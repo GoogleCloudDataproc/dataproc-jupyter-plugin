@@ -8,6 +8,7 @@ import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
 import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
 import EditIcon from '../../style/icons/edit_icon.svg';
+import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
 import DeletePopup from '../utils/deletePopup';
 import {
   API_HEADER_BEARER,
@@ -60,6 +61,10 @@ const iconDeleteCluster = new LabIcon({
 const iconEdit = new LabIcon({
   name: 'launcher:edit-icon',
   svgstr: EditIcon
+});
+const iconEditDisable = new LabIcon({
+  name: 'launcher:edit-disable-icon',
+  svgstr: EditIconDisable
 });
 
 interface IJobDetailsProps {
@@ -419,14 +424,17 @@ function JobDetails({
                   className={styleJobEdit(labelEditMode)}
                   onClick={() => (labelEditMode ? '' : handleJobLabelEdit())}
                 >
-                  {/* <Icon
-                    className={styleIconColor(labelEditMode)}
-                    name="pencil"
-                  /> */}
-                  <iconEdit.react
-                    tag="div"
-                    className={styleIconColor(labelEditMode)}
-                  />
+                  {labelEditMode ? (
+                    <iconEditDisable.react
+                      tag="div"
+                      className={styleIconColor(labelEditMode)}
+                    />
+                  ) : (
+                    <iconEdit.react
+                      tag="div"
+                      className={styleIconColor(labelEditMode)}
+                    />
+                  )}
                   <div
                     className={
                       labelEditMode ? 'job-edit-text-disabled' : 'job-edit-text'

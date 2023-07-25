@@ -85,7 +85,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     mainMenu.addMenu(snippetMenu);
 
     if (launcher) {
-      Object.values(kernels).forEach(kernelsData => {
+      Object.values(kernels).forEach((kernelsData, index) => {
         if (
           kernelsData?.resources.endpointParentResource &&
           kernelsData?.resources.endpointParentResource.includes('/sessions')
@@ -115,19 +115,15 @@ const extension: JupyterFrontEndPlugin<void> = {
           launcher.add({
             command: commandNotebook,
             category: 'Dataproc Serverless Notebooks',
-            // category: kernelsData?.resources.endpointParentResource.includes(
-            //   '/sessions'
-            // )
-            //   ? 'Dataproc Serverless Notebooks'
-            //   : 'Dataproc Cluster Notebooks',
             //@ts-ignore
             metadata: kernelsData?.metadata,
+            rank: index+1,
             //@ts-ignore
             args: kernelsData?.argv
           });
         }
       });
-      Object.values(kernels).forEach(kernelsData => {
+      Object.values(kernels).forEach((kernelsData, index) => {
         if (
           kernelsData?.resources.endpointParentResource &&
           !kernelsData?.resources.endpointParentResource.includes('/sessions')
@@ -157,13 +153,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           launcher.add({
             command: commandNotebook,
             category: 'Dataproc Cluster Notebooks',
-            // category: kernelsData?.resources.endpointParentResource.includes(
-            //   '/sessions'
-            // )
-            //   ? 'Dataproc Serverless Notebooks'
-            //   : 'Dataproc Cluster Notebooks',
             //@ts-ignore
             metadata: kernelsData?.metadata,
+            rank: index+1,
             //@ts-ignore
             args: kernelsData?.argv
           });
