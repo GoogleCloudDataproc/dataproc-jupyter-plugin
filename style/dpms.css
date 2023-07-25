@@ -1,0 +1,58 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+
+
+.dpms-title{
+    line-height: 20px;
+    width: 150px;
+    height: 20px;
+    margin-top: 19px;
+    margin-left: 20px;
+    font-weight: 550;
+    font-size: 15px;
+}
+.refresh-icon{
+    margin-left: 230px;
+    margin-top: -20px;
+}
+.ui.icon.input>i.icon{
+    margin-top: 10px !important;
+    margin-left: 20px !important;
+    right: unset !important;
+}
+.ui.input>input{
+    border-radius: 4px !important;
+    border: solid 1px !important;
+    height: 36px !important;
+    margin-top: 20px !important;
+    margin-left: 20px !important;
+    width: 225px !important;
+    padding-left: 35px !important;
+}
+  .columns.icon{
+    margin-left: 20px;
+  }
+  div[role="treeitem"][aria-level="0"] > div {
+    display: flex;
+  }
+  
+  div[role="treeitem"][aria-level="0"] > div > div > svg {
+    margin-right: 5px;
+  }
+
+  div[role="treeitem"][aria-level="1"] > div {
+    display: flex;
+  }
+  
+  div[role="treeitem"][aria-level="1"] > div >  div > svg {
+    margin-right: 10px;
+  }
+  
+  div[role="treeitem"][aria-level="2"] > div {
+    display: flex;
+    margin-left: 20px;
+    /* align-items: center; */
+  }
+  
+  div[role="treeitem"][aria-level="2"] > div > div > svg {
+    margin-right: 10px;
+  }

@@ -1,0 +1,37 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+
+.db-title{
+    width: 124px;
+    height: 28px;
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 500;
+    margin-top: 50px;
+    margin-left: 20px;
+}
+.lm-Widget .p-Widget .jp-Toolbar .jp-Toolbar-micro{
+    padding-left: 20px !important;
+}
+.tr-row-even {
+    background-color: lightgrey;
+  }
+  
+  .tr-row-odd {
+    background-color: white;
+  }
+  .db-table {
+    width: 100%;
+    border-collapse: collapse; /* Remove spacing between cells */
+  }
+  
+  .db-table td {
+    padding-left: 10px; /* Remove padding around cells */
+  }
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 25px;
+    margin-left: 20px;
+    padding-right: 30px;
+}
+  

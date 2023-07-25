@@ -1,6 +1,8 @@
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  JupyterFrontEndPlugin,
+  JupyterLab,
+  ILabShell
 } from '@jupyterlab/application';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -10,19 +12,32 @@ import { Cluster } from './cluster/cluster';
 import { Serverless } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
-import { Menu } from '@lumino/widgets';
+import { Menu, Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
-import { KernelSpecAPI } from '@jupyterlab/services';
+import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
+import { dpmsWidget } from './dpms/dpmsWidget';
+import dpmsIcon from '../style/icons/dpms_icon.svg';
+import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
+const iconDpms = new LabIcon({
+  name: 'launcher:dpms-icon',
+  svgstr: dpmsIcon
+});
 
+function getActiveNotebookKernelName(notebook: NotebookPanel): string | null {
+  const kernel = notebook.sessionContext.session?.kernel;
+  return kernel?.name ?? null;
+}
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'cluster',
   autoStart: true,
-  optional: [ILauncher, IMainMenu],
+  optional: [ILauncher, IMainMenu,ILabShell,INotebookTracker],
   activate: async (
     app: JupyterFrontEnd,
     launcher: ILauncher,
-    mainMenu: IMainMenu
+    mainMenu: IMainMenu,
+    labShell: ILabShell,
+    notebookTracker: INotebookTracker
   ) => {
     const { commands } = app;
     const iconCluster = new LabIcon({
@@ -33,7 +48,42 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
-
+    const onTitleChanged = (title: Title<Widget>) => {
+      // console.log('the JupyterLab main application:', title);
+      // document.title = title.label;
+      const widget = title.owner as NotebookPanel;
+      if (widget && widget instanceof NotebookPanel) {
+        const kernelName = getActiveNotebookKernelName(widget);
+        const kernelInfo = kernelName ? ` - Kernel: ${kernelName}` : '';
+        document.title = `${title.label}${kernelInfo}`;
+        console.log(document.title);
+      } else {
+        document.title = title.label;
+      }
+    };
+        // Keep the session object on the status item up-to-date.
+        labShell.currentChanged.connect((_, change) => {
+          const { oldValue, newValue } = change;
+    
+          // Clean up after the old value if it exists,
+          // listen for changes to the title of the activity
+          if (oldValue) {
+            oldValue.title.changed.disconnect(onTitleChanged);
+          }
+          if (newValue) {
+            newValue.title.changed.connect(onTitleChanged);
+          }
+        });
+        notebookTracker.widgetAdded.connect(() => {
+        const currentWidget = notebookTracker.currentWidget;
+        if (currentWidget instanceof NotebookPanel) {
+          const kernel = currentWidget.sessionContext.session?.kernel;
+          console.log(Kernel);
+          console.log( kernel?.name ?? null);
+        }
+        console.log(null,"empty");
+      })
+    // console.log('Active notebook kernel:', getActiveNotebookKernelName(notebookTracker));
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
@@ -110,6 +160,8 @@ const extension: JupyterFrontEndPlugin<void> = {
                 factory: 'notebook'
               });
             }
+            // console.log(Kernel);
+
           });
 
           launcher.add({
@@ -152,6 +204,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 factory: 'notebook'
               });
             }
+            
           });
 
           launcher.add({
@@ -198,6 +251,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       //     });
       //   }
       // });
+      const panel = new Panel();
+      panel.id = 'dpms-tab';
+      panel.title.icon = iconDpms; // svg import
+      panel.addWidget(new dpmsWidget(app as JupyterLab));
+      app.shell.add(panel, 'left');
+      
 
       launcher.add({
         command,
@@ -213,4 +272,15 @@ const extension: JupyterFrontEndPlugin<void> = {
   }
 };
 
+// function getActiveNotebookKernelName(notebookTracker: INotebookTracker): string | null {
+//   const currentWidget = notebookTracker.currentWidget;
+//   if (currentWidget instanceof NotebookPanel) {
+//     const kernel = currentWidget.sessionContext.session?.kernel;
+//     return kernel?.name ?? null;
+//   }
+//   return null;
+// }
 export default extension;
+
+
+
