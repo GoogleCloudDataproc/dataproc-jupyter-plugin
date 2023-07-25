@@ -1,0 +1,119 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+
+.cluster-details-header {
+  height: 48px;
+  display: flex;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+.scrollable-content {
+  overflow: auto;
+  max-height: calc(100vh - 48px);
+}
+
+.cluster-details-title {
+  padding: 0px 15px;
+  height: 48px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 24px;
+  
+  display: flex;
+  align-items: center;
+  color: #000000;
+}
+
+.action-cluster-text {
+  padding-left: 5px;
+}
+
+.action-cluster-section.disabled {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.loader-full-style {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin-top: 20%;
+  margin-left: 50%;
+}
+
+.back-arrow-icon {
+  padding-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.action-cluster-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.action-disabled {
+  opacity: 0.5;
+  /* cursor: not-allowed; */
+}
+.action-cluster-section {
+  cursor: pointer;
+  padding-left: 20px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 32px;
+  
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #3367D6;
+}
+
+.cluster-details-container {
+  width: 50%;
+  padding-left: 15px;
+}
+
+.cluster-details-label {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  width: 35%;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+
+.cluster-details-value {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+  width: 65%;
+  color: rgba(0, 0, 0, 0.66);
+}
+
+.row-details {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 18px;
+  margin-bottom: 6px;
+}
+.cluster-details-value-job {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+  width: 65%;
+  color: #3367D6;
+  text-decoration: underline;
+  cursor: pointer;
+  height: 20px;
+}
+
+.cluster-details-action-parent{
+  display: flex;
+}
