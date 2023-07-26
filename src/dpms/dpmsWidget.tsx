@@ -1,6 +1,6 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
@@ -12,6 +12,8 @@ import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import 'semantic-ui-css/semantic.min.css';
+import { BASE_URL, API_HEADER_CONTENT_TYPE, API_HEADER_BEARER } from '../utils/const';
+import { authApi } from '../utils/utils';
 
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
@@ -39,29 +41,51 @@ const calculateDepth = (node: any): number => {
   return depth;
 };
 
-const CounterComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
+const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [clusterValue, setClusterValue] = useState<string>('');
+  const [dataprocMetastoreServices, setDataprocMetastoreServices] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true); 
 
-  const data = [
-    {
-      id: '3',
-      name: 'Database 1',
+
+  // const data = [
+  //   {
+  //     id: '3',
+  //     name: 'Database 1',
+  //     children: [
+  //       { id: 'c1', name: 'Table1', children: [{ id: 'e1', name: 'column1' }] },
+  //       { id: 'c2', name: 'Table2', children: [{ id: 'e2', name: 'column2' }] },
+  //       { id: 'c3', name: 'Table3', children: [{ id: 'e3', name: 'column3' }] }
+  //     ]
+  //   },
+  //   {
+  //     id: '4',
+  //     name: 'Database 2',
+  //     children: [
+  //       { id: 'd1', name: 'Table1', children: [{ id: 'f1', name: 'column1' }] },
+  //       { id: 'd2', name: 'Table2', children: [{ id: 'f2', name: 'column2' }] },
+  //       { id: 'd3', name: 'Table3', children: [{ id: 'f3', name: 'column3' }] }
+  //     ]
+  //   }
+  // ];
+  const extractDatabaseName = (metastoreService: string) => {
+    const lastIndex = metastoreService.lastIndexOf('/');
+    return lastIndex !== -1 ? metastoreService.substring(lastIndex + 1) : '';
+  };
+
+  const data = dataprocMetastoreServices.map((metastoreService: string) => {
+    const dbName = extractDatabaseName(metastoreService);
+    return {
+      id: uuidv4(), // Generate a unique ID for each database entry
+      name: dbName,
       children: [
-        { id: 'c1', name: 'Table1', children: [{ id: 'e1', name: 'column1' }] },
-        { id: 'c2', name: 'Table2', children: [{ id: 'e2', name: 'column2' }] },
-        { id: 'c3', name: 'Table3', children: [{ id: 'e3', name: 'column3' }] }
-      ]
-    },
-    {
-      id: '4',
-      name: 'Database 2',
-      children: [
-        { id: 'd1', name: 'Table1', children: [{ id: 'f1', name: 'column1' }] },
-        { id: 'd2', name: 'Table2', children: [{ id: 'f2', name: 'column2' }] },
-        { id: 'd3', name: 'Table3', children: [{ id: 'f3', name: 'column3' }] }
-      ]
-    }
-  ];
+        { id: uuidv4(), name: 'Table1', children: [{ id: uuidv4(), name: 'column1' }] },
+        { id: uuidv4(), name: 'Table2', children: [{ id: uuidv4(), name: 'column2' }] },
+        { id: uuidv4(), name: 'Table3', children: [{ id: uuidv4(), name: 'column3' }] },
+      ],
+    };
+  });
+  console.log(data);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -87,50 +111,11 @@ const CounterComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       app.shell.add(widget, 'main');
     }
   };
-
-  return (
-    <>
-      <div>
-        <div className="dpms-title">Dataproc Metastore</div>
-        <div className="refresh-icon">
-          <iconRefresh.react tag="div" />
-        </div>
-        <div className="ui category search">
-          <div className="ui icon input">
-            <input
-              className="search-field"
-              type="text"
-              value={searchTerm}
-              onChange={handleSearch}
-            />
-            <i className="search icon"></i>
-          </div>
-        </div>
-      </div>
-      <div style={{ marginLeft: '20px' }}>
-        <Tree
-          initialData={data}
-          openByDefault={false}
-          width={600}
-          height={1000}
-          indent={24}
-          rowHeight={36}
-          overscanCount={1}
-          paddingTop={30}
-          paddingBottom={10}
-          padding={25}
-          searchTerm={searchTerm}
-          searchMatch={searchMatch}
-        >
-          {(props: NodeRendererProps<any>) => (
-            <Node {...props} onClick={handleNodeClick} />
-          )}
-        </Tree>
-      </div>
-    </>
-  );
-};
-
+  const handleRefreshClick = () => {
+    // Call the getClusterDetails function to fetch updated data
+    getClusterDetails();
+  };
+  
 type NodeProps = NodeRendererProps<any> & {
   onClick: (node: any) => void;
 };
@@ -191,6 +176,107 @@ function Node({ node, style, dragHandle, onClick }: NodeProps) {
   );
 }
 
+const getClusterDetails = async () => {
+  console.log('cluster details');
+  const credentials = await authApi();
+  if (credentials && clusterValue) {
+    fetch(
+      `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterValue}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      }
+    )
+      .then((response: Response) => {
+        response
+          .json()
+          .then((responseResult: any) => {
+            console.log(responseResult);
+            // const metastoreServices = responseResult.config?.metastoreConfig?.dataprocMetastoreService;
+            setDataprocMetastoreServices(["projects/acn-ytmusicsonos/locations/us-central1/services/service-metastore"]);
+            if(data){
+              setIsLoading(false);
+            }
+          })
+          .catch((e: Error) => {
+            console.log(e);
+            // setIsLoading(false);
+          });
+      })
+      .catch((err: Error) => {
+        // setIsLoading(false);
+        console.error('Error listing clusters Details', err);
+        // toast.error('Failed to fetch Cluster Details');
+      });
+  }
+};
+  useEffect(() => {
+    const clusterVal = localStorage.getItem('clusterValue');
+    console.log(clusterVal)
+    if(clusterVal){
+    setClusterValue(clusterVal);
+    getClusterDetails();
+  }
+  else{
+    console.log("no value");
+  }
+  return () => {
+    // Cleanup function to reset clusterValue when the component is unmounted
+    setClusterValue('');
+  };
+ 
+  }, [clusterValue]);
+  return (
+    <>
+      <div>
+        <div className="dpms-title">Dataproc Metastore</div>
+        <div className="refresh-icon" onClick={handleRefreshClick}>
+          <iconRefresh.react tag="div" />
+        </div>
+        <div className="ui category search">
+          <div className="ui icon input">
+            <input
+              className="search-field"
+              type="text"
+              value={searchTerm}
+              onChange={handleSearch}
+            />
+            <i className="search icon"></i>
+          </div>
+        </div>
+      </div>
+      <div style={{ marginLeft: '20px' }}>
+      {isLoading ? ( // Conditional rendering based on isLoading state
+          <div>Loading data...</div>
+        ) : (
+        <Tree
+          initialData={data}
+          openByDefault={false}
+          width={600}
+          height={1000}
+          indent={24}
+          rowHeight={36}
+          overscanCount={1}
+          paddingTop={30}
+          paddingBottom={10}
+          padding={25}
+          searchTerm={searchTerm}
+          searchMatch={searchMatch}
+        >
+          {(props: NodeRendererProps<any>) => (
+            <Node {...props} onClick={handleNodeClick} />
+          )}
+        </Tree>
+          )}
+      </div>
+    </>
+  );
+};
+
+
 export class dpmsWidget extends ReactWidget {
   app: JupyterLab;
 
@@ -201,6 +287,6 @@ export class dpmsWidget extends ReactWidget {
   }
 
   render(): JSX.Element {
-    return <CounterComponent app={this.app} />;
+    return <DpmsComponent app={this.app} />;
   }
 }
