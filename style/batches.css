@@ -19,6 +19,7 @@
   width: 65%;
   padding-left: 30px;
   color: #000000;
+  overflow-wrap: anywhere;
 }
 
 .batch-details-container {
@@ -45,6 +46,7 @@
   width: 65%;
   padding-left: 15px;
   color: #000000;
+  overflow-wrap: anywhere;
 }
 .details-value {
   font-style: normal;

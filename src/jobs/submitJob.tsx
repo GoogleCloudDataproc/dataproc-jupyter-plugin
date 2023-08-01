@@ -661,7 +661,7 @@ function SubmitJob(
           >
             <iconLeftArrow.react tag="div" />
           </div>
-          <div className="cluster-details-title">Submit a Job</div>
+          <div className="cluster-details-title">Submit a job</div>
         </div>
         <div className="submit-job-container">
           <div className="submit-job-label-header">Cluster</div>

@@ -1,32 +1,96 @@
 import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import ViewLogsIcon from '../../style/icons/view_logs_icon.svg';
-import { VIEW_LOGS_CLUSTER_URL } from './const';
+import {
+  API_HEADER_BEARER,
+  API_HEADER_CONTENT_TYPE,
+  BASE_URL,
+  VIEW_LOGS_CLUSTER_URL
+} from './const';
+import { authApi } from './utils';
 
 const iconViewLogs = new LabIcon({
   name: 'launcher:view-logs-icon',
   svgstr: ViewLogsIcon
 });
 
-function ViewLogs({ clusterInfo, projectName }: any) {
+function ViewLogs({
+  clusterInfo,
+  projectName,
+  clusterName,
+  setErrorView,
+  batchInfoResponse,
+  sessionInfo
+}: any) {
+  const handleJobDetailsViewLogs = async (clusterName: string) => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterName}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: any) => {
+              if (responseResult.error && responseResult.error.code === 404) {
+                setErrorView(true);
+              } else {
+                window.open(
+                  responseResult.config.endpointConfig.httpPorts[
+                    'Spark History Server'
+                  ]
+                );
+              }
+            })
+            .catch((e: Error) => {
+              console.error(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing clusters Details', err);
+        });
+    }
+  };
+
   return (
     <div
-      className={
-        clusterInfo
-          ? 'action-cluster-section'
-          : 'action-disabled action-cluster-section'
-      }
+      className='action-cluster-section'
       onClick={() => {
-        window.open(
-          `${VIEW_LOGS_CLUSTER_URL}${clusterInfo.clusterName}%22%0Aresource.labels.cluster_uuid%3D%22${clusterInfo.clusterUuid}%22?project=${projectName}`,
-          '_blank'
-        );
+        if (clusterInfo) {
+          window.open(
+            `${VIEW_LOGS_CLUSTER_URL}"${clusterInfo.clusterName}" resource.labels.cluster_uuid="${clusterInfo.clusterUuid}"?project=${projectName}`,
+            '_blank'
+          );
+        } else if (batchInfoResponse) {
+          window.open(
+            batchInfoResponse.runtimeInfo.endpoints["Spark History Server"],
+            '_blank'
+          );
+        } else if (sessionInfo) {
+          window.open(
+            sessionInfo.runtimeInfo.endpoints["Spark History Server"],
+            '_blank'
+          );
+        } else {
+          handleJobDetailsViewLogs(clusterName);
+        } 
       }}
     >
       <div className="action-cluster-icon">
         <iconViewLogs.react tag="div" />
       </div>
-      <div className="action-cluster-text">VIEW LOGS</div>
+      {clusterInfo ? (
+        <div className="action-cluster-text">VIEW LOGS</div>
+      ) : (
+        <div className="action-cluster-text">SPARK LOGS</div>
+      )}
     </div>
   );
 }

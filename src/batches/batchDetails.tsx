@@ -232,7 +232,7 @@ function BatchDetails({
               </div>
               <div className="action-cluster-text">DELETE</div>
             </div>
-            <ViewLogs />
+            <ViewLogs batchInfoResponse={batchInfoResponse}/>
           </div>
 
           <div className="batch-details-container-top">
@@ -354,90 +354,14 @@ function BatchDetails({
               <div className="details-label">Properties</div>
               <div className="details-value"></div>
             </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.executor.instances
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.executor.instances'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.driver.cores
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.driver.cores'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.driver.memory
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.driver.memory'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.executor.cores
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.executor.cores'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.executor.memory
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.executor.memory'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.dynamicAllocation.executorAllocationRatio
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.dynamicAllocation.executorAllocationRatio'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.app.name
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.app.name'
-                  ]
-                }
-              </div>
-            </div>
+            {Object.entries(batchInfoResponse.runtimeConfig.properties).map(
+              ([key, value]) => (
+                <div className="row-details" key={key}>
+                  <div className="batch-details-label-level-one">{key}</div>
+                  <div className="details-value">{value}</div>
+                </div>
+              )
+            )}
             <div className="row-details">
               <div className="details-label">Environment config</div>
               <div className="details-value"></div>

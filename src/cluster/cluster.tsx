@@ -70,6 +70,8 @@ const ClusterComponent = (): React.JSX.Element => {
   const [configLoading, setConfigLoading] = useState(true);
   const [projectId, setProjectId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const [selectedJobClone, setSelectedJobClone] = useState({});
+
   const pollingClusters = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -349,6 +351,7 @@ const ClusterComponent = (): React.JSX.Element => {
       pollingClusters(listClustersAPI, true);
     };
   }, [pollingDisable, detailedView, selectedMode]);
+
   return (
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (
@@ -371,6 +374,10 @@ const ClusterComponent = (): React.JSX.Element => {
               setDetailedView={setDetailedView}
               detailedJobView={detailedJobView}
               setDetailedJobView={setDetailedJobView}
+              submitJobView={submitJobView}
+              clusterResponse={clusterResponse}
+              selectedJobClone={selectedJobClone}
+              setSelectedJobClone={setSelectedJobClone}
               setSubmitJobView={setSubmitJobView}
             />
           )}
@@ -402,6 +409,8 @@ const ClusterComponent = (): React.JSX.Element => {
                     setSubmitJobView={setSubmitJobView}
                     setDetailedView={setDetailedView}
                     clusterResponse={clusterResponse}
+                    selectedJobClone={selectedJobClone}
+                    setSelectedJobClone={setSelectedJobClone}
                   />
                 ) : (
                   <ListCluster

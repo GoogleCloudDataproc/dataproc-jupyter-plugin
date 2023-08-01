@@ -80,7 +80,7 @@
   font-weight: 500;
   font-size: 13px;
   line-height: 18px;
-  width: 35%;
+  min-width: 35%;
   color: #000000;
   overflow-wrap: anywhere;
 }

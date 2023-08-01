@@ -204,7 +204,7 @@ function SessionDetails({
                   </div>
                   <div className="action-cluster-text">TERMINATE</div>
                 </div>
-                <ViewLogs />
+                <ViewLogs sessionInfo={sessionInfo} />
               </div>
               <div className="cluster-details-container">
                 <div className="row-details"></div>

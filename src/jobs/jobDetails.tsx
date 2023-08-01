@@ -37,6 +37,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import errorIcon from '../../style/icons/error_icon.svg';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -66,7 +67,10 @@ const iconEditDisable = new LabIcon({
   name: 'launcher:edit-disable-icon',
   svgstr: EditIconDisable
 });
-
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
+});
 interface IJobDetailsProps {
   jobSelected: any;
   setDetailedJobView: (value: boolean) => void;
@@ -74,14 +78,16 @@ interface IJobDetailsProps {
   deleteJobApi: (jobId: string) => Promise<void>;
   region: any;
   setDetailedView: (value: boolean) => void;
-  clusterResponse: string;
+  clusterResponse: any;
+  clustersList: object;
 }
 function JobDetails({
   jobSelected,
   setDetailedJobView,
   region,
   setDetailedView,
-  clusterResponse
+  clusterResponse,
+  clustersList
 }: IJobDetailsProps) {
   const [jobInfo, setjobInfo] = useState({
     status: { state: '', stateStartTime: '' },
@@ -124,6 +130,8 @@ function JobDetails({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const [errorView, setErrorView] = useState(false);
+
   const pollingJobDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -142,6 +150,9 @@ function JobDetails({
 
   const handleDetailedClusterView = () => {
     pollingJobDetails(getJobDetails, true);
+    if(!clustersList){
+      setDetailedJobView(false);
+    }
     setDetailedClusterView(true);
   };
 
@@ -318,7 +329,20 @@ function JobDetails({
 
   return (
     <div>
-      {submitJobView && (
+      {errorView && (
+        <div className="error-view-parent">
+          <div className="back-arrow-icon" onClick={() => setErrorView(false)}>
+            <iconLeftArrow.react tag="div" />
+          </div>
+          <div className="error-view-message-parent">
+            <iconError.react tag="div" />
+            <div className="error-view-message">
+              Unable to find the resource you requested
+            </div>
+          </div>
+        </div>
+      )}
+      {submitJobView && !detailedClusterView && (
         <SubmitJob
           setSubmitJobView={setSubmitJobView}
           selectedJobClone={selectedJobClone}
@@ -340,9 +364,15 @@ function JobDetails({
           clusterSelected={jobInfo.placement.clusterName}
           setDetailedView={setDetailedView}
           setDetailedClusterView={setDetailedClusterView}
+          submitJobView={submitJobView}
+          selectedJobClone={selectedJobClone}
+          clusterResponse={clusterResponse}
+          setSubmitJobView={setSubmitJobView}
+          setDetailedJobView={setDetailedJobView}
+          setSelectedJobClone={setSelectedJobClone}
         />
       )}
-      {!submitJobView && !detailedClusterView && (
+      {!submitJobView && !detailedClusterView && !errorView && (
         <div className="scroll-comp">
           {jobInfo.jobUuid !== '' && (
             <div>
@@ -391,7 +421,10 @@ function JobDetails({
                   </div>
                   <div className="action-cluster-text">DELETE</div>
                 </div>
-                <ViewLogs />
+                <ViewLogs
+                  clusterName={jobInfo.placement.clusterName}
+                  setErrorView={setErrorView}
+                />
               </div>
 
               <div className="cluster-details-container">
