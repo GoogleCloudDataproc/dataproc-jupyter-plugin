@@ -7,6 +7,11 @@ import databaseIcon from '../../style/icons/database_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
 import columnsIcon from '../../style/icons/columns_icon.svg';
 import refreshIcon from '../../style/icons/refresh_icon.svg';
+import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
+import datasetsIcon from '../../style/icons/datasets_icon.svg';
+import searchIcon from '../../style/icons/search_icon.svg';
+import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
+import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
 // import { Widget } from '@lumino/widgets';
 import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
@@ -32,9 +37,29 @@ const iconColumns = new LabIcon({
   name: 'launcher:columns-icon',
   svgstr: columnsIcon
 });
+const iconDatasets = new LabIcon({
+  name: 'launcher:datasets-icon',
+  svgstr: datasetsIcon
+});
+const iconDatabaseWidget = new LabIcon({
+  name: 'launcher:databse-widget-icon',
+  svgstr: databaseWidgetIcon
+});
 const iconRefresh = new LabIcon({
   name: 'launcher:refresh-icon',
   svgstr: refreshIcon
+});
+const iconSearch = new LabIcon({
+  name: 'launcher:search-icon',
+  svgstr: searchIcon
+});
+const iconRightArrow = new LabIcon({
+  name: 'launcher:right-arrow-icon',
+  svgstr: rightArrowIcon
+});
+const iconDownArrow = new LabIcon({
+  name: 'launcher:down-arrow-icon',
+  svgstr: downArrowIcon
 });
 const calculateDepth = (node: any): number => {
   let depth = 0;
@@ -124,6 +149,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       // widget.node.innerHTML = node.data.name;
       widget.title.label = node.data.name;
       widget.title.closable = true;
+      widget.title.icon = iconDatabaseWidget;
 
       // Add the widget to the main area
       app.shell.add(widget, 'main');
@@ -135,6 +161,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       // widget.node.innerHTML = node.data.name;
       widget.title.label = node.data.name;
       widget.title.closable = true;
+      widget.title.icon = iconDatasets;
 
       // Add the widget to the main area
       app.shell.add(widget, 'main');
@@ -167,9 +194,17 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
 
       const arrowIcon = hasChildren ? (
         expanded ? (
-          <i className="caret right icon large" onClick={handleToggle}></i>
+          <>
+            <div onClick={handleToggle}>
+              <iconRightArrow.react tag="div" />
+            </div>
+            {/* <i className="caret right icon large" onClick={handleToggle}></i> */}
+          </>
         ) : (
-          <i className="caret down icon large" onClick={handleToggle}></i>
+          <div onClick={handleToggle}>
+            <iconDownArrow.react tag="div" />
+          </div>
+          // <i className="caret down icon large" onClick={handleToggle}></i>
         )
       ) : null;
 
@@ -344,7 +379,11 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
               value={searchTerm}
               onChange={handleSearch}
             />
-            <i className="search icon"></i>
+            <div className="search-icon">
+              <iconSearch.react tag="div" />
+            </div>
+
+            {/* <i className="search icon"></i> */}
           </div>
         </div>
       </div>

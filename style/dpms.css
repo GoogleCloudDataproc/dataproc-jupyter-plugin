@@ -14,10 +14,15 @@
     margin-left: 230px;
     margin-top: -20px;
 }
-.ui.icon.input>i.icon{
+/* .ui.icon.input>i.icon{
     margin-top: 10px !important;
     margin-left: 20px !important;
     right: unset !important;
+} */
+.search-icon {
+  position: relative;
+  top: 30px;
+  right: 220px;
 }
 .ui.input>input{
     border-radius: 4px !important;
@@ -37,6 +42,7 @@
   
   div[role="treeitem"][aria-level="0"] > div > div > svg {
     margin-right: 5px;
+    margin-top:-2px;
   }
 
   div[role="treeitem"][aria-level="1"] > div {

@@ -9,8 +9,17 @@
     margin-top: 50px;
     margin-left: 20px;
 }
-.lm-Widget .p-Widget .jp-Toolbar .jp-Toolbar-micro{
+/* .lm-Widget .p-Widget .jp-Toolbar .jp-Toolbar-micro{
     padding-left: 20px !important;
+} */
+.title-overlay{
+  height: 37px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding-left: 20px;
 }
 .tr-row-even {
     background-color: #F5F5F5;
@@ -27,6 +36,7 @@
   .db-table td {
     padding-left: 10px; /* Remove padding around cells */
     height: 29px;
+    width: 10px;
   }
   .table-container {
     width: 100%;
@@ -34,12 +44,31 @@
     margin-top: 25px;
     margin-left: 20px;
     padding-right: 30px;
+    display: flex;
 }
-  
+.db-table td:nth-child(2) {
+  width: 70%;
+}
+
 .db-table th {
   padding-left: 10px;
   text-align: left;
+  background-color: #F5F5F5;
 }
-.db-table td .schema-td {
+ .schema-td {
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+.schema-table {
+  width: 50%;
+  border-collapse: collapse; /* Remove spacing between cells */
+}
+
+.schema-table td {
+  padding-left: 10px; /* Remove padding around cells */
+  height: 29px;
+}
+.schema-table th {
+  padding-left: 10px;
+  text-align: left;
+  background-color: #F5F5F5;
 }

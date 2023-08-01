@@ -123,7 +123,7 @@ const TableInfo = ({ title }: { title: any }): React.JSX.Element => {
 
     return (
       <div className="table-container">
-        <table className="db-table" {...getTableProps()}>
+        <table className="schema-table" {...getTableProps()}>
           <thead>
             {headerGroups.map(headerGroup => (
               <tr {...headerGroup.getHeaderGroupProps()}>
@@ -161,9 +161,7 @@ const TableInfo = ({ title }: { title: any }): React.JSX.Element => {
 
   return (
     <div>
-      <div className="lm-Widget p-Widget jp-Toolbar jp-Toolbar-micro">
-        {title._label}
-      </div>
+      <div className="title-overlay">{title._label}</div>
       <div className="db-title">Table info</div>
       <div className="table-container">
         <table className="db-table">

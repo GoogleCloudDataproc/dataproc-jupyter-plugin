@@ -39,9 +39,7 @@ const DatabaseInfo = ({ title }: { title: any }): React.JSX.Element => {
 
   return (
     <div>
-      <div className="lm-Widget p-Widget jp-Toolbar jp-Toolbar-micro">
-        {title._label}
-      </div>
+      <div className="title-overlay">{title._label}</div>
       <div className="db-title">Database info</div>
       {renderTable()}
     </div>
