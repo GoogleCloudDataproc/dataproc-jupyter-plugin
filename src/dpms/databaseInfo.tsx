@@ -49,7 +49,6 @@ const DatabaseInfo = ({ title }: { title: any }): React.JSX.Element => {
 };
 
 export class Database extends ReactWidget {
-  menu: any;
   constructor(title: string) {
     super();
     this.addClass('jp-ReactWidget');

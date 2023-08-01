@@ -13,7 +13,7 @@
     padding-left: 20px !important;
 }
 .tr-row-even {
-    background-color: lightgrey;
+    background-color: #F5F5F5;
   }
   
   .tr-row-odd {
@@ -26,6 +26,7 @@
   
   .db-table td {
     padding-left: 10px; /* Remove padding around cells */
+    height: 29px;
   }
   .table-container {
     width: 100%;
@@ -35,3 +36,10 @@
     padding-right: 30px;
 }
   
+.db-table th {
+  padding-left: 10px;
+  text-align: left;
+}
+.db-table td .schema-td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}

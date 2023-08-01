@@ -12,7 +12,7 @@ import { Cluster } from './cluster/cluster';
 import { Serverless } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
-import { Menu, Panel, Title, Widget} from '@lumino/widgets';
+import { Menu, Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
@@ -27,7 +27,7 @@ const iconDpms = new LabIcon({
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'cluster',
   autoStart: true,
-  optional: [ILauncher, IMainMenu,ILabShell,INotebookTracker],
+  optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker],
   activate: async (
     app: JupyterFrontEnd,
     launcher: ILauncher,
@@ -44,71 +44,72 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
-  //  const onTitleChanged = async (title: Title<Widget>) => {
-  //     const widget = title.owner as NotebookPanel;
-  //     if (widget && widget instanceof NotebookPanel) {
-  //       console.log("enteres if");
-  //       const kernel = widget.sessionContext.session?.kernel;
-  //       // let kernelName = await getActiveNotebookKernelName(widget);
-  //       let kernelName = kernel?.name;
-  //       console.log(kernelName,"kernelname");
-  //       if (kernelName) {
-  //         console.log("executing");
-  //         console.log(kernels[kernelName]);
-  //         const kernelSpec = kernels[kernelName];
-  //         console.log(kernelSpec?.resources.endpointParentResource || null);
-  //         document.title = `${title.label}`;
-  //       } 
-  //       console.log(document.title);
-  //     } else {
-  //       document.title = title.label;
-  //     }
-  //     console.log(Kernel)
-  //   };
-  const onTitleChanged = async (title: Title<Widget>) => {
-    const widget = title.owner as NotebookPanel;
-    if (widget && widget instanceof NotebookPanel) {
-      const kernel = widget.sessionContext.session?.kernel;
-      if (kernel) {
-        const kernelName = kernel.name;
-        const kernelSpec = kernels[kernelName];
-        if (kernelSpec?.resources.endpointParentResource.includes('/clusters/')) {
-        const parts = kernelSpec?.resources.endpointParentResource.split('/');
-        const clusterValue = parts[parts.length - 1];
-        console.log(clusterValue);
-        localStorage.setItem('clusterValue', clusterValue);
+    //  const onTitleChanged = async (title: Title<Widget>) => {
+    //     const widget = title.owner as NotebookPanel;
+    //     if (widget && widget instanceof NotebookPanel) {
+    //       console.log("enteres if");
+    //       const kernel = widget.sessionContext.session?.kernel;
+    //       // let kernelName = await getActiveNotebookKernelName(widget);
+    //       let kernelName = kernel?.name;
+    //       console.log(kernelName,"kernelname");
+    //       if (kernelName) {
+    //         console.log("executing");
+    //         console.log(kernels[kernelName]);
+    //         const kernelSpec = kernels[kernelName];
+    //         console.log(kernelSpec?.resources.endpointParentResource || null);
+    //         document.title = `${title.label}`;
+    //       }
+    //       console.log(document.title);
+    //     } else {
+    //       document.title = title.label;
+    //     }
+    //     console.log(Kernel)
+    //   };
+    const onTitleChanged = async (title: Title<Widget>) => {
+      const widget = title.owner as NotebookPanel;
+      if (widget && widget instanceof NotebookPanel) {
+        const kernel = widget.sessionContext.session?.kernel;
+        if (kernel) {
+          const kernelName = kernel.name;
+          const kernelSpec = kernels[kernelName];
+          if (
+            kernelSpec?.resources.endpointParentResource.includes('/clusters/')
+          ) {
+            const parts =
+              kernelSpec?.resources.endpointParentResource.split('/');
+            const clusterValue = parts[parts.length - 1];
+            console.log(clusterValue);
+            localStorage.setItem('clusterValue', clusterValue);
+          }
+        } else {
+          console.log('No active kernel.');
         }
+        document.title = title.label;
+        console.log(document.title);
       } else {
-        console.log("No active kernel.");
+        document.title = title.label;
       }
-      document.title = title.label;
-      console.log(document.title);
-    } else {
-      document.title = title.label;
-    }
-    console.log(Kernel);
-    
-  };
-  labShell.currentChanged.connect((_, change) => {
-    const { oldValue, newValue } = change;
-  
-    // Clean up after the old value if it exists,
-    // listen for changes to the title of the activity
-    if (oldValue) {
-      // Check if the old value is an instance of NotebookPanel
-      if (oldValue instanceof NotebookPanel) {
-        oldValue.title.changed.disconnect(onTitleChanged);
+      console.log(Kernel);
+    };
+    labShell.currentChanged.connect((_, change) => {
+      const { oldValue, newValue } = change;
+
+      // Clean up after the old value if it exists,
+      // listen for changes to the title of the activity
+      if (oldValue) {
+        // Check if the old value is an instance of NotebookPanel
+        if (oldValue instanceof NotebookPanel) {
+          oldValue.title.changed.disconnect(onTitleChanged);
+        }
       }
-    }
-  
-    if (newValue) {
-      // Check if the new value is an instance of NotebookPanel
-      if (newValue instanceof NotebookPanel) {
-        newValue.title.changed.connect(onTitleChanged);
+
+      if (newValue) {
+        // Check if the new value is an instance of NotebookPanel
+        if (newValue instanceof NotebookPanel) {
+          newValue.title.changed.connect(onTitleChanged);
+        }
       }
-    }
-  });
-  
+    });
 
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
@@ -187,7 +188,6 @@ const extension: JupyterFrontEndPlugin<void> = {
               });
             }
             // console.log(Kernel);
-
           });
 
           launcher.add({
@@ -230,7 +230,6 @@ const extension: JupyterFrontEndPlugin<void> = {
                 factory: 'notebook'
               });
             }
-            
           });
 
           launcher.add({
@@ -282,8 +281,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       panel.title.icon = iconDpms; // svg import
       panel.addWidget(new dpmsWidget(app as JupyterLab));
       app.shell.add(panel, 'left');
-      
-
 
       launcher.add({
         command,
@@ -308,6 +305,3 @@ const extension: JupyterFrontEndPlugin<void> = {
 //   return null;
 // }
 export default extension;
-
-
-
