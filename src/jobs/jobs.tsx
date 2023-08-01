@@ -33,7 +33,6 @@ import stopIcon from '../../style/icons/stop_icon.svg';
 import JobDetails from './jobDetails';
 import stopDisableIcon from '../../style/icons/stop_disable_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
-import cloneIconDisable from '../../style/icons/clone_icon_disable.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
@@ -70,11 +69,6 @@ const iconClone = new LabIcon({
   name: 'launcher:clone-icon',
   svgstr: cloneIcon
 });
-const iconCloneDisable = new LabIcon({
-  name: 'launcher:clone-icon-disable',
-  svgstr: cloneIconDisable
-});
-
 const iconStop = new LabIcon({
   name: 'launcher:stop-icon',
   svgstr: stopIcon
@@ -112,6 +106,8 @@ function JobComponent({
   setSubmitJobView,
   setDetailedView,
   clusterResponse,
+  selectedJobClone,
+  setSelectedJobClone,
   clustersList
 }: any) {
   const [jobsList, setjobsList] = useState([]);
@@ -119,7 +115,6 @@ function JobComponent({
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
   const [region, setRegion] = useState('');
-  const [selectedJobClone, setSelectedJobClone] = useState({});
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
@@ -287,29 +282,12 @@ function JobComponent({
     const jobId = data.reference.jobId;
     return (
       <div className="actions-icon">
-        {/* <div
+        <div
           className="icon-buttons-style"
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
-        > */}
-        <div
-          className={
-            clusterSelected !== undefined
-              ? 'icon-buttons-style-disable'
-              : 'icon-buttons-style'
-          }
-          title="Clone Job"
-          onClick={
-            clusterSelected === undefined
-              ? () => handleCloneJob(data)
-              : undefined
-          }
         >
-          {clusterSelected !== undefined ? (
-            <iconCloneDisable.react tag="div" />
-          ) : (
-            <iconClone.react tag="div" />
-          )}
+          <iconClone.react tag="div" />
         </div>
         <div
           className={
@@ -349,13 +327,6 @@ function JobComponent({
             <iconDelete.react tag="div" />
           )}
         </div>
-        {/* <div
-          className="icon-buttons-style"
-          title="Delete Job"
-          onClick={() => handleDeleteJob(jobId)}
-        >
-          <iconDelete.react tag="div" />
-        </div> */}
       </div>
     );
   }
@@ -489,27 +460,28 @@ function JobComponent({
           region={region}
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
+          clustersList={clustersList}
         />
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {clusterResponse &&
+          {clustersList && clusterResponse &&
             clusterResponse.clusters &&
             clusterResponse.clusters.length > 0 && (
-              <div className="create-cluster-overlay">
-                <div
-                  className="create-cluster-sub-overlay"
-                  onClick={() => {
-                    handleSubmitJobOpen();
-                  }}
-                >
-                  <div className="create-cluster-icon">
-                    <iconSubmitJob.react tag="div" />
-                  </div>
-                  <div className="create-cluster-text">SUBMIT JOB</div>
+            <div className="create-cluster-overlay">
+              <div
+                className="create-cluster-sub-overlay"
+                onClick={() => {
+                  handleSubmitJobOpen();
+                }}
+              >
+                <div className="create-cluster-icon">
+                  <iconSubmitJob.react tag="div" />
                 </div>
+                <div className="create-cluster-text">SUBMIT JOB</div>
               </div>
-            )}
+            </div>
+          )}
           {jobsList.length > 0 ? (
             <div>
               <div className="filter-cluster-overlay">

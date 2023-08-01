@@ -90,10 +90,23 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         const configStatus = (data as { config: string }).config;
         setIsLoading(false);
         if (configStatus && !toast.isActive('custom-toast')) {
-          toast.success(configStatus, {
-            position: toast.POSITION.TOP_CENTER,
-            toastId: 'custom-toast'
-          });
+          if(configStatus.includes('Failed')) {
+            toast.error(configStatus, {
+              hideProgressBar: true,
+              autoClose: false,
+              theme: "dark",
+              position: toast.POSITION.BOTTOM_CENTER,
+              toastId: 'custom-toast'
+            });
+          } else {
+            toast.success(configStatus, {
+              hideProgressBar: true,
+              autoClose: false,
+              theme: "dark",
+              position: toast.POSITION.BOTTOM_CENTER,
+              toastId: 'custom-toast'
+            });
+          }
         }
       }
     } catch (reason) {
@@ -185,7 +198,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
               SetRegionEmpty(false);
               if (!toast.isActive('custom-toast-error')) {
                 toast.error(response.status + ' Permission Denied', {
-                  position: toast.POSITION.TOP_CENTER,
+                  position: toast.POSITION.BOTTOM_CENTER,
                   toastId: 'custom-toast-error'
                 });
               }

@@ -53,6 +53,7 @@ import ViewLogs from '../utils/viewLogs';
 import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import SubmitJob from '../jobs/submitJob';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -101,14 +102,22 @@ interface IClusterDetailsProps {
   detailedJobView?: boolean;
   setDetailedJobView?: (value: boolean) => void;
   setSubmitJobView?: (value: boolean) => void;
+  submitJobView: boolean;
+  clusterResponse: any;
+  selectedJobClone: any;
+  setSelectedJobClone?: (value: boolean) => void;
 }
 function ClusterDetails({
   clusterSelected,
   setDetailedView,
   setDetailedClusterView,
   detailedJobView,
+  setSubmitJobView,
   setDetailedJobView,
-  setSubmitJobView
+  submitJobView,
+  clusterResponse,
+  selectedJobClone,
+  setSelectedJobClone
 }: IClusterDetailsProps) {
   const [clusterInfo, setClusterInfo] = useState({
     status: { state: '' },
@@ -271,6 +280,13 @@ function ClusterDetails({
           </div>
         </div>
       )}
+      {submitJobView && !detailedJobView && (
+        <SubmitJob
+          setSubmitJobView={setSubmitJobView}
+          selectedJobClone={selectedJobClone}
+          clusterResponse={clusterResponse}
+        />
+      )}
       {deletePopupOpen && (
         <DeletePopup
           onCancel={() => handleCancelDelete()}
@@ -281,6 +297,7 @@ function ClusterDetails({
           }
         />
       )}
+      {!submitJobView &&
       <div className="scroll-comp">
         <ToastContainer />
         {!errorView && clusterInfo.clusterName !== '' ? (
@@ -366,6 +383,9 @@ function ClusterDetails({
               setDetailedView={setDetailedView}
               detailedJobView={detailedJobView}
               setDetailedJobView={setDetailedJobView}
+              setSubmitJobView={setSubmitJobView}
+              setSelectedJobClone={setSelectedJobClone}
+              clusterResponse={clusterResponse}
             />
           </div>
         ) : (
@@ -385,6 +405,7 @@ function ClusterDetails({
           </div>
         )}
       </div>
+      }
     </div>
   );
 }

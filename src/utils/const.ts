@@ -87,7 +87,7 @@ export const ARGUMENTSMESSAGE =
 export const MAXRESTARTMESSAGE =
   'Leave blank if you do not want to allow automatic restarts on job failure. ';
 export const VIEW_LOGS_CLUSTER_URL =
-  'https://console.cloud.google.com/logs/query;query=resource.type%3D%22cloud_dataproc_cluster%22%0Aresource.labels.cluster_name%3D%22';
+  'https://console.cloud.google.com/logs/query;query=resource.type="cloud_dataproc_cluster" resource.labels.cluster_name=';
 export const RESTART_JOB_URL =
   'https://cloud.google.com/dataproc/docs/concepts/jobs/restartable-jobs';
 export const SPARK = 'Spark';
@@ -96,3 +96,4 @@ export const SPARKR = 'SparkR';
 export const PYSPARK = 'PySpark';
 export const DCU_HOURS = 3600000;
 export const GB_MONTHS = 2592000;
+export const TITLE_LAUNCHER_CATEGORY = 'Dataproc Jobs and Sessions';

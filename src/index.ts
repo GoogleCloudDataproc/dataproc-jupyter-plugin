@@ -31,6 +31,7 @@ import { Menu } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
+import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'cluster',
@@ -54,8 +55,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
-    const command = 'create-cluster-component';
-    commands.addCommand(command, {
+    const createClusterComponentCommand = 'create-cluster-component';
+    commands.addCommand(createClusterComponentCommand, {
       caption: 'Create a new Cluster Component',
       label: 'Clusters',
       // @ts-ignore
@@ -69,8 +70,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    const commandNew = 'create-serverless-component';
-    commands.addCommand(commandNew, {
+    const createServerlessComponentCommand = 'create-serverless-component';
+    commands.addCommand(createServerlessComponentCommand, {
       caption: 'Create a new Serverless Component',
       label: 'Serverless',
       // @ts-ignore
@@ -84,7 +85,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    commands.addCommand('initConfig', {
+    const createAuthLoginComponentCommand = 'create-authlogin-component';
+    commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Setup',
       caption: 'Setup',
       execute: () => {
@@ -98,11 +100,11 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const snippetMenu = new Menu({ commands });
     snippetMenu.title.label = 'Dataproc';
-    snippetMenu.addItem({ command: 'initConfig' });
+    snippetMenu.addItem({ command: createAuthLoginComponentCommand });
     mainMenu.addMenu(snippetMenu);
 
     if (launcher) {
-      Object.values(kernels).forEach(kernelsData => {
+      Object.values(kernels).forEach((kernelsData, index) => {
         if (
           kernelsData?.resources.endpointParentResource &&
           kernelsData?.resources.endpointParentResource.includes('/sessions')
@@ -132,19 +134,15 @@ const extension: JupyterFrontEndPlugin<void> = {
           launcher.add({
             command: commandNotebook,
             category: 'Dataproc Serverless Notebooks',
-            // category: kernelsData?.resources.endpointParentResource.includes(
-            //   '/sessions'
-            // )
-            //   ? 'Dataproc Serverless Notebooks'
-            //   : 'Dataproc Cluster Notebooks',
             //@ts-ignore
             metadata: kernelsData?.metadata,
+            rank: index+1,
             //@ts-ignore
             args: kernelsData?.argv
           });
         }
       });
-      Object.values(kernels).forEach(kernelsData => {
+      Object.values(kernels).forEach((kernelsData, index) => {
         if (
           kernelsData?.resources.endpointParentResource &&
           !kernelsData?.resources.endpointParentResource.includes('/sessions')
@@ -174,13 +172,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           launcher.add({
             command: commandNotebook,
             category: 'Dataproc Cluster Notebooks',
-            // category: kernelsData?.resources.endpointParentResource.includes(
-            //   '/sessions'
-            // )
-            //   ? 'Dataproc Serverless Notebooks'
-            //   : 'Dataproc Cluster Notebooks',
             //@ts-ignore
             metadata: kernelsData?.metadata,
+            rank: index+1,
             //@ts-ignore
             args: kernelsData?.argv
           });
@@ -217,13 +211,13 @@ const extension: JupyterFrontEndPlugin<void> = {
       // });
 
       launcher.add({
-        command,
-        category: 'Dataproc Jobs and Sessions',
+        command: createClusterComponentCommand,
+        category: TITLE_LAUNCHER_CATEGORY,
         rank: 1
       });
       launcher.add({
-        command: commandNew,
-        category: 'Dataproc Jobs and Sessions',
+        command: createServerlessComponentCommand,
+        category: TITLE_LAUNCHER_CATEGORY,
         rank: 2
       });
     }
