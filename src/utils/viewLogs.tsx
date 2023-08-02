@@ -37,7 +37,8 @@ function ViewLogs({
   clusterName,
   setErrorView,
   batchInfoResponse,
-  sessionInfo
+  sessionInfo,
+  JobInfo
 }: any) {
   const handleJobDetailsViewLogs = async (clusterName: string) => {
     const credentials = await authApi();
@@ -78,7 +79,7 @@ function ViewLogs({
 
   return (
     <div
-      className='action-cluster-section'
+      className="action-cluster-section"
       onClick={() => {
         if (clusterInfo) {
           window.open(
@@ -87,26 +88,26 @@ function ViewLogs({
           );
         } else if (batchInfoResponse) {
           window.open(
-            batchInfoResponse.runtimeInfo.endpoints["Spark History Server"],
+            batchInfoResponse.runtimeInfo.endpoints['Spark History Server'],
             '_blank'
           );
         } else if (sessionInfo) {
           window.open(
-            sessionInfo.runtimeInfo.endpoints["Spark History Server"],
+            sessionInfo.runtimeInfo.endpoints['Spark History Server'],
             '_blank'
           );
         } else {
           handleJobDetailsViewLogs(clusterName);
-        } 
+        }
       }}
     >
       <div className="action-cluster-icon">
         <iconViewLogs.react tag="div" />
       </div>
       {clusterInfo ? (
-        <div className="action-cluster-text">VIEW LOGS</div>
+        <div className="action-cluster-text">VIEW CLOUD LOGS</div>
       ) : (
-        <div className="action-cluster-text">SPARK LOGS</div>
+        <div className="action-cluster-text">VIEW SPARK LOGS</div>
       )}
     </div>
   );

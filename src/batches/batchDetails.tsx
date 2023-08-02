@@ -405,17 +405,6 @@ function BatchDetails({
               </div>
               <div className="details-value"></div>
             </div>
-            {/* <div className="row-details">
-              <div className="batch-details-label-level-two">
-                Service account
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.environmentConfig.executionConfig
-                    .serviceAccount
-                }
-              </div>
-            </div> */}
             {Object.entries(
               batchInfoResponse.environmentConfig.executionConfig
             ).map(([key, value]) => {
@@ -442,15 +431,6 @@ function BatchDetails({
                 );
               }
             })}
-            {/* <div className="row-details">
-              <div className="batch-details-label-level-two">Sub network</div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.environmentConfig.executionConfig
-                    .subnetworkUri
-                }
-              </div>
-            </div> */}
 
             <div className="row-details">
               <div className="details-label">Encryption type</div>
