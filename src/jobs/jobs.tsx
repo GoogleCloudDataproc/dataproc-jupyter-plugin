@@ -134,8 +134,8 @@ function JobComponent({
   const columns = React.useMemo(
     () => [
       {
-        Header: 'Name',
-        accessor: 'name'
+        Header: 'Job ID',
+        accessor: 'jobid'
       },
       {
         Header: 'Status',
@@ -173,7 +173,7 @@ function JobComponent({
   const jobDetails = (selectedName: string) => {
     pollingJobs(listJobsAPI, true);
     const filteredJobDetails = jobsList.filter((jobInfo: any) => {
-      return jobInfo.name === selectedName;
+      return jobInfo.jobid === selectedName;
     });
     const region = filteredJobDetails[0];
     setRegion(region);
@@ -244,7 +244,7 @@ function JobComponent({
                   labelvalue.push('None');
                 }
                 return {
-                  name: data.reference.jobId,
+                  jobid: data.reference.jobId,
                   status: statusMsg,
                   region: credentials.region_id,
                   type: jobType,
@@ -355,7 +355,7 @@ function JobComponent({
     value: any;
   }
   const tableDataCondition = (cell: ICell) => {
-    if (cell.column.Header === 'Name') {
+    if (cell.column.Header === 'Job ID') {
       return (
         <td
           {...cell.getCellProps()}
@@ -465,23 +465,25 @@ function JobComponent({
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {clustersList && clusterResponse &&
+          {
+          // clustersList &&
+            clusterResponse &&
             clusterResponse.clusters &&
             clusterResponse.clusters.length > 0 && (
-            <div className="create-cluster-overlay">
-              <div
-                className="create-cluster-sub-overlay"
-                onClick={() => {
-                  handleSubmitJobOpen();
-                }}
-              >
-                <div className="create-cluster-icon">
-                  <iconSubmitJob.react tag="div" />
+              <div className="create-cluster-overlay">
+                <div
+                  className="create-cluster-sub-overlay"
+                  onClick={() => {
+                    handleSubmitJobOpen();
+                  }}
+                >
+                  <div className="create-cluster-icon">
+                    <iconSubmitJob.react tag="div" />
+                  </div>
+                  <div className="create-cluster-text">SUBMIT JOB</div>
                 </div>
-                <div className="create-cluster-text">SUBMIT JOB</div>
               </div>
-            </div>
-          )}
+            )}
           {jobsList.length > 0 ? (
             <div>
               <div className="filter-cluster-overlay">

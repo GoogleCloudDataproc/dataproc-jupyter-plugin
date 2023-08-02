@@ -22,7 +22,9 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
-  VIEW_LOGS_CLUSTER_URL
+  VIEW_LOGS_BATCH_URL,
+  VIEW_LOGS_CLUSTER_URL,
+  VIEW_LOGS_SESSION_URL
 } from './const';
 import { authApi } from './utils';
 
@@ -77,38 +79,77 @@ function ViewLogs({
   };
 
   return (
-    <div
-      className='action-cluster-section'
-      onClick={() => {
-        if (clusterInfo) {
-          window.open(
-            `${VIEW_LOGS_CLUSTER_URL}"${clusterInfo.clusterName}" resource.labels.cluster_uuid="${clusterInfo.clusterUuid}"?project=${projectName}`,
-            '_blank'
-          );
-        } else if (batchInfoResponse) {
-          window.open(
-            batchInfoResponse.runtimeInfo.endpoints["Spark History Server"],
-            '_blank'
-          );
-        } else if (sessionInfo) {
-          window.open(
-            sessionInfo.runtimeInfo.endpoints["Spark History Server"],
-            '_blank'
-          );
-        } else {
-          handleJobDetailsViewLogs(clusterName);
-        } 
-      }}
-    >
-      <div className="action-cluster-icon">
-        <iconViewLogs.react tag="div" />
+    <>
+      <div
+        className="action-cluster-section"
+        onClick={() => {
+          if (clusterInfo) {
+            window.open(
+              `${VIEW_LOGS_CLUSTER_URL}"${clusterInfo.clusterName}" resource.labels.cluster_uuid="${clusterInfo.clusterUuid}"?project=${projectName}`,
+              '_blank'
+            );
+          } else if (batchInfoResponse) {
+            window.open(
+              batchInfoResponse.runtimeInfo.endpoints['Spark History Server'],
+              '_blank'
+            );
+          } else if (sessionInfo) {
+            window.open(
+              sessionInfo.runtimeInfo.endpoints['Spark History Server'],
+              '_blank'
+            );
+          } else {
+            handleJobDetailsViewLogs(clusterName);
+          }
+        }}
+      >
+        <div className="action-cluster-icon">
+          <iconViewLogs.react tag="div" />
+        </div>
+        {clusterInfo ? (
+          <div className="action-cluster-text">VIEW CLOUD LOGS</div>
+        ) : (
+          <div className="action-cluster-text">VIEW SPARK LOGS</div>
+        )}
       </div>
-      {clusterInfo ? (
-        <div className="action-cluster-text">VIEW LOGS</div>
-      ) : (
-        <div className="action-cluster-text">SPARK LOGS</div>
-      )}
-    </div>
+      <div
+        className="action-cluster-section"
+        onClick={() => {
+          if (sessionInfo) {
+            window.open(
+              `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
+                sessionInfo.name.split('/')[1]
+              }"
+              resource.labels.location="us-central1"
+              resource.labels.session_id="${
+                sessionInfo.name.split('/')[5]
+              }"?project=${sessionInfo.name.split('/')[1]}`,
+              '_blank'
+            );
+          } else {
+            window.open(
+              `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
+                batchInfoResponse.name.split('/')[1]
+              }"
+              resource.labels.location="us-central1"
+              resource.labels.session_id="${
+                batchInfoResponse.name.split('/')[5]
+              }"?project=${batchInfoResponse.name.split('/')[1]}`,
+              '_blank'
+            );
+          }
+        }}
+      >
+        {!clusterInfo && !clusterName && (
+          <>
+            <div className="action-cluster-icon">
+              <iconViewLogs.react tag="div" />
+            </div>
+            <div className="action-cluster-text">VIEW CLOUD LOGS</div>
+          </>
+        )}
+      </div>
+    </>
   );
 }
 export default ViewLogs;

@@ -136,7 +136,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             category: 'Dataproc Serverless Notebooks',
             //@ts-ignore
             metadata: kernelsData?.metadata,
-            rank: index+1,
+            rank: index + 1,
             //@ts-ignore
             args: kernelsData?.argv
           });
@@ -174,7 +174,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             category: 'Dataproc Cluster Notebooks',
             //@ts-ignore
             metadata: kernelsData?.metadata,
-            rank: index+1,
+            rank: index + 1,
             //@ts-ignore
             args: kernelsData?.argv
           });
