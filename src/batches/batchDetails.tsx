@@ -26,7 +26,13 @@ import { ClipLoader } from 'react-spinners';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL
+  BASE_URL,
+  NETWORK_KEY,
+  NETWORK_LABEL,
+  SERVICE_ACCOUNT_KEY,
+  SERVICE_ACCOUNT_LABEL,
+  SUBNETWORK_KEY,
+  SUBNETWORK_LABEL
 } from '../utils/const';
 import {
   BatchTypeValue,
@@ -250,7 +256,7 @@ function BatchDetails({
               </div>
               <div className="action-cluster-text">DELETE</div>
             </div>
-            <ViewLogs batchInfoResponse={batchInfoResponse}/>
+            <ViewLogs batchInfoResponse={batchInfoResponse} />
           </div>
 
           <div className="batch-details-container-top">
@@ -285,10 +291,10 @@ function BatchDetails({
               <div className="details-value">{elapsedTimeString}</div>
             </div>
             {runTimeString !== '' && (
-            <div className="row-details">
-              <div className="details-label">Run time</div>
-              <div className="details-value">{runTimeString}</div>
-            </div>
+              <div className="row-details">
+                <div className="details-label">Run time</div>
+                <div className="details-value">{runTimeString}</div>
+              </div>
             )}
             {batchInfoResponse.runtimeInfo.approximateUsage &&
               batchInfoResponse.runtimeInfo.approximateUsage
@@ -336,14 +342,15 @@ function BatchDetails({
               <div className="details-label">Batch type</div>
               <div className="details-value">{batch}</div>
             </div>
-            {batch === 'Spark' && batchInfoResponse.sparkBatch.mainJarFileUri && (
-              <div className="row-details">
-                <div className="details-label">Main jar</div>
-                <div className="details-value">
-                  {batchInfoResponse.sparkBatch.mainJarFileUri}
+            {batch === 'Spark' &&
+              batchInfoResponse.sparkBatch.mainJarFileUri && (
+                <div className="row-details">
+                  <div className="details-label">Main jar</div>
+                  <div className="details-value">
+                    {batchInfoResponse.sparkBatch.mainJarFileUri}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             {batch === 'Spark' && batchInfoResponse.sparkBatch.mainClass && (
               <div className="row-details">
                 <div className="details-label">Main Class</div>
@@ -398,7 +405,7 @@ function BatchDetails({
               </div>
               <div className="details-value"></div>
             </div>
-            <div className="row-details">
+            {/* <div className="row-details">
               <div className="batch-details-label-level-two">
                 Service account
               </div>
@@ -408,8 +415,34 @@ function BatchDetails({
                     .serviceAccount
                 }
               </div>
-            </div>
-            <div className="row-details">
+            </div> */}
+            {Object.entries(
+              batchInfoResponse.environmentConfig.executionConfig
+            ).map(([key, value]) => {
+              let label;
+              if (key === SERVICE_ACCOUNT_KEY) {
+                label = SERVICE_ACCOUNT_LABEL;
+              } else if (key === NETWORK_KEY) {
+                label = NETWORK_LABEL;
+              } else if (key === SUBNETWORK_KEY) {
+                label = SUBNETWORK_LABEL;
+              } else {
+                label = '';
+              }
+              if (
+                key === SERVICE_ACCOUNT_KEY ||
+                key === NETWORK_KEY ||
+                key === SUBNETWORK_KEY
+              ) {
+                return (
+                  <div className="row-details" key={key}>
+                    <div className="batch-details-label-level-two">{label}</div>
+                    <div className="details-value">{value}</div>
+                  </div>
+                );
+              }
+            })}
+            {/* <div className="row-details">
               <div className="batch-details-label-level-two">Sub network</div>
               <div className="details-value">
                 {
@@ -417,7 +450,7 @@ function BatchDetails({
                     .subnetworkUri
                 }
               </div>
-            </div>
+            </div> */}
 
             <div className="row-details">
               <div className="details-label">Encryption type</div>
