@@ -465,7 +465,8 @@ function JobComponent({
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {clustersList &&
+          {
+          // clustersList &&
             clusterResponse &&
             clusterResponse.clusters &&
             clusterResponse.clusters.length > 0 && (

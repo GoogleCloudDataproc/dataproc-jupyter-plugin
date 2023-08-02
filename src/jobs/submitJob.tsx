@@ -131,7 +131,7 @@ function SubmitJob(
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
   const [hexNumber, setHexNumber] = useState('');
   const [submitDisabled, setSubmitDisabled] = useState(true);
-  let mainJarFileUri = '';
+  let mainJarFileUri = ' ';
   let args: any[] = [];
   let jarFileUris: any[] = [];
   let archiveUris: any[] = [];
@@ -144,6 +144,7 @@ function SubmitJob(
   let queryFileUri = '';
   let queryType = '';
   let queryList = '';
+  let mainClass = ' ';
   let key: any[] | (() => any[]) = [];
   let value: any[] | (() => any[]) = [];
   let jobKeys: string[] = [];
@@ -161,6 +162,7 @@ function SubmitJob(
       queryType = 'queryText';
     }
     mainJarFileUri = selectedJobClone[jobKeys[0]].mainJarFileUri;
+    mainClass = selectedJobClone[jobKeys[0]].mainClass;
     mainRFileUri = selectedJobClone[jobKeys[0]].mainRFileUri;
     mainPythonFileUri = selectedJobClone[jobKeys[0]].mainPythonFileUri;
     ({
@@ -172,8 +174,11 @@ function SubmitJob(
       maxFailuresPerHour
     } = handleOptionalFields(selectedJobClone, jobTypeKey));
   }
-
-  const [mainClassSelected, setMainClassSelected] = useState(mainJarFileUri);
+  const initialMainClassSelected =
+    mainJarFileUri && mainJarFileUri !== ' ' ? mainJarFileUri : mainClass;
+  const [mainClassSelected, setMainClassSelected] = useState(
+    initialMainClassSelected
+  );
   const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [mainPythonSelected, setMainPythonSelected] =
     useState(mainPythonFileUri);
@@ -306,7 +311,7 @@ function SubmitJob(
       clusterSelected !== '' &&
       jobIdSelected !== '' &&
       ((isSparkJob &&
-        mainClassSelected !== '' &&
+        mainClassSelected.trim().length !== 0 &&
         // mainClassValidation &&
         jarFileValidation &&
         fileValidation &&
@@ -667,7 +672,6 @@ function SubmitJob(
     }
   };
 
-
   return (
     <div>
       <div className="scroll-comp">
@@ -688,7 +692,7 @@ function SubmitJob(
           {clusterList.length === 0 ? (
             <Input
               className="select-job-style"
-              value='No clusters running'
+              value="No clusters running"
               readOnly
             />
           ) : (
@@ -798,7 +802,7 @@ function SubmitJob(
                 addOnBlur={true}
                 value={mainClassSelected}
               />
-              {mainClassSelected==='' && (
+              {mainClassSelected === '' && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" />
                   <div className="error-key-missing">
@@ -806,7 +810,7 @@ function SubmitJob(
                   </div>
                 </div>
               )}
-              {mainClassSelected!=='' && (
+              {mainClassSelected !== '' && (
                 <div className="submit-job-message">{MAINCLASSMESSAGE}</div>
               )}
             </>
