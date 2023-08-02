@@ -307,7 +307,7 @@ function SubmitJob(
       jobIdSelected !== '' &&
       ((isSparkJob &&
         mainClassSelected !== '' &&
-        mainClassValidation &&
+        // mainClassValidation &&
         jarFileValidation &&
         fileValidation &&
         archieveFileValidation &&
@@ -787,7 +787,6 @@ function SubmitJob(
                 Main class or jar*
               </div>
               <Input
-                //placeholder="Main class or jar*"
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -799,16 +798,15 @@ function SubmitJob(
                 addOnBlur={true}
                 value={mainClassSelected}
               />
-              {!mainClassValidation && (
+              {mainClassSelected==='' && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" />
                   <div className="error-key-missing">
-                    File must include a valid scheme prefix: 'file://', 'gs://',
-                    or 'hdfs://'
+                    Main class or jar is required
                   </div>
                 </div>
               )}
-              {mainClassValidation && (
+              {mainClassSelected!=='' && (
                 <div className="submit-job-message">{MAINCLASSMESSAGE}</div>
               )}
             </>

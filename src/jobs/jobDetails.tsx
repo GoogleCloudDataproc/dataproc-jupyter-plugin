@@ -114,7 +114,7 @@ function JobDetails({
     jobUuid: '',
     pysparkJob: { args: [], mainPythonFileUri: '' },
     sparkRJob: { args: [], mainRFileUri: '' },
-    sparkJob: { args: [], mainJarFileUri: '' },
+    sparkJob: { args: [], mainJarFileUri: '', mainClass: '' },
     sparkSqlJob: { queryFileUri: '', queryList: { queries: '' }, args: [] },
     placement: { clusterName: '' }
   });
@@ -126,7 +126,7 @@ function JobDetails({
     jobUuid: '',
     pysparkJob: { args: [], mainPythonFileUri: '' },
     sparkRJob: { args: [], mainRFileUri: '' },
-    sparkJob: { args: [], mainJarFileUri: '' },
+    sparkJob: { args: [], mainJarFileUri: '', mainClass: '' },
     sparkSqlJob: { queryFileUri: '', queryList: { queries: '' }, args: [] },
 
     placement: { clusterName: '' }
@@ -564,6 +564,7 @@ function JobDetails({
                     </div>
                     <div className="cluster-details-value">
                       {jobInfo.sparkJob.mainJarFileUri}
+                      {jobInfo.sparkJob.mainClass}
                     </div>
                   </div>
                 )}

@@ -86,7 +86,8 @@ function BatchDetails({
       }
     },
     sparkBatch: {
-      mainJarFileUri: ''
+      mainJarFileUri: '',
+      mainClass: ''
     },
     pysparkBatch: {
       mainPythonFileUri: ''
@@ -335,11 +336,19 @@ function BatchDetails({
               <div className="details-label">Batch type</div>
               <div className="details-value">{batch}</div>
             </div>
-            {batch === 'Spark' && (
+            {batch === 'Spark' && batchInfoResponse.sparkBatch.mainJarFileUri && (
               <div className="row-details">
                 <div className="details-label">Main jar</div>
                 <div className="details-value">
                   {batchInfoResponse.sparkBatch.mainJarFileUri}
+                </div>
+              </div>
+            )}
+            {batch === 'Spark' && batchInfoResponse.sparkBatch.mainClass && (
+              <div className="row-details">
+                <div className="details-label">Main Class</div>
+                <div className="details-value">
+                  {batchInfoResponse.sparkBatch.mainClass}
                 </div>
               </div>
             )}
