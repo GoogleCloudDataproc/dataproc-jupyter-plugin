@@ -114,7 +114,7 @@ function JobDetails({
     jobUuid: '',
     pysparkJob: { args: [], mainPythonFileUri: '' },
     sparkRJob: { args: [], mainRFileUri: '' },
-    sparkJob: { args: [], mainJarFileUri: '', mainClass: '' },
+    sparkJob: { args: [], mainJarFileUri: '', mainClass: '', jarFileUris: '' },
     sparkSqlJob: { queryFileUri: '', queryList: { queries: '' }, args: [] },
     placement: { clusterName: '' }
   });
@@ -570,9 +570,9 @@ function JobDetails({
                     </div>
                     <div className="row-details">
                       <div className="cluster-details-label">Jar files</div>
-                      {jobInfo.sparkJob.mainJarFileUri ? (
+                      {jobInfo.sparkJob.jarFileUris ? (
                         <div className="cluster-details-value">
-                          {jobInfo.sparkJob.mainJarFileUri}
+                          {jobInfo.sparkJob.jarFileUris}
                         </div>
                       ) : (
                         <div className="cluster-details-value">None</div>
