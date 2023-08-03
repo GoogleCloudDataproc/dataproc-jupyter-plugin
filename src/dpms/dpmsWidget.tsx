@@ -248,9 +248,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     const credentials = await authApi();
     if (credentials && clusterValue) {
       const requestBody = {
-        query: 'system=dataproc_metastore',
+        query: `system=dataproc_metastore AND type=DATABASE parent=${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
         scope: {
-          includeProjectIds: ['acn-ytmusicsonos']
+          includeProjectIds: [credentials.project_id]
         }
       };
       fetch('https://datacatalog.googleapis.com/v1/catalog:search', {
@@ -332,6 +332,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                   ? metastoreServices.substring(lastIndex + 1)
                   : '';
               setDataprocMetastoreServices(instanceName);
+              console.log(dataprocMetastoreServices);
               getDatabaseDetails();
               // if(data){
               //   setIsLoading(false);
