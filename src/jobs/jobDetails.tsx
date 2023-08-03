@@ -569,7 +569,7 @@ function JobDetails({
                       </div>
                     </div>
                     <div className="row-details">
-                      <div className="cluster-details-label">Jar File</div>
+                      <div className="cluster-details-label">Jar files</div>
                       {jobInfo.sparkJob.mainJarFileUri ? (
                         <div className="cluster-details-value">
                           {jobInfo.sparkJob.mainJarFileUri}

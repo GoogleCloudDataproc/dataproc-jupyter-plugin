@@ -115,6 +115,7 @@ function ViewLogs({
       <div
         className="action-cluster-section"
         onClick={() => {
+          const currentTimestamp = new Date().toISOString();
           if (sessionInfo) {
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
@@ -123,10 +124,11 @@ function ViewLogs({
                 sessionInfo.name.split('/')[3]
               }" resource.labels.session_id="${
                 sessionInfo.name.split('/')[5]
-              }"?project=${sessionInfo.name.split('/')[1]}`,
+              }";cursorTimestamp=${currentTimestamp};?project=${sessionInfo.name.split('/')[1]}`,
               '_blank'
             );
           } else {
+            const currentTimestamp = new Date().toISOString();
             window.open(
               `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
                 batchInfoResponse.name.split('/')[1]
@@ -134,7 +136,7 @@ function ViewLogs({
                 batchInfoResponse.name.split('/')[3]
               }" resource.labels.batch_id="${
                 batchInfoResponse.name.split('/')[5]
-              }"?project=${batchInfoResponse.name.split('/')[1]}`,
+              }";cursorTimestamp=${currentTimestamp};?project=${batchInfoResponse.name.split('/')[1]}`,
               '_blank'
             );
           }
