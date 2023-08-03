@@ -245,65 +245,64 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     );
   }
   const getDatabaseDetails = async () => {
-    // const credentials = await authApi();
-    // if (credentials && clusterValue) {
-    //   const requestBody = {
-    //     query: 'system=dataproc_metastore AND type=DATABASE parent=acn-ytmusicsonos.us-central1.service-metastore',
-    //     scope: {
-    //       includeProjectIds: ['acn-ytmusicsonos']
-    //     }
-    //   };
-    //   fetch(
-    //     'https://datacatalog.googleapis.com/v1/catalog:search',
-    //     {
-    //       method: 'POST',
-    //       headers: {
-    //         'Content-Type': API_HEADER_CONTENT_TYPE,
-    //         Authorization: API_HEADER_BEARER + credentials.access_token
-    //       },
-    //       body: JSON.stringify(requestBody)
-    //     }
-    //   )
-    //     .then((response: Response) => {
-    //       response
-    //         .json()
-    //         .then((responseResult: any) => {
-    //           console.log(responseResult);
-    //           console.log(dataprocMetastoreServices);
-    //           // const metastoreServices = responseResult.config?.metastoreConfig?.dataprocMetastoreService;
-    //           const inputArray = ["dataproc_metastore:acn-ytmusicsonos.us-central1.service-metastore.default"];
-    //           const valuesAfterLastDot = inputArray.map((inputString) => {
-    //             const parts = inputString.split('.');
-    //             return parts[parts.length - 1];
-    //           });
-    //           setDatabases(valuesAfterLastDot);
-    //           console.log(valuesAfterLastDot); // Output: "default"
-    //           if(data){
-    //             setIsLoading(false);
-    //           }
-    //         })
-    //         .catch((e: Error) => {
-    //           console.log(e);
-
-    //         });
-    //     })
-    //     .catch((err: Error) => {
-    //       console.error('Error listing clusters Details', err);
-    //     });
-    // }
-    console.log(dataprocMetastoreServices);
-    const inputArray = [
-      'dataproc_metastore:acn-ytmusicsonos.us-central1.service-metastore.default'
-    ];
-    const valuesAfterLastDot = inputArray.map(inputString => {
-      const parts = inputString.split('.');
-      return parts[parts.length - 1];
-    });
-    setDatabases(valuesAfterLastDot);
-    console.log(valuesAfterLastDot); // Output: "default"
-    if (data) {
-      setIsLoading(false);
+    const credentials = await authApi();
+    if (credentials && clusterValue) {
+      const requestBody = {
+        query: 'system=dataproc_metastore',
+        scope: {
+          includeProjectIds: ['acn-ytmusicsonos']
+        }
+      };
+      fetch('https://datacatalog.googleapis.com/v1/catalog:search', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token,
+          'X-Goog-User-Project': credentials.project_id || ''
+        }
+      })
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: any) => {
+              console.log(responseResult);
+              console.log(dataprocMetastoreServices);
+              // const metastoreServices = responseResult.config?.metastoreConfig?.dataprocMetastoreService;
+              const inputArray = [
+                'dataproc_metastore:acn-ytmusicsonos.us-central1.service-metastore.default'
+              ];
+              const valuesAfterLastDot = inputArray.map(inputString => {
+                const parts = inputString.split('.');
+                return parts[parts.length - 1];
+              });
+              setDatabases(valuesAfterLastDot);
+              console.log(valuesAfterLastDot); // Output: "default"
+              if (data) {
+                setIsLoading(false);
+              }
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing clusters Details', err);
+        });
     }
+    // console.log(dataprocMetastoreServices);
+    // const inputArray = [
+    //   'dataproc_metastore:acn-ytmusicsonos.us-central1.service-metastore.default'
+    // ];
+    // const valuesAfterLastDot = inputArray.map(inputString => {
+    //   const parts = inputString.split('.');
+    //   return parts[parts.length - 1];
+    // });
+    // setDatabases(valuesAfterLastDot);
+    // console.log(valuesAfterLastDot); // Output: "default"
+    // if (data) {
+    //   setIsLoading(false);
+    // }
   };
   const getClusterDetails = async () => {
     console.log('cluster details');
