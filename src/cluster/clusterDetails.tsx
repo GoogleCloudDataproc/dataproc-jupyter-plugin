@@ -1,3 +1,20 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useState, useEffect } from 'react';
 import JobComponent from '../jobs/jobs';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -36,6 +53,7 @@ import ViewLogs from '../utils/viewLogs';
 import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import SubmitJob from '../jobs/submitJob';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -84,14 +102,22 @@ interface IClusterDetailsProps {
   detailedJobView?: boolean;
   setDetailedJobView?: (value: boolean) => void;
   setSubmitJobView?: (value: boolean) => void;
+  submitJobView: boolean;
+  clusterResponse: any;
+  selectedJobClone: any;
+  setSelectedJobClone?: (value: boolean) => void;
 }
 function ClusterDetails({
   clusterSelected,
   setDetailedView,
   setDetailedClusterView,
   detailedJobView,
+  setSubmitJobView,
   setDetailedJobView,
-  setSubmitJobView
+  submitJobView,
+  clusterResponse,
+  selectedJobClone,
+  setSelectedJobClone
 }: IClusterDetailsProps) {
   const [clusterInfo, setClusterInfo] = useState({
     status: { state: '' },
@@ -254,6 +280,13 @@ function ClusterDetails({
           </div>
         </div>
       )}
+      {submitJobView && !detailedJobView && (
+        <SubmitJob
+          setSubmitJobView={setSubmitJobView}
+          selectedJobClone={selectedJobClone}
+          clusterResponse={clusterResponse}
+        />
+      )}
       {deletePopupOpen && (
         <DeletePopup
           onCancel={() => handleCancelDelete()}
@@ -264,6 +297,7 @@ function ClusterDetails({
           }
         />
       )}
+      {!submitJobView &&
       <div className="scroll-comp">
         <ToastContainer />
         {!errorView && clusterInfo.clusterName !== '' ? (
@@ -349,6 +383,9 @@ function ClusterDetails({
               setDetailedView={setDetailedView}
               detailedJobView={detailedJobView}
               setDetailedJobView={setDetailedJobView}
+              setSubmitJobView={setSubmitJobView}
+              setSelectedJobClone={setSelectedJobClone}
+              clusterResponse={clusterResponse}
             />
           </div>
         ) : (
@@ -368,6 +405,7 @@ function ClusterDetails({
           </div>
         )}
       </div>
+      }
     </div>
   );
 }

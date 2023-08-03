@@ -1,3 +1,20 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -129,7 +146,7 @@ function ListSessions() {
             .json()
             .then((responseResult: any) => {
               let transformSessionListData = [];
-              let sessionsListNew = responseResult.sessions
+              let sessionsListNew = responseResult.sessions;
               sessionsListNew.sort(
                 (a: { createTime: string }, b: { createTime: string }) => {
                   const dateA = new Date(a.createTime);
@@ -137,28 +154,26 @@ function ListSessions() {
                   return Number(dateB) - Number(dateA);
                 }
               );
-              transformSessionListData = sessionsListNew.map(
-                (data: any) => {
-                  const startTimeDisplay = jobTimeFormat(data.createTime);
-                  const startTime = new Date(data.createTime);
-                  let elapsedTimeString = '';
-                  if (
-                    data.state === STATUS_TERMINATED ||
-                    data.state === STATUS_FAIL
-                  ) {
-                    elapsedTimeString = elapsedTime(data.stateTime, startTime);
-                  }
-
-                  return {
-                    sessionID: data.name.split('/')[5],
-                    status: data.state,
-                    location: data.name.split('/')[3],
-                    creationTime: startTimeDisplay,
-                    elapsedTime: elapsedTimeString,
-                    actions: renderActions(data)
-                  };
+              transformSessionListData = sessionsListNew.map((data: any) => {
+                const startTimeDisplay = jobTimeFormat(data.createTime);
+                const startTime = new Date(data.createTime);
+                let elapsedTimeString = '';
+                if (
+                  data.state === STATUS_TERMINATED ||
+                  data.state === STATUS_FAIL
+                ) {
+                  elapsedTimeString = elapsedTime(data.stateTime, startTime);
                 }
-              );
+
+                return {
+                  sessionID: data.name.split('/')[5],
+                  status: data.state,
+                  location: data.name.split('/')[3],
+                  creationTime: startTimeDisplay,
+                  elapsedTime: elapsedTimeString,
+                  actions: renderActions(data)
+                };
+              });
               setSessionsList(transformSessionListData);
 
               setIsLoading(false);
@@ -370,7 +385,9 @@ function ListSessions() {
               Loading Sessions
             </div>
           )}
-          {!isLoading && !detailedSessionView && <div>No rows to display</div>}
+          {!isLoading && !detailedSessionView && (
+            <div className="no-data-style">No rows to display</div>
+          )}
         </div>
       )}
     </div>

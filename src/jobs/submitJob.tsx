@@ -1,3 +1,20 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
@@ -114,7 +131,7 @@ function SubmitJob(
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
   const [hexNumber, setHexNumber] = useState('');
   const [submitDisabled, setSubmitDisabled] = useState(true);
-  let mainJarFileUri = '';
+  let mainJarFileUri = ' ';
   let args: any[] = [];
   let jarFileUris: any[] = [];
   let archiveUris: any[] = [];
@@ -127,6 +144,7 @@ function SubmitJob(
   let queryFileUri = '';
   let queryType = '';
   let queryList = '';
+  let mainClass = ' ';
   let key: any[] | (() => any[]) = [];
   let value: any[] | (() => any[]) = [];
   let jobKeys: string[] = [];
@@ -144,6 +162,7 @@ function SubmitJob(
       queryType = 'queryText';
     }
     mainJarFileUri = selectedJobClone[jobKeys[0]].mainJarFileUri;
+    mainClass = selectedJobClone[jobKeys[0]].mainClass;
     mainRFileUri = selectedJobClone[jobKeys[0]].mainRFileUri;
     mainPythonFileUri = selectedJobClone[jobKeys[0]].mainPythonFileUri;
     ({
@@ -155,8 +174,11 @@ function SubmitJob(
       maxFailuresPerHour
     } = handleOptionalFields(selectedJobClone, jobTypeKey));
   }
-
-  const [mainClassSelected, setMainClassSelected] = useState(mainJarFileUri);
+  const initialMainClassSelected =
+    mainJarFileUri && mainJarFileUri !== ' ' ? mainJarFileUri : mainClass;
+  const [mainClassSelected, setMainClassSelected] = useState(
+    initialMainClassSelected
+  );
   const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [mainPythonSelected, setMainPythonSelected] =
     useState(mainPythonFileUri);
@@ -289,8 +311,8 @@ function SubmitJob(
       clusterSelected !== '' &&
       jobIdSelected !== '' &&
       ((isSparkJob &&
-        mainClassSelected !== '' &&
-        mainClassValidation &&
+        mainClassSelected.trim().length !== 0 &&
+        // mainClassValidation &&
         jarFileValidation &&
         fileValidation &&
         archieveFileValidation &&
@@ -650,7 +672,6 @@ function SubmitJob(
     }
   };
 
-
   return (
     <div>
       <div className="scroll-comp">
@@ -661,7 +682,7 @@ function SubmitJob(
           >
             <iconLeftArrow.react tag="div" />
           </div>
-          <div className="cluster-details-title">Submit a Job</div>
+          <div className="cluster-details-title">Submit a job</div>
         </div>
         <div className="submit-job-container">
           <div className="submit-job-label-header">Cluster</div>
@@ -671,7 +692,7 @@ function SubmitJob(
           {clusterList.length === 0 ? (
             <Input
               className="select-job-style"
-              value='No clusters running'
+              value="No clusters running"
               readOnly
             />
           ) : (
@@ -770,7 +791,6 @@ function SubmitJob(
                 Main class or jar*
               </div>
               <Input
-                //placeholder="Main class or jar*"
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -782,16 +802,15 @@ function SubmitJob(
                 addOnBlur={true}
                 value={mainClassSelected}
               />
-              {!mainClassValidation && (
+              {mainClassSelected === '' && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" />
                   <div className="error-key-missing">
-                    File must include a valid scheme prefix: 'file://', 'gs://',
-                    or 'hdfs://'
+                    Main class or jar is required
                   </div>
                 </div>
               )}
-              {mainClassValidation && (
+              {mainClassSelected !== '' && (
                 <div className="submit-job-message">{MAINCLASSMESSAGE}</div>
               )}
             </>

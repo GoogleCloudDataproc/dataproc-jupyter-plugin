@@ -1,3 +1,20 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
@@ -8,6 +25,7 @@ import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
 import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
 import EditIcon from '../../style/icons/edit_icon.svg';
+import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
 import DeletePopup from '../utils/deletePopup';
 import {
   API_HEADER_BEARER,
@@ -36,6 +54,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import errorIcon from '../../style/icons/error_icon.svg';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -61,7 +80,14 @@ const iconEdit = new LabIcon({
   name: 'launcher:edit-icon',
   svgstr: EditIcon
 });
-
+const iconEditDisable = new LabIcon({
+  name: 'launcher:edit-disable-icon',
+  svgstr: EditIconDisable
+});
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
+});
 interface IJobDetailsProps {
   jobSelected: any;
   setDetailedJobView: (value: boolean) => void;
@@ -69,14 +95,16 @@ interface IJobDetailsProps {
   deleteJobApi: (jobId: string) => Promise<void>;
   region: any;
   setDetailedView: (value: boolean) => void;
-  clusterResponse: string;
+  clusterResponse: any;
+  clustersList: object;
 }
 function JobDetails({
   jobSelected,
   setDetailedJobView,
   region,
   setDetailedView,
-  clusterResponse
+  clusterResponse,
+  clustersList
 }: IJobDetailsProps) {
   const [jobInfo, setjobInfo] = useState({
     status: { state: '', stateStartTime: '' },
@@ -86,7 +114,7 @@ function JobDetails({
     jobUuid: '',
     pysparkJob: { args: [], mainPythonFileUri: '' },
     sparkRJob: { args: [], mainRFileUri: '' },
-    sparkJob: { args: [], mainJarFileUri: '' },
+    sparkJob: { args: [], mainJarFileUri: '', mainClass: '' },
     sparkSqlJob: { queryFileUri: '', queryList: { queries: '' }, args: [] },
     placement: { clusterName: '' }
   });
@@ -98,7 +126,7 @@ function JobDetails({
     jobUuid: '',
     pysparkJob: { args: [], mainPythonFileUri: '' },
     sparkRJob: { args: [], mainRFileUri: '' },
-    sparkJob: { args: [], mainJarFileUri: '' },
+    sparkJob: { args: [], mainJarFileUri: '', mainClass: '' },
     sparkSqlJob: { queryFileUri: '', queryList: { queries: '' }, args: [] },
 
     placement: { clusterName: '' }
@@ -119,6 +147,8 @@ function JobDetails({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const [errorView, setErrorView] = useState(false);
+
   const pollingJobDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -137,6 +167,9 @@ function JobDetails({
 
   const handleDetailedClusterView = () => {
     pollingJobDetails(getJobDetails, true);
+    if(!clustersList){
+      setDetailedJobView(false);
+    }
     setDetailedClusterView(true);
   };
 
@@ -313,7 +346,20 @@ function JobDetails({
 
   return (
     <div>
-      {submitJobView && (
+      {errorView && (
+        <div className="error-view-parent">
+          <div className="back-arrow-icon" onClick={() => setErrorView(false)}>
+            <iconLeftArrow.react tag="div" />
+          </div>
+          <div className="error-view-message-parent">
+            <iconError.react tag="div" />
+            <div className="error-view-message">
+              Unable to find the resource you requested
+            </div>
+          </div>
+        </div>
+      )}
+      {submitJobView && !detailedClusterView && (
         <SubmitJob
           setSubmitJobView={setSubmitJobView}
           selectedJobClone={selectedJobClone}
@@ -335,9 +381,15 @@ function JobDetails({
           clusterSelected={jobInfo.placement.clusterName}
           setDetailedView={setDetailedView}
           setDetailedClusterView={setDetailedClusterView}
+          submitJobView={submitJobView}
+          selectedJobClone={selectedJobClone}
+          clusterResponse={clusterResponse}
+          setSubmitJobView={setSubmitJobView}
+          setDetailedJobView={setDetailedJobView}
+          setSelectedJobClone={setSelectedJobClone}
         />
       )}
-      {!submitJobView && !detailedClusterView && (
+      {!submitJobView && !detailedClusterView && !errorView && (
         <div className="scroll-comp">
           {jobInfo.jobUuid !== '' && (
             <div>
@@ -386,7 +438,10 @@ function JobDetails({
                   </div>
                   <div className="action-cluster-text">DELETE</div>
                 </div>
-                <ViewLogs />
+                <ViewLogs
+                  clusterName={jobInfo.placement.clusterName}
+                  setErrorView={setErrorView}
+                />
               </div>
 
               <div className="cluster-details-container">
@@ -419,14 +474,17 @@ function JobDetails({
                   className={styleJobEdit(labelEditMode)}
                   onClick={() => (labelEditMode ? '' : handleJobLabelEdit())}
                 >
-                  {/* <Icon
-                    className={styleIconColor(labelEditMode)}
-                    name="pencil"
-                  /> */}
-                  <iconEdit.react
-                    tag="div"
-                    className={styleIconColor(labelEditMode)}
-                  />
+                  {labelEditMode ? (
+                    <iconEditDisable.react
+                      tag="div"
+                      className={styleIconColor(labelEditMode)}
+                    />
+                  ) : (
+                    <iconEdit.react
+                      tag="div"
+                      className={styleIconColor(labelEditMode)}
+                    />
+                  )}
                   <div
                     className={
                       labelEditMode ? 'job-edit-text-disabled' : 'job-edit-text'
@@ -506,6 +564,7 @@ function JobDetails({
                     </div>
                     <div className="cluster-details-value">
                       {jobInfo.sparkJob.mainJarFileUri}
+                      {jobInfo.sparkJob.mainClass}
                     </div>
                   </div>
                 )}

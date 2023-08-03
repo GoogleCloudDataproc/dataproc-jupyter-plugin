@@ -1,3 +1,20 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useTable, useGlobalFilter } from 'react-table';
 import {
@@ -16,7 +33,6 @@ import stopIcon from '../../style/icons/stop_icon.svg';
 import JobDetails from './jobDetails';
 import stopDisableIcon from '../../style/icons/stop_disable_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
-import cloneIconDisable from '../../style/icons/clone_icon_disable.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
@@ -53,11 +69,6 @@ const iconClone = new LabIcon({
   name: 'launcher:clone-icon',
   svgstr: cloneIcon
 });
-const iconCloneDisable = new LabIcon({
-  name: 'launcher:clone-icon-disable',
-  svgstr: cloneIconDisable
-});
-
 const iconStop = new LabIcon({
   name: 'launcher:stop-icon',
   svgstr: stopIcon
@@ -95,6 +106,8 @@ function JobComponent({
   setSubmitJobView,
   setDetailedView,
   clusterResponse,
+  selectedJobClone,
+  setSelectedJobClone,
   clustersList
 }: any) {
   const [jobsList, setjobsList] = useState([]);
@@ -102,7 +115,6 @@ function JobComponent({
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
   const [region, setRegion] = useState('');
-  const [selectedJobClone, setSelectedJobClone] = useState({});
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
@@ -122,8 +134,8 @@ function JobComponent({
   const columns = React.useMemo(
     () => [
       {
-        Header: 'Name',
-        accessor: 'name'
+        Header: 'Job ID',
+        accessor: 'jobid'
       },
       {
         Header: 'Status',
@@ -161,7 +173,7 @@ function JobComponent({
   const jobDetails = (selectedName: string) => {
     pollingJobs(listJobsAPI, true);
     const filteredJobDetails = jobsList.filter((jobInfo: any) => {
-      return jobInfo.name === selectedName;
+      return jobInfo.jobid === selectedName;
     });
     const region = filteredJobDetails[0];
     setRegion(region);
@@ -232,7 +244,7 @@ function JobComponent({
                   labelvalue.push('None');
                 }
                 return {
-                  name: data.reference.jobId,
+                  jobid: data.reference.jobId,
                   status: statusMsg,
                   region: credentials.region_id,
                   type: jobType,
@@ -270,29 +282,12 @@ function JobComponent({
     const jobId = data.reference.jobId;
     return (
       <div className="actions-icon">
-        {/* <div
+        <div
           className="icon-buttons-style"
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
-        > */}
-        <div
-          className={
-            clusterSelected !== undefined
-              ? 'icon-buttons-style-disable'
-              : 'icon-buttons-style'
-          }
-          title="Clone Job"
-          onClick={
-            clusterSelected === undefined
-              ? () => handleCloneJob(data)
-              : undefined
-          }
         >
-          {clusterSelected !== undefined ? (
-            <iconCloneDisable.react tag="div" />
-          ) : (
-            <iconClone.react tag="div" />
-          )}
+          <iconClone.react tag="div" />
         </div>
         <div
           className={
@@ -332,13 +327,6 @@ function JobComponent({
             <iconDelete.react tag="div" />
           )}
         </div>
-        {/* <div
-          className="icon-buttons-style"
-          title="Delete Job"
-          onClick={() => handleDeleteJob(jobId)}
-        >
-          <iconDelete.react tag="div" />
-        </div> */}
       </div>
     );
   }
@@ -367,7 +355,7 @@ function JobComponent({
     value: any;
   }
   const tableDataCondition = (cell: ICell) => {
-    if (cell.column.Header === 'Name') {
+    if (cell.column.Header === 'Job ID') {
       return (
         <td
           {...cell.getCellProps()}
@@ -472,11 +460,14 @@ function JobComponent({
           region={region}
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
+          clustersList={clustersList}
         />
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {clusterResponse &&
+          {
+          // clustersList &&
+            clusterResponse &&
             clusterResponse.clusters &&
             clusterResponse.clusters.length > 0 && (
               <div className="create-cluster-overlay">
