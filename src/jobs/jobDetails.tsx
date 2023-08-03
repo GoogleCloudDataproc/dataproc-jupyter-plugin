@@ -167,7 +167,7 @@ function JobDetails({
 
   const handleDetailedClusterView = () => {
     pollingJobDetails(getJobDetails, true);
-    if(!clustersList){
+    if (!clustersList) {
       setDetailedJobView(false);
     }
     setDetailedClusterView(true);
@@ -558,15 +558,27 @@ function JobDetails({
                   </div>
                 )}
                 {job === 'Spark' && (
-                  <div className="row-details">
-                    <div className="cluster-details-label">
-                      Main class or jar
+                  <>
+                    <div className="row-details">
+                      <div className="cluster-details-label">
+                        Main class or jar
+                      </div>
+                      <div className="cluster-details-value">
+                        {jobInfo.sparkJob.mainJarFileUri}
+                        {jobInfo.sparkJob.mainClass}
+                      </div>
                     </div>
-                    <div className="cluster-details-value">
-                      {jobInfo.sparkJob.mainJarFileUri}
-                      {jobInfo.sparkJob.mainClass}
+                    <div className="row-details">
+                      <div className="cluster-details-label">Jar File</div>
+                      {jobInfo.sparkJob.mainJarFileUri ? (
+                        <div className="cluster-details-value">
+                          {jobInfo.sparkJob.mainJarFileUri}
+                        </div>
+                      ) : (
+                        <div className="cluster-details-value">None</div>
+                      )}
                     </div>
-                  </div>
+                  </>
                 )}
                 {job === 'SparkSQL' && jobInfo.sparkSqlJob.queryFileUri && (
                   <div className="row-details">

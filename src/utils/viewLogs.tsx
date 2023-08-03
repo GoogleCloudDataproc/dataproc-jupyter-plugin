@@ -120,7 +120,7 @@ function ViewLogs({
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
                 sessionInfo.name.split('/')[1]
               }"
-              resource.labels.location="us-central1"
+              resource.labels.location="${sessionInfo.name.split('/')[3]}"
               resource.labels.session_id="${
                 sessionInfo.name.split('/')[5]
               }"?project=${sessionInfo.name.split('/')[1]}`,
@@ -131,7 +131,7 @@ function ViewLogs({
               `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
                 batchInfoResponse.name.split('/')[1]
               }"
-              resource.labels.location="us-central1"
+              resource.labels.location="${sessionInfo.name.split('/')[3]}"
               resource.labels.session_id="${
                 batchInfoResponse.name.split('/')[5]
               }"?project=${batchInfoResponse.name.split('/')[1]}`,
