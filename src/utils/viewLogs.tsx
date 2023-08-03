@@ -119,9 +119,9 @@ function ViewLogs({
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
                 sessionInfo.name.split('/')[1]
-              }"
-              resource.labels.location="${sessionInfo.name.split('/')[3]}"
-              resource.labels.session_id="${
+              }" resource.labels.location="${
+                sessionInfo.name.split('/')[3]
+              }" resource.labels.session_id="${
                 sessionInfo.name.split('/')[5]
               }"?project=${sessionInfo.name.split('/')[1]}`,
               '_blank'
@@ -130,9 +130,9 @@ function ViewLogs({
             window.open(
               `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
                 batchInfoResponse.name.split('/')[1]
-              }"
-              resource.labels.location="${sessionInfo.name.split('/')[3]}"
-              resource.labels.session_id="${
+              }" resource.labels.location="${
+                batchInfoResponse.name.split('/')[3]
+              }" resource.labels.batch_id="${
                 batchInfoResponse.name.split('/')[5]
               }"?project=${batchInfoResponse.name.split('/')[1]}`,
               '_blank'
