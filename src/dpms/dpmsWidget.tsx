@@ -77,8 +77,16 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [databases, setDatabases] = useState<string[]>([]);
-
+  // const [databases, setDatabases] = useState<string[]>([]);
+  // const [tables, setTables] = useState<string[]>([]);
+  const [entries, setEntries] = useState<string[]>([]);
+  // const [columns, setColumns] = useState<string[]>([]);
+  const [columnResponse, setColumnResponse] = useState<string[]>([]);
+  const [databaseLength, setDatabaseLength] = useState(Number);
+  const [databaseIteration, setDatabaseIteration] = useState(0);
+  const [tableLength, setTableLength] = useState(Number);
+  const [tableIteration, setTableIteration] = useState(0);
+  // console.log(databases);
   // const data = [
   //   {
   //     id: '3',
@@ -99,35 +107,213 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   //     ]
   //   }
   // ];
-  // const extractDatabaseName = (metastoreService: string) => {
-  //   const lastIndex = metastoreService.lastIndexOf('/');
-  //   return lastIndex !== -1 ? metastoreService.substring(lastIndex + 1) : '';
-  // };
 
-  const data = databases.map((db: string) => {
-    const dbName = db;
-    return {
-      id: uuidv4(), // Generate a unique ID for each database entry
-      name: dbName,
-      children: [
-        {
-          id: uuidv4(),
-          name: 'Table1',
-          children: [{ id: uuidv4(), name: 'column1' }]
-        },
-        {
-          id: uuidv4(),
-          name: 'Table2',
-          children: [{ id: uuidv4(), name: 'column2' }]
-        },
-        {
-          id: uuidv4(),
-          name: 'Table3',
-          children: [{ id: uuidv4(), name: 'column3' }]
+  const getColumnDetails = async (name: string) => {
+    console.log(name);
+    const credentials = await authApi();
+    if (credentials && clusterValue) {
+      fetch(`https://datacatalog.googleapis.com/v1/${name}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token,
+          'X-Goog-User-Project': credentials.project_id || ''
         }
-      ]
-    };
+      })
+        .then((response: Response) => {
+          response
+            .json()
+            .then(async (responseResult: any) => {
+              // console.log(responseResult);
+
+              // const columns = responseResult.schema.columns.map(
+              //   (column: { column: string }) => column.column
+              // );
+              // console.log(columns);
+              // setColumns(columns);
+              setColumnResponse((prevResponse: any) => [
+                ...prevResponse,
+                responseResult
+              ]);
+              // if (data) {
+              //   setIsLoading(false);
+              // }
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing clusters Details', err);
+        });
+    }
+  };
+  const getTableDetails = async (database: string) => {
+    console.log(database);
+    const credentials = await authApi();
+    if (credentials && clusterValue) {
+      const requestBody = {
+        query: `system=dataproc_metastore AND type=TABLE parent=${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}.${database}`,
+        scope: {
+          includeProjectIds: [credentials.project_id]
+        }
+      };
+      fetch('https://datacatalog.googleapis.com/v1/catalog:search', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token,
+          'X-Goog-User-Project': credentials.project_id || ''
+        }
+      })
+        .then((response: Response) => {
+          response
+            .json()
+            .then(async (responseResult: any) => {
+              console.log(responseResult);
+              console.log(dataprocMetastoreServices);
+              const filteredEntries = responseResult.results.filter(
+                (entry: { displayName: string }) => entry.displayName !== 'def'
+              );
+              const tableNames: string[] = [];
+              const entryNames: string[] = [];
+              // Extract and display the displayName of each entry
+              filteredEntries.forEach(
+                (entry: {
+                  displayName: string;
+                  relativeResourceName: string;
+                }) => {
+                  console.log(entry.displayName);
+                  console.log(entry.relativeResourceName);
+                  tableNames.push(entry.displayName);
+                  entryNames.push(entry.relativeResourceName);
+                  // Display or do something with entry.displayName
+                }
+              );
+              // setTables(tableNames);
+              setEntries(entryNames);
+              // console.log(tables);
+              console.log(entryNames.length);
+              setTableLength(entryNames.length);
+              // let count = 0;
+              // entries.map(async (entry: string) => {
+              //   count++;
+              //   console.log(count);
+              //   setTableIteration(count);
+              //   await getColumnDetails(entry);
+              // });
+
+              // await Promise.all(promises);
+              // for (const entry of entries) {
+              //   await getColumnDetails(entry);
+              // }
+              // if (data) {
+              //   setIsLoading(false);
+              // }
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing clusters Details', err);
+        });
+    }
+  };
+  // const dataLoading = () => {
+  //   setIsLoading(false);
+  // };
+  // const [data, setData] = useState<
+  //   {
+  //     id: string;
+  //     name: string;
+  //     children: {
+  //       id: string;
+  //       name: string;
+  //       children: { id: string; name: string }[];
+  //     }[];
+  //   }[]
+  // >([]);
+  // const data = databases.map((db: string) => {
+  //   const dbName = db;
+  //   // const tables = ['table1', 'table2'];
+  //   const tableData = tables.map((table: string) => {
+  //     const tableName = table;
+  //     // const columns = ['column1', 'column2'];
+  //     // getColumnDetails(table);
+  //     const columnData = columns.map((column: string) => ({
+  //       id: uuidv4(),
+  //       name: column
+  //     }));
+
+  //     return {
+  //       id: uuidv4(),
+  //       name: tableName,
+  //       children: columnData
+  //     };
+  //   });
+
+  //   return {
+  //     id: uuidv4(),
+  //     name: dbName,
+  //     children: tableData
+  //   };
+  // });
+  // const data = columnResponse.map((res: any) => {
+  //   console.log(databases, columns);
+  //   const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
+  //   const tableName = res.fullyQualifiedName.split('.').slice(-1)[0];
+  //   const columnData = res.schema.columns.map((column: { column: string }) => ({
+  //     id: uuidv4(),
+  //     name: column.column
+  //   }));
+
+  //   return {
+  //     id: uuidv4(),
+  //     name: dbName,
+  //     children: [
+  //       {
+  //         id: uuidv4(),
+  //         name: tableName,
+  //         children: columnData
+  //       }
+  //     ]
+  //   };
+  // });
+  const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
+
+  columnResponse.forEach((res: any) => {
+    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
+    const tableName = res.displayName;
+    const columnName = res.schema.columns.map(
+      (column: { column: string }) => column.column
+    );
+
+    if (!database[dbName]) {
+      database[dbName] = {};
+    }
+
+    if (!database[dbName][tableName]) {
+      database[dbName][tableName] = [];
+    }
+
+    database[dbName][tableName].push(...columnName);
   });
+
+  const data = Object.entries(database).map(([dbName, tables]) => ({
+    id: uuidv4(),
+    name: dbName,
+    children: Object.entries(tables).map(([tableName, columns]) => ({
+      id: uuidv4(),
+      name: tableName,
+      children: columns.map((columnName: string) => ({
+        id: uuidv4(),
+        name: columnName
+      }))
+    }))
+  }));
+  console.log(data.length);
   console.log(data);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,22 +451,37 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then(async (responseResult: any) => {
               console.log(responseResult);
               console.log(dataprocMetastoreServices);
-              // const metastoreServices = responseResult.config?.metastoreConfig?.dataprocMetastoreService;
-              const inputArray = [
-                'dataproc_metastore:acn-ytmusicsonos.us-central1.service-metastore.default'
-              ];
-              const valuesAfterLastDot = inputArray.map(inputString => {
-                const parts = inputString.split('.');
-                return parts[parts.length - 1];
+              const filteredEntries = responseResult.results.filter(
+                (entry: { displayName: string }) =>
+                  entry.displayName !== 'default'
+              );
+              const databaseNames: string[] = [];
+              // Extract and display the displayName of each entry
+              filteredEntries.forEach((entry: { displayName: string }) => {
+                console.log(entry.displayName);
+                databaseNames.push(entry.displayName);
+                // Display or do something with entry.displayName
               });
-              setDatabases(valuesAfterLastDot);
-              console.log(valuesAfterLastDot); // Output: "default"
-              if (data) {
-                setIsLoading(false);
-              }
+              // setDatabases(databaseNames);
+              console.log(databaseNames);
+              setDatabaseLength(databaseNames.length);
+              databaseNames.map(async (db: string) => {
+                setDatabaseIteration(databaseIteration + 1);
+                await getTableDetails(db);
+              });
+              // await Promise.all(promises);
+              // for (const db of databaseNames) {
+              //   await getTableDetails(db);
+              // }
+              // console.log('loading false');
+              // setIsLoading(false);
+              // if (data.length !== 0) {
+              //   console.log('loading false');
+              //   setIsLoading(false);
+              // }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -305,7 +506,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     // }
   };
   const getClusterDetails = async () => {
-    console.log('cluster details');
     const credentials = await authApi();
     if (credentials && clusterValue) {
       fetch(
@@ -321,19 +521,25 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then(async (responseResult: any) => {
               console.log(responseResult);
-              // const metastoreServices = responseResult.config?.metastoreConfig?.dataprocMetastoreService;
+              // let transformClusterListData = [];
+
               const metastoreServices =
-                'projects/acn-ytmusicsonos/locations/us-central1/services/service-metastore';
+                responseResult.config?.metastoreConfig
+                  ?.dataprocMetastoreService;
+              // const metastoreServices =
+              // 'projects/acn-ytmusicsonos/locations/us-central1/services/service-metastore';
+              console.log(metastoreServices);
               const lastIndex = metastoreServices.lastIndexOf('/');
               const instanceName =
                 lastIndex !== -1
                   ? metastoreServices.substring(lastIndex + 1)
                   : '';
+              console.log(instanceName);
               setDataprocMetastoreServices(instanceName);
               console.log(dataprocMetastoreServices);
-              getDatabaseDetails();
+              // getDatabaseDetails();
               // if(data){
               //   setIsLoading(false);
               // }
@@ -364,6 +570,46 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       setClusterValue('');
     };
   }, [clusterValue]);
+  useEffect(() => {
+    console.log('database use effect');
+    getDatabaseDetails();
+  }, [dataprocMetastoreServices]);
+  useEffect(() => {
+    console.log('table use effect');
+    // entries.map((entry: string) => {
+    //   getColumnDetails(entry);
+    //   setTableIteration(tableIteration + 1);
+    // });
+    entries.forEach(async (entry: string) => {
+      await getColumnDetails(entry);
+      setTableIteration(prevCount => prevCount + 1);
+    });
+  }, [entries]);
+  useEffect(() => {
+    console.log(columnResponse);
+    console.log(databaseIteration);
+    console.log(databaseLength);
+    console.log(tableLength);
+    console.log(tableIteration);
+    if (
+      tableIteration === tableLength &&
+      databaseIteration === databaseLength &&
+      tableLength !== 0
+    ) {
+      console.log('loading false');
+      console.log(databaseIteration);
+      console.log(databaseLength);
+      console.log(tableLength);
+      console.log(tableIteration);
+      setIsLoading(false);
+    }
+    // dataLoading();
+  }, [columnResponse]);
+  useEffect(() => {
+    console.log('tableIteration:', tableIteration);
+
+    // You can perform other actions with the tableIteration count here if needed
+  }, [tableIteration]);
   return (
     <>
       <div>
@@ -391,24 +637,29 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         {isLoading ? ( // Conditional rendering based on isLoading state
           <div>Loading data...</div>
         ) : (
-          <Tree
-            initialData={data}
-            openByDefault={false}
-            width={600}
-            height={1000}
-            indent={24}
-            rowHeight={36}
-            overscanCount={1}
-            paddingTop={30}
-            paddingBottom={10}
-            padding={25}
-            searchTerm={searchTerm}
-            searchMatch={searchMatch}
+          <div
+            className="tree-container"
+            style={{ height: '600px', overflowY: 'auto' }}
           >
-            {(props: NodeRendererProps<any>) => (
-              <Node {...props} onClick={handleNodeClick} />
-            )}
-          </Tree>
+            <Tree
+              data={data}
+              openByDefault={false}
+              width={600}
+              height={1000}
+              indent={24}
+              rowHeight={36}
+              overscanCount={1}
+              paddingTop={30}
+              paddingBottom={10}
+              padding={25}
+              searchTerm={searchTerm}
+              searchMatch={searchMatch}
+            >
+              {(props: NodeRendererProps<any>) => (
+                <Node {...props} onClick={handleNodeClick} />
+              )}
+            </Tree>
+          </div>
         )}
       </div>
     </>
