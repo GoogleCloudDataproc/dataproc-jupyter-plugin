@@ -1,3 +1,20 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
@@ -71,7 +88,11 @@ export const ARGUMENTSMESSAGE =
 export const MAXRESTARTMESSAGE =
   'Leave blank if you do not want to allow automatic restarts on job failure. ';
 export const VIEW_LOGS_CLUSTER_URL =
-  'https://console.cloud.google.com/logs/query;query=resource.type%3D%22cloud_dataproc_cluster%22%0Aresource.labels.cluster_name%3D%22';
+  'https://console.cloud.google.com/logs/query;query=resource.type="cloud_dataproc_cluster" resource.labels.cluster_name=';
+export const VIEW_LOGS_SESSION_URL =
+  'https://console.cloud.google.com/logs/query;query=resource.type="cloud_dataproc_session"';
+  export const VIEW_LOGS_BATCH_URL =
+  'https://console.cloud.google.com/logs/query;query=resource.type="cloud_dataproc_batch"';
 export const RESTART_JOB_URL =
   'https://cloud.google.com/dataproc/docs/concepts/jobs/restartable-jobs';
 export const SPARK = 'Spark';
@@ -80,3 +101,4 @@ export const SPARKR = 'SparkR';
 export const PYSPARK = 'PySpark';
 export const DCU_HOURS = 3600000;
 export const GB_MONTHS = 2592000;
+export const TITLE_LAUNCHER_CATEGORY = 'Dataproc Jobs and Sessions';

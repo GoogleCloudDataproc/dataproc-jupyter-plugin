@@ -73,3 +73,9 @@ h2 {
 .ui.dropdown:not(.button)>.default.text {
   color: rgba(0, 0, 0, 0.66) !important;
 }
+
+/* Highlight select dropdown field when focus */
+.ui.selection.active.dropdown:focus {
+  border: 3px solid #3367D6 !important;
+}
+

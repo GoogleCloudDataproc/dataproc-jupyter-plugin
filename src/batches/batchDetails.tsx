@@ -1,3 +1,20 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
@@ -9,7 +26,13 @@ import { ClipLoader } from 'react-spinners';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL
+  BASE_URL,
+  NETWORK_KEY,
+  NETWORK_LABEL,
+  SERVICE_ACCOUNT_KEY,
+  SERVICE_ACCOUNT_LABEL,
+  SUBNETWORK_KEY,
+  SUBNETWORK_LABEL
 } from '../utils/const';
 import {
   BatchTypeValue,
@@ -69,7 +92,8 @@ function BatchDetails({
       }
     },
     sparkBatch: {
-      mainJarFileUri: ''
+      mainJarFileUri: '',
+      mainClass: ''
     },
     pysparkBatch: {
       mainPythonFileUri: ''
@@ -232,7 +256,7 @@ function BatchDetails({
               </div>
               <div className="action-cluster-text">DELETE</div>
             </div>
-            <ViewLogs />
+            <ViewLogs batchInfoResponse={batchInfoResponse} />
           </div>
 
           <div className="batch-details-container-top">
@@ -267,10 +291,10 @@ function BatchDetails({
               <div className="details-value">{elapsedTimeString}</div>
             </div>
             {runTimeString !== '' && (
-            <div className="row-details">
-              <div className="details-label">Run time</div>
-              <div className="details-value">{runTimeString}</div>
-            </div>
+              <div className="row-details">
+                <div className="details-label">Run time</div>
+                <div className="details-value">{runTimeString}</div>
+              </div>
             )}
             {batchInfoResponse.runtimeInfo.approximateUsage &&
               batchInfoResponse.runtimeInfo.approximateUsage
@@ -318,11 +342,20 @@ function BatchDetails({
               <div className="details-label">Batch type</div>
               <div className="details-value">{batch}</div>
             </div>
-            {batch === 'Spark' && (
+            {batch === 'Spark' &&
+              batchInfoResponse.sparkBatch.mainJarFileUri && (
+                <div className="row-details">
+                  <div className="details-label">Main jar</div>
+                  <div className="details-value">
+                    {batchInfoResponse.sparkBatch.mainJarFileUri}
+                  </div>
+                </div>
+              )}
+            {batch === 'Spark' && batchInfoResponse.sparkBatch.mainClass && (
               <div className="row-details">
-                <div className="details-label">Main jar</div>
+                <div className="details-label">Main Class</div>
                 <div className="details-value">
-                  {batchInfoResponse.sparkBatch.mainJarFileUri}
+                  {batchInfoResponse.sparkBatch.mainClass}
                 </div>
               </div>
             )}
@@ -354,90 +387,14 @@ function BatchDetails({
               <div className="details-label">Properties</div>
               <div className="details-value"></div>
             </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.executor.instances
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.executor.instances'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.driver.cores
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.driver.cores'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.driver.memory
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.driver.memory'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.executor.cores
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.executor.cores'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.executor.memory
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.executor.memory'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.dynamicAllocation.executorAllocationRatio
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.dynamicAllocation.executorAllocationRatio'
-                  ]
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-one">
-                spark:spark.app.name
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.runtimeConfig.properties[
-                    'spark:spark.app.name'
-                  ]
-                }
-              </div>
-            </div>
+            {Object.entries(batchInfoResponse.runtimeConfig.properties).map(
+              ([key, value]) => (
+                <div className="row-details" key={key}>
+                  <div className="batch-details-label-level-one">{key}</div>
+                  <div className="details-value">{value}</div>
+                </div>
+              )
+            )}
             <div className="row-details">
               <div className="details-label">Environment config</div>
               <div className="details-value"></div>
@@ -448,26 +405,32 @@ function BatchDetails({
               </div>
               <div className="details-value"></div>
             </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-two">
-                Service account
-              </div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.environmentConfig.executionConfig
-                    .serviceAccount
-                }
-              </div>
-            </div>
-            <div className="row-details">
-              <div className="batch-details-label-level-two">Sub network</div>
-              <div className="details-value">
-                {
-                  batchInfoResponse.environmentConfig.executionConfig
-                    .subnetworkUri
-                }
-              </div>
-            </div>
+            {Object.entries(
+              batchInfoResponse.environmentConfig.executionConfig
+            ).map(([key, value]) => {
+              let label;
+              if (key === SERVICE_ACCOUNT_KEY) {
+                label = SERVICE_ACCOUNT_LABEL;
+              } else if (key === NETWORK_KEY) {
+                label = NETWORK_LABEL;
+              } else if (key === SUBNETWORK_KEY) {
+                label = SUBNETWORK_LABEL;
+              } else {
+                label = '';
+              }
+              if (
+                key === SERVICE_ACCOUNT_KEY ||
+                key === NETWORK_KEY ||
+                key === SUBNETWORK_KEY
+              ) {
+                return (
+                  <div className="row-details" key={key}>
+                    <div className="batch-details-label-level-two">{label}</div>
+                    <div className="details-value">{value}</div>
+                  </div>
+                );
+              }
+            })}
 
             <div className="row-details">
               <div className="details-label">Encryption type</div>

@@ -1,3 +1,20 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import settingsIcon from '../../style/icons/settings_icon.svg';
@@ -73,10 +90,23 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         const configStatus = (data as { config: string }).config;
         setIsLoading(false);
         if (configStatus && !toast.isActive('custom-toast')) {
-          toast.success(configStatus, {
-            position: toast.POSITION.TOP_CENTER,
-            toastId: 'custom-toast'
-          });
+          if(configStatus.includes('Failed')) {
+            toast.error(configStatus, {
+              hideProgressBar: true,
+              autoClose: false,
+              theme: "dark",
+              position: toast.POSITION.BOTTOM_CENTER,
+              toastId: 'custom-toast'
+            });
+          } else {
+            toast.success(configStatus, {
+              hideProgressBar: true,
+              autoClose: false,
+              theme: "dark",
+              position: toast.POSITION.BOTTOM_CENTER,
+              toastId: 'custom-toast'
+            });
+          }
         }
       }
     } catch (reason) {
@@ -168,7 +198,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
               SetRegionEmpty(false);
               if (!toast.isActive('custom-toast-error')) {
                 toast.error(response.status + ' Permission Denied', {
-                  position: toast.POSITION.TOP_CENTER,
+                  position: toast.POSITION.BOTTOM_CENTER,
                   toastId: 'custom-toast-error'
                 });
               }
