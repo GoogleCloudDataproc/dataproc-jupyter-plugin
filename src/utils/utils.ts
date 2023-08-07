@@ -1,0 +1,253 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { requestAPI } from '../handler/handler';
+import {
+  DCU_HOURS,
+  GB_MONTHS,
+  PYSPARK,
+  SPARK,
+  SPARKR,
+  SPARKSQL,
+  STATUS_CREATING,
+  STATUS_DONE,
+  STATUS_ERROR,
+  STATUS_FAIL,
+  STATUS_PROVISIONING,
+  STATUS_SETUP_DONE,
+  STATUS_STARTING,
+  STATUS_SUCCESS
+} from './const';
+import pysparkLogo from '../../style/icons/pyspark_logo.svg';
+import pythonLogo from '../../style/icons/python_logo.svg';
+import sparkrLogo from '../../style/icons/sparkr_logo.svg';
+import scalaLogo from '../../style/icons/scala_logo.svg';
+import { LabIcon } from '@jupyterlab/ui-components';
+interface IAuthCredentials {
+  access_token?: string;
+  project_id?: string;
+  region_id?: string;
+  config_error?: number;
+  login_error?: number;
+}
+
+export const authApi = async (): Promise<IAuthCredentials | undefined> => {
+  try {
+    const data = await requestAPI('credentials');
+    if (typeof data === 'object' && data !== null) {
+      const credentials: IAuthCredentials = {
+        access_token: (data as { access_token: string }).access_token,
+        project_id: (data as { project_id: string }).project_id,
+        region_id: (data as { region_id: string }).region_id,
+        config_error: (data as { config_error: number }).config_error,
+        login_error: (data as { login_error: number }).login_error
+      };
+      return credentials;
+    } else {
+      console.error('Invalid data format.');
+    }
+  } catch (reason) {
+    console.error(`Error on GET credentials.\n${reason}`);
+  }
+};
+
+export const jobTimeFormat = (startTime: string) => {
+  const date = new Date(startTime);
+
+  const formattedDate = date.toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: true
+  });
+
+  return formattedDate;
+};
+interface IJobData {
+  [key: string]: any;
+}
+
+export const jobTypeValue = (data: IJobData): string | undefined => {
+  const result = Object.keys(data).filter(key => key.endsWith('Job'));
+  const jobTypeName = result[0].split('Job')[0];
+  switch (jobTypeName) {
+    case 'spark':
+      return SPARK;
+    case 'sparkR':
+      return SPARKR;
+    case 'sparkSql':
+      return SPARKSQL;
+    case 'pyspark':
+      return PYSPARK;
+  }
+};
+export const jobTypeValueArguments = (data: IJobData): string => {
+  const result = Object.keys(data).filter(key => key.endsWith('Job'));
+  return result[0].split('Job')[0];
+};
+
+export const BatchTypeValue = (data: IJobData): string | undefined => {
+  const result = Object.keys(data).filter(key => key.endsWith('Batch'));
+  const batchTypeName = result[0].split('Batch')[0];
+  switch (batchTypeName) {
+    case 'spark':
+      return SPARK;
+    case 'sparkR':
+      return SPARKR;
+    case 'sparkSql':
+      return SPARKSQL;
+    case 'pyspark':
+      return PYSPARK;
+  }
+};
+
+export const jobTypeDisplay = (data: string | undefined) => {
+  switch (data) {
+    case 'spark':
+      return 'Spark';
+    case 'sparkR':
+      return 'SparkR';
+    case 'sparkSql':
+      return 'Spark SQL';
+    case 'pyspark':
+      return 'PySpark';
+    case 'hive':
+      return 'Hive';
+    default:
+      return data;
+  }
+};
+
+export const elapsedTime = (endTime: string, jobStartTime: Date): string => {
+  const jobEndTime = new Date(endTime);
+  const elapsedMilliseconds = jobEndTime.getTime() - jobStartTime.getTime();
+  const elapsedSeconds = Math.round(elapsedMilliseconds / 1000) % 60;
+  const elapsedMinutes = Math.floor(elapsedMilliseconds / (1000 * 60)) % 60;
+  const elapsedHours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
+  let elapsedTimeString = '';
+  if (elapsedHours > 0) {
+    elapsedTimeString += `${elapsedHours} hr `;
+  }
+
+  if (elapsedMinutes > 0) {
+    elapsedTimeString += `${elapsedMinutes} min `;
+  }
+  if (elapsedSeconds > 0) {
+    elapsedTimeString += `${elapsedSeconds} sec `;
+  }
+  return elapsedTimeString;
+};
+
+export const statusMessage = (data: any) => {
+  if (data.status.state === STATUS_DONE) {
+    return STATUS_SUCCESS;
+  } else if (data.status.state === STATUS_ERROR) {
+    return STATUS_FAIL;
+  } else if (data.status.state === STATUS_SETUP_DONE) {
+    return STATUS_STARTING;
+  } else {
+    return data.status.state;
+  }
+};
+
+export const statusValue = (data: any) => {
+  if (data.status.state === STATUS_CREATING) {
+    return STATUS_PROVISIONING;
+  } else {
+    return data.status.state;
+  }
+};
+
+export const checkConfig = async (
+  setLoginState: React.Dispatch<React.SetStateAction<boolean>>,
+  setConfigError: React.Dispatch<React.SetStateAction<boolean>>,
+  setLoginError: React.Dispatch<React.SetStateAction<boolean>>
+): Promise<void> => {
+  const credentials = await authApi();
+  if (credentials) {
+    if (credentials.access_token === '') {
+      localStorage.clear();
+      if (credentials.config_error === 1) {
+        localStorage.clear();
+        setConfigError(true);
+      }
+      if (credentials.login_error === 1) {
+        localStorage.clear();
+        setLoginError(true);
+      }
+    } else {
+      setLoginState(true);
+    }
+  }
+};
+export const statusMessageBatch = (data: any) => {
+  if (data.state === STATUS_DONE) {
+    return STATUS_SUCCESS;
+  } else if (data.state === STATUS_ERROR) {
+    return STATUS_FAIL;
+  } else if (data.state === STATUS_SETUP_DONE) {
+    return STATUS_STARTING;
+  } else {
+    return data.state;
+  }
+};
+
+export const convertToDCUHours = (milliDcu: string) => {
+  return `~ ${(Number(milliDcu) / DCU_HOURS).toFixed(3)} DCU-hours`;
+};
+
+export const convertToGBMonths = (milliDcu: string) => {
+  return `~ ${(Number(milliDcu) / GB_MONTHS).toFixed(3)} GB-months`;
+};
+
+const iconPysparkLogo = new LabIcon({
+  name: 'launcher:pyspark-logo-icon',
+  svgstr: pysparkLogo
+});
+const iconPythonLogo = new LabIcon({
+  name: 'launcher:python-logo-icon',
+  svgstr: pythonLogo
+});
+const iconSparkRLogo = new LabIcon({
+  name: 'launcher:sparkr-logo-icon',
+  svgstr: sparkrLogo
+});
+const iconScalaLogo = new LabIcon({
+  name: 'launcher:scala-logo-icon',
+  svgstr: scalaLogo
+});
+
+export const iconDisplay = (kernelType: any) => {
+  if (
+    kernelType?.name.includes('spylon') ||
+    kernelType?.name.includes('apache')
+  ) {
+    return iconScalaLogo;
+  } else if (kernelType?.name.includes('ir')) {
+    return iconSparkRLogo;
+  } else if (
+    kernelType?.name.includes('pyspark') ||
+    kernelType?.resources.endpointParentResource.includes('/sessions')
+  ) {
+    return iconPysparkLogo;
+  } else {
+    return iconPythonLogo;
+  }
+};

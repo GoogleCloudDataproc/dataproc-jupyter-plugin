@@ -1,0 +1,81 @@
+/*
+    See the JupyterLab Developer Guide for useful CSS Patterns:
+
+    https://jupyterlab.readthedocs.io/en/stable/developer/css.html
+*/
+
+/*Hiding Notebook section cards with name Remote for Remote kernels*/
+.jp-LauncherCard[data-category='Notebook'][title~='Dataproc'], .jp-LauncherCard[data-category='Notebook'][title~='dataproc-serverless-interactive'] {
+  display: none;
+}
+
+/*Hiding Console section cards with name Remote for Remote kernels*/
+.jp-LauncherCard[data-category='Console'][title~='Dataproc'], .jp-LauncherCard[data-category='Console'][title~='dataproc-serverless-interactive'] {
+  display: none;
+}
+
+/*Changing Icon for category with image pyspark*/
+.f1hgkb35 svg[data-icon="launcher:pyspark-logo-icon"] {
+  content-visibility: hidden;
+  display: block;
+  height: 32px;
+  margin: 0 auto;
+  width: 32px;
+  background-image: url('./icons/dataproc_icon.svg');
+}
+
+/*Changing Icon for category with image cluster*/
+.f1hgkb35 svg[data-icon="launcher:clusters-icon"] {
+  content-visibility: hidden;
+  display: block;
+  height: 32px;
+  margin: 0 auto;
+  width: 32px;
+  background-image: url('./icons/dataproc_icon.svg');
+}
+
+/*Changing Icon for category with image python*/
+.f1hgkb35 svg[data-icon="launcher:python-logo-icon"] {
+  content-visibility: hidden;
+  display: block;
+  height: 32px;
+  margin: 0 auto;
+  width: 32px;
+  background-image: url('./icons/dataproc_icon.svg');
+}
+
+/*Changing Icon for category with image sparkR*/
+.f1hgkb35 svg[data-icon="launcher:sparkr-logo-icon"] {
+  content-visibility: hidden;
+  display: block;
+  height: 32px;
+  margin: 0 auto;
+  width: 32px;
+  background-image: url('./icons/dataproc_icon.svg');
+}
+
+/*Changing Icon for category with image scala*/
+.f1hgkb35 svg[data-icon="launcher:scala-logo-icon"] {
+  content-visibility: hidden;
+  display: block;
+  height: 32px;
+  margin: 0 auto;
+  width: 32px;
+  background-image: url('./icons/dataproc_icon.svg');
+}
+
+h2 {
+  display: flex;
+  align-items: center;
+  margin: 15px 0px !important;
+}
+
+.ui.dropdown:not(.button)>.default.text {
+  color: rgba(0, 0, 0, 0.66) !important;
+}
+
+/* Highlight select dropdown field when focus */
+.ui.selection.active.dropdown:focus {
+  border: 3px solid #3367D6 !important;
+}
+
