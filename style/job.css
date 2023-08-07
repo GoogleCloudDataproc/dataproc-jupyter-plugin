@@ -232,12 +232,14 @@
 }
 
 .jobs-list-table-parent {
-  height: 63vh;
+  /* height: 63vh; */
+  height: 56vh;
   overflow: auto;
 }
 
 .jobs-list-table-parent-small {
-  height: 49vh;
+  /* height: 49vh; */
+  height: 40vh;
   overflow: auto;
 }
 .job-details-label-row {

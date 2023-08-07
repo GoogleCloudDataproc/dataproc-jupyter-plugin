@@ -113,7 +113,7 @@ const ClusterComponent = (): React.JSX.Element => {
     if (credentials) {
       setProjectId(credentials.project_id || '');
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=100`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=1000`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,

@@ -133,7 +133,7 @@ function ListSessions() {
     const credentials = await authApi();
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions?pageSize=100`,
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions?pageSize=1000`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,

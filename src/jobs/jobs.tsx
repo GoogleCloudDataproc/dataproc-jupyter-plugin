@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import {
   authApi,
   jobTimeFormat,
@@ -118,6 +118,7 @@ function JobComponent({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  
   const pollingJobs = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -202,12 +203,16 @@ function JobComponent({
     setDeletePopupOpen(false);
   };
 
-  const listJobsAPI = async () => {
+  const listJobsAPI = async (
+    nextPageToken?: string,
+    previousJobsList?: object
+  ) => {
     const credentials = await authApi();
     const clusterName = clusterSelected ?? '';
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=100&&clusterName=${clusterName}`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=1000&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -254,8 +259,18 @@ function JobComponent({
                   actions: renderActions(data)
                 };
               });
-              setjobsList(transformJobListData);
-              setIsLoading(false);
+              const exsingJobsData: any = previousJobsList ?? [];
+              let allJobsData: any = [
+                ...exsingJobsData,
+                ...transformJobListData
+              ];
+
+              if (responseResult.nextPageToken) {
+                listJobsAPI(responseResult.nextPageToken, transformJobListData);
+              } else {
+                setjobsList(allJobsData);
+                setIsLoading(false);
+              }
             })
             .catch((e: Error) => {
               console.error(e);
@@ -428,8 +443,29 @@ function JobComponent({
     //@ts-ignore
     preGlobalFilteredRows,
     //@ts-ignore
-    setGlobalFilter
-  } = useTable({ columns, data }, useGlobalFilter);
+    setGlobalFilter,
+    //@ts-ignore
+    page,
+    //@ts-ignore
+    canPreviousPage,
+    //@ts-ignore
+    canNextPage,
+    //@ts-ignore
+    pageOptions,
+    //@ts-ignore
+    nextPage,
+    //@ts-ignore
+    previousPage,
+    //@ts-ignore
+    setPageSize,
+    //@ts-ignore
+    state: { pageIndex, pageSize }
+  } = useTable(
+    //@ts-ignore
+    { columns, data, autoResetPage: false },
+    useGlobalFilter,
+    usePagination
+  );
 
   return (
     <div>
@@ -466,24 +502,25 @@ function JobComponent({
       {!submitJobView && !detailedJobView && (
         <div>
           {
-          // clustersList &&
+            // clustersList &&
             clusterResponse &&
-            clusterResponse.clusters &&
-            clusterResponse.clusters.length > 0 && (
-              <div className="create-cluster-overlay">
-                <div
-                  className="create-cluster-sub-overlay"
-                  onClick={() => {
-                    handleSubmitJobOpen();
-                  }}
-                >
-                  <div className="create-cluster-icon">
-                    <iconSubmitJob.react tag="div" />
+              clusterResponse.clusters &&
+              clusterResponse.clusters.length > 0 && (
+                <div className="create-cluster-overlay">
+                  <div
+                    className="create-cluster-sub-overlay"
+                    onClick={() => {
+                      handleSubmitJobOpen();
+                    }}
+                  >
+                    <div className="create-cluster-icon">
+                      <iconSubmitJob.react tag="div" />
+                    </div>
+                    <div className="create-cluster-text">SUBMIT JOB</div>
                   </div>
-                  <div className="create-cluster-text">SUBMIT JOB</div>
                 </div>
-              </div>
-            )}
+              )
+          }
           {jobsList.length > 0 ? (
             <div>
               <div className="filter-cluster-overlay">
@@ -513,11 +550,50 @@ function JobComponent({
                   headerGroups={headerGroups}
                   getTableBodyProps={getTableBodyProps}
                   isLoading={isLoading}
+                  page={page}
                   rows={rows}
                   prepareRow={prepareRow}
                   tableDataCondition={tableDataCondition}
                   fromPage="Jobs"
                 />
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  margin: '10px'
+                }}
+              >
+                <div className="pagination">
+                  Rows per page:
+                  <select
+                    value={pageSize}
+                    onChange={e => {
+                      setPageSize(Number(e.target.value));
+                    }}
+                  >
+                    {[10, 20, 30, 40, 50].map(pageSize => (
+                      <option key={pageSize} value={pageSize}>
+                        {pageSize}
+                      </option>
+                    ))}
+                  </select>
+                  <span>
+                    Page{' '}
+                    <strong>
+                      {pageIndex + 1} of {pageOptions.length}
+                    </strong>{' '}
+                  </span>
+                  <button
+                    onClick={() => previousPage()}
+                    disabled={!canPreviousPage}
+                  >
+                    {'<'}
+                  </button>{' '}
+                  <button onClick={() => nextPage()} disabled={!canNextPage}>
+                    {'>'}
+                  </button>{' '}
+                </div>
               </div>
             </div>
           ) : (
