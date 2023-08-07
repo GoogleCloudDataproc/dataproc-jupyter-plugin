@@ -225,6 +225,9 @@ function LabelProperties({
                           label.split(':')[1]
                         )
                       }
+                      disabled={
+                        label==='client:dataproc-jupyter-plugin' && buttonText === 'ADD LABEL'
+                      }
                       defaultValue={label.split(':')[1]}
                     />
                     {valueValidation === index &&
@@ -239,13 +242,16 @@ function LabelProperties({
                         </div>
                       )}
                   </div>
+                  
+                  {label==='client:dataproc-jupyter-plugin' && buttonText === 'ADD LABEL' ?"":
+                      
                   <div
                     onClick={() =>
                       handleDeleteLabel(index, label.split(':')[0])
                     }
                   >
                     <iconDelete.react tag="div" />
-                  </div>
+                  </div>}
                   <></>
                 </div>
               </div>

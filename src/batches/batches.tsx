@@ -24,6 +24,7 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
+import CreateBatch from './createBatch';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -45,6 +46,10 @@ const ServerlessComponent = (): React.JSX.Element => {
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const [regionName, setRegionName] = useState('');
+
+  
+  const [createBatchView, setCreateBatchView] = useState(false);
   const pollingBatches = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -68,6 +73,7 @@ const ServerlessComponent = (): React.JSX.Element => {
   const listBatchAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
+      setRegionName(credentials.region_id || '');
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=100`,
         {
@@ -209,12 +215,20 @@ const ServerlessComponent = (): React.JSX.Element => {
       )}
       {loggedIn ? (
         <>
-          {detailedBatchView ? (
+          {detailedBatchView && (
             <BatchDetails
               batchSelected={batchSelected}
               setDetailedBatchView={setDetailedBatchView}
             />
-          ) : (
+          )} 
+          {createBatchView && (
+            <CreateBatch
+              setCreateBatchView={setCreateBatchView}
+              regionName={regionName}
+            />
+          )}
+          
+          { !detailedBatchView && !createBatchView &&(
             <div className="clusters-list-component">
               {
                 <div className="clusters-list-overlay" role="tab">
@@ -242,6 +256,8 @@ const ServerlessComponent = (): React.JSX.Element => {
                     setPollingDisable={setPollingDisable}
                     listBatchAPI={listBatchAPI}
                     handleBatchDetails={handleBatchDetails}
+                    setCreateBatchView={setCreateBatchView}
+                    createBatchView={createBatchView}
                   />
                 )}
               </div>
