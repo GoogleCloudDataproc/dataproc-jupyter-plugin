@@ -449,7 +449,7 @@ function BatchDetails({
 
             <div className="row-details">
               <div className="details-label">Encryption type</div>
-              <div className="details-value">Google-managed key</div>
+              <div className="details-value">Google-managed</div>
             </div>
             <div className="batch-details-row-label">
               <div className="details-label">Labels</div>

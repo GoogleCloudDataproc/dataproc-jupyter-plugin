@@ -131,7 +131,7 @@ function SubmitJob(
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
   const [hexNumber, setHexNumber] = useState('');
   const [submitDisabled, setSubmitDisabled] = useState(true);
-  let mainJarFileUri = ' ';
+  let mainJarFileUri = '';
   let args: any[] = [];
   let jarFileUris: any[] = [];
   let archiveUris: any[] = [];
@@ -144,7 +144,7 @@ function SubmitJob(
   let queryFileUri = '';
   let queryType = '';
   let queryList = '';
-  let mainClass = ' ';
+  let mainClass = '';
   let key: any[] | (() => any[]) = [];
   let value: any[] | (() => any[]) = [];
   let jobKeys: string[] = [];
@@ -175,7 +175,7 @@ function SubmitJob(
     } = handleOptionalFields(selectedJobClone, jobTypeKey));
   }
   const initialMainClassSelected =
-    mainJarFileUri && mainJarFileUri !== ' ' ? mainJarFileUri : mainClass;
+    mainJarFileUri && mainJarFileUri !== '' ? mainJarFileUri : mainClass;
   const [mainClassSelected, setMainClassSelected] = useState(
     initialMainClassSelected
   );
@@ -213,6 +213,7 @@ function SubmitJob(
   const [valueValidation, setvalueValidation] = useState(-1);
   const [jobIdValidation, setjobIdValidation] = useState(true);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
+  const [mainClassActive, setMainClassActive] = useState(false);
 
   const handleCancelJobButton = () => {
     setSubmitJobView(false);
@@ -311,7 +312,7 @@ function SubmitJob(
       clusterSelected !== '' &&
       jobIdSelected !== '' &&
       ((isSparkJob &&
-        mainClassSelected.trim().length !== 0 &&
+        mainClassSelected.length !== 0 &&
         // mainClassValidation &&
         jarFileValidation &&
         fileValidation &&
@@ -799,10 +800,11 @@ function SubmitJob(
                     setMainClassValidation
                   )
                 }
+                onBlur={()=>setMainClassActive(true)}
                 addOnBlur={true}
                 value={mainClassSelected}
               />
-              {mainClassSelected === '' && (
+              {mainClassSelected === '' && mainClassActive && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" />
                   <div className="error-key-missing">
@@ -810,7 +812,7 @@ function SubmitJob(
                   </div>
                 </div>
               )}
-              {mainClassSelected !== '' && (
+              {(mainClassSelected !== '' || !mainClassActive) && (
                 <div className="submit-job-message">{MAINCLASSMESSAGE}</div>
               )}
             </>

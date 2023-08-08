@@ -25,7 +25,6 @@ import {
   statusMessage,
   jobTypeDisplay
 } from '../utils/utils';
-
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import cloneIcon from '../../style/icons/clone_icon.svg';
@@ -60,6 +59,7 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { PaginationView } from '../utils/paginationView';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -118,7 +118,7 @@ function JobComponent({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
-  
+
   const pollingJobs = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -212,7 +212,7 @@ function JobComponent({
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=1000&pageToken=${pageToken}&&clusterName=${clusterName}`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=${pageSize}&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -266,7 +266,7 @@ function JobComponent({
               ];
 
               if (responseResult.nextPageToken) {
-                listJobsAPI(responseResult.nextPageToken, transformJobListData);
+                listJobsAPI(responseResult.nextPageToken, allJobsData);
               } else {
                 setjobsList(allJobsData);
                 setIsLoading(false);
@@ -462,7 +462,7 @@ function JobComponent({
     state: { pageIndex, pageSize }
   } = useTable(
     //@ts-ignore
-    { columns, data, autoResetPage: false },
+    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
   );
@@ -556,44 +556,16 @@ function JobComponent({
                   tableDataCondition={tableDataCondition}
                   fromPage="Jobs"
                 />
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  margin: '10px'
-                }}
-              >
-                <div className="pagination">
-                  Rows per page:
-                  <select
-                    value={pageSize}
-                    onChange={e => {
-                      setPageSize(Number(e.target.value));
-                    }}
-                  >
-                    {[10, 20, 30, 40, 50].map(pageSize => (
-                      <option key={pageSize} value={pageSize}>
-                        {pageSize}
-                      </option>
-                    ))}
-                  </select>
-                  <span>
-                    Page{' '}
-                    <strong>
-                      {pageIndex + 1} of {pageOptions.length}
-                    </strong>{' '}
-                  </span>
-                  <button
-                    onClick={() => previousPage()}
-                    disabled={!canPreviousPage}
-                  >
-                    {'<'}
-                  </button>{' '}
-                  <button onClick={() => nextPage()} disabled={!canNextPage}>
-                    {'>'}
-                  </button>{' '}
-                </div>
+                <PaginationView
+                  pageSize={pageSize}
+                  setPageSize={setPageSize}
+                  pageIndex={pageIndex}
+                  allData={jobsList}
+                  previousPage={previousPage}
+                  nextPage={nextPage}
+                  canPreviousPage={canPreviousPage}
+                  canNextPage={canNextPage}
+                />
               </div>
             </div>
           ) : (

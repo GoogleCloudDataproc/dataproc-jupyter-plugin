@@ -81,24 +81,42 @@ function ViewLogs({
   return (
     <>
       <div
-        className="action-cluster-section"
+        className={
+          (batchInfoResponse?.runtimeInfo?.endpoints &&
+            batchInfoResponse?.runtimeInfo?.endpoints[
+              'Spark History Server'
+            ]) ||
+          (sessionInfo?.runtimeInfo?.endpoints &&
+            sessionInfo?.runtimeInfo?.endpoints['Spark History Server']) ||
+          clusterName
+            ? 'action-cluster-section'
+            : 'action-disabled action-cluster-section'
+        }
         onClick={() => {
           if (clusterInfo) {
             window.open(
               `${VIEW_LOGS_CLUSTER_URL}"${clusterInfo.clusterName}" resource.labels.cluster_uuid="${clusterInfo.clusterUuid}"?project=${projectName}`,
               '_blank'
             );
-          } else if (batchInfoResponse) {
+          } else if (
+            batchInfoResponse &&
+            batchInfoResponse?.runtimeInfo?.endpoints &&
+            batchInfoResponse?.runtimeInfo?.endpoints['Spark History Server']
+          ) {
             window.open(
               batchInfoResponse.runtimeInfo.endpoints['Spark History Server'],
               '_blank'
             );
-          } else if (sessionInfo) {
+          } else if (
+            sessionInfo &&
+            sessionInfo?.runtimeInfo?.endpoints &&
+            sessionInfo?.runtimeInfo?.endpoints['Spark History Server']
+          ) {
             window.open(
               sessionInfo.runtimeInfo.endpoints['Spark History Server'],
               '_blank'
             );
-          } else {
+          } else if(clusterName) {
             handleJobDetailsViewLogs(clusterName);
           }
         }}
@@ -115,7 +133,6 @@ function ViewLogs({
       <div
         className="action-cluster-section"
         onClick={() => {
-          const currentTimestamp = new Date().toISOString();
           if (sessionInfo) {
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
@@ -124,11 +141,12 @@ function ViewLogs({
                 sessionInfo.name.split('/')[3]
               }" resource.labels.session_id="${
                 sessionInfo.name.split('/')[5]
-              }";cursorTimestamp=${currentTimestamp};?project=${sessionInfo.name.split('/')[1]}`,
+              }";cursorTimestamp=${sessionInfo.createTime};?project=${
+                sessionInfo.name.split('/')[1]
+              }`,
               '_blank'
             );
           } else {
-            const currentTimestamp = new Date().toISOString();
             window.open(
               `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
                 batchInfoResponse.name.split('/')[1]
@@ -136,7 +154,9 @@ function ViewLogs({
                 batchInfoResponse.name.split('/')[3]
               }" resource.labels.batch_id="${
                 batchInfoResponse.name.split('/')[5]
-              }";cursorTimestamp=${currentTimestamp};?project=${batchInfoResponse.name.split('/')[1]}`,
+              }";cursorTimestamp=${batchInfoResponse.createTime};?project=${
+                batchInfoResponse.name.split('/')[1]
+              }`,
               '_blank'
             );
           }
