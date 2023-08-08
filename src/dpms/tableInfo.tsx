@@ -66,30 +66,41 @@ import React from 'react';
 import { ReactWidget } from '@jupyterlab/apputils';
 import { useTable } from 'react-table';
 
-const TableInfo = ({ title }: { title: any }): React.JSX.Element => {
+interface IDatabaseProps {
+  title: string;
+  dataprocMetastoreServices: string;
+  database: string;
+  column: any;
+}
+const TableInfo = ({
+  title,
+  dataprocMetastoreServices,
+  database,
+  column
+}: IDatabaseProps): React.JSX.Element => {
   const table = {
-    'Table name': 'dataproc-public-data.american_health_ranking.ahr',
+    'Table name': title,
     Description: 'description text goes here',
     'By column name': 'lorem ipsum',
-    'By Database': 'lorem ipsum',
-    'By Dataproc Metastore Instance': 'Lorem ipsum'
+    'By Database': database,
+    'By Dataproc Metastore Instance': dataprocMetastoreServices
   };
 
-  const schema = [
-    {
-      name: 'column1',
-      type: 'string',
-      mode: 'nullable',
-      description: 'Description for column1'
-    },
-    {
-      name: 'column2',
-      type: 'integer',
-      mode: 'required',
-      description: 'Description for column2'
-    }
-    // Add more columns as needed
-  ];
+  // const schema = [
+  //   {
+  //     name: 'column1',
+  //     type: 'string',
+  //     mode: 'nullable',
+  //     description: 'Description for column1'
+  //   },
+  //   {
+  //     name: 'column2',
+  //     type: 'integer',
+  //     mode: 'required',
+  //     description: 'Description for column2'
+  //   }
+  //   // Add more columns as needed
+  // ];
 
   const renderColumnTable = () => {
     const columns = React.useMemo(
@@ -114,7 +125,13 @@ const TableInfo = ({ title }: { title: any }): React.JSX.Element => {
       []
     );
 
-    const data = React.useMemo(() => schema, [schema]);
+    const data = React.useMemo(() => {
+      return column.map((column: any) => ({
+        name: column.name,
+        type: column.type || '',
+        mode: column.mode || ''
+      }));
+    }, [column]);
 
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -161,7 +178,7 @@ const TableInfo = ({ title }: { title: any }): React.JSX.Element => {
 
   return (
     <div>
-      <div className="title-overlay">{title._label}</div>
+      <div className="title-overlay">{title}</div>
       <div className="db-title">Table info</div>
       <div className="table-container">
         <table className="db-table">
@@ -185,12 +202,31 @@ const TableInfo = ({ title }: { title: any }): React.JSX.Element => {
 };
 
 export class Table extends ReactWidget {
-  constructor(title: string) {
+  dataprocMetastoreServices: string;
+  database!: string;
+  column: any;
+
+  constructor(
+    title: string,
+    dataprocMetastoreServices: string,
+    database: string,
+    column: any
+  ) {
     super();
     this.addClass('jp-ReactWidget');
+    this.dataprocMetastoreServices = dataprocMetastoreServices;
+    this.database = database;
+    this.column = column;
   }
 
   render(): React.JSX.Element {
-    return <TableInfo title={this.title} />;
+    return (
+      <TableInfo
+        title={this.title.label}
+        dataprocMetastoreServices={this.dataprocMetastoreServices}
+        database={this.database}
+        column={this.column}
+      />
+    );
   }
 }

@@ -1,21 +1,24 @@
-import React from 'react';
+// import React from 'react';
 import { ReactWidget } from '@jupyterlab/apputils';
-const DatabaseInfo = ({ title }: { title: any }): React.JSX.Element => {
-  //   return (
-  //     <div>
-  //       <div className="lm-Widget p-Widget jp-Toolbar jp-Toolbar-micro">
-  //         {title._label}
-  //       </div>
-  //       <div className="db-title">database info</div>
-  //     </div>
-  //   );
-  // };
-  const database = {
-    dname: 'name',
-    description: 'description',
-    instanceName: 'instanceName'
-  };
+import React from 'react';
 
+interface IDatabaseProps {
+  title: string;
+  dataprocMetastoreServices: string;
+  databaseDetails: any;
+}
+
+const DatabaseInfo = ({
+  title,
+  dataprocMetastoreServices,
+  databaseDetails
+}: IDatabaseProps): React.ReactElement => {
+  const database = {
+    dname: title,
+    description: databaseDetails[title],
+    instanceName: dataprocMetastoreServices
+  };
+  console.log(dataprocMetastoreServices);
   // Render the JSON object in a React table
   const renderTable = () => {
     return (
@@ -25,7 +28,7 @@ const DatabaseInfo = ({ title }: { title: any }): React.JSX.Element => {
             {Object.entries(database).map(([key, value], index) => (
               <tr
                 key={key}
-                className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'} // Apply different classes to even and odd rows
+                className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
               >
                 <td>{key}</td>
                 <td>{value}</td>
@@ -39,7 +42,7 @@ const DatabaseInfo = ({ title }: { title: any }): React.JSX.Element => {
 
   return (
     <div>
-      <div className="title-overlay">{title._label}</div>
+      <div className="title-overlay">{title}</div>
       <div className="db-title">Database info</div>
       {renderTable()}
     </div>
@@ -47,12 +50,27 @@ const DatabaseInfo = ({ title }: { title: any }): React.JSX.Element => {
 };
 
 export class Database extends ReactWidget {
-  constructor(title: string) {
+  dataprocMetastoreServices: string;
+  databaseDetails: any;
+  constructor(
+    title: string,
+    dataprocMetastoreServices: string,
+    databaseDetails: any
+  ) {
     super();
     this.addClass('jp-ReactWidget');
+    this.title.label = title; // Set the title label here
+    this.dataprocMetastoreServices = dataprocMetastoreServices;
+    this.databaseDetails = databaseDetails;
   }
 
-  render(): React.JSX.Element {
-    return <DatabaseInfo title={this.title} />;
+  render(): React.ReactElement {
+    return (
+      <DatabaseInfo
+        title={this.title.label}
+        dataprocMetastoreServices={this.dataprocMetastoreServices}
+        databaseDetails={this.databaseDetails}
+      />
+    );
   }
 }

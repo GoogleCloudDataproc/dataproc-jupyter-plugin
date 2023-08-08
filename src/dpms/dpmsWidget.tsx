@@ -12,7 +12,6 @@ import datasetsIcon from '../../style/icons/datasets_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
 import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
 import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
-// import { Widget } from '@lumino/widgets';
 import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
@@ -77,37 +76,13 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
   const [isLoading, setIsLoading] = useState(true);
-  // const [databases, setDatabases] = useState<string[]>([]);
-  // const [tables, setTables] = useState<string[]>([]);
   const [entries, setEntries] = useState<string[]>([]);
-  // const [columns, setColumns] = useState<string[]>([]);
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseLength, setDatabaseLength] = useState(Number);
   const [databaseIteration, setDatabaseIteration] = useState(0);
   const [tableLength, setTableLength] = useState(Number);
   const [tableIteration, setTableIteration] = useState(0);
-  // console.log(databases);
-  // const data = [
-  //   {
-  //     id: '3',
-  //     name: 'Database 1',
-  //     children: [
-  //       { id: 'c1', name: 'Table1', children: [{ id: 'e1', name: 'column1' }] },
-  //       { id: 'c2', name: 'Table2', children: [{ id: 'e2', name: 'column2' }] },
-  //       { id: 'c3', name: 'Table3', children: [{ id: 'e3', name: 'column3' }] }
-  //     ]
-  //   },
-  //   {
-  //     id: '4',
-  //     name: 'Database 2',
-  //     children: [
-  //       { id: 'd1', name: 'Table1', children: [{ id: 'f1', name: 'column1' }] },
-  //       { id: 'd2', name: 'Table2', children: [{ id: 'f2', name: 'column2' }] },
-  //       { id: 'd3', name: 'Table3', children: [{ id: 'f3', name: 'column3' }] }
-  //     ]
-  //   }
-  // ];
-
+  const [databaseDetails, setDatabaseDetails] = useState({});
   const getColumnDetails = async (name: string) => {
     console.log(name);
     const credentials = await authApi();
@@ -124,13 +99,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           response
             .json()
             .then(async (responseResult: any) => {
-              // console.log(responseResult);
-
-              // const columns = responseResult.schema.columns.map(
-              //   (column: { column: string }) => column.column
-              // );
-              // console.log(columns);
-              // setColumns(columns);
               setColumnResponse((prevResponse: any) => [
                 ...prevResponse,
                 responseResult
@@ -178,7 +146,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
               );
               const tableNames: string[] = [];
               const entryNames: string[] = [];
-              // Extract and display the displayName of each entry
               filteredEntries.forEach(
                 (entry: {
                   displayName: string;
@@ -188,29 +155,11 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                   console.log(entry.relativeResourceName);
                   tableNames.push(entry.displayName);
                   entryNames.push(entry.relativeResourceName);
-                  // Display or do something with entry.displayName
                 }
               );
-              // setTables(tableNames);
               setEntries(entryNames);
-              // console.log(tables);
               console.log(entryNames.length);
               setTableLength(entryNames.length);
-              // let count = 0;
-              // entries.map(async (entry: string) => {
-              //   count++;
-              //   console.log(count);
-              //   setTableIteration(count);
-              //   await getColumnDetails(entry);
-              // });
-
-              // await Promise.all(promises);
-              // for (const entry of entries) {
-              //   await getColumnDetails(entry);
-              // }
-              // if (data) {
-              //   setIsLoading(false);
-              // }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -221,74 +170,15 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         });
     }
   };
-  // const dataLoading = () => {
-  //   setIsLoading(false);
-  // };
-  // const [data, setData] = useState<
-  //   {
-  //     id: string;
-  //     name: string;
-  //     children: {
-  //       id: string;
-  //       name: string;
-  //       children: { id: string; name: string }[];
-  //     }[];
-  //   }[]
-  // >([]);
-  // const data = databases.map((db: string) => {
-  //   const dbName = db;
-  //   // const tables = ['table1', 'table2'];
-  //   const tableData = tables.map((table: string) => {
-  //     const tableName = table;
-  //     // const columns = ['column1', 'column2'];
-  //     // getColumnDetails(table);
-  //     const columnData = columns.map((column: string) => ({
-  //       id: uuidv4(),
-  //       name: column
-  //     }));
-
-  //     return {
-  //       id: uuidv4(),
-  //       name: tableName,
-  //       children: columnData
-  //     };
-  //   });
-
-  //   return {
-  //     id: uuidv4(),
-  //     name: dbName,
-  //     children: tableData
-  //   };
-  // });
-  // const data = columnResponse.map((res: any) => {
-  //   console.log(databases, columns);
-  //   const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
-  //   const tableName = res.fullyQualifiedName.split('.').slice(-1)[0];
-  //   const columnData = res.schema.columns.map((column: { column: string }) => ({
-  //     id: uuidv4(),
-  //     name: column.column
-  //   }));
-
-  //   return {
-  //     id: uuidv4(),
-  //     name: dbName,
-  //     children: [
-  //       {
-  //         id: uuidv4(),
-  //         name: tableName,
-  //         children: columnData
-  //       }
-  //     ]
-  //   };
-  // });
   const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
-
   columnResponse.forEach((res: any) => {
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
-    const columnName = res.schema.columns.map(
-      (column: { column: string }) => column.column
-    );
+    const columns = res.schema.columns.map((column: any) => ({
+      name: column.column,
+      type: column.type.toUpperCase(),
+      mode: column.mode
+    }));
 
     if (!database[dbName]) {
       database[dbName] = {};
@@ -298,7 +188,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       database[dbName][tableName] = [];
     }
 
-    database[dbName][tableName].push(...columnName);
+    database[dbName][tableName].push(...columns);
   });
 
   const data = Object.entries(database).map(([dbName, tables]) => ({
@@ -307,9 +197,11 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     children: Object.entries(tables).map(([tableName, columns]) => ({
       id: uuidv4(),
       name: tableName,
-      children: columns.map((columnName: string) => ({
+      children: columns.map((column: any) => ({
         id: uuidv4(),
-        name: columnName
+        name: column.name,
+        type: column.type,
+        mode: column.mode
       }))
     }))
   }));
@@ -328,11 +220,16 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     // Open main area widget with selected node values
     const depth = calculateDepth(node);
     if (depth === 1) {
-      const content = new Database(node.data.name);
+      console.log(dataprocMetastoreServices);
+      console.log(databaseDetails);
+      const content = new Database(
+        node.data.name,
+        dataprocMetastoreServices,
+        databaseDetails
+      );
       const widget = new MainAreaWidget<Database>({ content });
       const widgetId = `node-widget-${uuidv4()}`;
       widget.id = widgetId;
-      // widget.node.innerHTML = node.data.name;
       widget.title.label = node.data.name;
       widget.title.closable = true;
       widget.title.icon = iconDatabaseWidget;
@@ -340,11 +237,19 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       // Add the widget to the main area
       app.shell.add(widget, 'main');
     } else if (depth === 2) {
-      const content = new Table(node.data.name);
+      console.log(node);
+      console.log(node.parent.data.name);
+      const database = node.parent.data.name;
+      const column = node.data.children;
+      const content = new Table(
+        node.data.name,
+        dataprocMetastoreServices,
+        database,
+        column
+      );
       const widget = new MainAreaWidget<Table>({ content });
       const widgetId = `node-widget-${uuidv4()}`;
       widget.id = widgetId;
-      // widget.node.innerHTML = node.data.name;
       widget.title.label = node.data.name;
       widget.title.closable = true;
       widget.title.icon = iconDatasets;
@@ -384,13 +289,11 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             <div onClick={handleToggle}>
               <iconRightArrow.react tag="div" />
             </div>
-            {/* <i className="caret right icon large" onClick={handleToggle}></i> */}
           </>
         ) : (
           <div onClick={handleToggle}>
             <iconDownArrow.react tag="div" />
           </div>
-          // <i className="caret down icon large" onClick={handleToggle}></i>
         )
       ) : null;
 
@@ -459,29 +362,23 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                   entry.displayName !== 'default'
               );
               const databaseNames: string[] = [];
-              // Extract and display the displayName of each entry
-              filteredEntries.forEach((entry: { displayName: string }) => {
-                console.log(entry.displayName);
-                databaseNames.push(entry.displayName);
-                // Display or do something with entry.displayName
-              });
-              // setDatabases(databaseNames);
+              const updatedDatabaseDetails: { [key: string]: string } = {};
+              filteredEntries.forEach(
+                (entry: { description: string; displayName: string }) => {
+                  console.log(entry.displayName);
+                  databaseNames.push(entry.displayName);
+                  const description = entry.description || 'None';
+                  updatedDatabaseDetails[entry.displayName] = description;
+                }
+              );
+              setDatabaseDetails(updatedDatabaseDetails);
+              console.log(databaseDetails);
               console.log(databaseNames);
               setDatabaseLength(databaseNames.length);
               databaseNames.map(async (db: string) => {
                 setDatabaseIteration(databaseIteration + 1);
                 await getTableDetails(db);
               });
-              // await Promise.all(promises);
-              // for (const db of databaseNames) {
-              //   await getTableDetails(db);
-              // }
-              // console.log('loading false');
-              // setIsLoading(false);
-              // if (data.length !== 0) {
-              //   console.log('loading false');
-              //   setIsLoading(false);
-              // }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -491,19 +388,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           console.error('Error listing clusters Details', err);
         });
     }
-    // console.log(dataprocMetastoreServices);
-    // const inputArray = [
-    //   'dataproc_metastore:acn-ytmusicsonos.us-central1.service-metastore.default'
-    // ];
-    // const valuesAfterLastDot = inputArray.map(inputString => {
-    //   const parts = inputString.split('.');
-    //   return parts[parts.length - 1];
-    // });
-    // setDatabases(valuesAfterLastDot);
-    // console.log(valuesAfterLastDot); // Output: "default"
-    // if (data) {
-    //   setIsLoading(false);
-    // }
   };
   const getClusterDetails = async () => {
     const credentials = await authApi();
@@ -523,13 +407,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             .json()
             .then(async (responseResult: any) => {
               console.log(responseResult);
-              // let transformClusterListData = [];
-
               const metastoreServices =
                 responseResult.config?.metastoreConfig
                   ?.dataprocMetastoreService;
-              // const metastoreServices =
-              // 'projects/acn-ytmusicsonos/locations/us-central1/services/service-metastore';
               console.log(metastoreServices);
               const lastIndex = metastoreServices.lastIndexOf('/');
               const instanceName =
@@ -539,14 +419,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
               console.log(instanceName);
               setDataprocMetastoreServices(instanceName);
               console.log(dataprocMetastoreServices);
-              // getDatabaseDetails();
-              // if(data){
-              //   setIsLoading(false);
-              // }
             })
             .catch((e: Error) => {
               console.log(e);
-              // setIsLoading(false);
             });
         })
         .catch((err: Error) => {
@@ -576,40 +451,24 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   }, [dataprocMetastoreServices]);
   useEffect(() => {
     console.log('table use effect');
-    // entries.map((entry: string) => {
-    //   getColumnDetails(entry);
-    //   setTableIteration(tableIteration + 1);
-    // });
     entries.forEach(async (entry: string) => {
       await getColumnDetails(entry);
       setTableIteration(prevCount => prevCount + 1);
     });
   }, [entries]);
   useEffect(() => {
-    console.log(columnResponse);
-    console.log(databaseIteration);
-    console.log(databaseLength);
-    console.log(tableLength);
-    console.log(tableIteration);
     if (
       tableIteration === tableLength &&
       databaseIteration === databaseLength &&
       tableLength !== 0
     ) {
       console.log('loading false');
-      console.log(databaseIteration);
-      console.log(databaseLength);
-      console.log(tableLength);
-      console.log(tableIteration);
       setIsLoading(false);
     }
-    // dataLoading();
   }, [columnResponse]);
-  useEffect(() => {
-    console.log('tableIteration:', tableIteration);
-
-    // You can perform other actions with the tableIteration count here if needed
-  }, [tableIteration]);
+  // useEffect(() => {
+  //   console.log('tableIteration:', tableIteration);
+  // }, [tableIteration]);
   return (
     <>
       <div>
@@ -628,13 +487,11 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             <div className="search-icon">
               <iconSearch.react tag="div" />
             </div>
-
-            {/* <i className="search icon"></i> */}
           </div>
         </div>
       </div>
       <div style={{ marginLeft: '20px' }}>
-        {isLoading ? ( // Conditional rendering based on isLoading state
+        {isLoading ? (
           <div>Loading data...</div>
         ) : (
           <div
