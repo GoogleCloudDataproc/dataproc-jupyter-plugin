@@ -10,7 +10,6 @@ import {
   ARCHIVEFILESMESSAGE,
   ARGUMENTSMESSAGE,
   BASE_URL,
-  BASE_URL_CREATE_BATCH,
   BASE_URL_META,
   FILESMESSAGE,
   JARFILEMESSAGE,
@@ -24,6 +23,7 @@ import LabelProperties from '../jobs/labelProperties';
 import { authApi } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
+import ErrorPopup from '../utils/errorPopup';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -42,6 +42,7 @@ let argumentsUris: any[] = [];
 let networkUris: any[] = [];
 let key: any[] | (() => any[]) = [];
 let value: any[] | (() => any[]) = [];
+
 
 function CreateBatch({
   setCreateBatchView,
@@ -92,6 +93,7 @@ function CreateBatch({
   const [regionList, setRegionList] = useState([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [isLoadingService, setIsLoadingService] = useState(false);
+  const [error, setError] = useState({ isOpen: false, message: '' });
   const [clustersList, setClustersList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
@@ -134,6 +136,15 @@ function CreateBatch({
     listClustersAPI();
     setInitialClustersList([...clustersList]);
   }, [clusterSelected]);
+
+  function isSubmitDisabled() {
+    return (
+      batchIdSelected === '' ||
+      regionName === '' ||
+      (selectedRadio === 'mainClass' && mainClassSelected === '') ||
+      (selectedRadio === 'mainJarURI' && mainJarSelected === '')
+    );
+  }
 
   const listClustersAPI = async () => {
     const credentials = await authApi();
@@ -304,10 +315,11 @@ function CreateBatch({
     mainJarSelected: string,
     mainClassSelected: string,
     propertyObject: any,
-    archieveFileSelected: any,
-    fileSelected: any,
-    jarFileSelected: any,
-    argumentSelected: any,
+    ArchiveFilesSelected: any,
+    filesSelected: any,
+    jarFilesSelected: any,
+    argumentsSelected: any,
+    networkTagSelected: any,
     labelObject: any,
     projectName: any,
     regionName: any,
@@ -321,46 +333,59 @@ function CreateBatch({
         }),
         ...(mainClassSelected !== '' && {
           mainClass: mainClassSelected
-        }),
+        })},
         ...(labelObject && {
           labels: labelObject
         }),
         name: `projects/${projectName}/locations/${regionName}/batches/${batchIdSelected}`,
         runtimeConfig: {
-          version: { versionSelected },
-          containerImage: containerImageSelected,
+          version: versionSelected,
+          ...(containerImageSelected !== '' && {
+            containerImage: containerImageSelected
+          }),
           ...(propertyObject && {
             properties: propertyObject
           })
         },
         environmentConfig: {
           executionConfig: {
-            serviceAccount: serviceAccountSelected,
+            ...(serviceAccountSelected !== '' && {
+              serviceAccount: serviceAccountSelected
+            }),
             subnetworkUri: 'default',
-            networkTags: networkTagSelected
+            ...(networkTagSelected.length > 0 && {
+              networkTags: networkTagSelected
+            })
           }
         },
-        peripheralsConfig: {
-          metastoreService: servicesSelected,
-          sparkHistoryServerConfig: {
-            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
+        ...((servicesSelected !== 'None' || clusterSelected !== '') && {
+          peripheralsConfig: {
+            ...(servicesSelected !== 'None' && {
+              metastoreService: servicesSelected
+            }),
+            ...(clusterSelected !== '' && {
+              sparkHistoryServerConfig: {
+                dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
+              }
+            })
           }
-        },
-        ...(archieveFileSelected !== '' && {
-          archiveUris: archieveFileSelected
         }),
-        ...(fileSelected !== '' && {
-          fileUris: [fileSelected]
+        ...(ArchiveFilesSelected.length > 0 && {
+          archiveUris: ArchiveFilesSelected
         }),
-        ...(jarFileSelected !== '' && {
-          jarFileUris: jarFileSelected
+        ...(filesSelected.length > 0 && {
+          fileUris: [filesSelected]
         }),
-        ...(argumentSelected !== '' && {
-          args: [argumentSelected]
+        ...(jarFilesSelected.length > 0 && {
+          jarFileUris: jarFilesSelected
+        }),
+        ...(argumentsSelected.length > 0 && {
+          args: [argumentsSelected]
         })
-      }
+      
     };
   };
+   
 
   const handleSubmit = async () => {
     const credentials = await authApi();
@@ -384,18 +409,21 @@ function CreateBatch({
             mainClassSelected,
             propertyObject,
             ArchiveFilesSelected,
+            
             filesSelected,
             jarFilesSelected,
             argumentsSelected,
+            networkTagSelected,
             labelObject,
             projectName,
             regionName,
             clusterSelected,
             batchIdSelected
+            
           ))
       };
       fetch(
-        `${BASE_URL_CREATE_BATCH}/projects/${credentials.project_id}/regions/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
         {
           method: 'POST',
           body: JSON.stringify(payload),
@@ -405,23 +433,20 @@ function CreateBatch({
           }
         }
       )
-        .then((response: any) => {
-          if (response.status === 200) {
-            response
-              .json()
-              .then((responseResult: any) => {
-                console.log(responseResult);
-              })
-              .catch((e: any) => {
-                console.log(e);
-              });
+        .then(async (response: any) => {
+          if (response.ok) {
+            const responseResult = await response.json();
+            console.log(responseResult);
+            setCreateBatchView(false);
           } else {
-            throw new Error(`API failed with status: ${response.status}`);
+            const errorResponse = await response.json();
+            console.log(errorResponse);
+            setError({ isOpen: true, message: errorResponse.error.message });
           }
         })
         .catch((err: any) => {
-          console.error('Error submitting job', err);
-          toast.error('Failed to submit the job');
+          console.error('Error submitting Batch', err);
+          toast.error('Failed to submit the Batch');
         });
     }
   };
@@ -841,18 +866,29 @@ function CreateBatch({
               setDuplicateKeyError={setDuplicateKeyError}
             />
             <div className="job-button-style-parent">
-              <div className="submit-button-style">
+              <div className={isSubmitDisabled()
+                  ? 'submit-button-disable-style'
+                  : 'submit-button-style'}>
                 <div
                   onClick={() => {
-                    handleSubmit();
+                    if (!isSubmitDisabled()) {
+                      handleSubmit();
+                    }
                   }}
                 >
                   SUBMIT
                 </div>
               </div>
               <div className="job-cancel-button-style">
-                <div>CANCEL</div>
+                <div   onClick={() => handleCreateBatchBackView()}>CANCEL</div>
               </div>
+              {error.isOpen && (
+                <ErrorPopup
+                  onCancel={() => setError({ isOpen: false, message: '' })}
+                  errorPopupOpen={error.isOpen}
+                  DeleteMsg={error.message}
+                />
+              )}
             </div>
           </form>
         </div>
