@@ -10,6 +10,7 @@ import {
   ARCHIVEFILESMESSAGE,
   ARGUMENTSMESSAGE,
   BASE_URL,
+  BASE_URL_CREATE_BATCH,
   BASE_URL_META,
   FILESMESSAGE,
   JARFILEMESSAGE,
@@ -22,6 +23,7 @@ import 'react-tagsinput/react-tagsinput.css';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
+import { toast } from 'react-toastify';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -31,6 +33,7 @@ const iconLeftArrow = new LabIcon({
 interface ICreateBatchProps {
   setCreateBatchView: (value: boolean) => void;
   regionName: string;
+  projectName: string;
 }
 let jarFileUris: any[] = [];
 let fileUris: any[] = [];
@@ -40,17 +43,18 @@ let networkUris: any[] = [];
 let key: any[] | (() => any[]) = [];
 let value: any[] | (() => any[]) = [];
 
-function CreateBatch({ setCreateBatchView, regionName }: ICreateBatchProps) {
-  const [batchID, setBatchID] = useState('');
+function CreateBatch({
+  setCreateBatchView,
+  regionName,
+  projectName
+}: ICreateBatchProps) {
   const [batchTypeList, setBatchTypeList] = useState([{}]);
   const [versionList, setVersionList] = useState([{}]);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [batchIdSelected, setBatchIdSelected] = useState('');
   const [batchTypeSelected, setBatchTypeSelected] = useState('spark');
-  const [versionSelected, setVersionSelected] = useState(
-    '2.1(Spark 3.4, Java 17, Scala 2.13)'
-  );
+  const [versionSelected, setVersionSelected] = useState('2.1');
   const [selectedRadio, setSelectedRadio] = useState('mainClass');
   const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
     useState('googleManaged');
@@ -94,6 +98,7 @@ function CreateBatch({ setCreateBatchView, regionName }: ICreateBatchProps) {
   const [initialClustersList, setInitialClustersList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
+
   const handleCreateBatchBackView = () => {
     setCreateBatchView(false);
   };
@@ -128,7 +133,7 @@ function CreateBatch({ setCreateBatchView, regionName }: ICreateBatchProps) {
     projectListAPI();
     listClustersAPI();
     setInitialClustersList([...clustersList]);
-  }, [batchIdSelected, clustersList]);
+  }, [clusterSelected]);
 
   const listClustersAPI = async () => {
     const credentials = await authApi();
@@ -295,12 +300,130 @@ function CreateBatch({ setCreateBatchView, regionName }: ICreateBatchProps) {
         });
     }
   };
+  const createSparkPayload = (
+    mainJarSelected: string,
+    mainClassSelected: string,
+    propertyObject: any,
+    archieveFileSelected: any,
+    fileSelected: any,
+    jarFileSelected: any,
+    argumentSelected: any,
+    labelObject: any,
+    projectName: any,
+    regionName: any,
+    clusterSelected: any,
+    batchIdSelected: any
+  ) => {
+    return {
+      sparkBatch: {
+        ...(mainJarSelected !== '' && {
+          mainJarFileUri: mainJarSelected
+        }),
+        ...(mainClassSelected !== '' && {
+          mainClass: mainClassSelected
+        }),
+        ...(labelObject && {
+          labels: labelObject
+        }),
+        name: `projects/${projectName}/locations/${regionName}/batches/${batchIdSelected}`,
+        runtimeConfig: {
+          version: { versionSelected },
+          containerImage: containerImageSelected,
+          ...(propertyObject && {
+            properties: propertyObject
+          })
+        },
+        environmentConfig: {
+          executionConfig: {
+            serviceAccount: serviceAccountSelected,
+            subnetworkUri: 'default',
+            networkTags: networkTagSelected
+          }
+        },
+        peripheralsConfig: {
+          metastoreService: servicesSelected,
+          sparkHistoryServerConfig: {
+            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
+          }
+        },
+        ...(archieveFileSelected !== '' && {
+          archiveUris: archieveFileSelected
+        }),
+        ...(fileSelected !== '' && {
+          fileUris: [fileSelected]
+        }),
+        ...(jarFileSelected !== '' && {
+          jarFileUris: jarFileSelected
+        }),
+        ...(argumentSelected !== '' && {
+          args: [argumentSelected]
+        })
+      }
+    };
+  };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Do something with the form data, e.g., submit it to the server
-    // You can access the form values from the state (batchID in this case)
-    console.log('Submitting batch ID:', batchID, setBatchID);
+  const handleSubmit = async () => {
+    const credentials = await authApi();
+    if (credentials) {
+      const labelObject: { [key: string]: string } = {};
+      labelDetailUpdated.forEach((label: string) => {
+        const key = label.split(':')[0];
+        const value = label.split(':')[1];
+        labelObject[key] = value;
+      });
+      const propertyObject: { [key: string]: string } = {};
+      propertyDetailUpdated.forEach((label: string) => {
+        const key = label.split(':')[0];
+        const value = label.split(':')[1];
+        propertyObject[key] = value;
+      });
+      const payload = {
+        ...(batchTypeSelected === 'spark' &&
+          createSparkPayload(
+            mainJarSelected,
+            mainClassSelected,
+            propertyObject,
+            ArchiveFilesSelected,
+            filesSelected,
+            jarFilesSelected,
+            argumentsSelected,
+            labelObject,
+            projectName,
+            regionName,
+            clusterSelected,
+            batchIdSelected
+          ))
+      };
+      fetch(
+        `${BASE_URL_CREATE_BATCH}/projects/${credentials.project_id}/regions/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: any) => {
+          if (response.status === 200) {
+            response
+              .json()
+              .then((responseResult: any) => {
+                console.log(responseResult);
+              })
+              .catch((e: any) => {
+                console.log(e);
+              });
+          } else {
+            throw new Error(`API failed with status: ${response.status}`);
+          }
+        })
+        .catch((err: any) => {
+          console.error('Error submitting job', err);
+          toast.error('Failed to submit the job');
+        });
+    }
   };
   const generateRandomHex = () => {
     if (!generationCompleted) {
@@ -608,7 +731,6 @@ function CreateBatch({ setCreateBatchView, regionName }: ICreateBatchProps) {
                       selection
                       options={versionList}
                       value={versionSelected}
-              
                     />
                   </div>
                 )}
@@ -719,8 +841,14 @@ function CreateBatch({ setCreateBatchView, regionName }: ICreateBatchProps) {
               setDuplicateKeyError={setDuplicateKeyError}
             />
             <div className="job-button-style-parent">
-              <div className="submit-button-disable-style">
-                <div>SUBMIT</div>
+              <div className="submit-button-style">
+                <div
+                  onClick={() => {
+                    handleSubmit();
+                  }}
+                >
+                  SUBMIT
+                </div>
               </div>
               <div className="job-cancel-button-style">
                 <div>CANCEL</div>

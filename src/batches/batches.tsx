@@ -64,6 +64,7 @@ const ServerlessComponent = (): React.JSX.Element => {
   const [selectedBatch, setSelectedBatch] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
   const [regionName, setRegionName] = useState('');
+  const [projectName, setProjectName] = useState('');
 
   
   const [createBatchView, setCreateBatchView] = useState(false);
@@ -91,6 +92,7 @@ const ServerlessComponent = (): React.JSX.Element => {
     const credentials = await authApi();
     if (credentials) {
       setRegionName(credentials.region_id || '');
+      setProjectName(credentials.project_id || '');
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=100`,
         {
@@ -242,6 +244,7 @@ const ServerlessComponent = (): React.JSX.Element => {
             <CreateBatch
               setCreateBatchView={setCreateBatchView}
               regionName={regionName}
+              projectName={projectName}
             />
           )}
           
