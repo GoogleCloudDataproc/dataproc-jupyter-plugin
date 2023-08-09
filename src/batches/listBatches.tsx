@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import createClusterIcon from '../../style/icons/create_cluster_icon.svg';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -36,6 +36,7 @@ import {
   STATUS_SUCCESS
 } from '../utils/const';
 import TableData from '../utils/tableData';
+import { PaginationView } from '../utils/paginationView';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -126,13 +127,30 @@ function ListBatches({
     rows,
     prepareRow,
     state,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore
-    setGlobalFilter
-  } =
-    //@ts-ignore
-    useTable({ columns, data }, useGlobalFilter);
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    setGlobalFilter,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    page,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    canPreviousPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    canNextPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    nextPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    previousPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    setPageSize,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    state: { pageIndex, pageSize }
+  } = useTable(
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
+    useGlobalFilter,
+    usePagination
+  );
 
   interface ICellProps {
     getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
@@ -215,7 +233,7 @@ function ListBatches({
             <div className="filter-cluster-section">
               <GlobalFilter
                 preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore
+                //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 listBatchAPI={listBatchAPI}
@@ -230,10 +248,23 @@ function ListBatches({
               getTableBodyProps={getTableBodyProps}
               isLoading={isLoading}
               rows={rows}
+              page={page}
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Batches"
             />
+            {batchesList.length > 50 && (
+              <PaginationView
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                pageIndex={pageIndex}
+                allData={batchesList}
+                previousPage={previousPage}
+                nextPage={nextPage}
+                canPreviousPage={canPreviousPage}
+                canNextPage={canNextPage}
+              />
+            )}
           </div>
         </div>
       ) : (

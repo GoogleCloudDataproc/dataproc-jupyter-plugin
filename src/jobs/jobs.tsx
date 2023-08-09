@@ -212,7 +212,7 @@ function JobComponent({
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=${pageSize}&pageToken=${pageToken}&&clusterName=${clusterName}`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -259,9 +259,10 @@ function JobComponent({
                   actions: renderActions(data)
                 };
               });
-              const exsingJobsData: any = previousJobsList ?? [];
+              const existingJobsData = previousJobsList ?? [];
+              //setStateAction never type issue
               let allJobsData: any = [
-                ...exsingJobsData,
+                ...(existingJobsData as []),
                 ...transformJobListData
               ];
 
@@ -440,28 +441,26 @@ function JobComponent({
     rows,
     prepareRow,
     state,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setGlobalFilter,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     page,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canPreviousPage,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canNextPage,
-    //@ts-ignore
-    pageOptions,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     nextPage,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     previousPage,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setPageSize,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     state: { pageIndex, pageSize }
   } = useTable(
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
@@ -531,7 +530,7 @@ function JobComponent({
                 <div className="filter-cluster-section">
                   <GlobalFilter
                     preGlobalFilteredRows={preGlobalFilteredRows}
-                    //@ts-ignore
+                    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
                     globalFilter={state.globalFilter}
                     setGlobalFilter={setGlobalFilter}
                     setPollingDisable={setPollingDisable}
@@ -556,16 +555,18 @@ function JobComponent({
                   tableDataCondition={tableDataCondition}
                   fromPage="Jobs"
                 />
-                <PaginationView
-                  pageSize={pageSize}
-                  setPageSize={setPageSize}
-                  pageIndex={pageIndex}
-                  allData={jobsList}
-                  previousPage={previousPage}
-                  nextPage={nextPage}
-                  canPreviousPage={canPreviousPage}
-                  canNextPage={canNextPage}
-                />
+                {jobsList.length > 50 && (
+                  <PaginationView
+                    pageSize={pageSize}
+                    setPageSize={setPageSize}
+                    pageIndex={pageIndex}
+                    allData={jobsList}
+                    previousPage={previousPage}
+                    nextPage={nextPage}
+                    canPreviousPage={canPreviousPage}
+                    canNextPage={canNextPage}
+                  />
+                )}
               </div>
             </div>
           ) : (

@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
@@ -48,6 +48,7 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
+import { PaginationView } from '../utils/paginationView';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -129,11 +130,15 @@ function ListSessions() {
     []
   );
 
-  const listSessionsAPI = async () => {
+  const listSessionsAPI = async (
+    nextPageToken?: string,
+    previousSessionsList?: object
+  ) => {
     const credentials = await authApi();
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions?pageSize=1000`,
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions?pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -174,9 +179,20 @@ function ListSessions() {
                   actions: renderActions(data)
                 };
               });
-              setSessionsList(transformSessionListData);
 
-              setIsLoading(false);
+              const existingSessionsData = previousSessionsList ?? [];
+              //setStateAction never type issue
+              let allSessionsData: any = [
+                ...(existingSessionsData as []),
+                ...transformSessionListData
+              ];
+
+              if (responseResult.nextPageToken) {
+                listSessionsAPI(responseResult.nextPageToken, allSessionsData);
+              } else {
+                setSessionsList(allSessionsData);
+                setIsLoading(false);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -210,11 +226,30 @@ function ListSessions() {
     rows,
     prepareRow,
     state,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore
-    setGlobalFilter
-  } = useTable({ columns, data }, useGlobalFilter);
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    setGlobalFilter,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    page,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    canPreviousPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    canNextPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    nextPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    previousPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    setPageSize,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    state: { pageIndex, pageSize }
+  } = useTable(
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
+    useGlobalFilter,
+    usePagination
+  );
 
   useEffect(() => {
     listSessionsAPI();
@@ -351,7 +386,7 @@ function ListSessions() {
             <div className="filter-cluster-section">
               <GlobalFilter
                 preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore
+                //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
@@ -365,10 +400,23 @@ function ListSessions() {
               getTableBodyProps={getTableBodyProps}
               isLoading={isLoading}
               rows={rows}
+              page={page}
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Sessions"
             />
+            {sessionsList.length > 50 && (
+              <PaginationView
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                pageIndex={pageIndex}
+                allData={sessionsList}
+                previousPage={previousPage}
+                nextPage={nextPage}
+                canPreviousPage={canPreviousPage}
+                canNextPage={canNextPage}
+              />
+            )}
           </div>
         </div>
       ) : (

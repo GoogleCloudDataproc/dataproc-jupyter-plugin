@@ -17,11 +17,30 @@
 
 import React from 'react';
 
+interface IBatch {
+  batchID: string;
+  status: string;
+  location: string;
+  creationTime: string;
+  elapsedTime: string;
+  type: string;
+  actions: JSX.Element;
+}
+interface ICluster {
+  clusterName: string;
+  status: string;
+  clusterImage: string;
+  region: string;
+  zone: string;
+  totalWorkersNode: string;
+  schedulesDeletion: string;
+  actions: React.ReactNode;
+}
 interface IPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
   pageIndex: number;
-  allData: any;
+  allData: IBatch[] | ICluster[];
   previousPage: () => void;
   nextPage:  () => void;
   canPreviousPage: boolean;

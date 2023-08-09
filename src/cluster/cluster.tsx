@@ -108,12 +108,16 @@ const ClusterComponent = (): React.JSX.Element => {
     }
     setSelectedMode(mode);
   };
-  const listClustersAPI = async () => {
+  const listClustersAPI = async (
+    nextPageToken?: string,
+    previousClustersList?: object
+  ) => {
     const credentials = await authApi();
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
       setProjectId(credentials.project_id || '');
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=1000`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -150,9 +154,20 @@ const ClusterComponent = (): React.JSX.Element => {
                   };
                 }
               );
-              setclustersList(transformClusterListData);
-              setIsLoading(false);
-              setLoggedIn(true);
+              const existingClusterData = previousClustersList ?? [];
+              //setStateAction never type issue
+              let allClustersData: any = [
+                ...(existingClusterData as []),
+                ...transformClusterListData
+              ];
+
+              if (responseResult.nextPageToken) {
+                listClustersAPI(responseResult.nextPageToken, allClustersData);
+              } else {
+                setclustersList(allClustersData);
+                setIsLoading(false);
+                setLoggedIn(true);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
