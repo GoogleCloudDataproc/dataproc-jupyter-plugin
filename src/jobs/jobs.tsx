@@ -500,26 +500,23 @@ function JobComponent({
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {
-            // clustersList &&
-            clusterResponse &&
-              clusterResponse.clusters &&
-              clusterResponse.clusters.length > 0 && (
-                <div className="create-cluster-overlay">
-                  <div
-                    className="create-cluster-sub-overlay"
-                    onClick={() => {
-                      handleSubmitJobOpen();
-                    }}
-                  >
-                    <div className="create-cluster-icon">
-                      <iconSubmitJob.react tag="div" />
-                    </div>
-                    <div className="create-cluster-text">SUBMIT JOB</div>
+          {clusterResponse &&
+            clusterResponse.clusters &&
+            clusterResponse.clusters.length > 0 && (
+              <div className="create-cluster-overlay">
+                <div
+                  className="create-cluster-sub-overlay"
+                  onClick={() => {
+                    handleSubmitJobOpen();
+                  }}
+                >
+                  <div className="create-cluster-icon">
+                    <iconSubmitJob.react tag="div" />
                   </div>
+                  <div className="create-cluster-text">SUBMIT JOB</div>
                 </div>
-              )
-          }
+              </div>
+            )}
           {jobsList.length > 0 ? (
             <div>
               <div className="filter-cluster-overlay">

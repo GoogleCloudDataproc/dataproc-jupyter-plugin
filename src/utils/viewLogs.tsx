@@ -22,6 +22,7 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
+  SPARK_HISTORY_SERVER,
   VIEW_LOGS_BATCH_URL,
   VIEW_LOGS_CLUSTER_URL,
   VIEW_LOGS_SESSION_URL
@@ -63,7 +64,7 @@ function ViewLogs({
               } else {
                 window.open(
                   responseResult.config.endpointConfig.httpPorts[
-                    'Spark History Server'
+                    SPARK_HISTORY_SERVER
                   ]
                 );
               }
@@ -83,11 +84,9 @@ function ViewLogs({
       <div
         className={
           (batchInfoResponse?.runtimeInfo?.endpoints &&
-            batchInfoResponse?.runtimeInfo?.endpoints[
-              'Spark History Server'
-            ]) ||
+            batchInfoResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
           (sessionInfo?.runtimeInfo?.endpoints &&
-            sessionInfo?.runtimeInfo?.endpoints['Spark History Server']) ||
+            sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
           clusterName
             ? 'action-cluster-section'
             : 'action-disabled action-cluster-section'
@@ -101,22 +100,22 @@ function ViewLogs({
           } else if (
             batchInfoResponse &&
             batchInfoResponse?.runtimeInfo?.endpoints &&
-            batchInfoResponse?.runtimeInfo?.endpoints['Spark History Server']
+            batchInfoResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]
           ) {
             window.open(
-              batchInfoResponse.runtimeInfo.endpoints['Spark History Server'],
+              batchInfoResponse.runtimeInfo.endpoints[SPARK_HISTORY_SERVER],
               '_blank'
             );
           } else if (
             sessionInfo &&
             sessionInfo?.runtimeInfo?.endpoints &&
-            sessionInfo?.runtimeInfo?.endpoints['Spark History Server']
+            sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]
           ) {
             window.open(
-              sessionInfo.runtimeInfo.endpoints['Spark History Server'],
+              sessionInfo.runtimeInfo.endpoints[SPARK_HISTORY_SERVER],
               '_blank'
             );
-          } else if(clusterName) {
+          } else if (clusterName) {
             handleJobDetailsViewLogs(clusterName);
           }
         }}
@@ -134,6 +133,10 @@ function ViewLogs({
         className="action-cluster-section"
         onClick={() => {
           if (sessionInfo) {
+            /*
+            Extracting project, location, session_id from sessionInfo.name
+            Example projects/{project}/locations/{location}/sessionTemplates/{session_id}"
+            */
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
                 sessionInfo.name.split('/')[1]
@@ -147,6 +150,10 @@ function ViewLogs({
               '_blank'
             );
           } else {
+            /*
+            Extracting project, location, batch_id from batchInfoResponse.name 
+            Example projects/{project}/locations/{location}/batches/{batch_id}"
+            */
             window.open(
               `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
                 batchInfoResponse.name.split('/')[1]
