@@ -78,12 +78,12 @@ function jobTypeFunction(jobKey: string) {
   }
 }
 function handleOptionalFields(selectedJobClone: any, jobTypeKey: any) {
-  let args: any[] = [];
-  let jarFileUris: any[] = [];
-  let archiveUris: any[] = [];
-  let fileUris: any[] = [];
+  let args: string[] = [];
+  let jarFileUris: string[] = [];
+  let archiveUris: string[] = [];
+  let fileUris: string[] = [];
   let maxFailuresPerHour = '';
-  let pythonFileUris: any[] = [];
+  let pythonFileUris: string[] = [];
   if (selectedJobClone[jobTypeKey].hasOwnProperty('fileUris')) {
     fileUris = [selectedJobClone[jobTypeKey].fileUris];
   }
@@ -131,12 +131,12 @@ function SubmitJob(
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
   const [hexNumber, setHexNumber] = useState('');
   const [submitDisabled, setSubmitDisabled] = useState(true);
-  let mainJarFileUri = ' ';
-  let args: any[] = [];
-  let jarFileUris: any[] = [];
-  let archiveUris: any[] = [];
-  let fileUris: any[] = [];
-  let pythonFileUris: any[] = [];
+  let mainJarFileUri = '';
+  let args: string[] = [];
+  let jarFileUris: string[] = [];
+  let archiveUris: string[] = [];
+  let fileUris: string[] = [];
+  let pythonFileUris: string[] = [];
   let maxFailuresPerHour = '';
   let mainRFileUri = '';
   let jobType = 'spark';
@@ -144,9 +144,9 @@ function SubmitJob(
   let queryFileUri = '';
   let queryType = '';
   let queryList = '';
-  let mainClass = ' ';
-  let key: any[] | (() => any[]) = [];
-  let value: any[] | (() => any[]) = [];
+  let mainClass = '';
+  let key: string[] | (() => string[]) = [];
+  let value: string[] | (() => string[]) = [];
   let jobKeys: string[] = [];
   if (Object.keys(selectedJobClone).length !== 0) {
     jobKeys = jobKey(selectedJobClone);
@@ -175,7 +175,7 @@ function SubmitJob(
     } = handleOptionalFields(selectedJobClone, jobTypeKey));
   }
   const initialMainClassSelected =
-    mainJarFileUri && mainJarFileUri !== ' ' ? mainJarFileUri : mainClass;
+    mainJarFileUri && mainJarFileUri !== '' ? mainJarFileUri : mainClass;
   const [mainClassSelected, setMainClassSelected] = useState(
     initialMainClassSelected
   );
@@ -213,6 +213,7 @@ function SubmitJob(
   const [valueValidation, setvalueValidation] = useState(-1);
   const [jobIdValidation, setjobIdValidation] = useState(true);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
+  const [mainClassActive, setMainClassActive] = useState(false);
 
   const handleCancelJobButton = () => {
     setSubmitJobView(false);
@@ -311,8 +312,7 @@ function SubmitJob(
       clusterSelected !== '' &&
       jobIdSelected !== '' &&
       ((isSparkJob &&
-        mainClassSelected.trim().length !== 0 &&
-        // mainClassValidation &&
+        mainClassSelected.length !== 0 &&
         jarFileValidation &&
         fileValidation &&
         archieveFileValidation &&
@@ -733,7 +733,6 @@ function SubmitJob(
                 Query source type*
               </div>
               <Select
-                // placeholder="Query source type*"
                 onChange={handleQuerySourceTypeSelected}
                 className="select-job-style"
                 options={querySourceTypeList}
@@ -746,7 +745,6 @@ function SubmitJob(
               <>
                 <div className="submit-job-cluster-message">Query file*</div>
                 <Input
-                  //placeholder="Query file*"
                   className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
@@ -777,7 +775,6 @@ function SubmitJob(
               <>
                 <div className="submit-job-cluster-message">Query text*</div>
                 <Input
-                  //placeholder="Query text*"
                   className="select-job-style"
                   onChange={e => setQueryTextSelected(e.target.value)}
                   value={queryTextSelected}
@@ -799,10 +796,11 @@ function SubmitJob(
                     setMainClassValidation
                   )
                 }
+                onBlur={()=>setMainClassActive(true)}
                 addOnBlur={true}
                 value={mainClassSelected}
               />
-              {mainClassSelected === '' && (
+              {mainClassSelected === '' && mainClassActive && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" />
                   <div className="error-key-missing">
@@ -810,7 +808,7 @@ function SubmitJob(
                   </div>
                 </div>
               )}
-              {mainClassSelected !== '' && (
+              {(mainClassSelected !== '' || !mainClassActive) && (
                 <div className="submit-job-message">{MAINCLASSMESSAGE}</div>
               )}
             </>
@@ -819,7 +817,6 @@ function SubmitJob(
             <>
               <div className="submit-job-cluster-message">Main R file*</div>
               <Input
-                //placeholder="Main R file*"
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -851,7 +848,6 @@ function SubmitJob(
                 Main Python file*
               </div>
               <Input
-                //placeholder="Main Python file*"
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1028,7 +1024,6 @@ function SubmitJob(
             Max restarts per hour
           </div>
           <Input
-            //placeholder="Max restarts per hour"
             className="select-job-style"
             onChange={e => setMaxRestartSelected(e.target.value)}
             value={maxRestartSelected}

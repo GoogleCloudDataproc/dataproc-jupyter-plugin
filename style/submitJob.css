@@ -211,3 +211,7 @@ a:hover {
 .react-tagsinput--focused{
   border: 3px solid #3367D6 !important;
 }
+
+.labels-delete-icon {
+  padding-top: 7px;
+}

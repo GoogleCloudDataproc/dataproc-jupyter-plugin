@@ -93,7 +93,8 @@ function BatchDetails({
     },
     sparkBatch: {
       mainJarFileUri: '',
-      mainClass: ''
+      mainClass: '',
+      jarFileUris: ''
     },
     pysparkBatch: {
       mainPythonFileUri: ''
@@ -352,12 +353,26 @@ function BatchDetails({
                 </div>
               )}
             {batch === 'Spark' && batchInfoResponse.sparkBatch.mainClass && (
-              <div className="row-details">
-                <div className="details-label">Main Class</div>
-                <div className="details-value">
-                  {batchInfoResponse.sparkBatch.mainClass}
+              <>
+                <div className="row-details">
+                  <div className="details-label">Main Class</div>
+                  <div className="details-value">
+                    {batchInfoResponse.sparkBatch.mainClass}
+                  </div>
                 </div>
-              </div>
+                <div className="row-details">
+                  <div className="details-label">Jar files</div>
+                  <div className="details-value">
+                    {batchInfoResponse.sparkBatch.jarFileUris ? (
+                      <div className="cluster-details-value">
+                        {batchInfoResponse.sparkBatch.jarFileUris}
+                      </div>
+                    ) : (
+                      <div className="cluster-details-value">None</div>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
             {batch === 'PySpark' && (
               <div className="row-details">
@@ -434,7 +449,7 @@ function BatchDetails({
 
             <div className="row-details">
               <div className="details-label">Encryption type</div>
-              <div className="details-value">Google-managed key</div>
+              <div className="details-value">Google-managed</div>
             </div>
             <div className="batch-details-row-label">
               <div className="details-label">Labels</div>
