@@ -76,6 +76,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [noCluster, setNoCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseLength, setDatabaseLength] = useState(Number);
@@ -258,9 +259,24 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       app.shell.add(widget, 'main');
     }
   };
+  const clearState = () => {
+    setSearchTerm('');
+    setClusterValue('');
+    setDataprocMetastoreServices('');
+    setIsLoading(true);
+    setEntries([]);
+    setColumnResponse([]);
+    setDatabaseLength(0);
+    setDatabaseIteration(0);
+    setTableLength(0);
+    setTableIteration(0);
+    setDatabaseDetails({});
+  };
   const handleRefreshClick = () => {
     // Call the getClusterDetails function to fetch updated data
-    getClusterDetails();
+    clearState();
+    setIsLoading(true);
+    getActiveNotebook();
   };
 
   type NodeProps = NodeRendererProps<any> & {
@@ -411,14 +427,19 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                 responseResult.config?.metastoreConfig
                   ?.dataprocMetastoreService;
               console.log(metastoreServices);
-              const lastIndex = metastoreServices.lastIndexOf('/');
-              const instanceName =
-                lastIndex !== -1
-                  ? metastoreServices.substring(lastIndex + 1)
-                  : '';
-              console.log(instanceName);
-              setDataprocMetastoreServices(instanceName);
-              console.log(dataprocMetastoreServices);
+              if (metastoreServices) {
+                const lastIndex = metastoreServices.lastIndexOf('/');
+                const instanceName =
+                  lastIndex !== -1
+                    ? metastoreServices.substring(lastIndex + 1)
+                    : '';
+                console.log(instanceName);
+                setDataprocMetastoreServices(instanceName);
+                console.log(dataprocMetastoreServices);
+                setNoCluster(false);
+              } else {
+                setNoCluster(true);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -431,15 +452,19 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         });
     }
   };
-  useEffect(() => {
+  const getActiveNotebook = () => {
     const clusterVal = localStorage.getItem('clusterValue');
     console.log(clusterVal);
     if (clusterVal) {
       setClusterValue(clusterVal);
       getClusterDetails();
     } else {
+      setNoCluster(true);
       console.log('no value');
     }
+  };
+  useEffect(() => {
+    getActiveNotebook();
     return () => {
       // Cleanup function to reset clusterValue when the component is unmounted
       setClusterValue('');
@@ -476,49 +501,56 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         <div className="refresh-icon" onClick={handleRefreshClick}>
           <iconRefresh.react tag="div" />
         </div>
-        <div className="ui category search">
-          <div className="ui icon input">
-            <input
-              className="search-field"
-              type="text"
-              value={searchTerm}
-              onChange={handleSearch}
-            />
-            <div className="search-icon">
-              <iconSearch.react tag="div" />
-            </div>
+      </div>
+      {!noCluster ? (
+        <>
+          <div>
+            {isLoading ? (
+              <div>Loading data...</div>
+            ) : (
+              <>
+                <div className="ui category search">
+                  <div className="ui icon input">
+                    <input
+                      className="search-field"
+                      type="text"
+                      value={searchTerm}
+                      onChange={handleSearch}
+                    />
+                    <div className="search-icon">
+                      <iconSearch.react tag="div" />
+                    </div>
+                  </div>
+                </div>
+                <div className="tree-container">
+                  <Tree
+                    data={data}
+                    openByDefault={false}
+                    width={600}
+                    height={1000}
+                    indent={24}
+                    rowHeight={36}
+                    overscanCount={1}
+                    paddingTop={30}
+                    paddingBottom={10}
+                    padding={25}
+                    searchTerm={searchTerm}
+                    searchMatch={searchMatch}
+                  >
+                    {(props: NodeRendererProps<any>) => (
+                      <Node {...props} onClick={handleNodeClick} />
+                    )}
+                  </Tree>
+                </div>
+              </>
+            )}
           </div>
+        </>
+      ) : (
+        <div className="dpms-error">
+          Please select cluster notebook attached to metastore and refresh
         </div>
-      </div>
-      <div style={{ marginLeft: '20px' }}>
-        {isLoading ? (
-          <div>Loading data...</div>
-        ) : (
-          <div
-            className="tree-container"
-            style={{ height: '600px', overflowY: 'auto' }}
-          >
-            <Tree
-              data={data}
-              openByDefault={false}
-              width={600}
-              height={1000}
-              indent={24}
-              rowHeight={36}
-              overscanCount={1}
-              paddingTop={30}
-              paddingBottom={10}
-              padding={25}
-              searchTerm={searchTerm}
-              searchMatch={searchMatch}
-            >
-              {(props: NodeRendererProps<any>) => (
-                <Node {...props} onClick={handleNodeClick} />
-              )}
-            </Tree>
-          </div>
-        )}
-      </div>
+      )}
     </>
   );
 };

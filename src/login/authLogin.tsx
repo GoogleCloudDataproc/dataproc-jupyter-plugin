@@ -49,7 +49,7 @@ const AuthLoginComponent = (): React.JSX.Element => {
         localStorage.setItem('loginState', LOGIN_STATE);
       } else {
         setLoginState(false);
-        localStorage.clear();
+        localStorage.removeItem('loginState');
       }
     }
   };

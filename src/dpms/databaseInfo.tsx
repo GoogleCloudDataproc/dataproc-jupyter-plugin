@@ -1,11 +1,10 @@
-// import React from 'react';
 import { ReactWidget } from '@jupyterlab/apputils';
 import React from 'react';
 
 interface IDatabaseProps {
   title: string;
   dataprocMetastoreServices: string;
-  databaseDetails: any;
+  databaseDetails: Record<string, string>;
 }
 
 const DatabaseInfo = ({
@@ -51,11 +50,11 @@ const DatabaseInfo = ({
 
 export class Database extends ReactWidget {
   dataprocMetastoreServices: string;
-  databaseDetails: any;
+  databaseDetails: Record<string, string>;
   constructor(
     title: string,
     dataprocMetastoreServices: string,
-    databaseDetails: any
+    databaseDetails: Record<string, string>
   ) {
     super();
     this.addClass('jp-ReactWidget');

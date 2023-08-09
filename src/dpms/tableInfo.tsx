@@ -1,76 +1,18 @@
-// import React from 'react';
-// import { ReactWidget } from '@jupyterlab/apputils';
-// const TableInfo = ({ title }: { title: any }): React.JSX.Element => {
-//   //   return (
-//   //     <div>
-//   //       <div className="lm-Widget p-Widget jp-Toolbar jp-Toolbar-micro">
-//   //         {title._label}
-//   //       </div>
-//   //       <div className="db-title">database info</div>
-//   //     </div>
-//   //   );
-//   // };
-//   const table = {
-//     'Table name': 'dataproc-public-data.american_health_ranking.ahr',
-//     Description: 'description text goes here',
-//     'By column name': 'lorem ipsum',
-//     'By Database': 'lorem ipsum',
-//     'By Dataproc Metastore Instance': 'Lorem ipsum'
-//   };
-
-//   // Render the JSON object in a React table
-//   const renderTable = () => {
-//     return (
-//       <div className="table-container">
-//         <table className="db-table">
-//           <tbody>
-//             {Object.entries(table).map(([key, value], index) => (
-//               <tr
-//                 key={key}
-//                 className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'} // Apply different classes to even and odd rows
-//               >
-//                 <td>{key}</td>
-//                 <td>{value}</td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-//     );
-//   };
-
-//   return (
-//     <div>
-//       <div className="lm-Widget p-Widget jp-Toolbar jp-Toolbar-micro">
-//         {title._label}
-//       </div>
-//       <div className="db-title">Table info</div>
-//       {renderTable()}
-//       <div className="db-title">Schema</div>
-//       {renderColumnTable(table)}
-//     </div>
-//   );
-// };
-
-// export class Table extends ReactWidget {
-//   constructor(title: string) {
-//     super();
-//     this.addClass('jp-ReactWidget');
-//   }
-
-//   render(): React.JSX.Element {
-//     return <TableInfo title={this.title} />;
-//   }
-// }
 import React from 'react';
 import { ReactWidget } from '@jupyterlab/apputils';
 import { useTable } from 'react-table';
+interface IColumn {
+  name: string;
+  type: string;
+  mode: string;
+  description: string;
+}
 
 interface IDatabaseProps {
   title: string;
   dataprocMetastoreServices: string;
   database: string;
-  column: any;
+  column: IColumn[];
 }
 const TableInfo = ({
   title,
@@ -126,7 +68,7 @@ const TableInfo = ({
     );
 
     const data = React.useMemo(() => {
-      return column.map((column: any) => ({
+      return column.map((column: IColumn) => ({
         name: column.name,
         type: column.type || '',
         mode: column.mode || ''
@@ -204,13 +146,13 @@ const TableInfo = ({
 export class Table extends ReactWidget {
   dataprocMetastoreServices: string;
   database!: string;
-  column: any;
+  column: IColumn[];
 
   constructor(
     title: string,
     dataprocMetastoreServices: string,
     database: string,
-    column: any
+    column: IColumn[]
   ) {
     super();
     this.addClass('jp-ReactWidget');

@@ -13,6 +13,8 @@
 .refresh-icon{
     margin-left: 230px;
     margin-top: -20px;
+    width: 20px;
+    cursor: pointer;
 }
 /* .ui.icon.input>i.icon{
     margin-top: 10px !important;
@@ -61,4 +63,15 @@
   
   div[role="treeitem"][aria-level="2"] > div > div > svg {
     margin-right: 10px;
+  }
+  .dpms-error{
+    margin-top: 50px;
+    margin-left: 20px;
+    font-weight: 550;
+    font-size: 15px;
+  }
+  .tree-container {
+    height: '600px';
+    overflow-y: 'auto';
+    margin-left: 20px;
   }

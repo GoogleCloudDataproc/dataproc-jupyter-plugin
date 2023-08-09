@@ -183,13 +183,13 @@ export const checkConfig = async (
   const credentials = await authApi();
   if (credentials) {
     if (credentials.access_token === '') {
-      localStorage.clear();
+      localStorage.removeItem('loginState');
       if (credentials.config_error === 1) {
-        localStorage.clear();
+        localStorage.removeItem('loginState');
         setConfigError(true);
       }
       if (credentials.login_error === 1) {
-        localStorage.clear();
+        localStorage.removeItem('loginState');
         setLoginError(true);
       }
     } else {

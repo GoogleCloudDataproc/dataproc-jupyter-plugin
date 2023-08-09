@@ -62,27 +62,10 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
-    //  const onTitleChanged = async (title: Title<Widget>) => {
-    //     const widget = title.owner as NotebookPanel;
-    //     if (widget && widget instanceof NotebookPanel) {
-    //       console.log("enteres if");
-    //       const kernel = widget.sessionContext.session?.kernel;
-    //       // let kernelName = await getActiveNotebookKernelName(widget);
-    //       let kernelName = kernel?.name;
-    //       console.log(kernelName,"kernelname");
-    //       if (kernelName) {
-    //         console.log("executing");
-    //         console.log(kernels[kernelName]);
-    //         const kernelSpec = kernels[kernelName];
-    //         console.log(kernelSpec?.resources.endpointParentResource || null);
-    //         document.title = `${title.label}`;
-    //       }
-    //       console.log(document.title);
-    //     } else {
-    //       document.title = title.label;
-    //     }
-    //     console.log(Kernel)
-    //   };
+    window.addEventListener('beforeunload', () => {
+      // Clear the specific local storage item when the tab is closed
+      localStorage.removeItem('clusterValue');
+    });
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
       if (widget && widget instanceof NotebookPanel) {
@@ -101,6 +84,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           }
         } else {
           console.log('No active kernel.');
+          localStorage.removeItem('clusterValue');
         }
         document.title = title.label;
         console.log(document.title);
@@ -290,6 +274,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       const panel = new Panel();
       panel.id = 'dpms-tab';
       panel.title.icon = iconDpms; // svg import
+      const activeNotebook = notebookTracker.currentWidget;
+      if (activeNotebook && activeNotebook.sessionContext.session?.kernel) {
+        console.log('notebook active');
+      } else {
+        console.log('no active');
+      }
       panel.addWidget(new dpmsWidget(app as JupyterLab));
       app.shell.add(panel, 'left');
 
