@@ -22,6 +22,7 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
+  SPARK_HISTORY_SERVER,
   VIEW_LOGS_BATCH_URL,
   VIEW_LOGS_CLUSTER_URL,
   VIEW_LOGS_SESSION_URL
@@ -63,7 +64,7 @@ function ViewLogs({
               } else {
                 window.open(
                   responseResult.config.endpointConfig.httpPorts[
-                    'Spark History Server'
+                    SPARK_HISTORY_SERVER
                   ]
                 );
               }
@@ -81,24 +82,40 @@ function ViewLogs({
   return (
     <>
       <div
-        className="action-cluster-section"
+        className={
+          (batchInfoResponse?.runtimeInfo?.endpoints &&
+            batchInfoResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
+          (sessionInfo?.runtimeInfo?.endpoints &&
+            sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
+          clusterName
+            ? 'action-cluster-section'
+            : 'action-disabled action-cluster-section'
+        }
         onClick={() => {
           if (clusterInfo) {
             window.open(
               `${VIEW_LOGS_CLUSTER_URL}"${clusterInfo.clusterName}" resource.labels.cluster_uuid="${clusterInfo.clusterUuid}"?project=${projectName}`,
               '_blank'
             );
-          } else if (batchInfoResponse) {
+          } else if (
+            batchInfoResponse &&
+            batchInfoResponse?.runtimeInfo?.endpoints &&
+            batchInfoResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]
+          ) {
             window.open(
-              batchInfoResponse.runtimeInfo.endpoints['Spark History Server'],
+              batchInfoResponse.runtimeInfo.endpoints[SPARK_HISTORY_SERVER],
               '_blank'
             );
-          } else if (sessionInfo) {
+          } else if (
+            sessionInfo &&
+            sessionInfo?.runtimeInfo?.endpoints &&
+            sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]
+          ) {
             window.open(
-              sessionInfo.runtimeInfo.endpoints['Spark History Server'],
+              sessionInfo.runtimeInfo.endpoints[SPARK_HISTORY_SERVER],
               '_blank'
             );
-          } else {
+          } else if (clusterName) {
             handleJobDetailsViewLogs(clusterName);
           }
         }}
@@ -116,25 +133,37 @@ function ViewLogs({
         className="action-cluster-section"
         onClick={() => {
           if (sessionInfo) {
+            /*
+            Extracting project, location, session_id from sessionInfo.name
+            Example: "projects/{project}/locations/{location}/sessionTemplates/{session_id}"
+            */
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
                 sessionInfo.name.split('/')[1]
-              }"
-              resource.labels.location="us-central1"
-              resource.labels.session_id="${
+              }" resource.labels.location="${
+                sessionInfo.name.split('/')[3]
+              }" resource.labels.session_id="${
                 sessionInfo.name.split('/')[5]
-              }"?project=${sessionInfo.name.split('/')[1]}`,
+              }";cursorTimestamp=${sessionInfo.createTime};?project=${
+                sessionInfo.name.split('/')[1]
+              }`,
               '_blank'
             );
           } else {
+            /*
+            Extracting project, location, batch_id from batchInfoResponse.name 
+            Example: "projects/{project}/locations/{location}/batches/{batch_id}"
+            */
             window.open(
               `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
                 batchInfoResponse.name.split('/')[1]
-              }"
-              resource.labels.location="us-central1"
-              resource.labels.session_id="${
+              }" resource.labels.location="${
+                batchInfoResponse.name.split('/')[3]
+              }" resource.labels.batch_id="${
                 batchInfoResponse.name.split('/')[5]
-              }"?project=${batchInfoResponse.name.split('/')[1]}`,
+              }";cursorTimestamp=${batchInfoResponse.createTime};?project=${
+                batchInfoResponse.name.split('/')[1]
+              }`,
               '_blank'
             );
           }

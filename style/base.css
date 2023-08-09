@@ -5,12 +5,12 @@
 */
 
 /*Hiding Notebook section cards with name Remote for Remote kernels*/
-.jp-LauncherCard[data-category='Notebook'][title~='Dataproc'], .jp-LauncherCard[data-category='Notebook'][title~='dataproc-serverless-interactive'] {
+.jp-LauncherCard[data-category='Notebook'][title~='Remote'], .jp-LauncherCard[data-category='Notebook'][title~='Serverless'] {
   display: none;
 }
 
 /*Hiding Console section cards with name Remote for Remote kernels*/
-.jp-LauncherCard[data-category='Console'][title~='Dataproc'], .jp-LauncherCard[data-category='Console'][title~='dataproc-serverless-interactive'] {
+.jp-LauncherCard[data-category='Console'][title~='Remote'], .jp-LauncherCard[data-category='Console'][title~='Serverless'] {
   display: none;
 }
 
