@@ -82,11 +82,15 @@ const ServerlessComponent = (): React.JSX.Element => {
     setSelectedMode(mode);
   };
 
-  const listBatchAPI = async () => {
+  const listBatchAPI = async (
+    nextPageToken?: string,
+    previousBatchesList?: object
+  ) => {
     const credentials = await authApi();
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=100`,
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -124,9 +128,21 @@ const ServerlessComponent = (): React.JSX.Element => {
                   };
                 }
               );
-              setBatchesList(transformBatchListData);
-              setIsLoading(false);
-              setLoggedIn(true);
+
+              const existingBatchData = previousBatchesList ?? [];
+              //setStateAction never type issue
+              let allBatchesData: any = [
+                ...(existingBatchData as []),
+                ...transformBatchListData
+              ];
+
+              if (responseResult.nextPageToken) {
+                listBatchAPI(responseResult.nextPageToken, allBatchesData);
+              } else {
+                setBatchesList(allBatchesData);
+                setIsLoading(false);
+                setLoggedIn(true);
+              }
             })
             .catch((e: Error) => {
               console.log(e);

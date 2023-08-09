@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import {
   authApi,
   jobTimeFormat,
@@ -25,7 +25,6 @@ import {
   statusMessage,
   jobTypeDisplay
 } from '../utils/utils';
-
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import cloneIcon from '../../style/icons/clone_icon.svg';
@@ -60,6 +59,7 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { PaginationView } from '../utils/paginationView';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -118,6 +118,7 @@ function JobComponent({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+
   const pollingJobs = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -202,12 +203,16 @@ function JobComponent({
     setDeletePopupOpen(false);
   };
 
-  const listJobsAPI = async () => {
+  const listJobsAPI = async (
+    nextPageToken?: string,
+    previousJobsList?: object
+  ) => {
     const credentials = await authApi();
     const clusterName = clusterSelected ?? '';
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=100&&clusterName=${clusterName}`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -254,8 +259,19 @@ function JobComponent({
                   actions: renderActions(data)
                 };
               });
-              setjobsList(transformJobListData);
-              setIsLoading(false);
+              const existingJobsData = previousJobsList ?? [];
+              //setStateAction never type issue
+              let allJobsData: any = [
+                ...(existingJobsData as []),
+                ...transformJobListData
+              ];
+
+              if (responseResult.nextPageToken) {
+                listJobsAPI(responseResult.nextPageToken, allJobsData);
+              } else {
+                setjobsList(allJobsData);
+                setIsLoading(false);
+              }
             })
             .catch((e: Error) => {
               console.error(e);
@@ -425,11 +441,30 @@ function JobComponent({
     rows,
     prepareRow,
     state,
-    //@ts-ignore
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore
-    setGlobalFilter
-  } = useTable({ columns, data }, useGlobalFilter);
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    setGlobalFilter,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    page,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    canPreviousPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    canNextPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    nextPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    previousPage,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    setPageSize,
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    state: { pageIndex, pageSize }
+  } = useTable(
+    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
+    useGlobalFilter,
+    usePagination
+  );
 
   return (
     <div>
@@ -465,9 +500,7 @@ function JobComponent({
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {
-          // clustersList &&
-            clusterResponse &&
+          {clusterResponse &&
             clusterResponse.clusters &&
             clusterResponse.clusters.length > 0 && (
               <div className="create-cluster-overlay">
@@ -494,7 +527,7 @@ function JobComponent({
                 <div className="filter-cluster-section">
                   <GlobalFilter
                     preGlobalFilteredRows={preGlobalFilteredRows}
-                    //@ts-ignore
+                    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
                     globalFilter={state.globalFilter}
                     setGlobalFilter={setGlobalFilter}
                     setPollingDisable={setPollingDisable}
@@ -513,11 +546,24 @@ function JobComponent({
                   headerGroups={headerGroups}
                   getTableBodyProps={getTableBodyProps}
                   isLoading={isLoading}
+                  page={page}
                   rows={rows}
                   prepareRow={prepareRow}
                   tableDataCondition={tableDataCondition}
                   fromPage="Jobs"
                 />
+                {jobsList.length > 50 && (
+                  <PaginationView
+                    pageSize={pageSize}
+                    setPageSize={setPageSize}
+                    pageIndex={pageIndex}
+                    allData={jobsList}
+                    previousPage={previousPage}
+                    nextPage={nextPage}
+                    canPreviousPage={canPreviousPage}
+                    canNextPage={canNextPage}
+                  />
+                )}
               </div>
             </div>
           ) : (

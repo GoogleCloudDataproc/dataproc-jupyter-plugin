@@ -257,6 +257,7 @@ function LabelProperties({
                       )}
                   </div>
                   <div
+                    className='labels-delete-icon'
                     onClick={() =>
                       handleDeleteLabel(index, label.split(':')[0])
                     }
