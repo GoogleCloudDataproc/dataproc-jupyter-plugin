@@ -135,7 +135,7 @@ function ViewLogs({
           if (sessionInfo) {
             /*
             Extracting project, location, session_id from sessionInfo.name
-            Example projects/{project}/locations/{location}/sessionTemplates/{session_id}"
+            Example: "projects/{project}/locations/{location}/sessionTemplates/{session_id}"
             */
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
@@ -152,7 +152,7 @@ function ViewLogs({
           } else {
             /*
             Extracting project, location, batch_id from batchInfoResponse.name 
-            Example projects/{project}/locations/{location}/batches/{batch_id}"
+            Example: "projects/{project}/locations/{location}/batches/{batch_id}"
             */
             window.open(
               `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
