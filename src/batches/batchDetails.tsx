@@ -162,7 +162,7 @@ function BatchDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting Batch details', err);
-          toast.error('Failed to fetch Batch details');
+          toast.error(`Failed to fetch batch details ${batchSelected}`);
         });
     }
   };

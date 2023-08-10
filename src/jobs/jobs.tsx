@@ -281,7 +281,7 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
-          toast.error('Failed to fetch Jobs');
+          toast.error('Failed to fetch jobs');
         });
     }
   };

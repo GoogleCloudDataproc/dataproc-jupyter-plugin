@@ -144,6 +144,7 @@ class LoginHandler(APIHandler):
 class ConfigHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
+        ERROR_MESSAGE = "Project and region update "
         global credentials_cache
         input_data = self.get_json_body()
         project_id = input_data["projectId"]
@@ -157,11 +158,11 @@ class ConfigHandler(APIHandler):
             output, _ = region_set.communicate()
             if region_set.returncode == 0:
                 credentials_cache = None
-                self.finish({'config':'Project and Region Updated Successfully'})
+                self.finish({'config': ERROR_MESSAGE + 'successful'})
             else:
-                self.finish({'config':'Project and Region Updation Failed'})
+                self.finish({'config': ERROR_MESSAGE + 'failed'})
         else:
-            self.finish({'config':'Project and Region Updation Failed'})
+            self.finish({'config': ERROR_MESSAGE + 'failed'})
 
 
 def setup_handlers(web_app):

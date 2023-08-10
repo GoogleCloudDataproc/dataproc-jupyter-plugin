@@ -136,7 +136,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         .catch((err: any) => {
           setIsLoadingUser(false);
           console.error('Error displaying user info', err);
-          toast.error('Failed to fetch User Information ');
+          toast.error('Failed to fetch user information');
         });
     }
   };
@@ -173,7 +173,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         .catch((err: any) => {
           setIsLoadingProject(false);
           console.error('Error fetching project list', err);
-          toast.error('Failed to fetch the project list ');
+          toast.error('Failed to fetch the projects');
         });
     }
   };
@@ -228,7 +228,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
     } catch (error) {
       setIsLoadingRegion(false);
       console.error('Error fetching region list:');
-      toast.error('Failed to fetch the region list ');
+      toast.error('Failed to fetch the regions');
       // Handle the error here (e.g., show an error message to the user)
     }
   };
