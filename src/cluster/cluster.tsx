@@ -130,6 +130,7 @@ const ClusterComponent = (): React.JSX.Element => {
             .json()
             .then((responseResult: any) => {
               let transformClusterListData = [];
+              if (responseResult && responseResult.clusters) {
               setClusterResponse(responseResult);
               transformClusterListData = responseResult.clusters.map(
                 (data: any) => {
@@ -160,9 +161,10 @@ const ClusterComponent = (): React.JSX.Element => {
                   };
                 }
               );
+            }
               const existingClusterData = previousClustersList ?? [];
               //setStateAction never type issue
-              let allClustersData: any = [
+              const allClustersData: any = [
                 ...(existingClusterData as []),
                 ...transformClusterListData
               ];
@@ -277,6 +279,11 @@ const ClusterComponent = (): React.JSX.Element => {
   }) {
     return (
       <div
+        role="button"
+        aria-disabled={
+          data.status.state !== ClusterStatus.STATUS_STOPPED &&
+          restartEnabled !== true
+        }
         className={
           data.status.state === ClusterStatus.STATUS_STOPPED &&
           restartEnabled !== true
@@ -305,6 +312,8 @@ const ClusterComponent = (): React.JSX.Element => {
   }) {
     return (
       <div
+        role="button"
+        aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
         className={
           data.status.state === ClusterStatus.STATUS_RUNNING
             ? 'icon-buttons-style'
@@ -332,6 +341,8 @@ const ClusterComponent = (): React.JSX.Element => {
   }) {
     return (
       <div
+        role="button"
+        aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
         className={
           data.status.state === ClusterStatus.STATUS_RUNNING
             ? 'icon-buttons-style'
@@ -420,16 +431,18 @@ const ClusterComponent = (): React.JSX.Element => {
             />
           )}
           {!detailedView && (
-            <div className="clusters-list-component">
+            <div className="clusters-list-component" role="tablist">
               {!detailedJobView && !submitJobView && (
-                <div className="clusters-list-overlay">
+                <div className="clusters-list-overlay" role="tab">
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Clusters')}
                     onClick={() => selectedModeChange('Clusters')}
                   >
                     Clusters
                   </div>
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Jobs')}
                     onClick={() => selectedModeChange('Jobs')}
                   >

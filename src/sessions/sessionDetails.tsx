@@ -195,6 +195,7 @@ function SessionDetails({
             <div>
               <div className="cluster-details-header">
                 <div
+                  role="button"
                   className="back-arrow-icon"
                   onClick={() => handleDetailedView()}
                 >
@@ -202,6 +203,7 @@ function SessionDetails({
                 </div>
                 <div className="cluster-details-title">Session details</div>
                 <div
+                  role="button"
                   className={
                     sessionInfo.state === STATUS_ACTIVE
                       ? 'action-cluster-section'

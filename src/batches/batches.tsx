@@ -103,36 +103,37 @@ const ServerlessComponent = (): React.JSX.Element => {
             .json()
             .then((responseResult: any) => {
               let transformBatchListData = [];
-              transformBatchListData = responseResult.batches.map(
-                (data: any) => {
-                  const startTimeDisplay = jobTimeFormat(data.createTime);
-                  const startTime = new Date(data.createTime);
-                  const elapsedTimeString = elapsedTime(
-                    data.stateTime,
-                    startTime
-                  );
-                  const batchType = Object.keys(data).filter(key =>
-                    key.endsWith('Batch')
-                  );
-                  /*
+              if (responseResult && responseResult.batches) {
+                transformBatchListData = responseResult.batches.map(
+                  (data: any) => {
+                    const startTimeDisplay = jobTimeFormat(data.createTime);
+                    const startTime = new Date(data.createTime);
+                    const elapsedTimeString = elapsedTime(
+                      data.stateTime,
+                      startTime
+                    );
+                    const batchType = Object.keys(data).filter(key =>
+                      key.endsWith('Batch')
+                    );
+                    /*
                      Extracting batchID, location from batchInfo.name
                       Example: "projects/{project}/locations/{location}/batches/{batchID}"
-                  */
-                  const batchTypeDisplay = jobTypeDisplay(
-                    batchType[0].split('Batch')[0]
-                  );
-                  
-                  return {
-                    batchID: data.name.split('/')[5],
-                    status: data.state,
-                    location: data.name.split('/')[3],
-                    creationTime: startTimeDisplay,
-                    type: batchTypeDisplay,
-                    elapsedTime: elapsedTimeString,
-                    actions: renderActions(data)
-                  };
-                }
-              );
+                    */
+                    const batchTypeDisplay = jobTypeDisplay(
+                      batchType[0].split('Batch')[0]
+                    );
+                    return {
+                      batchID: data.name.split('/')[5],
+                      status: data.state,
+                      location: data.name.split('/')[3],
+                      creationTime: startTimeDisplay,
+                      type: batchTypeDisplay,
+                      elapsedTime: elapsedTimeString,
+                      actions: renderActions(data)
+                    };
+                  }
+                );
+              }
 
               const existingBatchData = previousBatchesList ?? [];
               //setStateAction never type issue
@@ -257,12 +258,14 @@ const ServerlessComponent = (): React.JSX.Element => {
               {
                 <div className="clusters-list-overlay" role="tab">
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Batches')}
                     onClick={() => selectedModeChange('Batches')}
                   >
                     Batches
                   </div>
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Sessions')}
                     onClick={() => selectedModeChange('Sessions')}
                   >

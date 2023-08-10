@@ -89,6 +89,7 @@ const AuthLoginComponent = (): React.JSX.Element => {
           <div className="login-error">Please login to continue</div>
           <div style={{ alignItems: 'center' }}>
             <div
+              role="button"
               className={
                 isloginDisabled
                   ? 'signin-google-icon disabled'

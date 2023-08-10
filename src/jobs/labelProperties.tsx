@@ -180,7 +180,7 @@ function LabelProperties({
                       Example: "{client:dataProc_plugin}"
                   */
             const labelSplit = label.split(':');
-            
+
             return (
               <div key={label}>
                 <div className="job-label-edit-row">
@@ -208,7 +208,7 @@ function LabelProperties({
                     />
 
                     {labelDetailUpdated[index].split(':')[0] === '' ? (
-                      <div className="error-key-parent">
+                      <div role="alert" className="error-key-parent">
                         <iconError.react tag="div" />
                         <div className="error-key-missing">key is required</div>
                       </div>
@@ -264,6 +264,7 @@ function LabelProperties({
                       )}
                   </div>
                   <div
+                    role="button"
                     className="labels-delete-icon"
                     onClick={() => handleDeleteLabel(index, labelSplit[0])}
                   >
@@ -275,6 +276,7 @@ function LabelProperties({
             );
           })}
         <div
+          role="button"
           className={styleAddLabelButton(buttonText, labelDetail)}
           onClick={() => {
             (labelDetail.length === 0 ||
