@@ -204,7 +204,7 @@ function ListSessions() {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing Sessions', err);
-          toast.error('Failed to fetch Sessions');
+          toast.error('Failed to fetch sessions');
         });
     }
   };

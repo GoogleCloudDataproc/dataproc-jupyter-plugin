@@ -78,7 +78,7 @@ def get_cached_credentials():
                         'access_token': '',
                         'config_error': 0,
                         'login_error': 1
-                            }
+                        }
             else:
                 credentials = {
                 'project_id': '',
@@ -135,15 +135,16 @@ class LoginHandler(APIHandler):
         cmd = "gcloud auth login"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
-         # Check if the authentication was successful
+        # Check if the authentication was successful
         if process.returncode == 0:
-            self.finish({'login':'SUCCEEDED'})
+            self.finish({'login' : 'SUCCEEDED'})
         else:
-            self.finish({'login':'FAILED'})
+            self.finish({'login' : 'FAILED'})
 
 class ConfigHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
+        ERROR_MESSAGE = "Project and region update "
         global credentials_cache
         input_data = self.get_json_body()
         project_id = input_data["projectId"]
@@ -157,11 +158,11 @@ class ConfigHandler(APIHandler):
             output, _ = region_set.communicate()
             if region_set.returncode == 0:
                 credentials_cache = None
-                self.finish({'config':'Project and Region Updated Successfully'})
+                self.finish({'config' : ERROR_MESSAGE + 'successful'})
             else:
-                self.finish({'config':'Project and Region Updation Failed'})
+                self.finish({'config' : ERROR_MESSAGE + 'failed'})
         else:
-            self.finish({'config':'Project and Region Updation Failed'})
+            self.finish({'config' : ERROR_MESSAGE + 'failed'})
 
 
 def setup_handlers(web_app):

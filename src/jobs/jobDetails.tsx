@@ -232,7 +232,7 @@ function JobDetails({
         })
         .catch((err: Error) => {
           console.error('Error in updating job', err);
-          toast.error('Failed to Update the job ');
+          toast.error(`Failed to update the job ${jobSelected}`);
         });
     }
   };
@@ -300,7 +300,7 @@ function JobDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting job details', err);
-          toast.error('Failed to fetch Job details ');
+          toast.error(`Failed to fetch job details ${jobSelected}`);
         });
     }
   };

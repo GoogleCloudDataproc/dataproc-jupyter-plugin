@@ -158,7 +158,7 @@ const ServerlessComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing batches', err);
-          toast.error('Failed to fetch Batches');
+          toast.error('Failed to fetch batches');
         });
     }
   };

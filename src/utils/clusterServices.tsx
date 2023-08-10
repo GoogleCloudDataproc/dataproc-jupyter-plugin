@@ -76,7 +76,7 @@ export const startStopAPI = async (
       })
       .catch((err: Error) => {
         console.error('Error starting/stopping cluster', err);
-        toast.error('Failed to Start/Stop the Cluster');
+        toast.error(`Failed to ${operation} the cluster ${selectedcluster}`);
       });
   }
 };

@@ -183,7 +183,7 @@ const ClusterComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters', err);
-          toast.error('Failed to fetch Clusters ');
+          toast.error('Failed to fetch clusters');
         });
     }
   };
@@ -226,7 +226,7 @@ const ClusterComponent = (): React.JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error fetching status', err);
-          toast.error('Failed to Fetch the Status');
+          toast.error(`Failed to fetch the status ${selectedcluster}`);
         });
 
       listClustersAPI();
@@ -263,7 +263,7 @@ const ClusterComponent = (): React.JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error restarting cluster', err);
-          toast.error('Failed to Restart the Cluster');
+          toast.error(`Failed to restart the cluster ${selectedcluster}`);
         });
 
       listClustersAPI();

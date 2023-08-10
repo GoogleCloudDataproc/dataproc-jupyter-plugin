@@ -151,7 +151,7 @@ function SessionDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error loading session details', err);
-          toast.error('Failed to fetch Session details');
+          toast.error(`Failed to fetch session details ${sessionSelected}`);
         });
     }
   };

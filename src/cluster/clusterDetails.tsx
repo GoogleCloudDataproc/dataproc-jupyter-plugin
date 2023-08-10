@@ -195,7 +195,7 @@ function ClusterDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters Details', err);
-          toast.error('Failed to fetch Cluster Details');
+          toast.error(`Failed to fetch cluster details ${clusterSelected}`);
         });
     }
   };
