@@ -130,6 +130,7 @@ const ClusterComponent = (): React.JSX.Element => {
             .json()
             .then((responseResult: any) => {
               let transformClusterListData = [];
+              if (responseResult && responseResult.clusters) {
               setClusterResponse(responseResult);
               transformClusterListData = responseResult.clusters.map(
                 (data: any) => {
@@ -160,6 +161,7 @@ const ClusterComponent = (): React.JSX.Element => {
                   };
                 }
               );
+            }
               const existingClusterData = previousClustersList ?? [];
               //setStateAction never type issue
               const allClustersData: any = [

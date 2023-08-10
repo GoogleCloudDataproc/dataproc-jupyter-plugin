@@ -151,34 +151,36 @@ function ListSessions() {
             .json()
             .then((responseResult: any) => {
               let transformSessionListData = [];
-              let sessionsListNew = responseResult.sessions;
-              sessionsListNew.sort(
-                (a: { createTime: string }, b: { createTime: string }) => {
-                  const dateA = new Date(a.createTime);
-                  const dateB = new Date(b.createTime);
-                  return Number(dateB) - Number(dateA);
-                }
-              );
-              transformSessionListData = sessionsListNew.map((data: any) => {
-                const startTimeDisplay = jobTimeFormat(data.createTime);
-                const startTime = new Date(data.createTime);
-                let elapsedTimeString = '';
-                if (
-                  data.state === STATUS_TERMINATED ||
-                  data.state === STATUS_FAIL
-                ) {
-                  elapsedTimeString = elapsedTime(data.stateTime, startTime);
-                }
+              if (responseResult && responseResult.sessions) {
+                let sessionsListNew = responseResult.sessions;
+                sessionsListNew.sort(
+                  (a: { createTime: string }, b: { createTime: string }) => {
+                    const dateA = new Date(a.createTime);
+                    const dateB = new Date(b.createTime);
+                    return Number(dateB) - Number(dateA);
+                  }
+                );
+                transformSessionListData = sessionsListNew.map((data: any) => {
+                  const startTimeDisplay = jobTimeFormat(data.createTime);
+                  const startTime = new Date(data.createTime);
+                  let elapsedTimeString = '';
+                  if (
+                    data.state === STATUS_TERMINATED ||
+                    data.state === STATUS_FAIL
+                  ) {
+                    elapsedTimeString = elapsedTime(data.stateTime, startTime);
+                  }
 
-                return {
-                  sessionID: data.name.split('/')[5],
-                  status: data.state,
-                  location: data.name.split('/')[3],
-                  creationTime: startTimeDisplay,
-                  elapsedTime: elapsedTimeString,
-                  actions: renderActions(data)
-                };
-              });
+                  return {
+                    sessionID: data.name.split('/')[5],
+                    status: data.state,
+                    location: data.name.split('/')[3],
+                    creationTime: startTimeDisplay,
+                    elapsedTime: elapsedTimeString,
+                    actions: renderActions(data)
+                  };
+                });
+              }
 
               const existingSessionsData = previousSessionsList ?? [];
               //setStateAction never type issue

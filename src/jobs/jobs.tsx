@@ -225,40 +225,42 @@ function JobComponent({
             .json()
             .then((responseResult: any) => {
               let transformJobListData = [];
-              transformJobListData = responseResult.jobs.map((data: any) => {
-                const startTime = jobTimeFormat(
-                  data.statusHistory[0].stateStartTime
-                );
-                const job = jobTypeValue(data);
-                const jobType = jobTypeDisplay(job);
-                const endTime = data.status.stateStartTime;
-                const jobStartTime = new Date(
-                  data.statusHistory[0].stateStartTime
-                );
+              if (responseResult && responseResult.jobs) {
+                transformJobListData = responseResult.jobs.map((data: any) => {
+                  const startTime = jobTimeFormat(
+                    data.statusHistory[0].stateStartTime
+                  );
+                  const job = jobTypeValue(data);
+                  const jobType = jobTypeDisplay(job);
+                  const endTime = data.status.stateStartTime;
+                  const jobStartTime = new Date(
+                    data.statusHistory[0].stateStartTime
+                  );
 
-                const elapsedTimeString = elapsedTime(endTime, jobStartTime);
+                  const elapsedTimeString = elapsedTime(endTime, jobStartTime);
 
-                const statusMsg = statusMessage(data);
+                  const statusMsg = statusMessage(data);
 
-                const labelvalue = [];
-                if (data.labels) {
-                  for (const [key, value] of Object.entries(data.labels)) {
-                    labelvalue.push(`${key} : ${value}`);
+                  const labelvalue = [];
+                  if (data.labels) {
+                    for (const [key, value] of Object.entries(data.labels)) {
+                      labelvalue.push(`${key} : ${value}`);
+                    }
+                  } else {
+                    labelvalue.push('None');
                   }
-                } else {
-                  labelvalue.push('None');
-                }
-                return {
-                  jobid: data.reference.jobId,
-                  status: statusMsg,
-                  region: credentials.region_id,
-                  type: jobType,
-                  starttime: startTime,
-                  elapsedtime: elapsedTimeString,
-                  labels: labelvalue,
-                  actions: renderActions(data)
-                };
-              });
+                  return {
+                    jobid: data.reference.jobId,
+                    status: statusMsg,
+                    region: credentials.region_id,
+                    type: jobType,
+                    starttime: startTime,
+                    elapsedtime: elapsedTimeString,
+                    labels: labelvalue,
+                    actions: renderActions(data)
+                  };
+                });
+              }
               const existingJobsData = previousJobsList ?? [];
               //setStateAction never type issue
               let allJobsData: any = [
