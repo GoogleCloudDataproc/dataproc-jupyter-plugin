@@ -131,18 +131,24 @@ const ClusterComponent = (): React.JSX.Element => {
             .then((responseResult: any) => {
               let transformClusterListData = [];
               setClusterResponse(responseResult);
-
               transformClusterListData = responseResult.clusters.map(
                 (data: any) => {
                   const statusVal = statusValue(data);
+                   /*
+                     Extracting zone from zoneUri
+                      Example: "projects/{project}/zones/{zone}"
+                  */
+                  const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
+                 
+                
                   return {
                     clusterUuid: data.clusterUuid,
                     status: statusVal,
                     clusterName: data.clusterName,
                     clusterImage: data.config.softwareConfig.imageVersion,
                     region: data.labels['goog-dataproc-location'],
-                    zone: data.config.gceClusterConfig.zoneUri.split('/')[
-                      data.config.gceClusterConfig.zoneUri.split('/').length - 1
+                    zone: zoneUri[
+                      zoneUri.length - 1
                     ],
                     totalWorkersNode: data.config.workerConfig
                       ? data.config.workerConfig.numInstances

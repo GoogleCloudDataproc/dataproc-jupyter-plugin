@@ -95,6 +95,7 @@ function LabelProperties({
     keyValueData: string
   ) => {
     const labelEdit = [...labelDetail];
+
     labelEdit.forEach((data, dataNumber: any) => {
       if (index === dataNumber) {
         if (keyValue === 'key') {
@@ -174,6 +175,12 @@ function LabelProperties({
       <div className="job-label-edit-parent">
         {labelDetail.length > 0 &&
           labelDetail.map((label: any, index: any) => {
+            /*
+                     Extracting key, value from label
+                      Example: "{client:dataProc_plugin}"
+                  */
+            const labelSplit = label.split(':');
+            
             return (
               <div key={label}>
                 <div className="job-label-edit-row">
@@ -182,7 +189,7 @@ function LabelProperties({
                       placeholder={`Key ${index + 1}*`}
                       className="edit-input-style"
                       disabled={
-                        label.split(':')[0] === '' ||
+                        labelSplit[0] === '' ||
                         buttonText !== 'ADD LABEL' ||
                         duplicateKeyError !== -1
                           ? false
@@ -194,10 +201,10 @@ function LabelProperties({
                           e.target.value,
                           index,
                           'key',
-                          label.split(':')[0]
+                          labelSplit[0]
                         )
                       }
-                      defaultValue={label.split(':')[0]}
+                      defaultValue={labelSplit[0]}
                     />
 
                     {labelDetailUpdated[index].split(':')[0] === '' ? (
@@ -239,10 +246,10 @@ function LabelProperties({
                           e.target.value,
                           index,
                           'value',
-                          label.split(':')[1]
+                          labelSplit[1]
                         )
                       }
-                      defaultValue={label.split(':')[1]}
+                      defaultValue={labelSplit[1]}
                     />
                     {valueValidation === index &&
                       buttonText === 'ADD LABEL' && (
@@ -257,10 +264,8 @@ function LabelProperties({
                       )}
                   </div>
                   <div
-                    className='labels-delete-icon'
-                    onClick={() =>
-                      handleDeleteLabel(index, label.split(':')[0])
-                    }
+                    className="labels-delete-icon"
+                    onClick={() => handleDeleteLabel(index, labelSplit[0])}
                   >
                     <iconDelete.react tag="div" />
                   </div>

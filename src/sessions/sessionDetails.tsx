@@ -353,9 +353,15 @@ function SessionDetails({
                   <div className="session-label-style-parent">
                     {labelDetail.length > 0
                       ? labelDetail.map(label => {
+                         /*
+                            Extracting key, value from label
+                               Example: "{client:dataproc_plugin}"
+                         */
+                          const labelParts = label.split(':');
+                         
                           return (
                             <div key={label} className="job-label-style">
-                              {label.split(':')[0]} : {label.split(':')[1]}
+                              {labelParts[0]} : {labelParts[1]}
                             </div>
                           );
                         })
