@@ -161,6 +161,7 @@ const ClusterComponent = (): React.JSX.Element => {
                   };
                 }
               );
+            }
               const existingClusterData = previousClustersList ?? [];
               //setStateAction never type issue
               let allClustersData: any = [
