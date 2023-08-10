@@ -242,8 +242,14 @@ function JobDetails({
     const payload = jobInfoResponse;
     const labelObject: { [key: string]: string } = {};
     labelDetailUpdated.forEach((label: string) => {
-      const key = label.split(':')[0];
-      const value = label.split(':')[1];
+      /*
+         Extracting key, value from label
+         Example: "{client:dataproc_plugin}"
+      */
+      const labelParts = label.split(':');
+
+      const key = labelParts[0];
+      const value = labelParts[1];
       labelObject[key] = value;
     });
     payload.labels = labelObject;
@@ -630,9 +636,15 @@ function JobDetails({
                     <div className="job-label-style-parent">
                       {labelDetail.length > 0
                         ? labelDetail.map(label => {
+                            /*
+                            Extracting key, value from label
+                               Example: "{client:dataproc_plugin}"
+                         */
+                            const labelParts = label.split(':');
+
                             return (
                               <div key={label} className="job-label-style">
-                                {label.split(':')[0]} : {label.split(':')[1]}
+                                {labelParts[0]} : {labelParts[1]}
                               </div>
                             );
                           })
