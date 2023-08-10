@@ -102,3 +102,4 @@ export const DCU_HOURS = 3600000;
 export const GB_MONTHS = 2592000;
 export const TITLE_LAUNCHER_CATEGORY = 'Dataproc Jobs and Sessions';
 export const SPARK_HISTORY_SERVER = 'Spark History Server';
+export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';

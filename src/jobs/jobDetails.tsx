@@ -655,7 +655,7 @@ function JobDetails({
                       setLabelDetail={setLabelDetail}
                       labelDetailUpdated={labelDetailUpdated}
                       setLabelDetailUpdated={setLabelDetailUpdated}
-                      selectedJobClone={selectedJobClone ? true : false}
+                      selectedJobClone={!!selectedJobClone}
                       buttonText="ADD LABEL"
                       keyValidation={keyValidation}
                       setKeyValidation={setKeyValidation}
