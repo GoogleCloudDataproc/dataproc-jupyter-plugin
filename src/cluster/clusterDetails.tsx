@@ -195,7 +195,7 @@ function ClusterDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters Details', err);
-          toast.error('Failed to fetch Cluster Details');
+          toast.error(`Failed to fetch cluster details ${clusterSelected}`);
         });
     }
   };
@@ -204,6 +204,8 @@ function ClusterDetails({
     return (
       <div className="cluster-details-action-parent">
         <div
+          role="button"
+          aria-disabled={clusterInfo.status.state !== STATUS_STOPPED}
           className={
             clusterInfo.status.state === STATUS_STOPPED
               ? 'action-cluster-section'
@@ -224,6 +226,8 @@ function ClusterDetails({
           <div className="action-cluster-text">START</div>
         </div>
         <div
+          role="button"
+          aria-disabled={clusterInfo.status.state !== STATUS_RUNNING}
           className={
             clusterInfo.status.state === STATUS_RUNNING
               ? 'action-cluster-section'
@@ -244,6 +248,7 @@ function ClusterDetails({
           <div className="action-cluster-text">STOP</div>
         </div>
         <div
+          role="button"
           className="action-cluster-section"
           onClick={() => handleDeleteCluster(clusterInfo.clusterName)}
         >
@@ -269,7 +274,11 @@ function ClusterDetails({
     <div>
       {errorView && (
         <div className="error-view-parent">
-          <div className="back-arrow-icon" onClick={() => handleDetailedView()}>
+          <div
+            role="button"
+            className="back-arrow-icon"
+            onClick={() => handleDetailedView()}
+          >
             <iconLeftArrow.react tag="div" />
           </div>
           <div className="error-view-message-parent">
@@ -297,115 +306,121 @@ function ClusterDetails({
           }
         />
       )}
-      {!submitJobView &&
-      <div className="scroll-comp">
-        <ToastContainer />
-        {!errorView && clusterInfo.clusterName !== '' ? (
-          <div>
-            {!detailedJobView && (
-              <div>
-                <div className="cluster-details-header">
-                  <div
-                    className="back-arrow-icon"
-                    onClick={() => handleDetailedView()}
-                  >
-                    <iconLeftArrow.react tag="div" />
-                  </div>
-                  <div className="cluster-details-title">Cluster details</div>
-                  {clusterDetailsAction()}
-                  <ViewLogs
-                    clusterInfo={clusterInfo}
-                    projectName={projectName}
-                  />
-                </div>
-                <div className="cluster-details-container">
-                  <div className="row-details"></div>
-                  <div className="row-details">
-                    <div className="cluster-details-label">Name</div>
-                    <div className="cluster-details-value">
-                      {clusterInfo.clusterName}
+      {!submitJobView && (
+        <div className="scroll-comp">
+          <ToastContainer />
+          {!errorView && clusterInfo.clusterName !== '' ? (
+            <div>
+              {!detailedJobView && (
+                <div>
+                  <div className="cluster-details-header">
+                    <div
+                      role="button"
+                      aria-label="back-arrow-icon"
+                      className="back-arrow-icon"
+                      onClick={() => handleDetailedView()}
+                    >
+                      <iconLeftArrow.react tag="div" />
                     </div>
+                    <div className="cluster-details-title">Cluster details</div>
+                    {clusterDetailsAction()}
+                    <ViewLogs
+                      clusterInfo={clusterInfo}
+                      projectName={projectName}
+                    />
                   </div>
-                  <div className="row-details">
-                    <div className="cluster-details-label">Cluster UUID</div>
-                    <div className="cluster-details-value">
-                      {clusterInfo.clusterUuid}
+                  <div className="cluster-details-container">
+                    <div className="row-details"></div>
+                    <div className="row-details">
+                      <div className="cluster-details-label">Name</div>
+                      <div className="cluster-details-value">
+                        {clusterInfo.clusterName}
+                      </div>
                     </div>
-                  </div>
-                  <div className="row-details">
-                    <div className="cluster-details-label">Type</div>
-                    <div className="cluster-details-value">
-                      Dataproc Cluster
+                    <div className="row-details">
+                      <div className="cluster-details-label">Cluster UUID</div>
+                      <div className="cluster-details-value">
+                        {clusterInfo.clusterUuid}
+                      </div>
                     </div>
-                  </div>
-                  <div className="row-details">
-                    <div className="cluster-details-label">Status</div>
-                    <div className="cluster-detail-status-parent">
-                      {clusterInfo.status.state === STATUS_RUNNING && (
-                        <iconClusterRunning.react tag="div" />
-                      )}
-                      {clusterInfo.status.state === STATUS_STOPPED && (
-                        <iconStop.react tag="div" />
-                      )}
-                      {clusterInfo.status.state === STATUS_ERROR && (
-                        <iconClusterError.react tag="div" />
-                      )}
-                      {(clusterInfo.status.state === STATUS_PROVISIONING ||
-                        clusterInfo.status.state === STATUS_CREATING ||
-                        clusterInfo.status.state === STATUS_STARTING ||
-                        clusterInfo.status.state === STATUS_STOPPING ||
-                        clusterInfo.status.state === STATUS_DELETING) && (
-                        <div>
-                          <ClipLoader
-                            color="#8A8A8A"
-                            loading={true}
-                            size={15}
-                            aria-label="Loading Spinner"
-                            data-testid="loader"
-                          />
+                    <div className="row-details">
+                      <div className="cluster-details-label">Type</div>
+                      <div className="cluster-details-value">
+                        Dataproc Cluster
+                      </div>
+                    </div>
+                    <div className="row-details">
+                      <div className="cluster-details-label">Status</div>
+                      <div
+                        className="cluster-detail-status-parent"
+                        aria-status={clusterInfo.status.state}
+                        aria-label={clusterInfo.status.state}
+                      >
+                        {clusterInfo.status.state === STATUS_RUNNING && (
+                          <iconClusterRunning.react tag="div" />
+                        )}
+                        {clusterInfo.status.state === STATUS_STOPPED && (
+                          <iconStop.react tag="div" />
+                        )}
+                        {clusterInfo.status.state === STATUS_ERROR && (
+                          <iconClusterError.react tag="div" />
+                        )}
+                        {(clusterInfo.status.state === STATUS_PROVISIONING ||
+                          clusterInfo.status.state === STATUS_CREATING ||
+                          clusterInfo.status.state === STATUS_STARTING ||
+                          clusterInfo.status.state === STATUS_STOPPING ||
+                          clusterInfo.status.state === STATUS_DELETING) && (
+                          <div>
+                            <ClipLoader
+                              color="#8A8A8A"
+                              loading={true}
+                              size={15}
+                              aria-label="Loading Spinner"
+                              data-testid="loader"
+                            />
+                          </div>
+                        )}
+                        <div className="cluster-status">
+                          {clusterInfo.status.state === STATUS_CREATING
+                            ? STATUS_PROVISIONING
+                            : clusterInfo.status.state.toLowerCase()}
                         </div>
-                      )}
-                      <div className="cluster-status">
-                        {clusterInfo.status.state === STATUS_CREATING
-                          ? STATUS_PROVISIONING
-                          : clusterInfo.status.state.toLowerCase()}
                       </div>
                     </div>
                   </div>
+                  <div className="cluster-details-header">
+                    <div className="cluster-details-title">Jobs</div>
+                  </div>
                 </div>
-                <div className="cluster-details-header">
-                  <div className="cluster-details-title">Jobs</div>
+              )}
+              <JobComponent
+                clusterSelected={clusterSelected}
+                setDetailedView={setDetailedView}
+                detailedJobView={detailedJobView}
+                setDetailedJobView={setDetailedJobView}
+                setSubmitJobView={setSubmitJobView}
+                setSelectedJobClone={setSelectedJobClone}
+                clusterResponse={clusterResponse}
+              />
+            </div>
+          ) : (
+            <div className="loader-full-style">
+              {isLoading && (
+                <div>
+                  <ClipLoader
+                    color="#8A8A8A"
+                    loading={true}
+                    size={20}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                  Loading Cluster Details
                 </div>
-              </div>
-            )}
-            <JobComponent
-              clusterSelected={clusterSelected}
-              setDetailedView={setDetailedView}
-              detailedJobView={detailedJobView}
-              setDetailedJobView={setDetailedJobView}
-              setSubmitJobView={setSubmitJobView}
-              setSelectedJobClone={setSelectedJobClone}
-              clusterResponse={clusterResponse}
-            />
-          </div>
-        ) : (
-          <div className="loader-full-style">
-            {isLoading && (
-              <div>
-                <ClipLoader
-                  color="#8A8A8A"
-                  loading={true}
-                  size={20}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-                Loading Cluster Details
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      }
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

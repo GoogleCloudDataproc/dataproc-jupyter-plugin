@@ -81,7 +81,7 @@ function ViewLogs({
 
   return (
     <>
-      <div
+      <div role="button"
         className={
           (batchInfoResponse?.runtimeInfo?.endpoints &&
             batchInfoResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
@@ -130,6 +130,7 @@ function ViewLogs({
         )}
       </div>
       <div
+        role="button"
         className="action-cluster-section"
         onClick={() => {
           /*

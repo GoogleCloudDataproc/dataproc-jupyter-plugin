@@ -181,35 +181,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       });
 
-      // Object.values(kernels).forEach(kernelsData => {
-      //   if (kernelsData?.resources.endpointParentResource) {
-      //     const commandConsole = `console:create-${kernelsData?.display_name}`;
-      //     commands.addCommand(commandConsole, {
-      //       caption: kernelsData?.display_name,
-      //       label: kernelsData?.display_name,
-      //       icon: iconDisplay(kernelsData),
-      //       execute: async () => {
-      //         await app.commands.execute('console:create', {
-      //           activate: true,
-      //           kernel: { name: kernelsData?.name }
-      //         });
-
-      //         await app.commands.execute('console:open', {
-      //           activate: true,
-      //           kernel: { name: kernelsData?.name }
-      //         });
-      //       }
-      //     });
-
-      //     launcher.add({
-      //       command: commandConsole,
-      //       category: 'Dataproc Console',
-      //       metadata: kernelsData?.metadata,
-      //       args: kernelsData?.argv
-      //     });
-      //   }
-      // });
-
       launcher.add({
         command: createClusterComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,

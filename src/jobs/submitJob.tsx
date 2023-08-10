@@ -677,6 +677,7 @@ function SubmitJob(
       <div className="scroll-comp">
         <div className="cluster-details-header">
           <div
+            role="button"
             className="back-arrow-icon"
             onClick={() => handleSubmitJobBackView()}
           >
@@ -796,7 +797,7 @@ function SubmitJob(
                     setMainClassValidation
                   )
                 }
-                onBlur={()=>setMainClassActive(true)}
+                onBlur={() => setMainClassActive(true)}
                 addOnBlur={true}
                 value={mainClassSelected}
               />
@@ -1079,6 +1080,7 @@ function SubmitJob(
               }
             >
               <div
+                role="button"
                 onClick={() => {
                   handleSubmitJobView();
                 }}
@@ -1088,6 +1090,7 @@ function SubmitJob(
             </div>
             <div className="job-cancel-button-style">
               <div
+                role="button"
                 onClick={() => {
                   handleCancelJobButton();
                 }}

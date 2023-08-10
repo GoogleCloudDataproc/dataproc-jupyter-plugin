@@ -283,24 +283,25 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
-          toast.error('Failed to fetch Jobs');
+          toast.error('Failed to fetch jobs');
         });
     }
   };
 
-  function handleCloneJob(data: object) {
+  const handleCloneJob = (data: object) => {
     setSubmitJobView(true);
     setSelectedJobClone(data);
-  }
-  function renderActions(data: {
+  };
+  const renderActions = (data: {
     reference: { jobId: string };
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     const jobId = data.reference.jobId;
     return (
       <div className="actions-icon">
         <div
+          role="button"
           className="icon-buttons-style"
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
@@ -308,6 +309,8 @@ function JobComponent({
           <iconClone.react tag="div" />
         </div>
         <div
+          role="button"
+          aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
           className={
             data.status.state === ClusterStatus.STATUS_RUNNING
               ? 'icon-buttons-style'
@@ -327,6 +330,8 @@ function JobComponent({
           )}
         </div>
         <div
+          role="button"
+          aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
           className={
             data.status.state === ClusterStatus.STATUS_RUNNING
               ? 'icon-buttons-style-disable'
@@ -347,7 +352,7 @@ function JobComponent({
         </div>
       </div>
     );
-  }
+  };
 
   useEffect(() => {
     listJobsAPI();
@@ -376,6 +381,7 @@ function JobComponent({
     if (cell.column.Header === 'Job ID') {
       return (
         <td
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => jobDetails(cell.value)}
@@ -497,6 +503,7 @@ function JobComponent({
             clusterResponse.clusters.length > 0 && (
               <div className="create-cluster-overlay">
                 <div
+                  role="button"
                   className="create-cluster-sub-overlay"
                   onClick={() => {
                     handleSubmitJobOpen();

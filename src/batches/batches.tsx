@@ -158,7 +158,7 @@ const ServerlessComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing batches', err);
-          toast.error('Failed to fetch Batches');
+          toast.error('Failed to fetch batches');
         });
     }
   };
@@ -183,7 +183,7 @@ const ServerlessComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  function renderActions(data: { name: string }) {
+  const renderActions = (data: { name: string }) => {
     return (
       <div className="actions-icon" role="button" aria-label="Delete Job">
         <div
@@ -195,7 +195,7 @@ const ServerlessComponent = (): React.JSX.Element => {
         </div>
       </div>
     );
-  }
+  };
 
   const toggleStyleSelection = (toggleItem: string) => {
     if (selectedMode === toggleItem) {
@@ -258,12 +258,14 @@ const ServerlessComponent = (): React.JSX.Element => {
               {
                 <div className="clusters-list-overlay" role="tab">
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Batches')}
                     onClick={() => selectedModeChange('Batches')}
                   >
                     Batches
                   </div>
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Sessions')}
                     onClick={() => selectedModeChange('Sessions')}
                   >

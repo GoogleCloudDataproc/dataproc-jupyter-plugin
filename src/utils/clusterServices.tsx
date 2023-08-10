@@ -41,7 +41,6 @@ export const deleteClusterApi = async (selectedcluster: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
-            // listClustersAPI();
           })
           .catch((e: Error) => console.log(e));
       })
@@ -77,10 +76,8 @@ export const startStopAPI = async (
       })
       .catch((err: Error) => {
         console.error('Error starting/stopping cluster', err);
-        toast.error('Failed to Start/Stop the Cluster');
+        toast.error(`Failed to ${operation} the cluster ${selectedcluster}`);
       });
-
-    // listClustersAPI();
   }
 };
 

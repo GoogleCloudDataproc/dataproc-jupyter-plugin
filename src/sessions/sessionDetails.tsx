@@ -151,7 +151,7 @@ function SessionDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error loading session details', err);
-          toast.error('Failed to fetch Session details');
+          toast.error(`Failed to fetch session details ${sessionSelected}`);
         });
     }
   };
@@ -196,6 +196,7 @@ function SessionDetails({
             <div>
               <div className="cluster-details-header">
                 <div
+                  role="button"
                   className="back-arrow-icon"
                   onClick={() => handleDetailedView()}
                 >
@@ -203,6 +204,7 @@ function SessionDetails({
                 </div>
                 <div className="cluster-details-title">Session details</div>
                 <div
+                  role="button"
                   className={
                     sessionInfo.state === STATUS_ACTIVE
                       ? 'action-cluster-section'

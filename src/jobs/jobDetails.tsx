@@ -18,7 +18,6 @@
 import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-// import { Icon } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
 import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
@@ -233,7 +232,7 @@ function JobDetails({
         })
         .catch((err: Error) => {
           console.error('Error in updating job', err);
-          toast.error('Failed to Update the job ');
+          toast.error(`Failed to update the job ${jobSelected}`);
         });
     }
   };
@@ -301,7 +300,7 @@ function JobDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting job details', err);
-          toast.error('Failed to fetch Job details ');
+          toast.error(`Failed to fetch job details ${jobSelected}`);
         });
     }
   };
@@ -354,7 +353,11 @@ function JobDetails({
     <div>
       {errorView && (
         <div className="error-view-parent">
-          <div className="back-arrow-icon" onClick={() => setErrorView(false)}>
+          <div
+            role="button"
+            className="back-arrow-icon"
+            onClick={() => setErrorView(false)}
+          >
             <iconLeftArrow.react tag="div" />
           </div>
           <div className="error-view-message-parent">
@@ -410,6 +413,7 @@ function JobDetails({
                 </div>
                 <div className="cluster-details-title">Job details</div>
                 <div
+                  role="button"
                   className="action-cluster-section"
                   onClick={() => handleCloneJob()}
                 >
@@ -420,6 +424,7 @@ function JobDetails({
                 </div>
 
                 <div
+                  role="button"
                   className={statusStyleSelection(jobInfo)}
                   onClick={() =>
                     jobInfo.status.state === STATUS_RUNNING &&
@@ -436,6 +441,7 @@ function JobDetails({
                   <div className="action-cluster-text">STOP</div>
                 </div>
                 <div
+                  role="button"
                   className="action-cluster-section"
                   onClick={() => handleDeleteJob(jobInfo.reference.jobId)}
                 >
@@ -477,6 +483,7 @@ function JobDetails({
               </div>
               <div className="job-edit-header">
                 <div
+                  role="button"
                   className={styleJobEdit(labelEditMode)}
                   onClick={() => (labelEditMode ? '' : handleJobLabelEdit())}
                 >
@@ -523,6 +530,7 @@ function JobDetails({
                   <div className="cluster-details-label">Cluster</div>
 
                   <div
+                    role="button"
                     className="cluster-details-value-job"
                     onClick={() => handleDetailedClusterView()}
                   >
@@ -663,6 +671,7 @@ function JobDetails({
                   <div className="job-button-style-parent">
                     <div className="job-save-button-style">
                       <div
+                        role="button"
                         onClick={() => {
                           handleSaveEdit();
                         }}
@@ -672,6 +681,7 @@ function JobDetails({
                     </div>
                     <div className="job-cancel-button-style">
                       <div
+                        role="button"
                         onClick={() => {
                           handleCancelEdit();
                         }}
