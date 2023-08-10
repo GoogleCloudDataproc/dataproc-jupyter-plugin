@@ -165,6 +165,7 @@ function ListBatches({
     if (cell.column.Header === 'Batch ID') {
       return (
         <td
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => handleBatchDetails(cell.value)}

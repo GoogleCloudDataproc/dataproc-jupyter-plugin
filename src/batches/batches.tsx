@@ -254,7 +254,7 @@ const ServerlessComponent = (): React.JSX.Element => {
               setDetailedBatchView={setDetailedBatchView}
             />
           ) : (
-            <div className="clusters-list-component">
+            <div className="clusters-list-component" role="tablist">
               {
                 <div className="clusters-list-overlay" role="tab">
                   <div
@@ -292,11 +292,13 @@ const ServerlessComponent = (): React.JSX.Element => {
         </>
       ) : (
         loginError && (
-          <div className="login-error">Please login to continue</div>
+          <div role="alert" className="login-error">
+            Please login to continue
+          </div>
         )
       )}
       {configError && (
-        <div className="login-error">
+        <div role="alert" className="login-error">
           Please Configure Gcloud with Account, Project ID and Region
         </div>
       )}
