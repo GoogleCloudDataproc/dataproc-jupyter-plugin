@@ -262,18 +262,18 @@ function ListSessions() {
     };
   }, [pollingDisable]);
 
-  function renderActions(data: { state: ClusterStatus; name: string }) {
+  const renderActions = (data: { state: ClusterStatus; name: string }) => {
     /*
       Extracting sessionId from sessionInfo
       Example: "projects/{project}/locations/{location}/sessions/{name}"
     */
-    let sessionValue =data.name.split('/')[5];
-    
+    let sessionValue = data.name.split('/')[5];
+
     return (
       <div className="actions-icon">
         <div
-         role="button"
-         aria-disabled = {data.state !== ClusterStatus.STATUS_ACTIVE}
+          role="button"
+          aria-disabled={data.state !== ClusterStatus.STATUS_ACTIVE}
           className={
             data.state === ClusterStatus.STATUS_ACTIVE
               ? 'icon-buttons-style'
@@ -293,7 +293,7 @@ function ListSessions() {
           )}
         </div>
         <div
-          role = "button"
+          role="button"
           className="icon-buttons-style"
           title="Delete Session"
           onClick={() => handleDeleteSession(sessionValue)}
@@ -302,7 +302,7 @@ function ListSessions() {
         </div>
       </div>
     );
-  }
+  };
   const handleSessionDetails = (selectedName: string) => {
     pollingSessions(listSessionsAPI, true);
     setSessionSelected(selectedName);
@@ -320,7 +320,7 @@ function ListSessions() {
     if (cell.column.Header === 'Session ID') {
       return (
         <td
-         role="button"
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => handleSessionDetails(cell.value)}

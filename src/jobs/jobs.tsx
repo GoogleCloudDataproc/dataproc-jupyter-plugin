@@ -288,15 +288,15 @@ function JobComponent({
     }
   };
 
-  function handleCloneJob(data: object) {
+  const handleCloneJob = (data: object) => {
     setSubmitJobView(true);
     setSelectedJobClone(data);
-  }
-  function renderActions(data: {
+  };
+  const renderActions = (data: {
     reference: { jobId: string };
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     const jobId = data.reference.jobId;
     return (
       <div className="actions-icon">
@@ -352,7 +352,7 @@ function JobComponent({
         </div>
       </div>
     );
-  }
+  };
 
   useEffect(() => {
     listJobsAPI();

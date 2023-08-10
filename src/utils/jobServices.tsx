@@ -64,7 +64,6 @@ export const deleteJobApi = async (jobId: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
-            // listJobsAPI();
           })
           .catch((e: Error) => console.log(e));
       })

@@ -183,7 +183,7 @@ const ServerlessComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  function renderActions(data: { name: string }) {
+  const renderActions = (data: { name: string }) => {
     return (
       <div className="actions-icon" role="button" aria-label="Delete Job">
         <div
@@ -195,7 +195,7 @@ const ServerlessComponent = (): React.JSX.Element => {
         </div>
       </div>
     );
-  }
+  };
 
   const toggleStyleSelection = (toggleItem: string) => {
     if (selectedMode === toggleItem) {

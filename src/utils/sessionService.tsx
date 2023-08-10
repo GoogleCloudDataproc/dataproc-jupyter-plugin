@@ -49,8 +49,6 @@ export const deleteSessionAPI = async (selectedSession: string) => {
         console.error('Error deleting session', err);
 
         toast.error('Failed to delete the session');
-
-
       });
   }
 };
