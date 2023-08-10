@@ -201,26 +201,17 @@ function ListCluster({
     rows,
     prepareRow,
     state,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setGlobalFilter,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     page,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canPreviousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canNextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     nextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     previousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setPageSize,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     state: { pageIndex, pageSize }
   } = useTable(
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
@@ -254,8 +245,7 @@ function ListCluster({
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
               <GlobalFilter
-                preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+                preGlobalFilteredRows={preGlobalFilteredRows}               
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 listClustersAPI={listClustersAPI}
