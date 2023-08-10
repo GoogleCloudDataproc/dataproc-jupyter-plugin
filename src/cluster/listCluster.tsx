@@ -252,10 +252,9 @@ function ListCluster({
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
               <GlobalFilter
-                preGlobalFilteredRows={preGlobalFilteredRows}               
+                preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
-                listClustersAPI={listClustersAPI}
                 setPollingDisable={setPollingDisable}
               />
             </div>

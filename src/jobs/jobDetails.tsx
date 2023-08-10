@@ -226,6 +226,7 @@ function JobDetails({
             .json()
             .then((responseResultJob: Response) => {
               // TODO: Handle Toast here
+              toast.success(`Request to update job ${jobSelected} submitted`);
               console.log(responseResultJob);
             })
             .catch((e: Error) => console.error(e));

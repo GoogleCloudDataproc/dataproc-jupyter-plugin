@@ -77,7 +77,7 @@ function jobTypeFunction(jobKey: string) {
       return jobType;
   }
 }
-function handleOptionalFields(selectedJobClone: any, jobTypeKey: any) {
+const handleOptionalFields = (selectedJobClone: any, jobTypeKey: any) => {
   let args: string[] = [];
   let jarFileUris: string[] = [];
   let archiveUris: string[] = [];
@@ -115,7 +115,7 @@ function handleOptionalFields(selectedJobClone: any, jobTypeKey: any) {
     pythonFileUris,
     maxFailuresPerHour
   };
-}
+};
 function SubmitJob(
   this: any,
   { setSubmitJobView, selectedJobClone, clusterResponse }: any
@@ -613,6 +613,7 @@ function SubmitJob(
               .json()
               .then((responseResult: any) => {
                 console.log(responseResult);
+                toast.success(`Job ${jobIdSelected} successfully submitted`);
               })
               .catch((e: any) => {
                 console.log(e);

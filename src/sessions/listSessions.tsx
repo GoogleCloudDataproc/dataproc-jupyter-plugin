@@ -77,7 +77,6 @@ const iconDelete = new LabIcon({
 });
 
 function ListSessions() {
-  //   handleBatchDetails
   const [sessionsList, setSessionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);

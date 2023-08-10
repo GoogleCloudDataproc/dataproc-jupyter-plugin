@@ -227,7 +227,6 @@ function ListBatches({
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
-                listBatchAPI={listBatchAPI}
                 setPollingDisable={setPollingDisable}
               />
             </div>
