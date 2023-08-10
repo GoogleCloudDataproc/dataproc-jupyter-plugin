@@ -30,7 +30,7 @@ import { Select } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function ConfigSelection({ loginState, configError, setConfigError }: any) {
@@ -90,22 +90,17 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         const configStatus = (data as { config: string }).config;
         setIsLoading(false);
         if (configStatus && !toast.isActive('custom-toast')) {
+          const toastifyCustomStyle: ToastOptions<{}> = {
+            hideProgressBar: true,
+            autoClose: false,
+            theme: "dark",
+            position: toast.POSITION.BOTTOM_CENTER,
+            toastId: 'custom-toast'
+          }
           if(configStatus.includes('Failed')) {
-            toast.error(configStatus, {
-              hideProgressBar: true,
-              autoClose: false,
-              theme: "dark",
-              position: toast.POSITION.BOTTOM_CENTER,
-              toastId: 'custom-toast'
-            });
+            toast.error(configStatus, toastifyCustomStyle);
           } else {
-            toast.success(configStatus, {
-              hideProgressBar: true,
-              autoClose: false,
-              theme: "dark",
-              position: toast.POSITION.BOTTOM_CENTER,
-              toastId: 'custom-toast'
-            });
+            toast.success(configStatus, toastifyCustomStyle);
           }
         }
       }

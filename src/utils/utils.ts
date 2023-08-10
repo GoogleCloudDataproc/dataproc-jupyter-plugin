@@ -96,6 +96,8 @@ export const jobTypeValue = (data: IJobData): string | undefined => {
       return SPARKSQL;
     case 'pyspark':
       return PYSPARK;
+    default:
+      return jobTypeName;
   }
 };
 export const jobTypeValueArguments = (data: IJobData): string => {
@@ -115,6 +117,8 @@ export const BatchTypeValue = (data: IJobData): string | undefined => {
       return SPARKSQL;
     case 'pyspark':
       return PYSPARK;
+    default:
+      return batchTypeName;
   }
 };
 
