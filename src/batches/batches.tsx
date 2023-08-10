@@ -47,7 +47,7 @@ const iconDelete = new LabIcon({
   svgstr: deleteIcon
 });
 
-const ServerlessComponent = (): React.JSX.Element => {
+const BatchesComponent = (): React.JSX.Element => {
   const [batchesList, setBatchesList] = useState([]);
   const [selectedMode, setSelectedMode] = useState('Batches');
   const [isLoading, setIsLoading] = useState(true);
@@ -304,13 +304,12 @@ const ServerlessComponent = (): React.JSX.Element => {
   );
 };
 
-export class Serverless extends ReactWidget {
+export class Batches extends ReactWidget {
   constructor() {
     super();
-    this.addClass('jp-ReactWidget');
   }
 
   render(): React.JSX.Element {
-    return <ServerlessComponent />;
+    return <BatchesComponent />;
   }
 }

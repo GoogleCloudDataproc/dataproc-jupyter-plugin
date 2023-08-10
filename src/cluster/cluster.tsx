@@ -495,7 +495,6 @@ const ClusterComponent = (): React.JSX.Element => {
 export class Cluster extends ReactWidget {
   constructor() {
     super();
-    this.addClass('jp-ReactWidget');
   }
 
   render(): React.JSX.Element {

@@ -18,7 +18,7 @@
 import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-// import { Icon } from 'semantic-ui-react';
+
 import 'semantic-ui-css/semantic.min.css';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
 import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
@@ -141,7 +141,7 @@ function JobDetails({
   const [selectedJobClone, setSelectedJobClone] = useState({});
   const [submitJobView, setSubmitJobView] = useState(false);
   const [keyValidation, setKeyValidation] = useState(-1);
-  const [valueValidation, setvalueValidation] = useState(-1);
+  const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
@@ -661,7 +661,7 @@ function JobDetails({
                       keyValidation={keyValidation}
                       setKeyValidation={setKeyValidation}
                       valueValidation={valueValidation}
-                      setvalueValidation={setvalueValidation}
+                      setValueValidation={setValueValidation}
                       labelEditMode={labelEditMode}
                       duplicateKeyError={duplicateKeyError}
                       setDuplicateKeyError={setDuplicateKeyError}
