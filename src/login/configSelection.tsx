@@ -222,14 +222,12 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           .catch((error: any) => {
             setIsLoadingRegion(false);
             console.error('Error fetching region list:', error.message);
-            // Handle the error here (e.g., show an error message to the user)
           });
       }
     } catch (error) {
       setIsLoadingRegion(false);
       console.error('Error fetching region list:');
       toast.error('Failed to fetch the regions');
-      // Handle the error here (e.g., show an error message to the user)
     }
   };
   const handleDropdownOpen = () => {

@@ -77,7 +77,6 @@ const iconDelete = new LabIcon({
 });
 
 function ListSessions() {
-  //   handleBatchDetails
   const [sessionsList, setSessionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
@@ -228,26 +227,16 @@ function ListSessions() {
     rows,
     prepareRow,
     state,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setGlobalFilter,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     page,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canPreviousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canNextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     nextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     previousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setPageSize,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     state: { pageIndex, pageSize }
   } = useTable(
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
@@ -262,18 +251,18 @@ function ListSessions() {
     };
   }, [pollingDisable]);
 
-  function renderActions(data: { state: ClusterStatus; name: string }) {
+  const renderActions = (data: { state: ClusterStatus; name: string }) => {
     /*
       Extracting sessionId from sessionInfo
       Example: "projects/{project}/locations/{location}/sessions/{name}"
     */
-    let sessionValue =data.name.split('/')[5];
-    
+    let sessionValue = data.name.split('/')[5];
+
     return (
       <div className="actions-icon">
         <div
-         role="button"
-         aria-disabled = {data.state !== ClusterStatus.STATUS_ACTIVE}
+          role="button"
+          aria-disabled={data.state !== ClusterStatus.STATUS_ACTIVE}
           className={
             data.state === ClusterStatus.STATUS_ACTIVE
               ? 'icon-buttons-style'
@@ -293,7 +282,7 @@ function ListSessions() {
           )}
         </div>
         <div
-          role = "button"
+          role="button"
           className="icon-buttons-style"
           title="Delete Session"
           onClick={() => handleDeleteSession(sessionValue)}
@@ -302,7 +291,7 @@ function ListSessions() {
         </div>
       </div>
     );
-  }
+  };
   const handleSessionDetails = (selectedName: string) => {
     pollingSessions(listSessionsAPI, true);
     setSessionSelected(selectedName);
@@ -320,7 +309,7 @@ function ListSessions() {
     if (cell.column.Header === 'Session ID') {
       return (
         <td
-         role="button"
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => handleSessionDetails(cell.value)}
@@ -398,7 +387,6 @@ function ListSessions() {
             <div className="filter-cluster-section">
               <GlobalFilter
                 preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}

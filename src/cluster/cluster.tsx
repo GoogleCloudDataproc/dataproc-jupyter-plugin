@@ -31,8 +31,6 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   POLLING_TIME_LIMIT,
-  // STATUS_RUNNING,
-  // STATUS_STOPPED,
   API_HEADER_BEARER,
   LOGIN_STATE,
   ClusterStatus
@@ -131,37 +129,35 @@ const ClusterComponent = (): React.JSX.Element => {
             .then((responseResult: any) => {
               let transformClusterListData = [];
               if (responseResult && responseResult.clusters) {
-              setClusterResponse(responseResult);
-              transformClusterListData = responseResult.clusters.map(
-                (data: any) => {
-                  const statusVal = statusValue(data);
-                   /*
+                setClusterResponse(responseResult);
+                transformClusterListData = responseResult.clusters.map(
+                  (data: any) => {
+                    const statusVal = statusValue(data);
+                    /*
                      Extracting zone from zoneUri
                       Example: "projects/{project}/zones/{zone}"
                   */
-                  const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
-                 
-                
-                  return {
-                    clusterUuid: data.clusterUuid,
-                    status: statusVal,
-                    clusterName: data.clusterName,
-                    clusterImage: data.config.softwareConfig.imageVersion,
-                    region: data.labels['goog-dataproc-location'],
-                    zone: zoneUri[
-                      zoneUri.length - 1
-                    ],
-                    totalWorkersNode: data.config.workerConfig
-                      ? data.config.workerConfig.numInstances
-                      : 0,
-                    schedulesDeletion: data.config.lifecycleConfig
-                      ? 'On'
-                      : 'Off',
-                    actions: renderActions(data)
-                  };
-                }
-              );
-            }
+                    const zoneUri =
+                      data.config.gceClusterConfig.zoneUri.split('/');
+
+                    return {
+                      clusterUuid: data.clusterUuid,
+                      status: statusVal,
+                      clusterName: data.clusterName,
+                      clusterImage: data.config.softwareConfig.imageVersion,
+                      region: data.labels['goog-dataproc-location'],
+                      zone: zoneUri[zoneUri.length - 1],
+                      totalWorkersNode: data.config.workerConfig
+                        ? data.config.workerConfig.numInstances
+                        : 0,
+                      schedulesDeletion: data.config.lifecycleConfig
+                        ? 'On'
+                        : 'Off',
+                      actions: renderActions(data)
+                    };
+                  }
+                );
+              }
               const existingClusterData = previousClustersList ?? [];
               //setStateAction never type issue
               const allClustersData: any = [
@@ -273,10 +269,10 @@ const ClusterComponent = (): React.JSX.Element => {
     }
   };
 
-  function startButton(data: {
+  const startButton = (data: {
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     return (
       <div
         role="button"
@@ -304,12 +300,12 @@ const ClusterComponent = (): React.JSX.Element => {
         )}
       </div>
     );
-  }
+  };
 
-  function stopButton(data: {
+  const stopButton = (data: {
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     return (
       <div
         role="button"
@@ -333,12 +329,12 @@ const ClusterComponent = (): React.JSX.Element => {
         )}
       </div>
     );
-  }
+  };
 
-  function restartButton(data: {
+  const restartButton = (data: {
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     return (
       <div
         role="button"
@@ -362,11 +358,11 @@ const ClusterComponent = (): React.JSX.Element => {
         )}
       </div>
     );
-  }
-  function renderActions(data: {
+  };
+  const renderActions = (data: {
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     return (
       <div className="actions-icon">
         {startButton(data)}
@@ -374,7 +370,7 @@ const ClusterComponent = (): React.JSX.Element => {
         {restartButton(data)}
       </div>
     );
-  }
+  };
 
   const toggleStyleSelection = (toggleItem: string) => {
     if (selectedMode === toggleItem) {

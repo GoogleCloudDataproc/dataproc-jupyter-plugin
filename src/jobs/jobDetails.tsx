@@ -18,7 +18,6 @@
 import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-
 import 'semantic-ui-css/semantic.min.css';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
 import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
@@ -226,7 +225,7 @@ function JobDetails({
           response
             .json()
             .then((responseResultJob: Response) => {
-              // TODO: Handle Toast here
+              toast.success(`Request to update job ${jobSelected} submitted`);
               console.log(responseResultJob);
             })
             .catch((e: Error) => console.error(e));
@@ -311,7 +310,7 @@ function JobDetails({
   const jobType = jobTypeDisplay(job);
   const jobArgument = jobTypeValueArguments(jobInfo);
   const jobTypeConcat = jobArgument + 'Job';
-  //@ts-ignore
+  //@ts-ignore string used as index
   const argumentsList = jobInfo[jobTypeConcat].args;
   const statusMsg = statusMessage(jobInfo);
 

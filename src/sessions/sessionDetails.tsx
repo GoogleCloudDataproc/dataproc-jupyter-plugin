@@ -164,6 +164,7 @@ function SessionDetails({
       pollingSessionDetails(getSessionDetails, true);
     };
   }, []);
+  
   const createTimeDisplay = jobTimeFormat(sessionInfo.createTime);
   const parts = createTimeDisplay.split(',');
   const createTimeString = parts.slice(0, 2).join(',');

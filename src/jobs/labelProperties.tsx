@@ -117,7 +117,6 @@ function LabelProperties({
           );
           if (duplicateIndex !== -1) {
             setDuplicateKeyError(index);
-            // Show error message or take necessary action
           } else {
             setDuplicateKeyError(-1);
           }
