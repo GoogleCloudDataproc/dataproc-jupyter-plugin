@@ -79,10 +79,10 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [noCluster, setNoCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
-  const [databaseLength, setDatabaseLength] = useState(Number);
-  const [databaseIteration, setDatabaseIteration] = useState(0);
-  const [tableLength, setTableLength] = useState(Number);
-  const [tableIteration, setTableIteration] = useState(0);
+  // const [databaseLength, setDatabaseLength] = useState(Number);
+  // const [databaseIteration, setDatabaseIteration] = useState(0);
+  // const [tableLength, setTableLength] = useState(Number);
+  // const [tableIteration, setTableIteration] = useState(0);
   const [databaseDetails, setDatabaseDetails] = useState({});
   const getColumnDetails = async (name: string) => {
     console.log(name);
@@ -104,9 +104,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                 ...prevResponse,
                 responseResult
               ]);
-              // if (data) {
-              //   setIsLoading(false);
-              // }
+              if (data) {
+                setIsLoading(false);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -160,7 +160,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
               );
               setEntries(entryNames);
               console.log(entryNames.length);
-              setTableLength(entryNames.length);
+              // setTableLength(entryNames.length);
             })
             .catch((e: Error) => {
               console.log(e);
@@ -266,10 +266,10 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     setIsLoading(true);
     setEntries([]);
     setColumnResponse([]);
-    setDatabaseLength(0);
-    setDatabaseIteration(0);
-    setTableLength(0);
-    setTableIteration(0);
+    // setDatabaseLength(0);
+    // setDatabaseIteration(0);
+    // setTableLength(0);
+    // setTableIteration(0);
     setDatabaseDetails({});
   };
   const handleRefreshClick = () => {
@@ -390,9 +390,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
               setDatabaseDetails(updatedDatabaseDetails);
               console.log(databaseDetails);
               console.log(databaseNames);
-              setDatabaseLength(databaseNames.length);
+              // setDatabaseLength(databaseNames.length);
               databaseNames.map(async (db: string) => {
-                setDatabaseIteration(databaseIteration + 1);
+                // setDatabaseIteration(databaseIteration + 1);
                 await getTableDetails(db);
               });
             })
@@ -478,19 +478,19 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     console.log('table use effect');
     entries.forEach(async (entry: string) => {
       await getColumnDetails(entry);
-      setTableIteration(prevCount => prevCount + 1);
+      // setTableIteration(prevCount => prevCount + 1);
     });
   }, [entries]);
-  useEffect(() => {
-    if (
-      tableIteration === tableLength &&
-      databaseIteration === databaseLength &&
-      tableLength !== 0
-    ) {
-      console.log('loading false');
-      setIsLoading(false);
-    }
-  }, [columnResponse]);
+  // useEffect(() => {
+  //   if (
+  //     tableIteration === tableLength &&
+  //     databaseIteration === databaseLength &&
+  //     tableLength !== 0
+  //   ) {
+  //     console.log('loading false');
+  //     setIsLoading(false);
+  //   }
+  // }, [columnResponse]);
   // useEffect(() => {
   //   console.log('tableIteration:', tableIteration);
   // }, [tableIteration]);
