@@ -201,7 +201,7 @@ function LabelProperties({
                     />
 
                     {labelDetailUpdated[index].split(':')[0] === '' ? (
-                      <div className="error-key-parent">
+                      <div role="alert" className="error-key-parent">
                         <iconError.react tag="div" />
                         <div className="error-key-missing">key is required</div>
                       </div>
@@ -257,7 +257,8 @@ function LabelProperties({
                       )}
                   </div>
                   <div
-                    className='labels-delete-icon'
+                    role="button"
+                    className="labels-delete-icon"
                     onClick={() =>
                       handleDeleteLabel(index, label.split(':')[0])
                     }
@@ -270,6 +271,7 @@ function LabelProperties({
             );
           })}
         <div
+          role="button"
           className={styleAddLabelButton(buttonText, labelDetail)}
           onClick={() => {
             (labelDetail.length === 0 ||

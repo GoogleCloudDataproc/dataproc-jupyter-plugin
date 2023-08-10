@@ -31,10 +31,10 @@ function DeletePopup({ onCancel, onDelete, deletePopupOpen, DeleteMsg }: any) {
         <div className="popup-text">{DeleteMsg}</div>
 
         <div className="popup-buttons">
-          <div className="popup-button-style" onClick={onCancel}>
+          <div role="button" className="popup-button-style" onClick={onCancel}>
             CANCEL
           </div>
-          <div className="popup-button-style" onClick={onDelete}>
+          <div role="button" className="popup-button-style" onClick={onDelete}>
             DELETE
           </div>
         </div>

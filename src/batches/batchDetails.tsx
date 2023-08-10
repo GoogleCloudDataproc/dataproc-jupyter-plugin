@@ -235,6 +235,7 @@ function BatchDetails({
         <div className="scroll-comp">
           <div className="cluster-details-header">
             <div
+              role="button"
               className="back-arrow-icon"
               onClick={() => handleDetailedBatchView()}
             >
@@ -249,6 +250,7 @@ function BatchDetails({
             </div>
 
             <div
+              role="button"
               className="action-cluster-section"
               onClick={() => handleDeleteBatch(batchSelected)}
             >
@@ -355,7 +357,7 @@ function BatchDetails({
             {batch === 'Spark' && batchInfoResponse.sparkBatch.mainClass && (
               <>
                 <div className="row-details">
-                  <div className="details-label">Main Class</div>
+                  <div className="details-label">Main class</div>
                   <div className="details-value">
                     {batchInfoResponse.sparkBatch.mainClass}
                   </div>

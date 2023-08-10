@@ -146,6 +146,7 @@ function ListCluster({
       return (
         <td
           {...cell.getCellProps()}
+          role="button"
           className="cluster-name"
           onClick={() =>
             cell.row.original.status !== STATUS_DELETING &&
@@ -158,7 +159,12 @@ function ListCluster({
     } else if (cell.column.Header === 'Status') {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
-          <div key="Status" className="cluster-status-parent">
+          <div
+            key="Status"
+            className="cluster-status-parent"
+            role="status"
+            aria-labels="cell.value"
+          >
             {cell.value === STATUS_RUNNING && (
               <iconClusterRunning.react tag="div" />
             )}
@@ -230,6 +236,7 @@ function ListCluster({
     <div>
       <div className="create-cluster-overlay">
         <div
+          role="button"
           className="create-cluster-sub-overlay"
           onClick={() => {
             window.open(

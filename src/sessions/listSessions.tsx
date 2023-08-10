@@ -264,6 +264,8 @@ function ListSessions() {
     return (
       <div className="actions-icon">
         <div
+         role="button"
+         aria-disabled = {data.state !== ClusterStatus.STATUS_ACTIVE}
           className={
             data.state === ClusterStatus.STATUS_ACTIVE
               ? 'icon-buttons-style'
@@ -283,6 +285,7 @@ function ListSessions() {
           )}
         </div>
         <div
+          role = "button"
           className="icon-buttons-style"
           title="Delete Session"
           onClick={() => handleDeleteSession(data.name.split('/')[5])}
@@ -309,6 +312,7 @@ function ListSessions() {
     if (cell.column.Header === 'Session ID') {
       return (
         <td
+         role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => handleSessionDetails(cell.value)}

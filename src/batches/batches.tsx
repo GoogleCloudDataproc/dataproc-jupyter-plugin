@@ -252,12 +252,14 @@ const ServerlessComponent = (): React.JSX.Element => {
               {
                 <div className="clusters-list-overlay" role="tab">
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Batches')}
                     onClick={() => selectedModeChange('Batches')}
                   >
                     Batches
                   </div>
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Sessions')}
                     onClick={() => selectedModeChange('Sessions')}
                   >
