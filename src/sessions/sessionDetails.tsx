@@ -174,7 +174,8 @@ function SessionDetails({
     sessionInfo.state === STATUS_TERMINATED ||
     sessionInfo.state === STATUS_FAIL
   ) {
-    elapsedTimeString = elapsedTime(sessionInfo.stateTime, sessionStartTime);
+    const sessionStateTime = new Date(sessionInfo.stateTime); // Convert string to Date
+    elapsedTimeString = elapsedTime(sessionStateTime, sessionStartTime);
   }
   const sessionActiveTime =
     sessionInfo.stateHistory &&
@@ -184,7 +185,8 @@ function SessionDetails({
       : '';
   let runTimeString = '';
   if (sessionActiveTime !== '') {
-    runTimeString = elapsedTime(sessionInfo.stateTime, sessionActiveTime);
+    const sessionInfoStateTime = new Date(sessionInfo.stateTime);
+    runTimeString = elapsedTime(sessionInfoStateTime, sessionActiveTime);
   }
 
   return (

@@ -135,7 +135,7 @@ export const jobTypeDisplay = (data: string | undefined) => {
   }
 };
 
-export const elapsedTime = (endTime: string, jobStartTime: Date): string => {
+export const elapsedTime = (endTime: Date, jobStartTime: Date): string => {
   const jobEndTime = new Date(endTime);
   const elapsedMilliseconds = jobEndTime.getTime() - jobStartTime.getTime();
   const elapsedSeconds = Math.round(elapsedMilliseconds / 1000) % 60;

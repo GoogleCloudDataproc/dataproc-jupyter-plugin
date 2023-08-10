@@ -313,13 +313,12 @@ function JobDetails({
   //@ts-ignore string used as index
   const argumentsList = jobInfo[jobTypeConcat].args;
   const statusMsg = statusMessage(jobInfo);
-
-  const endTime = jobInfo.status.stateStartTime;
+  const endTime = new Date(jobInfo.status.stateStartTime);
   const jobStartTime = new Date(
     jobInfo.statusHistory[jobInfo.statusHistory.length - 1].stateStartTime
   );
-
   const elapsedTimeString = elapsedTime(endTime, jobStartTime);
+
 
   const statusStyleSelection = (jobInfo: any) => {
     if (jobInfo.status.state === STATUS_RUNNING) {

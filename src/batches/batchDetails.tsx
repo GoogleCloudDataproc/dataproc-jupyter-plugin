@@ -186,26 +186,32 @@ function BatchDetails({
     }
   };
 
-  const statusMsg = statusMessageBatch(batchInfoResponse);
+const statusMsg = statusMessageBatch(batchInfoResponse);
   const startTime = jobTimeFormat(batchInfoResponse.createTime);
-  const startTimeElapsed = new Date(batchInfoResponse.createTime);
-  const endTime = batchInfoResponse.stateTime;
-  let jobStartTime;
-  let runTimeString = '';
-  if (batchInfoResponse.stateHistory) {
-    jobStartTime = new Date(
-      batchInfoResponse.stateHistory[
-        batchInfoResponse.stateHistory.length - 1
-      ].stateStartTime
-    );
-    runTimeString = elapsedTime(endTime, jobStartTime);
-  }
-  const batch = BatchTypeValue(batchInfoResponse);
+const startTimeElapsed = new Date(batchInfoResponse.createTime);
 
-  const elapsedTimeString = elapsedTime(
-    batchInfoResponse.stateTime,
-    startTimeElapsed
-  );
+const endTime = new Date(batchInfoResponse.stateTime);
+
+let jobStartTime: Date;
+let runTimeString = '';
+
+if (batchInfoResponse.stateHistory) {
+  const lastStateHistory = batchInfoResponse.stateHistory[
+    batchInfoResponse.stateHistory.length - 1
+  ];
+  jobStartTime = new Date(lastStateHistory.stateStartTime);
+  runTimeString = elapsedTime(endTime, jobStartTime);
+}
+
+const batch = BatchTypeValue(batchInfoResponse);
+
+const elapsedTimeString = elapsedTime(
+  new Date(batchInfoResponse.stateTime),
+  startTimeElapsed
+);
+
+
+
 
   const handleDeleteBatch = (batchSelected: string) => {
     setSelectedBatch(batchSelected);

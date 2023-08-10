@@ -351,7 +351,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 <div className="user-overlay">
                   <div className="user-image-overlay">
                     <img
-                      src={userInfo.picture} // Path to your placeholder image
+                      src={userInfo.picture}
                       alt="User Image"
                       className="user-image"
                     />
