@@ -59,7 +59,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createClusterComponentCommand, {
       caption: 'Create a new Cluster Component',
       label: 'Clusters',
-      // @ts-ignore
+      // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
         const content = new Cluster();
@@ -74,7 +74,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createServerlessComponentCommand, {
       caption: 'Create a new Serverless Component',
       label: 'Serverless',
-      // @ts-ignore
+      // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
         const content = new Serverless();
@@ -134,10 +134,10 @@ const extension: JupyterFrontEndPlugin<void> = {
           launcher.add({
             command: commandNotebook,
             category: 'Dataproc Serverless Notebooks',
-            //@ts-ignore
+            //@ts-ignore jupyter lab Launcher type issue
             metadata: kernelsData?.metadata,
             rank: index + 1,
-            //@ts-ignore
+            //@ts-ignore jupyter lab Launcher type issue
             args: kernelsData?.argv
           });
         }
@@ -172,10 +172,10 @@ const extension: JupyterFrontEndPlugin<void> = {
           launcher.add({
             command: commandNotebook,
             category: 'Dataproc Cluster Notebooks',
-            //@ts-ignore
+            //@ts-ignore jupyter lab Launcher type issue
             metadata: kernelsData?.metadata,
             rank: index + 1,
-            //@ts-ignore
+            //@ts-ignore jupyter lab Launcher type issue
             args: kernelsData?.argv
           });
         }

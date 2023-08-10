@@ -310,7 +310,7 @@ function JobDetails({
   const jobType = jobTypeDisplay(job);
   const jobArgument = jobTypeValueArguments(jobInfo);
   const jobTypeConcat = jobArgument + 'Job';
-  //@ts-ignore
+  //@ts-ignore string used as index
   const argumentsList = jobInfo[jobTypeConcat].args;
   const statusMsg = statusMessage(jobInfo);
 
