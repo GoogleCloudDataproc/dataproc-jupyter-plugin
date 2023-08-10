@@ -31,8 +31,6 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   POLLING_TIME_LIMIT,
-  // STATUS_RUNNING,
-  // STATUS_STOPPED,
   API_HEADER_BEARER,
   LOGIN_STATE,
   ClusterStatus
@@ -130,33 +128,39 @@ const ClusterComponent = (): React.JSX.Element => {
             .json()
             .then((responseResult: any) => {
               let transformClusterListData = [];
-              setClusterResponse(responseResult);
+              if (responseResult && responseResult.clusters) {
+                setClusterResponse(responseResult);
+                transformClusterListData = responseResult.clusters.map(
+                  (data: any) => {
+                    const statusVal = statusValue(data);
+                    /*
+                     Extracting zone from zoneUri
+                      Example: "projects/{project}/zones/{zone}"
+                  */
+                    const zoneUri =
+                      data.config.gceClusterConfig.zoneUri.split('/');
 
-              transformClusterListData = responseResult.clusters.map(
-                (data: any) => {
-                  const statusVal = statusValue(data);
-                  return {
-                    clusterUuid: data.clusterUuid,
-                    status: statusVal,
-                    clusterName: data.clusterName,
-                    clusterImage: data.config.softwareConfig.imageVersion,
-                    region: data.labels['goog-dataproc-location'],
-                    zone: data.config.gceClusterConfig.zoneUri.split('/')[
-                      data.config.gceClusterConfig.zoneUri.split('/').length - 1
-                    ],
-                    totalWorkersNode: data.config.workerConfig
-                      ? data.config.workerConfig.numInstances
-                      : 0,
-                    schedulesDeletion: data.config.lifecycleConfig
-                      ? 'On'
-                      : 'Off',
-                    actions: renderActions(data)
-                  };
-                }
-              );
+                    return {
+                      clusterUuid: data.clusterUuid,
+                      status: statusVal,
+                      clusterName: data.clusterName,
+                      clusterImage: data.config.softwareConfig.imageVersion,
+                      region: data.labels['goog-dataproc-location'],
+                      zone: zoneUri[zoneUri.length - 1],
+                      totalWorkersNode: data.config.workerConfig
+                        ? data.config.workerConfig.numInstances
+                        : 0,
+                      schedulesDeletion: data.config.lifecycleConfig
+                        ? 'On'
+                        : 'Off',
+                      actions: renderActions(data)
+                    };
+                  }
+                );
+              }
               const existingClusterData = previousClustersList ?? [];
               //setStateAction never type issue
-              let allClustersData: any = [
+              const allClustersData: any = [
                 ...(existingClusterData as []),
                 ...transformClusterListData
               ];
@@ -177,7 +181,7 @@ const ClusterComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters', err);
-          toast.error('Failed to fetch Clusters ');
+          toast.error('Failed to fetch clusters');
         });
     }
   };
@@ -220,7 +224,7 @@ const ClusterComponent = (): React.JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error fetching status', err);
-          toast.error('Failed to Fetch the Status');
+          toast.error(`Failed to fetch the status ${selectedcluster}`);
         });
 
       listClustersAPI();
@@ -257,7 +261,7 @@ const ClusterComponent = (): React.JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error restarting cluster', err);
-          toast.error('Failed to Restart the Cluster');
+          toast.error(`Failed to restart the cluster ${selectedcluster}`);
         });
 
       listClustersAPI();
@@ -265,12 +269,17 @@ const ClusterComponent = (): React.JSX.Element => {
     }
   };
 
-  function startButton(data: {
+  const startButton = (data: {
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     return (
       <div
+        role="button"
+        aria-disabled={
+          data.status.state !== ClusterStatus.STATUS_STOPPED &&
+          restartEnabled !== true
+        }
         className={
           data.status.state === ClusterStatus.STATUS_STOPPED &&
           restartEnabled !== true
@@ -291,14 +300,16 @@ const ClusterComponent = (): React.JSX.Element => {
         )}
       </div>
     );
-  }
+  };
 
-  function stopButton(data: {
+  const stopButton = (data: {
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     return (
       <div
+        role="button"
+        aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
         className={
           data.status.state === ClusterStatus.STATUS_RUNNING
             ? 'icon-buttons-style'
@@ -318,14 +329,16 @@ const ClusterComponent = (): React.JSX.Element => {
         )}
       </div>
     );
-  }
+  };
 
-  function restartButton(data: {
+  const restartButton = (data: {
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     return (
       <div
+        role="button"
+        aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
         className={
           data.status.state === ClusterStatus.STATUS_RUNNING
             ? 'icon-buttons-style'
@@ -345,11 +358,11 @@ const ClusterComponent = (): React.JSX.Element => {
         )}
       </div>
     );
-  }
-  function renderActions(data: {
+  };
+  const renderActions = (data: {
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     return (
       <div className="actions-icon">
         {startButton(data)}
@@ -357,7 +370,7 @@ const ClusterComponent = (): React.JSX.Element => {
         {restartButton(data)}
       </div>
     );
-  }
+  };
 
   const toggleStyleSelection = (toggleItem: string) => {
     if (selectedMode === toggleItem) {
@@ -414,16 +427,18 @@ const ClusterComponent = (): React.JSX.Element => {
             />
           )}
           {!detailedView && (
-            <div className="clusters-list-component">
+            <div className="clusters-list-component" role="tablist">
               {!detailedJobView && !submitJobView && (
-                <div className="clusters-list-overlay">
+                <div className="clusters-list-overlay" role="tab">
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Clusters')}
                     onClick={() => selectedModeChange('Clusters')}
                   >
                     Clusters
                   </div>
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Jobs')}
                     onClick={() => selectedModeChange('Jobs')}
                   >
@@ -476,7 +491,6 @@ const ClusterComponent = (): React.JSX.Element => {
 export class Cluster extends ReactWidget {
   constructor() {
     super();
-    this.addClass('jp-ReactWidget');
   }
 
   render(): React.JSX.Element {

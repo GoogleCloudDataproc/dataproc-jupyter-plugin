@@ -47,7 +47,7 @@ export const deleteBatchAPI = async (selectedBatch: string) => {
       })
       .catch((err: Error) => {
         console.error('Error deleting batches', err);
-        toast.error('Failed to Delete the Batch ');
+        toast.error(`Failed to delete the batch ${selectedBatch}`);
       });
   }
 };

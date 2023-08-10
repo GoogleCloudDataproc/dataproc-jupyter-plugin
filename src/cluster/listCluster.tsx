@@ -146,6 +146,7 @@ function ListCluster({
       return (
         <td
           {...cell.getCellProps()}
+          role="button"
           className="cluster-name"
           onClick={() =>
             cell.row.original.status !== STATUS_DELETING &&
@@ -158,7 +159,12 @@ function ListCluster({
     } else if (cell.column.Header === 'Status') {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
-          <div key="Status" className="cluster-status-parent">
+          <div
+            key="Status"
+            className="cluster-status-parent"
+            role="status"
+            aria-labels="cell.value"
+          >
             {cell.value === STATUS_RUNNING && (
               <iconClusterRunning.react tag="div" />
             )}
@@ -201,26 +207,17 @@ function ListCluster({
     rows,
     prepareRow,
     state,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setGlobalFilter,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     page,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canPreviousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canNextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     nextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     previousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setPageSize,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     state: { pageIndex, pageSize }
   } = useTable(
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+    //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
@@ -230,6 +227,7 @@ function ListCluster({
     <div>
       <div className="create-cluster-overlay">
         <div
+          role="button"
           className="create-cluster-sub-overlay"
           onClick={() => {
             window.open(
@@ -255,10 +253,8 @@ function ListCluster({
             <div className="filter-cluster-section">
               <GlobalFilter
                 preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
-                listClustersAPI={listClustersAPI}
                 setPollingDisable={setPollingDisable}
               />
             </div>

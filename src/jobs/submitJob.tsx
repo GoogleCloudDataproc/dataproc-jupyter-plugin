@@ -27,14 +27,14 @@ import 'react-tagsinput/react-tagsinput.css';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  ARCHIVEFILESMESSAGE,
-  ARGUMENTSMESSAGE,
+  ARCHIVE_FILES_MESSAGE,
+  ARGUMENTS_MESSAGE,
   BASE_URL,
-  FILESMESSAGE,
-  JARFILEMESSAGE,
-  MAINCLASSMESSAGE,
-  MAXRESTARTMESSAGE,
-  QUERYFILEMESSAGE,
+  FILES_MESSAGE,
+  JAR_FILE_MESSAGE,
+  MAIN_CLASS_MESSAGE,
+  MAX_RESTART_MESSAGE,
+  QUERY_FILE_MESSAGE,
   RESTART_JOB_URL,
   STATUS_RUNNING
 } from '../utils/const';
@@ -77,7 +77,7 @@ function jobTypeFunction(jobKey: string) {
       return jobType;
   }
 }
-function handleOptionalFields(selectedJobClone: any, jobTypeKey: any) {
+const handleOptionalFields = (selectedJobClone: any, jobTypeKey: any) => {
   let args: string[] = [];
   let jarFileUris: string[] = [];
   let archiveUris: string[] = [];
@@ -115,7 +115,7 @@ function handleOptionalFields(selectedJobClone: any, jobTypeKey: any) {
     pythonFileUris,
     maxFailuresPerHour
   };
-}
+};
 function SubmitJob(
   this: any,
   { setSubmitJobView, selectedJobClone, clusterResponse }: any
@@ -210,7 +210,7 @@ function SubmitJob(
   const [mainClassValidation, setMainClassValidation] = useState(true);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [keyValidation, setKeyValidation] = useState(-1);
-  const [valueValidation, setvalueValidation] = useState(-1);
+  const [valueValidation, setValueValidation] = useState(-1);
   const [jobIdValidation, setjobIdValidation] = useState(true);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [mainClassActive, setMainClassActive] = useState(false);
@@ -281,7 +281,7 @@ function SubmitJob(
     setQuerySourceTypeList(querySourceData);
   }, []);
   useEffect(() => {
-    submitButtonDisable();
+    disableSubmitButtonIfInvalid();
     generateRandomHex();
   }, [
     clusterSelected,
@@ -303,7 +303,7 @@ function SubmitJob(
     jobIdValidation,
     duplicateKeyError
   ]);
-  const submitButtonDisable = () => {
+  const disableSubmitButtonIfInvalid  = () => {
     const isSparkJob = jobTypeSelected === 'spark';
     const isSparkRJob = jobTypeSelected === 'sparkR';
     const isPySparkJob = jobTypeSelected === 'pySpark';
@@ -613,6 +613,7 @@ function SubmitJob(
               .json()
               .then((responseResult: any) => {
                 console.log(responseResult);
+                toast.success(`Job ${jobIdSelected} successfully submitted`);
               })
               .catch((e: any) => {
                 console.log(e);
@@ -677,6 +678,7 @@ function SubmitJob(
       <div className="scroll-comp">
         <div className="cluster-details-header">
           <div
+            role="button"
             className="back-arrow-icon"
             onClick={() => handleSubmitJobBackView()}
           >
@@ -691,7 +693,7 @@ function SubmitJob(
           </div>
           {clusterList.length === 0 ? (
             <Input
-              className="select-job-style"
+              className="input-style"
               value="No clusters running"
               readOnly
             />
@@ -707,7 +709,7 @@ function SubmitJob(
           <div className="submit-job-label-header">Job</div>
           <div className="submit-job-cluster-message">Job ID*</div>
           <Input
-            className="select-job-style"
+            className="input-style"
             onChange={e => handleInputChange(e)}
             type="text"
             value={hexNumber}
@@ -745,7 +747,7 @@ function SubmitJob(
               <>
                 <div className="submit-job-cluster-message">Query file*</div>
                 <Input
-                  className="select-job-style"
+                  className="input-style"
                   onChange={e =>
                     handleValidationFiles(
                       e.target.value,
@@ -766,7 +768,7 @@ function SubmitJob(
                   </div>
                 )}
                 {queryFileValidation && (
-                  <div className="submit-job-message">{QUERYFILEMESSAGE}</div>
+                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -775,7 +777,7 @@ function SubmitJob(
               <>
                 <div className="submit-job-cluster-message">Query text*</div>
                 <Input
-                  className="select-job-style"
+                  className="input-style"
                   onChange={e => setQueryTextSelected(e.target.value)}
                   value={queryTextSelected}
                 />
@@ -788,7 +790,7 @@ function SubmitJob(
                 Main class or jar*
               </div>
               <Input
-                className="select-job-style"
+                className="input-style"
                 onChange={e =>
                   handleValidationFiles(
                     e.target.value,
@@ -796,7 +798,7 @@ function SubmitJob(
                     setMainClassValidation
                   )
                 }
-                onBlur={()=>setMainClassActive(true)}
+                onBlur={() => setMainClassActive(true)}
                 addOnBlur={true}
                 value={mainClassSelected}
               />
@@ -809,7 +811,7 @@ function SubmitJob(
                 </div>
               )}
               {(mainClassSelected !== '' || !mainClassActive) && (
-                <div className="submit-job-message">{MAINCLASSMESSAGE}</div>
+                <div className="submit-job-message">{MAIN_CLASS_MESSAGE}</div>
               )}
             </>
           )}
@@ -817,7 +819,7 @@ function SubmitJob(
             <>
               <div className="submit-job-cluster-message">Main R file*</div>
               <Input
-                className="select-job-style"
+                className="input-style"
                 onChange={e =>
                   handleValidationFiles(
                     e.target.value,
@@ -838,7 +840,7 @@ function SubmitJob(
                 </div>
               )}
               {mainRValidation && (
-                <div className="submit-job-message">{QUERYFILEMESSAGE}</div>
+                <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
               )}
             </>
           )}
@@ -848,7 +850,7 @@ function SubmitJob(
                 Main Python file*
               </div>
               <Input
-                className="select-job-style"
+                className="input-style"
                 onChange={e =>
                   handleValidationFiles(
                     e.target.value,
@@ -869,7 +871,7 @@ function SubmitJob(
                 </div>
               )}
               {mainPythonValidation && (
-                <div className="submit-job-message">{QUERYFILEMESSAGE}</div>
+                <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
               )}
             </>
           )}
@@ -879,7 +881,7 @@ function SubmitJob(
                 Additional python files
               </div>
               <TagsInput
-                className="select-job-style"
+                className="input-style"
                 onChange={e =>
                   handleValidationFiles(
                     e,
@@ -928,7 +930,7 @@ function SubmitJob(
                 </div>
               )}
               {jarFileValidation && (
-                <div className="submit-job-message">{JARFILEMESSAGE}</div>
+                <div className="submit-job-message">{JAR_FILE_MESSAGE}</div>
               )}
             </>
           )}
@@ -954,7 +956,7 @@ function SubmitJob(
                 </div>
               )}
               {fileValidation && (
-                <div className="submit-job-message">{FILESMESSAGE}</div>
+                <div className="submit-job-message">{FILES_MESSAGE}</div>
               )}
             </>
           )}
@@ -984,7 +986,7 @@ function SubmitJob(
                 </div>
               )}
               {archieveFileValidation && (
-                <div className="submit-job-message">{ARCHIVEFILESMESSAGE}</div>
+                <div className="submit-job-message">{ARCHIVE_FILES_MESSAGE}</div>
               )}
             </>
           )}
@@ -997,7 +999,7 @@ function SubmitJob(
                 value={argumentSelected}
                 inputProps={{ placeholder: '' }}
               />
-              <div className="submit-job-message">{ARGUMENTSMESSAGE}</div>
+              <div className="submit-job-message">{ARGUMENTS_MESSAGE}</div>
             </>
           )}
           {querySourceSelected === 'queryFile' &&
@@ -1014,7 +1016,7 @@ function SubmitJob(
                   keyValidation={keyValidation}
                   setKeyValidation={setKeyValidation}
                   valueValidation={valueValidation}
-                  setvalueValidation={setvalueValidation}
+                  setValueValidation={setValueValidation}
                   duplicateKeyError={duplicateKeyError}
                   setDuplicateKeyError={setDuplicateKeyError}
                 />
@@ -1024,12 +1026,12 @@ function SubmitJob(
             Max restarts per hour
           </div>
           <Input
-            className="select-job-style"
+            className="input-style"
             onChange={e => setMaxRestartSelected(e.target.value)}
             value={maxRestartSelected}
           />
           <div className="submit-job-message-with-link">
-            {MAXRESTARTMESSAGE}
+            {MAX_RESTART_MESSAGE}
             <div
               className="submit-job-learn-more"
               onClick={() => {
@@ -1051,7 +1053,7 @@ function SubmitJob(
             keyValidation={keyValidation}
             setKeyValidation={setKeyValidation}
             valueValidation={valueValidation}
-            setvalueValidation={setvalueValidation}
+            setValueValidation={setValueValidation}
             duplicateKeyError={duplicateKeyError}
             setDuplicateKeyError={setDuplicateKeyError}
           />
@@ -1066,7 +1068,7 @@ function SubmitJob(
             keyValidation={keyValidation}
             setKeyValidation={setKeyValidation}
             valueValidation={valueValidation}
-            setvalueValidation={setvalueValidation}
+            setValueValidation={setValueValidation}
             duplicateKeyError={duplicateKeyError}
             setDuplicateKeyError={setDuplicateKeyError}
           />
@@ -1079,6 +1081,7 @@ function SubmitJob(
               }
             >
               <div
+                role="button"
                 onClick={() => {
                   handleSubmitJobView();
                 }}
@@ -1088,6 +1091,7 @@ function SubmitJob(
             </div>
             <div className="job-cancel-button-style">
               <div
+                role="button"
                 onClick={() => {
                   handleCancelJobButton();
                 }}

@@ -59,7 +59,7 @@ export const PaginationView = ({
 }: IPaginationViewProps) => {
   return (
     <div className="pagination-parent-view">
-      <div>Rows per page:</div>
+      <div>Rows per page: </div>
       <select
         className="page-size-selection"
         value={pageSize}
@@ -75,15 +75,15 @@ export const PaginationView = ({
       </select>
       {(pageIndex + 1) * pageSize > allData.length ? (
         <div className="page-display-part">
-          {pageIndex * pageSize + 1} - {allData.length} of {allData.length}
+          {pageIndex * pageSize + 1} -{' '} {allData.length} of {allData.length}
         </div>
       ) : (
         <div className="page-display-part">
-          {pageIndex * pageSize + 1} -{(pageIndex + 1) * pageSize} of{' '}
+          {pageIndex * pageSize + 1} -{' '} {(pageIndex + 1) * pageSize} of{' '}
           {allData.length}
         </div>
       )}
-      <div
+      <div role="button"
         className={
           !canPreviousPage ? 'page-move-button disabled' : 'page-move-button'
         }
@@ -91,7 +91,7 @@ export const PaginationView = ({
       >
         {'<'}
       </div>
-      <div
+      <div role="button"
         onClick={() => nextPage()}
         className={
           !canNextPage ? 'page-move-button disabled' : 'page-move-button'

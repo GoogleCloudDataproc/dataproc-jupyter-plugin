@@ -89,6 +89,7 @@ const AuthLoginComponent = (): React.JSX.Element => {
           <div className="login-error">Please login to continue</div>
           <div style={{ alignItems: 'center' }}>
             <div
+              role="button"
               className={
                 isloginDisabled
                   ? 'signin-google-icon disabled'
@@ -113,7 +114,6 @@ const AuthLoginComponent = (): React.JSX.Element => {
 export class AuthLogin extends ReactWidget {
   constructor() {
     super();
-    this.addClass('jp-ReactWidget');
   }
 
   render(): React.JSX.Element {

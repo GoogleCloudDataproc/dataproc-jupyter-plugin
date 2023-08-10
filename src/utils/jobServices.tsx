@@ -41,8 +41,8 @@ export const stopJobApi = async (jobId: string) => {
           .catch((e: Error) => console.log(e));
       })
       .catch((err: Error) => {
-        console.error('Error Stoping jobs', err);
-        toast.error('Failed to Stop job');
+        console.error('Error to  stop job', err);
+        toast.error(`Failed to stop job ${jobId}`);
       });
   }
 };
@@ -64,13 +64,12 @@ export const deleteJobApi = async (jobId: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
-            // listJobsAPI();
           })
           .catch((e: Error) => console.log(e));
       })
       .catch((err: Error) => {
         console.error('Error Deleting Job', err);
-        toast.error('Failed to Delete the job');
+        toast.error(`Failed to delete the job ${jobId}`);
       });
   }
 };
