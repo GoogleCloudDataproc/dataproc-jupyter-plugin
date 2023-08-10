@@ -77,7 +77,6 @@ const iconDelete = new LabIcon({
 });
 
 function ListSessions() {
-  //   handleBatchDetails
   const [sessionsList, setSessionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
@@ -151,34 +150,36 @@ function ListSessions() {
             .json()
             .then((responseResult: any) => {
               let transformSessionListData = [];
-              let sessionsListNew = responseResult.sessions;
-              sessionsListNew.sort(
-                (a: { createTime: string }, b: { createTime: string }) => {
-                  const dateA = new Date(a.createTime);
-                  const dateB = new Date(b.createTime);
-                  return Number(dateB) - Number(dateA);
-                }
-              );
-              transformSessionListData = sessionsListNew.map((data: any) => {
-                const startTimeDisplay = jobTimeFormat(data.createTime);
-                const startTime = new Date(data.createTime);
-                let elapsedTimeString = '';
-                if (
-                  data.state === STATUS_TERMINATED ||
-                  data.state === STATUS_FAIL
-                ) {
-                  elapsedTimeString = elapsedTime(data.stateTime, startTime);
-                }
+              if (responseResult && responseResult.sessions) {
+                let sessionsListNew = responseResult.sessions;
+                sessionsListNew.sort(
+                  (a: { createTime: string }, b: { createTime: string }) => {
+                    const dateA = new Date(a.createTime);
+                    const dateB = new Date(b.createTime);
+                    return Number(dateB) - Number(dateA);
+                  }
+                );
+                transformSessionListData = sessionsListNew.map((data: any) => {
+                  const startTimeDisplay = jobTimeFormat(data.createTime);
+                  const startTime = new Date(data.createTime);
+                  let elapsedTimeString = '';
+                  if (
+                    data.state === STATUS_TERMINATED ||
+                    data.state === STATUS_FAIL
+                  ) {
+                    elapsedTimeString = elapsedTime(data.stateTime, startTime);
+                  }
 
-                return {
-                  sessionID: data.name.split('/')[5],
-                  status: data.state,
-                  location: data.name.split('/')[3],
-                  creationTime: startTimeDisplay,
-                  elapsedTime: elapsedTimeString,
-                  actions: renderActions(data)
-                };
-              });
+                  return {
+                    sessionID: data.name.split('/')[5],
+                    status: data.state,
+                    location: data.name.split('/')[3],
+                    creationTime: startTimeDisplay,
+                    elapsedTime: elapsedTimeString,
+                    actions: renderActions(data)
+                  };
+                });
+              }
 
               const existingSessionsData = previousSessionsList ?? [];
               //setStateAction never type issue
@@ -202,7 +203,7 @@ function ListSessions() {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing Sessions', err);
-          toast.error('Failed to fetch Sessions');
+          toast.error('Failed to fetch sessions');
         });
     }
   };
@@ -226,26 +227,16 @@ function ListSessions() {
     rows,
     prepareRow,
     state,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setGlobalFilter,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     page,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canPreviousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canNextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     nextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     previousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setPageSize,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     state: { pageIndex, pageSize }
   } = useTable(
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
@@ -260,10 +251,18 @@ function ListSessions() {
     };
   }, [pollingDisable]);
 
-  function renderActions(data: { state: ClusterStatus; name: string }) {
+  const renderActions = (data: { state: ClusterStatus; name: string }) => {
+    /*
+      Extracting sessionId from sessionInfo
+      Example: "projects/{project}/locations/{location}/sessions/{name}"
+    */
+    let sessionValue = data.name.split('/')[5];
+
     return (
       <div className="actions-icon">
         <div
+          role="button"
+          aria-disabled={data.state !== ClusterStatus.STATUS_ACTIVE}
           className={
             data.state === ClusterStatus.STATUS_ACTIVE
               ? 'icon-buttons-style'
@@ -272,7 +271,7 @@ function ListSessions() {
           title="Terminate Session"
           onClick={
             data.state === ClusterStatus.STATUS_ACTIVE
-              ? () => terminateSessionAPI(data.name.split('/')[5])
+              ? () => terminateSessionAPI(sessionValue)
               : undefined
           }
         >
@@ -283,15 +282,16 @@ function ListSessions() {
           )}
         </div>
         <div
+          role="button"
           className="icon-buttons-style"
           title="Delete Session"
-          onClick={() => handleDeleteSession(data.name.split('/')[5])}
+          onClick={() => handleDeleteSession(sessionValue)}
         >
           <iconDelete.react tag="div" />
         </div>
       </div>
     );
-  }
+  };
   const handleSessionDetails = (selectedName: string) => {
     pollingSessions(listSessionsAPI, true);
     setSessionSelected(selectedName);
@@ -309,6 +309,7 @@ function ListSessions() {
     if (cell.column.Header === 'Session ID') {
       return (
         <td
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => handleSessionDetails(cell.value)}
@@ -386,7 +387,6 @@ function ListSessions() {
             <div className="filter-cluster-section">
               <GlobalFilter
                 preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}

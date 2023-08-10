@@ -225,40 +225,42 @@ function JobComponent({
             .json()
             .then((responseResult: any) => {
               let transformJobListData = [];
-              transformJobListData = responseResult.jobs.map((data: any) => {
-                const startTime = jobTimeFormat(
-                  data.statusHistory[0].stateStartTime
-                );
-                const job = jobTypeValue(data);
-                const jobType = jobTypeDisplay(job);
-                const endTime = data.status.stateStartTime;
-                const jobStartTime = new Date(
-                  data.statusHistory[0].stateStartTime
-                );
+              if (responseResult && responseResult.jobs) {
+                transformJobListData = responseResult.jobs.map((data: any) => {
+                  const startTime = jobTimeFormat(
+                    data.statusHistory[0].stateStartTime
+                  );
+                  const job = jobTypeValue(data);
+                  const jobType = jobTypeDisplay(job);
+                  const endTime = data.status.stateStartTime;
+                  const jobStartTime = new Date(
+                    data.statusHistory[0].stateStartTime
+                  );
 
-                const elapsedTimeString = elapsedTime(endTime, jobStartTime);
+                  const elapsedTimeString = elapsedTime(endTime, jobStartTime);
 
-                const statusMsg = statusMessage(data);
+                  const statusMsg = statusMessage(data);
 
-                const labelvalue = [];
-                if (data.labels) {
-                  for (const [key, value] of Object.entries(data.labels)) {
-                    labelvalue.push(`${key} : ${value}`);
+                  const labelvalue = [];
+                  if (data.labels) {
+                    for (const [key, value] of Object.entries(data.labels)) {
+                      labelvalue.push(`${key} : ${value}`);
+                    }
+                  } else {
+                    labelvalue.push('None');
                   }
-                } else {
-                  labelvalue.push('None');
-                }
-                return {
-                  jobid: data.reference.jobId,
-                  status: statusMsg,
-                  region: credentials.region_id,
-                  type: jobType,
-                  starttime: startTime,
-                  elapsedtime: elapsedTimeString,
-                  labels: labelvalue,
-                  actions: renderActions(data)
-                };
-              });
+                  return {
+                    jobid: data.reference.jobId,
+                    status: statusMsg,
+                    region: credentials.region_id,
+                    type: jobType,
+                    starttime: startTime,
+                    elapsedtime: elapsedTimeString,
+                    labels: labelvalue,
+                    actions: renderActions(data)
+                  };
+                });
+              }
               const existingJobsData = previousJobsList ?? [];
               //setStateAction never type issue
               let allJobsData: any = [
@@ -281,24 +283,25 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
-          toast.error('Failed to fetch Jobs');
+          toast.error('Failed to fetch jobs');
         });
     }
   };
 
-  function handleCloneJob(data: object) {
+  const handleCloneJob = (data: object) => {
     setSubmitJobView(true);
     setSelectedJobClone(data);
-  }
-  function renderActions(data: {
+  };
+  const renderActions = (data: {
     reference: { jobId: string };
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     const jobId = data.reference.jobId;
     return (
       <div className="actions-icon">
         <div
+          role="button"
           className="icon-buttons-style"
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
@@ -306,6 +309,8 @@ function JobComponent({
           <iconClone.react tag="div" />
         </div>
         <div
+          role="button"
+          aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
           className={
             data.status.state === ClusterStatus.STATUS_RUNNING
               ? 'icon-buttons-style'
@@ -325,6 +330,8 @@ function JobComponent({
           )}
         </div>
         <div
+          role="button"
+          aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
           className={
             data.status.state === ClusterStatus.STATUS_RUNNING
               ? 'icon-buttons-style-disable'
@@ -345,7 +352,7 @@ function JobComponent({
         </div>
       </div>
     );
-  }
+  };
 
   useEffect(() => {
     listJobsAPI();
@@ -374,6 +381,7 @@ function JobComponent({
     if (cell.column.Header === 'Job ID') {
       return (
         <td
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => jobDetails(cell.value)}
@@ -441,26 +449,16 @@ function JobComponent({
     rows,
     prepareRow,
     state,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     preGlobalFilteredRows,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setGlobalFilter,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     page,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canPreviousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     canNextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     nextPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     previousPage,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     setPageSize,
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     state: { pageIndex, pageSize }
   } = useTable(
-    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
@@ -505,6 +503,7 @@ function JobComponent({
             clusterResponse.clusters.length > 0 && (
               <div className="create-cluster-overlay">
                 <div
+                  role="button"
                   className="create-cluster-sub-overlay"
                   onClick={() => {
                     handleSubmitJobOpen();
@@ -526,8 +525,7 @@ function JobComponent({
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
                   <GlobalFilter
-                    preGlobalFilteredRows={preGlobalFilteredRows}
-                    //@ts-ignore react-table Property does not exist on type 'TableInstance<object>'
+                    preGlobalFilteredRows={preGlobalFilteredRows}                 
                     globalFilter={state.globalFilter}
                     setGlobalFilter={setGlobalFilter}
                     setPollingDisable={setPollingDisable}
