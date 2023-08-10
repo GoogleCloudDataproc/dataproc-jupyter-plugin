@@ -51,7 +51,7 @@ function LabelProperties({
   keyValidation,
   setKeyValidation,
   valueValidation,
-  setvalueValidation,
+  setValueValidation,
   duplicateKeyError,
   setDuplicateKeyError,
   labelEditMode
@@ -85,7 +85,7 @@ function LabelProperties({
     setLabelDetail(labelDelete);
     setDuplicateKeyError(-1);
     setKeyValidation(-1);
-    setvalueValidation(-1);
+    setValueValidation(-1);
   };
 
   const handleEditLabelSwitch = () => {
@@ -102,6 +102,9 @@ function LabelProperties({
 
     labelEdit.forEach((data, dataNumber: any) => {
       if (index === dataNumber) {
+        /*
+          allowed aplhanumeric and spaces and underscores
+        */
         const regexp = /^[a-z0-9-_]+$/;
         if (keyValue === 'key') {
           if (
@@ -127,10 +130,14 @@ function LabelProperties({
           data = data.replace(data.split(':')[0], value);
         } else {
           if (value.search(regexp) === -1) {
-            setvalueValidation(index);
+            setValueValidation(index);
           } else {
-            setvalueValidation(-1);
+            setValueValidation(-1);
           }
+          /*
+          value is split from labels 
+          Example:"client:dataproc_plugin"
+          */
           if (data.split(':')[1] === '') {
             data = data + value;
           } else {

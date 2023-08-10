@@ -216,7 +216,11 @@ function ClusterDetails({
             startClusterApi(clusterInfo.clusterName)
           }
         >
-          <div className="action-cluster-icon">
+          <div
+            className="action-cluster-icon"
+            role="button"
+            aria-disabled={clusterInfo.status.state !== STATUS_STOPPED}
+          >
             {clusterInfo.status.state === STATUS_STOPPED ? (
               <iconStartCluster.react tag="div" />
             ) : (
@@ -276,6 +280,7 @@ function ClusterDetails({
         <div className="error-view-parent">
           <div
             role="button"
+            aria-label="back-arrow-icon"
             className="back-arrow-icon"
             onClick={() => handleDetailedView()}
           >
@@ -283,7 +288,7 @@ function ClusterDetails({
           </div>
           <div className="error-view-message-parent">
             <iconError.react tag="div" />
-            <div className="error-view-message">
+            <div role="alert" className="error-view-message">
               Unable to find the resource you requested
             </div>
           </div>

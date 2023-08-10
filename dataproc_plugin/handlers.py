@@ -169,9 +169,6 @@ def setup_handlers(web_app):
     host_pattern = ".*$"
 
     base_url = web_app.settings["base_url"]
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "get-example")
-    handlers = [(route_pattern, RouteHandler)]
-    web_app.add_handlers(host_pattern, handlers)
 
     # Prepend the base_url so that it works in a JupyterHub setting
     route_pattern = url_path_join(base_url, "dataproc-plugin", "credentials")
@@ -184,8 +181,4 @@ def setup_handlers(web_app):
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "configuration")
     handlers = [(route_pattern, ConfigHandler)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "get-example")
-    handlers = [(route_pattern, TestHandler)]
     web_app.add_handlers(host_pattern, handlers)

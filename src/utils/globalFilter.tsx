@@ -43,6 +43,7 @@ function GlobalFilter({
           onChange(e.target.value);
         }}
         placeholder={'Filter Table'}
+        aria-label="filterd value"
         className="filter-section-part"
       />
     </span>

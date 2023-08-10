@@ -24,7 +24,7 @@ import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
-import { Serverless } from './batches/batches';
+import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
 import { Menu } from '@lumino/widgets';
@@ -70,15 +70,15 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    const createServerlessComponentCommand = 'create-serverless-component';
-    commands.addCommand(createServerlessComponentCommand, {
+    const createBatchesComponentCommand = 'create-batches-component';
+    commands.addCommand(createBatchesComponentCommand, {
       caption: 'Create a new Serverless Component',
       label: 'Serverless',
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-        const content = new Serverless();
-        const widget = new MainAreaWidget<Serverless>({ content });
+        const content = new Batches();
+        const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;
         app.shell.add(widget, 'main');
@@ -187,7 +187,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         rank: 1
       });
       launcher.add({
-        command: createServerlessComponentCommand,
+        command: createBatchesComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 2
       });

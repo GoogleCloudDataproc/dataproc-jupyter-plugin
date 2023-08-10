@@ -156,6 +156,7 @@ function ListBatches({
     if (cell.column.Header === 'Batch ID') {
       return (
         <td
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => handleBatchDetails(cell.value)}
@@ -226,7 +227,6 @@ function ListBatches({
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
-                listBatchAPI={listBatchAPI}
                 setPollingDisable={setPollingDisable}
               />
             </div>

@@ -31,8 +31,6 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   POLLING_TIME_LIMIT,
-  // STATUS_RUNNING,
-  // STATUS_STOPPED,
   API_HEADER_BEARER,
   LOGIN_STATE,
   ClusterStatus
@@ -493,7 +491,6 @@ const ClusterComponent = (): React.JSX.Element => {
 export class Cluster extends ReactWidget {
   constructor() {
     super();
-    this.addClass('jp-ReactWidget');
   }
 
   render(): React.JSX.Element {

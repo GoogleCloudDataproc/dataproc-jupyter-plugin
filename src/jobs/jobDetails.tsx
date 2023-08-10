@@ -140,7 +140,7 @@ function JobDetails({
   const [selectedJobClone, setSelectedJobClone] = useState({});
   const [submitJobView, setSubmitJobView] = useState(false);
   const [keyValidation, setKeyValidation] = useState(-1);
-  const [valueValidation, setvalueValidation] = useState(-1);
+  const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
@@ -225,7 +225,7 @@ function JobDetails({
           response
             .json()
             .then((responseResultJob: Response) => {
-              // TODO: Handle Toast here
+              toast.success(`Request to update job ${jobSelected} submitted`);
               console.log(responseResultJob);
             })
             .catch((e: Error) => console.error(e));
@@ -660,7 +660,7 @@ function JobDetails({
                       keyValidation={keyValidation}
                       setKeyValidation={setKeyValidation}
                       valueValidation={valueValidation}
-                      setvalueValidation={setvalueValidation}
+                      setValueValidation={setValueValidation}
                       labelEditMode={labelEditMode}
                       duplicateKeyError={duplicateKeyError}
                       setDuplicateKeyError={setDuplicateKeyError}

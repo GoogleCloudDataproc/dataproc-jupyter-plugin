@@ -114,7 +114,6 @@ const AuthLoginComponent = (): React.JSX.Element => {
 export class AuthLogin extends ReactWidget {
   constructor() {
     super();
-    this.addClass('jp-ReactWidget');
   }
 
   render(): React.JSX.Element {

@@ -58,6 +58,14 @@
   width: 50%;
   margin-top: 10px;
   min-height: 40px;
+  outline: none;
+}
+.input-style{
+    background: #ffffff;
+    width: 50%;
+    margin-top: 10px;
+    min-height: 40px;
+    outline: none;
 }
 .react-tagsinput-input {
   font-family: 'Roboto' !important;
@@ -96,7 +104,6 @@
   background-color: grey !important;
   padding-right: 6px !important;
 }
-
 a {
   color: black !important;
 }
@@ -203,8 +210,16 @@ a:hover {
 }
 
 /* Highlight input field when focus */
-.ui.input>input:focus {
+.ui.input>input {
+  outline: none;
+  border-radius: 4px;
+  border: 1px solid black !important;
+}
+.ui.input>input:focus{
   border: 3px solid #3367D6 !important;
+  
+  border-radius: 4px;
+  outline: none;
 }
 
 /* Highlight tags input field when focus */
