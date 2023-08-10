@@ -115,6 +115,10 @@ const ServerlessComponent = (): React.JSX.Element => {
                     const batchType = Object.keys(data).filter(key =>
                       key.endsWith('Batch')
                     );
+                    /*
+                     Extracting batchID, location from batchInfo.name
+                      Example: "projects/{project}/locations/{location}/batches/{batchID}"
+                    */
                     const batchTypeDisplay = jobTypeDisplay(
                       batchType[0].split('Batch')[0]
                     );

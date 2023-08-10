@@ -263,6 +263,12 @@ function ListSessions() {
   }, [pollingDisable]);
 
   function renderActions(data: { state: ClusterStatus; name: string }) {
+    /*
+      Extracting sessionId from sessionInfo
+      Example: "projects/{project}/locations/{location}/sessions/{name}"
+    */
+    let sessionValue =data.name.split('/')[5];
+    
     return (
       <div className="actions-icon">
         <div
@@ -274,7 +280,7 @@ function ListSessions() {
           title="Terminate Session"
           onClick={
             data.state === ClusterStatus.STATUS_ACTIVE
-              ? () => terminateSessionAPI(data.name.split('/')[5])
+              ? () => terminateSessionAPI(sessionValue)
               : undefined
           }
         >
@@ -287,7 +293,7 @@ function ListSessions() {
         <div
           className="icon-buttons-style"
           title="Delete Session"
-          onClick={() => handleDeleteSession(data.name.split('/')[5])}
+          onClick={() => handleDeleteSession(sessionValue)}
         >
           <iconDelete.react tag="div" />
         </div>

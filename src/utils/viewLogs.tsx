@@ -132,37 +132,42 @@ function ViewLogs({
       <div
         className="action-cluster-section"
         onClick={() => {
-          if (sessionInfo) {
-            /*
+          /*
             Extracting project, location, session_id from sessionInfo.name
             Example: "projects/{project}/locations/{location}/sessionTemplates/{session_id}"
             */
+          const sessionValueUri=sessionInfo.name.split('/')
+           
+          if (sessionInfo) {
+           
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
-                sessionInfo.name.split('/')[1]
+                sessionValueUri[1]
               }" resource.labels.location="${
-                sessionInfo.name.split('/')[3]
+                sessionValueUri[3]
               }" resource.labels.session_id="${
-                sessionInfo.name.split('/')[5]
+                sessionValueUri[5]
               }";cursorTimestamp=${sessionInfo.createTime};?project=${
-                sessionInfo.name.split('/')[1]
+                sessionValueUri[1]
               }`,
               '_blank'
             );
           } else {
-            /*
+             /*
             Extracting project, location, batch_id from batchInfoResponse.name 
             Example: "projects/{project}/locations/{location}/batches/{batch_id}"
             */
+            const batchValueUri=batchInfoResponse.name.split('/')
+           
             window.open(
               `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
-                batchInfoResponse.name.split('/')[1]
+                batchValueUri[1]
               }" resource.labels.location="${
-                batchInfoResponse.name.split('/')[3]
+                batchValueUri[3]
               }" resource.labels.batch_id="${
-                batchInfoResponse.name.split('/')[5]
+                batchValueUri[5]
               }";cursorTimestamp=${batchInfoResponse.createTime};?project=${
-                batchInfoResponse.name.split('/')[1]
+                batchValueUri[1]
               }`,
               '_blank'
             );
