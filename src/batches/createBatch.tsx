@@ -14,6 +14,7 @@ import {
   FILESMESSAGE,
   JARFILEMESSAGE,
   PROJECT_LIST_URL,
+  QUERYFILEMESSAGE,
   REGION_URL,
   STATUS_RUNNING
 } from '../utils/const';
@@ -42,7 +43,7 @@ let argumentsUris: any[] = [];
 let networkUris: any[] = [];
 let key: any[] | (() => any[]) = [];
 let value: any[] | (() => any[]) = [];
-
+let pythonFileUris: any[] = [];
 
 function CreateBatch({
   setCreateBatchView,
@@ -61,9 +62,11 @@ function CreateBatch({
     useState('googleManaged');
   const [mainClassSelected, setMainClassSelected] = useState('');
   const [mainJarSelected, setMainJarSelected] = useState('');
+  const [mainRSelected, setMainRSelected] = useState('');
   const [containerImageSelected, setContainerImageSelected] = useState('');
   const [jarFilesSelected, setJarFilesSelected] = useState([...jarFileUris]);
   const [filesSelected, setFilesSelected] = useState([...fileUris]);
+  const [queryFileSelected, setQueryFileSelected] = useState('');
   const [ArchiveFilesSelected, setArchiveFileSelected] = useState([
     ...archiveFileUris
   ]);
@@ -94,6 +97,11 @@ function CreateBatch({
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [isLoadingService, setIsLoadingService] = useState(false);
   const [error, setError] = useState({ isOpen: false, message: '' });
+  const [parameterDetail, setParameterDetail] = useState(['']);
+  const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
+  const [additionalPythonFileSelected, setAdditionalPythonFileSelected] =
+    useState([...pythonFileUris]);
+  const [mainPythonSelected, setMainPythonSelected] = useState('');
   const [clustersList, setClustersList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
@@ -138,12 +146,23 @@ function CreateBatch({
   }, [clusterSelected]);
 
   function isSubmitDisabled() {
-    return (
-      batchIdSelected === '' ||
-      regionName === '' ||
-      (selectedRadio === 'mainClass' && mainClassSelected === '') ||
-      (selectedRadio === 'mainJarURI' && mainJarSelected === '')
-    );
+    const commonConditions = batchIdSelected === '' || regionName === '';
+
+    switch (batchTypeSelected) {
+      case 'spark':
+        return (
+          commonConditions ||
+          (selectedRadio === 'mainClass' && mainClassSelected === '') ||
+          (selectedRadio === 'mainJarURI' && mainJarSelected === '')
+        );
+      case 'sparkR':
+        return commonConditions || mainRSelected === '';
+      case 'pySpark':
+        return commonConditions || mainPythonSelected === '';
+      default:
+        // Handle other cases or conditions if needed
+        return false;
+    }
   }
 
   const listClustersAPI = async () => {
@@ -251,7 +270,7 @@ function CreateBatch({
           Authorization: API_HEADER_BEARER + credentials.access_token
         }
       })
-        .then((response: any) => {
+        .then((response: Response) => {
           response
             .json()
             .then((responseResult: any) => {
@@ -267,9 +286,9 @@ function CreateBatch({
               );
               setProjectList(transformedProjectList);
             })
-            .catch((e: any) => console.log(e));
+            .catch((e: Error) => console.log(e));
         })
-        .catch((err: any) => {
+        .catch((err: Error) => {
           console.error('Error fetching project list', err);
         });
     }
@@ -311,7 +330,10 @@ function CreateBatch({
         });
     }
   };
-  const createSparkPayload = (
+
+
+  const createPayload = (
+    batchTypeSelected: string,
     mainJarSelected: string,
     mainClassSelected: string,
     propertyObject: any,
@@ -324,68 +346,75 @@ function CreateBatch({
     projectName: any,
     regionName: any,
     clusterSelected: any,
-    batchIdSelected: any
+    batchIdSelected: any,
+    parameterObject: any,
+    mainRSelected: any,
+    additionalPythonFileSelected: any,
+    mainPythonSelected: any,
+    queryFileSelected: any
   ) => {
-    return {
-      sparkBatch: {
-        ...(mainJarSelected !== '' && {
-          mainJarFileUri: mainJarSelected
-        }),
-        ...(mainClassSelected !== '' && {
-          mainClass: mainClassSelected
-        })},
-        ...(labelObject && {
-          labels: labelObject
-        }),
-        name: `projects/${projectName}/locations/${regionName}/batches/${batchIdSelected}`,
-        runtimeConfig: {
-          version: versionSelected,
-          ...(containerImageSelected !== '' && {
-            containerImage: containerImageSelected
-          }),
-          ...(propertyObject && {
-            properties: propertyObject
-          })
-        },
-        environmentConfig: {
-          executionConfig: {
-            ...(serviceAccountSelected !== '' && {
-              serviceAccount: serviceAccountSelected
-            }),
-            subnetworkUri: 'default',
-            ...(networkTagSelected.length > 0 && {
-              networkTags: networkTagSelected
-            })
-          }
-        },
-        ...((servicesSelected !== 'None' || clusterSelected !== '') && {
-          peripheralsConfig: {
-            ...(servicesSelected !== 'None' && {
-              metastoreService: servicesSelected
-            }),
-            ...(clusterSelected !== '' && {
-              sparkHistoryServerConfig: {
-                dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
-              }
-            })
-          }
-        }),
-        ...(ArchiveFilesSelected.length > 0 && {
-          archiveUris: ArchiveFilesSelected
-        }),
-        ...(filesSelected.length > 0 && {
-          fileUris: [filesSelected]
-        }),
-        ...(jarFilesSelected.length > 0 && {
-          jarFileUris: jarFilesSelected
-        }),
-        ...(argumentsSelected.length > 0 && {
-          args: [argumentsSelected]
-        })
-      
+    const payload: any = {};
+  
+    if (batchTypeSelected === 'spark') {
+      payload.sparkBatch = {
+        ...(mainJarSelected !== '' && { mainJarFileUri: mainJarSelected }),
+        ...(mainClassSelected !== '' && { mainClass: mainClassSelected })
+      };
+    }
+    if (batchTypeSelected === 'sparkR') {
+    payload.sparkRBatch = {
+      ...(mainRSelected !== '' && { mainRFileUri: mainRSelected })
     };
+  }
+  if (batchTypeSelected === 'pySpark') {
+    payload.pysparkBatch = {
+      ...(additionalPythonFileSelected.length > 0 && { pythonFileUris: additionalPythonFileSelected }),
+      ...(mainPythonSelected !== '' && { mainPythonFileUri: mainPythonSelected })
+    };
+  }
+  if (batchTypeSelected === 'sparkSql') {
+    payload.sparkSqlBatch = {
+      ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
+      ...(parameterObject && { queryVariables: { query: parameterObject } })
+    };}
+  
+    payload.labels = labelObject;
+  
+    payload.name = `projects/${projectName}/locations/${regionName}/batches/${batchIdSelected}`;
+  
+    payload.runtimeConfig = {
+      version: versionSelected,
+      ...(containerImageSelected !== '' && { containerImage: containerImageSelected }),
+      ...(propertyObject && { properties: propertyObject })
+    };
+  
+    payload.environmentConfig = {
+      executionConfig: {
+        ...(serviceAccountSelected !== '' && { serviceAccount: serviceAccountSelected }),
+        subnetworkUri: 'default',
+        ...(networkTagSelected.length > 0 && { networkTags: networkTagSelected })
+      }
+    };
+  
+    if (servicesSelected !== 'None' || clusterSelected !== '') {
+      payload.peripheralsConfig = {
+        ...(servicesSelected !== 'None' && { metastoreService: servicesSelected }),
+        ...(clusterSelected !== '' && {
+          sparkHistoryServerConfig: {
+            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
+          }
+        })
+      };
+    }
+  
+    payload.archiveUris = ArchiveFilesSelected.length > 0 ? ArchiveFilesSelected : undefined;
+    payload.fileUris = filesSelected.length > 0 ? [filesSelected] : undefined;
+    payload.jarFileUris = jarFilesSelected.length > 0 ? jarFilesSelected : undefined;
+    payload.args = argumentsSelected.length > 0 ? [argumentsSelected] : undefined;
+  
+    return payload;
   };
-   
+  
 
   const handleSubmit = async () => {
     const credentials = await authApi();
@@ -402,14 +431,19 @@ function CreateBatch({
         const value = label.split(':')[1];
         propertyObject[key] = value;
       });
-      const payload = {
-        ...(batchTypeSelected === 'spark' &&
-          createSparkPayload(
+      const parameterObject: { [key: string]: string } = {};
+      parameterDetailUpdated.forEach((label: string) => {
+        const key = label.split(':')[0];
+        const value = label.split(':')[1];
+        parameterObject[key] = value;
+      });
+      const payload = 
+      createPayload(
+            batchTypeSelected,
             mainJarSelected,
             mainClassSelected,
             propertyObject,
             ArchiveFilesSelected,
-            
             filesSelected,
             jarFilesSelected,
             argumentsSelected,
@@ -418,10 +452,13 @@ function CreateBatch({
             projectName,
             regionName,
             clusterSelected,
-            batchIdSelected
-            
-          ))
-      };
+            batchIdSelected,
+            parameterObject,
+            mainRSelected,
+            additionalPythonFileSelected,
+            mainPythonSelected,
+            queryFileSelected
+          )
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
         {
@@ -470,7 +507,6 @@ function CreateBatch({
   };
   const handleBatchTypeSelected = (event: any, data: any) => {
     setBatchTypeSelected(data.value);
-    setVersionSelected(data.value);
   };
   const handleVersionSelected = (event: any, data: any) => {
     setVersionSelected(data.value);
@@ -553,62 +589,118 @@ function CreateBatch({
               options={versionList}
               onChange={handleVersionSelected}
             />
+            {batchTypeSelected === 'spark' && (
+              <div>
+                <div>
+                  <div className="create-batch-radio">
+                    <Radio
+                      className="select-batch-radio-style"
+                      value="mainClass"
+                      checked={selectedRadio === 'mainClass'}
+                      onChange={() => setSelectedRadio('mainClass')}
+                    />
+                    <div className="create-batch-message">Main class</div>
+                  </div>
+                  <div className="create-batch-sub-message">
+                    The fully qualified name of a class in a provided or
+                    standard jar file, for example, com.example.wordcount.
+                  </div>
+                </div>
+                {selectedRadio === 'mainClass' && (
+                  <div className="create-batch-input">
+                    <div className="create-batch-message">Main class*</div>
+                    <Input
+                      className="create-batch-style "
+                      value={mainClassSelected}
+                      onChange={e => setMainClassSelected(e.target.value)}
+                      type="text"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            {batchTypeSelected === 'spark' && (
+              <div>
+                <div>
+                  <div className="create-batch-radio">
+                    <Radio
+                      className="select-batch-radio-style"
+                      value="mainJarURI"
+                      checked={selectedRadio === 'mainJarURI'}
+                      onChange={() => setSelectedRadio('mainJarURI')}
+                    />
+                    <div className="create-batch-message">Main jar URI</div>
+                  </div>
+                  <div className="create-batch-sub-message">
+                    A provided jar file to use the main class of that jar file.
+                  </div>
+                </div>
+                {selectedRadio === 'mainJarURI' && (
+                  <div className="create-batch-input">
+                    <div className="create-batch-message">Main jar*</div>
+                    <Input
+                      className="create-batch-style "
+                      value={mainJarSelected}
+                      onChange={e => setMainJarSelected(e.target.value)}
+                      type="text"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
-            <div>
-              <div>
-                <div className="create-batch-radio">
-                  <Radio
-                    className="select-batch-radio-style"
-                    value="mainClass"
-                    checked={selectedRadio === 'mainClass'}
-                    onChange={() => setSelectedRadio('mainClass')}
-                  />
-                  <div className="create-batch-message">Main class</div>
+            {batchTypeSelected === 'sparkR' && (
+              <>
+                <div className="create-batch-message">Main R file*</div>
+                <Input
+                  //placeholder="Main R file*"
+                  className="create-batch-style"
+                  onChange={e => setMainRSelected(e.target.value)}
+                  addOnBlur={true}
+                  value={mainRSelected}
+                />
+              </>
+            )}
+            {batchTypeSelected === 'pySpark' && (
+              <>
+                <div className="create-batch-message">Main python file*</div>
+                <Input
+                  //placeholder="Main R file*"
+                  className="create-batch-style"
+                  onChange={e => setMainPythonSelected(e.target.value)}
+                  addOnBlur={true}
+                  value={mainPythonSelected}
+                />
+                <div className="submit-job-message">{QUERYFILEMESSAGE}</div>
+              </>
+            )}
+            {batchTypeSelected === 'pySpark' && (
+              <>
+                <div className="create-batches-message">
+                  Additional python files
                 </div>
-                <div className="create-batch-sub-message">
-                  The fully qualified name of a class in a provided or standard
-                  jar file, for example, com.example.wordcount.
-                </div>
-              </div>
-              {selectedRadio === 'mainClass' && (
-                <div className="create-batch-input">
-                  <div className="create-batch-message">Main class*</div>
-                  <Input
-                    className="create-batch-style "
-                    value={mainClassSelected}
-                    onChange={e => setMainClassSelected(e.target.value)}
-                    type="text"
-                  />
-                </div>
-              )}
-            </div>
-            <div>
-              <div>
-                <div className="create-batch-radio">
-                  <Radio
-                    className="select-batch-radio-style"
-                    value="mainJarURI"
-                    checked={selectedRadio === 'mainJarURI'}
-                    onChange={() => setSelectedRadio('mainJarURI')}
-                  />
-                  <div className="create-batch-message">Main jar URI</div>
-                </div>
-                <div className="create-batch-sub-message">
-                  A provided jar file to use the main class of that jar file.
-                </div>
-              </div>
-              {selectedRadio === 'mainJarURI' && (
-                <div className="create-batch-input">
-                  <div className="create-batch-message">Main jar*</div>
-                  <Input
-                    className="create-batch-style "
-                    value={mainJarSelected}
-                    onChange={e => setMainJarSelected(e.target.value)}
-                    type="text"
-                  />
-                </div>
-              )}
-            </div>
+                <TagsInput
+                  className="create-batch-style"
+                  onChange={e => setAdditionalPythonFileSelected(e)}
+                  addOnBlur={true}
+                  value={additionalPythonFileSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+              </>
+            )}
+            {batchTypeSelected === 'sparkSql' && (
+              <>
+                <div className="create-batch-message">Query file*</div>
+                <Input
+                  //placeholder="Main R file*"
+                  className="create-batch-style"
+                  onChange={e => setQueryFileSelected(e.target.value)}
+                  addOnBlur={true}
+                  value={queryFileSelected}
+                />
+                <div className="submit-job-message">{QUERYFILEMESSAGE}</div>
+              </>
+            )}
             <div className="create-batches-message">Custom container image</div>
             <Input
               className="create-batch-style "
@@ -623,42 +715,77 @@ function CreateBatch({
               host your custom container on Container Registry or Artifact
               Registry . Learn more{' '}
             </div>
-            <div className="create-batches-message">Jar files</div>
-            <TagsInput
-              className="create-batch-style"
-              onChange={e => setJarFilesSelected(e)}
-              addOnBlur={true}
-              value={jarFilesSelected}
-              inputProps={{ placeholder: '' }}
-            />
-            <div className="create-messagelist">{JARFILEMESSAGE}</div>
-            <div className="create-batches-message">Files</div>
-            <TagsInput
-              className="create-batch-style"
-              onChange={e => setFilesSelected(e)}
-              addOnBlur={true}
-              value={filesSelected}
-              inputProps={{ placeholder: '' }}
-            />
-            <div className="create-messagelist">{FILESMESSAGE}</div>
-            <div className="create-batches-message">Archive files</div>
-            <TagsInput
-              className="create-batch-style"
-              onChange={e => setArchiveFileSelected(e)}
-              addOnBlur={true}
-              value={ArchiveFilesSelected}
-              inputProps={{ placeholder: '' }}
-            />
-            <div className="create-messagelist">{ARCHIVEFILESMESSAGE}</div>
-            <div className="create-batches-message">Arguments</div>
-            <TagsInput
-              className="create-batch-style"
-              onChange={e => setArgumentsSelected(e)}
-              addOnBlur={true}
-              value={argumentsSelected}
-              inputProps={{ placeholder: '' }}
-            />
-            <div className="create-messagelist">{ARGUMENTSMESSAGE}</div>
+            {batchTypeSelected === 'spark' ||
+              (batchTypeSelected === 'sparkSql' && (
+                <>
+                  <div className="create-batches-message">Jar files</div>
+                  <TagsInput
+                    className="create-batch-style"
+                    onChange={e => setJarFilesSelected(e)}
+                    addOnBlur={true}
+                    value={jarFilesSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
+                  <div className="create-messagelist">{JARFILEMESSAGE}</div>
+                </>
+              ))}
+            {batchTypeSelected !== 'sparkSql' && (
+              <>
+                <div className="create-batches-message">Files</div>
+                <TagsInput
+                  className="create-batch-style"
+                  onChange={e => setFilesSelected(e)}
+                  addOnBlur={true}
+                  value={filesSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+                <div className="create-messagelist">{FILESMESSAGE}</div>
+              </>
+            )}
+            {batchTypeSelected !== 'sparkSql' && (
+              <>
+                <div className="create-batches-message">Archive files</div>
+                <TagsInput
+                  className="create-batch-style"
+                  onChange={e => setArchiveFileSelected(e)}
+                  addOnBlur={true}
+                  value={ArchiveFilesSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+                <div className="create-messagelist">{ARCHIVEFILESMESSAGE}</div>
+              </>
+            )}
+            {batchTypeSelected !== 'sparkSql' && (
+              <>
+                <div className="create-batches-message">Arguments</div>
+                <TagsInput
+                  className="create-batch-style"
+                  onChange={e => setArgumentsSelected(e)}
+                  addOnBlur={true}
+                  value={argumentsSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+                <div className="create-messagelist">{ARGUMENTSMESSAGE}</div>
+              </>
+            )}
+            {batchTypeSelected === 'sparkSql' && (
+              <>
+                <div className="submit-job-label-header">Query parameters</div>
+                <LabelProperties
+                  labelDetail={parameterDetail}
+                  setLabelDetail={setParameterDetail}
+                  labelDetailUpdated={parameterDetailUpdated}
+                  setLabelDetailUpdated={setParameterDetailUpdated}
+                  buttonText="ADD PARAMETER"
+                  keyValidation={keyValidation}
+                  setKeyValidation={setKeyValidation}
+                  valueValidation={valueValidation}
+                  setvalueValidation={setvalueValidation}
+                  duplicateKeyError={duplicateKeyError}
+                  setDuplicateKeyError={setDuplicateKeyError}
+                />
+              </>
+            )}
             <div className="submit-job-label-header">
               Execution Configuration
             </div>
@@ -866,9 +993,13 @@ function CreateBatch({
               setDuplicateKeyError={setDuplicateKeyError}
             />
             <div className="job-button-style-parent">
-              <div className={isSubmitDisabled()
-                  ? 'submit-button-disable-style'
-                  : 'submit-button-style'}>
+              <div
+                className={
+                  isSubmitDisabled()
+                    ? 'submit-button-disable-style'
+                    : 'submit-button-style'
+                }
+              >
                 <div
                   onClick={() => {
                     if (!isSubmitDisabled()) {
@@ -880,7 +1011,7 @@ function CreateBatch({
                 </div>
               </div>
               <div className="job-cancel-button-style">
-                <div   onClick={() => handleCreateBatchBackView()}>CANCEL</div>
+                <div onClick={() => handleCreateBatchBackView()}>CANCEL</div>
               </div>
               {error.isOpen && (
                 <ErrorPopup
