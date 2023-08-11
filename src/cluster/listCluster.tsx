@@ -163,7 +163,7 @@ function ListCluster({
             key="Status"
             className="cluster-status-parent"
             role="status"
-            aria-labels="cell.value"
+            aria-labels={cell.value}
           >
             {cell.value === STATUS_RUNNING && (
               <iconClusterRunning.react tag="div" />

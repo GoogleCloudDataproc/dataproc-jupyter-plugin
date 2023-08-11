@@ -189,11 +189,9 @@ export const checkConfig = async (
     if (credentials.access_token === '') {
       localStorage.clear();
       if (credentials.config_error === 1) {
-        localStorage.clear();
         setConfigError(true);
       }
       if (credentials.login_error === 1) {
-        localStorage.clear();
         setLoginError(true);
       }
     } else {
