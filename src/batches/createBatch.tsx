@@ -159,9 +159,6 @@ function CreateBatch({
   const [clustersList, setClustersList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
-  // const [initialClustersList, setInitialClustersList] = useState<
-  //   Array<{ key: string; value: string; text: string }>
-  // >([]);
   const [additionalPythonFileValidation, setAdditionalPythonFileValidation] =
     useState(true);
   const [jarFileValidation, setJarFileValidation] = useState(true);
@@ -194,7 +191,7 @@ function CreateBatch({
       { key: 'pySpark', value: 'pySpark', text: 'PySpark' }
     ];
 
-    const versionData = [
+    const runTimeVersionData = [
       {
         key: '2.1',
         value: '2.1',
@@ -211,7 +208,7 @@ function CreateBatch({
         text: '1.1 (Spark 3.3, Java 11, Scala 2.12)'
       }
     ];
-    setVersionList(versionData);
+    setVersionList(runTimeVersionData);
     setBatchTypeList(batchTypeData);
     projectListAPI();
     listClustersAPI();
@@ -380,6 +377,11 @@ function CreateBatch({
             .json()
             .then((responseResult: { items: Network[] }) => {
               let transformedNetworkList = [];
+               /*
+         Extracting network, subnetwork from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
+      */
+              
               transformedNetworkList = responseResult.items.map((data: Network) => {
                 return {
                   network: data.network.split('/')[9],
@@ -652,20 +654,23 @@ function CreateBatch({
     if (credentials) {
       const labelObject: { [key: string]: string } = {};
       labelDetailUpdated.forEach((label: string) => {
-        const key = label.split(':')[0];
-        const value = label.split(':')[1];
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
         labelObject[key] = value;
       });
       const propertyObject: { [key: string]: string } = {};
       propertyDetailUpdated.forEach((label: string) => {
-        const key = label.split(':')[0];
-        const value = label.split(':')[1];
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
         propertyObject[key] = value;
       });
       const parameterObject: { [key: string]: string } = {};
       parameterDetailUpdated.forEach((label: string) => {
-        const key = label.split(':')[0];
-        const value = label.split(':')[1];
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
         parameterObject[key] = value;
       });
       const payload = createPayload(
@@ -929,7 +934,6 @@ function CreateBatch({
               <>
                 <div className="create-batch-message">Main R file*</div>
                 <Input
-                  //placeholder="Main R file*"
                   className="create-batch-style"
                   onChange={e =>
                     handleValidationFiles(
@@ -1439,6 +1443,7 @@ function CreateBatch({
                     ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }
+                aria-label="submit Batch"
               >
                 <div
                   onClick={() => {
@@ -1450,7 +1455,7 @@ function CreateBatch({
                   SUBMIT
                 </div>
               </div>
-              <div className="job-cancel-button-style">
+              <div className="job-cancel-button-style" aria-label="cancel Batch">
                 <div onClick={() => handleCreateBatchBackView()}>CANCEL</div>
               </div>
               {error.isOpen && (
