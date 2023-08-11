@@ -21,7 +21,7 @@
   top: 30px;
   right: 220px;
 }
-.ui.input>input{
+/* .ui.input>input{
     border-radius: 4px !important;
     border: solid 1px !important;
     height: 36px !important;
@@ -29,7 +29,7 @@
     margin-left: 20px !important;
     width: 225px !important;
     padding-left: 35px !important;
-}
+} */
   .columns.icon{
     margin-left: 20px;
   }
