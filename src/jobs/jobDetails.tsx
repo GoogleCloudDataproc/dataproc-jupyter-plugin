@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import 'semantic-ui-css/semantic.min.css';
@@ -31,7 +31,6 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   LABEL_TEXT,
-  POLLING_TIME_LIMIT,
   STATUS_RUNNING
 } from '../utils/const';
 import {
@@ -54,6 +53,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -145,18 +145,14 @@ function JobDetails({
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
-  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timer | undefined>(undefined);
   const [errorView, setErrorView] = useState(false);
 
   const pollingJobDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    if (pollingDisable) {
-      clearInterval(timer);
-    } else {
-      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
-    }
+    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
   };
 
   const handleDetailedJobView = () => {

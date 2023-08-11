@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
@@ -29,7 +29,6 @@ import {
   BASE_URL,
   NETWORK_KEY,
   NETWORK_LABEL,
-  POLLING_TIME_LIMIT,
   SERVICE_ACCOUNT_KEY,
   SERVICE_ACCOUNT_LABEL,
   SUBNETWORK_KEY,
@@ -49,6 +48,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
 import { statusDisplay } from '../utils/statusDisplay';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -120,16 +120,13 @@ function BatchDetails({
   const [isLoading, setIsLoading] = useState(true);
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('');
-  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+  
   const pollingBatchDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    if (pollingDisable) {
-      clearInterval(timer);
-    } else {
-      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
-    }
+    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
   };
 
   const handleDetailedBatchView = () => {

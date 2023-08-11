@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
@@ -28,7 +28,6 @@ import {
   BASE_URL,
   NETWORK_KEY,
   NETWORK_LABEL,
-  POLLING_TIME_LIMIT,
   SERVICE_ACCOUNT_KEY,
   SERVICE_ACCOUNT_LABEL,
   STATUS_ACTIVE,
@@ -50,6 +49,7 @@ import ViewLogs from '../utils/viewLogs';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -75,7 +75,7 @@ const iconClusterError = new LabIcon({
 
 interface ISessionDetailsProps {
   sessionSelected: string;
-  setDetailedSessionView: React.Dispatch<React.SetStateAction<boolean>>;
+  setDetailedSessionView: (value: boolean) => void;
   detailedSessionView: boolean;
 }
 function SessionDetails({
@@ -98,16 +98,13 @@ function SessionDetails({
   });
   const [isLoading, setIsLoading] = useState(true);
   const [labelDetail, setLabelDetail] = useState(['']);
-  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+
   const pollingSessionDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    if (pollingDisable) {
-      clearInterval(timer);
-    } else {
-      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
-    }
+    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
   };
 
   const handleDetailedView = () => {
