@@ -23,5 +23,7 @@ import './submitJob.css';
 import './batches.css';
 import './authLogin.css';
 import './sessionDetails.css';
-import './popup.css';
+import './popup.css'
+import './dpms.css'
+import './databaseInfo.css'
 import './paginationView.css';

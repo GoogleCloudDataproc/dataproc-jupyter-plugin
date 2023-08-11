@@ -58,6 +58,12 @@ export const PROJECT_LIST_URL =
 export const USER_INFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
 export const REGION_URL = 'https://compute.googleapis.com/compute/v1/projects/';
 export const LOGIN_STATE = '1';
+export const QUERY_TABLE = 'system=dataproc_metastore AND type=TABLE parent=';
+export const QUERY_DATABASE =
+  'system=dataproc_metastore AND type=DATABASE parent=';
+export const CATALOG_SEARCH =
+  'https://datacatalog.googleapis.com/v1/catalog:search';
+export const COLUMN_API = 'https://datacatalog.googleapis.com/v1/';
 export const MONTH_NAMES = [
   'Jan',
   'Feb',
@@ -90,7 +96,7 @@ export const VIEW_LOGS_CLUSTER_URL =
   'https://console.cloud.google.com/logs/query;query=resource.type="cloud_dataproc_cluster" resource.labels.cluster_name=';
 export const VIEW_LOGS_SESSION_URL =
   'https://console.cloud.google.com/logs/query;query=resource.type="cloud_dataproc_session"';
-  export const VIEW_LOGS_BATCH_URL =
+export const VIEW_LOGS_BATCH_URL =
   'https://console.cloud.google.com/logs/query;query=resource.type="cloud_dataproc_batch"';
 export const RESTART_JOB_URL =
   'https://cloud.google.com/dataproc/docs/concepts/jobs/restartable-jobs';
