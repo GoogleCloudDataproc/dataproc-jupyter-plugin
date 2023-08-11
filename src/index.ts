@@ -17,7 +17,9 @@
 
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  JupyterFrontEndPlugin,
+  JupyterLab,
+  ILabShell
 } from '@jupyterlab/application';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -27,20 +29,29 @@ import { Cluster } from './cluster/cluster';
 import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
-import { Menu } from '@lumino/widgets';
+import { Menu, Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
-import { KernelSpecAPI } from '@jupyterlab/services';
+import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
+import { dpmsWidget } from './dpms/dpmsWidget';
+import dpmsIcon from '../style/icons/dpms_icon.svg';
+import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
+const iconDpms = new LabIcon({
+  name: 'launcher:dpms-icon',
+  svgstr: dpmsIcon
+});
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'cluster',
   autoStart: true,
-  optional: [ILauncher, IMainMenu],
+  optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker],
   activate: async (
     app: JupyterFrontEnd,
     launcher: ILauncher,
-    mainMenu: IMainMenu
+    mainMenu: IMainMenu,
+    labShell: ILabShell,
+    notebookTracker: INotebookTracker
   ) => {
     const { commands } = app;
     const iconCluster = new LabIcon({
@@ -50,6 +61,50 @@ const extension: JupyterFrontEndPlugin<void> = {
     const iconServerless = new LabIcon({
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
+    });
+    window.addEventListener('beforeunload', () => {
+      localStorage.removeItem('clusterValue');
+    });
+    const onTitleChanged = async (title: Title<Widget>) => {
+      const widget = title.owner as NotebookPanel;
+      if (widget && widget instanceof NotebookPanel) {
+        const kernel = widget.sessionContext.session?.kernel;
+        if (kernel) {
+          const kernelName = kernel.name;
+          const kernelSpec = kernels[kernelName];
+          if (
+            kernelSpec?.resources.endpointParentResource.includes('/clusters/')
+          ) {
+            const parts =
+              kernelSpec?.resources.endpointParentResource.split('/');
+            const clusterValue = parts[parts.length - 1];
+            localStorage.setItem('clusterValue', clusterValue);
+          }
+        } else {
+          localStorage.removeItem('clusterValue');
+        }
+        document.title = title.label;
+      } else {
+        document.title = title.label;
+      }
+      console.log(Kernel);
+    };
+    labShell.currentChanged.connect((_, change) => {
+      const { oldValue, newValue } = change;
+      // Clean up after the old value if it exists,
+      // listen for changes to the title of the activity
+      if (oldValue) {
+        // Check if the old value is an instance of NotebookPanel
+        if (oldValue instanceof NotebookPanel) {
+          oldValue.title.changed.disconnect(onTitleChanged);
+        }
+      }
+      if (newValue) {
+        // Check if the new value is an instance of NotebookPanel
+        if (newValue instanceof NotebookPanel) {
+          newValue.title.changed.connect(onTitleChanged);
+        }
+      }
     });
 
     const kernelSpecs = await KernelSpecAPI.getSpecs();
@@ -180,6 +235,11 @@ const extension: JupyterFrontEndPlugin<void> = {
           });
         }
       });
+      const panel = new Panel();
+      panel.id = 'dpms-tab';
+      panel.title.icon = iconDpms; // svg import
+      panel.addWidget(new dpmsWidget(app as JupyterLab));
+      app.shell.add(panel, 'left');
 
       launcher.add({
         command: createClusterComponentCommand,

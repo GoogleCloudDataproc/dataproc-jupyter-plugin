@@ -40,6 +40,7 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
+import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
 
 const iconDelete = new LabIcon({
@@ -61,6 +62,10 @@ const BatchesComponent = (): React.JSX.Element => {
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('');
+  const [regionName, setRegionName] = useState('');
+  const [projectName, setProjectName] = useState('');
+
+  const [createBatchView, setCreateBatchView] = useState(false);
   const timer = useRef<NodeJS.Timer | undefined>(undefined);
   
   const pollingBatches = async (
@@ -81,6 +86,8 @@ const BatchesComponent = (): React.JSX.Element => {
     const credentials = await authApi();
     const pageToken = nextPageToken ?? '';
     if (credentials) {
+      setRegionName(credentials.region_id || '');
+      setProjectName(credentials.project_id || '');
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
@@ -240,12 +247,21 @@ const BatchesComponent = (): React.JSX.Element => {
       )}
       {loggedIn && !configError ? (
         <>
-          {detailedBatchView ? (
+          {detailedBatchView && (
             <BatchDetails
               batchSelected={batchSelected}
               setDetailedBatchView={setDetailedBatchView}
             />
-          ) : (
+          )}
+          {createBatchView && (
+            <CreateBatch
+              setCreateBatchView={setCreateBatchView}
+              regionName={regionName}
+              projectName={projectName}
+            />
+          )}
+
+          {!detailedBatchView && !createBatchView && (
             <div className="clusters-list-component" role="tablist">
               {
                 <div className="clusters-list-overlay" role="tab">
@@ -275,6 +291,8 @@ const BatchesComponent = (): React.JSX.Element => {
                     setPollingDisable={setPollingDisable}
                     listBatchAPI={listBatchAPI}
                     handleBatchDetails={handleBatchDetails}
+                    setCreateBatchView={setCreateBatchView}
+                    createBatchView={createBatchView}
                   />
                 )}
               </div>
