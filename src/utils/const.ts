@@ -60,6 +60,12 @@ export const PROJECT_LIST_URL =
 export const USER_INFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
 export const REGION_URL = 'https://compute.googleapis.com/compute/v1/projects/';
 export const LOGIN_STATE = '1';
+export const QUERY_TABLE = 'system=dataproc_metastore AND type=TABLE parent=';
+export const QUERY_DATABASE =
+  'system=dataproc_metastore AND type=DATABASE parent=';
+export const CATALOG_SEARCH =
+  'https://datacatalog.googleapis.com/v1/catalog:search';
+export const COLUMN_API = 'https://datacatalog.googleapis.com/v1/';
 export const MONTH_NAMES = [
   'Jan',
   'Feb',
