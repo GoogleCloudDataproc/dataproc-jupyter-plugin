@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import {
   authApi,
@@ -41,7 +41,6 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   ClusterStatus,
-  POLLING_TIME_LIMIT,
   STATUS_CANCELLED,
   STATUS_CREATING,
   STATUS_DELETING,
@@ -60,6 +59,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import { PaginationView } from '../utils/paginationView';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -117,17 +117,13 @@ function JobComponent({
   const [region, setRegion] = useState('');
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
-  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timer | undefined>(undefined);
 
   const pollingJobs = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    if (pollingDisable) {
-      clearInterval(timer);
-    } else {
-      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
-    }
+    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
   };
 
   const data = jobsList;
@@ -356,7 +352,9 @@ function JobComponent({
 
   useEffect(() => {
     listJobsAPI();
-    pollingJobs(listJobsAPI, pollingDisable);
+    if(!detailedJobView) {
+      pollingJobs(listJobsAPI, pollingDisable);
+    }
 
     return () => {
       pollingJobs(listJobsAPI, true);
