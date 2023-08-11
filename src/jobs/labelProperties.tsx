@@ -255,7 +255,7 @@ function LabelProperties({
                         )
                       }
                       disabled={
-                        label==='client:dataproc-jupyter-plugin' && buttonText === 'ADD LABEL'
+                        label=== DEFAULT_LABEL_DETAIL && buttonText === 'ADD LABEL'
                       }
                       defaultValue={labelSplit[1]}
                     />
@@ -272,7 +272,7 @@ function LabelProperties({
                       )}
                   </div>
                   
-                  {label==='client:dataproc-jupyter-plugin' && buttonText === 'ADD LABEL' ?"":
+                  {label=== DEFAULT_LABEL_DETAIL && buttonText === 'ADD LABEL' ?"":
                       
                   <div
                     role="button"
