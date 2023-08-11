@@ -1,6 +1,6 @@
 {
   "name": "dataproc_plugin",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "It is a plugin to work with dataproc services in Jupyterlab",
   "keywords": [
     "jupyter",
@@ -11,10 +11,10 @@
   "bugs": {
     "url": "https://github.com/github_username/dataproc_plugin/issues"
   },
-  "license": "BSD-3-Clause",
+  "license": "Apache-2.0",
   "author": {
     "name": "google",
-    "email": "xyz@google.com"
+    "email": "dataproc-plugins@google.com"
   },
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
