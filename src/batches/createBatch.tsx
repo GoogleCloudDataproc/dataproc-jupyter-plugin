@@ -32,8 +32,10 @@ import {
   BASE_URL_NETWORKS,
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
+  CUSTOM_CONTAINER_MESSAGE,
   FILES_MESSAGE,
   JAR_FILE_MESSAGE,
+  METASTORE_MESSAGE,
   PROJECT_LIST_URL,
   QUERY_FILE_MESSAGE,
   REGION_URL,
@@ -1022,9 +1024,7 @@ function CreateBatch({
               placeholder=""
             />
             <div className="create-custom-messagelist">
-              Specify a custom container image to add Java or Python
-              dependencies not provided by the default container image. You must
-              host your custom container on
+             {CUSTOM_CONTAINER_MESSAGE}
               <div className="create-container-message">
               <div
                 className="create-batch-learn-more"
@@ -1315,9 +1315,7 @@ function CreateBatch({
               </div>
             </div>
             <div className="create-messagelist">
-              We recommend this option to persist table metadata when the batch
-              finishes processing. A metastore can be shared across many
-              serverless batches in different projects and GCP regions.
+              {METASTORE_MESSAGE}
             </div>
             <div className="create-batches-message">Metastore project</div>
             <Select

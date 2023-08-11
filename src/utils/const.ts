@@ -109,7 +109,8 @@ export const CUSTOM_CONTAINERS_MESSAGE =
   'Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on Container Registry or Artifact Registry .';
 export const CONTAINER_REGISTERY = 'https://console.cloud.google.com/gcr';
 export const ARTIFACT_REGISTERY = 'https://console.cloud.google.com/artifacts';
-
+export const METASTORE_MESSAGE='We recommend this option to persist table metadata when the batch finishes processing. A metastore can be shared across many serverless batches in different projects and GCP regions.';
+export const CUSTOM_CONTAINER_MESSAGE=' Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on';
 export const SPARK = 'Spark';
 export const SPARKSQL = 'SparkSQL';
 export const SPARKR = 'SparkR';
