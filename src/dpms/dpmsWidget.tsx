@@ -311,7 +311,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
               className="caret-icon right"
               onClick={handleIconClick}
             >
-              <iconRightArrow.react tag="div" />
+              <iconDownArrow.react tag="div" />
             </div>
           </>
         ) : (
@@ -320,7 +320,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             className="caret-icon down"
             onClick={handleIconClick}
           >
-            <iconDownArrow.react tag="div" />
+            <iconRightArrow.react tag="div" />
           </div>
         )
       ) : null;

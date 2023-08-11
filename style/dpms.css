@@ -87,6 +87,7 @@
     height: 600px;
     overflow-y: auto;
     margin-left: 20px;
+    overflow-x: hidden;
   }
   .database-loader{
     display: flex;

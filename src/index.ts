@@ -79,15 +79,12 @@ const extension: JupyterFrontEndPlugin<void> = {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
             const clusterValue = parts[parts.length - 1];
-            console.log(clusterValue);
             localStorage.setItem('clusterValue', clusterValue);
           }
         } else {
-          console.log('No active kernel.');
           localStorage.removeItem('clusterValue');
         }
         document.title = title.label;
-        console.log(document.title);
       } else {
         document.title = title.label;
       }
@@ -95,7 +92,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     };
     labShell.currentChanged.connect((_, change) => {
       const { oldValue, newValue } = change;
-
       // Clean up after the old value if it exists,
       // listen for changes to the title of the activity
       if (oldValue) {
@@ -104,7 +100,6 @@ const extension: JupyterFrontEndPlugin<void> = {
           oldValue.title.changed.disconnect(onTitleChanged);
         }
       }
-
       if (newValue) {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
@@ -190,7 +185,6 @@ const extension: JupyterFrontEndPlugin<void> = {
                 factory: 'notebook'
               });
             }
-            // console.log(Kernel);
           });
 
           launcher.add({
@@ -245,12 +239,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       const panel = new Panel();
       panel.id = 'dpms-tab';
       panel.title.icon = iconDpms; // svg import
-      const activeNotebook = notebookTracker.currentWidget;
-      if (activeNotebook && activeNotebook.sessionContext.session?.kernel) {
-        console.log('notebook active');
-      } else {
-        console.log('no active');
-      }
       panel.addWidget(new dpmsWidget(app as JupyterLab));
       app.shell.add(panel, 'left');
 
