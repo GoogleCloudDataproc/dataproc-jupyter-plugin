@@ -111,8 +111,6 @@ function CreateBatch({
   const [batchTypeSelected, setBatchTypeSelected] = useState('spark');
   const [versionSelected, setVersionSelected] = useState('2.1');
   const [selectedRadio, setSelectedRadio] = useState('mainClass');
-  // const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
-  //   useState('googleManaged');
   const [mainClassSelected, setMainClassSelected] = useState('');
   const [mainJarSelected, setMainJarSelected] = useState('');
   const [mainRSelected, setMainRSelected] = useState('');
@@ -161,9 +159,9 @@ function CreateBatch({
   const [clustersList, setClustersList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
-  const [initialClustersList, setInitialClustersList] = useState<
-    Array<{ key: string; value: string; text: string }>
-  >([]);
+  // const [initialClustersList, setInitialClustersList] = useState<
+  //   Array<{ key: string; value: string; text: string }>
+  // >([]);
   const [additionalPythonFileValidation, setAdditionalPythonFileValidation] =
     useState(true);
   const [jarFileValidation, setJarFileValidation] = useState(true);
@@ -218,7 +216,6 @@ function CreateBatch({
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
-    setInitialClustersList([...clustersList]);
   }, [clusterSelected]);
 
   useEffect(() => {
@@ -780,28 +777,7 @@ function CreateBatch({
     setClusterSelected(data.value);
   };
 
-  const handleSearchChange = (event: any, data: { searchQuery: string }) => {
-    const { searchQuery } = data;
-    console.log('Search Query:', searchQuery);
   
-    const filteredOptions = initialClustersList.filter(option =>
-      option.text.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    console.log('Filtered Options:', filteredOptions);
-  
-    setClustersList(prevClusters => {
-      const filteredOptions = prevClusters.filter(option =>
-        option.text.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      return filteredOptions;
-    });
-  };
-  
-
-  const handleSearchClear = () => {
-    setClustersList(initialClustersList);
-  };
-
   return (
     <div>
       <div className="scroll-comp">
@@ -1424,8 +1400,6 @@ function CreateBatch({
               search
               selection
               value={clusterSelected}
-              onSearchChange={handleSearchChange}
-              onClear={handleSearchClear}
               onChange={handleClusterSelected}
               options={clustersList}
               placeholder="Search..."
