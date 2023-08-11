@@ -30,7 +30,7 @@ import { Select } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function ConfigSelection({ loginState, configError, setConfigError }: any) {
@@ -90,22 +90,17 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         const configStatus = (data as { config: string }).config;
         setIsLoading(false);
         if (configStatus && !toast.isActive('custom-toast')) {
+          const toastifyCustomStyle: ToastOptions<{}> = {
+            hideProgressBar: true,
+            autoClose: false,
+            theme: "dark",
+            position: toast.POSITION.BOTTOM_CENTER,
+            toastId: 'custom-toast'
+          }
           if(configStatus.includes('Failed')) {
-            toast.error(configStatus, {
-              hideProgressBar: true,
-              autoClose: false,
-              theme: "dark",
-              position: toast.POSITION.BOTTOM_CENTER,
-              toastId: 'custom-toast'
-            });
+            toast.error(configStatus, toastifyCustomStyle);
           } else {
-            toast.success(configStatus, {
-              hideProgressBar: true,
-              autoClose: false,
-              theme: "dark",
-              position: toast.POSITION.BOTTOM_CENTER,
-              toastId: 'custom-toast'
-            });
+            toast.success(configStatus, toastifyCustomStyle);
           }
         }
       }
@@ -136,7 +131,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         .catch((err: any) => {
           setIsLoadingUser(false);
           console.error('Error displaying user info', err);
-          toast.error('Failed to fetch User Information ');
+          toast.error('Failed to fetch user information');
         });
     }
   };
@@ -173,7 +168,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         .catch((err: any) => {
           setIsLoadingProject(false);
           console.error('Error fetching project list', err);
-          toast.error('Failed to fetch the project list ');
+          toast.error('Failed to fetch the projects');
         });
     }
   };
@@ -222,14 +217,12 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           .catch((error: any) => {
             setIsLoadingRegion(false);
             console.error('Error fetching region list:', error.message);
-            // Handle the error here (e.g., show an error message to the user)
           });
       }
     } catch (error) {
       setIsLoadingRegion(false);
       console.error('Error fetching region list:');
-      toast.error('Failed to fetch the region list ');
-      // Handle the error here (e.g., show an error message to the user)
+      toast.error('Failed to fetch the regions');
     }
   };
   const handleDropdownOpen = () => {
@@ -353,7 +346,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 <div className="user-overlay">
                   <div className="user-image-overlay">
                     <img
-                      src={userInfo.picture} // Path to your placeholder image
+                      src={userInfo.picture}
                       alt="User Image"
                       className="user-image"
                     />

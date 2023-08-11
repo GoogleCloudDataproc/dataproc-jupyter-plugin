@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import {
   authApi,
   jobTimeFormat,
@@ -25,7 +25,6 @@ import {
   statusMessage,
   jobTypeDisplay
 } from '../utils/utils';
-
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import cloneIcon from '../../style/icons/clone_icon.svg';
@@ -60,6 +59,7 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { PaginationView } from '../utils/paginationView';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -118,6 +118,7 @@ function JobComponent({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+
   const pollingJobs = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -202,12 +203,16 @@ function JobComponent({
     setDeletePopupOpen(false);
   };
 
-  const listJobsAPI = async () => {
+  const listJobsAPI = async (
+    nextPageToken?: string,
+    previousJobsList?: object
+  ) => {
     const credentials = await authApi();
     const clusterName = clusterSelected ?? '';
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=100&&clusterName=${clusterName}`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -220,42 +225,55 @@ function JobComponent({
             .json()
             .then((responseResult: any) => {
               let transformJobListData = [];
-              transformJobListData = responseResult.jobs.map((data: any) => {
-                const startTime = jobTimeFormat(
-                  data.statusHistory[0].stateStartTime
-                );
-                const job = jobTypeValue(data);
-                const jobType = jobTypeDisplay(job);
-                const endTime = data.status.stateStartTime;
-                const jobStartTime = new Date(
-                  data.statusHistory[0].stateStartTime
-                );
+              if (responseResult && responseResult.jobs) {
+                transformJobListData = responseResult.jobs.map((data: any) => {
+                  const startTime = jobTimeFormat(
+                    data.statusHistory[0].stateStartTime
+                  );
+                  const job = jobTypeValue(data);
+                  const jobType = jobTypeDisplay(job);
+                  const endTime = data.status.stateStartTime;
+                  const jobStartTime = new Date(
+                    data.statusHistory[0].stateStartTime
+                  );
 
-                const elapsedTimeString = elapsedTime(endTime, jobStartTime);
+                  const elapsedTimeString = elapsedTime(endTime, jobStartTime);
 
-                const statusMsg = statusMessage(data);
+                  const statusMsg = statusMessage(data);
 
-                const labelvalue = [];
-                if (data.labels) {
-                  for (const [key, value] of Object.entries(data.labels)) {
-                    labelvalue.push(`${key} : ${value}`);
+                  const labelvalue = [];
+                  if (data.labels) {
+                    for (const [key, value] of Object.entries(data.labels)) {
+                      labelvalue.push(`${key} : ${value}`);
+                    }
+                  } else {
+                    labelvalue.push('None');
                   }
-                } else {
-                  labelvalue.push('None');
-                }
-                return {
-                  jobid: data.reference.jobId,
-                  status: statusMsg,
-                  region: credentials.region_id,
-                  type: jobType,
-                  starttime: startTime,
-                  elapsedtime: elapsedTimeString,
-                  labels: labelvalue,
-                  actions: renderActions(data)
-                };
-              });
-              setjobsList(transformJobListData);
-              setIsLoading(false);
+                  return {
+                    jobid: data.reference.jobId,
+                    status: statusMsg,
+                    region: credentials.region_id,
+                    type: jobType,
+                    starttime: startTime,
+                    elapsedtime: elapsedTimeString,
+                    labels: labelvalue,
+                    actions: renderActions(data)
+                  };
+                });
+              }
+              const existingJobsData = previousJobsList ?? [];
+              //setStateAction never type issue
+              let allJobsData: any = [
+                ...(existingJobsData as []),
+                ...transformJobListData
+              ];
+
+              if (responseResult.nextPageToken) {
+                listJobsAPI(responseResult.nextPageToken, allJobsData);
+              } else {
+                setjobsList(allJobsData);
+                setIsLoading(false);
+              }
             })
             .catch((e: Error) => {
               console.error(e);
@@ -265,24 +283,25 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
-          toast.error('Failed to fetch Jobs');
+          toast.error('Failed to fetch jobs');
         });
     }
   };
 
-  function handleCloneJob(data: object) {
+  const handleCloneJob = (data: object) => {
     setSubmitJobView(true);
     setSelectedJobClone(data);
-  }
-  function renderActions(data: {
+  };
+  const renderActions = (data: {
     reference: { jobId: string };
     status: { state: ClusterStatus };
     clusterName: string;
-  }) {
+  }) => {
     const jobId = data.reference.jobId;
     return (
       <div className="actions-icon">
         <div
+          role="button"
           className="icon-buttons-style"
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
@@ -290,6 +309,8 @@ function JobComponent({
           <iconClone.react tag="div" />
         </div>
         <div
+          role="button"
+          aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
           className={
             data.status.state === ClusterStatus.STATUS_RUNNING
               ? 'icon-buttons-style'
@@ -309,6 +330,8 @@ function JobComponent({
           )}
         </div>
         <div
+          role="button"
+          aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
           className={
             data.status.state === ClusterStatus.STATUS_RUNNING
               ? 'icon-buttons-style-disable'
@@ -329,7 +352,7 @@ function JobComponent({
         </div>
       </div>
     );
-  }
+  };
 
   useEffect(() => {
     listJobsAPI();
@@ -358,6 +381,7 @@ function JobComponent({
     if (cell.column.Header === 'Job ID') {
       return (
         <td
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => jobDetails(cell.value)}
@@ -425,11 +449,20 @@ function JobComponent({
     rows,
     prepareRow,
     state,
-    //@ts-ignore
     preGlobalFilteredRows,
-    //@ts-ignore
-    setGlobalFilter
-  } = useTable({ columns, data }, useGlobalFilter);
+    setGlobalFilter,
+    page,
+    canPreviousPage,
+    canNextPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize }
+  } = useTable(
+    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
+    useGlobalFilter,
+    usePagination
+  );
 
   return (
     <div>
@@ -465,13 +498,12 @@ function JobComponent({
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {
-          // clustersList &&
-            clusterResponse &&
+          {clusterResponse &&
             clusterResponse.clusters &&
             clusterResponse.clusters.length > 0 && (
               <div className="create-cluster-overlay">
                 <div
+                  role="button"
                   className="create-cluster-sub-overlay"
                   onClick={() => {
                     handleSubmitJobOpen();
@@ -493,8 +525,7 @@ function JobComponent({
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
                   <GlobalFilter
-                    preGlobalFilteredRows={preGlobalFilteredRows}
-                    //@ts-ignore
+                    preGlobalFilteredRows={preGlobalFilteredRows}                 
                     globalFilter={state.globalFilter}
                     setGlobalFilter={setGlobalFilter}
                     setPollingDisable={setPollingDisable}
@@ -513,11 +544,24 @@ function JobComponent({
                   headerGroups={headerGroups}
                   getTableBodyProps={getTableBodyProps}
                   isLoading={isLoading}
+                  page={page}
                   rows={rows}
                   prepareRow={prepareRow}
                   tableDataCondition={tableDataCondition}
                   fromPage="Jobs"
                 />
+                {jobsList.length > 50 && (
+                  <PaginationView
+                    pageSize={pageSize}
+                    setPageSize={setPageSize}
+                    pageIndex={pageIndex}
+                    allData={jobsList}
+                    previousPage={previousPage}
+                    nextPage={nextPage}
+                    canPreviousPage={canPreviousPage}
+                    canNextPage={canNextPage}
+                  />
+                )}
               </div>
             </div>
           ) : (

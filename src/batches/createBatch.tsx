@@ -24,15 +24,15 @@ import { Input, Radio, Select, Dropdown } from 'semantic-ui-react';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  ARCHIVEFILESMESSAGE,
-  ARGUMENTSMESSAGE,
+  ARCHIVE_FILES_MESSAGE,
+  ARGUMENTS_MESSAGE,
   BASE_URL,
   BASE_URL_META,
   BASE_URL_NETWORKS,
-  FILESMESSAGE,
-  JARFILEMESSAGE,
+  FILES_MESSAGE,
+  JAR_FILE_MESSAGE,
   PROJECT_LIST_URL,
-  QUERYFILEMESSAGE,
+  QUERY_FILE_MESSAGE,
   REGION_URL,
   STATUS_RUNNING
 } from '../utils/const';
@@ -118,7 +118,7 @@ function CreateBatch({
   const [region, setRegion] = useState('');
   const [projectList, setProjectList] = useState([{}]);
   const [regionList, setRegionList] = useState([]);
-  const [networkList, setNetworklist] = useState([]);
+  const [networkList, setNetworklist] = useState([{}]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState('default');
   const [subNetworkSelected, setSubNetworkSelected] = useState('default');
@@ -904,7 +904,7 @@ function CreateBatch({
                   </div>
                 )}
                 {mainRValidation && (
-                  <div className="submit-job-message">{QUERYFILEMESSAGE}</div>
+                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -934,7 +934,7 @@ function CreateBatch({
                   </div>
                 )}
                 {mainPythonValidation && (
-                  <div className="submit-job-message">{QUERYFILEMESSAGE}</div>
+                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -993,7 +993,7 @@ function CreateBatch({
                   </div>
                 )}
                 {queryFileValidation && (
-                  <div className="create-messagelist">{QUERYFILEMESSAGE}</div>
+                  <div className="create-messagelist">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -1038,7 +1038,7 @@ function CreateBatch({
                     </div>
                   )}
                   {jarFileValidation && (
-                    <div className="create-messagelist">{JARFILEMESSAGE}</div>
+                    <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
                   )}
                 </>
               ))}
@@ -1068,7 +1068,7 @@ function CreateBatch({
                   </div>
                 )}
                 {fileValidation && (
-                  <div className="create-messagelist">{FILESMESSAGE}</div>
+                  <div className="create-messagelist">{FILES_MESSAGE}</div>
                 )}
               </>
             )}
@@ -1099,7 +1099,7 @@ function CreateBatch({
                 )}
                 {archieveFileValidation && (
                   <div className="create-messagelist">
-                    {ARCHIVEFILESMESSAGE}
+                    {ARCHIVE_FILES_MESSAGE}
                   </div>
                 )}
               </>
@@ -1114,7 +1114,7 @@ function CreateBatch({
                   value={argumentsSelected}
                   inputProps={{ placeholder: '' }}
                 />
-                <div className="create-messagelist">{ARGUMENTSMESSAGE}</div>
+                <div className="create-messagelist">{ARGUMENTS_MESSAGE}</div>
               </>
             )}
             {batchTypeSelected === 'sparkSql' && (

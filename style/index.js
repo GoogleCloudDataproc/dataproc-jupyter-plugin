@@ -25,3 +25,4 @@ import './authLogin.css';
 import './sessionDetails.css';
 import './popup.css';
 import './createBatch.css'
+import './paginationView.css';

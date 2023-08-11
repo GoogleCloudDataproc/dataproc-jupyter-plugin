@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import createClusterIcon from '../../style/icons/create_cluster_icon.svg';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -36,6 +36,7 @@ import {
   STATUS_SUCCESS
 } from '../utils/const';
 import TableData from '../utils/tableData';
+import { PaginationView } from '../utils/paginationView';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -132,13 +133,21 @@ function ListBatches({
     rows,
     prepareRow,
     state,
-    //@ts-ignore
     preGlobalFilteredRows,
-    //@ts-ignore
-    setGlobalFilter
-  } =
-    //@ts-ignore
-    useTable({ columns, data }, useGlobalFilter);
+    setGlobalFilter,
+    page,
+    canPreviousPage,
+    canNextPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize }
+  } = useTable(
+    //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
+    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
+    useGlobalFilter,
+    usePagination
+  );
 
   const handleCreateBatchOpen = () => {
     setCreateBatchView(true);
@@ -157,6 +166,7 @@ function ListBatches({
     if (cell.column.Header === 'Batch ID') {
       return (
         <td
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => handleBatchDetails(cell.value)}
@@ -225,10 +235,8 @@ function ListBatches({
             <div className="filter-cluster-section">
               <GlobalFilter
                 preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
-                listBatchAPI={listBatchAPI}
                 setPollingDisable={setPollingDisable}
               />
             </div>
@@ -240,10 +248,23 @@ function ListBatches({
               getTableBodyProps={getTableBodyProps}
               isLoading={isLoading}
               rows={rows}
+              page={page}
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Batches"
             />
+            {batchesList.length > 50 && (
+              <PaginationView
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                pageIndex={pageIndex}
+                allData={batchesList}
+                previousPage={previousPage}
+                nextPage={nextPage}
+                canPreviousPage={canPreviousPage}
+                canNextPage={canNextPage}
+              />
+            )}
           </div>
         </div>
       ) : (

@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
@@ -48,6 +48,7 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
+import { PaginationView } from '../utils/paginationView';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -76,7 +77,6 @@ const iconDelete = new LabIcon({
 });
 
 function ListSessions() {
-  //   handleBatchDetails
   const [sessionsList, setSessionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
@@ -129,11 +129,15 @@ function ListSessions() {
     []
   );
 
-  const listSessionsAPI = async () => {
+  const listSessionsAPI = async (
+    nextPageToken?: string,
+    previousSessionsList?: object
+  ) => {
     const credentials = await authApi();
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions?pageSize=100`,
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions?pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -146,37 +150,50 @@ function ListSessions() {
             .json()
             .then((responseResult: any) => {
               let transformSessionListData = [];
-              let sessionsListNew = responseResult.sessions;
-              sessionsListNew.sort(
-                (a: { createTime: string }, b: { createTime: string }) => {
-                  const dateA = new Date(a.createTime);
-                  const dateB = new Date(b.createTime);
-                  return Number(dateB) - Number(dateA);
-                }
-              );
-              transformSessionListData = sessionsListNew.map((data: any) => {
-                const startTimeDisplay = jobTimeFormat(data.createTime);
-                const startTime = new Date(data.createTime);
-                let elapsedTimeString = '';
-                if (
-                  data.state === STATUS_TERMINATED ||
-                  data.state === STATUS_FAIL
-                ) {
-                  elapsedTimeString = elapsedTime(data.stateTime, startTime);
-                }
+              if (responseResult && responseResult.sessions) {
+                let sessionsListNew = responseResult.sessions;
+                sessionsListNew.sort(
+                  (a: { createTime: string }, b: { createTime: string }) => {
+                    const dateA = new Date(a.createTime);
+                    const dateB = new Date(b.createTime);
+                    return Number(dateB) - Number(dateA);
+                  }
+                );
+                transformSessionListData = sessionsListNew.map((data: any) => {
+                  const startTimeDisplay = jobTimeFormat(data.createTime);
+                  const startTime = new Date(data.createTime);
+                  let elapsedTimeString = '';
+                  if (
+                    data.state === STATUS_TERMINATED ||
+                    data.state === STATUS_FAIL
+                  ) {
+                    elapsedTimeString = elapsedTime(data.stateTime, startTime);
+                  }
 
-                return {
-                  sessionID: data.name.split('/')[5],
-                  status: data.state,
-                  location: data.name.split('/')[3],
-                  creationTime: startTimeDisplay,
-                  elapsedTime: elapsedTimeString,
-                  actions: renderActions(data)
-                };
-              });
-              setSessionsList(transformSessionListData);
+                  return {
+                    sessionID: data.name.split('/')[5],
+                    status: data.state,
+                    location: data.name.split('/')[3],
+                    creationTime: startTimeDisplay,
+                    elapsedTime: elapsedTimeString,
+                    actions: renderActions(data)
+                  };
+                });
+              }
 
-              setIsLoading(false);
+              const existingSessionsData = previousSessionsList ?? [];
+              //setStateAction never type issue
+              let allSessionsData: any = [
+                ...(existingSessionsData as []),
+                ...transformSessionListData
+              ];
+
+              if (responseResult.nextPageToken) {
+                listSessionsAPI(responseResult.nextPageToken, allSessionsData);
+              } else {
+                setSessionsList(allSessionsData);
+                setIsLoading(false);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -186,7 +203,7 @@ function ListSessions() {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing Sessions', err);
-          toast.error('Failed to fetch Sessions');
+          toast.error('Failed to fetch sessions');
         });
     }
   };
@@ -210,11 +227,20 @@ function ListSessions() {
     rows,
     prepareRow,
     state,
-    //@ts-ignore
     preGlobalFilteredRows,
-    //@ts-ignore
-    setGlobalFilter
-  } = useTable({ columns, data }, useGlobalFilter);
+    setGlobalFilter,
+    page,
+    canPreviousPage,
+    canNextPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize }
+  } = useTable(
+    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
+    useGlobalFilter,
+    usePagination
+  );
 
   useEffect(() => {
     listSessionsAPI();
@@ -225,10 +251,18 @@ function ListSessions() {
     };
   }, [pollingDisable]);
 
-  function renderActions(data: { state: ClusterStatus; name: string }) {
+  const renderActions = (data: { state: ClusterStatus; name: string }) => {
+    /*
+      Extracting sessionId from sessionInfo
+      Example: "projects/{project}/locations/{location}/sessions/{name}"
+    */
+    let sessionValue = data.name.split('/')[5];
+
     return (
       <div className="actions-icon">
         <div
+          role="button"
+          aria-disabled={data.state !== ClusterStatus.STATUS_ACTIVE}
           className={
             data.state === ClusterStatus.STATUS_ACTIVE
               ? 'icon-buttons-style'
@@ -237,7 +271,7 @@ function ListSessions() {
           title="Terminate Session"
           onClick={
             data.state === ClusterStatus.STATUS_ACTIVE
-              ? () => terminateSessionAPI(data.name.split('/')[5])
+              ? () => terminateSessionAPI(sessionValue)
               : undefined
           }
         >
@@ -248,15 +282,16 @@ function ListSessions() {
           )}
         </div>
         <div
+          role="button"
           className="icon-buttons-style"
           title="Delete Session"
-          onClick={() => handleDeleteSession(data.name.split('/')[5])}
+          onClick={() => handleDeleteSession(sessionValue)}
         >
           <iconDelete.react tag="div" />
         </div>
       </div>
     );
-  }
+  };
   const handleSessionDetails = (selectedName: string) => {
     pollingSessions(listSessionsAPI, true);
     setSessionSelected(selectedName);
@@ -274,6 +309,7 @@ function ListSessions() {
     if (cell.column.Header === 'Session ID') {
       return (
         <td
+          role="button"
           {...cell.getCellProps()}
           className="cluster-name"
           onClick={() => handleSessionDetails(cell.value)}
@@ -351,7 +387,6 @@ function ListSessions() {
             <div className="filter-cluster-section">
               <GlobalFilter
                 preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
@@ -365,10 +400,23 @@ function ListSessions() {
               getTableBodyProps={getTableBodyProps}
               isLoading={isLoading}
               rows={rows}
+              page={page}
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Sessions"
             />
+            {sessionsList.length > 50 && (
+              <PaginationView
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                pageIndex={pageIndex}
+                allData={sessionsList}
+                previousPage={previousPage}
+                nextPage={nextPage}
+                canPreviousPage={canPreviousPage}
+                canNextPage={canNextPage}
+              />
+            )}
           </div>
         </div>
       ) : (

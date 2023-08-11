@@ -22,6 +22,7 @@ import plusIconDisable from '../../style/icons/plus_icon_disable.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Input } from 'semantic-ui-react';
+import { DEFAULT_LABEL_DETAIL } from '../utils/const';
 
 const iconPlus = new LabIcon({
   name: 'launcher:plus-icon',
@@ -50,19 +51,23 @@ function LabelProperties({
   keyValidation,
   setKeyValidation,
   valueValidation,
-  setvalueValidation,
+  setValueValidation,
   duplicateKeyError,
   setDuplicateKeyError,
   labelEditMode
 }: any) {
+  /* 
+  labelDetail used to store the permanent label details when onblur 
+  labelDetailUpdated used to store the temporay label details when onchange 
+  */
   useEffect(() => {
     if (!labelEditMode) {
-      buttonText === 'ADD LABEL' && !selectedJobClone
-        ? setLabelDetail(['client:dataproc-jupyter-plugin'])
-        : setLabelDetail([]);
-      buttonText === 'ADD LABEL' && !selectedJobClone
-        ? setLabelDetailUpdated(['client:dataproc-jupyter-plugin'])
-        : setLabelDetail([]);
+      if (buttonText === 'ADD LABEL' && !selectedJobClone) {
+        setLabelDetail([DEFAULT_LABEL_DETAIL]);
+        setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
+      } else {
+        setLabelDetail([]);
+      }
     }
   }, []);
 
@@ -73,17 +78,17 @@ function LabelProperties({
     setLabelDetail(labelAdd);
   };
 
-  const handleDeleteLabel = (index: any, value: string) => {
+  const handleDeleteLabel = (index: number, value: string) => {
     const labelDelete = [...labelDetail];
     labelDelete.splice(index, 1);
     setLabelDetailUpdated(labelDelete);
     setLabelDetail(labelDelete);
     setDuplicateKeyError(-1);
     setKeyValidation(-1);
-    setvalueValidation(-1);
+    setValueValidation(-1);
   };
 
-  const handleEditLabelSwitch = (index: any) => {
+  const handleEditLabelSwitch = () => {
     if (duplicateKeyError === -1) {
       setLabelDetail(labelDetailUpdated);
     }
@@ -91,17 +96,19 @@ function LabelProperties({
   const handleEditLabel = (
     value: string,
     index: number,
-    keyValue: string,
-    keyValueData: string
+    keyValue: string
   ) => {
     const labelEdit = [...labelDetail];
+
     labelEdit.forEach((data, dataNumber: any) => {
       if (index === dataNumber) {
+        /*
+          allowed aplhanumeric and spaces and underscores
+        */
+        const regexp = /^[a-z0-9-_]+$/;
         if (keyValue === 'key') {
-          const regexp = /^[a-z0-9-_]+$/;
-          const check = value;
           if (
-            check.search(regexp) === -1 ||
+            value.search(regexp) === -1 ||
             value.charAt(0) !== value.charAt(0).toLowerCase()
           ) {
             setKeyValidation(index);
@@ -116,20 +123,21 @@ function LabelProperties({
           );
           if (duplicateIndex !== -1) {
             setDuplicateKeyError(index);
-            // Show error message or take necessary action
           } else {
             setDuplicateKeyError(-1);
           }
 
           data = data.replace(data.split(':')[0], value);
         } else {
-          const regexp = /^[a-z0-9-_]+$/;
-          const check = value;
-          if (check.search(regexp) === -1) {
-            setvalueValidation(index);
+          if (value.search(regexp) === -1) {
+            setValueValidation(index);
           } else {
-            setvalueValidation(-1);
+            setValueValidation(-1);
           }
+          /*
+          value is split from labels 
+          Example:"client:dataproc_plugin"
+          */
           if (data.split(':')[1] === '') {
             data = data + value;
           } else {
@@ -143,7 +151,7 @@ function LabelProperties({
     setLabelDetailUpdated(labelEdit);
   };
 
-  const styleAddLabelButton = (buttonText: any, labelDetail: any) => {
+  const styleAddLabelButton = (buttonText: string, labelDetail: any) => {
     if (
       buttonText === 'ADD LABEL' &&
       (labelDetail.length === 0 ||
@@ -173,7 +181,13 @@ function LabelProperties({
     <div>
       <div className="job-label-edit-parent">
         {labelDetail.length > 0 &&
-          labelDetail.map((label: any, index: any) => {
+          labelDetail.map((label: any, index: number) => {
+            /*
+                     Extracting key, value from label
+                      Example: "{client:dataProc_plugin}"
+                  */
+            const labelSplit = label.split(':');
+
             return (
               <div key={label}>
                 <div className="job-label-edit-row">
@@ -182,26 +196,25 @@ function LabelProperties({
                       placeholder={`Key ${index + 1}*`}
                       className="edit-input-style"
                       disabled={
-                        label.split(':')[0] === '' ||
+                        labelSplit[0] === '' ||
                         buttonText !== 'ADD LABEL' ||
                         duplicateKeyError !== -1
                           ? false
                           : true
                       }
-                      onBlur={() => handleEditLabelSwitch(index)}
+                      onBlur={() => handleEditLabelSwitch()}
                       onChange={e =>
                         handleEditLabel(
                           e.target.value,
                           index,
-                          'key',
-                          label.split(':')[0]
+                          'key'
                         )
                       }
-                      defaultValue={label.split(':')[0]}
+                      defaultValue={labelSplit[0]}
                     />
 
                     {labelDetailUpdated[index].split(':')[0] === '' ? (
-                      <div className="error-key-parent">
+                      <div role="alert" className="error-key-parent">
                         <iconError.react tag="div" />
                         <div className="error-key-missing">key is required</div>
                       </div>
@@ -233,19 +246,18 @@ function LabelProperties({
                     <Input
                       placeholder={`Value ${index + 1}`}
                       className="edit-input-style"
-                      onBlur={() => handleEditLabelSwitch(index)}
+                      onBlur={() => handleEditLabelSwitch()}
                       onChange={e =>
                         handleEditLabel(
                           e.target.value,
                           index,
-                          'value',
-                          label.split(':')[1]
+                          'value'
                         )
                       }
                       disabled={
                         label==='client:dataproc-jupyter-plugin' && buttonText === 'ADD LABEL'
                       }
-                      defaultValue={label.split(':')[1]}
+                      defaultValue={labelSplit[1]}
                     />
                     {valueValidation === index &&
                       buttonText === 'ADD LABEL' && (
@@ -263,9 +275,9 @@ function LabelProperties({
                   {label==='client:dataproc-jupyter-plugin' && buttonText === 'ADD LABEL' ?"":
                       
                   <div
-                    onClick={() =>
-                      handleDeleteLabel(index, label.split(':')[0])
-                    }
+                    role="button"
+                    className="labels-delete-icon"
+                    onClick={() => handleDeleteLabel(index, labelSplit[0])}
                   >
                     <iconDelete.react tag="div" />
                   </div>}
@@ -275,6 +287,7 @@ function LabelProperties({
             );
           })}
         <div
+          role="button"
           className={styleAddLabelButton(buttonText, labelDetail)}
           onClick={() => {
             (labelDetail.length === 0 ||

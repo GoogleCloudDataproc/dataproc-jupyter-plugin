@@ -18,7 +18,6 @@
 import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-// import { Icon } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
 import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
@@ -114,7 +113,7 @@ function JobDetails({
     jobUuid: '',
     pysparkJob: { args: [], mainPythonFileUri: '' },
     sparkRJob: { args: [], mainRFileUri: '' },
-    sparkJob: { args: [], mainJarFileUri: '', mainClass: '' },
+    sparkJob: { args: [], mainJarFileUri: '', mainClass: '', jarFileUris: '' },
     sparkSqlJob: { queryFileUri: '', queryList: { queries: '' }, args: [] },
     placement: { clusterName: '' }
   });
@@ -141,7 +140,7 @@ function JobDetails({
   const [selectedJobClone, setSelectedJobClone] = useState({});
   const [submitJobView, setSubmitJobView] = useState(false);
   const [keyValidation, setKeyValidation] = useState(-1);
-  const [valueValidation, setvalueValidation] = useState(-1);
+  const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
@@ -167,7 +166,7 @@ function JobDetails({
 
   const handleDetailedClusterView = () => {
     pollingJobDetails(getJobDetails, true);
-    if(!clustersList){
+    if (!clustersList) {
       setDetailedJobView(false);
     }
     setDetailedClusterView(true);
@@ -226,14 +225,14 @@ function JobDetails({
           response
             .json()
             .then((responseResultJob: Response) => {
-              // TODO: Handle Toast here
+              toast.success(`Request to update job ${jobSelected} submitted`);
               console.log(responseResultJob);
             })
             .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
           console.error('Error in updating job', err);
-          toast.error('Failed to Update the job ');
+          toast.error(`Failed to update the job ${jobSelected}`);
         });
     }
   };
@@ -242,8 +241,14 @@ function JobDetails({
     const payload = jobInfoResponse;
     const labelObject: { [key: string]: string } = {};
     labelDetailUpdated.forEach((label: string) => {
-      const key = label.split(':')[0];
-      const value = label.split(':')[1];
+      /*
+         Extracting key, value from label
+         Example: "{client:dataproc_plugin}"
+      */
+      const labelParts = label.split(':');
+
+      const key = labelParts[0];
+      const value = labelParts[1];
       labelObject[key] = value;
     });
     payload.labels = labelObject;
@@ -295,7 +300,7 @@ function JobDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting job details', err);
-          toast.error('Failed to fetch Job details ');
+          toast.error(`Failed to fetch job details ${jobSelected}`);
         });
     }
   };
@@ -305,16 +310,15 @@ function JobDetails({
   const jobType = jobTypeDisplay(job);
   const jobArgument = jobTypeValueArguments(jobInfo);
   const jobTypeConcat = jobArgument + 'Job';
-  //@ts-ignore
+  //@ts-ignore string used as index
   const argumentsList = jobInfo[jobTypeConcat].args;
   const statusMsg = statusMessage(jobInfo);
-
-  const endTime = jobInfo.status.stateStartTime;
+  const endTime = new Date(jobInfo.status.stateStartTime);
   const jobStartTime = new Date(
     jobInfo.statusHistory[jobInfo.statusHistory.length - 1].stateStartTime
   );
-
   const elapsedTimeString = elapsedTime(endTime, jobStartTime);
+
 
   const statusStyleSelection = (jobInfo: any) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
@@ -348,7 +352,11 @@ function JobDetails({
     <div>
       {errorView && (
         <div className="error-view-parent">
-          <div className="back-arrow-icon" onClick={() => setErrorView(false)}>
+          <div
+            role="button"
+            className="back-arrow-icon"
+            onClick={() => setErrorView(false)}
+          >
             <iconLeftArrow.react tag="div" />
           </div>
           <div className="error-view-message-parent">
@@ -404,6 +412,7 @@ function JobDetails({
                 </div>
                 <div className="cluster-details-title">Job details</div>
                 <div
+                  role="button"
                   className="action-cluster-section"
                   onClick={() => handleCloneJob()}
                 >
@@ -414,6 +423,7 @@ function JobDetails({
                 </div>
 
                 <div
+                  role="button"
                   className={statusStyleSelection(jobInfo)}
                   onClick={() =>
                     jobInfo.status.state === STATUS_RUNNING &&
@@ -430,6 +440,7 @@ function JobDetails({
                   <div className="action-cluster-text">STOP</div>
                 </div>
                 <div
+                  role="button"
                   className="action-cluster-section"
                   onClick={() => handleDeleteJob(jobInfo.reference.jobId)}
                 >
@@ -471,6 +482,7 @@ function JobDetails({
               </div>
               <div className="job-edit-header">
                 <div
+                  role="button"
                   className={styleJobEdit(labelEditMode)}
                   onClick={() => (labelEditMode ? '' : handleJobLabelEdit())}
                 >
@@ -517,6 +529,7 @@ function JobDetails({
                   <div className="cluster-details-label">Cluster</div>
 
                   <div
+                    role="button"
                     className="cluster-details-value-job"
                     onClick={() => handleDetailedClusterView()}
                   >
@@ -558,15 +571,27 @@ function JobDetails({
                   </div>
                 )}
                 {job === 'Spark' && (
-                  <div className="row-details">
-                    <div className="cluster-details-label">
-                      Main class or jar
+                  <>
+                    <div className="row-details">
+                      <div className="cluster-details-label">
+                        Main class or jar
+                      </div>
+                      <div className="cluster-details-value">
+                        {jobInfo.sparkJob.mainJarFileUri}
+                        {jobInfo.sparkJob.mainClass}
+                      </div>
                     </div>
-                    <div className="cluster-details-value">
-                      {jobInfo.sparkJob.mainJarFileUri}
-                      {jobInfo.sparkJob.mainClass}
+                    <div className="row-details">
+                      <div className="cluster-details-label">Jar files</div>
+                      {jobInfo.sparkJob.jarFileUris ? (
+                        <div className="cluster-details-value">
+                          {jobInfo.sparkJob.jarFileUris}
+                        </div>
+                      ) : (
+                        <div className="cluster-details-value">None</div>
+                      )}
                     </div>
-                  </div>
+                  </>
                 )}
                 {job === 'SparkSQL' && jobInfo.sparkSqlJob.queryFileUri && (
                   <div className="row-details">
@@ -609,9 +634,15 @@ function JobDetails({
                     <div className="job-label-style-parent">
                       {labelDetail.length > 0
                         ? labelDetail.map(label => {
+                            /*
+                            Extracting key, value from label
+                               Example: "{client:dataproc_plugin}"
+                         */
+                            const labelParts = label.split(':');
+
                             return (
                               <div key={label} className="job-label-style">
-                                {label.split(':')[0]} : {label.split(':')[1]}
+                                {labelParts[0]} : {labelParts[1]}
                               </div>
                             );
                           })
@@ -623,12 +654,12 @@ function JobDetails({
                       setLabelDetail={setLabelDetail}
                       labelDetailUpdated={labelDetailUpdated}
                       setLabelDetailUpdated={setLabelDetailUpdated}
-                      selectedJobClone={selectedJobClone ? true : false}
+                      selectedJobClone={!!selectedJobClone}
                       buttonText="ADD LABEL"
                       keyValidation={keyValidation}
                       setKeyValidation={setKeyValidation}
                       valueValidation={valueValidation}
-                      setvalueValidation={setvalueValidation}
+                      setValueValidation={setValueValidation}
                       labelEditMode={labelEditMode}
                       duplicateKeyError={duplicateKeyError}
                       setDuplicateKeyError={setDuplicateKeyError}
@@ -639,6 +670,7 @@ function JobDetails({
                   <div className="job-button-style-parent">
                     <div className="job-save-button-style">
                       <div
+                        role="button"
                         onClick={() => {
                           handleSaveEdit();
                         }}
@@ -648,6 +680,7 @@ function JobDetails({
                     </div>
                     <div className="job-cancel-button-style">
                       <div
+                        role="button"
                         onClick={() => {
                           handleCancelEdit();
                         }}

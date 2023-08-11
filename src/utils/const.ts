@@ -52,7 +52,7 @@ export const API_HEADER_BEARER = 'Bearer ';
 export const SERVICE_ACCOUNT_KEY = 'serviceAccount';
 export const SERVICE_ACCOUNT_LABEL = 'Service account';
 export const NETWORK_KEY = 'networkUri';
-export const NETWORK_LABEL = 'Sub network';
+export const NETWORK_LABEL = 'Network';
 export const SUBNETWORK_KEY = 'subnetworkUri';
 export const SUBNETWORK_LABEL = 'Sub network';
 export const PROJECT_LIST_URL =
@@ -74,19 +74,19 @@ export const MONTH_NAMES = [
   'Nov',
   'Dec'
 ];
-export const QUERYFILEMESSAGE =
+export const QUERY_FILE_MESSAGE =
   'Can be a GCS file with the gs:// prefix, an HDFS file on the cluster with the hdfs:// prefix, or a local file on the cluster with the file:// prefix';
-export const MAINCLASSMESSAGE =
+export const MAIN_CLASS_MESSAGE =
   'The fully qualified name of a class in a provided or standard jar file, for example, com.example.wordcount, or a provided jar file to use the main class of that jar file';
-export const JARFILEMESSAGE =
+export const JAR_FILE_MESSAGE =
   'Jar files are included in the CLASSPATH. Can be a GCS file with the gs:// prefix, an HDFS file on the cluster with the hdfs:// prefix, or a local file on the cluster with the file:// prefix.';
-export const FILESMESSAGE =
+export const FILES_MESSAGE =
   'Files are included in the working directory of each executor. Can be a GCS file with the gs:// prefix, an HDFS file on the cluster with the hdfs:// prefix, or a local file on the cluster with the file:// prefix.';
-export const ARCHIVEFILESMESSAGE =
+export const ARCHIVE_FILES_MESSAGE =
   'Archive files are extracted in the Spark working directory. Can be a GCS file with the gs:// prefix, an HDFS file on the cluster with the hdfs:// prefix, or a local file on the cluster with the file:// prefix. Supported file types: .jar, .tar, .tar.gz, .tgz, .zip';
-export const ARGUMENTSMESSAGE =
+export const ARGUMENTS_MESSAGE =
   'Additional arguments to pass to the main class. Press Return after each argument.';
-export const MAXRESTARTMESSAGE =
+export const MAX_RESTART_MESSAGE =
   'Leave blank if you do not want to allow automatic restarts on job failure. ';
 export const VIEW_LOGS_CLUSTER_URL =
   'https://console.cloud.google.com/logs/query;query=resource.type="cloud_dataproc_cluster" resource.labels.cluster_name=';
@@ -103,3 +103,5 @@ export const PYSPARK = 'PySpark';
 export const DCU_HOURS = 3600000;
 export const GB_MONTHS = 2592000;
 export const TITLE_LAUNCHER_CATEGORY = 'Dataproc Jobs and Sessions';
+export const SPARK_HISTORY_SERVER = 'Spark History Server';
+export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';
