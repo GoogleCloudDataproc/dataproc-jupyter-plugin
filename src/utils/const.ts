@@ -20,6 +20,7 @@ export const CREATE_CLUSTER_URL =
 export const CREATE_BATCH_URL =
   'https://console.cloud.google.com/dataproc/batches/create';
 export const BASE_URL = 'https://dataproc.googleapis.com/v1';
+export const BASE_URL_NETWORKS = 'https://compute.googleapis.com/compute/v1';
 export const BASE_URL_META='https://metastore.googleapis.com/v1'
 export const VIEW_LOGS_URL = 'https://console.cloud.google.com/logs';
 export const POLLING_TIME_LIMIT = 10000;
