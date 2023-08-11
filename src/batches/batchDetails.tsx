@@ -186,32 +186,28 @@ function BatchDetails({
     }
   };
 
-const statusMsg = statusMessageBatch(batchInfoResponse);
+  const statusMsg = statusMessageBatch(batchInfoResponse);
   const startTime = jobTimeFormat(batchInfoResponse.createTime);
-const startTimeElapsed = new Date(batchInfoResponse.createTime);
+  const startTimeElapsed = new Date(batchInfoResponse.createTime);
 
-const endTime = new Date(batchInfoResponse.stateTime);
+  const endTime = new Date(batchInfoResponse.stateTime);
 
-let jobStartTime: Date;
-let runTimeString = '';
+  let jobStartTime: Date;
+  let runTimeString = '';
 
-if (batchInfoResponse.stateHistory) {
-  const lastStateHistory = batchInfoResponse.stateHistory[
-    batchInfoResponse.stateHistory.length - 1
-  ];
-  jobStartTime = new Date(lastStateHistory.stateStartTime);
-  runTimeString = elapsedTime(endTime, jobStartTime);
-}
+  if (batchInfoResponse.stateHistory) {
+    const lastStateHistory =
+      batchInfoResponse.stateHistory[batchInfoResponse.stateHistory.length - 1];
+    jobStartTime = new Date(lastStateHistory.stateStartTime);
+    runTimeString = elapsedTime(endTime, jobStartTime);
+  }
 
-const batch = BatchTypeValue(batchInfoResponse);
+  const batch = BatchTypeValue(batchInfoResponse);
 
-const elapsedTimeString = elapsedTime(
-  new Date(batchInfoResponse.stateTime),
-  startTimeElapsed
-);
-
-
-
+  const elapsedTimeString = elapsedTime(
+    new Date(batchInfoResponse.stateTime),
+    startTimeElapsed
+  );
 
   const handleDeleteBatch = (batchSelected: string) => {
     setSelectedBatch(batchSelected);
