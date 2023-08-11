@@ -42,7 +42,7 @@
     display: flex;
   }
   
-  div[role="treeitem"][aria-level="0"] > div > div > svg {
+  div[role="treeitem"][aria-level="0"] > div > div > div >svg {
     margin-right: 5px;
     margin-top:-2px;
   }
@@ -73,5 +73,10 @@
   .tree-container {
     height: '600px';
     overflow-y: 'auto';
+    margin-left: 20px;
+  }
+  .database-loader{
+    display: flex;
+    margin-top: 50px;
     margin-left: 20px;
   }

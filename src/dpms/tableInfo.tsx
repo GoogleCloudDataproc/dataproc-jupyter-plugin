@@ -13,36 +13,22 @@ interface IDatabaseProps {
   dataprocMetastoreServices: string;
   database: string;
   column: IColumn[];
+  tableDescription: Record<string, string>;
 }
 const TableInfo = ({
   title,
   dataprocMetastoreServices,
   database,
-  column
+  column,
+  tableDescription
 }: IDatabaseProps): React.JSX.Element => {
   const table = {
     'Table name': title,
-    Description: 'description text goes here',
-    'By column name': 'lorem ipsum',
+    Description: tableDescription[title],
+    'By column name': '',
     'By Database': database,
     'By Dataproc Metastore Instance': dataprocMetastoreServices
   };
-
-  // const schema = [
-  //   {
-  //     name: 'column1',
-  //     type: 'string',
-  //     mode: 'nullable',
-  //     description: 'Description for column1'
-  //   },
-  //   {
-  //     name: 'column2',
-  //     type: 'integer',
-  //     mode: 'required',
-  //     description: 'Description for column2'
-  //   }
-  //   // Add more columns as needed
-  // ];
 
   const renderColumnTable = () => {
     const columns = React.useMemo(
@@ -99,16 +85,11 @@ const TableInfo = ({
             {rows.map(row => {
               prepareRow(row);
               return (
-                <tr
-                  {...row.getRowProps()}
-                  //   className={row.index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
-                >
+                <tr {...row.getRowProps()}>
                   {row.cells.map((cell, index) => {
                     return (
                       <td
-                        className={`schema-td ${
-                          index === 0 ? 'bold-column' : ''
-                        }`}
+                        className={index === 0 ? 'bold-column' : ''}
                         {...cell.getCellProps()}
                       >
                         {cell.render('Cell')}
@@ -136,7 +117,7 @@ const TableInfo = ({
                 key={key}
                 className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
               >
-                <td>{key}</td>
+                <td className="bold-column">{key}</td>
                 <td>{value}</td>
               </tr>
             ))}
@@ -153,18 +134,21 @@ export class Table extends ReactWidget {
   dataprocMetastoreServices: string;
   database!: string;
   column: IColumn[];
+  tableDescription: Record<string, string>;
 
   constructor(
     title: string,
     dataprocMetastoreServices: string,
     database: string,
-    column: IColumn[]
+    column: IColumn[],
+    tableDescription: Record<string, string>
   ) {
     super();
     this.addClass('jp-ReactWidget');
     this.dataprocMetastoreServices = dataprocMetastoreServices;
     this.database = database;
     this.column = column;
+    this.tableDescription = tableDescription;
   }
 
   render(): React.JSX.Element {
@@ -174,6 +158,7 @@ export class Table extends ReactWidget {
         dataprocMetastoreServices={this.dataprocMetastoreServices}
         database={this.database}
         column={this.column}
+        tableDescription={this.tableDescription}
       />
     );
   }

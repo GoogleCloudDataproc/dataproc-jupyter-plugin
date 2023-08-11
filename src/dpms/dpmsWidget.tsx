@@ -80,11 +80,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [noCluster, setNoCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
-  // const [databaseLength, setDatabaseLength] = useState(Number);
-  // const [databaseIteration, setDatabaseIteration] = useState(0);
-  // const [tableLength, setTableLength] = useState(Number);
-  // const [tableIteration, setTableIteration] = useState(0);
   const [databaseDetails, setDatabaseDetails] = useState({});
+  const [tableDescription, setTableDescription] = useState({});
   const getColumnDetails = async (name: string) => {
     console.log(name);
     const credentials = await authApi();
@@ -148,20 +145,23 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
               );
               const tableNames: string[] = [];
               const entryNames: string[] = [];
+              const updatedTableDetails: { [key: string]: string } = {};
               filteredEntries.forEach(
                 (entry: {
                   displayName: string;
                   relativeResourceName: string;
+                  description: string;
                 }) => {
                   console.log(entry.displayName);
                   console.log(entry.relativeResourceName);
                   tableNames.push(entry.displayName);
                   entryNames.push(entry.relativeResourceName);
+                  const description = entry.description || 'None';
+                  updatedTableDetails[entry.displayName] = description;
                 }
               );
               setEntries(entryNames);
-              console.log(entryNames.length);
-              // setTableLength(entryNames.length);
+              setTableDescription(updatedTableDetails);
             })
             .catch((e: Error) => {
               console.log(e);
@@ -251,7 +251,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         node.data.name,
         dataprocMetastoreServices,
         database,
-        column
+        column,
+        tableDescription
       );
       const widget = new MainAreaWidget<Table>({ content });
       const widgetId = `node-widget-${uuidv4()}`;
@@ -271,10 +272,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     setIsLoading(true);
     setEntries([]);
     setColumnResponse([]);
-    // setDatabaseLength(0);
-    // setDatabaseIteration(0);
-    // setTableLength(0);
-    // setTableIteration(0);
     setDatabaseDetails({});
   };
   const handleRefreshClick = () => {
@@ -388,8 +385,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
               console.log(responseResult);
               console.log(dataprocMetastoreServices);
               const filteredEntries = responseResult.results.filter(
-                (entry: { displayName: string }) =>
-                  entry.displayName !== 'default'
+                (entry: { displayName: string }) => entry.displayName !== 'def'
               );
               const databaseNames: string[] = [];
               const updatedDatabaseDetails: { [key: string]: string } = {};
@@ -492,22 +488,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     console.log('table use effect');
     entries.forEach(async (entry: string) => {
       await getColumnDetails(entry);
-      // setTableIteration(prevCount => prevCount + 1);
     });
   }, [entries]);
-  // useEffect(() => {
-  //   if (
-  //     tableIteration === tableLength &&
-  //     databaseIteration === databaseLength &&
-  //     tableLength !== 0
-  //   ) {
-  //     console.log('loading false');
-  //     setIsLoading(false);
-  //   }
-  // }, [columnResponse]);
-  // useEffect(() => {
-  //   console.log('tableIteration:', tableIteration);
-  // }, [tableIteration]);
+
   return (
     <>
       <div>
@@ -520,14 +503,16 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         <>
           <div>
             {isLoading ? (
-              <div>
-                <ClipLoader
-                  color="#8A8A8A"
-                  loading={true}
-                  size={20}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
+              <div className="database-loader">
+                <div>
+                  <ClipLoader
+                    color="#8A8A8A"
+                    loading={true}
+                    size={20}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
                 Loading databases
               </div>
             ) : (
