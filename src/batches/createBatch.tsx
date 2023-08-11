@@ -26,14 +26,20 @@ import {
   API_HEADER_CONTENT_TYPE,
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
+  ARTIFACT_REGISTERY,
   BASE_URL,
   BASE_URL_META,
   BASE_URL_NETWORKS,
+  CONTAINER_REGISTERY,
+  CUSTOM_CONTAINERS,
   FILES_MESSAGE,
   JAR_FILE_MESSAGE,
   PROJECT_LIST_URL,
   QUERY_FILE_MESSAGE,
   REGION_URL,
+  SECURITY_KEY,
+  SELF_MANAGED_CLUSTER,
+  SERVICE_ACCOUNT,
   STATUS_RUNNING
 } from '../utils/const';
 import TagsInput from 'react-tagsinput';
@@ -761,7 +767,7 @@ function CreateBatch({
             )}
             <div className="create-batches-message">Region*</div>
             <Select
-              className="create-batch-style "
+              className="select-job-style"
               value={regionName}
               type="text"
               disabled={true}
@@ -771,7 +777,7 @@ function CreateBatch({
             <div className="submit-job-label-header">Container</div>
             <div className="create-batches-message">Batch type*</div>
             <Select
-              className="create-batch-style "
+              className="select-job-style"
               value={batchTypeSelected}
               type="text"
               options={batchTypeList}
@@ -779,7 +785,7 @@ function CreateBatch({
             />
             <div className="create-batches-message">Runtime version*</div>
             <Select
-              className="create-batch-style "
+              className="select-job-style"
               value={versionSelected}
               type="text"
               options={versionList}
@@ -944,7 +950,7 @@ function CreateBatch({
                   Additional python files
                 </div>
                 <TagsInput
-                  className="create-batch-style"
+                  className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
                       e,
@@ -1005,18 +1011,45 @@ function CreateBatch({
               type="text"
               placeholder=""
             />
-            <div className="create-messagelist">
+            <div className="create-custom-messagelist">
               Specify a custom container image to add Java or Python
               dependencies not provided by the default container image. You must
-              host your custom container on Container Registry or Artifact
-              Registry . Learn more{' '}
+              host your custom container on
+              <div className="create-container-message">
+              <div
+                className="create-batch-learn-more"
+                onClick={() => {
+                  window.open(`${CONTAINER_REGISTERY}`, '_blank');
+                }}
+              >
+                Container Registry
+              </div>
+              {' or '}
+              <div
+                className="create-batch-learn-more"
+                onClick={() => {
+                  window.open(`${ARTIFACT_REGISTERY}`, '_blank');
+                }}
+              >
+                 Artifact Registry
+              </div>
+               {' . '}
+              <div
+                className="submit-job-learn-more"
+                onClick={() => {
+                  window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+                }}
+              >
+                Learn more
+              </div>
+              </div>
             </div>
             {batchTypeSelected === 'spark' ||
               (batchTypeSelected === 'sparkSql' && (
                 <>
                   <div className="create-batches-message">Jar files</div>
                   <TagsInput
-                    className="create-batch-style"
+                    className="select-job-style"
                     onChange={e =>
                       handleValidationFiles(
                         e,
@@ -1046,7 +1079,7 @@ function CreateBatch({
               <>
                 <div className="create-batches-message">Files</div>
                 <TagsInput
-                  className="create-batch-style"
+                  className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
                       e,
@@ -1076,7 +1109,7 @@ function CreateBatch({
               <>
                 <div className="create-batches-message">Archive files</div>
                 <TagsInput
-                  className="create-batch-style"
+                  className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
                       e,
@@ -1108,7 +1141,7 @@ function CreateBatch({
               <>
                 <div className="create-batches-message">Arguments</div>
                 <TagsInput
-                  className="create-batch-style"
+                  className="select-job-style"
                   onChange={e => setArgumentsSelected(e)}
                   addOnBlur={true}
                   value={argumentsSelected}
@@ -1148,7 +1181,14 @@ function CreateBatch({
             />
             <div className="create-messagelist">
               If not provided, the default GCE service account will be used.
-              Learn more
+              <div
+                className="create-batch-learn-more"
+                onClick={() => {
+                  window.open(`${SERVICE_ACCOUNT}`, '_blank');
+                }}
+              >
+                Learn more
+              </div>
             </div>
             <div className="submit-job-label-header">Network Configuration</div>
             <div className="create-batches-message">
@@ -1185,7 +1225,7 @@ function CreateBatch({
             </div>
             <div className="create-batches-message">Network tags*</div>
             <TagsInput
-              className="create-batch-style"
+              className="select-job-style"
               onChange={e => setNetworkTagSelected(e)}
               addOnBlur={true}
               value={networkTagSelected}
@@ -1224,12 +1264,20 @@ function CreateBatch({
                   </div>
                 </div>
                 <div className="create-batch-sub-message">
-                  Manage via Google Cloud Key Management Service
+                  Manage via{' '}
+                  <div
+                    className="create-batch-learn-more"
+                    onClick={() => {
+                      window.open(`${SECURITY_KEY}`, '_blank');
+                    }}
+                  >
+                    Google Cloud Key Management Service
+                  </div>
                 </div>
                 {selectedEncryptionRadio === 'customerManaged' && (
                   <div className="create-batch-input">
                     <Dropdown
-                      className="create-batch-style"
+                      className="select-job-style"
                       placeholder="Select an option"
                       search
                       selection
@@ -1246,7 +1294,15 @@ function CreateBatch({
             </div>
             <div className="create-batches-message">
               Configure Dataproc to use Dataproc Metastore as its Hive
-              metastore.{' '}
+              metastore.
+              <div
+                className="create-batch-learn-more"
+                onClick={() => {
+                  window.open(`${SELF_MANAGED_CLUSTER}`, '_blank');
+                }}
+              >
+                Learn more
+              </div>
             </div>
             <div className="create-messagelist">
               We recommend this option to persist table metadata when the batch
@@ -1256,7 +1312,7 @@ function CreateBatch({
             <div className="create-batches-message">Metastore project</div>
             <Select
               placeholder={projectId}
-              className="create-batch-style "
+              className="select-job-style"
               value={projectId}
               onChange={handleProjectIdChange}
               options={projectList}
@@ -1272,7 +1328,7 @@ function CreateBatch({
             ) : (
               <Select
                 placeholder={region}
-                className="create-batch-style "
+                className="select-job-style"
                 value={region}
                 onChange={handleRegionChange}
                 options={regionList}
@@ -1289,7 +1345,7 @@ function CreateBatch({
               />
             ) : (
               <Select
-                className="create-batch-style "
+                className="select-job-style"
                 value={servicesSelected}
                 type="text"
                 options={servicesList}
@@ -1306,7 +1362,7 @@ function CreateBatch({
             <div className="create-batches-message">History server cluster</div>
 
             <Dropdown
-              className="create-batch-style"
+              className="select-job-style"
               search
               selection
               value={clusterSelected}
