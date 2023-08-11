@@ -23,6 +23,7 @@ import {
 } from '../utils/const';
 import { authApi } from '../utils/utils';
 import { Table } from './tableInfo';
+import { ClipLoader } from 'react-spinners';
 
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
@@ -172,13 +173,15 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     }
   };
   const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
+  console.log(columnResponse);
   columnResponse.forEach((res: any) => {
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
     const columns = res.schema.columns.map((column: any) => ({
       name: column.column,
       type: column.type.toUpperCase(),
-      mode: column.mode
+      mode: column.mode,
+      description: column?.description || 'None'
     }));
 
     if (!database[dbName]) {
@@ -198,11 +201,13 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     children: Object.entries(tables).map(([tableName, columns]) => ({
       id: uuidv4(),
       name: tableName,
+      desciption: '',
       children: columns.map((column: any) => ({
         id: uuidv4(),
         name: column.name,
         type: column.type,
-        mode: column.mode
+        mode: column.mode,
+        description: column.description
       }))
     }))
   }));
@@ -302,12 +307,12 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       const arrowIcon = hasChildren ? (
         expanded ? (
           <>
-            <div onClick={handleToggle}>
+            <div className="caret-icon" onClick={handleToggle}>
               <iconRightArrow.react tag="div" />
             </div>
           </>
         ) : (
-          <div onClick={handleToggle}>
+          <div className="caret-icon" onClick={handleToggle}>
             <iconDownArrow.react tag="div" />
           </div>
         )
@@ -317,7 +322,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         return (
           <>
             {arrowIcon}
-            <iconDatabase.react tag="div" />
+            <div>
+              <iconDatabase.react tag="div" />
+            </div>
           </>
         );
       } else if (depth === 2) {
@@ -341,6 +348,13 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       <div
         style={style}
         ref={dragHandle}
+        // onClick={event => {
+        //   // Call node.toggle() only when clicked on the caret icon
+        //   const targetElement = event.currentTarget as HTMLElement;
+        //   if (targetElement.classList.contains('caret-icon')) {
+        //     node.toggle();
+        //   }
+        // }}
         onClick={() => node.toggle()}
         // onMouseDown={() => onClick(node)}
       >
@@ -506,7 +520,16 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         <>
           <div>
             {isLoading ? (
-              <div>Loading data...</div>
+              <div>
+                <ClipLoader
+                  color="#8A8A8A"
+                  loading={true}
+                  size={20}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+                Loading databases
+              </div>
             ) : (
               <>
                 <div className="ui category search">

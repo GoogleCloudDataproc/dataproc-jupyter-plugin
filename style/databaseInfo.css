@@ -72,3 +72,10 @@
   text-align: left;
   background-color: #F5F5F5;
 }
+.schema-td.bold-column {
+  font-weight: 600; 
+}
+.table-info-overlay{
+max-height: 600px;
+overflow-x: auto;
+}

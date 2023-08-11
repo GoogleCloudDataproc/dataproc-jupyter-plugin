@@ -71,7 +71,8 @@ const TableInfo = ({
       return column.map((column: IColumn) => ({
         name: column.name,
         type: column.type || '',
-        mode: column.mode || ''
+        mode: column.mode || '',
+        description: column.description
       }));
     }, [column]);
 
@@ -102,9 +103,14 @@ const TableInfo = ({
                   {...row.getRowProps()}
                   //   className={row.index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
                 >
-                  {row.cells.map(cell => {
+                  {row.cells.map((cell, index) => {
                     return (
-                      <td className="schema-td" {...cell.getCellProps()}>
+                      <td
+                        className={`schema-td ${
+                          index === 0 ? 'bold-column' : ''
+                        }`}
+                        {...cell.getCellProps()}
+                      >
                         {cell.render('Cell')}
                       </td>
                     );
@@ -119,7 +125,7 @@ const TableInfo = ({
   };
 
   return (
-    <div>
+    <div className="table-info-overlay">
       <div className="title-overlay">{title}</div>
       <div className="db-title">Table info</div>
       <div className="table-container">
