@@ -1284,18 +1284,15 @@ function CreateBatch({
                     Google Cloud Key Management Service
                   </div>
                 </div>
-                {selectedEncryptionRadio === 'customerManaged' && (
+                {/* {selectedEncryptionRadio === 'customerManaged' && (
                   <div className="create-batch-input">
-                    <Dropdown
+                    <Select
                       className="select-job-style"
                       placeholder="Select an option"
-                      search
-                      selection
-                      options={versionList}
-                      value={versionSelected}
+                      options={[]}
                     />
                   </div>
-                )}
+                )} */}
               </div>
             </div>
 
