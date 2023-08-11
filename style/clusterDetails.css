@@ -29,6 +29,7 @@
 
 .action-cluster-section.disabled {
   color: rgba(0, 0, 0, 0.54);
+  cursor: context-menu;
 }
 
 .loader-full-style {
@@ -54,7 +55,7 @@
 }
 .action-disabled {
   opacity: 0.5;
-  /* cursor: not-allowed; */
+  cursor: context-menu !important;
 }
 .action-cluster-section {
   cursor: pointer;

@@ -245,7 +245,7 @@ const BatchesComponent = (): React.JSX.Element => {
           }
         />
       )}
-      {loggedIn ? (
+      {loggedIn && !configError ? (
         <>
           {detailedBatchView && (
             <BatchDetails
@@ -309,7 +309,7 @@ const BatchesComponent = (): React.JSX.Element => {
       )}
       {configError && (
         <div role="alert" className="login-error">
-          Please Configure Gcloud with Account, Project ID and Region
+          Please configure gcloud with account, project-id and region
         </div>
       )}
     </div>

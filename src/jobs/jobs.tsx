@@ -23,7 +23,8 @@ import {
   jobTypeValue,
   elapsedTime,
   statusMessage,
-  jobTypeDisplay
+  jobTypeDisplay,
+  ICellProps
 } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -360,22 +361,8 @@ function JobComponent({
       pollingJobs(listJobsAPI, true);
     };
   }, [pollingDisable, detailedJobView]);
-  interface ICell {
-    render(arg0: string): React.ReactNode;
-    column: {
-      Header: string;
-    };
-
-    getCellProps: () => { [key: string]: any };
-    row: {
-      original: {
-        status: string;
-      };
-    };
-
-    value: any;
-  }
-  const tableDataCondition = (cell: ICell) => {
+  
+  const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Job ID') {
       return (
         <td

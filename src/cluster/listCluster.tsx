@@ -38,6 +38,7 @@ import {
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
+import { ICellProps } from '../utils/utils';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -126,22 +127,8 @@ function ListCluster({
     ],
     []
   );
-  interface ICell {
-    render(arg0: string): React.ReactNode;
-    column: {
-      Header: string;
-    };
 
-    getCellProps: () => { [key: string]: any };
-    row: {
-      original: {
-        status: string;
-      };
-    };
-
-    value: any;
-  }
-  const tableDataCondition = (cell: ICell) => {
+  const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Name') {
       return (
         <td

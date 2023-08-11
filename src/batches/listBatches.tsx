@@ -37,6 +37,7 @@ import {
 } from '../utils/const';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
+import { ICellProps } from '../utils/utils';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -152,15 +153,6 @@ function ListBatches({
   const handleCreateBatchOpen = () => {
     setCreateBatchView(true);
   };
-
-  interface ICellProps {
-    getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
-    value: any;
-    column: {
-      Header: string;
-    };
-    render: (value: string) => React.ReactNode;
-  }
 
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Batch ID') {
