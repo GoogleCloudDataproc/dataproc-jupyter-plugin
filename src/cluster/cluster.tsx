@@ -472,7 +472,7 @@ const ClusterComponent = (): React.JSX.Element => {
       )}
       {configError && (
         <div className="login-error">
-          Please Configure Gcloud with Account, Project ID and Region
+          Please configure gcloud with account, project-id and region
         </div>
       )}
     </div>

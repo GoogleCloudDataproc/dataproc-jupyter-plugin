@@ -41,7 +41,7 @@ import {
   STATUS_TERMINATING
 } from '../utils/const';
 import TableData from '../utils/tableData';
-import { authApi, elapsedTime, jobTimeFormat } from '../utils/utils';
+import { ICellProps, authApi, elapsedTime, jobTimeFormat } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
@@ -296,14 +296,7 @@ function ListSessions() {
     setSessionSelected(selectedName);
     setDetailedSessionView(true);
   };
-  interface ICellProps {
-    getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
-    value: any;
-    column: {
-      Header: string;
-    };
-    render: (value: string) => React.ReactNode;
-  }
+
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Session ID') {
       return (

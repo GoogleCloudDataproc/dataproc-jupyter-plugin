@@ -253,3 +253,18 @@ export const iconDisplay = (kernelType: any) => {
     return iconPythonLogo;
   }
 };
+
+
+export interface ICellProps {
+  getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
+  value: string | any;
+  column: {
+    Header: string;
+  };
+  row: {
+    original: {
+      status: string;
+    };
+  };
+  render: (value: string) => React.ReactNode;
+}

@@ -81,13 +81,15 @@ function ViewLogs({
 
   return (
     <>
-      <div role="button"
+      <div
+        role="button"
         className={
           (batchInfoResponse?.runtimeInfo?.endpoints &&
             batchInfoResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
           (sessionInfo?.runtimeInfo?.endpoints &&
             sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
-          clusterName
+          (clusterName) ||
+          (clusterInfo)
             ? 'action-cluster-section'
             : 'action-disabled action-cluster-section'
         }
@@ -137,39 +139,22 @@ function ViewLogs({
             Extracting project, location, session_id from sessionInfo.name
             Example: "projects/{project}/locations/{location}/sessionTemplates/{session_id}"
             */
-          const sessionValueUri=sessionInfo.name.split('/')
-           
+          const sessionValueUri = sessionInfo.name.split('/');
+
           if (sessionInfo) {
-           
             window.open(
-              `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${
-                sessionValueUri[1]
-              }" resource.labels.location="${
-                sessionValueUri[3]
-              }" resource.labels.session_id="${
-                sessionValueUri[5]
-              }";cursorTimestamp=${sessionInfo.createTime};?project=${
-                sessionValueUri[1]
-              }`,
+              `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${sessionValueUri[1]}" resource.labels.location="${sessionValueUri[3]}" resource.labels.session_id="${sessionValueUri[5]}";cursorTimestamp=${sessionInfo.createTime};?project=${sessionValueUri[1]}`,
               '_blank'
             );
           } else {
-             /*
+            /*
             Extracting project, location, batch_id from batchInfoResponse.name 
             Example: "projects/{project}/locations/{location}/batches/{batch_id}"
             */
-            const batchValueUri=batchInfoResponse.name.split('/')
-           
+            const batchValueUri = batchInfoResponse.name.split('/');
+
             window.open(
-              `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${
-                batchValueUri[1]
-              }" resource.labels.location="${
-                batchValueUri[3]
-              }" resource.labels.batch_id="${
-                batchValueUri[5]
-              }";cursorTimestamp=${batchInfoResponse.createTime};?project=${
-                batchValueUri[1]
-              }`,
+              `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${batchValueUri[1]}" resource.labels.location="${batchValueUri[3]}" resource.labels.batch_id="${batchValueUri[5]}";cursorTimestamp=${batchInfoResponse.createTime};?project=${batchValueUri[1]}`,
               '_blank'
             );
           }
