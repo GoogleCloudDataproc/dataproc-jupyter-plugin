@@ -254,6 +254,9 @@ function LabelProperties({
                           'value'
                         )
                       }
+                      disabled={
+                        label=== DEFAULT_LABEL_DETAIL && buttonText === 'ADD LABEL'
+                      }
                       defaultValue={labelSplit[1]}
                     />
                     {valueValidation === index &&
@@ -268,13 +271,16 @@ function LabelProperties({
                         </div>
                       )}
                   </div>
+                  
+                  {label=== DEFAULT_LABEL_DETAIL && buttonText === 'ADD LABEL' ?"":
+                      
                   <div
                     role="button"
                     className="labels-delete-icon"
                     onClick={() => handleDeleteLabel(index, labelSplit[0])}
                   >
                     <iconDelete.react tag="div" />
-                  </div>
+                  </div>}
                   <></>
                 </div>
               </div>

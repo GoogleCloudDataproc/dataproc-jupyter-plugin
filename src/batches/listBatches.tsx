@@ -68,6 +68,8 @@ interface IBatch {
   elapsedTime: string;
   type: string;
   actions: JSX.Element;
+  setCreateBatchView: (value: boolean) => void;
+  createBatchView: boolean;
 }
 
 interface IListBatchesProps {
@@ -76,6 +78,8 @@ interface IListBatchesProps {
   setPollingDisable: (value: boolean) => void;
   listBatchAPI: () => void;
   handleBatchDetails: (batchID: string) => void;
+  setCreateBatchView: (value: boolean) => void;
+  createBatchView: boolean;
 }
 
 function ListBatches({
@@ -83,7 +87,9 @@ function ListBatches({
   isLoading,
   setPollingDisable,
   listBatchAPI,
-  handleBatchDetails
+  handleBatchDetails,
+  setCreateBatchView,
+  createBatchView
 }: IListBatchesProps) {
   const data = batchesList;
   const columns = React.useMemo(
@@ -142,6 +148,10 @@ function ListBatches({
     useGlobalFilter,
     usePagination
   );
+
+  const handleCreateBatchOpen = () => {
+    setCreateBatchView(true);
+  };
 
   interface ICellProps {
     getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
@@ -202,21 +212,21 @@ function ListBatches({
 
   return (
     <div>
-      <div className="batch-header-part">
-        <div
-          className="action-disabled create-batch-overlay"
-          // onClick={() => {
-          //   window.open(CREATE_BATCH_URL, '_blank');
-          // }}
-        >
-          <div className="create-cluster-icon">
-            <iconCreateCluster.react tag="div" />
-          </div>
-          <div className="create-cluster-text">Create Batch</div>
-        </div>
-      </div>
-      {batchesList.length > 0 ? (
+      {batchesList.length > 0 && !createBatchView ? (
         <div>
+          <div className="batch-header-part">
+            <div
+              className="create-batch-overlay"
+              onClick={() => {
+                handleCreateBatchOpen();
+              }}
+            >
+              <div className="create-cluster-icon">
+                <iconCreateCluster.react tag="div" />
+              </div>
+              <div className="create-cluster-text">Create Batch</div>
+            </div>
+          </div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
               <iconFilter.react tag="div" />
