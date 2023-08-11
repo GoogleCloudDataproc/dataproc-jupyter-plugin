@@ -24,6 +24,7 @@ import {
 import { authApi } from '../utils/utils';
 import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
+import { ToastContainer, toast } from 'react-toastify';
 
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
@@ -83,7 +84,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [databaseDetails, setDatabaseDetails] = useState({});
   const [tableDescription, setTableDescription] = useState({});
   const getColumnDetails = async (name: string) => {
-    console.log(name);
     const credentials = await authApi();
     if (credentials && clusterValue) {
       fetch(`https://datacatalog.googleapis.com/v1/${name}`, {
@@ -97,7 +97,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: unknown) => {
               setColumnResponse((prevResponse: any) => [
                 ...prevResponse,
                 responseResult
@@ -111,7 +111,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing clusters Details', err);
+          console.error('Error getting column details', err);
         });
     }
   };
@@ -137,11 +137,10 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then((responseResult: any) => {
               console.log(responseResult);
-              console.log(dataprocMetastoreServices);
               const filteredEntries = responseResult.results.filter(
-                (entry: { displayName: string }) => entry.displayName !== 'def'
+                (entry: { displayName: string }) => entry.displayName
               );
               const tableNames: string[] = [];
               const entryNames: string[] = [];
@@ -152,8 +151,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                   relativeResourceName: string;
                   description: string;
                 }) => {
-                  console.log(entry.displayName);
-                  console.log(entry.relativeResourceName);
                   tableNames.push(entry.displayName);
                   entryNames.push(entry.relativeResourceName);
                   const description = entry.description || 'None';
@@ -168,21 +165,27 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing clusters Details', err);
+          console.error('Error getting table details', err);
         });
     }
   };
   const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
-  console.log(columnResponse);
   columnResponse.forEach((res: any) => {
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
-    const columns = res.schema.columns.map((column: any) => ({
-      name: column.column,
-      type: column.type.toUpperCase(),
-      mode: column.mode,
-      description: column?.description || 'None'
-    }));
+    const columns = res.schema.columns.map(
+      (column: {
+        column: string;
+        type: string;
+        mode: string;
+        description: string;
+      }) => ({
+        name: column.column,
+        type: column.type.toUpperCase(),
+        mode: column.mode,
+        description: column?.description || 'None'
+      })
+    );
 
     if (!database[dbName]) {
       database[dbName] = {};
@@ -211,14 +214,12 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       }))
     }))
   }));
-  console.log(data.length);
-  console.log(data);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
-  const searchMatch = (node: any | string, term: string) => {
+  const searchMatch = (node: { data: { name: string } }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
 
@@ -226,8 +227,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     // Open main area widget with selected node values
     const depth = calculateDepth(node);
     if (depth === 1) {
-      console.log(dataprocMetastoreServices);
-      console.log(databaseDetails);
       const content = new Database(
         node.data.name,
         dataprocMetastoreServices,
@@ -239,12 +238,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       widget.title.label = node.data.name;
       widget.title.closable = true;
       widget.title.icon = iconDatabaseWidget;
-
-      // Add the widget to the main area
       app.shell.add(widget, 'main');
     } else if (depth === 2) {
-      console.log(node);
-      console.log(node.parent.data.name);
       const database = node.parent.data.name;
       const column = node.data.children;
       const content = new Table(
@@ -290,6 +285,13 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
 
     const handleToggle = () => {
       setExpanded(!expanded);
+      node.toggle();
+    };
+    const handleIconClick = (event: React.MouseEvent) => {
+      // Check if the clicked element has the caret-icon class
+      if (event.currentTarget.classList.contains('caret-icon')) {
+        handleToggle();
+      }
     };
     const handleTextClick = (event: React.MouseEvent) => {
       // Prevent the event from propagating to the caret icon and node container
@@ -304,12 +306,20 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       const arrowIcon = hasChildren ? (
         expanded ? (
           <>
-            <div className="caret-icon" onClick={handleToggle}>
+            <div
+              role="treeitem"
+              className="caret-icon right"
+              onClick={handleIconClick}
+            >
               <iconRightArrow.react tag="div" />
             </div>
           </>
         ) : (
-          <div className="caret-icon" onClick={handleToggle}>
+          <div
+            role="treeitem"
+            className="caret-icon down"
+            onClick={handleIconClick}
+          >
             <iconDownArrow.react tag="div" />
           </div>
         )
@@ -319,7 +329,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         return (
           <>
             {arrowIcon}
-            <div>
+            <div role="img" className="db-icon" onClick={handleIconClick}>
               <iconDatabase.react tag="div" />
             </div>
           </>
@@ -328,7 +338,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         return (
           <>
             {arrowIcon}
-            <iconTable.react tag="div" />
+            <div role="img" className="table-icon" onClick={handleIconClick}>
+              <iconTable.react tag="div" />
+            </div>
           </>
         );
       }
@@ -342,21 +354,11 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     };
 
     return (
-      <div
-        style={style}
-        ref={dragHandle}
-        // onClick={event => {
-        //   // Call node.toggle() only when clicked on the caret icon
-        //   const targetElement = event.currentTarget as HTMLElement;
-        //   if (targetElement.classList.contains('caret-icon')) {
-        //     node.toggle();
-        //   }
-        // }}
-        onClick={() => node.toggle()}
-        // onMouseDown={() => onClick(node)}
-      >
+      <div style={style}>
         {renderNodeIcon()}
-        <div onClick={handleTextClick}>{node.data.name}</div>
+        <div role="treeitem" onClick={handleTextClick}>
+          {node.data.name}
+        </div>
       </div>
     );
   }
@@ -382,27 +384,20 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           response
             .json()
             .then(async (responseResult: any) => {
-              console.log(responseResult);
-              console.log(dataprocMetastoreServices);
               const filteredEntries = responseResult.results.filter(
-                (entry: { displayName: string }) => entry.displayName !== 'def'
+                (entry: { displayName: string }) => entry.displayName
               );
               const databaseNames: string[] = [];
               const updatedDatabaseDetails: { [key: string]: string } = {};
               filteredEntries.forEach(
                 (entry: { description: string; displayName: string }) => {
-                  console.log(entry.displayName);
                   databaseNames.push(entry.displayName);
                   const description = entry.description || 'None';
                   updatedDatabaseDetails[entry.displayName] = description;
                 }
               );
               setDatabaseDetails(updatedDatabaseDetails);
-              console.log(databaseDetails);
-              console.log(databaseNames);
-              // setDatabaseLength(databaseNames.length);
               databaseNames.map(async (db: string) => {
-                // setDatabaseIteration(databaseIteration + 1);
                 await getTableDetails(db);
               });
             })
@@ -411,7 +406,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing clusters Details', err);
+          console.error('Error getting database details', err);
         });
     }
   };
@@ -432,20 +427,16 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           response
             .json()
             .then(async (responseResult: any) => {
-              console.log(responseResult);
               const metastoreServices =
                 responseResult.config?.metastoreConfig
                   ?.dataprocMetastoreService;
-              console.log(metastoreServices);
               if (metastoreServices) {
                 const lastIndex = metastoreServices.lastIndexOf('/');
                 const instanceName =
                   lastIndex !== -1
                     ? metastoreServices.substring(lastIndex + 1)
                     : '';
-                console.log(instanceName);
                 setDataprocMetastoreServices(instanceName);
-                console.log(dataprocMetastoreServices);
                 setNoCluster(false);
               } else {
                 setNoCluster(true);
@@ -456,21 +447,19 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             });
         })
         .catch((err: Error) => {
-          // setIsLoading(false);
-          console.error('Error listing clusters Details', err);
-          // toast.error('Failed to fetch Cluster Details');
+          setIsLoading(false);
+          console.error('Error listing clusters details', err);
+          toast.error('Failed to fetch cluster cetails');
         });
     }
   };
   const getActiveNotebook = () => {
     const clusterVal = localStorage.getItem('clusterValue');
-    console.log(clusterVal);
     if (clusterVal) {
       setClusterValue(clusterVal);
       getClusterDetails();
     } else {
       setNoCluster(true);
-      console.log('no value');
     }
   };
   useEffect(() => {
@@ -481,11 +470,9 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     };
   }, [clusterValue]);
   useEffect(() => {
-    console.log('database use effect');
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
   useEffect(() => {
-    console.log('table use effect');
     entries.forEach(async (entry: string) => {
       await getColumnDetails(entry);
     });
@@ -495,7 +482,13 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     <>
       <div>
         <div className="dpms-title">Dataproc Metastore</div>
-        <div className="refresh-icon" onClick={handleRefreshClick}>
+        <div
+          role="button"
+          aria-label="refresh"
+          className="refresh-icon"
+          data-tip="Refresh"
+          onClick={handleRefreshClick}
+        >
           <iconRefresh.react tag="div" />
         </div>
       </div>
@@ -549,6 +542,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                       <Node {...props} onClick={handleNodeClick} />
                     )}
                   </Tree>
+                  <ToastContainer />
                 </div>
               </>
             )}

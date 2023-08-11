@@ -17,8 +17,6 @@ const DatabaseInfo = ({
     description: databaseDetails[title],
     instanceName: dataprocMetastoreServices
   };
-  console.log(dataprocMetastoreServices);
-  // Render the JSON object in a React table
   const renderTable = () => {
     return (
       <div className="table-container">
@@ -29,7 +27,7 @@ const DatabaseInfo = ({
                 key={key}
                 className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
               >
-                <td>{key}</td>
+                <td className="bold-column">{key}</td>
                 <td>{value}</td>
               </tr>
             ))}

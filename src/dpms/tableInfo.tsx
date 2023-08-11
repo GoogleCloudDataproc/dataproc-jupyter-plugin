@@ -63,7 +63,6 @@ const TableInfo = ({
     }, [column]);
 
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       useTable({ columns, data });
 
