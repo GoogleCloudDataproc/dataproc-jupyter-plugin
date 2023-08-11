@@ -39,7 +39,7 @@ import {
   PROJECT_LIST_URL,
   QUERY_FILE_MESSAGE,
   REGION_URL,
-  SECURITY_KEY,
+  // SECURITY_KEY,
   SELF_MANAGED_CLUSTER,
   SERVICE_ACCOUNT,
   STATUS_RUNNING
@@ -52,6 +52,27 @@ import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
+
+type Project = {
+  projectId: string;
+};
+
+type Cluster = {
+  clusterName: string;
+  status: {
+    state: string;
+  };
+};
+
+type Network = {
+  selfLink: any;
+  network: string;
+  subnetworks: string;
+};
+
+type Service = {
+  name: string;
+};
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -68,14 +89,14 @@ interface ICreateBatchProps {
   regionName: string;
   projectName: string;
 }
-let jarFileUris: any[] = [];
-let fileUris: any[] = [];
-let archiveFileUris: any[] = [];
-let argumentsUris: any[] = [];
-let networkUris: any[] = [];
-let key: any[] | (() => any[]) = [];
-let value: any[] | (() => any[]) = [];
-let pythonFileUris: any[] = [];
+let jarFileUris: string[] = [];
+let fileUris: string[] = [];
+let archiveFileUris: string[] = [];
+let argumentsUris: string[] = [];
+let networkUris: string[] = [];
+let key: string[] | (() => string[]) = [];
+let value: string[] | (() => string[]) = [];
+let pythonFileUris: string[] = [];
 
 function CreateBatch({
   setCreateBatchView,
@@ -90,8 +111,8 @@ function CreateBatch({
   const [batchTypeSelected, setBatchTypeSelected] = useState('spark');
   const [versionSelected, setVersionSelected] = useState('2.1');
   const [selectedRadio, setSelectedRadio] = useState('mainClass');
-  const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
-    useState('googleManaged');
+  // const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
+  //   useState('googleManaged');
   const [mainClassSelected, setMainClassSelected] = useState('');
   const [mainJarSelected, setMainJarSelected] = useState('');
   const [mainRSelected, setMainRSelected] = useState('');
@@ -125,7 +146,7 @@ function CreateBatch({
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
   const [projectList, setProjectList] = useState([{}]);
-  const [regionList, setRegionList] = useState([]);
+  const [regionList, setRegionList] = useState<{ value: string; key: string; text: string; }[]>([]);
   const [networkList, setNetworklist] = useState([{}]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState('default');
@@ -314,11 +335,11 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: { clusters: Cluster[] }) => {
               let transformClusterListData = [];
 
               transformClusterListData = responseResult.clusters.filter(
-                (data: any) => {
+                (data: Cluster) => {
                   if (data.status.state === STATUS_RUNNING) {
                     return {
                       clusterName: data.clusterName
@@ -328,7 +349,7 @@ function CreateBatch({
               );
 
               const keyLabelStructure = transformClusterListData.map(
-                (obj: any) => ({
+                (obj) => ({
                   key: obj.clusterName,
                   value: obj.clusterName,
                   text: obj.clusterName
@@ -360,16 +381,16 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: { items: Network[] }) => {
               let transformedNetworkList = [];
-              transformedNetworkList = responseResult.items.map((data: any) => {
+              transformedNetworkList = responseResult.items.map((data: Network) => {
                 return {
                   network: data.network.split('/')[9],
                   subnetworks: data.selfLink.split('/')[10]
                 };
               });
               const keyLabelStructureNetwork = transformedNetworkList.map(
-                (obj: any) => ({
+                (obj) => ({
                   key: obj.network,
                   value: obj.network,
                   text: obj.network
@@ -403,11 +424,11 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: { services: Service[] }) => {
               let transformClusterListData = [];
 
               transformClusterListData = responseResult.services.filter(
-                (data: any) => {
+                (data: Service) => {
                   return {
                     name: data.name
                   };
@@ -415,7 +436,7 @@ function CreateBatch({
               );
 
               const keyLabelStructure = transformClusterListData.map(
-                (obj: any) => ({
+                (obj) => ({
                   key: obj.name,
                   value: obj.name,
                   text: obj.name
@@ -449,10 +470,10 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: { projects: Project[] }) => {
               let transformedProjectList = [];
               transformedProjectList = responseResult.projects.map(
-                (data: any) => {
+                (data: Project) => {
                   return {
                     value: data.projectId,
                     key: data.projectId,
@@ -470,6 +491,10 @@ function CreateBatch({
     }
   };
 
+  type Region = {
+    name: string;
+  };
+
   const regionListAPI = async (projectId: string) => {
     setIsLoadingRegion(true);
     const credentials = await authApi();
@@ -483,9 +508,9 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: { items: Region[] }) => {
               let transformedRegionList = [];
-              transformedRegionList = responseResult.items.map((data: any) => {
+              transformedRegionList = responseResult.items.map((data: Region) => {
                 return {
                   value: data.name,
                   key: data.name,
@@ -507,16 +532,36 @@ function CreateBatch({
     }
   };
 
+  type Payload = {
+    [key: string]: any;
+  };
+  
+  type RuntimeConfig = {
+    version: string;
+    containerImage?: string;
+    properties?: object;
+  };
+  
+  type ExecutionConfig = {
+    serviceAccount?: string;
+    subnetworkUri: string;
+    networkTags?: string[];
+  };
+  
+  type SparkHistoryServerConfig = {
+    dataprocCluster: string;
+  };
+  
   const createPayload = (
     batchTypeSelected: string,
     mainJarSelected: string,
     mainClassSelected: string,
     propertyObject: object,
-    ArchiveFilesSelected: any,
-    filesSelected: any,
-    jarFilesSelected: any,
-    argumentsSelected: any,
-    networkTagSelected: any,
+    ArchiveFilesSelected: string[],
+    filesSelected: string[],
+    jarFilesSelected: string[],
+    argumentsSelected: string[],
+    networkTagSelected: string[],
     labelObject: object,
     projectName: string,
     regionName: string,
@@ -524,87 +569,86 @@ function CreateBatch({
     batchIdSelected: string,
     parameterObject: object,
     mainRSelected: string,
-    additionalPythonFileSelected: any,
+    additionalPythonFileSelected: string[],
     mainPythonSelected: string,
     queryFileSelected: string
-  ) => {
-    const payload: any = {};
-
+  ): Payload => {
+    const payload: Payload = {};
+  
     if (batchTypeSelected === 'spark') {
       payload.sparkBatch = {
         ...(mainJarSelected !== '' && { mainJarFileUri: mainJarSelected }),
-        ...(mainClassSelected !== '' && { mainClass: mainClassSelected })
+        ...(mainClassSelected !== '' && { mainClass: mainClassSelected }),
       };
     }
     if (batchTypeSelected === 'sparkR') {
       payload.sparkRBatch = {
-        ...(mainRSelected !== '' && { mainRFileUri: mainRSelected })
+        ...(mainRSelected !== '' && { mainRFileUri: mainRSelected }),
       };
     }
     if (batchTypeSelected === 'pySpark') {
       payload.pysparkBatch = {
         ...(additionalPythonFileSelected.length > 0 && {
-          pythonFileUris: additionalPythonFileSelected
+          pythonFileUris: additionalPythonFileSelected,
         }),
         ...(mainPythonSelected !== '' && {
-          mainPythonFileUri: mainPythonSelected
-        })
+          mainPythonFileUri: mainPythonSelected,
+        }),
       };
     }
     if (batchTypeSelected === 'sparkSql') {
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
-        ...(parameterObject && { queryVariables: { query: parameterObject } })
+        ...(parameterObject && { queryVariables: { query: parameterObject } }),
       };
     }
-
+  
     payload.labels = labelObject;
-
+  
     payload.name = `projects/${projectName}/locations/${regionName}/batches/${batchIdSelected}`;
-
+  
     payload.runtimeConfig = {
       version: versionSelected,
       ...(containerImageSelected !== '' && {
-        containerImage: containerImageSelected
+        containerImage: containerImageSelected,
       }),
-      ...(propertyObject && { properties: propertyObject })
-    };
-
+      ...(propertyObject && { properties: propertyObject }),
+    } as RuntimeConfig;
+  
     payload.environmentConfig = {
       executionConfig: {
         ...(serviceAccountSelected !== '' && {
-          serviceAccount: serviceAccountSelected
+          serviceAccount: serviceAccountSelected,
         }),
         subnetworkUri: networkSelected,
         ...(networkTagSelected.length > 0 && {
-          networkTags: networkTagSelected
-        })
-      }
+          networkTags: networkTagSelected,
+        }),
+      } as ExecutionConfig,
     };
-
+  
     if (servicesSelected !== 'None' || clusterSelected !== '') {
       payload.peripheralsConfig = {
         ...(servicesSelected !== 'None' && {
-          metastoreService: servicesSelected
+          metastoreService: servicesSelected,
         }),
         ...(clusterSelected !== '' && {
           sparkHistoryServerConfig: {
-            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
-          }
-        })
+            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`,
+          } as SparkHistoryServerConfig,
+        }),
       };
     }
-
+  
     payload.archiveUris =
       ArchiveFilesSelected.length > 0 ? ArchiveFilesSelected : undefined;
-    payload.fileUris = filesSelected.length > 0 ? [filesSelected] : undefined;
-    payload.jarFileUris =
-      jarFilesSelected.length > 0 ? jarFilesSelected : undefined;
-    payload.args =
-      argumentsSelected.length > 0 ? [argumentsSelected] : undefined;
-
+    payload.fileUris = filesSelected.length > 0 ? filesSelected : undefined;
+    payload.jarFileUris = jarFilesSelected.length > 0 ? jarFilesSelected : undefined;
+    payload.args = argumentsSelected.length > 0 ? argumentsSelected : undefined;
+  
     return payload;
   };
+  
 
   const handleSubmit = async () => {
     const credentials = await authApi();
@@ -738,15 +782,24 @@ function CreateBatch({
 
   const handleSearchChange = (event: any, data: { searchQuery: string }) => {
     const { searchQuery } = data;
-
+    console.log('Search Query:', searchQuery);
+  
     const filteredOptions = initialClustersList.filter(option =>
       option.text.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    setClustersList(filteredOptions);
+    console.log('Filtered Options:', filteredOptions);
+  
+    setClustersList(prevClusters => {
+      const filteredOptions = prevClusters.filter(option =>
+        option.text.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      return filteredOptions;
+    });
   };
+  
 
   const handleSearchClear = () => {
-    setClustersList(clustersList);
+    setClustersList(initialClustersList);
   };
 
   return (
@@ -1245,12 +1298,12 @@ function CreateBatch({
               <div className="submit-job-label-header">Encryption</div>
               <div>
                 <div className="create-batch-radio">
-                  <Radio
+                  {/* <Radio
                     className="select-batch-radio-style"
                     value="googleManaged"
                     checked={selectedEncryptionRadio === 'googleManaged'}
                     onChange={() => setSelectedEncryptionRadio('googleManaged')}
-                  />
+                  /> */}
                   <div className="create-batch-message">
                     Google-managed encryption key
                   </div>
@@ -1259,7 +1312,7 @@ function CreateBatch({
                   No configuration required
                 </div>
               </div>
-              <div>
+              {/* <div>
                 <div className="create-batch-radio">
                   <Radio
                     className="select-batch-radio-style"
@@ -1292,8 +1345,8 @@ function CreateBatch({
                       options={[]}
                     />
                   </div>
-                )} */}
-              </div>
+                )} 
+              </div> */}
             </div>
 
             <div className="submit-job-label-header">
