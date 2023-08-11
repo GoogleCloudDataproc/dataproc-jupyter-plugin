@@ -155,6 +155,16 @@ function CreateBatch({
   const handleCreateBatchBackView = () => {
     setCreateBatchView(false);
   };
+  const handleMainClassRadio = () => {
+    setSelectedRadio('mainClass');
+    setMainJarSelected('');
+    setMainClassSelected('');
+  };
+  const handleMainJarRadio = () => {
+    setSelectedRadio('mainJarURI');
+    setMainClassSelected('');
+    setMainJarSelected('');
+  };
   useEffect(() => {
     const batchTypeData = [
       { key: 'spark', value: 'spark', text: 'Spark' },
@@ -799,7 +809,7 @@ function CreateBatch({
                       className="select-batch-radio-style"
                       value="mainClass"
                       checked={selectedRadio === 'mainClass'}
-                      onChange={() => setSelectedRadio('mainClass')}
+                      onChange={handleMainClassRadio}
                     />
                     <div className="create-batch-message">Main class</div>
                   </div>
@@ -838,7 +848,7 @@ function CreateBatch({
                       className="select-batch-radio-style"
                       value="mainJarURI"
                       checked={selectedRadio === 'mainJarURI'}
-                      onChange={() => setSelectedRadio('mainJarURI')}
+                      onChange={handleMainJarRadio}
                     />
                     <div className="create-batch-message">Main jar URI</div>
                   </div>
