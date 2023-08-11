@@ -29,6 +29,7 @@ import {
   BASE_URL,
   NETWORK_KEY,
   NETWORK_LABEL,
+  POLLING_TIME_LIMIT,
   SERVICE_ACCOUNT_KEY,
   SERVICE_ACCOUNT_LABEL,
   SUBNETWORK_KEY,
@@ -93,7 +94,8 @@ function BatchDetails({
     },
     sparkBatch: {
       mainJarFileUri: '',
-      mainClass: ''
+      mainClass: '',
+      jarFileUris: ''
     },
     pysparkBatch: {
       mainPythonFileUri: ''
@@ -118,14 +120,32 @@ function BatchDetails({
   const [isLoading, setIsLoading] = useState(true);
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('');
+  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const pollingBatchDetails = async (
+    pollingFunction: () => void,
+    pollingDisable: boolean
+  ) => {
+    if (pollingDisable) {
+      clearInterval(timer);
+    } else {
+      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
+    }
+  };
 
   const handleDetailedBatchView = () => {
+    pollingBatchDetails(getBatchDetails, true);
     setDetailedBatchView(false);
   };
 
   useEffect(() => {
     getBatchDetails();
+    pollingBatchDetails(getBatchDetails, false);
+
+    return () => {
+      pollingBatchDetails(getBatchDetails, true);
+    };
   }, []);
+
   const getBatchDetails = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -161,7 +181,7 @@ function BatchDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting Batch details', err);
-          toast.error('Failed to fetch Batch details');
+          toast.error(`Failed to fetch batch details ${batchSelected}`);
         });
     }
   };
@@ -169,21 +189,23 @@ function BatchDetails({
   const statusMsg = statusMessageBatch(batchInfoResponse);
   const startTime = jobTimeFormat(batchInfoResponse.createTime);
   const startTimeElapsed = new Date(batchInfoResponse.createTime);
-  const endTime = batchInfoResponse.stateTime;
-  let jobStartTime;
+
+  const endTime = new Date(batchInfoResponse.stateTime);
+
+  let jobStartTime: Date;
   let runTimeString = '';
+
   if (batchInfoResponse.stateHistory) {
-    jobStartTime = new Date(
-      batchInfoResponse.stateHistory[
-        batchInfoResponse.stateHistory.length - 1
-      ].stateStartTime
-    );
+    const lastStateHistory =
+      batchInfoResponse.stateHistory[batchInfoResponse.stateHistory.length - 1];
+    jobStartTime = new Date(lastStateHistory.stateStartTime);
     runTimeString = elapsedTime(endTime, jobStartTime);
   }
+
   const batch = BatchTypeValue(batchInfoResponse);
 
   const elapsedTimeString = elapsedTime(
-    batchInfoResponse.stateTime,
+    new Date(batchInfoResponse.stateTime),
     startTimeElapsed
   );
 
@@ -234,6 +256,7 @@ function BatchDetails({
         <div className="scroll-comp">
           <div className="cluster-details-header">
             <div
+              role="button"
               className="back-arrow-icon"
               onClick={() => handleDetailedBatchView()}
             >
@@ -248,6 +271,7 @@ function BatchDetails({
             </div>
 
             <div
+              role="button"
               className="action-cluster-section"
               onClick={() => handleDeleteBatch(batchSelected)}
             >
@@ -352,12 +376,26 @@ function BatchDetails({
                 </div>
               )}
             {batch === 'Spark' && batchInfoResponse.sparkBatch.mainClass && (
-              <div className="row-details">
-                <div className="details-label">Main Class</div>
-                <div className="details-value">
-                  {batchInfoResponse.sparkBatch.mainClass}
+              <>
+                <div className="row-details">
+                  <div className="details-label">Main class</div>
+                  <div className="details-value">
+                    {batchInfoResponse.sparkBatch.mainClass}
+                  </div>
                 </div>
-              </div>
+                <div className="row-details">
+                  <div className="details-label">Jar files</div>
+                  <div className="details-value">
+                    {batchInfoResponse.sparkBatch.jarFileUris ? (
+                      <div className="cluster-details-value">
+                        {batchInfoResponse.sparkBatch.jarFileUris}
+                      </div>
+                    ) : (
+                      <div className="cluster-details-value">None</div>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
             {batch === 'PySpark' && (
               <div className="row-details">
@@ -434,7 +472,7 @@ function BatchDetails({
 
             <div className="row-details">
               <div className="details-label">Encryption type</div>
-              <div className="details-value">Google-managed key</div>
+              <div className="details-value">Google-managed</div>
             </div>
             <div className="batch-details-row-label">
               <div className="details-label">Labels</div>

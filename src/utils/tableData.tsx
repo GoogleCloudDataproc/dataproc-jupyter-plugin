@@ -24,10 +24,12 @@ function TableData({
   getTableBodyProps,
   isLoading,
   rows,
+  page,
   prepareRow,
   tableDataCondition,
   fromPage
 }: any) {
+  const displayData = page ? page: rows
   return (
     <table {...getTableProps()} className="clusters-list-table">
       <thead>
@@ -60,7 +62,7 @@ function TableData({
             Loading {fromPage}
           </div>
         ) : (
-          rows.map((row: any) => {
+          displayData.map((row: any) => {
             prepareRow(row);
             return (
               <tr {...row.getRowProps()} className="cluster-list-data-parent">

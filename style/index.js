@@ -26,3 +26,4 @@ import './sessionDetails.css';
 import './popup.css'
 import './dpms.css'
 import './databaseInfo.css'
+import './paginationView.css';

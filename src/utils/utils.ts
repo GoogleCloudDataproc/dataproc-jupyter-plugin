@@ -96,6 +96,8 @@ export const jobTypeValue = (data: IJobData): string | undefined => {
       return SPARKSQL;
     case 'pyspark':
       return PYSPARK;
+    default:
+      return jobTypeName;
   }
 };
 export const jobTypeValueArguments = (data: IJobData): string => {
@@ -115,6 +117,8 @@ export const BatchTypeValue = (data: IJobData): string | undefined => {
       return SPARKSQL;
     case 'pyspark':
       return PYSPARK;
+    default:
+      return batchTypeName;
   }
 };
 
@@ -135,7 +139,7 @@ export const jobTypeDisplay = (data: string | undefined) => {
   }
 };
 
-export const elapsedTime = (endTime: string, jobStartTime: Date): string => {
+export const elapsedTime = (endTime: Date, jobStartTime: Date): string => {
   const jobEndTime = new Date(endTime);
   const elapsedMilliseconds = jobEndTime.getTime() - jobStartTime.getTime();
   const elapsedSeconds = Math.round(elapsedMilliseconds / 1000) % 60;
@@ -185,11 +189,9 @@ export const checkConfig = async (
     if (credentials.access_token === '') {
       localStorage.removeItem('loginState');
       if (credentials.config_error === 1) {
-        localStorage.removeItem('loginState');
         setConfigError(true);
       }
       if (credentials.login_error === 1) {
-        localStorage.removeItem('loginState');
         setLoginError(true);
       }
     } else {

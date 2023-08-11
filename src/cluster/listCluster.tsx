@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import createClusterIcon from '../../style/icons/create_cluster_icon.svg';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -37,6 +37,7 @@ import {
 } from '../utils/const';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
+import { PaginationView } from '../utils/paginationView';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -145,6 +146,7 @@ function ListCluster({
       return (
         <td
           {...cell.getCellProps()}
+          role="button"
           className="cluster-name"
           onClick={() =>
             cell.row.original.status !== STATUS_DELETING &&
@@ -157,7 +159,12 @@ function ListCluster({
     } else if (cell.column.Header === 'Status') {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
-          <div key="Status" className="cluster-status-parent">
+          <div
+            key="Status"
+            className="cluster-status-parent"
+            role="status"
+            aria-labels={cell.value}
+          >
             {cell.value === STATUS_RUNNING && (
               <iconClusterRunning.react tag="div" />
             )}
@@ -200,18 +207,27 @@ function ListCluster({
     rows,
     prepareRow,
     state,
-    //@ts-ignore
     preGlobalFilteredRows,
-    //@ts-ignore
-    setGlobalFilter
-  } =
-    //@ts-ignore
-    useTable({ columns, data }, useGlobalFilter);
+    setGlobalFilter,
+    page,
+    canPreviousPage,
+    canNextPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize }
+  } = useTable(
+    //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
+    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
+    useGlobalFilter,
+    usePagination
+  );
 
   return (
     <div>
       <div className="create-cluster-overlay">
         <div
+          role="button"
           className="create-cluster-sub-overlay"
           onClick={() => {
             window.open(
@@ -237,10 +253,8 @@ function ListCluster({
             <div className="filter-cluster-section">
               <GlobalFilter
                 preGlobalFilteredRows={preGlobalFilteredRows}
-                //@ts-ignore
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
-                listClustersAPI={listClustersAPI}
                 setPollingDisable={setPollingDisable}
               />
             </div>
@@ -252,10 +266,23 @@ function ListCluster({
               getTableBodyProps={getTableBodyProps}
               isLoading={isLoading}
               rows={rows}
+              page={page}
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Clusters"
             />
+            {clustersList.length > 50 && (
+              <PaginationView
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                pageIndex={pageIndex}
+                allData={clustersList}
+                previousPage={previousPage}
+                nextPage={nextPage}
+                canPreviousPage={canPreviousPage}
+                canNextPage={canNextPage}
+              />
+            )}
           </div>
         </div>
       ) : (

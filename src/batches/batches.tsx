@@ -47,7 +47,7 @@ const iconDelete = new LabIcon({
   svgstr: deleteIcon
 });
 
-const ServerlessComponent = (): React.JSX.Element => {
+const BatchesComponent = (): React.JSX.Element => {
   const [batchesList, setBatchesList] = useState([]);
   const [selectedMode, setSelectedMode] = useState('Batches');
   const [isLoading, setIsLoading] = useState(true);
@@ -82,11 +82,15 @@ const ServerlessComponent = (): React.JSX.Element => {
     setSelectedMode(mode);
   };
 
-  const listBatchAPI = async () => {
+  const listBatchAPI = async (
+    nextPageToken?: string,
+    previousBatchesList?: object
+  ) => {
     const credentials = await authApi();
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=100`,
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -99,34 +103,52 @@ const ServerlessComponent = (): React.JSX.Element => {
             .json()
             .then((responseResult: any) => {
               let transformBatchListData = [];
-              transformBatchListData = responseResult.batches.map(
-                (data: any) => {
-                  const startTimeDisplay = jobTimeFormat(data.createTime);
-                  const startTime = new Date(data.createTime);
-                  const elapsedTimeString = elapsedTime(
-                    data.stateTime,
-                    startTime
-                  );
-                  const batchType = Object.keys(data).filter(key =>
-                    key.endsWith('Batch')
-                  );
-                  const batchTypeDisplay = jobTypeDisplay(
-                    batchType[0].split('Batch')[0]
-                  );
-                  return {
-                    batchID: data.name.split('/')[5],
-                    status: data.state,
-                    location: data.name.split('/')[3],
-                    creationTime: startTimeDisplay,
-                    type: batchTypeDisplay,
-                    elapsedTime: elapsedTimeString,
-                    actions: renderActions(data)
-                  };
-                }
-              );
-              setBatchesList(transformBatchListData);
-              setIsLoading(false);
-              setLoggedIn(true);
+              if (responseResult && responseResult.batches) {
+                transformBatchListData = responseResult.batches.map(
+                  (data: any) => {
+                    const startTimeDisplay = jobTimeFormat(data.createTime);
+                    const startTime = new Date(data.createTime);
+                    const elapsedTimeString = elapsedTime(
+                      data.stateTime,
+                      startTime
+                    );
+                    const batchType = Object.keys(data).filter(key =>
+                      key.endsWith('Batch')
+                    );
+                    /*
+                     Extracting batchID, location from batchInfo.name
+                      Example: "projects/{project}/locations/{location}/batches/{batchID}"
+                    */
+                    const batchTypeDisplay = jobTypeDisplay(
+                      batchType[0].split('Batch')[0]
+                    );
+                    return {
+                      batchID: data.name.split('/')[5],
+                      status: data.state,
+                      location: data.name.split('/')[3],
+                      creationTime: startTimeDisplay,
+                      type: batchTypeDisplay,
+                      elapsedTime: elapsedTimeString,
+                      actions: renderActions(data)
+                    };
+                  }
+                );
+              }
+
+              const existingBatchData = previousBatchesList ?? [];
+              //setStateAction never type issue
+              let allBatchesData: any = [
+                ...(existingBatchData as []),
+                ...transformBatchListData
+              ];
+
+              if (responseResult.nextPageToken) {
+                listBatchAPI(responseResult.nextPageToken, allBatchesData);
+              } else {
+                setBatchesList(allBatchesData);
+                setIsLoading(false);
+                setLoggedIn(true);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -136,7 +158,7 @@ const ServerlessComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing batches', err);
-          toast.error('Failed to fetch Batches');
+          toast.error('Failed to fetch batches');
         });
     }
   };
@@ -161,7 +183,7 @@ const ServerlessComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  function renderActions(data: { name: string }) {
+  const renderActions = (data: { name: string }) => {
     return (
       <div className="actions-icon" role="button" aria-label="Delete Job">
         <div
@@ -173,7 +195,7 @@ const ServerlessComponent = (): React.JSX.Element => {
         </div>
       </div>
     );
-  }
+  };
 
   const toggleStyleSelection = (toggleItem: string) => {
     if (selectedMode === toggleItem) {
@@ -232,16 +254,18 @@ const ServerlessComponent = (): React.JSX.Element => {
               setDetailedBatchView={setDetailedBatchView}
             />
           ) : (
-            <div className="clusters-list-component">
+            <div className="clusters-list-component" role="tablist">
               {
                 <div className="clusters-list-overlay" role="tab">
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Batches')}
                     onClick={() => selectedModeChange('Batches')}
                   >
                     Batches
                   </div>
                   <div
+                    role="tabpanel"
                     className={toggleStyleSelection('Sessions')}
                     onClick={() => selectedModeChange('Sessions')}
                   >
@@ -268,11 +292,13 @@ const ServerlessComponent = (): React.JSX.Element => {
         </>
       ) : (
         loginError && (
-          <div className="login-error">Please login to continue</div>
+          <div role="alert" className="login-error">
+            Please login to continue
+          </div>
         )
       )}
       {configError && (
-        <div className="login-error">
+        <div role="alert" className="login-error">
           Please Configure Gcloud with Account, Project ID and Region
         </div>
       )}
@@ -280,13 +306,12 @@ const ServerlessComponent = (): React.JSX.Element => {
   );
 };
 
-export class Serverless extends ReactWidget {
+export class Batches extends ReactWidget {
   constructor() {
     super();
-    this.addClass('jp-ReactWidget');
   }
 
   render(): React.JSX.Element {
-    return <ServerlessComponent />;
+    return <BatchesComponent />;
   }
 }

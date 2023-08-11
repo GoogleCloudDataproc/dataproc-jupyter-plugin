@@ -26,7 +26,7 @@ import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
-import { Serverless } from './batches/batches';
+import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
 import { Menu, Panel, Title, Widget } from '@lumino/widgets';
@@ -120,7 +120,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createClusterComponentCommand, {
       caption: 'Create a new Cluster Component',
       label: 'Clusters',
-      // @ts-ignore
+      // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
         const content = new Cluster();
@@ -131,15 +131,15 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    const createServerlessComponentCommand = 'create-serverless-component';
-    commands.addCommand(createServerlessComponentCommand, {
+    const createBatchesComponentCommand = 'create-batches-component';
+    commands.addCommand(createBatchesComponentCommand, {
       caption: 'Create a new Serverless Component',
       label: 'Serverless',
-      // @ts-ignore
+      // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-        const content = new Serverless();
-        const widget = new MainAreaWidget<Serverless>({ content });
+        const content = new Batches();
+        const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;
         app.shell.add(widget, 'main');
@@ -196,10 +196,10 @@ const extension: JupyterFrontEndPlugin<void> = {
           launcher.add({
             command: commandNotebook,
             category: 'Dataproc Serverless Notebooks',
-            //@ts-ignore
+            //@ts-ignore jupyter lab Launcher type issue
             metadata: kernelsData?.metadata,
             rank: index + 1,
-            //@ts-ignore
+            //@ts-ignore jupyter lab Launcher type issue
             args: kernelsData?.argv
           });
         }
@@ -234,43 +234,14 @@ const extension: JupyterFrontEndPlugin<void> = {
           launcher.add({
             command: commandNotebook,
             category: 'Dataproc Cluster Notebooks',
-            //@ts-ignore
+            //@ts-ignore jupyter lab Launcher type issue
             metadata: kernelsData?.metadata,
             rank: index + 1,
-            //@ts-ignore
+            //@ts-ignore jupyter lab Launcher type issue
             args: kernelsData?.argv
           });
         }
       });
-
-      // Object.values(kernels).forEach(kernelsData => {
-      //   if (kernelsData?.resources.endpointParentResource) {
-      //     const commandConsole = `console:create-${kernelsData?.display_name}`;
-      //     commands.addCommand(commandConsole, {
-      //       caption: kernelsData?.display_name,
-      //       label: kernelsData?.display_name,
-      //       icon: iconDisplay(kernelsData),
-      //       execute: async () => {
-      //         await app.commands.execute('console:create', {
-      //           activate: true,
-      //           kernel: { name: kernelsData?.name }
-      //         });
-
-      //         await app.commands.execute('console:open', {
-      //           activate: true,
-      //           kernel: { name: kernelsData?.name }
-      //         });
-      //       }
-      //     });
-
-      //     launcher.add({
-      //       command: commandConsole,
-      //       category: 'Dataproc Console',
-      //       metadata: kernelsData?.metadata,
-      //       args: kernelsData?.argv
-      //     });
-      //   }
-      // });
       const panel = new Panel();
       panel.id = 'dpms-tab';
       panel.title.icon = iconDpms; // svg import
@@ -289,7 +260,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         rank: 1
       });
       launcher.add({
-        command: createServerlessComponentCommand,
+        command: createBatchesComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 2
       });
@@ -297,12 +268,4 @@ const extension: JupyterFrontEndPlugin<void> = {
   }
 };
 
-// function getActiveNotebookKernelName(notebookTracker: INotebookTracker): string | null {
-//   const currentWidget = notebookTracker.currentWidget;
-//   if (currentWidget instanceof NotebookPanel) {
-//     const kernel = currentWidget.sessionContext.session?.kernel;
-//     return kernel?.name ?? null;
-//   }
-//   return null;
-// }
 export default extension;

@@ -151,7 +151,7 @@ function SessionDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error loading session details', err);
-          toast.error('Failed to fetch Session details');
+          toast.error(`Failed to fetch session details ${sessionSelected}`);
         });
     }
   };
@@ -164,6 +164,7 @@ function SessionDetails({
       pollingSessionDetails(getSessionDetails, true);
     };
   }, []);
+  
   const createTimeDisplay = jobTimeFormat(sessionInfo.createTime);
   const parts = createTimeDisplay.split(',');
   const createTimeString = parts.slice(0, 2).join(',');
@@ -173,7 +174,8 @@ function SessionDetails({
     sessionInfo.state === STATUS_TERMINATED ||
     sessionInfo.state === STATUS_FAIL
   ) {
-    elapsedTimeString = elapsedTime(sessionInfo.stateTime, sessionStartTime);
+    const sessionStateTime = new Date(sessionInfo.stateTime); // Convert string to Date
+    elapsedTimeString = elapsedTime(sessionStateTime, sessionStartTime);
   }
   const sessionActiveTime =
     sessionInfo.stateHistory &&
@@ -183,7 +185,8 @@ function SessionDetails({
       : '';
   let runTimeString = '';
   if (sessionActiveTime !== '') {
-    runTimeString = elapsedTime(sessionInfo.stateTime, sessionActiveTime);
+    const sessionInfoStateTime = new Date(sessionInfo.stateTime);
+    runTimeString = elapsedTime(sessionInfoStateTime, sessionActiveTime);
   }
 
   return (
@@ -195,6 +198,7 @@ function SessionDetails({
             <div>
               <div className="cluster-details-header">
                 <div
+                  role="button"
                   className="back-arrow-icon"
                   onClick={() => handleDetailedView()}
                 >
@@ -202,6 +206,7 @@ function SessionDetails({
                 </div>
                 <div className="cluster-details-title">Session details</div>
                 <div
+                  role="button"
                   className={
                     sessionInfo.state === STATUS_ACTIVE
                       ? 'action-cluster-section'
@@ -353,9 +358,15 @@ function SessionDetails({
                   <div className="session-label-style-parent">
                     {labelDetail.length > 0
                       ? labelDetail.map(label => {
+                         /*
+                            Extracting key, value from label
+                               Example: "{client:dataproc_plugin}"
+                         */
+                          const labelParts = label.split(':');
+                         
                           return (
                             <div key={label} className="job-label-style">
-                              {label.split(':')[0]} : {label.split(':')[1]}
+                              {labelParts[0]} : {labelParts[1]}
                             </div>
                           );
                         })
