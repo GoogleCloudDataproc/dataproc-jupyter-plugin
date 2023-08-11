@@ -21,7 +21,7 @@
   top: 30px;
   right: 220px;
 }
-.ui.input>input{
+.search-field{
     border-radius: 4px !important;
     border: solid 1px !important;
     height: 36px !important;
