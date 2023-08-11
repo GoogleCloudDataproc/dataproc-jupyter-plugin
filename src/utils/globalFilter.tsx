@@ -23,7 +23,7 @@ function GlobalFilter({
   setPollingDisable
 }: any) {
   const [value, setValue] = React.useState(globalFilter);
-  const onChange = (value: any) => {
+  const onChange = (value: string) => {
     setGlobalFilter(value || undefined);
   };
   if (value !== undefined) {
