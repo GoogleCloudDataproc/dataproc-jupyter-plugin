@@ -62,11 +62,11 @@
 }
 .schema-table {
   width: 50%;
-  border-collapse: collapse; /* Remove spacing between cells */
+  border-collapse: collapse;
 }
 
 .schema-table td {
-  padding-left: 10px; /* Remove padding around cells */
+  padding-left: 10px; 
   height: 29px;
   font-size: 13px;
   line-height: 18px;

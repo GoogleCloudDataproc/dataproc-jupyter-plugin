@@ -63,7 +63,7 @@ const TableInfo = ({
     }, [column]);
 
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-      // @ts-ignore
+      // @ts-ignore  react-table 'columns' which is declared here on type 'TableOptions<IColumns>'
       useTable({ columns, data });
 
     return (
@@ -143,7 +143,6 @@ export class Table extends ReactWidget {
     tableDescription: Record<string, string>
   ) {
     super();
-    this.addClass('jp-ReactWidget');
     this.dataprocMetastoreServices = dataprocMetastoreServices;
     this.database = database;
     this.column = column;

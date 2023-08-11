@@ -19,7 +19,11 @@ import 'semantic-ui-css/semantic.min.css';
 import {
   BASE_URL,
   API_HEADER_CONTENT_TYPE,
-  API_HEADER_BEARER
+  API_HEADER_BEARER,
+  CATALOG_SEARCH,
+  COLUMN_API,
+  QUERY_DATABASE,
+  QUERY_TABLE
 } from '../utils/const';
 import { authApi } from '../utils/utils';
 import { Table } from './tableInfo';
@@ -86,7 +90,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && clusterValue) {
-      fetch(`https://datacatalog.googleapis.com/v1/${name}`, {
+      fetch(`${COLUMN_API}${name}`, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -112,20 +116,20 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error getting column details', err);
+          toast.error('Error getting column details');
         });
     }
   };
   const getTableDetails = async (database: string) => {
-    console.log(database);
     const credentials = await authApi();
     if (credentials && clusterValue) {
       const requestBody = {
-        query: `system=dataproc_metastore AND type=TABLE parent=${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}.${database}`,
+        query: `${QUERY_TABLE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}.${database}`,
         scope: {
           includeProjectIds: [credentials.project_id]
         }
       };
-      fetch('https://datacatalog.googleapis.com/v1/catalog:search', {
+      fetch(`${CATALOG_SEARCH}`, {
         method: 'POST',
         body: JSON.stringify(requestBody),
         headers: {
@@ -138,7 +142,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           response
             .json()
             .then((responseResult: any) => {
-              console.log(responseResult);
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -166,11 +169,14 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error getting table details', err);
+          toast.error('Error getting table details');
         });
     }
   };
   const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
   columnResponse.forEach((res: any) => {
+    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
+    fetching database name from fully qualified name structure */
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
     const columns = res.schema.columns.map(
@@ -197,7 +203,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
 
     database[dbName][tableName].push(...columns);
   });
-
   const data = Object.entries(database).map(([dbName, tables]) => ({
     id: uuidv4(),
     name: dbName,
@@ -218,13 +223,11 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
-
   const searchMatch = (node: { data: { name: string } }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
 
   const handleNodeClick = (node: any) => {
-    // Open main area widget with selected node values
     const depth = calculateDepth(node);
     if (depth === 1) {
       const content = new Database(
@@ -255,8 +258,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       widget.title.label = node.data.name;
       widget.title.closable = true;
       widget.title.icon = iconDatasets;
-
-      // Add the widget to the main area
       app.shell.add(widget, 'main');
     }
   };
@@ -270,7 +271,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     setDatabaseDetails({});
   };
   const handleRefreshClick = () => {
-    // Call the getClusterDetails function to fetch updated data
     clearState();
     setIsLoading(true);
     getActiveNotebook();
@@ -288,15 +288,13 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       node.toggle();
     };
     const handleIconClick = (event: React.MouseEvent) => {
-      // Check if the clicked element has the caret-icon class
       if (event.currentTarget.classList.contains('caret-icon')) {
         handleToggle();
       }
     };
     const handleTextClick = (event: React.MouseEvent) => {
-      // Prevent the event from propagating to the caret icon and node container
       event.stopPropagation();
-      onClick(node); // Call the original onClick to open the main widget area
+      onClick(node);
     };
     const renderNodeIcon = () => {
       const depth = calculateDepth(node);
@@ -366,12 +364,12 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     const credentials = await authApi();
     if (credentials && clusterValue) {
       const requestBody = {
-        query: `system=dataproc_metastore AND type=DATABASE parent=${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
+        query: `${QUERY_DATABASE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
         scope: {
           includeProjectIds: [credentials.project_id]
         }
       };
-      fetch('https://datacatalog.googleapis.com/v1/catalog:search', {
+      fetch(`${CATALOG_SEARCH}`, {
         method: 'POST',
         body: JSON.stringify(requestBody),
         headers: {
@@ -407,6 +405,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error getting database details', err);
+          toast.error('Error getting database details');
         });
     }
   };
@@ -449,7 +448,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters details', err);
-          toast.error('Failed to fetch cluster cetails');
+          toast.error('Failed to fetch cluster details');
         });
     }
   };
@@ -465,7 +464,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   useEffect(() => {
     getActiveNotebook();
     return () => {
-      // Cleanup function to reset clusterValue when the component is unmounted
       setClusterValue('');
     };
   }, [clusterValue]);
@@ -563,7 +561,6 @@ export class dpmsWidget extends ReactWidget {
   constructor(app: JupyterLab) {
     super();
     this.app = app;
-    this.addClass('jp-ReactWidget');
   }
 
   render(): JSX.Element {

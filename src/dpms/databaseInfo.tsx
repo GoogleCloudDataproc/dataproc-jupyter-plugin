@@ -55,8 +55,7 @@ export class Database extends ReactWidget {
     databaseDetails: Record<string, string>
   ) {
     super();
-    this.addClass('jp-ReactWidget');
-    this.title.label = title; // Set the title label here
+    this.title.label = title;
     this.dataprocMetastoreServices = dataprocMetastoreServices;
     this.databaseDetails = databaseDetails;
   }

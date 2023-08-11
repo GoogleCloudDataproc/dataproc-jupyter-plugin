@@ -63,7 +63,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       svgstr: serverlessIcon
     });
     window.addEventListener('beforeunload', () => {
-      // Clear the specific local storage item when the tab is closed
       localStorage.removeItem('clusterValue');
     });
     const onTitleChanged = async (title: Title<Widget>) => {
