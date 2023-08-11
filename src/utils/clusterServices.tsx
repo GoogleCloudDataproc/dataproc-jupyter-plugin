@@ -52,7 +52,7 @@ export const deleteClusterApi = async (selectedcluster: string) => {
 
 export const startStopAPI = async (
   selectedcluster: string,
-  operation: string
+  operation: 'start' | 'stop'
 ) => {
   const credentials = await authApi();
   if (credentials) {
