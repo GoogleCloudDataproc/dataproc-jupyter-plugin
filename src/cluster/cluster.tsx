@@ -16,7 +16,7 @@
  */
 
 import { ReactWidget } from '@jupyterlab/apputils';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import JobComponent from '../jobs/jobs';
 import ClusterDetails from './clusterDetails';
 import { authApi, checkConfig, statusValue } from '../utils/utils';
@@ -40,6 +40,7 @@ import { ClipLoader } from 'react-spinners';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { startClusterApi, stopClusterApi } from '../utils/clusterServices';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconStart = new LabIcon({
   name: 'launcher:start-icon',
@@ -84,28 +85,20 @@ const ClusterComponent = (): React.JSX.Element => {
   const [loginError, setLoginError] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
   const [projectId, setProjectId] = useState('');
-  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timer | undefined>(undefined);
   const [selectedJobClone, setSelectedJobClone] = useState({});
 
   const pollingClusters = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    if (pollingDisable) {
-      clearInterval(timer);
-    } else {
-      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
-    }
+    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
   };
 
   const selectedModeChange = (mode: Mode) => {
-    if (mode === 'Jobs') {
-      pollingClusters(listClustersAPI, true);
-    } else {
-      pollingClusters(listClustersAPI, pollingDisable);
-    }
     setSelectedMode(mode);
   };
+  
   const listClustersAPI = async (
     nextPageToken?: string,
     previousClustersList?: object
@@ -216,7 +209,7 @@ const ClusterComponent = (): React.JSX.Element => {
                   responseResult.status.state === ClusterStatus.STATUS_STOPPED
                 ) {
                   startClusterApi(selectedcluster);
-                  clearInterval(timer);
+                  clearInterval(timer.current);
                 }
               }
             )
@@ -251,11 +244,9 @@ const ClusterComponent = (): React.JSX.Element => {
             .then((responseResult: Response) => {
               console.log(responseResult);
               listClustersAPI();
-              setTimer(
-                setInterval(() => {
-                  statusApi(selectedcluster);
-                }, POLLING_TIME_LIMIT)
-              );
+              timer.current = setInterval(() => {
+                statusApi(selectedcluster);
+              }, POLLING_TIME_LIMIT);
             })
             .catch((e: Error) => console.log(e));
         })
@@ -481,7 +472,7 @@ const ClusterComponent = (): React.JSX.Element => {
       )}
       {configError && (
         <div className="login-error">
-          Please Configure Gcloud with Account, Project ID and Region
+          Please configure gcloud with account, project-id and region
         </div>
       )}
     </div>

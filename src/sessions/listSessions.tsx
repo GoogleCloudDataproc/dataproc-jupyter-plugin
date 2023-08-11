@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -31,7 +31,6 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   ClusterStatus,
-  POLLING_TIME_LIMIT,
   STATUS_ACTIVE,
   STATUS_CREATING,
   STATUS_DELETING,
@@ -42,13 +41,14 @@ import {
   STATUS_TERMINATING
 } from '../utils/const';
 import TableData from '../utils/tableData';
-import { authApi, elapsedTime, jobTimeFormat } from '../utils/utils';
+import { ICellProps, authApi, elapsedTime, jobTimeFormat } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
 import { PaginationView } from '../utils/paginationView';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -85,16 +85,13 @@ function ListSessions() {
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedSessionValue, setSelectedSessionValue] = useState('');
-  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+  
   const pollingSessions = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    if (pollingDisable) {
-      clearInterval(timer);
-    } else {
-      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
-    }
+    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
   };
 
   const data = sessionsList;
@@ -244,12 +241,14 @@ function ListSessions() {
 
   useEffect(() => {
     listSessionsAPI();
-    pollingSessions(listSessionsAPI, pollingDisable);
+    if(!detailedSessionView){
+      pollingSessions(listSessionsAPI, pollingDisable);
+    }
 
     return () => {
       pollingSessions(listSessionsAPI, true);
     };
-  }, [pollingDisable]);
+  }, [pollingDisable, detailedSessionView]);
 
   const renderActions = (data: { state: ClusterStatus; name: string }) => {
     /*
@@ -297,14 +296,7 @@ function ListSessions() {
     setSessionSelected(selectedName);
     setDetailedSessionView(true);
   };
-  interface ICellProps {
-    getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
-    value: any;
-    column: {
-      Header: string;
-    };
-    render: (value: string) => React.ReactNode;
-  }
+
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Session ID') {
       return (

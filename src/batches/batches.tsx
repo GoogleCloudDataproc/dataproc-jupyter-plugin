@@ -16,7 +16,7 @@
  */
 
 import { ReactWidget } from '@jupyterlab/apputils';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   authApi,
   checkConfig,
@@ -27,7 +27,6 @@ import {
 import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
-  POLLING_TIME_LIMIT,
   API_HEADER_BEARER,
   LOGIN_STATE
 } from '../utils/const';
@@ -41,6 +40,8 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
+import CreateBatch from './createBatch';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -61,24 +62,20 @@ const BatchesComponent = (): React.JSX.Element => {
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('');
-  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const [regionName, setRegionName] = useState('');
+  const [projectName, setProjectName] = useState('');
+
+  const [createBatchView, setCreateBatchView] = useState(false);
+  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+  
   const pollingBatches = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    if (pollingDisable) {
-      clearInterval(timer);
-    } else {
-      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
-    }
+    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
   };
 
   const selectedModeChange = (mode: 'Sessions' | 'Batches') => {
-    if (mode === 'Sessions') {
-      pollingBatches(listBatchAPI, true);
-    } else {
-      pollingBatches(listBatchAPI, pollingDisable);
-    }
     setSelectedMode(mode);
   };
 
@@ -89,6 +86,8 @@ const BatchesComponent = (): React.JSX.Element => {
     const credentials = await authApi();
     const pageToken = nextPageToken ?? '';
     if (credentials) {
+      setRegionName(credentials.region_id || '');
+      setProjectName(credentials.project_id || '');
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
@@ -246,14 +245,23 @@ const BatchesComponent = (): React.JSX.Element => {
           }
         />
       )}
-      {loggedIn ? (
+      {loggedIn && !configError ? (
         <>
-          {detailedBatchView ? (
+          {detailedBatchView && (
             <BatchDetails
               batchSelected={batchSelected}
               setDetailedBatchView={setDetailedBatchView}
             />
-          ) : (
+          )}
+          {createBatchView && (
+            <CreateBatch
+              setCreateBatchView={setCreateBatchView}
+              regionName={regionName}
+              projectName={projectName}
+            />
+          )}
+
+          {!detailedBatchView && !createBatchView && (
             <div className="clusters-list-component" role="tablist">
               {
                 <div className="clusters-list-overlay" role="tab">
@@ -283,6 +291,8 @@ const BatchesComponent = (): React.JSX.Element => {
                     setPollingDisable={setPollingDisable}
                     listBatchAPI={listBatchAPI}
                     handleBatchDetails={handleBatchDetails}
+                    setCreateBatchView={setCreateBatchView}
+                    createBatchView={createBatchView}
                   />
                 )}
               </div>
@@ -299,7 +309,7 @@ const BatchesComponent = (): React.JSX.Element => {
       )}
       {configError && (
         <div role="alert" className="login-error">
-          Please Configure Gcloud with Account, Project ID and Region
+          Please configure gcloud with account, project-id and region
         </div>
       )}
     </div>

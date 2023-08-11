@@ -49,7 +49,7 @@ const AuthLoginComponent = (): React.JSX.Element => {
         localStorage.setItem('loginState', LOGIN_STATE);
       } else {
         setLoginState(false);
-        localStorage.clear();
+        localStorage.removeItem('loginState');
       }
     }
   };
@@ -104,7 +104,7 @@ const AuthLoginComponent = (): React.JSX.Element => {
       )}
       {configError && (
         <div className="login-error">
-          Please Configure Gcloud with Account, Project ID and Region
+          Please configure gcloud with account, project-id and region
         </div>
       )}
     </div>

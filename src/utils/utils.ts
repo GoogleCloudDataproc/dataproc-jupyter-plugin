@@ -187,7 +187,7 @@ export const checkConfig = async (
   const credentials = await authApi();
   if (credentials) {
     if (credentials.access_token === '') {
-      localStorage.clear();
+      localStorage.removeItem('loginState');
       if (credentials.config_error === 1) {
         setConfigError(true);
       }
@@ -253,3 +253,18 @@ export const iconDisplay = (kernelType: any) => {
     return iconPythonLogo;
   }
 };
+
+
+export interface ICellProps {
+  getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
+  value: string | any;
+  column: {
+    Header: string;
+  };
+  row: {
+    original: {
+      status: string;
+    };
+  };
+  render: (value: string) => React.ReactNode;
+}

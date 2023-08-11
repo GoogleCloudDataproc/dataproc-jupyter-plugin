@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import JobComponent from '../jobs/jobs';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
@@ -37,7 +37,6 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
-  POLLING_TIME_LIMIT,
   STATUS_CREATING,
   STATUS_DELETING,
   STATUS_ERROR,
@@ -54,6 +53,7 @@ import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SubmitJob from '../jobs/submitJob';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -129,16 +129,13 @@ function ClusterDetails({
   const [projectName, setProjectName] = useState('');
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedCluster, setSelectedCluster] = useState('');
-  const [timer, setTimer] = useState<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+  
   const pollingClusterDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    if (pollingDisable) {
-      clearInterval(timer);
-    } else {
-      setTimer(setInterval(pollingFunction, POLLING_TIME_LIMIT));
-    }
+    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
   };
 
   const handleDetailedView = () => {
