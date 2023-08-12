@@ -42,7 +42,8 @@ def _link_jupyter_server_extension(server_app):
     c.ServerApp.kernel_spec_manager_class = MixingKernelSpecManager
     c.ServerApp.kernel_manager_class = MixingMappingKernelManager
     c.ServerApp.session_manager_class = SessionManager
-    c.ServerApp.kernel_websocket_connection_class = DelegatingWebsocketConnection    
+    c.ServerApp.kernel_websocket_connection_class = (
+        DelegatingWebsocketConnection)
     c.GatewayClient.auth_scheme = 'Bearer'
     c.GatewayClient.headers = '{"Cookie": "_xsrf=XSRF", "X-XSRFToken": "XSRF"}'
     c.GatewayClient.gateway_token_renewer_class = CommandTokenRenewer

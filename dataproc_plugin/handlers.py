@@ -27,8 +27,8 @@ from google.cloud.jupyter_config.config import gcp_kernel_gateway_url
 def update_gateway_client_url(c, log):
     try:
         kernel_gateway_url = gcp_kernel_gateway_url()
-    except subprocess.SubprocessError:
-        log.warning(f"Error constructing the kernel gateway URL; configure your project, region, and credentials using gcloud")
+    except subprocess.SubprocessError as e:
+        log.warning(f"Error constructing the kernel gateway URL; configure your project, region, and credentials using gcloud: {e}")
         return
     log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
     c.GatewayClient.url = kernel_gateway_url
