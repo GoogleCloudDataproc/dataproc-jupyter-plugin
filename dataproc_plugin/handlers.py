@@ -21,6 +21,19 @@ from datetime import datetime
 from datetime import datetime
 from cachetools import TTLCache
 
+from google.cloud.jupyter_config.config import gcp_kernel_gateway_url
+
+
+def update_gateway_client_url(c, log):
+    try:
+        kernel_gateway_url = gcp_kernel_gateway_url()
+    except subprocess.SubprocessError:
+        log.warning(f"Error constructing the kernel gateway URL; configure your project, region, and credentials using gcloud")
+        return
+    log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
+    c.GatewayClient.url = kernel_gateway_url
+
+
 credentials_cache = None
 
 def get_cached_credentials():
@@ -158,6 +171,7 @@ class ConfigHandler(APIHandler):
             output, _ = region_set.communicate()
             if region_set.returncode == 0:
                 credentials_cache = None
+                update_gateway_client_url(self.config, self.log)
                 self.finish({'config' : ERROR_MESSAGE + 'successful'})
             else:
                 self.finish({'config' : ERROR_MESSAGE + 'failed'})
