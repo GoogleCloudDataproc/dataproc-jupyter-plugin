@@ -12,7 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.from ._version import __version__
 
-from .handlers import setup_handlers
+from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
+
+from kernels_mixer.kernelspecs import MixingKernelSpecManager
+from kernels_mixer.kernels import MixingMappingKernelManager
+from kernels_mixer.websockets import DelegatingWebsocketConnection
+
+from jupyter_server.services.sessions.sessionmanager import SessionManager
+
+
+from .handlers import setup_handlers, update_gateway_client_url
 
 
 def _jupyter_labextension_paths():
@@ -26,6 +35,22 @@ def _jupyter_server_extension_points():
     return [{
         "module": "dataproc_plugin"
     }]
+
+
+def _link_jupyter_server_extension(server_app):
+    c = server_app.config
+    c.ServerApp.kernel_spec_manager_class = MixingKernelSpecManager
+    c.ServerApp.kernel_manager_class = MixingMappingKernelManager
+    c.ServerApp.session_manager_class = SessionManager
+    c.ServerApp.kernel_websocket_connection_class = (
+        DelegatingWebsocketConnection)
+    c.GatewayClient.auth_scheme = 'Bearer'
+    c.GatewayClient.headers = '{"Cookie": "_xsrf=XSRF", "X-XSRFToken": "XSRF"}'
+    c.GatewayClient.gateway_token_renewer_class = CommandTokenRenewer
+    c.CommandTokenRenewer.token_command = (
+        'gcloud config config-helper --format="value(credential.access_token)"')
+
+    update_gateway_client_url(c, server_app.log)
 
 
 def _load_jupyter_server_extension(server_app):
