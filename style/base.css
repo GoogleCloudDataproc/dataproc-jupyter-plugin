@@ -5,12 +5,12 @@
 */
 
 /*Hiding Notebook section cards with name Remote for Remote kernels*/
-.jp-LauncherCard[data-category='Notebook'][title~='Remote'], .jp-LauncherCard[data-category='Notebook'][title~='Serverless'] {
+.jp-LauncherCard[data-category='Notebook'][title~='(Remote)'] {
   display: none;
 }
 
 /*Hiding Console section cards with name Remote for Remote kernels*/
-.jp-LauncherCard[data-category='Console'][title~='Remote'], .jp-LauncherCard[data-category='Console'][title~='Serverless'] {
+.jp-LauncherCard[data-category='Console'][title~='(Remote)'] {
   display: none;
 }
 
