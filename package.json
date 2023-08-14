@@ -1,6 +1,6 @@
 {
   "name": "dataproc_plugin",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "It is a plugin to work with dataproc services in Jupyterlab",
   "keywords": [
     "jupyter",
