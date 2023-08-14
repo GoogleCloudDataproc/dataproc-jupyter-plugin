@@ -1,0 +1,24 @@
+.page-move-button.disabled {
+  opacity: 0.5;
+}
+
+.page-move-button {
+  padding: 0px 15px;
+  font-size: 25px;
+  color: #000000;
+}
+
+.page-size-selection {
+  border: none;
+  margin-left: 5px;
+}
+
+.pagination-parent-view {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px;
+}
+
+.page-display-part {
+  padding-left: 20px;
+}

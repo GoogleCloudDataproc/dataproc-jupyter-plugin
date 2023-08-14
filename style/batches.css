@@ -1,0 +1,72 @@
+.batch-header-part {
+  display: flex;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.create-batch-overlay {
+  height: 48px;
+  padding-left: 15px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.batch-details-label-level-two {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  width: 65%;
+  padding-left: 30px;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+
+.batch-details-container {
+  width: 80%;
+  padding-left: 15px;
+}
+.batch-details-container-top {
+  width: 50%;
+  padding-left: 15px;
+}
+.details-label {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  width: 65%;
+  color: #000000;
+}
+.batch-details-label-level-one {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  width: 65%;
+  padding-left: 15px;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+.details-value {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 20px;
+  width: 35%;
+  color: rgba(0, 0, 0, 0.66);
+}
+.batch-details-row-label {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-height: 18px;
+  margin-bottom: 6px;
+}
+.scroll-comp-batch{
+ 
+    overflow-y: auto;
+    max-height: 85vh;
+  
+}
