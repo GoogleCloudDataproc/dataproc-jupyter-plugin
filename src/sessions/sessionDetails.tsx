@@ -98,13 +98,17 @@ function SessionDetails({
   });
   const [isLoading, setIsLoading] = useState(true);
   const [labelDetail, setLabelDetail] = useState(['']);
-  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingSessionDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
   };
 
   const handleDetailedView = () => {
@@ -161,7 +165,7 @@ function SessionDetails({
       pollingSessionDetails(getSessionDetails, true);
     };
   }, []);
-  
+
   const createTimeDisplay = jobTimeFormat(sessionInfo.createTime);
   const parts = createTimeDisplay.split(',');
   const createTimeString = parts.slice(0, 2).join(',');
@@ -355,12 +359,12 @@ function SessionDetails({
                   <div className="session-label-style-parent">
                     {labelDetail.length > 0
                       ? labelDetail.map(label => {
-                         /*
+                          /*
                             Extracting key, value from label
                                Example: "{client:dataproc_plugin}"
                          */
                           const labelParts = label.split(':');
-                         
+
                           return (
                             <div key={label} className="job-label-style">
                               {labelParts[0]} : {labelParts[1]}

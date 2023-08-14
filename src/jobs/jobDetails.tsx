@@ -145,14 +145,18 @@ function JobDetails({
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
-  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [errorView, setErrorView] = useState(false);
 
   const pollingJobDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
   };
 
   const handleDetailedJobView = () => {
@@ -314,7 +318,6 @@ function JobDetails({
     jobInfo.statusHistory[jobInfo.statusHistory.length - 1].stateStartTime
   );
   const elapsedTimeString = elapsedTime(endTime, jobStartTime);
-
 
   const statusStyleSelection = (jobInfo: any) => {
     if (jobInfo.status.state === STATUS_RUNNING) {

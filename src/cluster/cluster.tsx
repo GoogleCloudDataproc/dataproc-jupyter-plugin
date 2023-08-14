@@ -85,20 +85,24 @@ const ClusterComponent = (): React.JSX.Element => {
   const [loginError, setLoginError] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
   const [projectId, setProjectId] = useState('');
-  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [selectedJobClone, setSelectedJobClone] = useState({});
 
   const pollingClusters = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
   };
 
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
   };
-  
+
   const listClustersAPI = async (
     nextPageToken?: string,
     previousClustersList?: object

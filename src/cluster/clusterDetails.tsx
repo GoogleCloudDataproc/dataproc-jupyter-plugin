@@ -129,13 +129,17 @@ function ClusterDetails({
   const [projectName, setProjectName] = useState('');
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedCluster, setSelectedCluster] = useState('');
-  const timer = useRef<NodeJS.Timer | undefined>(undefined);
-  
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+
   const pollingClusterDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
   };
 
   const handleDetailedView = () => {

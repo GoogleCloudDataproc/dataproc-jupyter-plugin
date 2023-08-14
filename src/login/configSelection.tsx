@@ -93,11 +93,11 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           const toastifyCustomStyle: ToastOptions<{}> = {
             hideProgressBar: true,
             autoClose: false,
-            theme: "dark",
+            theme: 'dark',
             position: toast.POSITION.BOTTOM_CENTER,
             toastId: 'custom-toast'
-          }
-          if(configStatus.includes('Failed')) {
+          };
+          if (configStatus.includes('Failed')) {
             toast.error(configStatus, toastifyCustomStyle);
           } else {
             toast.success(configStatus, toastifyCustomStyle);
@@ -355,7 +355,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                     <div className="user-email">{userInfo.email}</div>
                   </div>
                 </div>
-                <div className="seperator"></div>
                 <div className="google-header">
                   <a
                     href="https://policies.google.com/privacy?hl=en"
@@ -364,13 +363,21 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                   >
                     Privacy Policy
                   </a>
-                  <span className="privacy-terms"> • </span>
+                  <span className="separator"> • </span>
                   <a
                     href="https://policies.google.com/terms?hl=en"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     Terms of Service
+                  </a>
+                  <span className="separator"> • </span>
+                  <a
+                    href="https://policies.google.com/terms?hl=en"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Third
                   </a>
                 </div>
               </div>

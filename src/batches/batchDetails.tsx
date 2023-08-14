@@ -120,13 +120,17 @@ function BatchDetails({
   const [isLoading, setIsLoading] = useState(true);
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('');
-  const timer = useRef<NodeJS.Timer | undefined>(undefined);
-  
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+
   const pollingBatchDetails = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
   };
 
   const handleDetailedBatchView = () => {

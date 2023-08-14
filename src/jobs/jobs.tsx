@@ -118,13 +118,17 @@ function JobComponent({
   const [region, setRegion] = useState('');
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
-  const timer = useRef<NodeJS.Timer | undefined>(undefined);
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingJobs = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
   };
 
   const data = jobsList;
@@ -353,7 +357,7 @@ function JobComponent({
 
   useEffect(() => {
     listJobsAPI();
-    if(!detailedJobView) {
+    if (!detailedJobView) {
       pollingJobs(listJobsAPI, pollingDisable);
     }
 
@@ -361,7 +365,7 @@ function JobComponent({
       pollingJobs(listJobsAPI, true);
     };
   }, [pollingDisable, detailedJobView]);
-  
+
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Job ID') {
       return (
@@ -510,7 +514,7 @@ function JobComponent({
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
                   <GlobalFilter
-                    preGlobalFilteredRows={preGlobalFilteredRows}                 
+                    preGlobalFilteredRows={preGlobalFilteredRows}
                     globalFilter={state.globalFilter}
                     setGlobalFilter={setGlobalFilter}
                     setPollingDisable={setPollingDisable}

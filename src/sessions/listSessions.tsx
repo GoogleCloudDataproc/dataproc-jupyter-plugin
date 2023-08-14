@@ -41,7 +41,12 @@ import {
   STATUS_TERMINATING
 } from '../utils/const';
 import TableData from '../utils/tableData';
-import { ICellProps, authApi, elapsedTime, jobTimeFormat } from '../utils/utils';
+import {
+  ICellProps,
+  authApi,
+  elapsedTime,
+  jobTimeFormat
+} from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
@@ -85,13 +90,17 @@ function ListSessions() {
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedSessionValue, setSelectedSessionValue] = useState('');
-  const timer = useRef<NodeJS.Timer | undefined>(undefined);
-  
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+
   const pollingSessions = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
-    timer.current = PollingTimer(pollingFunction, pollingDisable, timer.current);
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
   };
 
   const data = sessionsList;
@@ -241,7 +250,7 @@ function ListSessions() {
 
   useEffect(() => {
     listSessionsAPI();
-    if(!detailedSessionView){
+    if (!detailedSessionView) {
       pollingSessions(listSessionsAPI, pollingDisable);
     }
 

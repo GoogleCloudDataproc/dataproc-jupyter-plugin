@@ -3,7 +3,7 @@ import { POLLING_TIME_LIMIT } from './const';
 const PollingTimer = (
   pollingFunction: () => void,
   pollingDisable: boolean,
-  interval: NodeJS.Timer | undefined
+  interval: NodeJS.Timeout | undefined
 ) => {
   if (pollingDisable) {
     clearInterval(interval);
