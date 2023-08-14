@@ -363,7 +363,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                   >
                     Privacy Policy
                   </a>
-                  <span className="separator"> • </span>
+                  <span className="footer-divider"> • </span>
                   <a
                     href="https://policies.google.com/terms?hl=en"
                     target="_blank"
@@ -371,13 +371,13 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                   >
                     Terms of Service
                   </a>
-                  <span className="separator"> • </span>
+                  <span className="footer-divider"> • </span>
                   <a
-                    href="https://policies.google.com/terms?hl=en"
+                    href="https://raw.githubusercontent.com/GoogleCloudDataproc/dataproc-jupyter-plugin/main/third-party-licenses.txt"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Third
+                    Licenses
                   </a>
                 </div>
               </div>

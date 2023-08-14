@@ -8,7 +8,7 @@
   cursor: pointer;
 }
 .signin-google-icon:disabled {
-  opacity: 0.5; 
+  opacity: 0.5;
 }
 .settings-overlay {
   width: 100%;
@@ -147,9 +147,9 @@
   border: none;
   cursor: pointer;
 }
-.save-button:disabled{
+.save-button:disabled {
   background: lightgrey;
-  color:  black;
+  color: black;
 }
 .save-loader {
   margin-top: 5px;
@@ -245,13 +245,14 @@
   padding-top: 15px;
 }
 
-.privacy-terms{
+.footer-divider {
   margin: 0 5px;
 }
 .ui.selection.active.dropdown .menu {
   border: none !important;
 }
-.ui.dropdown .menu .selected.item, .ui.dropdown.selected {
-  background: rgb(230,236,250) !important;
-  color: rgb(28,58,169) !important;
+.ui.dropdown .menu .selected.item,
+.ui.dropdown.selected {
+  background: rgb(230, 236, 250) !important;
+  color: rgb(28, 58, 169) !important;
 }
