@@ -32,10 +32,10 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
-import pysparkLogo from '../../style/icons/pyspark_logo.svg';
-import pythonLogo from '../../style/icons/python_logo.svg';
-import sparkrLogo from '../../style/icons/sparkr_logo.svg';
-import scalaLogo from '../../style/icons/scala_logo.svg';
+import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
+import pythonLogo from '../../third_party/icons/python_logo.svg';
+import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
+import scalaLogo from '../../third_party/icons/scala_logo.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 interface IAuthCredentials {
   access_token?: string;
