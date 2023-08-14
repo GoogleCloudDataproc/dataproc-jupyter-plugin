@@ -1,0 +1,281 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+
+.clusters-list-overlay {
+  height: 37px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.selected-header {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 24px;
+
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 20px;
+  
+  text-transform: uppercase;
+
+  color: #3367D6;
+  box-shadow: inset 0px -2px 0px #3367D6;
+}
+
+.unselected-header {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 24px;
+
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 20px;
+  
+  text-transform: uppercase;
+
+  color: rgba(0, 0, 0, 0.66);
+}
+
+.create-cluster-overlay {
+  height: 48px;
+  padding-left: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+  display: flex;
+  align-items: center;
+}
+.create-cluster-sub-overlay{
+  width:20%;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.cluster-status {
+  padding-left: 5px;
+  text-transform: capitalize;
+}
+
+ .actions-icon {
+  display: flex;
+}
+.cluster-status-parent{
+  display: flex;
+  align-items: center;
+  height: 29px;
+  color: rgba(0, 0, 0, 0.66);
+}
+
+.cluster-detail-status-parent{
+  display: flex;
+  align-items: center;
+  height: 29px;
+  color: rgba(0, 0, 0, 0.66);
+}
+
+.icon-buttons-style {
+  cursor: pointer;
+  padding-right: 5px;
+}
+
+.icon-buttons-style-disable{
+  /* cursor: not-allowed; */
+  padding-right: 5px;
+  color:rgb(245,245,245);
+  opacity: 0.5;
+}
+
+.spin-loader{
+  display: flex;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+.spin-loaderMain{
+  display: flex;
+  margin-top: 20%;
+  margin-left: 50%;
+}
+
+.filter-cluster-overlay {
+  height: 42px;
+  padding-left: 15px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.filter-section-part {
+  border: 0px;
+  width: 100%;
+}
+
+.create-cluster-text {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 32px;
+  
+  display: flex;
+  align-items: center;
+  text-align: center;
+  text-transform: uppercase;
+
+  color: #3367D6;
+}
+
+.filter-cluster-text {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 20px;
+  
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+.create-cluster-icon {
+  display: flex;
+  height: 18px;
+  width: 18px;
+  color: #3367D6;
+}
+
+.filter-cluster-icon {
+  display: flex;
+  height: 18px;
+  width: 18px;
+}
+
+.filter-cluster-section {
+  width: 100%;
+  padding-left: 8px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 20px;
+  
+  color: #757575;
+}
+
+.clusters-list-table-parent {
+  height: 62vh;
+  overflow: auto;
+}
+
+.clusters-list-table {
+  width: 100%;
+  border-spacing: 0;
+}
+
+.cluster-list-table-header {
+  background: rgba(0, 0, 0, 0.04);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  height: 29px;
+  line-height: 18px;
+  color: #000000;
+}
+
+.cluster-list-data-parent {
+  background: #ffffff;
+  height: 29px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+  
+  color: rgba(0, 0, 0, 0.66);
+}
+
+.clusters-table-header {
+  text-align: left;
+  padding-left: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.clusters-table-body {
+  overflow-y: auto;
+  max-height: 55vh;
+}
+
+.clusters-table-data {
+  padding-left: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.clusters-table-data:nth-child(1) {
+  color: #3367D6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cluster-name {
+  color: #3367D6;
+  text-decoration: underline;
+  cursor: pointer;
+  height: 29px;
+  padding-left: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  align-items: center;
+}
+
+.clusters-table-data:nth-child(2) {
+  text-transform: capitalize;
+}
+
+.clusters-list-start-icons {
+  display: flex;
+  justify-content: center;
+}
+
+.clusters-list-start-buttons-padding {
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+.component-level{
+  max-height: 85vh;
+}
+.scroll-comp{
+  overflow-y: auto;
+  max-height: 79vh;
+}
+.login-error{
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 50px;
+}
+.no-data-style {
+  margin: 10px 15px
+}
+
+.error-view-parent{
+  display: flex;
+  align-items: center;
+  padding: 0px 30px;
+  height: 50px;
+  background-color: rgb(251 233 231);
+  color: #000000;
+}
+
+.error-view-message-parent{
+  display: flex;
+  margin-left: 35%;
+}
+
+.error-view-message{
+  margin-left: 30px;
+}

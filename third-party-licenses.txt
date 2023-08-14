@@ -1,0 +1,4225 @@
+This file was generated with the generate-license-file npm package!
+https://www.npmjs.com/package/generate-license-file
+
+The following npm package may be included in this product:
+
+ - @babel/runtime@7.22.10
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2014-present Sebastian McKenzie and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @codemirror/state@6.2.1
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (C) 2018-2021 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - @fluentui/react-component-event-listener@0.63.1
+ - @fluentui/react-component-ref@0.63.1
+
+These packages each contain the following license and notice below:
+
+(MIT)
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @fortawesome/fontawesome-free@5.15.4
+
+This package contains the following license and notice below:
+
+Font Awesome Free License
+-------------------------
+
+Font Awesome Free is free, open source, and GPL friendly. You can use it for
+commercial projects, open source projects, or really almost whatever you want.
+Full Font Awesome Free license: https://fontawesome.com/license/free.
+
+# Icons: CC BY 4.0 License (https://creativecommons.org/licenses/by/4.0/)
+In the Font Awesome Free download, the CC BY 4.0 license applies to all icons
+packaged as SVG and JS file types.
+
+# Fonts: SIL OFL 1.1 License (https://scripts.sil.org/OFL)
+In the Font Awesome Free download, the SIL OFL license applies to all icons
+packaged as web and desktop font files.
+
+# Code: MIT License (https://opensource.org/licenses/MIT)
+In the Font Awesome Free download, the MIT license applies to all non-font and
+non-icon files.
+
+# Attribution
+Attribution is required by MIT, SIL OFL, and CC BY licenses. Downloaded Font
+Awesome Free files already contain embedded comments with sufficient
+attribution, so you shouldn't need to do anything additional when using these
+files normally.
+
+We've kept attribution comments terse, so we ask that you do not actively work
+to remove them from files, especially code. They're a great way for folks to
+learn about Font Awesome.
+
+# Brand Icons
+All brand icons are trademarks of their respective owners. The use of these
+trademarks does not indicate endorsement of the trademark holder by Font
+Awesome, nor vice versa. **Please do not use brand logos for any purpose except
+to represent the company, product, or service to which they refer.**
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyter/ydoc@1.0.2
+
+This package contains the following license and notice below:
+
+# @jupyter/ydoc
+
+`@jupyter/ydoc` provides [Yjs](https://github.com/yjs/yjs)-based data structures for various
+documents used in the Jupyter ecosystem. Built-in documents include:
+- `YFile`: a generic text document.
+- `YNotebook`: a Jupyter notebook document.
+
+The API documentation is available [there](https://jupyter-ydoc.readthedocs.io/en/latest/api/index.html).
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/application@4.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/application
+
+A JupyterLab package that provides the top-level application object,
+with which JupyterLab plugins may be registered.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/apputils@4.1.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/apputils
+
+A JupyterLab package which provides a collection of utilities and UI elements for building an application and manipulating the DOM.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/codeeditor@4.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/codeeditor
+
+A JupyterLab package which defines an abstract interface to a code editor,
+which is used in many places in the application, including [cells](../cells)
+and the [file editor](../fileeditor).
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/coreutils@6.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/coreutils
+
+A JupyterLab package which provides utility functions that are widely used
+across many of the `@jupyterlab` packages. This includes (among other things)
+functions for manipulating paths, urls, and the notebook format.
+
+This package is intended for use within both Node.js and browser environments.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/docregistry@4.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/docregistry
+
+A JupyterLab package which tracks the different types of documents that the application is able to interact with.
+This includes notebooks, text files, and base64 encoded documents.
+
+Extensions may register new document types with the document registry to allow them to be opened with JupyterLab.
+An example of this may be found in the [@jupyterlab/notebook](../notebook) package.
+
+The document registry is a singleton on the [application](../application).
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/launcher@4.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/launcher
+
+A JupyterLab package that provides a launcher for various activities,
+including notebooks, consoles, text editors, and terminals.
+
+JupyterLab extensions may register themselves with the launcher in order to show up as an activity when the application starts.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/mainmenu@4.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/mainmenu
+
+A JupyterLab extension which provides the application menubar.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - @jupyterlab/nbformat@4.0.4
+ - @jupyterlab/settingregistry@4.0.4
+ - @jupyterlab/statedb@4.0.4
+ - @jupyterlab/statusbar@4.0.4
+ - @lumino/algorithm@2.0.1
+ - @lumino/application@2.2.1
+ - @lumino/collections@2.0.1
+ - @lumino/commands@2.1.3
+ - @lumino/coreutils@2.1.2
+ - @lumino/disposable@2.1.2
+ - @lumino/domutils@2.0.1
+ - @lumino/dragdrop@2.1.3
+ - @lumino/keyboard@2.0.1
+ - @lumino/messaging@2.0.1
+ - @lumino/properties@2.0.1
+ - @lumino/signaling@2.1.2
+ - @lumino/virtualdom@2.0.1
+ - @lumino/widgets@2.3.0
+
+These packages each contain the following license and notice below:
+
+(BSD-3-Clause)
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/observables@5.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/observables
+
+A JupyterLab package which provides data structures (such as strings, lists, and maps), which can be listened to for changes.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/rendermime-interfaces@3.8.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/rendermime-interfaces
+
+A package for JupyterLab which provides interfaces for implementing mime renderer extensions.
+
+A general JupyterLab plugin involves a certain amount of boilerplate code
+that can be annoying for authors of relatively extensions.
+The interfaces in this package are meant to give an easier way for extension authors
+to provide a plugin that renders mime bundles and documents of a specific mime type.
+
+When using these interfaces, extensions only need to provide some metadata about
+what kind of mime bundle they are able to render, and a `Widget` with
+a `renderModel` method that renders the mime bundle.
+
+Examples can be found in [@jupyterlab/vega5-extension](../vega5-extension) and [@jupyterlab/pdf-extension](../pdf-extension).
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/rendermime@4.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/rendermime
+
+A JupyterLab package which manages mime bundle renderers for the application,
+and provides default renderers for a number of formats, such as markdown,
+HTML, images, and LaTeX.
+
+A simplified interface for adding new mime renderers to the application
+can be found in [@jupyterlab/rendermime-interfaces](../rendermime-interfaces).
+
+The rendermime is a singleton on the [application](../application).
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/services@7.0.4
+
+This package contains the following license and notice below:
+
+# JupyterLab Services
+
+Javascript client for the Jupyter services REST APIs
+
+[API Docs](https://jupyterlab.readthedocs.io/en/stable/api/)
+
+[REST API Docs](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml)
+
+Note: All functions and classes using the REST API allow a `serverSettings`
+parameter to configure requests.
+Requests are made using the `fetch` API, which is available in modern browsers
+or via `npm install fetch` for node users. The `whatwg-fetch` npm package
+can be used to polyfill browsers that do not support the `fetch` API.
+
+## Package Install
+
+**Prerequisites**
+
+- [node](http://nodejs.org/)
+- Python, e.g. via [conda](https://www.anaconda.com/download)
+
+```bash
+npm install --save @jupyterlab/services
+conda install jupyter-server # jupyter-server 2.0+ is recommended
+# or `pip install jupyter-server`
+```
+
+## Source Build
+
+**Prerequisites**
+
+See the [building instructions for JupyterLab](../../CONTRIBUTING.md), which
+will build this module as part of the build process.
+
+**Rebuild**
+
+```bash
+yarn run clean
+yarn run build
+```
+
+## Run Tests
+
+Follow the source build instructions first.
+
+```bash
+yarn run test
+```
+
+## Build Docs
+
+Follow the source build instructions first.
+
+```bash
+yarn run docs
+```
+
+Navigate to `docs/index.html`.
+
+## Supported Runtimes
+
+The runtime versions which should work are listed below. Earlier versions may
+also work, but come with no guarantees.
+
+- Node 10
+- Firefox 52+
+- Chrome 55+
+
+Note: "requirejs" may need be included in a global context for `Comm` targets
+using the a `target_module` (in the classic Notebook).
+This can be as a `<script>` tag in the browser or by using the `requirejs`
+package in node (`npm install requirejs` and setting
+`global.requirejs = require('requirejs');`).
+
+## Starting the Jupyter Server
+
+Follow the package install instructions first.
+
+The library requires a running Jupyter Server, launched as:
+
+```bash
+jupyter server
+```
+
+or
+
+```bash
+jupyter lab
+```
+
+## Bundling for the Browser
+
+Follow the package install instructions first.
+
+See `examples/browser` for an example of using Webpack to bundle the library.
+
+## Usage from Node.js
+
+Follow the package install instructions first.
+
+See `examples/node` for an example of using an ES5 node script.
+
+## Usage Examples
+
+**Note:** This package is compiled to ES2018 JavaScript syntax from
+TypeScript. Here are some examples of using parts of this package. See the
+other `examples` subdirectories for more examples.
+
+- [Comms](./examples/browser/src/comm.ts)
+- [Config](./examples/browser/src/config.ts)
+- [Contents](./examples/browser/src/contents.ts)
+- [Kernel](./examples/browser/src/kernel.ts)
+- [Session](./examples/browser/src/session.ts)
+- [Terminal](./examples/browser/src/terminal.ts)
+
+## Overview
+
+This package introduces a number of concepts, such as session context, etc.
+Here we give a brief overview of some of the top-level concepts in this
+package.
+
+### Clients
+
+A _client_ is a single entity connected to a kernel. Since kernel messages
+include the client id, it is easy for a client to filter kernel messages for
+just messages between it and the kernel. In JupyterLab, different activities
+(such as a console and a notebook) are usually considered separate clients when
+connected to the same kernel.
+
+### Kernel specs
+
+A _kernel spec_ is the data about an available kernel on the system. We can
+retrieve a current list of kernel specs from the server.
+
+### Kernels
+
+A _kernel_ represents a running process on the server that implements the
+Jupyter kernel messaging protocol.
+
+#### Kernel model
+
+A _kernel model_ mirrors the server kernel models, and represents a single
+running kernel on the server. A kernel can be created, restarted, shut down,
+etc., through calls to the server. A kernel model's lifecycle mirrors the
+server kernel model's lifecycle, and it will be disposed when the server
+kernel is shut down.
+
+#### Kernel connection
+
+A _kernel connection_ represents a single client connecting to a kernel over a
+websocket. Typically only one kernel connection handles comms for any given
+kernel. The kernel connection is disposed when the client no longer has a need
+for the connection. Disposing a kernel connection does not cause the kernel to
+shut down. However, if a kernel is shut down, (eventually) all of its kernel
+connections should be disposed if they were initiated from a kernel manager.
+If the kernel connections were instantiated outside of a manager, you are
+responsible for cleaning them up.
+
+A kernel connection has a number of signals, such as kernel status, kernel
+connection status, etc.
+
+#### Kernel manager
+
+A _kernel manager_ is an object that maintains a list of kernel models by
+regular polling. The kernel manager can instantiate a kernel connection and
+will manage its lifecycle (e.g., when the kernel is shut down, the connections
+will be disposed). The manager provides some minimal bookkeeping around
+kernels and their connections. Generally, it is easiest to interact with
+kernels on a server through a manager.
+
+### Sessions
+
+A _session_ is a mapping on the server from an identifying string (the
+session's `path`) to a kernel. A session has a few other pieces of information
+to allow for easy categorization and searching of sessions.
+
+The primary usecase of a session is to enable persisting a connection to a
+kernel. For example, a notebook viewer may start a session with session path
+of the notebook's file path. When a browser is refreshed, the notebook viewer
+can connect to the same kernel by asking the server for the session
+corresponding with the notebook file path.
+
+#### Session model
+
+A _session model_ mirrors a server session. The session models can be
+refreshed from the server, created, changed (including creating a new session
+kernel), and shut down (which implies that the kernel will be shut down). A
+session model's lifecycle mirrors the server session's lifecycle, and it will
+be disposed when the server session is shut down.
+
+#### Session connection
+
+A _session connection_ represents a single client connected to a session's
+kernel. A session's kernel connection can change and may be null to signify no
+current kernel connection. A session connection owns the kernel connection,
+meaning the kernel connection is created and disposed by the session
+connection as needed. The session connection proxies signals from the kernel
+connection for convenience (e.g., you can listen to the session's status
+signal to get status changes for whatever the current kernel is, without
+having to disconnect and reconnect your signal handlers every time the session
+kernel changes). The session connection can be disposed when the client no
+longer is connected to that session's kernel, and disposal will not cause the
+session model to be deleted.
+
+#### Session manager
+
+A _session manager_ is an object that maintains a list of session models by
+regular polling. The session manager can instantiate a session connection and
+will manage its lifecycle (e.g., when the session is shut down, the connections
+will be disposed). The manager provides some minimal bookkeeping around
+sessions and their connections. Generally, it is easiest to interact with
+sessions on a server through a manager.
+
+### Session Context
+
+A _session context_ is an object which has the same lifecycle as the client.
+The session context owns a session connection (which may be null if the client
+is not currently associated with a session). The session context proxies the
+current session connection's signals for convenience. The session context
+primarily serves as a stable object for a client to keep track of the current
+session connection. The session context also contains some convenience
+functionality, such as preferences for whether a kernel should be started and
+a user-friendly kernel name and status.
+
+Here is a diagram that provides an overview of the different components:
+
+![architecture-diagram](./architecture.png)
+
+_The diagram can be edited on [diagrams.net](https://diagrams.net) by importing the [source](./architecture.xml)_.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/translation@4.0.4
+
+This package contains the following license and notice below:
+
+# @jupyterlab/translation
+
+Translation utilities.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @jupyterlab/ui-components@4.0.4
+
+This package contains the following license and notice below:
+
+<!--
+THIS FILE IS AUTOGENERATED, DO NOT EDIT
+
+Instead, make changes to docs sources in `packages/ui-components/docs`,
+then run "jlpm docs:init" to refresh the built docs
+-->
+
+# @jupyterlab/ui-components
+
+The
+[@jupyterlab/ui-components](https://jupyterlab.github.io/jupyterlab/modules/_ui_components_src_index_.html)
+package provides UI elements that are widely used in JupyterLab core,
+and that can be reused in your own extensions.
+
+For example, all of the icons in JupyterLab core can be reused via
+`LabIcon`. You can also use `LabIcon` to create your own custom icons
+that will be able to automatically change color to match the current
+JupyterLab theme.
+
+# `LabIcon` - set up and render icons
+
+`LabIcon` is the icon class used by JupyterLab, and is part of the new
+icon system introduced in JupyterLab v2.0.
+
+## How JupyterLab handles icons
+
+The @jupyterlab/ui-components package provides icons to the rest of
+JupyterLab, in the form of a set of `LabIcon` instances (currently about
+80). All of the icons in the core JupyterLab packages are rendered using
+one of these `LabIcon` instances.
+
+## Using the icons in your own code
+
+You can use any of JupyterLab icons in your own code via an `import`
+statement. For example, to use `jupyterIcon` you would first do:
+
+```typescript
+import { jupyterIcon } from '@jupyterlab/ui-components';
+```
+
+## How to render an icon into a DOM node
+
+Icons can be added as children to any `div` or `span` nodes using the
+`icon.element(...)` method (where `icon` is any instance of `LabIcon`).
+For example, to render the Jupyter icon you could do:
+
+```typescript
+jupyterIcon.element({
+  container: elem,
+  height: '16px',
+  width: '16px',
+  marginLeft: '2px'
+});
+```
+
+where `elem` is any `HTMLElement` with a `div` or `span` tag. As shown
+in the above example, the icon can be styled by passing CSS parameters
+into `.element(...)`. Any valid CSS parameter can be used (one catch:
+snake case params do have to be converted to camel case: instead of
+`foo-bar: '8px'`, you’d need to use `fooBar: '8px'`.
+
+## How to render an icon as a React component
+
+Icons can also be rendered using React. The `icon.react` parameter holds
+a standard React component that will display the icon on render. Like
+any React component, `icon.react` can be used in various ways.
+
+For example, here is how you would add the Jupyter icon to the render
+tree of another React component:
+
+```jsx
+public render() {
+  return (
+    <div className="outer">
+      <div className="inner">
+        <jupyterIcon.react tag="span" right="7px" top="5px" />
+        "and here's a text node"
+      </div>
+    </div>
+  );
+}
+```
+
+Alternatively, you can just render the icon directly into any existing
+DOM node `elem` by using the `ReactDOM` module:
+
+```typescript
+const root = createRoot(elem);
+root.render(jupyterIcon.react);
+```
+
+If do you use `ReactDOM` to render, and if the `elem` node is ever
+removed from the DOM, you’ll first need to clean it up:
+
+```typescript
+root.unmount();
+```
+
+This cleanup step is not a special property of `LabIcon`, but is instead
+needed for any React component that is rendered directly at the top
+level by `ReactDOM`.
+
+## How to create your own custom `LabIcon`
+
+You can create your own custom icon by constructing a new instance of
+`LabIcon`:
+
+```typescript
+export const fooIcon = new LabIcon({
+  name: 'barpkg:foo',
+  svgstr: '<svg>...</svg>'
+});
+```
+
+where `name` should be of the form “your-pkg:icon-name”, and `svgstr` is
+the raw contents of your icon’s svg file.
+
+## How to create a new `LabIcon` from an external svg file
+
+Although you can copy-and-paste an svg directly into the `LabIcon`
+constructor, the best practice is to keep the svg for each of your icons
+in its own separate svg file. You will need to have an `svg.d.ts` file
+at the root of your project’s `src` directory:
+
+```typescript
+// svg.d.ts
+
+declare module '*.svg' {
+  const value: string;
+  export default value;
+}
+```
+
+You can then `import` the contents of an svg file:
+
+```typescript
+import fooSvgstr from 'path-to-your/foo.svg';
+
+export const fooIcon = new LabIcon({
+  name: 'barpkg:foo',
+  svgstr: fooSvgstr
+});
+```
+
+## Sync icon color to JupyterLab theme
+
+<em>Example svgs with class annotation can be found in <a href="https://github.com/jupyterlab/jupyterlab/tree/f0153e0258b32674c9aec106383ddf7b618cebab/packages/ui-components/style/icons">ui-components/style/icons</a></em>
+
+You can ensure that the colors of your custom `LabIcon` sync up to the
+colors of the current JupyterLab theme by adding appropriate `class`
+annotations to each colored element of your icon's svg.
+
+In other words, each element of your svg that a `fill="..."` or a
+`stroke="..."` property should also have a `class="jp-icon<whatever>"`
+property.
+
+### Available icon classes
+
+<em>Icon-related CSS classes are defined in <a href="https://github.com/jupyterlab/jupyterlab/blob/f0153e0258b32674c9aec106383ddf7b618cebab/packages/ui-components/style/icons.css">ui-components/style/icons.css</a></em>
+
+All colors shown are for the standard light/dark theme, mouse over for
+hex values.
+
+#### `jp-iconX`: contrast to theme background
+
+<ul>
+<li>jp-icon0: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#111"/><title>#111</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#fff"/><title>#fff</title></svg></li>
+<li>jp-icon1: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#212121"/><title>#212121</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#fff"/><title>#fff</title></svg></li>
+<li>jp-icon2: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#424242"/><title>#424242</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#eee"/><title>#eee</title></svg></li>
+<li>jp-icon3: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#616161"/><title>#616161</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#bdbdbd"/><title>#bdbdbd</title></svg></li>
+<li>jp-icon4: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#757575"/><title>#757575</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#757575"/><title>#757575</title></svg></li>
+</ul>
+
+Most one-color icons in JupyterLab (including the sidebar and toolbar
+icons) are colored using the `jp-icon3` class.
+
+For light/dark themes, `jp-icon0` corresponds to the darkest/lightest
+background color, while `jp-icon1` is somewhat lighter/darker, and so
+forth.
+
+#### `jp-icon-accentX`: match to theme background
+
+<ul>
+<li>jp-icon-accent0: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#fff"/><title>#fff</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#111"/><title>#111</title></svg></li>
+<li>jp-icon-accent1: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#fff"/><title>#fff</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#212121"/><title>#212121</title></svg></li>
+<li>jp-icon-accent2: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#eee"/><title>#eee</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#424242"/><title>#424242</title></svg></li>
+<li>jp-icon-accent3: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#bdbdbd"/><title>#bdbdbd</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#616161"/><title>#616161</title></svg></li>
+<li>jp-icon-accent4: <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#757575"/><title>#757575</title></svg> / <svg width="16" viewBox="0 0 1 1"><rect width="1" height="1" fill="#757575"/><title>#757575</title></svg></li>
+</ul>
+
+For light/dark themes, `jp-icon-accent0` corresponds to the
+lightest/darkest background color, while `jp-icon-accent1` is somewhat
+darker/lighter, and so forth.
+
+### Adding classes to a one-color icon
+
+For most simple, one-color icons, it is desirable for the icon's color
+to strongly contrast with that of the application's background. You can
+achieve this using one of the `jp-iconX` classes.
+
+**Example: check icon**
+
+_svg source:_
+
+```html
+<svg xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 24 24">
+  <path
+    class="jp-icon3"
+    fill="#616161"
+    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+  />
+</svg>
+```
+
+_rendered icon:_
+
+<svg xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 24 24">
+  <path class="jp-icon3" fill="#616161" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+</svg>
+
+### Adding classes to a multi-colored icon
+
+For more complex icons, each element that needs to match the background
+should be annotated with a `jp-icon-accentX` class, while each element
+that needs to contrast with the background should be annotated with a
+`jp-iconX` class.
+
+**Example: close-circle icon**
+
+_svg source:_
+
+```html
+<svg xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 24 24">
+  <circle class="jp-icon3" fill="#616161" cx="12" cy="12" r="11" />
+  <rect
+    class="jp-icon-accent0"
+    fill="#fff"
+    height="18"
+    width="2"
+    x="11"
+    y="3"
+    transform="rotate(315, 12, 12)"
+  />
+  <rect
+    class="jp-icon-accent0"
+    fill="#fff"
+    height="18"
+    width="2"
+    x="11"
+    y="3"
+    transform="rotate(45, 12, 12)"
+  />
+</svg>
+```
+
+_rendered icon:_
+
+<svg xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 24 24">
+  <circle class="jp-icon3" fill="#616161" cx="12" cy="12" r="11"/>
+  <rect class="jp-icon-accent0" fill="#fff" height="18" width="2" x="11" y="3" transform="rotate(315, 12, 12)"/>
+  <rect class="jp-icon-accent0" fill="#fff" height="18" width="2" x="11" y="3" transform="rotate(45, 12, 12)"/>
+</svg>
+
+## Background
+
+### Icon handling in Jupyterlab
+
+Pre JupyterLab 2.0, most icons were created using the
+icons-as-css-background pattern:
+
+- Set up the icon’s svg as a `background-image` in CSS:
+
+  ```css
+  /* CSS */
+
+  .jp-FooIcon {
+    background-image: url('path-to-your/foo.svg');
+  }
+  ```
+
+- Add the icon to the DOM by constructing an otherwise empty DOM node
+  with the appropriate class:
+
+  ```typescript
+  // typescript
+
+  const e = document.createElement('div');
+  e.className = 'jp-FooIcon';
+  document.body.append(e);
+  ```
+
+What you end up with is a single DOM node that has the “foo” icon as a
+background image.
+
+Post JupyterLab 2.0, nearly all icons in core are now created using
+[LabIcon](https://github.com/jupyterlab/jupyterlab/blob/f0153e0258b32674c9aec106383ddf7b618cebab/packages/ui-components/src/icon/labicon.tsx)
+and the icons-as-inline-svg pattern:
+
+- Construct a new instance of LabIcon from the icon’s name and svg:
+
+  ```typescript
+  // typescript
+
+  // svgstr is the raw contents of an icon's svg file
+  export const fooIcon = new LabIcon({
+    name: 'barpkg:foo',
+    svgstr: '<svg>...</svg>'
+  });
+  ```
+
+- Add the icon to the DOM using the appropriate property of your
+  LabIcon instance (either LabIcon.element() to directly create a DOM
+  node, or LabIcon.react to get the icon as a react component):
+
+  ```typescript
+  // typescript
+
+  const e = fooIcon.element();
+  document.body.append(e);
+  ```
+
+What you end up with is a DOM node (by default a ‘div’) that has an
+inline svg node as a child.
+
+### `background-image` vs inline svg
+
+The big limitation of the old icon-as-css-background pattern is that svg
+images rendered as `background-image` are invisible to CSS. On the other
+hand, an icon rendered as an inline svg node is fully exposed to the
+CSS. This allows us to dynamically change icon styling as needed simply by
+modifying our CSS. Most importantly, this allows us to recolor icons
+according to Jupyterlab’s current theme.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @lumino/polling@2.1.2
+
+This package contains the following license and notice below:
+
+# @lumino/polling
+
+This package provides a class for generic polling functionality (`Poll`). It
+also provides rate limiters (`Debouncer` and `Throttler`).
+
+The `Poll` class provides three different ways to "subscribe" to poll ticks:
+
+- [`@lumino/signaling`](../signaling/): `Poll#ticked` is a Lumino signal that
+  emits each time there is a poll tick.
+- `Promise`-based: `Poll#tick` is a promise that resolves after every tick and
+  only rejects when the poll is disposed.
+- `AsyncIterable`: `Poll#[`Symbol.asyncIterator`]` implements the async iterable
+  protocol that allows iteration using [`for-await...of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) loops.
+
+## Example usage
+
+These are examples from the unit tests for this package. They
+demonstrate the three different ways polling is supported.
+
+### Using `Poll#tick` promise
+
+Here, we set up the testing state variables and create a new `Poll` instance.
+
+```typescript
+const expected = 'started resolved resolved';
+const ticker: IPoll.Phase<any>[] = [];
+const tock = (poll: Poll) => {
+  ticker.push(poll.state.phase);
+  poll.tick.then(tock).catch(() => undefined);
+};
+const poll = new Poll({
+  auto: false,
+  factory: () => Promise.resolve(),
+  frequency: { interval: 100, backoff: false }
+});
+```
+
+Next we assign the `tock` function to run after the poll ticks and
+we start the poll.
+
+```typescript
+void poll.tick.then(tock);
+void poll.start();
+```
+
+And we verify that the `ticker` did indeed get populated when `tock`
+was called and the next promise was captured as well.
+
+```typescript
+await sleep(1000); // Sleep for longer than the interval.
+expect(ticker.join(' ').startsWith(expected)).to.equal(true);
+poll.dispose();
+```
+
+### Using `Poll#ticked` signal
+
+Here, we set up the testing state variables and create a new `Poll` instance.
+
+```typescript
+const poll = new Poll<void, void>({
+  factory: () => Promise.resolve(),
+  frequency: { interval: 100, backoff: false }
+});
+```
+
+Here we connect to the `ticked` signal and simply check that each
+tick matches the poll `state` accessor's contents.
+
+```typescript
+poll.ticked.connect((_, tick) => {
+  expect(tick).to.equal(poll.state);
+});
+await sleep(1000); // Sleep for longer than the interval.
+poll.dispose();
+```
+
+### Using `Poll` as an `AsyncIterable`
+
+Here, we set up the testing state variables and create a new `Poll` instance.
+
+```typescript
+let poll: Poll;
+let total = 2;
+let i = 0;
+
+poll = new Poll({
+  auto: false,
+  factory: () => Promise.resolve(++i > total ? poll.dispose() : void 0),
+  frequency: { interval: Poll.IMMEDIATE }
+});
+
+const expected = `started${' resolved'.repeat(total)}`;
+const ticker: IPoll.Phase<any>[] = [];
+```
+
+Then the poll is started:
+
+```typescript
+void poll.start();
+```
+
+Instead of connecting to the `ticked` signal or awaiting the `tick` promise, we can now use a `for-await...of` loop:
+
+```typescript
+for await (const state of poll) {
+  ticker.push(state.phase);
+  if (poll.isDisposed) {
+    break;
+  }
+}
+```
+
+And we check to make sure the results are as expected:
+
+```typescript
+// ticker and expected both equal:
+// 'started resolved resolved disposed'
+expect(ticker.join(' ')).to.equal(expected);
+```
+
+### Note for consumers of async iterators
+
+In order to use `for-await...of` loops in TypeScript, you will need to use `ES2018` or above in your `lib` array in `tsconfig.json`.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @popperjs/core@2.11.8
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Federico Zivolo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @react-dnd/asap@4.0.1
+
+This package contains the following license and notice below:
+
+Copyright 2009–2014 Contributors. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - @react-dnd/invariant@2.0.0
+ - prop-types@15.8.1
+ - warning@4.0.3
+
+These packages each contain the following license and notice below:
+
+MIT License
+
+Copyright (c) 2013-present, Facebook, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - @react-dnd/shallowequal@2.0.0
+ - shallowequal@1.1.0
+
+These packages each contain the following license and notice below:
+
+MIT License
+
+Copyright (c) 2017 Alberto Leal <mailforalberto@gmail.com> (github.com/dashed)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - @rjsf/core@5.12.0
+ - @rjsf/utils@5.12.0
+
+These packages each contain the following license and notice below:
+
+Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+1.  Definitions.
+
+    "License" shall mean the terms and conditions for use, reproduction,
+    and distribution as defined by Sections 1 through 9 of this document.
+
+    "Licensor" shall mean the copyright owner or entity authorized by
+    the copyright owner that is granting the License.
+
+    "Legal Entity" shall mean the union of the acting entity and all
+    other entities that control, are controlled by, or are under common
+    control with that entity. For the purposes of this definition,
+    "control" means (i) the power, direct or indirect, to cause the
+    direction or management of such entity, whether by contract or
+    otherwise, or (ii) ownership of fifty percent (50%) or more of the
+    outstanding shares, or (iii) beneficial ownership of such entity.
+
+    "You" (or "Your") shall mean an individual or Legal Entity
+    exercising permissions granted by this License.
+
+    "Source" form shall mean the preferred form for making modifications,
+    including but not limited to software source code, documentation
+    source, and configuration files.
+
+    "Object" form shall mean any form resulting from mechanical
+    transformation or translation of a Source form, including but
+    not limited to compiled object code, generated documentation,
+    and conversions to other media types.
+
+    "Work" shall mean the work of authorship, whether in Source or
+    Object form, made available under the License, as indicated by a
+    copyright notice that is included in or attached to the work
+    (an example is provided in the Appendix below).
+
+    "Derivative Works" shall mean any work, whether in Source or Object
+    form, that is based on (or derived from) the Work and for which the
+    editorial revisions, annotations, elaborations, or other modifications
+    represent, as a whole, an original work of authorship. For the purposes
+    of this License, Derivative Works shall not include works that remain
+    separable from, or merely link (or bind by name) to the interfaces of,
+    the Work and Derivative Works thereof.
+
+    "Contribution" shall mean any work of authorship, including
+    the original version of the Work and any modifications or additions
+    to that Work or Derivative Works thereof, that is intentionally
+    submitted to Licensor for inclusion in the Work by the copyright owner
+    or by an individual or Legal Entity authorized to submit on behalf of
+    the copyright owner. For the purposes of this definition, "submitted"
+    means any form of electronic, verbal, or written communication sent
+    to the Licensor or its representatives, including but not limited to
+    communication on electronic mailing lists, source code control systems,
+    and issue tracking systems that are managed by, or on behalf of, the
+    Licensor for the purpose of discussing and improving the Work, but
+    excluding communication that is conspicuously marked or otherwise
+    designated in writing by the copyright owner as "Not a Contribution."
+
+    "Contributor" shall mean Licensor and any individual or Legal Entity
+    on behalf of whom a Contribution has been received by Licensor and
+    subsequently incorporated within the Work.
+
+2.  Grant of Copyright License. Subject to the terms and conditions of
+    this License, each Contributor hereby grants to You a perpetual,
+    worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+    copyright license to reproduce, prepare Derivative Works of,
+    publicly display, publicly perform, sublicense, and distribute the
+    Work and such Derivative Works in Source or Object form.
+
+3.  Grant of Patent License. Subject to the terms and conditions of
+    this License, each Contributor hereby grants to You a perpetual,
+    worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+    (except as stated in this section) patent license to make, have made,
+    use, offer to sell, sell, import, and otherwise transfer the Work,
+    where such license applies only to those patent claims licensable
+    by such Contributor that are necessarily infringed by their
+    Contribution(s) alone or by combination of their Contribution(s)
+    with the Work to which such Contribution(s) was submitted. If You
+    institute patent litigation against any entity (including a
+    cross-claim or counterclaim in a lawsuit) alleging that the Work
+    or a Contribution incorporated within the Work constitutes direct
+    or contributory patent infringement, then any patent licenses
+    granted to You under this License for that Work shall terminate
+    as of the date such litigation is filed.
+
+4.  Redistribution. You may reproduce and distribute copies of the
+    Work or Derivative Works thereof in any medium, with or without
+    modifications, and in Source or Object form, provided that You
+    meet the following conditions:
+
+    (a) You must give any other recipients of the Work or
+    Derivative Works a copy of this License; and
+
+    (b) You must cause any modified files to carry prominent notices
+    stating that You changed the files; and
+
+    (c) You must retain, in the Source form of any Derivative Works
+    that You distribute, all copyright, patent, trademark, and
+    attribution notices from the Source form of the Work,
+    excluding those notices that do not pertain to any part of
+    the Derivative Works; and
+
+    (d) If the Work includes a "NOTICE" text file as part of its
+    distribution, then any Derivative Works that You distribute must
+    include a readable copy of the attribution notices contained
+    within such NOTICE file, excluding those notices that do not
+    pertain to any part of the Derivative Works, in at least one
+    of the following places: within a NOTICE text file distributed
+    as part of the Derivative Works; within the Source form or
+    documentation, if provided along with the Derivative Works; or,
+    within a display generated by the Derivative Works, if and
+    wherever such third-party notices normally appear. The contents
+    of the NOTICE file are for informational purposes only and
+    do not modify the License. You may add Your own attribution
+    notices within Derivative Works that You distribute, alongside
+    or as an addendum to the NOTICE text from the Work, provided
+    that such additional attribution notices cannot be construed
+    as modifying the License.
+
+    You may add Your own copyright statement to Your modifications and
+    may provide additional or different license terms and conditions
+    for use, reproduction, or distribution of Your modifications, or
+    for any such Derivative Works as a whole, provided Your use,
+    reproduction, and distribution of the Work otherwise complies with
+    the conditions stated in this License.
+
+5.  Submission of Contributions. Unless You explicitly state otherwise,
+    any Contribution intentionally submitted for inclusion in the Work
+    by You to the Licensor shall be under the terms and conditions of
+    this License, without any additional terms or conditions.
+    Notwithstanding the above, nothing herein shall supersede or modify
+    the terms of any separate license agreement you may have executed
+    with Licensor regarding such Contributions.
+
+6.  Trademarks. This License does not grant permission to use the trade
+    names, trademarks, service marks, or product names of the Licensor,
+    except as required for reasonable and customary use in describing the
+    origin of the Work and reproducing the content of the NOTICE file.
+
+7.  Disclaimer of Warranty. Unless required by applicable law or
+    agreed to in writing, Licensor provides the Work (and each
+    Contributor provides its Contributions) on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+    implied, including, without limitation, any warranties or conditions
+    of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+    PARTICULAR PURPOSE. You are solely responsible for determining the
+    appropriateness of using or redistributing the Work and assume any
+    risks associated with Your exercise of permissions under this License.
+
+8.  Limitation of Liability. In no event and under no legal theory,
+    whether in tort (including negligence), contract, or otherwise,
+    unless required by applicable law (such as deliberate and grossly
+    negligent acts) or agreed to in writing, shall any Contributor be
+    liable to You for damages, including any direct, indirect, special,
+    incidental, or consequential damages of any character arising as a
+    result of this License or out of the use or inability to use the
+    Work (including but not limited to damages for loss of goodwill,
+    work stoppage, computer failure or malfunction, or any and all
+    other commercial damages or losses), even if such Contributor
+    has been advised of the possibility of such damages.
+
+9.  Accepting Warranty or Additional Liability. While redistributing
+    the Work or Derivative Works thereof, You may choose to offer,
+    and charge a fee for, acceptance of support, warranty, indemnity,
+    or other liability obligations and/or rights consistent with this
+    License. However, in accepting such obligations, You may act only
+    on Your own behalf and on Your sole responsibility, not on behalf
+    of any other Contributor, and only if You agree to indemnify,
+    defend, and hold each Contributor harmless for any liability
+    incurred by, or claims asserted against, such Contributor by reason
+    of your accepting any such warranty or additional liability.
+
+END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @semantic-ui-react/event-stack@3.1.3
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2018 Alexander Fedyashov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - @types/hoist-non-react-statics@3.3.1
+
+This package contains the following license and notice below:
+
+MIT License
+
+    Copyright (c) Microsoft Corporation. All rights reserved.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - @types/node@20.4.10
+ - @types/prop-types@15.7.5
+ - @types/react@18.2.20
+ - @types/scheduler@0.16.3
+ - @types/uuid@9.0.2
+
+These packages each contain the following license and notice below:
+
+MIT License
+
+    Copyright (c) Microsoft Corporation.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE
+
+-----------
+
+The following npm package may be included in this product:
+
+ - ajv@8.12.0
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2015-2021 Evgeny Poberezkin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - clsx@1.2.1
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - compute-gcd@1.2.1
+ - compute-lcm@1.1.2
+ - validate.io-array@1.0.6
+
+These packages each contain the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2014-2015 Athan Reines.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - csstype@3.0.10
+
+This package contains the following license and notice below:
+
+Copyright (c) 2017-2018 Fredrik Nicol
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - csstype@3.1.2
+
+This package contains the following license and notice below:
+
+Copyright (c) 2017-2018 Fredrik Nicol
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - deepmerge@4.3.1
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2012 James Halliday, Josh Duff, and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - dnd-core@14.0.1
+ - react-dnd-html5-backend@14.1.0
+
+These packages each contain the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Dan Abramov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - dom-serializer@1.4.1
+
+This package contains the following license and notice below:
+
+License
+
+(The MIT License)
+
+Copyright (c) 2014 The cheeriojs contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - domelementtype@2.3.0
+ - domhandler@4.3.1
+ - domutils@2.8.0
+ - entities@2.2.0
+
+These packages each contain the following license and notice below:
+
+Copyright (c) Felix Böhm
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - escape-string-regexp@4.0.0
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - exenv@1.2.2
+
+This package contains the following license and notice below:
+
+BSD License
+
+For React software
+
+Copyright (c) 2013-2015, Facebook, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+ * Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+ * Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+ * Neither the name Facebook nor the names of its contributors may be used to
+   endorse or promote products derived from this software without specific
+   prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - fast-deep-equal@3.1.3
+ - json-schema-traverse@1.0.0
+
+These packages each contain the following license and notice below:
+
+MIT License
+
+Copyright (c) 2017 Evgeny Poberezkin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - free-style@3.1.0
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2014 Blake Embrey (hello@blakeembrey.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - hoist-non-react-statics@3.3.2
+
+This package contains the following license and notice below:
+
+Software License Agreement (BSD License)
+========================================
+
+Copyright (c) 2015, Yahoo! Inc. All rights reserved.
+----------------------------------------------------
+
+Redistribution and use of this software in source and binary forms, with or
+without modification, are permitted provided that the following conditions are
+met:
+
+  * Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+  * Neither the name of Yahoo! Inc. nor the names of YUI's contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission of Yahoo! Inc.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - htmlparser2@6.1.0
+
+This package contains the following license and notice below:
+
+Copyright 2010, 2011, Chris Winberry <chris@winberry.net>. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+ 
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+ 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - is-plain-object@5.0.0
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2014-2017, Jon Schlinkert.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - isomorphic.js@0.2.5
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2020 Kevin Jahns <kevin.jahns@protonmail.com>.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - jquery@3.7.0
+
+This package contains the following license and notice below:
+
+Copyright OpenJS Foundation and other contributors, https://openjsf.org/
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - js-tokens@4.0.0
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2014, 2015, 2016, 2017, 2018 Simon Lydell
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - json-schema-compare@0.2.2
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2017 Martin Hansen
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - json-schema-merge-allof@0.8.1
+
+This package contains the following license and notice below:
+
+# json-schema-merge-allof [![Build Status](https://travis-ci.org/mokkabonna/json-schema-merge-allof.svg?branch=master)](https://travis-ci.org/mokkabonna/json-schema-merge-allof) [![Coverage Status](https://coveralls.io/repos/github/mokkabonna/json-schema-merge-allof/badge.svg?branch=master)](https://coveralls.io/github/mokkabonna/json-schema-merge-allof?branch=master)
+
+> Merge schemas combined using allOf into a more readable composed schema free from allOf.
+
+```bash
+npm install json-schema-merge-allof --save
+```
+
+## Features
+
+- **Real** and **safe** merging of schemas combined with **allOf**
+- Takes away all allOf found in the whole schema
+- Lossless in terms of validation rules, merged schema does not validate more or less than the original schema
+- Results in a more readable root schema
+- Removes almost all logical impossibilities
+- Throws if no logical intersection is found (your schema would not validate anything from the start)
+- Validates in a way not possible by regular simple meta validators
+- Correctly considers additionalProperties, patternProperties and properties as a part of an whole when merging schemas containing those
+- Correctly considers items and additionalItems as a whole when merging schemas containing those
+- Supports merging schemas with items as array and direct schema
+- Supports merging dependencies when mixed array and schema
+- Supports all JSON schema core/validation keywords (v6, use custom resolvers to support other keywords)
+- Option to override common impossibility like adding properties when using **additionalProperties: false**
+- Pluggable keyword resolvers
+
+## How
+
+Since allOf require ALL schemas provided (including the parent schema) to apply, we can iterate over all the schemas, extracting all the values for say, **type**, and find the **intersection** of valid values. Here is an example:
+
+```js
+{
+  type: ['object', 'null'],
+  additionalProperties: {
+    type: 'string',
+    minLength: 5
+  },
+  allOf: [{
+    type: ['array', 'object'],
+    additionalProperties: {
+      type: 'string',
+      minLength: 10,
+      maxLength: 20
+    }
+  }]
+}
+```
+
+This result in the schema :
+```js
+{
+  type: 'object',
+  additionalProperties: {
+    type: 'string',
+    minLength: 10,
+    maxLength: 20
+  }
+}
+```
+
+Notice that type now excludes null and array since those are not logically possible. Also minLength is raised to 10. The other properties have no conflict and are merged into the root schema with no resolving needed.
+
+For other keywords other methods are used, here are some simple examples:
+
+- minLength, minimum, minItems etc chooses the **highest** value of the conflicting values.
+- maxLength, maximum, maxItems etc chooses the **lowest** value of the conflicting values.
+- uniqueItems is true if **any** of the conflicting values are true
+
+As you can see above the strategy is to choose the **most** restrictive of the set of values that conflict. For some keywords that is done by intersection, for others like **required** it is done by a union of all the values, since that is the most restrictive.
+
+What you are left with is a schema completely free of allOf. Except for in a couple of values that are impossible to properly intersect/combine:
+
+### not
+
+When multiple conflicting **not** values are found, we also use the approach that pattern use, but instead of allOf we use anyOf. When extraction of common rules from anyOf is in place this can be further simplified.
+
+## Options
+**ignoreAdditionalProperties** default **false**
+
+Allows you to combine schema properties even though some schemas have `additionalProperties: false` This is the most common issue people face when trying to expand schemas using allOf and a limitation of the json schema spec. Be aware though that the schema produced will allow more than the original schema. But this is useful if just want to combine schemas using allOf as if additionalProperties wasn't false during the merge process. The resulting schema will still get additionalProperties set to false.
+
+**deep** boolean, default *true*
+If false, resolves only the top-level `allOf` keyword in the schema.
+
+If true, resolves all `allOf` keywords in the schema.
+
+
+**resolvers** Object
+Override any default resolver like this:
+
+```js
+mergeAllOf(schema, {
+  resolvers: {
+    title: function(values, path, mergeSchemas, options) {
+      // choose what title you want to be used based on the conflicting values
+      // resolvers MUST return a value other than undefined
+    }
+  }
+})
+```
+
+The function is passed:
+
+- **values** an array of the conflicting values that need to be resolved
+- **path** an array of strings containing the path to the position in the schema that caused the resolver to be called (useful if you use the same resolver for multiple keywords, or want to implement specific logic for custom paths)
+- **mergeSchemas** a function you can call that merges an array of schemas
+- **options** the options mergeAllOf was called with
+
+
+### Combined resolvers
+Some keyword are dependant on other keywords, like properties, patternProperties, additionalProperties. To create a resolver for these the resolver requires this structure:
+
+```js
+mergeAllOf(schema, {
+  resolvers: {
+    properties:
+      keywords: ['properties', 'patternProperties', 'additionalProperties'],
+      resolver(values, parents, mergers, options) {
+
+      }
+    }
+  }
+})
+```
+
+This type of resolvers are expected to return an object containing the resolved values of all the associated keywords. The keys must be the name of the keywords. So the properties resolver need to return an object like this containing the resolved values for each keyword:
+
+```js
+{
+    properties: ...,
+    patternProperties: ...,
+    additionalProperties: ...,
+}
+```
+
+Also the resolve function is not passed **mergeSchemas**, but an object **mergers** that contains mergers for each of the related keywords. So properties get passed an object like this:
+
+```js
+const mergers = {
+    properties: function mergeSchemas(schemas, childSchemaName){...},
+    patternProperties: function mergeSchemas(schemas, childSchemaName){...},
+    additionalProperties: function mergeSchemas(schemas){...},
+}
+```
+
+Some of the mergers requires you to supply a string of the name or index of the subschema you are currently merging. This is to make sure the path passed to child resolvers are correct.
+
+### Default resolver
+You can set a default resolver that catches any unknown keyword. Let's say you want to use the same strategy as the ones for the meta keywords, to use the first value found. You can accomplish that like this:
+
+```js
+mergeJsonSchema({
+  ...
+}, {
+  resolvers: {
+    defaultResolver: mergeJsonSchema.options.resolvers.title
+  }
+})
+```
+
+
+## Resolvers
+
+Resolvers are called whenever multiple conflicting values are found on the same position in the schemas.
+
+You can override a resolver by supplying it in the options.
+
+### Lossy vs lossless
+
+All built in reducers for validation keywords are lossless, meaning that they don't remove or add anything in terms of validation.
+
+For meta keywords like title, description, $id, $schema, default the strategy is to use the first possible value if there are conflicting ones. So the root schema is prioritized. This process possibly removes some meta information from your schema. So it's lossy. Override this by providing custom resolvers.
+
+
+## $ref
+
+If one of your schemas contain a $ref property you should resolve them using a ref resolver like [json-schema-ref-parser](https://github.com/BigstickCarpet/json-schema-ref-parser) to dereference your schema for you first. Resolving $refs is not the task of this library.
+
+
+## Other libraries
+
+There exists some libraries that claim to merge schemas combined with allOf, but they just merge schemas using a **very** basic logic. Basically just the same as lodash merge. So you risk ending up with a schema that allows more or less than the original schema would allow.
+
+
+## Restrictions
+
+We cannot merge schemas that are a logical impossibility, like:
+
+```js
+{
+  type: 'object',
+  allOf: [{
+    type: 'array'
+  }]
+}
+```
+
+The library will then throw an error reporting the values that had no valid intersection. But then again, your original schema wouldn't validate anything either.
+
+
+## Roadmap
+
+- [x] Treat the interdependent validations like properties and additionalProperties as one resolver (and items additionalItems)
+- [ ] Extract repeating validators from anyOf/oneOf and merge them with parent schema
+- [ ] After extraction of validators from anyOf/oneOf, compare them and remove duplicates.
+- [ ] If left with only one in anyOf/oneOf then merge it to the parent schema.
+- [ ] Expose seperate tools for validation, extraction
+- [ ] Consider adding even more logical validation (like minLength <= maxLength)
+
+## Contributing
+
+Create tests for new functionality and follow the eslint rules.
+
+## License
+
+MIT © [Martin Hansen](http://martinhansen.com)
+
+-----------
+
+The following npm package may be included in this product:
+
+ - json5@2.2.3
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2012-2018 Aseem Kishore, and [others].
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+[others]: https://github.com/json5/json5/contributors
+
+-----------
+
+The following npm package may be included in this product:
+
+ - jsonpointer@5.0.1
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2011-2015 Jan Lehnardt <jan@apache.org> & Marc Bachmann <https://github.com/marcbachmann> 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - keyboard-key@1.1.0
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2018 Levi Thomason
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - lib0@0.2.80
+ - y-protocols@1.0.5
+
+These packages each contain the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Kevin Jahns <kevin.jahns@protonmail.com>.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - lodash-es@4.17.21
+ - lodash@4.17.21
+
+These packages each contain the following license and notice below:
+
+Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
+
+Based on Underscore.js, copyright Jeremy Ashkenas,
+DocumentCloud and Investigative Reporters & Editors <http://underscorejs.org/>
+
+This software consists of voluntary contributions made by many
+individuals. For exact contribution history, see the revision history
+available at https://github.com/lodash/lodash
+
+The following license applies to all parts of this software except as
+documented below:
+
+====
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+====
+
+Copyright and related rights for sample code are waived via CC0. Sample
+code is defined as all source code displayed within the prose of the
+documentation.
+
+CC0: http://creativecommons.org/publicdomain/zero/1.0/
+
+====
+
+Files located in the node_modules and vendor directories are externally
+maintained libraries used by this software which have their own
+licenses; we recommend you read them, as their terms may differ from the
+terms above.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - lodash.escape@4.0.1
+
+This package contains the following license and notice below:
+
+Copyright jQuery Foundation and other contributors <https://jquery.org/>
+
+Based on Underscore.js, copyright Jeremy Ashkenas,
+DocumentCloud and Investigative Reporters & Editors <http://underscorejs.org/>
+
+This software consists of voluntary contributions made by many
+individuals. For exact contribution history, see the revision history
+available at https://github.com/lodash/lodash
+
+The following license applies to all parts of this software except as
+documented below:
+
+====
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+====
+
+Copyright and related rights for sample code are waived via CC0. Sample
+code is defined as all source code displayed within the prose of the
+documentation.
+
+CC0: http://creativecommons.org/publicdomain/zero/1.0/
+
+====
+
+Files located in the node_modules and vendor directories are externally
+maintained libraries used by this software which have their own
+licenses; we recommend you read them, as their terms may differ from the
+terms above.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - loose-envify@1.4.0
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Andres Suarez <zertosh@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - markdown-to-jsx@7.3.2
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2015-present Evan Jacobs
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - memoize-one@5.2.1
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2019 Alexander Reardon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - minimist@1.2.8
+
+This package contains the following license and notice below:
+
+This software is released under the MIT license:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - nanoid@3.3.6
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright 2017 Andrey Sitnik <andrey@sitnik.ru>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - object-assign@4.1.1
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - parse-srcset@1.0.2
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2014 Alex Bell
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - path-browserify@1.0.1
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2013 James Halliday
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - picocolors@1.0.0
+
+This package contains the following license and notice below:
+
+ISC License
+
+Copyright (c) 2021 Alexey Raspopov, Kostiantyn Denysov, Anton Verinov
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - postcss@8.4.27
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright 2013 Andrey Sitnik <andrey@sitnik.ru>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - punycode@2.3.0
+
+This package contains the following license and notice below:
+
+Copyright Mathias Bynens <https://mathiasbynens.be/>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - querystringify@2.2.0
+ - requires-port@1.0.0
+ - url-parse@1.5.10
+
+These packages each contain the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Unshift.io, Arnout Kazemier,  the Contributors.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-arborist@3.2.0
+
+This package contains the following license and notice below:
+
+![Logo](https://user-images.githubusercontent.com/3460638/161630636-3512fe81-41c2-4ee5-8f7e-adaad07033b6.svg)
+
+<h1>React Arborist</h1>
+
+[See the Demos](https://react-arborist.netlify.app/)
+
+The tree view is ubiquitous in software applications. This library provides the React ecosystem with a complete solution to build the equivalent of a VSCode sidebar, Mac Finder, Windows Explorer, or Sketch/Figma layers panel.
+
+Here is a Gmail sidebar clone built with react-arborist.
+
+<img src="https://user-images.githubusercontent.com/3460638/197306119-59fe59e6-50ae-4bc2-8cb9-3faa2bc52cd2.gif" width="270px" alt="Gmail sidebar clone built with react-arborist" />
+
+## Features
+
+- Drag and drop sorting
+- Open/close folders
+- Inline renaming
+- Virtualized rendering
+- Custom styling
+- Keyboard navigation
+- Aria attributes
+- Tree filtering
+- Selection synchronization
+- Callbacks (onScroll, onActivate, onSelect)
+- Controlled or uncontrolled trees
+
+## Installation
+
+```
+yarn add react-arborist
+```
+
+```
+npm install react-arborist
+```
+
+## Examples
+
+Assume our data is this:
+
+```js
+const data = [
+  { id: "1", name: "Unread" },
+  { id: "2", name: "Threads" },
+  {
+    id: "3",
+    name: "Chat Rooms",
+    children: [
+      { id: "c1", name: "General" },
+      { id: "c2", name: "Random" },
+      { id: "c3", name: "Open Source Projects" },
+    ],
+  },
+  {
+    id: "4",
+    name: "Direct Messages",
+    children: [
+      { id: "d1", name: "Alice" },
+      { id: "d2", name: "Bob" },
+      { id: "d3", name: "Charlie" },
+    ],
+  },
+];
+```
+
+### The Simplest Tree
+
+Use all the defaults. The _initialData_ prop makes the tree an uncontrolled component. Create, move, rename, and delete will be handled internally.
+
+```jsx
+function App() {
+  return <Tree initialData={data} />;
+}
+```
+
+<img width="214" alt="image" src="https://user-images.githubusercontent.com/3460638/198098015-d7dc6400-6391-4094-9f66-0f56a99433e9.png">
+
+[Demo](https://codesandbox.io/s/the-simplest-tree-7tbedw)
+
+### Customize the Appearance
+
+We provide our own dimensions and our own `Node` component.
+
+```jsx
+function App() {
+  return (
+    <Tree
+      initialData={data}
+      openByDefault={false}
+      width={600}
+      height={1000}
+      indent={24}
+      rowHeight={36}
+      overscanCount={1}
+      paddingTop={30}
+      paddingBottom={10}
+      padding={25 /* sets both */}
+    >
+      {Node}
+    </Tree>
+  );
+}
+
+function Node({ node, style, dragHandle }) {
+  /* This node instance can do many things. See the API reference. */
+  return (
+    <div style={style} ref={dragHandle}>
+      {node.isLeaf ? "🍁" : "🗀"}
+      {node.data.name}
+    </div>
+  );
+}
+```
+
+<img width="166" alt="image" src="https://user-images.githubusercontent.com/3460638/198100281-594a492d-2ea0-4ff0-883d-1dd79dbb5acd.png">
+
+[Demo](https://codesandbox.io/s/customize-appearance-f4g15v?file=/src/App.tsx)
+
+### Control the Tree data
+
+Here we use the _data_ prop to make the tree a controlled component. We must handle all the data modifications ourselves using the props below.
+
+```jsx
+function App() {
+  /* Handle the data modifications outside the tree component */
+  const onCreate = ({ parentId, index, type }) => {};
+  const onRename = ({ id, name }) => {};
+  const onMove = ({ dragIds, parentId, index }) => {};
+  const onDelete = ({ ids }) => {};
+
+  return (
+    <Tree
+      data={data}
+      onCreate={onCreate}
+      onRename={onRename}
+      onMove={onMove}
+      onDelete={onDelete}
+    />
+  );
+}
+```
+
+### Tree Filtering
+
+Providing a non-empty _searchTerm_ will only show nodes that match. If a child matches, all its parents also match. Internal nodes are opened when filtering. You can provide your own _searchMatch_ function, or use the default.
+
+```jsx
+function App() {
+  const term = useSearchTermString()
+  <Tree
+    data={data}
+    searchTerm={term}
+    searchMatch={
+      (node, term) => node.data.name.toLowerCase().includes(term.toLowerCase())
+    }
+  />
+}
+```
+
+### Sync the Selection
+
+It's common to open something elsewhere in the app, but have the tree reflect the new selection.
+
+Passing an id to the _selection_ prop will select and scroll to that node whenever that id changes.
+
+```jsx
+function App() {
+  const chatId = useCurrentChatId();
+
+  /* 
+    Whenever the currentChatRoomId changes, 
+    the tree will automatically select it and scroll to it. 
+  */
+
+  return <Tree initialData={data} selection={chatId} />;
+}
+```
+
+### Use the Tree Api Instance
+
+You can access the Tree Api in the parent component by giving a ref to the tree.
+
+```jsx
+function App() {
+  const treeRef = useRef();
+
+  useEffect(() => {
+    const tree = treeRef.current;
+    tree.selectAll();
+    /* See the Tree API reference for all you can do with it. */
+  }, []);
+
+  return <Tree initialData={data} ref={treeRef} />;
+}
+```
+
+### Data with Different Property Names
+
+The _idAccessor_ and _childrenAccessor_ props allow you to specify the children and id fields in your data.
+
+```jsx
+function App() {
+  const data = [
+    {
+      category: "Food",
+      subCategories: [{ category: "Restaurants" }, { category: "Groceries" }],
+    },
+  ];
+  return (
+    <Tree
+      data={data}
+      /* An accessor can provide a string property name */
+      idAccessor="category"
+      /* or a function with the data as the argument */
+      childrenAccessor={(d) => d.subCategories}
+    />
+  );
+}
+```
+
+### Custom Rendering
+
+Render every single piece of the tree yourself. See the API reference for the props passed to each renderer.
+
+```jsx
+function App() {
+  return (
+    <Tree
+      data={data}
+      /* The outer most element in the list */
+      renderRow={MyRow}
+      /* The "ghost" element that follows the mouse as you drag */
+      renderDragPreview={MyDragPreview}
+      /* The line that shows where an element will be dropped */
+      renderCursor={MyCursor}
+    >
+      {/* The inner element that shows the indentation and data */}
+      {MyNode}
+    </Tree>
+  );
+}
+```
+
+## API Reference
+
+- Components
+  - [Tree Component Props](#tree-component-props)
+  - [Row Component Props](#row-component-props)
+  - [Node Component Props](#node-component-props)
+  - [DragPreview Component Props](#dragpreview-component-props)
+  - [Cursor Component Props](#cursor-component-props)
+- Interfaces
+  - [Node API](#node-api-reference)
+  - [Tree API](#tree-api-reference)
+
+## Tree Component Props
+
+These are all the props you can pass to the Tree component.
+
+```ts
+interface TreeProps<T> {
+  /* Data Options */
+  data?: readonly T[];
+  initialData?: readonly T[];
+
+  /* Data Handlers */
+  onCreate?: handlers.CreateHandler<T>;
+  onMove?: handlers.MoveHandler<T>;
+  onRename?: handlers.RenameHandler<T>;
+  onDelete?: handlers.DeleteHandler<T>;
+
+  /* Renderers*/
+  children?: ElementType<renderers.NodeRendererProps<T>>;
+  renderRow?: ElementType<renderers.RowRendererProps<T>>;
+  renderDragPreview?: ElementType<renderers.DragPreviewProps>;
+  renderCursor?: ElementType<renderers.CursorProps>;
+  renderContainer?: ElementType<{}>;
+
+  /* Sizes */
+  rowHeight?: number;
+  overscanCount?: number;
+  width?: number | string;
+  height?: number;
+  indent?: number;
+  paddingTop?: number;
+  paddingBottom?: number;
+  padding?: number;
+
+  /* Config */
+  childrenAccessor?: string | ((d: T) => T[] | null);
+  idAccessor?: string | ((d: T) => string);
+  openByDefault?: boolean;
+  selectionFollowsFocus?: boolean;
+  disableMultiSelection?: boolean;
+  disableEdit?: string | boolean | BoolFunc<T>;
+  disableDrag?: string | boolean | BoolFunc<T>;
+  disableDrop?:
+    | string
+    | boolean
+    | ((args: {
+        parentNode: NodeApi<T>;
+        dragNodes: NodeApi<T>[];
+        index: number;
+      }) => boolean);
+
+  /* Event Handlers */
+  onActivate?: (node: NodeApi<T>) => void;
+  onSelect?: (nodes: NodeApi<T>[]) => void;
+  onScroll?: (props: ListOnScrollProps) => void;
+  onToggle?: (id: string) => void;
+  onFocus?: (node: NodeApi<T>) => void;
+
+  /* Selection */
+  selection?: string;
+
+  /* Open State */
+  initialOpenState?: OpenMap;
+
+  /* Search */
+  searchTerm?: string;
+  searchMatch?: (node: NodeApi<T>, searchTerm: string) => boolean;
+
+  /* Extra */
+  className?: string | undefined;
+  rowClassName?: string | undefined;
+
+  dndRootElement?: globalThis.Node | null;
+  onClick?: MouseEventHandler;
+  onContextMenu?: MouseEventHandler;
+  dndManager?: DragDropManager;
+}
+```
+
+## Row Component Props
+
+The _\<RowRenderer\>_ is responsible for attaching the drop ref, the row style (top, height) and the aria-attributes. The default should work fine for most use cases, but it can be replaced by your own component if you need. See the _renderRow_ prop in the _\<Tree\>_ component.
+
+```ts
+type RowRendererProps<T> = {
+  node: NodeApi<T>;
+  innerRef: (el: HTMLDivElement | null) => void;
+  attrs: HTMLAttributes<any>;
+  children: ReactElement;
+};
+```
+
+## Node Component Props
+
+The _\<NodeRenderer\>_ is responsible for attaching the drag ref, the node style (padding for indentation), the visual look of the node, the edit input of the node, and anything else you can dream up.
+
+There is a default renderer, but it's only there as a placeholder to get started. You'll want to create your own component for this. It is passed as the _\<Tree\>_ components only child.
+
+```ts
+export type NodeRendererProps<T> = {
+  style: CSSProperties;
+  node: NodeApi<T>;
+  tree: TreeApi<T>;
+  dragHandle?: (el: HTMLDivElement | null) => void;
+  preview?: boolean;
+};
+```
+
+## DragPreview Component Props
+
+The _\<DragPreview\>_ is responsible for showing a "ghost" version of the node being dragged. The default is a semi-transparent version of the NodeRenderer and should work fine for most people. To customize it, pass your new component to the _renderDragPreview_ prop.
+
+```ts
+type DragPreviewProps = {
+  offset: XYCoord | null;
+  mouse: XYCoord | null;
+  id: string | null;
+  dragIds: string[];
+  isDragging: boolean;
+};
+```
+
+## Cursor Component Props
+
+The _\<Cursor\>_ is responsible for showing a line that indicates where the node will move to when it's dropped. The default is a blue line with circle on the left side. You may want to customize this. Pass your own component to the _renderCursor_ prop.
+
+```ts
+export type CursorProps = {
+  top: number;
+  left: number;
+  indent: number;
+};
+```
+
+## Node API Reference
+
+### State Properties
+
+All these properties on the node instance return booleans related to the state of the node.
+
+_node_.**isRoot**
+
+Returns true if this is the root node. The root node is added internally by react-arborist and not shown in the UI.
+
+_node_.**isLeaf**
+
+Returns true if the children property is not an array.
+
+_node_.**isInternal**
+
+Returns true if the children property is an array.
+
+_node_.**isOpen**
+
+Returns true if node is internal and in an open state.
+
+_node_.**isEditing**
+
+Returns true if this node is currently being edited. Use this property in the NodeRenderer to render the rename form.
+
+_node_.**isSelected**
+
+Returns true if node is selected.
+
+_node_.**isSelectedStart**
+
+Returns true if node is the first of a contiguous group of selected nodes. Useful for styling.
+
+_node_.**isSelectedEnd**
+
+Returns true if node is the last of a contiguous group of selected nodes. Useful for styling.
+
+_node_.**isOnlySelection**
+
+Returns true if node is the only node selected in the tree.
+
+_node_.**isFocused**
+
+Returns true if node is focused.
+
+_node_.**isDragging**
+
+Returns true if node is being dragged.
+
+_node_.**willReceiveDrop**
+
+Returns true if node is internal and the user is hovering a dragged node over it.
+
+_node_.**state**
+
+Returns an object with all the above properties as keys and boolean values. Useful for adding class names to an element with a library like [clsx](https://github.com/lukeed/clsx) or [classnames](https://github.com/JedWatson/classnames).
+
+```ts
+type NodeState = {
+  isEditing: boolean;
+  isDragging: boolean;
+  isSelected: boolean;
+  isSelectedStart: boolean;
+  isSelectedEnd: boolean;
+  isFocused: boolean;
+  isOpen: boolean;
+  isClosed: boolean;
+  isLeaf: boolean;
+  isInternal: boolean;
+  willReceiveDrop: boolean;
+};
+```
+
+### Accessors
+
+_node_.**childIndex**
+
+Returns the node's index in relation to its siblings.
+
+_node_.**next**
+
+Returns the next visible node. The node directly under this node in the tree component. Returns null if none exist.
+
+_node_.**prev**
+
+Returns the previous visible node. The node directly above this node in the tree component. Returns null if none exist.
+
+_node_.**nextSibling**
+
+Returns the next sibling in the data of this node. Returns null if none exist.
+
+### Selection Methods
+
+_node_.**select**()
+
+Select only this node.
+
+_node_.**deselect**()
+
+Deselect this node. Other nodes may still be selected.
+
+_node_.**selectMulti**()
+
+Select this node while maintaining all other selections.
+
+_node_.**selectContiguous**()
+
+Deselect all nodes from the anchor node to the last selected node, the select all nodes from the anchor node to this node. The anchor changes to the focused node after calling _select()_ or _selectMulti()_.
+
+### Activation Methods
+
+_node_.**activate**()
+
+Runs the Tree props' onActivate callback passing in this node.
+
+_node_.**focus**()
+
+Focus this node.
+
+### Open/Close Methods
+
+_node_.**open**()
+
+Opens the node if it is an internal node.
+
+_node_.**close**()
+
+Closes the node if it is an internal node.
+
+_node_.**toggle**()
+
+Toggles the open/closed state of the node if it is an internal node.
+
+_node_.**openParents**()
+
+Opens all the parents of this node.
+
+_node_.**edit**()
+
+Moves this node into the editing state. Calling node._isEditing_ will return true.
+
+_node_.**submit**(_newName_)
+
+Submits _newName_ string to the _onRename_ handler. Moves this node out of the editing state.
+
+_node_.**reset**()
+
+Moves this node out of the editing state without submitting a new name.
+
+### Event Handlers
+
+_node_.**handleClick**(_event_)
+
+Useful for using the standard selection methods when a node is clicked. If the meta key is down, call _multiSelect()_. If the shift key is down, call _selectContiguous()_. Otherwise, call _select()_ and _activate()_.
+
+## Tree API Reference
+
+The tree api reference is stable across re-renders. It always has the most recent state and props.
+
+### Node Accessors
+
+_tree_.**get**(_id_) : _NodeApi | null_
+
+Get node by id from the _visibleNodes_ array.
+
+_tree_.**at**(_index_) : _NodeApi | null_
+
+Get node by index from the _visibleNodes_ array.
+
+_tree_.**visibleNodes** : _NodeApi[]_
+
+Returns an array of the visible nodes.
+
+_tree_.**firstNode** : _NodeApi | null_
+
+The first node in the _visibleNodes_ array.
+
+_tree_.**lastNode** : _NodeApi | null_
+
+The last node in the _visibleNodes_ array.
+
+_tree_.**focusedNode** : _NodeApi | null_
+
+The currently focused node.
+
+_tree_.**mostRecentNode** : _NodeApi | null_
+
+The most recently selected node.
+
+_tree_.**nextNode** : _NodeApi | null_
+
+The node directly after the _focusedNode_ in the _visibleNodes_ array.
+
+_tree_.**prevNode** : _NodeApi | null_
+
+The node directly before the _focusedNode_ in the _visibleNodes_ array.
+
+### Focus Methods
+
+_tree_.**hasFocus** : _boolean_
+
+Returns true if the the tree has focus somewhere within it.
+
+_tree_.**focus**(_id_)
+
+Focus on the node with _id_.
+
+_tree_.**isFocused**(_id_) : _boolean_
+
+Check if the node with _id_ is focused.
+
+_tree_.**pageUp**()
+
+Move focus up one page.
+
+_tree_.**pageDown**()
+
+Move focus down one page.
+
+### Selection Methods
+
+_tree_.**selectedIds** : _Set\<string\>_
+
+Returns a set of ids that are selected.
+
+_tree_.**selectedNodes** : _NodeApi[]_
+
+Returns an array of nodes that are selected.
+
+_tree_.**hasNoSelection** : boolean
+
+Returns true if nothing is selected in the tree.
+
+_tree_.**hasSingleSelection** : boolean
+
+Returns true if there is only one selection.
+
+_tree_.**hasMultipleSelections** : boolean
+
+Returns true if there is more than one selection.
+
+_tree_.**isSelected**(_id_) : _boolean_
+
+Returns true if the node with _id_ is selected.
+
+_tree_.**select**(_id_)
+
+Select only the node with _id_.
+
+_tree_.**deselect**(_id_)
+
+Deselect the node with _id_.
+
+_tree_.**selectMulti**(_id_)
+
+Add to the selection the node with _id_.
+
+_tree_.**selectContiguous**(_id_)
+
+Deselected nodes between the anchor and the last selected node, then select the nodes between the anchor and the node with _id_.
+
+_tree_.**deselectAll**()
+
+Deselect all nodes.
+
+_tree_.**selectAll**()
+
+Select all nodes.
+
+### Visibility
+
+_tree_.**open**(_id_)
+
+Open the node with _id_.
+
+_tree_.**close**(_id_)
+
+Close the node with _id_.
+
+_tree_.**toggle**(_id_)
+
+Toggle the open state of the node with _id_.
+
+_tree_.**openParents**(_id_)
+
+Open all parents of the node with _id_.
+
+_tree_.**openSiblings**(_id_)
+
+Open all siblings of the node with _id_.
+
+_tree_.**openAll**()
+
+Open all internal nodes.
+
+_tree_.**closeAll**()
+
+Close all internal nodes.
+
+_tree_.**isOpen**(_id_) : _boolean_
+
+Returns true if the node with _id_ is open.
+
+### Drag and Drop
+
+_tree_.**isDragging**(_id_) : _boolean_
+
+Returns true if the node with _id_ is being dragged.
+
+_tree_.**willReceiveDrop**(_id_) : _boolean_
+
+Returns true if the node with _id_ is internal and is under the dragged node.
+
+### Scrolling
+
+_tree_.**scrollTo**(_id_, _[align]_)
+
+Scroll to the node with _id_. If this node is not visible, this method will open all its parents. The align argument can be _"auto" | "smart" | "center" | "end" | "start"_.
+
+### Properties
+
+_tree_.**isEditing** : _boolean_
+
+Returns true if the tree is editing a node.
+
+_tree_.**isFiltered** : _boolean_
+
+Returns true if the _searchTerm_ prop is not an empty string when trimmed.
+
+_tree_.**props** : _TreeProps_
+
+Returns all the props that were passed to the _\<Tree\>_ component.
+
+_tree_.**root** : _NodeApi_
+
+Returns the root _NodeApi_ instance. Its children are the Node representations of the _data_ prop array.
+
+## Author
+
+[James Kerr](https://twitter.com/specialCaseDev) at [Brim Data](https://brimdata.io) for the [Zui desktop app](https://www.youtube.com/watch?v=I2y663n8d2A).
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-dnd@14.0.5
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Dan Abramov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - react-dom@18.2.0
+ - react-is@16.13.1
+ - react-is@18.2.0
+ - react@18.2.0
+ - scheduler@0.23.0
+ - use-sync-external-store@1.2.0
+
+These packages each contain the following license and notice below:
+
+MIT License
+
+Copyright (c) Facebook, Inc. and its affiliates.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-fast-compare@3.2.2
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2018 Formidable Labs
+Copyright (c) 2017 Evgeny Poberezkin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-popper@2.3.0
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2018 React Popper authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-spinners@0.13.8
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2017 David Hu
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-table@7.8.0
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2016 Tanner Linsley
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-tagsinput@3.20.3
+
+This package contains the following license and notice below:
+
+The MIT License
+
+Copyright (c) 2015 Ola Holmström <olaholmstrom+github@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-toastify@9.1.3
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2023 Fadi Khadra
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - react-window@1.8.9
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2018 Brian Vaughn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - redux@4.2.1
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2015-present Dan Abramov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - regenerator-runtime@0.14.0
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2014-present, Facebook, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - require-from-string@2.0.2
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) Vsevolod Strukchinsky <floatdrop@gmail.com> (github.com/floatdrop)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - sanitize-html@2.7.3
+
+This package contains the following license and notice below:
+
+Copyright (c) 2013, 2014, 2015 P'unk Avenue LLC
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - semantic-ui-css@2.5.0
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Semantic Org
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - semantic-ui-react@2.1.4
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2016 TechnologyAdvice
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - source-map-js@1.0.2
+
+This package contains the following license and notice below:
+
+Copyright (c) 2009-2011, Mozilla Foundation and contributors
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the names of the Mozilla Foundation nor the names of project
+  contributors may be used to endorse or promote products derived from this
+  software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - typestyle@2.4.0
+
+This package contains the following license and notice below:
+
+MIT License
+
+Copyright (c) 2016 typestyle
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - uri-js@4.4.1
+
+This package contains the following license and notice below:
+
+Copyright 2011 Gary Court. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1.	Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2.	Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY GARY COURT "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL GARY COURT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of Gary Court.
+
+-----------
+
+The following npm packages may be included in this product:
+
+ - validate.io-function@1.0.2
+ - validate.io-integer@1.0.5
+ - validate.io-number@1.0.3
+
+These packages each contain the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2014 Athan Reines.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - validate.io-integer-array@1.0.0
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Athan Reines.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - ws@8.13.0
+
+This package contains the following license and notice below:
+
+Copyright (c) 2011 Einar Otto Stangvik <einaros@gmail.com>
+Copyright (c) 2013 Arnout Kazemier and contributors
+Copyright (c) 2016 Luigi Pinca and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-----------
+
+The following npm package may be included in this product:
+
+ - yjs@13.6.7
+
+This package contains the following license and notice below:
+
+The MIT License (MIT)
+
+Copyright (c) 2014
+  - Kevin Jahns <kevin.jahns@rwth-aachen.de>.
+  - Chair of Computer Science 5 (Databases & Information Systems), RWTH Aachen University, Germany
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-----------
+
+This file was generated with the generate-license-file npm package!
+https://www.npmjs.com/package/generate-license-file
