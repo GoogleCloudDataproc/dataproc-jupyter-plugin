@@ -1,6 +1,5 @@
 # dataproc_plugin
 
-[![Github Actions Status](https://github.com/github_username/dataproc_plugin/workflows/Build/badge.svg)](https://github.com/github_username/dataproc_plugin/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/github_username/dataproc_plugin/main?urlpath=lab)
 It is a plugin to work with dataproc services in Jupyterlab
 
 This extension is composed of a Python package named `dataproc_plugin`
