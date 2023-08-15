@@ -136,7 +136,7 @@ function LabelProperties({
           }
           /*
           value is split from labels 
-          Example:"client:dataproc_plugin"
+          Example:"client:dataproc_jupyter_plugin"
           */
           if (data.split(':')[1] === '') {
             data = data + value;

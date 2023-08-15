@@ -1,4 +1,4 @@
-# Making a new release of dataproc_plugin
+# Making a new release of dataproc_jupyter_plugin
 
 The extension can be published to `PyPI` and `npm` manually or using the [Jupyter Releaser](https://github.com/jupyter-server/jupyter_releaser).
 

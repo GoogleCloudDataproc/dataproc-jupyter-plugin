@@ -1,7 +1,7 @@
 {
   "jupyter.lab.shortcuts": [],
-  "title": "dataproc_plugin",
-  "description": "dataproc_plugin settings.",
+  "title": "dataproc_jupyter_plugin",
+  "description": "dataproc_jupyter_plugin settings.",
   "type": "object",
   "properties": {},
   "additionalProperties": false

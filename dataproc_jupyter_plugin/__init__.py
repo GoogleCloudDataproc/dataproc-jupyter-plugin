@@ -27,13 +27,13 @@ from .handlers import setup_handlers, update_gateway_client_url
 def _jupyter_labextension_paths():
     return [{
         "src": "labextension",
-        "dest": "dataproc_plugin"
+        "dest": "dataproc_jupyter_plugin"
     }]
 
 
 def _jupyter_server_extension_points():
     return [{
-        "module": "dataproc_plugin"
+        "module": "dataproc_jupyter_plugin"
     }]
 
 
@@ -64,7 +64,7 @@ def _load_jupyter_server_extension(server_app):
         JupyterLab application instance
     """
     setup_handlers(server_app.web_app)
-    name = "dataproc_plugin"
+    name = "dataproc_jupyter_plugin"
     server_app.log.info(f"Registered {name} server extension")
 
 
