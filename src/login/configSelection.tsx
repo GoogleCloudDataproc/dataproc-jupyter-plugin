@@ -32,6 +32,7 @@ import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { ToastContainer, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 
 function ConfigSelection({ loginState, configError, setConfigError }: any) {
   const Iconsettings = new LabIcon({
@@ -231,6 +232,19 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
     }
   };
 
+  /**
+   * onClick handler for when user's click on the "license" link in
+   * the user info box.
+   */
+  const handleLicenseClick = async () => {
+    const licenseWindow = window.open('about:blank');
+    if (licenseWindow) {
+      const preEle = licenseWindow.document.createElement('pre');
+      preEle.textContent = THIRD_PARTY_LICENSES;
+      licenseWindow.document.body.appendChild(preEle);
+    }
+  };
+
   const fetchProjectRegion = async () => {
     const credentials = await authApi();
     if (credentials && credentials.project_id && credentials.region_id) {
@@ -372,11 +386,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                     Terms of Service
                   </a>
                   <span className="footer-divider"> • </span>
-                  <a
-                    href="https://raw.githubusercontent.com/GoogleCloudDataproc/dataproc-jupyter-plugin/main/third-party-licenses.txt"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a onClick={handleLicenseClick} href="#">
                     Licenses
                   </a>
                 </div>

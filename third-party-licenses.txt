@@ -135,7 +135,7 @@ The API documentation is available [there](https://jupyter-ydoc.readthedocs.io/e
 
 The following npm package may be included in this product:
 
- - @jupyterlab/application@4.0.4
+ - @jupyterlab/application@4.0.5
 
 This package contains the following license and notice below:
 
@@ -148,7 +148,7 @@ with which JupyterLab plugins may be registered.
 
 The following npm package may be included in this product:
 
- - @jupyterlab/apputils@4.1.4
+ - @jupyterlab/apputils@4.1.5
 
 This package contains the following license and notice below:
 
@@ -160,7 +160,7 @@ A JupyterLab package which provides a collection of utilities and UI elements fo
 
 The following npm package may be included in this product:
 
- - @jupyterlab/codeeditor@4.0.4
+ - @jupyterlab/codeeditor@4.0.5
 
 This package contains the following license and notice below:
 
@@ -174,7 +174,7 @@ and the [file editor](../fileeditor).
 
 The following npm package may be included in this product:
 
- - @jupyterlab/coreutils@6.0.4
+ - @jupyterlab/coreutils@6.0.5
 
 This package contains the following license and notice below:
 
@@ -190,7 +190,7 @@ This package is intended for use within both Node.js and browser environments.
 
 The following npm package may be included in this product:
 
- - @jupyterlab/docregistry@4.0.4
+ - @jupyterlab/docregistry@4.0.5
 
 This package contains the following license and notice below:
 
@@ -208,7 +208,7 @@ The document registry is a singleton on the [application](../application).
 
 The following npm package may be included in this product:
 
- - @jupyterlab/launcher@4.0.4
+ - @jupyterlab/launcher@4.0.5
 
 This package contains the following license and notice below:
 
@@ -223,7 +223,7 @@ JupyterLab extensions may register themselves with the launcher in order to show
 
 The following npm package may be included in this product:
 
- - @jupyterlab/mainmenu@4.0.4
+ - @jupyterlab/mainmenu@4.0.5
 
 This package contains the following license and notice below:
 
@@ -235,10 +235,10 @@ A JupyterLab extension which provides the application menubar.
 
 The following npm packages may be included in this product:
 
- - @jupyterlab/nbformat@4.0.4
- - @jupyterlab/settingregistry@4.0.4
- - @jupyterlab/statedb@4.0.4
- - @jupyterlab/statusbar@4.0.4
+ - @jupyterlab/nbformat@4.0.5
+ - @jupyterlab/settingregistry@4.0.5
+ - @jupyterlab/statedb@4.0.5
+ - @jupyterlab/statusbar@4.0.5
  - @lumino/algorithm@2.0.1
  - @lumino/application@2.2.1
  - @lumino/collections@2.0.1
@@ -262,7 +262,7 @@ These packages each contain the following license and notice below:
 
 The following npm package may be included in this product:
 
- - @jupyterlab/observables@5.0.4
+ - @jupyterlab/observables@5.0.5
 
 This package contains the following license and notice below:
 
@@ -274,7 +274,7 @@ A JupyterLab package which provides data structures (such as strings, lists, and
 
 The following npm package may be included in this product:
 
- - @jupyterlab/rendermime-interfaces@3.8.4
+ - @jupyterlab/rendermime-interfaces@3.8.5
 
 This package contains the following license and notice below:
 
@@ -297,7 +297,7 @@ Examples can be found in [@jupyterlab/vega5-extension](../vega5-extension) and [
 
 The following npm package may be included in this product:
 
- - @jupyterlab/rendermime@4.0.4
+ - @jupyterlab/rendermime@4.0.5
 
 This package contains the following license and notice below:
 
@@ -316,7 +316,7 @@ The rendermime is a singleton on the [application](../application).
 
 The following npm package may be included in this product:
 
- - @jupyterlab/services@7.0.4
+ - @jupyterlab/services@7.0.5
 
 This package contains the following license and notice below:
 
@@ -554,7 +554,7 @@ _The diagram can be edited on [diagrams.net](https://diagrams.net) by importing 
 
 The following npm package may be included in this product:
 
- - @jupyterlab/translation@4.0.4
+ - @jupyterlab/translation@4.0.5
 
 This package contains the following license and notice below:
 
@@ -566,7 +566,7 @@ Translation utilities.
 
 The following npm package may be included in this product:
 
- - @jupyterlab/ui-components@4.0.4
+ - @jupyterlab/ui-components@4.0.5
 
 This package contains the following license and notice below:
 
@@ -1430,7 +1430,7 @@ MIT License
 
 The following npm packages may be included in this product:
 
- - @types/node@20.4.10
+ - @types/node@20.5.0
  - @types/prop-types@15.7.5
  - @types/react@18.2.20
  - @types/scheduler@0.16.3
@@ -2353,7 +2353,7 @@ SOFTWARE.
 
 The following npm packages may be included in this product:
 
- - lib0@0.2.80
+ - lib0@0.2.81
  - y-protocols@1.0.5
 
 These packages each contain the following license and notice below:
