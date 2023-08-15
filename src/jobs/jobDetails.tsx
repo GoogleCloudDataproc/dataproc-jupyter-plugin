@@ -243,7 +243,7 @@ function JobDetails({
     labelDetailUpdated.forEach((label: string) => {
       /*
          Extracting key, value from label
-         Example: "{client:dataproc_plugin}"
+         Example: "{client:dataproc_jupyter_plugin}"
       */
       const labelParts = label.split(':');
 
@@ -635,7 +635,7 @@ function JobDetails({
                         ? labelDetail.map(label => {
                             /*
                             Extracting key, value from label
-                               Example: "{client:dataproc_plugin}"
+                               Example: "{client:dataproc_jupyter_plugin}"
                          */
                             const labelParts = label.split(':');
 

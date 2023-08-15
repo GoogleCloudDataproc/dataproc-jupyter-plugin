@@ -5571,18 +5571,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dataproc_plugin-ui-tests@workspace:ui-tests":
+"dataproc_jupyter_plugin-ui-tests@workspace:ui-tests":
   version: 0.0.0-use.local
-  resolution: "dataproc_plugin-ui-tests@workspace:ui-tests"
+  resolution: "dataproc_jupyter_plugin-ui-tests@workspace:ui-tests"
   dependencies:
     "@jupyterlab/galata": ^5.0.0
     "@playwright/test": ^1.32.0
   languageName: unknown
   linkType: soft
 
-"dataproc_plugin@workspace:.":
+"dataproc_jupyter_plugin@workspace:.":
   version: 0.0.0-use.local
-  resolution: "dataproc_plugin@workspace:."
+  resolution: "dataproc_jupyter_plugin@workspace:."
   dependencies:
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/builder": ^4.0.0

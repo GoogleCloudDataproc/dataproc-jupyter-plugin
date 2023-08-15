@@ -3,7 +3,7 @@ requires = ["hatchling>=1.5.0", "jupyterlab>=4.0.0,<5", "hatch-nodejs-version"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dataproc_plugin"
+name = "dataproc_jupyter_plugin"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -47,26 +47,26 @@ fields = ["description", "authors", "urls"]
 allow-direct-references = true
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["dataproc_plugin/labextension"]
+artifacts = ["dataproc_jupyter_plugin/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"dataproc_plugin/labextension" = "share/jupyter/labextensions/dataproc_plugin"
-"install.json" = "share/jupyter/labextensions/dataproc_plugin/install.json"
+"dataproc_jupyter_plugin/labextension" = "share/jupyter/labextensions/dataproc_jupyter_plugin"
+"install.json" = "share/jupyter/labextensions/dataproc_jupyter_plugin/install.json"
 "jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
 "jupyter-config/nb-config" = "etc/jupyter/jupyter_notebook_config.d"
 
 [tool.hatch.build.hooks.version]
-path = "dataproc_plugin/_version.py"
+path = "dataproc_jupyter_plugin/_version.py"
 
 [tool.hatch.build.hooks.jupyter-builder]
 dependencies = ["hatch-jupyter-builder>=0.5"]
 build-function = "hatch_jupyter_builder.npm_builder"
 ensured-targets = [
-    "dataproc_plugin/labextension/static/style.js",
-    "dataproc_plugin/labextension/package.json",
+    "dataproc_jupyter_plugin/labextension/static/style.js",
+    "dataproc_jupyter_plugin/labextension/package.json",
 ]
-skip-if-exists = ["dataproc_plugin/labextension/static/style.js"]
+skip-if-exists = ["dataproc_jupyter_plugin/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
@@ -76,7 +76,7 @@ npm = ["jlpm"]
 build_cmd = "install:extension"
 npm = ["jlpm"]
 source_dir = "src"
-build_dir = "dataproc_plugin/labextension"
+build_dir = "dataproc_jupyter_plugin/labextension"
 
 [tool.jupyter-releaser.options]
 version_cmd = "hatch version"

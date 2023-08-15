@@ -33,6 +33,6 @@ test('should emit an activation console message', async ({ page }) => {
   await page.goto();
 
   expect(
-    logs.filter(s => s === 'JupyterLab extension dataproc_plugin is activated!')
+    logs.filter(s => s === 'JupyterLab extension dataproc_jupyter_plugin is activated!')
   ).toHaveLength(1);
 });

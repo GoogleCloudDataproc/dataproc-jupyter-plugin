@@ -361,7 +361,7 @@ function SessionDetails({
                       ? labelDetail.map(label => {
                           /*
                             Extracting key, value from label
-                               Example: "{client:dataproc_plugin}"
+                               Example: "{client:dataproc_jupyter_plugin}"
                          */
                           const labelParts = label.split(':');
 

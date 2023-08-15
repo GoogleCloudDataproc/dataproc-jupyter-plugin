@@ -1,9 +1,9 @@
-# dataproc_plugin
+# dataproc_jupyter_plugin
 
 It is a plugin to work with dataproc services in Jupyterlab
 
-This extension is composed of a Python package named `dataproc_plugin`
-for the server extension and a NPM package named `dataproc_plugin`
+This extension is composed of a Python package named `dataproc_jupyter_plugin`
+for the server extension and a NPM package named `dataproc_jupyter_plugin`
 for the frontend extension.
 
 ## Requirements
@@ -15,7 +15,7 @@ for the frontend extension.
 To install the extension, execute:
 
 ```bash
-pip install dataproc_plugin
+pip install dataproc_jupyter_plugin
 ```
 
 ## Uninstall
@@ -23,7 +23,7 @@ pip install dataproc_plugin
 To remove the extension, execute:
 
 ```bash
-pip uninstall dataproc_plugin
+pip uninstall dataproc_jupyter_plugin
 ```
 
 ## Troubleshoot
@@ -54,13 +54,13 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Change directory to the dataproc_plugin directory
+# Change directory to the dataproc_jupyter_plugin directory
 # Install package in development mode
 pip install -e ".[test]"
 # Link your development version of the extension with JupyterLab
 jupyter labextension develop . --overwrite
 # Server extension must be manually installed in develop mode
-jupyter server extension enable dataproc_plugin
+jupyter server extension enable dataproc_jupyter_plugin
 # Rebuild extension Typescript source after making changes
 jlpm build
 ```
@@ -86,13 +86,13 @@ jupyter lab build --minimize=False
 
 ```bash
 # Server extension must be manually disabled in develop mode
-jupyter server extension disable dataproc_plugin
-pip uninstall dataproc_plugin
+jupyter server extension disable dataproc_jupyter_plugin
+pip uninstall dataproc_jupyter_plugin
 ```
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `dataproc_plugin` within that folder.
+folder is located. Then you can remove the symlink named `dataproc_jupyter_plugin` within that folder.
 
 ### Testing the extension
 
@@ -111,7 +111,7 @@ jupyter labextension develop . --overwrite
 To execute them, run:
 
 ```sh
-pytest -vv -r ap --cov dataproc_plugin
+pytest -vv -r ap --cov dataproc_jupyter_plugin
 ```
 
 #### Frontend tests
