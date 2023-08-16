@@ -1333,6 +1333,7 @@ function CreateBatch({
                   <Radio
                     className="select-batch-radio-style"
                     value="googleManaged"
+                    disabled
                     checked={selectedEncryptionRadio === 'customerManaged'}
                     onChange={() =>
                       setSelectedEncryptionRadio('customerManaged')
