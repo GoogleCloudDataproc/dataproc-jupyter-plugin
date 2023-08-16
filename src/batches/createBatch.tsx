@@ -659,7 +659,7 @@ function CreateBatch({
         ...(serviceAccountSelected !== '' && {
           serviceAccount: serviceAccountSelected
         }),
-        subnetworkUri: networkSelected,
+        subnetworkUri: subNetworkSelected,
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
         })
@@ -809,7 +809,6 @@ function CreateBatch({
   };
   const handleNetworkChange = (event: any, data: any) => {
     setNetworkSelected(data.value);
-    //setSubNetworkSelected(data.value);
     listSubNetworksAPI(data.value);
   };
   const handleSubNetworkChange = (event: any, data: any) => {
