@@ -46,6 +46,7 @@ import { authApi } from '../utils/utils';
 import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
 import { ToastContainer, toast } from 'react-toastify';
+import { auto } from '@popperjs/core';
 
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
@@ -192,8 +193,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   };
   const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
   columnResponse.forEach((res: any) => {
-    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
-    fetching database name from fully qualified name structure */
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
     const columns = res.schema.columns.map(
@@ -236,6 +235,14 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       }))
     }))
   }));
+  data.sort((a, b) => a.name.localeCompare(b.name));
+
+  data.forEach(db => {
+    db.children.sort((a, b) => a.name.localeCompare(b.name));
+    db.children.forEach(table => {
+      table.children.sort((a, b) => a.name.localeCompare(b.name));
+    });
+  });
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -302,11 +309,18 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
 
     const handleToggle = () => {
       setExpanded(!expanded);
+      console.log(expanded);
       node.toggle();
     };
     const handleIconClick = (event: React.MouseEvent) => {
       if (event.currentTarget.classList.contains('caret-icon')) {
-        handleToggle();
+        if (searchTerm && !expanded) {
+          console.log(expanded);
+          setExpanded(true);
+          node.toggle();
+        } else {
+          handleToggle();
+        }
       }
     };
     const handleTextClick = (event: React.MouseEvent) => {
@@ -339,7 +353,54 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           </div>
         )
       ) : null;
+      // if (searchTerm && !searchMatch(node, searchTerm)) {
+      if (searchTerm) {
+        const arrowIcon =
+          hasChildren && !expanded ? (
+            <>
+              <div
+                role="treeitem"
+                className="caret-icon right"
+                onClick={handleIconClick}
+              >
+                <iconDownArrow.react tag="div" />
+              </div>
+            </>
+          ) : (
+            <div
+              role="treeitem"
+              className="caret-icon down"
+              onClick={handleIconClick}
+            >
+              <iconRightArrow.react tag="div" />
+            </div>
+          );
+        if (depth === 1) {
+          return (
+            <>
+              {arrowIcon}
+              <div role="img" className="db-icon" onClick={handleIconClick}>
+                <iconDatabase.react tag="div" />
+              </div>
+            </>
+          );
+        } else if (depth === 2) {
+          return (
+            <>
+              {arrowIcon}
+              <div role="img" className="table-icon" onClick={handleIconClick}>
+                <iconTable.react tag="div" />
+              </div>
+            </>
+          );
+        }
 
+        return (
+          <>
+            <iconColumns.react tag="div" />
+          </>
+        );
+      }
       if (depth === 1) {
         return (
           <>
@@ -362,7 +423,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
 
       return (
         <>
-          {arrowIcon}
           <iconColumns.react tag="div" />
         </>
       );
@@ -532,6 +592,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                       type="text"
                       value={searchTerm}
                       onChange={handleSearch}
+                      placeholder="Search your DBs and tables"
                     />
                     <div className="search-icon">
                       <iconSearch.react tag="div" />
@@ -542,10 +603,10 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                   <Tree
                     data={data}
                     openByDefault={false}
-                    width={600}
-                    height={1000}
                     indent={24}
                     rowHeight={36}
+                    height={600}
+                    width={auto}
                     overscanCount={1}
                     paddingTop={30}
                     paddingBottom={10}

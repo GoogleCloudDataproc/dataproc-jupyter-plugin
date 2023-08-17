@@ -239,7 +239,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       panel.id = 'dpms-tab';
       panel.title.icon = iconDpms; // svg import
       panel.addWidget(new dpmsWidget(app as JupyterLab));
-      app.shell.add(panel, 'left');
+      app.shell.add(panel, 'left', { rank: 1000 });
 
       launcher.add({
         command: createClusterComponentCommand,

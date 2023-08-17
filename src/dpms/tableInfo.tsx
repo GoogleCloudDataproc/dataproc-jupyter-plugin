@@ -42,7 +42,7 @@ const TableInfo = ({
   const table = {
     'Table name': title,
     Description: tableDescription[title],
-    'By column name': '',
+    'Column name': '',
     'By Database': database,
     'By Dataproc Metastore Instance': dataprocMetastoreServices
   };

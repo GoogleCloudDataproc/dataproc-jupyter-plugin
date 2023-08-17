@@ -17,9 +17,10 @@
     cursor: pointer;
 }
 .search-icon {
-  position: relative;
-  top: 30px;
-  right: 220px;
+  position: absolute;
+  top: 70%;
+  left: 30px;
+  transform: translateY(-50%);
 }
 .search-field{
     border-radius: 4px !important;
@@ -39,7 +40,7 @@
   
   div[role="treeitem"][aria-level="0"] > div > div > div >svg {
     margin-right: 5px;
-    margin-top:-2px;
+    margin-top:4px;
     cursor: pointer;
   }
 
@@ -79,13 +80,16 @@
     font-size: 15px;
   }
   .tree-container {
-    height: 600px;
-    overflow-y: auto;
     margin-left: 20px;
     overflow-x: hidden;
+    overflow: auto;
+    margin-top: 10px
   }
   .database-loader{
     display: flex;
     margin-top: 50px;
     margin-left: 20px;
+  }
+  .ui.icon.input{
+    width: 260px
   }
