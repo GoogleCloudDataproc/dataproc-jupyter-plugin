@@ -26,7 +26,6 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
-  ClusterStatus
 } from '../utils/const';
 import TableData from '../utils/tableData';
 import { ICellProps, authApi, jobTimeFormat } from '../utils/utils';
@@ -37,7 +36,7 @@ import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
-// import CreateRuntimeTemplate from './createRuntimeTemplate';
+import { SessionTemplate, SessionTemplateDisplay, SessionTemplateRoot } from '../utils/listRuntimeTemplateInterface';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -55,7 +54,7 @@ const iconSubmitJob = new LabIcon({
 interface IListRuntimeTemplate {
   openCreateTemplate: boolean;
   setOpenCreateTemplate: (value: boolean) => void;
-  setRuntimeTemplateSelected: any
+  setRuntimeTemplateSelected: (value: SessionTemplateDisplay) => void;
 }
 
 function ListRuntimeTemplates({
@@ -63,7 +62,7 @@ function ListRuntimeTemplates({
   setOpenCreateTemplate,
   setRuntimeTemplateSelected
 }: IListRuntimeTemplate) {
-  const [runtimeTemplateslist, setRuntimeTemplateslist] = useState([]);
+  const [runtimeTemplateslist, setRuntimeTemplateslist] = useState<SessionTemplateDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
   
@@ -130,8 +129,8 @@ function ListRuntimeTemplates({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
-              let transformRuntimeTemplatesListData = [];
+            .then((responseResult: SessionTemplateRoot) => {
+              let transformRuntimeTemplatesListData: SessionTemplateDisplay[] = [];
               if (responseResult && responseResult.sessionTemplates) {
                 let runtimeTemplatesListNew = responseResult.sessionTemplates;
                 runtimeTemplatesListNew.sort(
@@ -142,7 +141,7 @@ function ListRuntimeTemplates({
                   }
                 );
                 transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
-                  (data: any) => {
+                  (data: SessionTemplate) => {
                     const startTimeDisplay = data.updateTime ? jobTimeFormat(data.updateTime): '';
 
                     let displayName = '';
@@ -165,7 +164,7 @@ function ListRuntimeTemplates({
               const existingRuntimeTemplatesData =
                 previousRuntimeTemplatesList ?? [];
               //setStateAction never type issue
-              let allRuntimeTemplatesData: any = [
+              let allRuntimeTemplatesData: SessionTemplateDisplay[] = [
                 ...(existingRuntimeTemplatesData as []),
                 ...transformRuntimeTemplatesListData
               ];
@@ -222,6 +221,7 @@ function ListRuntimeTemplates({
     setPageSize,
     state: { pageIndex, pageSize }
   } = useTable(
+    //@ts-ignore columns Header, accessor with interface issue
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
@@ -238,7 +238,7 @@ function ListRuntimeTemplates({
     };
   }, [pollingDisable, openCreateTemplate]);
 
-  const renderActions = (data: { state: ClusterStatus; name: string }) => {
+  const renderActions = (data: SessionTemplate) => {
     let runtimeTemplateName = data.name;
     return (
       <div className="actions-icon">
@@ -255,8 +255,8 @@ function ListRuntimeTemplates({
   };
 
   const handleRuntimeTemplatesName = (selectedName: string) => {
-    let selectedRunTime: any = []
-    runtimeTemplateslist.forEach((data: any)=>{
+    let selectedRunTime: SessionTemplateDisplay[] = []
+    runtimeTemplateslist.forEach((data: SessionTemplateDisplay)=>{
       if(data.name === selectedName) {
         selectedRunTime.push(data)
       }

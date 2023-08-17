@@ -69,7 +69,8 @@ let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
 
-function CreateRunTime({}: any) {
+function CreateRunTime({runtimeTemplateSelected}: any) {
+  console.log(runtimeTemplateSelected)
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -661,7 +662,6 @@ function CreateRunTime({}: any) {
               <div className="create-batch-network">
                 <Select
                   search
-                  selection
                   className="select-primary-network-style"
                   value={networkSelected}
                   onChange={handleNetworkChange}
@@ -671,7 +671,6 @@ function CreateRunTime({}: any) {
 
                 <Select
                   search
-                  selection
                   className="select-sub-network-style"
                   value={subNetworkSelected}
                   onChange={handleSubNetworkChange}
@@ -736,6 +735,7 @@ function CreateRunTime({}: any) {
               />
             ) : (
               <Select
+              
                 className="select-job-style"
                 search
                 selection

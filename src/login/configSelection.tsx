@@ -36,7 +36,8 @@ import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
-import CreateRuntimeTemplate from '../runtime/createRuntimeTemplate';
+import CreateRuntime from '../runtime/createRunTime';
+import { SessionTemplateDisplay } from '../utils/listRuntimeTemplateInterface';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -70,7 +71,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   });
   const [expandRuntimeTemplate, setExpandRuntimeTemplate] = useState(true);
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
-  const [runtimeTemplateSelected, setRuntimeTemplateSelected] = useState('');
+  const [runtimeTemplateSelected, setRuntimeTemplateSelected] = useState<SessionTemplateDisplay>();
 
   const handleProjectIdChange = (event: any, data: any) => {
     setRegionList([]);
@@ -303,7 +304,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           Loading Config Setup
         </div>
       ) : !configError && openCreateTemplate ? (
-        <CreateRuntimeTemplate
+        <CreateRuntime
           runtimeTemplateSelected={runtimeTemplateSelected}
         />
       ) : (
@@ -322,6 +323,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                   Project ID
                 </label>
                 <Select
+                  search
                   placeholder={projectId}
                   className="project-select"
                   value={projectId}
@@ -336,6 +338,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 </label>
 
                 <Select
+                  search
                   onClick={handleDropdownOpen}
                   placeholder={region}
                   className="region-select"
