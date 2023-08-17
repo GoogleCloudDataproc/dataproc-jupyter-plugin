@@ -68,7 +68,8 @@ let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
 
-function CreateRunTime({}: any) {
+function CreateRunTime({runtimeTemplateSelected}: any) {
+  console.log(runtimeTemplateSelected)
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -120,11 +121,11 @@ function CreateRunTime({}: any) {
 
   useEffect(() => {
     const timeData = [
-        { key: 'hour', value: 'hour', text: 'hour' },
-        { key: 'min', value: 'min', text: 'min' },
-        { key: 'sec', value: 'sec', text: 'sec' }
-      ];
-      setTimeList(timeData);
+      { key: 'hour', value: 'hour', text: 'hour' },
+      { key: 'min', value: 'min', text: 'min' },
+      { key: 'sec', value: 'sec', text: 'sec' }
+    ];
+    setTimeList(timeData);
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
@@ -560,6 +561,7 @@ function CreateRunTime({}: any) {
             <div>
               <div className="create-batch-network">
                 <Select
+                  search
                   className="select-primary-network-style"
                   value={networkSelected}
                   onChange={handleNetworkChange}
@@ -568,6 +570,7 @@ function CreateRunTime({}: any) {
                 />
 
                 <Select
+                  search
                   className="select-sub-network-style"
                   value={subNetworkSelected}
                   onChange={handleSubNetworkChange}
@@ -594,6 +597,7 @@ function CreateRunTime({}: any) {
             <div className="submit-job-label-header">Metastore</div>
             <div className="create-batches-message">Metastore project</div>
             <Select
+              search
               placeholder={projectId}
               className="select-job-style"
               value={projectId}
@@ -610,6 +614,7 @@ function CreateRunTime({}: any) {
               />
             ) : (
               <Select
+                search
                 placeholder={region}
                 className="select-job-style"
                 value={region}
@@ -628,6 +633,7 @@ function CreateRunTime({}: any) {
               />
             ) : (
               <Select
+                search
                 className="select-job-style"
                 value={servicesSelected}
                 type="text"

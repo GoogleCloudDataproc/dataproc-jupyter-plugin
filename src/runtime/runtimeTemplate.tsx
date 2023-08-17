@@ -17,12 +17,12 @@
 
 import { ReactWidget } from '@jupyterlab/apputils';
 import React from 'react';
-import CreateRuntimeTemplate from './createRuntimeTemplate';
+import CreateRuntime from './createRunTime';
 
 const RuntimeTemplateComponent = (): React.JSX.Element => {
   return (
     <div>
-        <CreateRuntimeTemplate />
+        <CreateRuntime />
     </div>
   );
 };

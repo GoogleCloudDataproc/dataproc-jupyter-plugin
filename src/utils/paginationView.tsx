@@ -16,6 +16,7 @@
  */
 
 import React from 'react';
+import { SessionTemplateDisplay } from './listRuntimeTemplateInterface';
 
 interface IBatch {
   batchID: string;
@@ -40,7 +41,7 @@ interface IPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
   pageIndex: number;
-  allData: IBatch[] | ICluster[];
+  allData: IBatch[] | ICluster[] | SessionTemplateDisplay[];
   previousPage: () => void;
   nextPage:  () => void;
   canPreviousPage: boolean;
