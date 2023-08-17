@@ -1,0 +1,39 @@
+.runtime-list-table-parent {
+  height: 26vh;
+  overflow: auto;
+}
+
+.spin-loader-runtime {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 26vh;
+}
+
+.list-runtime-template-wrapper {
+  margin: 0px 20px 5px 0px;
+}
+
+.runtime-table-data {
+  padding-left: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.create-runtime-button-wrapper {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.create-runtime-overlay {
+  height: 48px;
+  width: 85px;
+  padding-left: 15px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.runtime-table-data:nth-child(1) {
+  color: #3367d6;
+  text-decoration: underline;
+  cursor: pointer;
+}

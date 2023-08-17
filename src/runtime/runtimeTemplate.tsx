@@ -15,18 +15,24 @@
  * limitations under the License.
  */
 
-import './base.css';
-import './cluster.css';
-import './job.css';
-import './clusterDetails.css';
-import './submitJob.css';
-import './batches.css';
-import './authLogin.css';
-import './sessionDetails.css';
-import './popup.css';
-import './createBatch.css'
-import './popup.css'
-import './dpms.css'
-import './databaseInfo.css'
-import './paginationView.css';
-import './runtimeTemplate.css';
+import { ReactWidget } from '@jupyterlab/apputils';
+import React from 'react';
+import CreateRuntimeTemplate from './createRuntimeTemplate';
+
+const RuntimeTemplateComponent = (): React.JSX.Element => {
+  return (
+    <div>
+        <CreateRuntimeTemplate />
+    </div>
+  );
+};
+
+export class RuntimeTemplate extends ReactWidget {
+  constructor() {
+    super();
+  }
+
+  render(): React.JSX.Element {
+    return <RuntimeTemplateComponent />;
+  }
+}
