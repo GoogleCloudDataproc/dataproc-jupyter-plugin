@@ -19,7 +19,7 @@ import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import 'semantic-ui-css/semantic.min.css';
 import 'react-toastify/dist/ReactToastify.css';
-import { Input, Select, Dropdown } from 'semantic-ui-react';
+import { Input, Select } from 'semantic-ui-react';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -37,6 +37,7 @@ import { authApi } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
+import { toast } from 'react-toastify';
 
 type Project = {
   projectId: string;
@@ -113,6 +114,7 @@ function CreateRunTime({}: any) {
   const [descriptionValidation, setDescriptionValidation] = useState(false);
   const [displayNameValidation, setDisplayNameValidation] = useState(false);
   const [versionValidation, setVersionValidation] = useState(false);
+  const [idleValidation, setIdleValidation] = useState(false);
   const [defaultValue, setDefaultValue] = useState('default');
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
@@ -120,11 +122,11 @@ function CreateRunTime({}: any) {
 
   useEffect(() => {
     const timeData = [
-        { key: 'hour', value: 'hour', text: 'hour' },
-        { key: 'min', value: 'min', text: 'min' },
-        { key: 'sec', value: 'sec', text: 'sec' }
-      ];
-      setTimeList(timeData);
+      { key: 'hour', value: 'hour', text: 'hour' },
+      { key: 'min', value: 'min', text: 'min' },
+      { key: 'sec', value: 'sec', text: 'sec' }
+    ];
+    setTimeList(timeData);
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
@@ -456,6 +458,13 @@ function CreateRunTime({}: any) {
   const handleServiceSelected = (event: any, data: any) => {
     setServicesSelected(data.value);
   };
+  const handleIdleSelected = (event: any) => {
+    !isNaN(event.target.value)
+      ? setIdleValidation(false)
+      : setIdleValidation(true);
+    const newVersion = event.target.value;
+    setIdleTimeSelected(newVersion);
+  };
   const handletimeSelected = (event: any, data: any) => {
     setTimeSelected(data.value);
   };
@@ -477,6 +486,97 @@ function CreateRunTime({}: any) {
 
   const handleClusterSelected = (event: any, data: any) => {
     setClusterSelected(data.value);
+  };
+  const handleSave = async () => {
+    const credentials = await authApi();
+    if (credentials) {
+      const labelObject: { [key: string]: string } = {};
+      labelDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        labelObject[key] = value;
+      });
+      const propertyObject: { [key: string]: string } = {};
+      propertyDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        propertyObject[key] = value;
+      });
+      const payload = {
+        name: runTimeSelected,
+        description: desciptionSelected,
+        createTime: new Date().toISOString(),
+        jupyterSession: {
+            Kernel: {
+              PYTHON: '1'
+            },
+            displayName: displayNameSelected
+          
+        },
+        creator: '',
+        labels: labelObject,
+        runtimeConfig: {
+            version: versionSelected,
+            ...(propertyObject && { properties: propertyObject }),
+          
+          ...(pythonRepositorySelected &&{
+          repositoryConfig: {
+            pypiRepositoryConfig: {
+              pypiRepository: pythonRepositorySelected
+            }
+          }})
+        },
+        environmentConfig: {
+            ...(networkTagSelected.length > 0 && {
+              networkTags: networkTagSelected,
+            }),
+            networkUri:networkSelected,
+            subnetworkUri:subNetworkSelected,
+          
+          ...(idleTimeSelected && {idleTtl:idleTimeSelected}),
+          ...(timeSelected && {ttl:timeSelected})
+        },
+        peripheralsConfig:{
+            ...(servicesSelected !== 'None' && {
+              metastoreService: servicesSelected,
+            }),
+            ...(clusterSelected !== '' && {
+              sparkHistoryServerConfig: {
+                dataprocCluster: `projects/${credentials.project_id}/locations/${credentials.region_id}/clusters/${clusterSelected}`,
+              },
+            }),
+          
+          updateTime:new Date().getTime(),
+        }
+      };
+      fetch(
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then(async (response: Response) => {
+          if (response.ok) {
+            const responseResult = await response.json();
+            console.log(responseResult);
+          } else {
+            const errorResponse = await response.json();
+            console.log(errorResponse);
+            setError({ isOpen: true, message: errorResponse.error.message });
+          }
+        })
+        .catch((err: Error) => {
+          console.error('Error Creating template', err);
+          toast.error('Failed to create the template');
+        });
+    }
   };
 
   return (
@@ -560,6 +660,8 @@ function CreateRunTime({}: any) {
             <div>
               <div className="create-batch-network">
                 <Select
+                  search
+                  selection
                   className="select-primary-network-style"
                   value={networkSelected}
                   onChange={handleNetworkChange}
@@ -568,6 +670,8 @@ function CreateRunTime({}: any) {
                 />
 
                 <Select
+                  search
+                  selection
                   className="select-sub-network-style"
                   value={subNetworkSelected}
                   onChange={handleSubNetworkChange}
@@ -594,8 +698,10 @@ function CreateRunTime({}: any) {
             <div className="submit-job-label-header">Metastore</div>
             <div className="create-batches-message">Metastore project</div>
             <Select
-              placeholder={projectId}
               className="select-job-style"
+              search
+              selection
+              placeholder={projectId}
               value={projectId}
               onChange={handleProjectIdChange}
               options={projectList}
@@ -610,8 +716,10 @@ function CreateRunTime({}: any) {
               />
             ) : (
               <Select
-                placeholder={region}
                 className="select-job-style"
+                search
+                selection
+                placeholder={region}
                 value={region}
                 onChange={handleRegionChange}
                 options={regionList}
@@ -629,6 +737,8 @@ function CreateRunTime({}: any) {
             ) : (
               <Select
                 className="select-job-style"
+                search
+                selection
                 value={servicesSelected}
                 type="text"
                 options={servicesList}
@@ -644,11 +754,13 @@ function CreateRunTime({}: any) {
               <Input
                 className="create-batch-style "
                 value={idleTimeSelected}
-                onChange={e => setIdleTimeSelected(e.target.value)}
+                onChange={e => handleIdleSelected(e)}
                 type="text"
               />
 
               <Select
+                search
+                selection
                 className="select-sub-network-style"
                 value={timeSelected}
                 onChange={handletimeSelected}
@@ -656,6 +768,12 @@ function CreateRunTime({}: any) {
                 options={timeList}
               />
             </div>
+            {idleValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" />
+                <div className="error-key-missing">Numeric is allowed</div>
+              </div>
+            )}
 
             <div className="create-batches-message">
               Python packages repository
@@ -679,7 +797,7 @@ function CreateRunTime({}: any) {
             </div>
             <div className="create-batches-message">History server cluster</div>
 
-            <Dropdown
+            <Select
               className="select-job-style"
               search
               selection
@@ -719,11 +837,9 @@ function CreateRunTime({}: any) {
             <div className="job-button-style-parent">
               <div className={'submit-button-style'} aria-label="submit Batch">
                 <div
-                // onClick={() => {
-                //   if (!isSubmitDisabled()) {
-                //     handleSubmit();
-                //   }
-                // }}
+                  onClick={() => {
+                    handleSave();
+                  }}
                 >
                   Save
                 </div>
