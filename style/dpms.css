@@ -96,5 +96,6 @@
     margin-left: 20px;
   }
   .ui.icon.input{
-    width: 265px
+    width: 100%;
+    padding-right: 20px;
   }
