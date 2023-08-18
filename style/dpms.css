@@ -30,7 +30,7 @@
     margin-left: 13px !important;
     width: 225px !important;
     padding-left: 35px !important;
-    padding-right: unset !important;
+    font-size: 13px;
 }
   .columns.icon{
     margin-left: 20px;
@@ -41,7 +41,6 @@
   
   div[role="treeitem"][aria-level="0"] > div > div > div >svg {
     margin-right: 5px;
-    margin-top:4px;
     cursor: pointer;
   }
 
