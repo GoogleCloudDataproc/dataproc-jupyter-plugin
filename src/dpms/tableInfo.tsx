@@ -43,8 +43,8 @@ const TableInfo = ({
     'Table name': title,
     Description: tableDescription[title],
     'Column name': '',
-    'By Database': database,
-    'By Dataproc Metastore Instance': dataprocMetastoreServices
+    'Database': database,
+    'Dataproc Metastore Instance': dataprocMetastoreServices
   };
 
   const renderColumnTable = () => {

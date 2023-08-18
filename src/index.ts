@@ -28,6 +28,7 @@ import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
 import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
+import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
 import { Menu, Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
@@ -41,6 +42,7 @@ const iconDpms = new LabIcon({
   svgstr: dpmsIcon
 });
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
+import { RuntimeTemplate } from './runtime/runtimeTemplate';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'cluster',
@@ -54,6 +56,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     notebookTracker: INotebookTracker
   ) => {
     const { commands } = app;
+    const iconAddRuntime = new LabIcon({
+      name: 'launcher:add-runtime-icon',
+      svgstr: addRuntimeIcon
+    });
     const iconCluster = new LabIcon({
       name: 'launcher:clusters-icon',
       svgstr: clusterIcon
@@ -142,6 +148,21 @@ const extension: JupyterFrontEndPlugin<void> = {
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
+    const createRuntimeTemplateComponentCommand = 'create-runtime-template-component';
+    commands.addCommand(createRuntimeTemplateComponentCommand, {
+      caption: 'Create a new runtime template',
+      label: 'New Runtime Template',
+      // @ts-ignore jupyter lab icon command issue
+      icon: args => (args['isPalette'] ? null : iconAddRuntime),
+      execute: () => {
+        const content = new RuntimeTemplate();
+        const widget = new MainAreaWidget<RuntimeTemplate>({ content });
+        widget.title.label = 'Runtime template';
+        widget.title.icon = iconServerless;
+        app.shell.add(widget, 'main');
+      }
+    });
+
     const createClusterComponentCommand = 'create-cluster-component';
     commands.addCommand(createClusterComponentCommand, {
       caption: 'Create a new Cluster Component',
@@ -190,6 +211,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     snippetMenu.addItem({ command: createAuthLoginComponentCommand });
     mainMenu.addMenu(snippetMenu);
 
+    let serverlessIndex = -1;
+
     if (launcher) {
       Object.values(kernels).forEach((kernelsData, index) => {
         if (
@@ -217,6 +240,8 @@ const extension: JupyterFrontEndPlugin<void> = {
               });
             }
           });
+
+          serverlessIndex = index
 
           launcher.add({
             command: commandNotebook,
@@ -266,6 +291,11 @@ const extension: JupyterFrontEndPlugin<void> = {
             args: kernelsData?.argv
           });
         }
+      });
+      launcher.add({
+        command: createRuntimeTemplateComponentCommand,
+        category: 'Dataproc Serverless Notebooks',
+        rank: serverlessIndex + 2
       });
       launcher.add({
         command: createClusterComponentCommand,
