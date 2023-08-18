@@ -83,6 +83,7 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
+
 const calculateDepth = (node: any): number => {
   let depth = 0;
   let currentNode = node;
@@ -193,7 +194,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
   columnResponse.forEach((res: any) => {
     /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
-    fetching database name from fully qualified name structure */
+fetching database name from fully qualified name structure */
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
     const columns = res.schema.columns.map(
@@ -236,6 +237,14 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
       }))
     }))
   }));
+  data.sort((a, b) => a.name.localeCompare(b.name));
+
+  data.forEach(db => {
+    db.children.sort((a, b) => a.name.localeCompare(b.name));
+    db.children.forEach(table => {
+      table.children.sort((a, b) => a.name.localeCompare(b.name));
+    });
+  });
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -243,39 +252,43 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const searchMatch = (node: { data: { name: string } }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
-
+  const openedWidgets: string[] = [];
   const handleNodeClick = (node: any) => {
     const depth = calculateDepth(node);
-    if (depth === 1) {
-      const content = new Database(
-        node.data.name,
-        dataprocMetastoreServices,
-        databaseDetails
-      );
-      const widget = new MainAreaWidget<Database>({ content });
-      const widgetId = `node-widget-${uuidv4()}`;
-      widget.id = widgetId;
-      widget.title.label = node.data.name;
-      widget.title.closable = true;
-      widget.title.icon = iconDatabaseWidget;
-      app.shell.add(widget, 'main');
-    } else if (depth === 2) {
-      const database = node.parent.data.name;
-      const column = node.data.children;
-      const content = new Table(
-        node.data.name,
-        dataprocMetastoreServices,
-        database,
-        column,
-        tableDescription
-      );
-      const widget = new MainAreaWidget<Table>({ content });
-      const widgetId = `node-widget-${uuidv4()}`;
-      widget.id = widgetId;
-      widget.title.label = node.data.name;
-      widget.title.closable = true;
-      widget.title.icon = iconDatasets;
-      app.shell.add(widget, 'main');
+    const widgetTitle = node.data.name;
+    if (!openedWidgets[widgetTitle]) {
+      if (depth === 1) {
+        const content = new Database(
+          node.data.name,
+          dataprocMetastoreServices,
+          databaseDetails
+        );
+        const widget = new MainAreaWidget<Database>({ content });
+        const widgetId = 'node-widget-db';
+        widget.id = widgetId;
+        widget.title.label = node.data.name;
+        widget.title.closable = true;
+        widget.title.icon = iconDatabaseWidget;
+        app.shell.add(widget, 'main');
+      } else if (depth === 2) {
+        const database = node.parent.data.name;
+        const column = node.data.children;
+        const content = new Table(
+          node.data.name,
+          dataprocMetastoreServices,
+          database,
+          column,
+          tableDescription
+        );
+        const widget = new MainAreaWidget<Table>({ content });
+        const widgetId = `node-widget-${uuidv4()}`;
+        widget.id = widgetId;
+        widget.title.label = node.data.name;
+        widget.title.closable = true;
+        widget.title.icon = iconDatasets;
+        app.shell.add(widget, 'main');
+      }
+      openedWidgets[widgetTitle] = node.data.name;
     }
   };
   const clearState = () => {
@@ -301,12 +314,21 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     const [expanded, setExpanded] = useState(false);
 
     const handleToggle = () => {
-      setExpanded(!expanded);
+      if (expanded) {
+        setExpanded(false);
+      } else {
+        setExpanded(true);
+      }
       node.toggle();
     };
     const handleIconClick = (event: React.MouseEvent) => {
       if (event.currentTarget.classList.contains('caret-icon')) {
-        handleToggle();
+        if (searchTerm && !expanded) {
+          setExpanded(true);
+          node.toggle();
+        } else {
+          handleToggle();
+        }
       }
     };
     const handleTextClick = (event: React.MouseEvent) => {
@@ -339,7 +361,53 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           </div>
         )
       ) : null;
+      if (searchTerm) {
+        const arrowIcon =
+          hasChildren && !expanded ? (
+            <>
+              <div
+                role="treeitem"
+                className="caret-icon right"
+                onClick={handleIconClick}
+              >
+                <iconDownArrow.react tag="div" />
+              </div>
+            </>
+          ) : (
+            <div
+              role="treeitem"
+              className="caret-icon down"
+              onClick={handleIconClick}
+            >
+              <iconRightArrow.react tag="div" />
+            </div>
+          );
+        if (depth === 1) {
+          return (
+            <>
+              {arrowIcon}
+              <div role="img" className="db-icon" onClick={handleIconClick}>
+                <iconDatabase.react tag="div" />
+              </div>
+            </>
+          );
+        } else if (depth === 2) {
+          return (
+            <>
+              {arrowIcon}
+              <div role="img" className="table-icon" onClick={handleIconClick}>
+                <iconTable.react tag="div" />
+              </div>
+            </>
+          );
+        }
 
+        return (
+          <>
+            <iconColumns.react tag="div" />
+          </>
+        );
+      }
       if (depth === 1) {
         return (
           <>
@@ -362,7 +430,6 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
 
       return (
         <>
-          {arrowIcon}
           <iconColumns.react tag="div" />
         </>
       );
@@ -532,6 +599,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                       type="text"
                       value={searchTerm}
                       onChange={handleSearch}
+                      placeholder="Search your DBs and tables"
                     />
                     <div className="search-icon">
                       <iconSearch.react tag="div" />
@@ -542,9 +610,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                   <Tree
                     data={data}
                     openByDefault={false}
-                    width={600}
-                    height={1000}
                     indent={24}
+                    width={230}
                     rowHeight={36}
                     overscanCount={1}
                     paddingTop={30}
@@ -564,9 +631,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           </div>
         </>
       ) : (
-        <div className="dpms-error">
-          Please select cluster notebook attached to metastore and refresh
-        </div>
+        <div className="dpms-error">No DPMS instance found</div>
       )}
     </>
   );

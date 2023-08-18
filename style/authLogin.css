@@ -29,19 +29,14 @@
   padding-bottom: 5px;
 }
 
-.settings-icon {
-  padding-left: 70px;
-}
 .settings-seperator {
   border: 1px solid #e0e0e0;
   width: 100%;
   height: 0px;
-  margin-left: 70px;
 }
-.configForm {
+.config-form {
   display: flex;
   flex-direction: column;
-  padding-left: 70px;
   padding-top: 60px;
   width: 100%;
   width: 630px;
@@ -179,6 +174,7 @@
 .config-overlay {
   display: flex;
   flex-direction: row;
+  margin-bottom: 25px;
 }
 .google-header {
   align-items: center;
@@ -245,7 +241,7 @@
   padding-top: 15px;
 }
 
-.footer-divider {
+.privacy-terms {
   margin: 0 5px;
 }
 .ui.selection.active.dropdown .menu {
@@ -255,4 +251,32 @@
 .ui.dropdown.selected {
   background: rgb(230, 236, 250) !important;
   color: rgb(28, 58, 169) !important;
+}
+.runtime-title-section {
+  display: flex;
+  justify-content: space-between;
+  color: #000;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 500;
+  margin-right: 20px;
+  line-height: 28px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-component {
+  height: 84vh;
+  overflow-y: auto;
+  margin-left: 40px;
+}
+
+.expand-icon {
+  cursor: pointer;
+}
+
+.runtime-title-part {
+  margin-bottom: 5px;
+}
+.footer-divider{
+  margin: 0 5px;
 }

@@ -39,7 +39,7 @@ import {
   PROJECT_LIST_URL,
   QUERY_FILE_MESSAGE,
   REGION_URL,
-  // SECURITY_KEY,
+  SECURITY_KEY,
   SELF_MANAGED_CLUSTER,
   SERVICE_ACCOUNT,
   STATUS_RUNNING
@@ -104,7 +104,6 @@ function CreateBatch({
   projectName
 }: ICreateBatchProps) {
   const [batchTypeList, setBatchTypeList] = useState([{}]);
-  const [versionList, setVersionList] = useState([{}]);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [batchIdSelected, setBatchIdSelected] = useState('');
@@ -129,9 +128,11 @@ function CreateBatch({
     ...networkUris
   ]);
   const [propertyDetail, setPropertyDetail] = useState(['']);
+  const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
+    useState('googleManaged');
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
-  const [valueValidation, setvalueValidation] = useState(-1);
+  const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
@@ -144,8 +145,13 @@ function CreateBatch({
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
   const [projectList, setProjectList] = useState([{}]);
-  const [regionList, setRegionList] = useState<{ value: string; key: string; text: string; }[]>([]);
+  const [regionList, setRegionList] = useState<
+    { value: string; key: string; text: string }[]
+  >([]);
   const [networkList, setNetworklist] = useState([{}]);
+  const [subNetworkList, setSubNetworklist] = useState<
+    { key: string; value: string; text: string }[]
+  >([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState('default');
   const [subNetworkSelected, setSubNetworkSelected] = useState('default');
@@ -169,6 +175,7 @@ function CreateBatch({
   const [mainRValidation, setMainRValidation] = useState(true);
   const [batchIdValidation, setBatchIdValidation] = useState(false);
   const [mainJarValidation, setMainJarValidation] = useState(true);
+  const [defaultValue, setDefaultValue] = useState('default');
 
   const handleCreateBatchBackView = () => {
     setCreateBatchView(false);
@@ -191,29 +198,11 @@ function CreateBatch({
       { key: 'pySpark', value: 'pySpark', text: 'PySpark' }
     ];
 
-    const runTimeVersionData = [
-      {
-        key: '2.1',
-        value: '2.1',
-        text: '2.1 (Spark 3.4, Java 17, Scala 2.13)'
-      },
-      {
-        key: '2.0',
-        value: '2.0',
-        text: '2.0 (Spark 3.3, Java 17, Scala 2.13)'
-      },
-      {
-        key: '1.1',
-        value: '1.1',
-        text: '1.1 (Spark 3.3, Java 11, Scala 2.12)'
-      }
-    ];
-    setVersionList(runTimeVersionData);
     setBatchTypeList(batchTypeData);
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
-  }, [clusterSelected]);
+  }, [clusterSelected, defaultValue]);
 
   useEffect(() => {
     generateRandomHex();
@@ -342,13 +331,11 @@ function CreateBatch({
                 }
               );
 
-              const keyLabelStructure = transformClusterListData.map(
-                (obj) => ({
-                  key: obj.clusterName,
-                  value: obj.clusterName,
-                  text: obj.clusterName
-                })
-              );
+              const keyLabelStructure = transformClusterListData.map(obj => ({
+                key: obj.clusterName,
+                value: obj.clusterName,
+                text: obj.clusterName
+              }));
               setClustersList(keyLabelStructure);
             })
             .catch((e: Error) => {
@@ -364,7 +351,7 @@ function CreateBatch({
     const credentials = await authApi();
     if (credentials) {
       fetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -377,25 +364,81 @@ function CreateBatch({
             .json()
             .then((responseResult: { items: Network[] }) => {
               let transformedNetworkList = [];
-               /*
-         Extracting network, subnetwork from items
+              /*
+         Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
       */
-              
-              transformedNetworkList = responseResult.items.map((data: Network) => {
-                return {
-                  network: data.network.split('/')[9],
-                  subnetworks: data.selfLink.split('/')[10]
-                };
-              });
+
+              transformedNetworkList = responseResult.items.map(
+                (data: Network) => {
+                  return {
+                    network: data.selfLink.split('/')[9]
+                  };
+                }
+              );
               const keyLabelStructureNetwork = transformedNetworkList.map(
-                (obj) => ({
+                obj => ({
                   key: obj.network,
                   value: obj.network,
                   text: obj.network
                 })
               );
               setNetworklist(keyLabelStructureNetwork);
+            })
+
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing Networks', err);
+        });
+    }
+  };
+  type SubnetworkData = {
+    subnetworks: string;
+  };
+  const listSubNetworksAPI = async (subnetwork: string) => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks/${subnetwork}`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: { subnetworks: string[] }) => {
+              let transformedSubNetworkList = [];
+              /*
+         Extracting  subnetworks from Network
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/subnetwork",
+      */
+
+              transformedSubNetworkList = responseResult.subnetworks.map(
+                (data: string) => {
+                  return {
+                    subnetworks: data.split(
+                      `${credentials.region_id}/subnetworks/`
+                    )[1]
+                  };
+                }
+              );
+              const keyLabelStructureSubNetwork = transformedSubNetworkList
+                .filter((obj: SubnetworkData) => obj.subnetworks !== undefined)
+                .map((obj: SubnetworkData) => ({
+                  key: obj.subnetworks,
+                  value: obj.subnetworks,
+                  text: obj.subnetworks
+                }));
+              setSubNetworklist(keyLabelStructureSubNetwork);
+              setDefaultValue(keyLabelStructureSubNetwork[0].value);
+             setSubNetworkSelected(keyLabelStructureSubNetwork[0].value);
             })
 
             .catch((e: Error) => {
@@ -434,13 +477,11 @@ function CreateBatch({
                 }
               );
 
-              const keyLabelStructure = transformClusterListData.map(
-                (obj) => ({
-                  key: obj.name,
-                  value: obj.name,
-                  text: obj.name
-                })
-              );
+              const keyLabelStructure = transformClusterListData.map(obj => ({
+                key: obj.name,
+                value: obj.name,
+                text: obj.name
+              }));
               const noneOption = { key: 'None', value: 'None', text: 'None' };
               setServicesList([noneOption, ...keyLabelStructure]);
               setIsLoadingService(false);
@@ -509,13 +550,15 @@ function CreateBatch({
             .json()
             .then((responseResult: { items: Region[] }) => {
               let transformedRegionList = [];
-              transformedRegionList = responseResult.items.map((data: Region) => {
-                return {
-                  value: data.name,
-                  key: data.name,
-                  text: data.name
-                };
-              });
+              transformedRegionList = responseResult.items.map(
+                (data: Region) => {
+                  return {
+                    value: data.name,
+                    key: data.name,
+                    text: data.name
+                  };
+                }
+              );
               setRegionList(transformedRegionList);
               setIsLoadingRegion(false);
             })
@@ -534,23 +577,23 @@ function CreateBatch({
   type Payload = {
     [key: string]: any;
   };
-  
+
   type RuntimeConfig = {
     version: string;
     containerImage?: string;
     properties?: object;
   };
-  
+
   type ExecutionConfig = {
     serviceAccount?: string;
     subnetworkUri: string;
     networkTags?: string[];
   };
-  
+
   type SparkHistoryServerConfig = {
     dataprocCluster: string;
   };
-  
+
   const createPayload = (
     batchTypeSelected: string,
     mainJarSelected: string,
@@ -573,81 +616,82 @@ function CreateBatch({
     queryFileSelected: string
   ): Payload => {
     const payload: Payload = {};
-  
+
     if (batchTypeSelected === 'spark') {
       payload.sparkBatch = {
         ...(mainJarSelected !== '' && { mainJarFileUri: mainJarSelected }),
-        ...(mainClassSelected !== '' && { mainClass: mainClassSelected }),
+        ...(mainClassSelected !== '' && { mainClass: mainClassSelected })
       };
     }
     if (batchTypeSelected === 'sparkR') {
       payload.sparkRBatch = {
-        ...(mainRSelected !== '' && { mainRFileUri: mainRSelected }),
+        ...(mainRSelected !== '' && { mainRFileUri: mainRSelected })
       };
     }
     if (batchTypeSelected === 'pySpark') {
       payload.pysparkBatch = {
         ...(additionalPythonFileSelected.length > 0 && {
-          pythonFileUris: additionalPythonFileSelected,
+          pythonFileUris: additionalPythonFileSelected
         }),
         ...(mainPythonSelected !== '' && {
-          mainPythonFileUri: mainPythonSelected,
-        }),
+          mainPythonFileUri: mainPythonSelected
+        })
       };
     }
     if (batchTypeSelected === 'sparkSql') {
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
-        ...(parameterObject && { queryVariables: { query: parameterObject } }),
+        ...(parameterObject && { queryVariables: { query: parameterObject } })
       };
     }
-  
+
     payload.labels = labelObject;
-  
+
     payload.name = `projects/${projectName}/locations/${regionName}/batches/${batchIdSelected}`;
-  
+
     payload.runtimeConfig = {
       version: versionSelected,
       ...(containerImageSelected !== '' && {
-        containerImage: containerImageSelected,
+        containerImage: containerImageSelected
       }),
-      ...(propertyObject && { properties: propertyObject }),
+      ...(propertyObject && { properties: propertyObject })
     } as RuntimeConfig;
-  
+
     payload.environmentConfig = {
       executionConfig: {
         ...(serviceAccountSelected !== '' && {
-          serviceAccount: serviceAccountSelected,
+          serviceAccount: serviceAccountSelected
         }),
-        subnetworkUri: networkSelected,
+        subnetworkUri: subNetworkSelected,
+        // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
-          networkTags: networkTagSelected,
-        }),
-      } as ExecutionConfig,
+          networkTags: networkTagSelected
+        })
+      } as ExecutionConfig
     };
-  
+
     if (servicesSelected !== 'None' || clusterSelected !== '') {
       payload.peripheralsConfig = {
         ...(servicesSelected !== 'None' && {
-          metastoreService: servicesSelected,
+          metastoreService: servicesSelected
         }),
         ...(clusterSelected !== '' && {
           sparkHistoryServerConfig: {
-            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`,
-          } as SparkHistoryServerConfig,
-        }),
+            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
+          } as SparkHistoryServerConfig
+        })
       };
     }
-  
+
     payload.archiveUris =
       ArchiveFilesSelected.length > 0 ? ArchiveFilesSelected : undefined;
     payload.fileUris = filesSelected.length > 0 ? filesSelected : undefined;
-    payload.jarFileUris = jarFilesSelected.length > 0 ? jarFilesSelected : undefined;
+    payload.jarFileUris =
+      jarFilesSelected.length > 0 ? jarFilesSelected : undefined;
     payload.args = argumentsSelected.length > 0 ? argumentsSelected : undefined;
-  
+
     return payload;
   };
-  
 
   const handleSubmit = async () => {
     const credentials = await authApi();
@@ -755,9 +799,6 @@ function CreateBatch({
     setQueryFileSelected('');
     setMainClassSelected('');
   };
-  const handleVersionSelected = (event: any, data: any) => {
-    setVersionSelected(data.value);
-  };
 
   const handleServiceSelected = (event: any, data: any) => {
     setServicesSelected(data.value);
@@ -772,7 +813,7 @@ function CreateBatch({
   };
   const handleNetworkChange = (event: any, data: any) => {
     setNetworkSelected(data.value);
-    setSubNetworkSelected(data.value);
+    listSubNetworksAPI(data.value);
   };
   const handleSubNetworkChange = (event: any, data: any) => {
     setSubNetworkSelected(data.value);
@@ -782,7 +823,6 @@ function CreateBatch({
     setClusterSelected(data.value);
   };
 
-  
   return (
     <div>
       <div className="scroll-comp">
@@ -813,6 +853,7 @@ function CreateBatch({
             )}
             <div className="create-batches-message">Region*</div>
             <Select
+              search
               className="select-job-style"
               value={regionName}
               type="text"
@@ -823,6 +864,7 @@ function CreateBatch({
             <div className="submit-job-label-header">Container</div>
             <div className="create-batches-message">Batch type*</div>
             <Select
+              search
               className="select-job-style"
               value={batchTypeSelected}
               type="text"
@@ -830,12 +872,12 @@ function CreateBatch({
               onChange={handleBatchTypeSelected}
             />
             <div className="create-batches-message">Runtime version*</div>
-            <Select
-              className="select-job-style"
+
+            <Input
+              className="create-batch-style "
               value={versionSelected}
+              onChange={e => setVersionSelected(e.target.value)}
               type="text"
-              options={versionList}
-              onChange={handleVersionSelected}
             />
             {batchTypeSelected === 'spark' && (
               <div>
@@ -1057,34 +1099,34 @@ function CreateBatch({
               placeholder=""
             />
             <div className="create-custom-messagelist">
-             {CUSTOM_CONTAINER_MESSAGE}
+              {CUSTOM_CONTAINER_MESSAGE}
               <div className="create-container-message">
-              <div
-                className="create-batch-learn-more"
-                onClick={() => {
-                  window.open(`${CONTAINER_REGISTERY}`, '_blank');
-                }}
-              >
-                Container Registry
-              </div>
-              {' or '}
-              <div
-                className="create-batch-learn-more"
-                onClick={() => {
-                  window.open(`${ARTIFACT_REGISTERY}`, '_blank');
-                }}
-              >
-                 Artifact Registry
-              </div>
-               {' . '}
-              <div
-                className="submit-job-learn-more"
-                onClick={() => {
-                  window.open(`${CUSTOM_CONTAINERS}`, '_blank');
-                }}
-              >
-                Learn more
-              </div>
+                <div
+                  className="create-batch-learn-more"
+                  onClick={() => {
+                    window.open(`${CONTAINER_REGISTERY}`, '_blank');
+                  }}
+                >
+                  Container Registry
+                </div>
+                {' or '}
+                <div
+                  className="create-batch-learn-more"
+                  onClick={() => {
+                    window.open(`${ARTIFACT_REGISTERY}`, '_blank');
+                  }}
+                >
+                  Artifact Registry
+                </div>
+                {' . '}
+                <div
+                  className="submit-job-learn-more"
+                  onClick={() => {
+                    window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+                  }}
+                >
+                  Learn more
+                </div>
               </div>
             </div>
             {batchTypeSelected === 'spark' ||
@@ -1205,7 +1247,7 @@ function CreateBatch({
                   keyValidation={keyValidation}
                   setKeyValidation={setKeyValidation}
                   valueValidation={valueValidation}
-                  setvalueValidation={setvalueValidation}
+                  setValueValidation={setValueValidation}
                   duplicateKeyError={duplicateKeyError}
                   setDuplicateKeyError={setDuplicateKeyError}
                 />
@@ -1249,6 +1291,7 @@ function CreateBatch({
             <div>
               <div className="create-batch-network">
                 <Select
+                  search
                   className="select-primary-network-style"
                   value={networkSelected}
                   onChange={handleNetworkChange}
@@ -1257,12 +1300,13 @@ function CreateBatch({
                 />
 
                 <Select
+                  search
                   className="select-sub-network-style"
                   value={subNetworkSelected}
                   onChange={handleSubNetworkChange}
                   type="text"
-                  options={[]}
-                  placeholder={networkSelected}
+                  options={subNetworkList}
+                  placeholder={defaultValue}
                 />
               </div>
             </div>
@@ -1278,12 +1322,12 @@ function CreateBatch({
               <div className="submit-job-label-header">Encryption</div>
               <div>
                 <div className="create-batch-radio">
-                  {/* <Radio
+                  <Radio
                     className="select-batch-radio-style"
                     value="googleManaged"
                     checked={selectedEncryptionRadio === 'googleManaged'}
                     onChange={() => setSelectedEncryptionRadio('googleManaged')}
-                  /> */}
+                  />
                   <div className="create-batch-message">
                     Google-managed encryption key
                   </div>
@@ -1292,11 +1336,12 @@ function CreateBatch({
                   No configuration required
                 </div>
               </div>
-              {/* <div>
+              <div>
                 <div className="create-batch-radio">
                   <Radio
                     className="select-batch-radio-style"
                     value="googleManaged"
+                    disabled
                     checked={selectedEncryptionRadio === 'customerManaged'}
                     onChange={() =>
                       setSelectedEncryptionRadio('customerManaged')
@@ -1317,16 +1362,20 @@ function CreateBatch({
                     Google Cloud Key Management Service
                   </div>
                 </div>
-                {/* {selectedEncryptionRadio === 'customerManaged' && (
+                {selectedEncryptionRadio === 'customerManaged' && (
                   <div className="create-batch-input">
-                    <Select
+                    <Dropdown
                       className="select-job-style"
-                      placeholder="Select an option"
-                      options={[]}
+                      search
+                      selection
+                      value={clusterSelected}
+                      onChange={handleClusterSelected}
+                      options={clustersList}
+                      placeholder="Search..."
                     />
                   </div>
-                )} 
-              </div> */}
+                )}
+              </div>
             </div>
 
             <div className="submit-job-label-header">
@@ -1344,11 +1393,10 @@ function CreateBatch({
                 Learn more
               </div>
             </div>
-            <div className="create-messagelist">
-              {METASTORE_MESSAGE}
-            </div>
+            <div className="create-messagelist">{METASTORE_MESSAGE}</div>
             <div className="create-batches-message">Metastore project</div>
             <Select
+              search
               placeholder={projectId}
               className="select-job-style"
               value={projectId}
@@ -1365,6 +1413,7 @@ function CreateBatch({
               />
             ) : (
               <Select
+                search
                 placeholder={region}
                 className="select-job-style"
                 value={region}
@@ -1383,11 +1432,13 @@ function CreateBatch({
               />
             ) : (
               <Select
+                search
                 className="select-job-style"
                 value={servicesSelected}
                 type="text"
                 options={servicesList}
                 onChange={handleServiceSelected}
+                placeholder="None"
               />
             )}
 
@@ -1418,7 +1469,7 @@ function CreateBatch({
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
               valueValidation={valueValidation}
-              setvalueValidation={setvalueValidation}
+              setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
             />
@@ -1432,7 +1483,7 @@ function CreateBatch({
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
               valueValidation={valueValidation}
-              setvalueValidation={setvalueValidation}
+              setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
             />
@@ -1455,7 +1506,10 @@ function CreateBatch({
                   SUBMIT
                 </div>
               </div>
-              <div className="job-cancel-button-style" aria-label="cancel Batch">
+              <div
+                className="job-cancel-button-style"
+                aria-label="cancel Batch"
+              >
                 <div onClick={() => handleCreateBatchBackView()}>CANCEL</div>
               </div>
               {error.isOpen && (
