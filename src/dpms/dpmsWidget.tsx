@@ -193,6 +193,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   };
   const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
   columnResponse.forEach((res: any) => {
+    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
+fetching database name from fully qualified name structure */
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
     const columns = res.schema.columns.map(
