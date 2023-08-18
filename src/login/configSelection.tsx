@@ -306,6 +306,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
       ) : !configError && openCreateTemplate ? (
         <CreateRuntime
           runtimeTemplateSelected={runtimeTemplateSelected}
+          setOpenCreateTemplate={setOpenCreateTemplate}
         />
       ) : (
         <div className="settings-component">
