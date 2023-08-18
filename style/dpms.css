@@ -6,29 +6,31 @@
     width: 150px;
     height: 20px;
     margin-top: 19px;
-    margin-left: 20px;
+    margin-left: 13px !important;
     font-weight: 550;
     font-size: 15px;
 }
 .refresh-icon{
-    margin-left: 230px;
+    margin-left: 225px !important;
     margin-top: -20px;
     width: 20px;
     cursor: pointer;
 }
 .search-icon {
-  position: relative;
-  top: 30px;
-  right: 220px;
+  position: absolute !important;
+  top: 70% !important;
+  left: 20px !important;
+  transform: translateY(-50%);
 }
 .search-field{
     border-radius: 4px !important;
     border: solid 1px !important;
     height: 36px !important;
     margin-top: 20px !important;
-    margin-left: 20px !important;
+    margin-left: 13px !important;
     width: 225px !important;
     padding-left: 35px !important;
+    font-size: 13px;
 }
   .columns.icon{
     margin-left: 20px;
@@ -39,7 +41,6 @@
   
   div[role="treeitem"][aria-level="0"] > div > div > div >svg {
     margin-right: 5px;
-    margin-top:-2px;
     cursor: pointer;
   }
 
@@ -63,6 +64,11 @@
   div[role="treeitem"] > div > div:last-child {
     cursor: pointer;
   }
+  div[role="treeitem"][aria-level="2"] > div > div:last-child {
+    cursor: context-menu !important;
+  }
+  
+
   .db-icon{
     pointer-events: none;
   }
@@ -77,12 +83,13 @@
     margin-left: 20px;
     font-weight: 550;
     font-size: 15px;
+    width: 230px;
   }
   .tree-container {
-    height: 600px;
-    overflow-y: auto;
     margin-left: 20px;
     overflow-x: hidden;
+    overflow: auto;
+    margin-top: 10px;
   }
   .database-loader{
     display: flex;

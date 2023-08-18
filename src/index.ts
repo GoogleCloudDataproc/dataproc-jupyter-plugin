@@ -71,8 +71,30 @@ const extension: JupyterFrontEndPlugin<void> = {
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('clusterValue');
     });
+    const panel = new Panel();
+    panel.id = 'dpms-tab';
+    panel.title.icon = iconDpms;
+    const loadDpmsWidget = (value: string) => {
+      const existingWidgets = panel.widgets;
+      existingWidgets.forEach(widget => {
+        if (widget instanceof dpmsWidget) {
+          widget.dispose();
+        }
+      });
+      const newWidget = new dpmsWidget(app as JupyterLab);
+      panel.addWidget(newWidget);
+    };
+
+    panel.addWidget(new dpmsWidget(app as JupyterLab));
+    const localStorageValue = localStorage.getItem('clusterValue');
+    if (localStorageValue) {
+      loadDpmsWidget(localStorageValue);
+    }
+    app.shell.add(panel, 'left', { rank: 1000 });
+
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
+      let localStorageValue = localStorage.getItem('clusterValue');
       if (widget && widget instanceof NotebookPanel) {
         const kernel = widget.sessionContext.session?.kernel;
         if (kernel) {
@@ -84,10 +106,20 @@ const extension: JupyterFrontEndPlugin<void> = {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
             const clusterValue = parts[parts.length - 1];
-            localStorage.setItem('clusterValue', clusterValue);
+            if (localStorageValue === null) {
+              localStorage.setItem('clusterValue', clusterValue);
+              localStorageValue = localStorage.getItem('clusterValue');
+              loadDpmsWidget(localStorageValue || '');
+            } else if (
+              localStorageValue !== localStorage.getItem('clusterValue')
+            ) {
+              localStorageValue = localStorage.getItem('clusterValue');
+              loadDpmsWidget(localStorageValue || '');
+            }
           }
         } else {
           localStorage.removeItem('clusterValue');
+          loadDpmsWidget('');
         }
         document.title = title.label;
       } else {
@@ -95,7 +127,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
       console.log(Kernel);
     };
-    labShell.currentChanged.connect((_, change) => {
+    labShell.currentChanged.connect(async (_, change) => {
       const { oldValue, newValue } = change;
       // Clean up after the old value if it exists,
       // listen for changes to the title of the activity
@@ -116,7 +148,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
-    const createRuntimeTemplateComponentCommand = 'create-runtime-template-component';
+    const createRuntimeTemplateComponentCommand =
+      'create-runtime-template-component';
     commands.addCommand(createRuntimeTemplateComponentCommand, {
       caption: 'Create a new runtime template',
       label: 'New Runtime Template',
@@ -209,7 +242,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             }
           });
 
-          serverlessIndex = index
+          serverlessIndex = index;
 
           launcher.add({
             command: commandNotebook,
@@ -260,12 +293,6 @@ const extension: JupyterFrontEndPlugin<void> = {
           });
         }
       });
-      const panel = new Panel();
-      panel.id = 'dpms-tab';
-      panel.title.icon = iconDpms; // svg import
-      panel.addWidget(new dpmsWidget(app as JupyterLab));
-      app.shell.add(panel, 'left');
-
       launcher.add({
         command: createRuntimeTemplateComponentCommand,
         category: 'Dataproc Serverless Notebooks',

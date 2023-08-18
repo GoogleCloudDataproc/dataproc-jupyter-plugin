@@ -31,7 +31,7 @@ const DatabaseInfo = ({
 }: IDatabaseProps): React.ReactElement => {
   const database = {
     'Database name': title,
-    'Description': databaseDetails[title],
+    Description: databaseDetails[title],
     'DPMS Instance': dataprocMetastoreServices
   };
   const renderTable = () => {
