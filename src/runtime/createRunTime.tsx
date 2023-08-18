@@ -28,7 +28,8 @@ import {
   BASE_URL_NETWORKS,
   PROJECT_LIST_URL,
   REGION_URL,
-  STATUS_RUNNING
+  STATUS_RUNNING,
+  USER_INFO_URL
 } from '../utils/const';
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
@@ -69,8 +70,8 @@ let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
 
-function CreateRunTime({runtimeTemplateSelected}: any) {
-  console.log(runtimeTemplateSelected)
+function CreateRunTime({ runtimeTemplateSelected }: any) {
+  console.log(runtimeTemplateSelected);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -120,14 +121,19 @@ function CreateRunTime({runtimeTemplateSelected}: any) {
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
   const [timeList, setTimeList] = useState([{}]);
+  const [userInfo, setUserInfo] = useState({
+    email: '',
+    picture: ''
+  });
 
   useEffect(() => {
     const timeData = [
-      { key: 'hour', value: 'hour', text: 'hour' },
-      { key: 'min', value: 'min', text: 'min' },
-      { key: 'sec', value: 'sec', text: 'sec' }
+      { key: 'h', value: 'h', text: 'hour' },
+      { key: 'm', value: 'm', text: 'min' },
+      { key: 's', value: 's', text: 'sec' }
     ];
     setTimeList(timeData);
+    displayUserInfo();
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
@@ -142,6 +148,30 @@ function CreateRunTime({runtimeTemplateSelected}: any) {
     runTimeValidation,
     duplicateKeyError
   ]);
+  const displayUserInfo = async () => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(USER_INFO_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      })
+        .then((response: any) => {
+          response
+            .json()
+            .then((responseResult: any) => {
+              setUserInfo(responseResult);
+            })
+            .catch((e: any) => console.log(e));
+        })
+        .catch((err: any) => {
+          console.error('Error displaying user info', err);
+          toast.error('Failed to fetch user information');
+        });
+    }
+  };
   const listClustersAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -277,6 +307,7 @@ function CreateRunTime({runtimeTemplateSelected}: any) {
                 }));
               setSubNetworklist(keyLabelStructureSubNetwork);
               setDefaultValue(keyLabelStructureSubNetwork[0].value);
+              setSubNetworkSelected(keyLabelStructureSubNetwork[0].value);
             })
 
             .catch((e: Error) => {
@@ -479,6 +510,7 @@ function CreateRunTime({runtimeTemplateSelected}: any) {
   };
   const handleNetworkChange = (event: any, data: any) => {
     setNetworkSelected(data.value);
+    setSubNetworkSelected(defaultValue);
     listSubNetworksAPI(data.value);
   };
   const handleSubNetworkChange = (event: any, data: any) => {
@@ -506,51 +538,54 @@ function CreateRunTime({runtimeTemplateSelected}: any) {
         propertyObject[key] = value;
       });
       const payload = {
-        name: runTimeSelected,
+        name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
         description: desciptionSelected,
+        creator: userInfo.email,
         createTime: new Date().toISOString(),
         jupyterSession: {
-            Kernel: {
-              PYTHON: '1'
-            },
-            displayName: displayNameSelected
-          
+          kernel: 'PYTHON',
+          displayName: displayNameSelected
         },
-        creator: '',
         labels: labelObject,
         runtimeConfig: {
-            version: versionSelected,
-            ...(propertyObject && { properties: propertyObject }),
-          
-          ...(pythonRepositorySelected &&{
-          repositoryConfig: {
-            pypiRepositoryConfig: {
-              pypiRepository: pythonRepositorySelected
-            }
-          }})
+          ...(versionSelected && { version: versionSelected }),
+          ...(propertyObject && { properties: propertyObject })
+
+          // ...(pythonRepositorySelected && {
+          //   repositoryConfig: {
+          //     pypiRepositoryConfig: {
+          //       pypiRepository: pythonRepositorySelected
+          //     }
+          //   }
+          // })
         },
         environmentConfig: {
+          executionConfig: {
             ...(networkTagSelected.length > 0 && {
-              networkTags: networkTagSelected,
+              networkTags: networkTagSelected
             }),
-            networkUri:networkSelected,
-            subnetworkUri:subNetworkSelected,
-          
-          ...(idleTimeSelected && {idleTtl:idleTimeSelected}),
-          ...(timeSelected && {ttl:timeSelected})
-        },
-        peripheralsConfig:{
+            //  ...(networkSelected && {networkUri:networkSelected}),
+            ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
+
+            ...(idleTimeSelected && {
+              idleTtl: idleTimeSelected + timeSelected
+            }),
+
+            ...((servicesSelected !== 'None' || clusterSelected !== '') && {})
+          },
+          peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
-              metastoreService: servicesSelected,
+              metastoreService: servicesSelected
             }),
             ...(clusterSelected !== '' && {
               sparkHistoryServerConfig: {
-                dataprocCluster: `projects/${credentials.project_id}/locations/${credentials.region_id}/clusters/${clusterSelected}`,
-              },
-            }),
-          
-          updateTime:new Date().getTime(),
-        }
+                dataprocCluster: `projects/${credentials.project_id}/locations/${credentials.region_id}/clusters/${clusterSelected}`
+              }
+            })
+          }
+        },
+
+        updateTime: new Date().toISOString()
       };
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
@@ -735,7 +770,6 @@ function CreateRunTime({runtimeTemplateSelected}: any) {
               />
             ) : (
               <Select
-              
                 className="select-job-style"
                 search
                 selection
@@ -848,11 +882,7 @@ function CreateRunTime({runtimeTemplateSelected}: any) {
                 className="job-cancel-button-style"
                 aria-label="cancel Batch"
               >
-                <div
-                //onClick={() => handleCreateBatchBackView()}
-                >
-                  CANCEL
-                </div>
+                <div>CANCEL</div>
               </div>
               {error.isOpen && (
                 <ErrorPopup

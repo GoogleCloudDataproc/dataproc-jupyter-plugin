@@ -22,7 +22,7 @@ import CreateRuntime from './createRunTime';
 const RuntimeTemplateComponent = (): React.JSX.Element => {
   return (
     <div>
-        <CreateRuntime />
+      <CreateRuntime />
     </div>
   );
 };

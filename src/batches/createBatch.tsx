@@ -438,6 +438,7 @@ function CreateBatch({
                 }));
               setSubNetworklist(keyLabelStructureSubNetwork);
               setDefaultValue(keyLabelStructureSubNetwork[0].value);
+             setSubNetworkSelected(keyLabelStructureSubNetwork[0].value);
             })
 
             .catch((e: Error) => {
@@ -662,6 +663,7 @@ function CreateBatch({
           serviceAccount: serviceAccountSelected
         }),
         subnetworkUri: subNetworkSelected,
+        networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
         })
