@@ -41,8 +41,7 @@ const TableInfo = ({
 }: IDatabaseProps): React.JSX.Element => {
   const table = {
     'Table name': title,
-    Description: tableDescription[title],
-    'Column name': '',
+    'Description': tableDescription[title],
     'Database': database,
     'Dataproc Metastore Instance': dataprocMetastoreServices
   };
