@@ -663,7 +663,7 @@ function CreateBatch({
           serviceAccount: serviceAccountSelected
         }),
         subnetworkUri: subNetworkSelected,
-        networkUri:networkSelected,
+        // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
         })

@@ -288,6 +288,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
       projectListAPI();
       displayUserInfo();
     }
+    setRuntimeTemplateSelected(undefined);
   }, []);
   return (
     <div>

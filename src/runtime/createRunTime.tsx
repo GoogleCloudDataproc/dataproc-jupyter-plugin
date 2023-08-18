@@ -74,6 +74,7 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
   runtimeTemplateSelected: any, 
   setOpenCreateTemplate: (value: boolean) => void; 
 }) {
+  console.log(runtimeTemplateSelected);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -130,7 +131,6 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
     email: '',
     picture: ''
   });
-  console.log(runtimeTemplateSelected);
  
   useEffect(() => {
     const timeData = [
@@ -138,8 +138,11 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
-    
-  
+   
+    runtimeTemplateSelected!==undefined &&
+    setDescriptionSelected(runtimeTemplateSelected.description);
+    runtimeTemplateSelected!==undefined &&
+    setDisplayNameSelected(runtimeTemplateSelected.name);
 
     setTimeList(timeData);
     displayUserInfo();
