@@ -61,6 +61,11 @@
   min-height: 40px;
   outline: none;
 }
+.single-line{
+  display: flex;
+  width:50%;
+
+}
 .create-batch-learn-more {
   color: #7b1fa2;
   text-decoration: underline;
@@ -118,6 +123,17 @@
   display: flex;
 }
 
+.create-batches-subMessage {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 10px;
+  padding-top: 13px;
+  padding-left: 5px;
+  color: #000000;
+  display: flex;
+  width:50%;
+}
 .ui.radio.checkbox input:checked~label:after{
   background-color:#3367d6 !important;
   border-color: #3367d6 !important;
