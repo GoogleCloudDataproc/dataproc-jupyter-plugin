@@ -30,12 +30,14 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
+  JOB_OPTIONAL_EXCLUDE,
   LABEL_TEXT,
   STATUS_RUNNING
 } from '../utils/const';
 import {
   authApi,
   elapsedTime,
+  jobDetailsOptionalDisplay,
   jobTimeFormat,
   jobTypeDisplay,
   jobTypeValue,
@@ -54,6 +56,7 @@ import { statusDisplay } from '../utils/statusDisplay';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
 import PollingTimer from '../utils/pollingTimer';
+import { IJobDetails } from '../utils/jobDetailsInterface';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -105,30 +108,53 @@ function JobDetails({
   clusterResponse,
   clustersList
 }: IJobDetailsProps) {
-  const [jobInfo, setjobInfo] = useState({
-    status: { state: '', stateStartTime: '' },
-    statusHistory: [{ stateStartTime: '' }],
-    labels: '',
-    reference: { jobId: '' },
-    jobUuid: '',
-    pysparkJob: { args: [], mainPythonFileUri: '' },
-    sparkRJob: { args: [], mainRFileUri: '' },
-    sparkJob: { args: [], mainJarFileUri: '', mainClass: '', jarFileUris: '' },
-    sparkSqlJob: { queryFileUri: '', queryList: { queries: '' }, args: [] },
-    placement: { clusterName: '' }
-  });
-  const [jobInfoResponse, setjobInfoResponse] = useState({
+  const initialJobDetails: IJobDetails = {
     status: { state: '', stateStartTime: '' },
     statusHistory: [{ stateStartTime: '' }],
     labels: {},
     reference: { jobId: '' },
     jobUuid: '',
-    pysparkJob: { args: [], mainPythonFileUri: '' },
-    sparkRJob: { args: [], mainRFileUri: '' },
-    sparkJob: { args: [], mainJarFileUri: '', mainClass: '' },
-    sparkSqlJob: { queryFileUri: '', queryList: { queries: '' }, args: [] },
-
+    scheduling: {
+      maxFailuresPerHour: 0
+    },
+    pysparkJob: {
+      args: [],
+      mainPythonFileUri: '',
+      pythonFileUris: [],
+      jarFileUris: [],
+      fileUris: [],
+      archiveUris: [],
+      properties: {}
+    },
+    sparkRJob: {
+      args: [],
+      mainRFileUri: '',
+      fileUris: [],
+      archiveUris: [],
+      properties: {}
+    },
+    sparkJob: {
+      args: [],
+      mainJarFileUri: '',
+      mainClass: '',
+      jarFileUris: [],
+      fileUris: [],
+      archiveUris: [],
+      properties: {}
+    },
+    sparkSqlJob: {
+      queryFileUri: '',
+      queryList: { queries: '' },
+      args: [],
+      scriptVariables: {},
+      properties: {},
+      jarFileUris: []
+    },
     placement: { clusterName: '' }
+  };
+  const [jobInfo, setjobInfo] = useState<IJobDetails>({ ...initialJobDetails });
+  const [jobInfoResponse, setjobInfoResponse] = useState<IJobDetails>({
+    ...initialJobDetails
   });
   const key: any[] | (() => any[]) = [];
   const value: any[] | (() => any[]) = [];
@@ -539,14 +565,7 @@ function JobDetails({
                   <div className="cluster-details-label">Job type</div>
                   <div className="cluster-details-value">{jobType}</div>
                 </div>
-                {job === 'SparkR' && (
-                  <div className="row-details">
-                    <div className="cluster-details-label">Spark R files</div>
-                    <div className="cluster-details-value">
-                      {jobInfo.sparkRJob.mainRFileUri}
-                    </div>
-                  </div>
-                )}
+
                 {job === 'SparkSQL' && (
                   <div className="row-details">
                     <div className="cluster-details-label">
@@ -559,47 +578,6 @@ function JobDetails({
                     )}
                   </div>
                 )}
-                {job === 'PySpark' && (
-                  <div className="row-details">
-                    <div className="cluster-details-label">
-                      Main python file
-                    </div>
-                    <div className="cluster-details-value">
-                      {jobInfo.pysparkJob.mainPythonFileUri}
-                    </div>
-                  </div>
-                )}
-                {job === 'Spark' && (
-                  <>
-                    <div className="row-details">
-                      <div className="cluster-details-label">
-                        Main class or jar
-                      </div>
-                      <div className="cluster-details-value">
-                        {jobInfo.sparkJob.mainJarFileUri}
-                        {jobInfo.sparkJob.mainClass}
-                      </div>
-                    </div>
-                    <div className="row-details">
-                      <div className="cluster-details-label">Jar files</div>
-                      {jobInfo.sparkJob.jarFileUris ? (
-                        <div className="cluster-details-value">
-                          {jobInfo.sparkJob.jarFileUris}
-                        </div>
-                      ) : (
-                        <div className="cluster-details-value">None</div>
-                      )}
-                    </div>
-                  </>
-                )}
-                {job === 'SparkSQL' && jobInfo.sparkSqlJob.queryFileUri && (
-                  <div className="row-details">
-                    <div className="cluster-details-label">Query file</div>
-                    <div className="cluster-details-value">
-                      {jobInfo.sparkSqlJob.queryFileUri}
-                    </div>
-                  </div>
-                )}
                 {job === 'SparkSQL' && jobInfo.sparkSqlJob.queryList && (
                   <div className="row-details">
                     <div className="cluster-details-label">Query script</div>
@@ -608,6 +586,78 @@ function JobDetails({
                     </div>
                   </div>
                 )}
+                {
+                  Object.keys(jobInfo[jobTypeConcat as keyof IJobDetails]).map(
+                    (titleData: string) => {
+                      //@ts-ignore string used as index
+                      const valueData = jobInfo[jobTypeConcat][titleData];
+                      return (
+                        !JOB_OPTIONAL_EXCLUDE.includes(titleData) && (
+                          <div className="row-details">
+                            <div className="cluster-details-label">
+                              {jobDetailsOptionalDisplay(titleData)}
+                            </div>
+                            {typeof valueData === 'string' ? (
+                              <div className="cluster-details-value">
+                                {valueData}
+                              </div>
+                            ) : (
+                              valueData.length > 0 &&
+                              !JOB_OPTIONAL_EXCLUDE.includes(titleData) && (
+                                <div className="cluster-details-value">
+                                  {valueData.map((item: string) => {
+                                    return <div>{item}</div>;
+                                  })}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )
+                      );
+                    }
+                  )
+                }
+
+                {jobInfo?.scheduling &&
+                  jobInfo.scheduling.maxFailuresPerHour && (
+                    <div className="row-details">
+                      <div className="cluster-details-label">
+                        Max restarts per hour
+                      </div>
+                      <div className="cluster-details-value">
+                        {jobInfo.scheduling.maxFailuresPerHour}
+                      </div>
+                    </div>
+                  )}
+                {
+                  //@ts-ignore string used as index
+                  jobInfo[jobTypeConcat].properties && (
+                    <div className="row-details">
+                      <div className="cluster-details-label">Properties</div>
+                      <div className="cluster-details-value"></div>
+                    </div>
+                  )
+                }
+                {
+                  //@ts-ignore string used as index
+                  jobInfo[jobTypeConcat].properties &&
+                    //@ts-ignore string used as index
+                    Object.keys(jobInfo[jobTypeConcat].properties).map(
+                      (titleData: string) => (
+                        <div className="row-details" key={titleData}>
+                          <div className="job-details-label-level-one">
+                            {titleData}
+                          </div>
+                          <div className="details-value">
+                            {
+                              //@ts-ignore string used as index
+                              jobInfo[jobTypeConcat].properties[titleData]
+                            }
+                          </div>
+                        </div>
+                      )
+                    )
+                }
                 {argumentsList && (
                   <div className="row-details">
                     <div className="cluster-details-label">Arguments</div>
