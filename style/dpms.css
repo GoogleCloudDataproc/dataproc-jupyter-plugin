@@ -6,12 +6,12 @@
     width: 150px;
     height: 20px;
     margin-top: 19px;
-    margin-left: 20px;
+    margin-left: 13px !important;
     font-weight: 550;
     font-size: 15px;
 }
 .refresh-icon{
-    margin-left: 230px;
+    margin-left: 225px !important;
     margin-top: -20px;
     width: 20px;
     cursor: pointer;
@@ -19,7 +19,7 @@
 .search-icon {
   position: absolute !important;
   top: 70% !important;
-  left: 30px;
+  left: 20px !important;
   transform: translateY(-50%);
 }
 .search-field{
@@ -27,9 +27,10 @@
     border: solid 1px !important;
     height: 36px !important;
     margin-top: 20px !important;
-    margin-left: 20px !important;
+    margin-left: 13px !important;
     width: 225px !important;
     padding-left: 35px !important;
+    padding-right: unset !important;
 }
   .columns.icon{
     margin-left: 20px;
@@ -83,19 +84,16 @@
     margin-left: 20px;
     font-weight: 550;
     font-size: 15px;
+    width: 230px;
   }
   .tree-container {
     margin-left: 20px;
     overflow-x: hidden;
     overflow: auto;
-    margin-top: 10px
+    margin-top: 10px;
   }
   .database-loader{
     display: flex;
     margin-top: 50px;
     margin-left: 20px;
-  }
-  .ui.icon.input{
-    width: 100%;
-    padding-right: 20px;
   }

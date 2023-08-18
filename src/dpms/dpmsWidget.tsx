@@ -46,7 +46,6 @@ import { authApi } from '../utils/utils';
 import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
 import { ToastContainer, toast } from 'react-toastify';
-import { auto } from '@popperjs/core';
 
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
@@ -313,7 +312,11 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     const [expanded, setExpanded] = useState(false);
 
     const handleToggle = () => {
-      setExpanded(!expanded);
+      if (expanded) {
+        setExpanded(false);
+      } else {
+        setExpanded(true);
+      }
       node.toggle();
     };
     const handleIconClick = (event: React.MouseEvent) => {
@@ -606,9 +609,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                     data={data}
                     openByDefault={false}
                     indent={24}
+                    width={230}
                     rowHeight={36}
-                    height={600}
-                    width={auto}
                     overscanCount={1}
                     paddingTop={30}
                     paddingBottom={10}
@@ -627,9 +629,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           </div>
         </>
       ) : (
-        <div className="dpms-error">
-          Please select cluster notebook attached to metastore and refresh
-        </div>
+        <div className="dpms-error">No DPMS instance found</div>
       )}
     </>
   );

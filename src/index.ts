@@ -148,7 +148,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
-    const createRuntimeTemplateComponentCommand = 'create-runtime-template-component';
+    const createRuntimeTemplateComponentCommand =
+      'create-runtime-template-component';
     commands.addCommand(createRuntimeTemplateComponentCommand, {
       caption: 'Create a new runtime template',
       label: 'New Runtime Template',
@@ -241,7 +242,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             }
           });
 
-          serverlessIndex = index
+          serverlessIndex = index;
 
           launcher.add({
             command: commandNotebook,
