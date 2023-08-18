@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import 'semantic-ui-css/semantic.min.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -52,7 +52,7 @@ type Cluster = {
 };
 
 type Network = {
-  selfLink: any;
+  selfLink: string;
   network: string;
   subnetworks: string;
 };
@@ -70,7 +70,10 @@ let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
 
-function CreateRunTime({ runtimeTemplateSelected }: any) {
+function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: { 
+  runtimeTemplateSelected: any, 
+  setOpenCreateTemplate: (value: boolean) => void; 
+}) {
   console.log(runtimeTemplateSelected);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
@@ -85,7 +88,7 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
-  const [valueValidation, setvalueValidation] = useState(-1);
+  const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
@@ -117,21 +120,30 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
   const [displayNameValidation, setDisplayNameValidation] = useState(false);
   const [versionValidation, setVersionValidation] = useState(false);
   const [idleValidation, setIdleValidation] = useState(false);
+  const [autoValidation,setAutoValidation]=useState(false);
   const [defaultValue, setDefaultValue] = useState('default');
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
+  const [autoTimeSelected, setAutoTimeSelected] = useState('');
+  const [autoSelected, setAutoSelected] = useState('');
   const [timeList, setTimeList] = useState([{}]);
   const [userInfo, setUserInfo] = useState({
     email: '',
     picture: ''
   });
-
+ 
   useEffect(() => {
     const timeData = [
       { key: 'h', value: 'h', text: 'hour' },
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
+   
+    runtimeTemplateSelected!==undefined &&
+    setDescriptionSelected(runtimeTemplateSelected.description);
+    runtimeTemplateSelected!==undefined &&
+    setDisplayNameSelected(runtimeTemplateSelected.name);
+
     setTimeList(timeData);
     displayUserInfo();
     projectListAPI();
@@ -145,8 +157,13 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
     runTimeSelected,
     keyValidation,
     valueValidation,
-    runTimeValidation,
-    duplicateKeyError
+    duplicateKeyError,
+    displayNameValidation,
+    versionValidation,
+    idleValidation,
+    autoValidation,
+    descriptionValidation,
+    runTimeValidation
   ]);
   const displayUserInfo = async () => {
     const credentials = await authApi();
@@ -158,15 +175,15 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
           Authorization: API_HEADER_BEARER + credentials.access_token
         }
       })
-        .then((response: any) => {
+        .then((response: Response) => {
           response
             .json()
             .then((responseResult: any) => {
               setUserInfo(responseResult);
             })
-            .catch((e: any) => console.log(e));
+            .catch((e: Error) => console.log(e));
         })
-        .catch((err: any) => {
+        .catch((err: Error) => {
           console.error('Error displaying user info', err);
           toast.error('Failed to fetch user information');
         });
@@ -457,7 +474,7 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
     }
   };
 
-  const handleInputChange = (event: any) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     setHexNumber(event.target.value);
     event.target.value.length > 0
       ? setRuntimeValidation(false)
@@ -465,21 +482,21 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
     const newRunTime = event.target.value;
     setRunTimeSelected(newRunTime);
   };
-  const handleDisplayNameChange = (event: any) => {
+  const handleDisplayNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.target.value.length > 0
       ? setDisplayNameValidation(false)
       : setDisplayNameValidation(true);
     const newDisplayName = event.target.value;
     setDisplayNameSelected(newDisplayName);
   };
-  const handleDescriptionChange = (event: any) => {
+  const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.target.value.length > 0
       ? setDescriptionValidation(false)
       : setDescriptionValidation(true);
     const newDescription = event.target.value;
     setDescriptionSelected(newDescription);
   };
-  const handleVersionChange = (event: any) => {
+  const handleVersionChange = (event: ChangeEvent<HTMLInputElement>) => {
     event.target.value.length > 0
       ? setVersionValidation(false)
       : setVersionValidation(true);
@@ -490,15 +507,31 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
   const handleServiceSelected = (event: any, data: any) => {
     setServicesSelected(data.value);
   };
-  const handleIdleSelected = (event: any) => {
-    !isNaN(event.target.value)
+  const handleIdleSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    const inputValueAsNumber = parseFloat(inputValue);
+  
+    !isNaN(inputValueAsNumber)
       ? setIdleValidation(false)
       : setIdleValidation(true);
-    const newVersion = event.target.value;
-    setIdleTimeSelected(newVersion);
+  
+      setIdleTimeSelected(inputValue);
   };
   const handletimeSelected = (event: any, data: any) => {
     setTimeSelected(data.value);
+  };
+  const handleAutoTimeSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    const inputValueAsNumber = parseFloat(inputValue);
+  
+    !isNaN(inputValueAsNumber)
+      ? setAutoValidation(false)
+      : setAutoValidation(true);
+  
+    setAutoTimeSelected(inputValue);
+  };
+  const handleAutoSelected = (event: any, data: any) => {
+    setAutoSelected(data.value);
   };
   const handleProjectIdChange = (event: any, data: any) => {
     regionListAPI(data.value);
@@ -516,10 +549,28 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
   const handleSubNetworkChange = (event: any, data: any) => {
     setSubNetworkSelected(data.value);
   };
+  const handleCancelButton = () => {
+    setOpenCreateTemplate(false);
+  };
 
   const handleClusterSelected = (event: any, data: any) => {
     setClusterSelected(data.value);
   };
+  function isSaveDisabled() {
+    return (
+      displayNameSelected === '' ||
+      runTimeSelected === '' ||
+      desciptionSelected === '' ||
+      versionSelected === '' ||
+      displayNameValidation ||
+      versionValidation ||
+      descriptionValidation ||
+      idleValidation ||
+      runTimeValidation ||
+      autoValidation
+    );
+  }
+  
   const handleSave = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -549,26 +600,29 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
         labels: labelObject,
         runtimeConfig: {
           ...(versionSelected && { version: versionSelected }),
-          ...(propertyObject && { properties: propertyObject })
+          ...(propertyObject && { properties: propertyObject }),
 
-          // ...(pythonRepositorySelected && {
-          //   repositoryConfig: {
-          //     pypiRepositoryConfig: {
-          //       pypiRepository: pythonRepositorySelected
-          //     }
-          //   }
-          // })
+          ...(pythonRepositorySelected && {
+            repositoryConfig: {
+              pypiRepositoryConfig: {
+                pypiRepository: pythonRepositorySelected
+              }
+            }
+          })
         },
         environmentConfig: {
           executionConfig: {
             ...(networkTagSelected.length > 0 && {
               networkTags: networkTagSelected
             }),
-            //  ...(networkSelected && {networkUri:networkSelected}),
+            // ...(networkSelected && {networkUri:networkSelected}),
             ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
 
             ...(idleTimeSelected && {
               idleTtl: idleTimeSelected + timeSelected
+            }),
+            ...(autoTimeSelected && {
+              ttl: autoTimeSelected + autoSelected
             }),
 
             ...((servicesSelected !== 'None' || clusterSelected !== '') && {})
@@ -601,6 +655,7 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
         .then(async (response: Response) => {
           if (response.ok) {
             const responseResult = await response.json();
+            setOpenCreateTemplate(false);
             console.log(responseResult);
           } else {
             const errorResponse = await response.json();
@@ -689,7 +744,7 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
             </div>
             <div className="create-batch-network">
               <div className="create-batch-network-message">
-                Primary network*
+                Primary network
               </div>
               <div className="create-batch-network-message">Subnetwork</div>
             </div>
@@ -715,7 +770,7 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
                 />
               </div>
             </div>
-            <div className="create-batches-message">Network tags*</div>
+            <div className="create-batches-message">Network tags</div>
             <TagsInput
               className="select-job-style"
               onChange={e => setNetworkTagSelected(e)}
@@ -805,7 +860,35 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
             {idleValidation && (
               <div className="error-key-parent">
                 <iconError.react tag="div" />
-                <div className="error-key-missing">Numeric is allowed</div>
+                <div className="error-key-missing">Only Numeric is allowed</div>
+              </div>
+            )}
+               <div className="single-line">
+              <div className="create-batches-subMessage">Auto shutdown time</div>
+              <div className="create-batches-subMessage">Time</div>
+            </div>
+            <div className="single-line">
+              <Input
+                className="create-batch-style "
+                value={autoTimeSelected}
+                onChange={e => handleAutoTimeSelected(e)}
+                type="text"
+              />
+
+              <Select
+                search
+                selection
+                className="select-sub-network-style"
+                value={autoSelected}
+                onChange={handleAutoSelected}
+                type="text"
+                options={timeList}
+              />
+            </div>
+            {autoValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" />
+                <div className="error-key-missing">Only Numeric is allowed</div>
               </div>
             )}
 
@@ -842,47 +925,54 @@ function CreateRunTime({ runtimeTemplateSelected }: any) {
             />
             <div className="submit-job-label-header">Spark Properties</div>
             <LabelProperties
-              labelDetail={propertyDetail}
-              setLabelDetail={setPropertyDetail}
-              labelDetailUpdated={propertyDetailUpdated}
-              setLabelDetailUpdated={setPropertyDetailUpdated}
-              buttonText="ADD PROPERTY"
-              keyValidation={keyValidation}
-              setKeyValidation={setKeyValidation}
-              valueValidation={valueValidation}
-              setvalueValidation={setvalueValidation}
-              duplicateKeyError={duplicateKeyError}
-              setDuplicateKeyError={setDuplicateKeyError}
-            />
+            labelDetail={propertyDetail}
+            setLabelDetail={setPropertyDetail}
+            labelDetailUpdated={propertyDetailUpdated}
+            setLabelDetailUpdated={setPropertyDetailUpdated}
+            buttonText="ADD PROPERTY"
+            keyValidation={keyValidation}
+            setKeyValidation={setKeyValidation}
+            valueValidation={valueValidation}
+            setValueValidation={setValueValidation}
+            duplicateKeyError={duplicateKeyError}
+            setDuplicateKeyError={setDuplicateKeyError}
+          />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
-              labelDetail={labelDetail}
-              setLabelDetail={setLabelDetail}
-              labelDetailUpdated={labelDetailUpdated}
-              setLabelDetailUpdated={setLabelDetailUpdated}
-              buttonText="ADD LABEL"
-              keyValidation={keyValidation}
-              setKeyValidation={setKeyValidation}
-              valueValidation={valueValidation}
-              setvalueValidation={setvalueValidation}
-              duplicateKeyError={duplicateKeyError}
-              setDuplicateKeyError={setDuplicateKeyError}
-            />
+            labelDetail={labelDetail}
+            setLabelDetail={setLabelDetail}
+            labelDetailUpdated={labelDetailUpdated}
+            setLabelDetailUpdated={setLabelDetailUpdated}
+            buttonText="ADD LABEL"
+            keyValidation={keyValidation}
+            setKeyValidation={setKeyValidation}
+            valueValidation={valueValidation}
+            setValueValidation={setValueValidation}
+            duplicateKeyError={duplicateKeyError}
+            setDuplicateKeyError={setDuplicateKeyError}
+          />
             <div className="job-button-style-parent">
-              <div className={'submit-button-style'} aria-label="submit Batch">
+            <div
+                className={
+                  isSaveDisabled()
+                    ? 'submit-button-disable-style'
+                    : 'submit-button-style'
+                }
+                aria-label="submit Batch"
+              >
                 <div
                   onClick={() => {
-                    handleSave();
+                    if (!isSaveDisabled()) {
+                      handleSave();
+                    }
                   }}
-                >
-                  Save
-                </div>
+                >SAVE</div>
               </div>
               <div
                 className="job-cancel-button-style"
                 aria-label="cancel Batch"
               >
-                <div>CANCEL</div>
+                <div onClick={handleCancelButton}>CANCEL</div>
               </div>
               {error.isOpen && (
                 <ErrorPopup

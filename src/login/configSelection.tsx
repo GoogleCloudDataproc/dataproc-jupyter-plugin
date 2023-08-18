@@ -288,6 +288,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
       projectListAPI();
       displayUserInfo();
     }
+    setRuntimeTemplateSelected(undefined);
   }, []);
   return (
     <div>
@@ -306,6 +307,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
       ) : !configError && openCreateTemplate ? (
         <CreateRuntime
           runtimeTemplateSelected={runtimeTemplateSelected}
+          setOpenCreateTemplate={setOpenCreateTemplate}
         />
       ) : (
         <div className="settings-component">
