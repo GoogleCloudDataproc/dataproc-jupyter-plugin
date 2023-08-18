@@ -54,7 +54,7 @@ const iconSubmitJob = new LabIcon({
 interface IListRuntimeTemplate {
   openCreateTemplate: boolean;
   setOpenCreateTemplate: (value: boolean) => void;
-  setRuntimeTemplateSelected: (value: SessionTemplateDisplay) => void;
+  setRuntimeTemplateSelected: (value: SessionTemplateDisplay | undefined) => void ;
 }
 
 function ListRuntimeTemplates({
@@ -268,6 +268,7 @@ function ListRuntimeTemplates({
 
   const handleCreateBatchOpen = () => {
     setOpenCreateTemplate(true);
+    setRuntimeTemplateSelected(undefined);
   };
 
   const tableDataCondition = (cell: ICellProps) => {

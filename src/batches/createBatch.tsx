@@ -132,7 +132,7 @@ function CreateBatch({
     useState('googleManaged');
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
-  const [valueValidation, setvalueValidation] = useState(-1);
+  const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
@@ -663,7 +663,7 @@ function CreateBatch({
           serviceAccount: serviceAccountSelected
         }),
         subnetworkUri: subNetworkSelected,
-        networkUri:networkSelected,
+        // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
         })
@@ -1247,7 +1247,7 @@ function CreateBatch({
                   keyValidation={keyValidation}
                   setKeyValidation={setKeyValidation}
                   valueValidation={valueValidation}
-                  setvalueValidation={setvalueValidation}
+                  setValueValidation={setValueValidation}
                   duplicateKeyError={duplicateKeyError}
                   setDuplicateKeyError={setDuplicateKeyError}
                 />
@@ -1469,7 +1469,7 @@ function CreateBatch({
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
               valueValidation={valueValidation}
-              setvalueValidation={setvalueValidation}
+              setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
             />
@@ -1483,7 +1483,7 @@ function CreateBatch({
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
               valueValidation={valueValidation}
-              setvalueValidation={setvalueValidation}
+              setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
             />
