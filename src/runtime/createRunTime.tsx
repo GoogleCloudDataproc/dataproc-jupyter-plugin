@@ -553,6 +553,8 @@ function CreateRunTime({
     setProjectId(data.value);
     data.value === 'None' && setRegion('');
     data.value === 'None' && setServicesSelected('');
+    data.value ==='None' && setRegionList([]);
+    data.value ==='None' && setServicesList([]);
   };
   const handleRegionChange = (event: any, data: any) => {
     setRegion(data.value);
