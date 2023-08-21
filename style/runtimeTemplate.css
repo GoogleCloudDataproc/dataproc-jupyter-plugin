@@ -18,6 +18,22 @@
   padding-left: 15px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
+.runtimetemplate-max-idle{
+    background: #ffffff;
+    width: 90%;
+    margin-top: 10px;
+    min-height: 40px;
+    outline: none;
+ 
+}
+.runtimetemplate-max-idle-select {
+  background: #ffffff;
+  border: 1px solid black !important;
+  border-radius: 4px;
+  margin-top: 10px;
+  min-height: 40px;
+  margin-left: 15px;
+}
 
 .create-runtime-button-wrapper {
   border-bottom: 1px solid #e0e0e0;
