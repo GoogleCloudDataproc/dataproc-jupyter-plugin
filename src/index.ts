@@ -220,7 +220,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           kernelsData?.resources.endpointParentResource &&
           kernelsData?.resources.endpointParentResource.includes('/sessions')
         ) {
-          const commandNotebook = `notebook:create-${kernelsData?.display_name}`;
+          const commandNotebook = `notebook:create-${kernelsData?.name}`;
           commands.addCommand(commandNotebook, {
             caption: kernelsData?.display_name,
             label: kernelsData?.display_name,
@@ -260,7 +260,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           kernelsData?.resources.endpointParentResource &&
           !kernelsData?.resources.endpointParentResource.includes('/sessions')
         ) {
-          const commandNotebook = `notebook:create-${kernelsData?.display_name}`;
+          const commandNotebook = `notebook:create-${kernelsData?.name}`;
           commands.addCommand(commandNotebook, {
             caption: kernelsData?.display_name,
             label: kernelsData?.display_name,

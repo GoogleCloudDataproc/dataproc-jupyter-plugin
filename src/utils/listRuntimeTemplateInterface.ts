@@ -36,4 +36,5 @@ export interface SessionTemplateDisplay {
   owner: string;
   description: string;
   lastModified: string;
+  id:string
 }
