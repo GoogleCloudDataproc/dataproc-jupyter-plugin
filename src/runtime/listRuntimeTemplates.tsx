@@ -69,26 +69,6 @@ function ListRuntimeTemplates({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedRuntimeTemplateValue, setSelectedRuntimeTemplateValue] =
     useState('');
-
-    // const [selectedRuntimeClone, setSelectedRuntimeClone] =
-    // useState<SessionTemplate>({name: '',
-    //   createTime: '',
-    //   jupyterSession: {
-    //     kernel: '',
-    //     displayName: ''
-    //   },
-    //   creator: '',
-    //   labels: {
-    //     purpose: ''
-    //   },
-    //   environmentConfig: {
-    //     executionConfig: {
-    //       subnetworkUri: ''
-    //     }
-    //   },
-    //   description: '',
-    //   updateTime: '',
-    // });  
     const [runTimeTemplateAllList, setRunTimeTemplateAllList] =
     useState<SessionTemplate[]>([{name: '',
       createTime: '',
