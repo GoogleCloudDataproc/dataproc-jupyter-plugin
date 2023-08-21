@@ -93,11 +93,7 @@ function LabelProperties({
       setLabelDetail(labelDetailUpdated);
     }
   };
-  const handleEditLabel = (
-    value: string,
-    index: number,
-    keyValue: string
-  ) => {
+  const handleEditLabel = (value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
 
     labelEdit.forEach((data, dataNumber: any) => {
@@ -204,11 +200,7 @@ function LabelProperties({
                       }
                       onBlur={() => handleEditLabelSwitch()}
                       onChange={e =>
-                        handleEditLabel(
-                          e.target.value,
-                          index,
-                          'key'
-                        )
+                        handleEditLabel(e.target.value, index, 'key')
                       }
                       defaultValue={labelSplit[0]}
                     />
@@ -248,14 +240,11 @@ function LabelProperties({
                       className="edit-input-style"
                       onBlur={() => handleEditLabelSwitch()}
                       onChange={e =>
-                        handleEditLabel(
-                          e.target.value,
-                          index,
-                          'value'
-                        )
+                        handleEditLabel(e.target.value, index, 'value')
                       }
                       disabled={
-                        label=== DEFAULT_LABEL_DETAIL && buttonText === 'ADD LABEL'
+                        label === DEFAULT_LABEL_DETAIL &&
+                        buttonText === 'ADD LABEL'
                       }
                       defaultValue={labelSplit[1]}
                     />
@@ -271,16 +260,28 @@ function LabelProperties({
                         </div>
                       )}
                   </div>
-                  
-                  {label=== DEFAULT_LABEL_DETAIL && buttonText === 'ADD LABEL' ?"":
-                      
+
                   <div
                     role="button"
-                    className="labels-delete-icon"
-                    onClick={() => handleDeleteLabel(index, labelSplit[0])}
+                    className={
+                      label === DEFAULT_LABEL_DETAIL &&
+                      buttonText === 'ADD LABEL'
+                        ? 'labels-delete-icon-hide'
+                        : 'labels-delete-icon'
+                    }
+                    onClick={() => {
+                      if (
+                        !(
+                          label === DEFAULT_LABEL_DETAIL &&
+                          buttonText === 'ADD LABEL'
+                        )
+                      ) {
+                        handleDeleteLabel(index, labelSplit[0]);
+                      }
+                    }}
                   >
                     <iconDelete.react tag="div" />
-                  </div>}
+                  </div>
                   <></>
                 </div>
               </div>

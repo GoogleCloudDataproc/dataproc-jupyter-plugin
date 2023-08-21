@@ -24,7 +24,7 @@ import { authApi } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export const deleteRuntimeTemplateAPI = async (selectedRuntimeTemplate: string) => {
+export const deleteRuntimeTemplateAPI = async (selectedRuntimeTemplate: string,selectedRuntimeTemplateDisplayName:string) => {
   const credentials = await authApi();
   if (credentials) {
     fetch(
@@ -38,12 +38,12 @@ export const deleteRuntimeTemplateAPI = async (selectedRuntimeTemplate: string) 
       }
     )
       .then((response: Response) => {
-        toast.success(`${selectedRuntimeTemplate} is deleted successfully`);
+        toast.success(`${selectedRuntimeTemplateDisplayName} is deleted successfully`);
         console.log(response);
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
-        toast.error(`Failed to delete the session ${selectedRuntimeTemplate}`);
+        toast.error(`Failed to delete the session ${selectedRuntimeTemplateDisplayName}`);
       });
   }
 };

@@ -472,7 +472,7 @@ function CreateRunTime({
       const array = new Uint32Array(1);
       crypto.getRandomValues(array);
       const hex = array[0].toString(16);
-      const paddedHex = hex.padStart(14, '0');
+      const paddedHex = hex.padStart(12, '0');
       setHexNumber('runtime-' + paddedHex);
       setRunTimeSelected('runtime-' + paddedHex);
       setGenerationCompleted(true);
@@ -676,7 +676,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${runTimeSelected} successfully submitted`
+              `RuntimeTemplate ${displayNameSelected} successfully submitted`
             );
             console.log(responseResult);
           } else {
@@ -931,16 +931,15 @@ function CreateRunTime({
             <div className="create-batches-message">
               Choose a history server cluster to store logs in.{' '}
             </div>
-            <div className="create-batches-message">History server cluster</div>
 
             <Select
               className="select-job-style"
               search
-              selection
+              clearable
               value={clusterSelected}
               onChange={handleClusterSelected}
               options={clustersList}
-              placeholder="Search..."
+              placeholder="History server cluster"
             />
             <div className="submit-job-label-header">Spark Properties</div>
             <LabelProperties
