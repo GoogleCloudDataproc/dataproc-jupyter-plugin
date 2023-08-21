@@ -269,28 +269,35 @@ export interface ICellProps {
   render: (value: string) => React.ReactNode;
 }
 
-export const jobDetailsOptionalDisplay = (data: string) => {
+export const detailsPageOptionalDisplay = (data: string) => {
   switch (data) {
-    case 'mainJarFileUri':
-      return 'Main class or jar';
-    case 'archiveUris':
-      return 'Archive uris';
     case 'fileUris':
       return 'Files';
     case 'jarFileUris':
       return 'Jar files';
     case 'mainPythonFileUri':
       return 'Main python file';
-    case 'pythonFileUris':
-      return 'Additional python files';
     case 'queryFileUri':
       return 'Query file';
+    default:
+      return data;
+  }
+}
+
+export const jobDetailsOptionalDisplay = (data: string) => {
+  switch (data) {
+    case 'mainJarFileUri':
+      return 'Main class or jar';
+    case 'archiveUris':
+      return 'Archive uris';
+    case 'pythonFileUris':
+      return 'Additional python files';
     case 'mainClass':
       return 'Main class or jar';
     case 'mainRFileUri':
       return 'Spark R files';
     default:
-      return data;
+      return detailsPageOptionalDisplay(data);
   }
 };
 
@@ -304,21 +311,13 @@ export const batchDetailsOptionalDisplay = (data: string) => {
       return 'Main jar';
     case 'archiveUris':
       return 'Archives';
-    case 'fileUris':
-      return 'Files';
-    case 'jarFileUris':
-      return 'Jar files';
-    case 'mainPythonFileUri':
-      return 'Main python file';
     case 'pythonFileUris':
       return 'Python files';
-    case 'queryFileUri':
-      return 'Query file';
     case 'mainClass':
       return 'Main class';
     case 'mainRFileUri':
       return 'Main R file';
     default:
-      return data;
+      return detailsPageOptionalDisplay(data);
   }
 };
