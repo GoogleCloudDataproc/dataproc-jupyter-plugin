@@ -69,6 +69,8 @@ function ListRuntimeTemplates({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedRuntimeTemplateValue, setSelectedRuntimeTemplateValue] =
     useState('');
+    const [selectedRuntimeTemplateDisplayName, setSelectedRuntimeTemplateDisplayName] =
+    useState('');
     const [runTimeTemplateAllList, setRunTimeTemplateAllList] =
     useState<SessionTemplate[]>([{name: '',
       createTime: '',
@@ -213,9 +215,10 @@ function ListRuntimeTemplates({
     }
   };
 
-  const handleDeleteRuntimeTemplate = (runtimeTemplateName: string) => {
+  const handleDeleteRuntimeTemplate = (runtimeTemplateName: string,runtimeTemplateDisplayName:string) => {
 
     setSelectedRuntimeTemplateValue(runtimeTemplateName);
+    setSelectedRuntimeTemplateDisplayName(runtimeTemplateDisplayName);
     setDeletePopupOpen(true);
   };
   const handleCancelDelete = () => {
@@ -223,7 +226,7 @@ function ListRuntimeTemplates({
   };
 
   const handleDelete = async () => {
-    await deleteRuntimeTemplateAPI(selectedRuntimeTemplateValue);
+    await deleteRuntimeTemplateAPI(selectedRuntimeTemplateValue,selectedRuntimeTemplateDisplayName);
     setDeletePopupOpen(false);
   };
   const {
@@ -262,13 +265,14 @@ function ListRuntimeTemplates({
 
   const renderActions = (data: SessionTemplate) => {
     let runtimeTemplateName = data.name;
+    let runtimeTemplateDisplayName=data.jupyterSession.displayName;
     return (
       <div className="actions-icon">
         <div
           role="button"
           className="icon-buttons-style"
           title="Delete Runtime Template"
-          onClick={() => handleDeleteRuntimeTemplate(runtimeTemplateName)}
+          onClick={() => handleDeleteRuntimeTemplate(runtimeTemplateName,runtimeTemplateDisplayName)}
         >
           <iconDelete.react tag="div" />
         </div>
@@ -325,7 +329,7 @@ function ListRuntimeTemplates({
           deletePopupOpen={deletePopupOpen}
           DeleteMsg={
             'This will delete ' +
-            selectedRuntimeTemplateValue +
+            selectedRuntimeTemplateDisplayName +
             ' and cannot be undone.'
           }
         />
