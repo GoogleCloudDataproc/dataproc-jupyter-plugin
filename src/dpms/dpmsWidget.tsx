@@ -309,26 +309,13 @@ fetching database name from fully qualified name structure */
   type NodeProps = NodeRendererProps<any> & {
     onClick: (node: any) => void;
   };
-
-  function Node({ node, style, dragHandle, onClick }: NodeProps) {
-    const [expanded, setExpanded] = useState(false);
-
+  const Node = ({ node, style, dragHandle, onClick }: NodeProps) => {
     const handleToggle = () => {
-      if (expanded) {
-        setExpanded(false);
-      } else {
-        setExpanded(true);
-      }
       node.toggle();
     };
     const handleIconClick = (event: React.MouseEvent) => {
       if (event.currentTarget.classList.contains('caret-icon')) {
-        if (searchTerm && !expanded) {
-          setExpanded(true);
-          node.toggle();
-        } else {
-          handleToggle();
-        }
+        handleToggle();
       }
     };
     const handleTextClick = (event: React.MouseEvent) => {
@@ -337,11 +324,9 @@ fetching database name from fully qualified name structure */
     };
     const renderNodeIcon = () => {
       const depth = calculateDepth(node);
-
       const hasChildren = node.children && node.children.length > 0;
-
       const arrowIcon = hasChildren ? (
-        expanded ? (
+        node.isOpen ? (
           <>
             <div
               role="treeitem"
@@ -363,7 +348,7 @@ fetching database name from fully qualified name structure */
       ) : null;
       if (searchTerm) {
         const arrowIcon =
-          hasChildren && !expanded ? (
+          hasChildren && node.isOpen ? (
             <>
               <div
                 role="treeitem"
@@ -443,7 +428,7 @@ fetching database name from fully qualified name structure */
         </div>
       </div>
     );
-  }
+  };
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
     if (credentials && clusterValue) {
@@ -559,7 +544,6 @@ fetching database name from fully qualified name structure */
       await getColumnDetails(entry);
     });
   }, [entries]);
-
   return (
     <>
       <div>
@@ -608,10 +592,12 @@ fetching database name from fully qualified name structure */
                 </div>
                 <div className="tree-container">
                   <Tree
+                    className="Tree"
                     data={data}
                     openByDefault={false}
                     indent={24}
                     width={230}
+                    height={500}
                     rowHeight={36}
                     overscanCount={1}
                     paddingTop={30}

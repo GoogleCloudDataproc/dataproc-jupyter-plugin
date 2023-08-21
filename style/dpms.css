@@ -87,12 +87,17 @@
   }
   .tree-container {
     margin-left: 20px;
-    overflow-x: hidden;
-    overflow: auto;
     margin-top: 10px;
+    height: 100%;  
   }
   .database-loader{
     display: flex;
     margin-top: 50px;
     margin-left: 20px;
+  }
+  .Tree{
+    overflow: auto;
+    height: 90% !important;
+    width: 100% !important;
+    overflow-wrap: anywhere;
   }
