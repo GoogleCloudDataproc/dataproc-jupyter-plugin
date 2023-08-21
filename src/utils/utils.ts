@@ -293,3 +293,32 @@ export const jobDetailsOptionalDisplay = (data: string) => {
       return data;
   }
 };
+
+export const batchDetailsOptionalDisplay = (data: string) => {
+  switch (data) {
+    case 'args':
+      return 'Arguments';
+    case 'queryVariables':
+      return 'Script variables';
+    case 'mainJarFileUri':
+      return 'Main jar';
+    case 'archiveUris':
+      return 'Archives';
+    case 'fileUris':
+      return 'Files';
+    case 'jarFileUris':
+      return 'Jar files';
+    case 'mainPythonFileUri':
+      return 'Main python file';
+    case 'pythonFileUris':
+      return 'Python files';
+    case 'queryFileUri':
+      return 'Query file';
+    case 'mainClass':
+      return 'Main class';
+    case 'mainRFileUri':
+      return 'Main R file';
+    default:
+      return data;
+  }
+};
