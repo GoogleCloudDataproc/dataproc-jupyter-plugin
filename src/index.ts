@@ -110,9 +110,8 @@ const extension: JupyterFrontEndPlugin<void> = {
               localStorage.setItem('clusterValue', clusterValue);
               localStorageValue = localStorage.getItem('clusterValue');
               loadDpmsWidget(localStorageValue || '');
-            } else if (
-              localStorageValue !== localStorage.getItem('clusterValue')
-            ) {
+            } else if (localStorageValue !== clusterValue) {
+              localStorage.setItem('clusterValue', clusterValue);
               localStorageValue = localStorage.getItem('clusterValue');
               loadDpmsWidget(localStorageValue || '');
             }
