@@ -54,13 +54,13 @@ const iconSubmitJob = new LabIcon({
 interface IListRuntimeTemplate {
   openCreateTemplate: boolean;
   setOpenCreateTemplate: (value: boolean) => void;
-  setRuntimeTemplateSelected: (value: SessionTemplateDisplay | undefined) => void ;
+  setSelectedRuntimeClone:(value: SessionTemplate | undefined) => void ;
 }
 
 function ListRuntimeTemplates({
   openCreateTemplate,
   setOpenCreateTemplate,
-  setRuntimeTemplateSelected
+  setSelectedRuntimeClone
 }: IListRuntimeTemplate) {
   const [runtimeTemplateslist, setRuntimeTemplateslist] = useState<SessionTemplateDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +69,27 @@ function ListRuntimeTemplates({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedRuntimeTemplateValue, setSelectedRuntimeTemplateValue] =
     useState('');
+    const [selectedRuntimeTemplateDisplayName, setSelectedRuntimeTemplateDisplayName] =
+    useState('');
+    const [runTimeTemplateAllList, setRunTimeTemplateAllList] =
+    useState<SessionTemplate[]>([{name: '',
+      createTime: '',
+      jupyterSession: {
+        kernel: '',
+        displayName: ''
+      },
+      creator: '',
+      labels: {
+        purpose: ''
+      },
+      environmentConfig: {
+        executionConfig: {
+          subnetworkUri: ''
+        }
+      },
+      description: '',
+      updateTime: '',
+    }]);  
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingRuntimeTemplates = async (
@@ -132,6 +153,7 @@ function ListRuntimeTemplates({
             .then((responseResult: SessionTemplateRoot) => {
               let transformRuntimeTemplatesListData: SessionTemplateDisplay[] = [];
               if (responseResult && responseResult.sessionTemplates) {
+                setRunTimeTemplateAllList(responseResult.sessionTemplates);
                 let runtimeTemplatesListNew = responseResult.sessionTemplates;
                 runtimeTemplatesListNew.sort(
                   (a: { updateTime: string }, b: { updateTime: string }) => {
@@ -155,7 +177,8 @@ function ListRuntimeTemplates({
                       owner: data.creator,
                       description: data.description,
                       lastModified: startTimeDisplay,
-                      actions: renderActions(data)
+                      actions: renderActions(data),
+                      id:data.name.split('/')[5]
                     };
                   }
                 );
@@ -192,8 +215,10 @@ function ListRuntimeTemplates({
     }
   };
 
-  const handleDeleteRuntimeTemplate = (runtimeTemplateName: string) => {
+  const handleDeleteRuntimeTemplate = (runtimeTemplateName: string,runtimeTemplateDisplayName:string) => {
+
     setSelectedRuntimeTemplateValue(runtimeTemplateName);
+    setSelectedRuntimeTemplateDisplayName(runtimeTemplateDisplayName);
     setDeletePopupOpen(true);
   };
   const handleCancelDelete = () => {
@@ -201,7 +226,7 @@ function ListRuntimeTemplates({
   };
 
   const handleDelete = async () => {
-    await deleteRuntimeTemplateAPI(selectedRuntimeTemplateValue);
+    await deleteRuntimeTemplateAPI(selectedRuntimeTemplateValue,selectedRuntimeTemplateDisplayName);
     setDeletePopupOpen(false);
   };
   const {
@@ -240,13 +265,14 @@ function ListRuntimeTemplates({
 
   const renderActions = (data: SessionTemplate) => {
     let runtimeTemplateName = data.name;
+    let runtimeTemplateDisplayName=data.jupyterSession.displayName;
     return (
       <div className="actions-icon">
         <div
           role="button"
           className="icon-buttons-style"
           title="Delete Runtime Template"
-          onClick={() => handleDeleteRuntimeTemplate(runtimeTemplateName)}
+          onClick={() => handleDeleteRuntimeTemplate(runtimeTemplateName,runtimeTemplateDisplayName)}
         >
           <iconDelete.react tag="div" />
         </div>
@@ -254,21 +280,22 @@ function ListRuntimeTemplates({
     );
   };
 
-  const handleRuntimeTemplatesName = (selectedName: string) => {
-    let selectedRunTime: SessionTemplateDisplay[] = []
-    runtimeTemplateslist.forEach((data: SessionTemplateDisplay)=>{
-      if(data.name === selectedName) {
-        selectedRunTime.push(data)
+  const handleRuntimeTemplatesName = (selectedValue: any) => {
+    let selectedRunTimeAll: SessionTemplate[] = []
+    
+    runTimeTemplateAllList.forEach((data: SessionTemplate)=>{
+      if(data.name.split('/')[5] === selectedValue.row.original.id) {
+        selectedRunTimeAll.push(data)
       }
     })
     pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
-    setRuntimeTemplateSelected(selectedRunTime[0]);
+    setSelectedRuntimeClone(selectedRunTimeAll[0]);
     setOpenCreateTemplate(true);
   };
 
   const handleCreateBatchOpen = () => {
     setOpenCreateTemplate(true);
-    setRuntimeTemplateSelected(undefined);
+    setSelectedRuntimeClone(undefined);
   };
 
   const tableDataCondition = (cell: ICellProps) => {
@@ -278,7 +305,7 @@ function ListRuntimeTemplates({
           role="button"
           {...cell.getCellProps()}
           className="cluster-name"
-          onClick={() => handleRuntimeTemplatesName(cell.value)}
+          onClick={() => handleRuntimeTemplatesName(cell)}
         >
           {cell.value}
         </td>
@@ -302,7 +329,7 @@ function ListRuntimeTemplates({
           deletePopupOpen={deletePopupOpen}
           DeleteMsg={
             'This will delete ' +
-            selectedRuntimeTemplateValue +
+            selectedRuntimeTemplateDisplayName +
             ' and cannot be undone.'
           }
         />

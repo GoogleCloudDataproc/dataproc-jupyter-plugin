@@ -37,7 +37,9 @@ import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import CreateRuntime from '../runtime/createRunTime';
-import { SessionTemplateDisplay } from '../utils/listRuntimeTemplateInterface';
+import {
+  SessionTemplate
+} from '../utils/listRuntimeTemplateInterface';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -71,8 +73,9 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   });
   const [expandRuntimeTemplate, setExpandRuntimeTemplate] = useState(true);
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
-  const [runtimeTemplateSelected, setRuntimeTemplateSelected] = useState<SessionTemplateDisplay>();
-
+ 
+  const [selectedRuntimeClone, setSelectedRuntimeClone] =
+    useState<SessionTemplate>();
   const handleProjectIdChange = (event: any, data: any) => {
     setRegionList([]);
     SetRegionEmpty(true);
@@ -288,7 +291,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
       projectListAPI();
       displayUserInfo();
     }
-    setRuntimeTemplateSelected(undefined);
+    setSelectedRuntimeClone(undefined);
   }, []);
   return (
     <div>
@@ -306,8 +309,8 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         </div>
       ) : !configError && openCreateTemplate ? (
         <CreateRuntime
-          runtimeTemplateSelected={runtimeTemplateSelected}
           setOpenCreateTemplate={setOpenCreateTemplate}
+          selectedRuntimeClone={selectedRuntimeClone}
         />
       ) : (
         <div className="settings-component">
@@ -443,7 +446,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
               <ListRuntimeTemplates
                 openCreateTemplate={openCreateTemplate}
                 setOpenCreateTemplate={setOpenCreateTemplate}
-                setRuntimeTemplateSelected={setRuntimeTemplateSelected}
+                setSelectedRuntimeClone={setSelectedRuntimeClone}
               />
             )}
           </div>

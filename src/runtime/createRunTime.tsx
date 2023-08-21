@@ -70,11 +70,14 @@ let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
 
-function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: { 
-  runtimeTemplateSelected: any, 
-  setOpenCreateTemplate: (value: boolean) => void; 
+function CreateRunTime({
+  setOpenCreateTemplate,
+  selectedRuntimeClone
+}: {
+  setOpenCreateTemplate: (value: boolean) => void;
+  selectedRuntimeClone: any;
 }) {
-  console.log(runtimeTemplateSelected);
+  console.log(selectedRuntimeClone);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -95,9 +98,9 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
   const [servicesList, setServicesList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
-  const [servicesSelected, setServicesSelected] = useState('None');
+  const [servicesSelected, setServicesSelected] = useState('');
   const [clusterSelected, setClusterSelected] = useState('');
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState('None');
   const [region, setRegion] = useState('');
   const [projectList, setProjectList] = useState([{}]);
   const [regionList, setRegionList] = useState<
@@ -120,7 +123,7 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
   const [displayNameValidation, setDisplayNameValidation] = useState(false);
   const [versionValidation, setVersionValidation] = useState(false);
   const [idleValidation, setIdleValidation] = useState(false);
-  const [autoValidation,setAutoValidation]=useState(false);
+  const [autoValidation, setAutoValidation] = useState(false);
   const [defaultValue, setDefaultValue] = useState('default');
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
@@ -131,18 +134,13 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
     email: '',
     picture: ''
   });
- 
+
   useEffect(() => {
     const timeData = [
       { key: 'h', value: 'h', text: 'hour' },
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
-   
-    runtimeTemplateSelected!==undefined &&
-    setDescriptionSelected(runtimeTemplateSelected.description);
-    runtimeTemplateSelected!==undefined &&
-    setDisplayNameSelected(runtimeTemplateSelected.name);
 
     setTimeList(timeData);
     displayUserInfo();
@@ -163,7 +161,10 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
     idleValidation,
     autoValidation,
     descriptionValidation,
-    runTimeValidation
+    runTimeValidation,
+    projectId,
+    region,
+    servicesSelected
   ]);
   const displayUserInfo = async () => {
     const credentials = await authApi();
@@ -402,13 +403,17 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
               transformedProjectList = responseResult.projects.map(
                 (data: Project) => {
                   return {
-                    value: data.projectId,
-                    key: data.projectId,
-                    text: data.projectId
+                    projectId: data.projectId
                   };
                 }
               );
-              setProjectList(transformedProjectList);
+              const keyLabelStructure = transformedProjectList.map(obj => ({
+                key: obj.projectId,
+                value: obj.projectId,
+                text: obj.projectId
+              }));
+              const noneOption = { key: 'None', value: 'None', text: 'None' };
+              setProjectList([noneOption, ...keyLabelStructure]);
             })
             .catch((e: Error) => console.log(e));
         })
@@ -466,10 +471,10 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
       const crypto = window.crypto || window.Crypto;
       const array = new Uint32Array(1);
       crypto.getRandomValues(array);
-      const hex = array[0].toString(14);
-      const paddedHex = hex.padStart(10, '0');
-      setHexNumber(paddedHex);
-      setRunTimeSelected(paddedHex);
+      const hex = array[0].toString(16);
+      const paddedHex = hex.padStart(12, '0');
+      setHexNumber('runtime-' + paddedHex);
+      setRunTimeSelected('runtime-' + paddedHex);
       setGenerationCompleted(true);
     }
   };
@@ -509,26 +514,36 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
   };
   const handleIdleSelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
-    const inputValueAsNumber = parseFloat(inputValue);
+    
+    // Regular expression to match numeric values or an empty string
+    const numericRegex = /^[0-9]*$/;
   
-    !isNaN(inputValueAsNumber)
-      ? setIdleValidation(false)
-      : setIdleValidation(true);
+    if (numericRegex.test(inputValue) || inputValue === "") {
+      setIdleValidation(false); // Numeric values or empty string
+    } else {
+      setIdleValidation(true); // Non-numeric values
+    }
   
-      setIdleTimeSelected(inputValue);
+    setIdleTimeSelected(inputValue);
   };
   const handletimeSelected = (event: any, data: any) => {
     setTimeSelected(data.value);
   };
   const handleAutoTimeSelected = (event: ChangeEvent<HTMLInputElement>) => {
-    const inputValue = event.target.value;
-    const inputValueAsNumber = parseFloat(inputValue);
-  
-    !isNaN(inputValueAsNumber)
-      ? setAutoValidation(false)
-      : setAutoValidation(true);
-  
-    setAutoTimeSelected(inputValue);
+    
+      const inputValue = event.target.value;
+      
+      // Regular expression to match numeric values or an empty string
+      const numericRegex = /^[0-9]*$/;
+    
+      if (numericRegex.test(inputValue) || inputValue === "") {
+        setAutoValidation(false); // Numeric values or empty string
+      } else {
+        setAutoValidation(true); // Non-numeric values
+      }
+    
+      setAutoTimeSelected(inputValue);
+    
   };
   const handleAutoSelected = (event: any, data: any) => {
     setAutoSelected(data.value);
@@ -536,6 +551,10 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
   const handleProjectIdChange = (event: any, data: any) => {
     regionListAPI(data.value);
     setProjectId(data.value);
+    data.value === 'None' && setRegion('');
+    data.value === 'None' && setServicesSelected('');
+    data.value ==='None' && setRegionList([]);
+    data.value ==='None' && setServicesList([]);
   };
   const handleRegionChange = (event: any, data: any) => {
     setRegion(data.value);
@@ -570,7 +589,7 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
       autoValidation
     );
   }
-  
+
   const handleSave = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -656,6 +675,9 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
+            toast.success(
+              `RuntimeTemplate ${displayNameSelected} successfully submitted`
+            );
             console.log(responseResult);
           } else {
             const errorResponse = await response.json();
@@ -699,6 +721,7 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
               value={hexNumber}
               onChange={e => handleInputChange(e)}
               type="text"
+              disabled={selectedRuntimeClone !== undefined}
             />
             {runTimeValidation && (
               <div className="error-key-parent">
@@ -832,25 +855,22 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
                 type="text"
                 options={servicesList}
                 onChange={handleServiceSelected}
-                placeholder="None"
+                placeholder={servicesSelected}
               />
             )}
             <div className="single-line">
               <div className="create-batches-subMessage">Max idle time</div>
-              <div className="create-batches-subMessage">Time</div>
             </div>
             <div className="single-line">
               <Input
-                className="create-batch-style "
+                className="runtimetemplate-max-idle"
                 value={idleTimeSelected}
                 onChange={e => handleIdleSelected(e)}
                 type="text"
               />
 
               <Select
-                search
-                selection
-                className="select-sub-network-style"
+                className="runtimetemplate-max-idle-select"
                 value={timeSelected}
                 onChange={handletimeSelected}
                 type="text"
@@ -863,13 +883,12 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
                 <div className="error-key-missing">Only Numeric is allowed</div>
               </div>
             )}
-               <div className="single-line">
-              <div className="create-batches-subMessage">Auto shutdown time</div>
-              <div className="create-batches-subMessage">Time</div>
+            <div className="single-line">
+              <div className="create-batches-subMessage">Max session time</div>
             </div>
             <div className="single-line">
               <Input
-                className="create-batch-style "
+                className="runtimetemplate-max-idle"
                 value={autoTimeSelected}
                 onChange={e => handleAutoTimeSelected(e)}
                 type="text"
@@ -878,7 +897,7 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
               <Select
                 search
                 selection
-                className="select-sub-network-style"
+                className="runtimetemplate-max-idle-select"
                 value={autoSelected}
                 onChange={handleAutoSelected}
                 type="text"
@@ -912,47 +931,46 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
             <div className="create-batches-message">
               Choose a history server cluster to store logs in.{' '}
             </div>
-            <div className="create-batches-message">History server cluster</div>
 
             <Select
               className="select-job-style"
               search
-              selection
+              clearable
               value={clusterSelected}
               onChange={handleClusterSelected}
               options={clustersList}
-              placeholder="Search..."
+              placeholder="History server cluster"
             />
             <div className="submit-job-label-header">Spark Properties</div>
             <LabelProperties
-            labelDetail={propertyDetail}
-            setLabelDetail={setPropertyDetail}
-            labelDetailUpdated={propertyDetailUpdated}
-            setLabelDetailUpdated={setPropertyDetailUpdated}
-            buttonText="ADD PROPERTY"
-            keyValidation={keyValidation}
-            setKeyValidation={setKeyValidation}
-            valueValidation={valueValidation}
-            setValueValidation={setValueValidation}
-            duplicateKeyError={duplicateKeyError}
-            setDuplicateKeyError={setDuplicateKeyError}
-          />
+              labelDetail={propertyDetail}
+              setLabelDetail={setPropertyDetail}
+              labelDetailUpdated={propertyDetailUpdated}
+              setLabelDetailUpdated={setPropertyDetailUpdated}
+              buttonText="ADD PROPERTY"
+              keyValidation={keyValidation}
+              setKeyValidation={setKeyValidation}
+              valueValidation={valueValidation}
+              setValueValidation={setValueValidation}
+              duplicateKeyError={duplicateKeyError}
+              setDuplicateKeyError={setDuplicateKeyError}
+            />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
-            labelDetail={labelDetail}
-            setLabelDetail={setLabelDetail}
-            labelDetailUpdated={labelDetailUpdated}
-            setLabelDetailUpdated={setLabelDetailUpdated}
-            buttonText="ADD LABEL"
-            keyValidation={keyValidation}
-            setKeyValidation={setKeyValidation}
-            valueValidation={valueValidation}
-            setValueValidation={setValueValidation}
-            duplicateKeyError={duplicateKeyError}
-            setDuplicateKeyError={setDuplicateKeyError}
-          />
+              labelDetail={labelDetail}
+              setLabelDetail={setLabelDetail}
+              labelDetailUpdated={labelDetailUpdated}
+              setLabelDetailUpdated={setLabelDetailUpdated}
+              buttonText="ADD LABEL"
+              keyValidation={keyValidation}
+              setKeyValidation={setKeyValidation}
+              valueValidation={valueValidation}
+              setValueValidation={setValueValidation}
+              duplicateKeyError={duplicateKeyError}
+              setDuplicateKeyError={setDuplicateKeyError}
+            />
             <div className="job-button-style-parent">
-            <div
+              <div
                 className={
                   isSaveDisabled()
                     ? 'submit-button-disable-style'
@@ -966,7 +984,9 @@ function CreateRunTime({ runtimeTemplateSelected, setOpenCreateTemplate }: {
                       handleSave();
                     }
                   }}
-                >SAVE</div>
+                >
+                  SAVE
+                </div>
               </div>
               <div
                 className="job-cancel-button-style"

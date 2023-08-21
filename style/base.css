@@ -78,4 +78,7 @@ h2 {
 .ui.selection.active.dropdown:focus {
   border: 3px solid #3367D6 !important;
 }
+.ui.selection.dropdown {
+  min-width:5em !important;
+}
 
