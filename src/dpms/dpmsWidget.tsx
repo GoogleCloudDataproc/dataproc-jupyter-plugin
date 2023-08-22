@@ -699,7 +699,7 @@ fetching database name from fully qualified name structure */
           DPMS is not configured for this cluster. Please attach DPMS or
           activate DPMS sync with data catalog
         </div>):(<div className="dpms-error">
-          Please select notebook connected to DPMS
+        DPMS schema explorer not set up
         </div>))
       )}
     </>
