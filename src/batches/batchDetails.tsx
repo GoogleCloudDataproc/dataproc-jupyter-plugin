@@ -29,7 +29,7 @@ import {
   BASE_URL,
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
-  BATCH_OPTIONAL_EXCLUDE,
+  BATCH_FIELDS_EXCLUDED,
   METASTORE_SERVICE_KEY,
   METASTORE_SERVICE_LABEL,
   NETWORK_KEY,
@@ -396,7 +396,7 @@ function BatchDetails({
                   //@ts-ignore string used as index
                   const valueData = batchInfoResponse[batchConcat][titleData];
                   return (
-                    !BATCH_OPTIONAL_EXCLUDE.includes(titleData) && (
+                    !BATCH_FIELDS_EXCLUDED.includes(titleData) && (
                       <>
                         <div className="row-details">
                           <div className="details-label">
@@ -406,7 +406,7 @@ function BatchDetails({
                             <div className="details-value">{valueData}</div>
                           ) : (
                             valueData.length > 0 &&
-                            !BATCH_OPTIONAL_EXCLUDE.includes(titleData) && (
+                            !BATCH_FIELDS_EXCLUDED.includes(titleData) && (
                               <div className="details-value">
                                 {valueData.map((item: string) => {
                                   return <div>{item}</div>;

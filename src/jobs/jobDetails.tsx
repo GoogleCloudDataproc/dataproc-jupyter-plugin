@@ -30,7 +30,7 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
-  JOB_OPTIONAL_EXCLUDE,
+  JOB_FIELDS_EXCLUDED,
   LABEL_TEXT,
   STATUS_RUNNING
 } from '../utils/const';
@@ -592,7 +592,7 @@ function JobDetails({
                       //@ts-ignore string used as index
                       const valueData = jobInfo[jobTypeConcat][titleData];
                       return (
-                        !JOB_OPTIONAL_EXCLUDE.includes(titleData) && (
+                        !JOB_FIELDS_EXCLUDED.includes(titleData) && (
                           <div className="row-details">
                             <div className="cluster-details-label">
                               {jobDetailsOptionalDisplay(titleData)}
@@ -603,7 +603,7 @@ function JobDetails({
                               </div>
                             ) : (
                               valueData.length > 0 &&
-                              !JOB_OPTIONAL_EXCLUDE.includes(titleData) && (
+                              !JOB_FIELDS_EXCLUDED.includes(titleData) && (
                                 <div className="cluster-details-value">
                                   {valueData.map((item: string) => {
                                     return <div>{item}</div>;

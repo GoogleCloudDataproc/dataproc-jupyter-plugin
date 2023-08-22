@@ -22,7 +22,7 @@ export interface IPysparkJob {
   jarFileUris: string[];
   fileUris: string[];
   archiveUris: string[];
-  properties: Record<string, any>;
+  properties: Record<string, string>;
 }
 
 export interface ISparkRJob {
@@ -30,7 +30,7 @@ export interface ISparkRJob {
   mainRFileUri: string;
   fileUris: string[];
   archiveUris: string[];
-  properties: Record<string, any>;
+  properties: Record<string, string>;
 }
 
 export interface ISparkJob {
@@ -40,7 +40,7 @@ export interface ISparkJob {
   jarFileUris: string[];
   fileUris: string[];
   archiveUris: string[];
-  properties: Record<string, any>;
+  properties: Record<string, string>;
 }
 
 export interface IQueryList {
@@ -51,8 +51,8 @@ export interface ISparkSqlJob {
   queryFileUri: string;
   queryList: IQueryList;
   args: string[];
-  scriptVariables: Record<string, any>;
-  properties: Record<string, any>;
+  scriptVariables: Record<string, string>;
+  properties: Record<string, string>;
   jarFileUris: string[];
 }
 
@@ -63,7 +63,7 @@ export interface IPlacement {
 export interface IJobDetails {
   status: IStatus;
   statusHistory: IStatusHistoryItem[];
-  labels: Record<string, any>;
+  labels: Record<string, string>;
   reference: IReference;
   jobUuid: string;
   scheduling: IScheduling;

@@ -135,5 +135,5 @@ export const GB_MONTHS = 2592000;
 export const TITLE_LAUNCHER_CATEGORY = 'Dataproc Jobs and Sessions';
 export const SPARK_HISTORY_SERVER = 'Spark History Server';
 export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';
-export const JOB_OPTIONAL_EXCLUDE = ['queryList', 'properties', 'args'];
-export const BATCH_OPTIONAL_EXCLUDE = ['queryList', 'properties'];
+export const JOB_FIELDS_EXCLUDED = ['queryList', 'properties', 'args'];
+export const BATCH_FIELDS_EXCLUDED = ['queryList', 'properties'];
