@@ -30,7 +30,7 @@ import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
-import { Menu, Panel, Title, Widget } from '@lumino/widgets';
+import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
@@ -210,10 +210,10 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    const createAuthLoginComponentCommand = 'create-authlogin-component';
+    const createAuthLoginComponentCommand = 'dataproc:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
-      label: 'Setup',
-      caption: 'Setup',
+      label: 'Configure',
+      caption: 'Configure',
       execute: () => {
         const content = new AuthLogin();
         const widget = new MainAreaWidget<AuthLogin>({ content });
@@ -222,11 +222,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         app.shell.add(widget, 'main');
       }
     });
-
-    const snippetMenu = new Menu({ commands });
-    snippetMenu.title.label = 'Dataproc';
-    snippetMenu.addItem({ command: createAuthLoginComponentCommand });
-    mainMenu.addMenu(snippetMenu);
 
     let serverlessIndex = -1;
 
