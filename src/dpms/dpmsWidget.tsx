@@ -29,10 +29,12 @@ import datasetsIcon from '../../style/icons/datasets_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
 import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
 import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
+import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import 'semantic-ui-css/semantic.min.css';
+import { auto } from '@popperjs/core';
 import {
   BASE_URL,
   API_HEADER_CONTENT_TYPE,
@@ -83,6 +85,10 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
+const iconSearchClear = new LabIcon({
+  name: 'launcher:search-clear-icon',
+  svgstr: searchClearIcon
+});
 
 const calculateDepth = (node: any): number => {
   let depth = 0;
@@ -96,18 +102,20 @@ const calculateDepth = (node: any): number => {
 
 const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [clusterValue, setClusterValue] = useState<string>('');
+  const [notebookValue, setNotebookValue] = useState<string>('');
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [noCluster, setNoCluster] = useState(false);
+  const [noDpmsInstance, setNoDpmsInstance] = useState(false);
+  const [session, setSession] = useState(false);
+  const [cluster, setCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseDetails, setDatabaseDetails] = useState({});
   const [tableDescription, setTableDescription] = useState({});
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
-    if (credentials && clusterValue) {
+    if (credentials && notebookValue) {
       fetch(`${COLUMN_API}${name}`, {
         method: 'GET',
         headers: {
@@ -140,7 +148,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   };
   const getTableDetails = async (database: string) => {
     const credentials = await authApi();
-    if (credentials && clusterValue) {
+    if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_TABLE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}.${database}`,
         scope: {
@@ -293,7 +301,7 @@ fetching database name from fully qualified name structure */
   };
   const clearState = () => {
     setSearchTerm('');
-    setClusterValue('');
+    setNotebookValue('');
     setDataprocMetastoreServices('');
     setIsLoading(true);
     setEntries([]);
@@ -305,11 +313,13 @@ fetching database name from fully qualified name structure */
     setIsLoading(true);
     getActiveNotebook();
   };
-
+  const handleSearchClear = () => {
+    setSearchTerm('');
+  };
   type NodeProps = NodeRendererProps<any> & {
     onClick: (node: any) => void;
   };
-  const Node = ({ node, style, dragHandle, onClick }: NodeProps) => {
+  const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
       node.toggle();
     };
@@ -431,7 +441,7 @@ fetching database name from fully qualified name structure */
   };
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
-    if (credentials && clusterValue) {
+    if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_DATABASE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
         scope: {
@@ -480,9 +490,9 @@ fetching database name from fully qualified name structure */
   };
   const getClusterDetails = async () => {
     const credentials = await authApi();
-    if (credentials && clusterValue) {
+    if (credentials && notebookValue) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterValue}`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
         {
           method: 'GET',
           headers: {
@@ -505,9 +515,56 @@ fetching database name from fully qualified name structure */
                     ? metastoreServices.substring(lastIndex + 1)
                     : '';
                 setDataprocMetastoreServices(instanceName);
-                setNoCluster(false);
+                setNoDpmsInstance(false);
+                setCluster(false);
               } else {
-                setNoCluster(true);
+                setNoDpmsInstance(true);
+                setCluster(true);
+              }
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          setIsLoading(false);
+          console.error('Error listing session details', err);
+          toast.error('Failed to fetch session details');
+        });
+    }
+  };
+  const getSessionDetails = async () => {
+    const credentials = await authApi();
+    if (credentials && notebookValue) {
+      fetch(
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then(async (responseResult: any) => {
+              const metastoreServices =
+                responseResult.environmentConfig?.peripheralsConfig
+                  ?.metastoreService;
+              if (metastoreServices) {
+                const lastIndex = metastoreServices.lastIndexOf('/');
+                const instanceName =
+                  lastIndex !== -1
+                    ? metastoreServices.substring(lastIndex + 1)
+                    : '';
+                setDataprocMetastoreServices(instanceName);
+                setNoDpmsInstance(false);
+               setSession(false);
+              } else {
+                setNoDpmsInstance(true);
+                setSession(true);
               }
             })
             .catch((e: Error) => {
@@ -522,20 +579,29 @@ fetching database name from fully qualified name structure */
     }
   };
   const getActiveNotebook = () => {
-    const clusterVal = localStorage.getItem('clusterValue');
-    if (clusterVal) {
-      setClusterValue(clusterVal);
+    const notebookVal = localStorage.getItem('notebookValue');
+    // notebookVal: clustername/cluster or sessionname/session getting only the cluster or session name
+    if (notebookVal?.includes('/clusters')) {
+      const clusterName = notebookVal.split('/')
+      const clusterVal = clusterName.slice(0, -1).join('/')
+      setNotebookValue(clusterVal);
       getClusterDetails();
-    } else {
-      setNoCluster(true);
+    } else if(notebookVal?.includes('/sessions')){
+      const sessionName = notebookVal.split('/')
+      const sessionVal = sessionName.slice(0, -1).join('/')
+      setNotebookValue(sessionVal);
+      getSessionDetails();
+    }
+    else {
+      setNoDpmsInstance(true);
     }
   };
   useEffect(() => {
     getActiveNotebook();
     return () => {
-      setClusterValue('');
+      setNotebookValue('');
     };
-  }, [clusterValue]);
+  }, [notebookValue]);
   useEffect(() => {
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
@@ -558,7 +624,7 @@ fetching database name from fully qualified name structure */
           <iconRefresh.react tag="div" />
         </div>
       </div>
-      {!noCluster ? (
+      {!noDpmsInstance ? (
         <>
           <div>
             {isLoading ? (
@@ -588,6 +654,13 @@ fetching database name from fully qualified name structure */
                     <div className="search-icon">
                       <iconSearch.react tag="div" />
                     </div>
+                    <div
+                      role="button"
+                      className="search-clear-icon"
+                      onClick={handleSearchClear}
+                    >
+                      <iconSearchClear.react tag="div" />
+                    </div>
                   </div>
                 </div>
                 <div className="tree-container">
@@ -596,7 +669,7 @@ fetching database name from fully qualified name structure */
                     data={data}
                     openByDefault={false}
                     indent={24}
-                    width={230}
+                    width={auto}
                     height={500}
                     rowHeight={36}
                     overscanCount={1}
@@ -605,6 +678,7 @@ fetching database name from fully qualified name structure */
                     padding={25}
                     searchTerm={searchTerm}
                     searchMatch={searchMatch}
+                    idAccessor={node => node.id}
                   >
                     {(props: NodeRendererProps<any>) => (
                       <Node {...props} onClick={handleNodeClick} />
@@ -617,7 +691,16 @@ fetching database name from fully qualified name structure */
           </div>
         </>
       ) : (
-        <div className="dpms-error">No DPMS instance found</div>
+        session ? (
+        <div className="dpms-error">
+          DPMS is not configured for this runtime template. Please attach DPMS or
+          activate DPMS sync with data catalog
+        </div>) : (cluster ? (<div className="dpms-error">
+          DPMS is not configured for this cluster. Please attach DPMS or
+          activate DPMS sync with data catalog
+        </div>):(<div className="dpms-error">
+        DPMS schema explorer not set up
+        </div>))
       )}
     </>
   );
