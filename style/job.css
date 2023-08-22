@@ -250,3 +250,14 @@
   min-height: 18px;
   margin-bottom: 6px;
 }
+
+.job-details-label-level-one {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  width: 35%;
+  padding-left: 15px;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
