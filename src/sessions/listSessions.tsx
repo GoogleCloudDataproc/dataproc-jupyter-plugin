@@ -180,7 +180,10 @@ function ListSessions() {
                   ) {
                     elapsedTimeString = elapsedTime(data.stateTime, startTime);
                   }
-
+                  /*
+                    Extracting sessionID, location from sessionInfo.name
+                    Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
+                  */
                   return {
                     sessionID: data.name.split('/')[5],
                     status: data.state,
