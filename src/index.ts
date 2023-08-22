@@ -212,8 +212,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const createAuthLoginComponentCommand = 'dataproc:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
-      label: 'Configure',
-      caption: 'Configure',
+      label: 'Setup',
       execute: () => {
         const content = new AuthLogin();
         const widget = new MainAreaWidget<AuthLogin>({ content });

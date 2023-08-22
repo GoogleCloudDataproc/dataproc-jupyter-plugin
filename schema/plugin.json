@@ -9,7 +9,7 @@
         "items": [
           {
             "type": "separator",
-            "rank": 6
+            "rank": 99
           },
           {
             "type": "submenu",
@@ -19,11 +19,11 @@
               "items": [
                 {
                   "command": "dataproc:configure",
-                  "rank": 6.1
+                  "rank": 99.1
                 }
               ]
             },
-            "rank": 6
+            "rank": 99
           }
         ]
       }
