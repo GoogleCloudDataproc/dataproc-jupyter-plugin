@@ -91,9 +91,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       loadDpmsWidget(localStorageValue);
     }
     app.shell.add(panel, 'left', { rank: 1000 });
-
+    let isNotebookConnected = false;
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
+      console.log(isNotebookConnected);
+      console.log(widget);
       let localStorageValue = localStorage.getItem('clusterValue');
       if (widget && widget instanceof NotebookPanel) {
         const kernel = widget.sessionContext.session?.kernel;
@@ -124,6 +126,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       } else {
         document.title = title.label;
       }
+      console.log(localStorage.getItem('clusterValue'));
+      console.log(localStorageValue);
       console.log(Kernel);
     };
     labShell.currentChanged.connect(async (_, change) => {
@@ -134,12 +138,14 @@ const extension: JupyterFrontEndPlugin<void> = {
         // Check if the old value is an instance of NotebookPanel
         if (oldValue instanceof NotebookPanel) {
           oldValue.title.changed.disconnect(onTitleChanged);
+          isNotebookConnected = false;
         }
       }
       if (newValue) {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
+          isNotebookConnected = true;
         }
       }
     });

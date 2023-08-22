@@ -17,7 +17,7 @@
 
 import { ReactWidget } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Tree, NodeRendererProps } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
@@ -29,10 +29,12 @@ import datasetsIcon from '../../style/icons/datasets_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
 import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
 import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
+import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import 'semantic-ui-css/semantic.min.css';
+import { auto } from '@popperjs/core';
 import {
   BASE_URL,
   API_HEADER_CONTENT_TYPE,
@@ -82,6 +84,10 @@ const iconRightArrow = new LabIcon({
 const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
+});
+const iconSearchClear = new LabIcon({
+  name: 'launcher:search-clear-icon',
+  svgstr: searchClearIcon
 });
 
 const calculateDepth = (node: any): number => {
@@ -305,11 +311,13 @@ fetching database name from fully qualified name structure */
     setIsLoading(true);
     getActiveNotebook();
   };
-
+  const handleSearchClear = () => {
+    setSearchTerm('');
+  };
   type NodeProps = NodeRendererProps<any> & {
     onClick: (node: any) => void;
   };
-  const Node = ({ node, style, dragHandle, onClick }: NodeProps) => {
+  const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
       node.toggle();
     };
@@ -544,6 +552,15 @@ fetching database name from fully qualified name structure */
       await getColumnDetails(entry);
     });
   }, [entries]);
+  const treeRef = useRef();
+
+  useEffect(() => {
+    const tree = treeRef.current;
+    if (tree) {
+      // const visibleNodes: NodeApi<any>[] = tree.visibleNodes as NodeApi<any>[];
+    }
+    /* See the Tree API reference for all you can do with it. */
+  }, []);
   return (
     <>
       <div>
@@ -588,6 +605,13 @@ fetching database name from fully qualified name structure */
                     <div className="search-icon">
                       <iconSearch.react tag="div" />
                     </div>
+                    <div
+                      role="button"
+                      className="search-clear-icon"
+                      onClick={handleSearchClear}
+                    >
+                      <iconSearchClear.react tag="div" />
+                    </div>
                   </div>
                 </div>
                 <div className="tree-container">
@@ -596,7 +620,7 @@ fetching database name from fully qualified name structure */
                     data={data}
                     openByDefault={false}
                     indent={24}
-                    width={230}
+                    width={auto}
                     height={500}
                     rowHeight={36}
                     overscanCount={1}
@@ -605,6 +629,7 @@ fetching database name from fully qualified name structure */
                     padding={25}
                     searchTerm={searchTerm}
                     searchMatch={searchMatch}
+                    idAccessor={node => node.id}
                   >
                     {(props: NodeRendererProps<any>) => (
                       <Node {...props} onClick={handleNodeClick} />
@@ -617,7 +642,10 @@ fetching database name from fully qualified name structure */
           </div>
         </>
       ) : (
-        <div className="dpms-error">No DPMS instance found</div>
+        <div className="dpms-error">
+          DPMS is not configured for this cluster. Please attach DPMS or
+          activate DPMS sync with data catalog
+        </div>
       )}
     </>
   );
