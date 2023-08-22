@@ -268,3 +268,56 @@ export interface ICellProps {
   };
   render: (value: string) => React.ReactNode;
 }
+
+export const detailsPageOptionalDisplay = (data: string) => {
+  switch (data) {
+    case 'fileUris':
+      return 'Files';
+    case 'jarFileUris':
+      return 'Jar files';
+    case 'mainPythonFileUri':
+      return 'Main python file';
+    case 'queryFileUri':
+      return 'Query file';
+    default:
+      return data;
+  }
+}
+
+export const jobDetailsOptionalDisplay = (data: string) => {
+  switch (data) {
+    case 'mainJarFileUri':
+      return 'Main class or jar';
+    case 'archiveUris':
+      return 'Archive uris';
+    case 'pythonFileUris':
+      return 'Additional python files';
+    case 'mainClass':
+      return 'Main class or jar';
+    case 'mainRFileUri':
+      return 'Spark R files';
+    default:
+      return detailsPageOptionalDisplay(data);
+  }
+};
+
+export const batchDetailsOptionalDisplay = (data: string) => {
+  switch (data) {
+    case 'args':
+      return 'Arguments';
+    case 'queryVariables':
+      return 'Script variables';
+    case 'mainJarFileUri':
+      return 'Main jar';
+    case 'archiveUris':
+      return 'Archives';
+    case 'pythonFileUris':
+      return 'Python files';
+    case 'mainClass':
+      return 'Main class';
+    case 'mainRFileUri':
+      return 'Main R file';
+    default:
+      return detailsPageOptionalDisplay(data);
+  }
+};
