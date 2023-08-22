@@ -81,6 +81,7 @@ const iconDelete = new LabIcon({
   svgstr: deleteIcon
 });
 
+
 function ListSessions() {
   const [sessionsList, setSessionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -118,6 +119,10 @@ function ListSessions() {
       {
         Header: 'Location',
         accessor: 'location'
+      },
+      {
+        Header: 'Creator',
+        accessor: 'creator'
       },
       {
         Header: 'Creation time',
@@ -180,6 +185,7 @@ function ListSessions() {
                     sessionID: data.name.split('/')[5],
                     status: data.state,
                     location: data.name.split('/')[3],
+                    creator: data.creator,
                     creationTime: startTimeDisplay,
                     elapsedTime: elapsedTimeString,
                     actions: renderActions(data)

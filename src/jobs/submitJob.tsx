@@ -881,7 +881,7 @@ function SubmitJob(
                 Additional python files
               </div>
               <TagsInput
-                className="input-style"
+                className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
                     e,
