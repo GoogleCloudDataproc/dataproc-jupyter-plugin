@@ -18,7 +18,7 @@
 }
 .search-icon {
   position: absolute !important;
-  top: 70% !important;
+  top: 73% !important;
   left: 20px !important;
   transform: translateY(-50%);
 }
@@ -80,10 +80,10 @@
   }
   .dpms-error{
     margin-top: 50px;
-    margin-left: 20px;
+    margin-left: 10px;
     font-weight: 550;
     font-size: 15px;
-    width: 230px;
+    width: auto;
   }
   .tree-container {
     margin-left: 20px;
@@ -93,7 +93,7 @@
   .database-loader{
     display: flex;
     margin-top: 50px;
-    margin-left: 20px;
+    margin-left: 10px;
   }
   .Tree{
     overflow: auto;
@@ -103,7 +103,8 @@
   }
   .search-clear-icon{
     position: absolute !important;
-    top: 70% !important;
+    top: 73% !important;
     left: 215px !important;
     transform: translateY(-50%);
+    cursor: pointer;
   }

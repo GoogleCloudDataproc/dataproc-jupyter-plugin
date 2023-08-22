@@ -17,7 +17,7 @@
 
 import { ReactWidget } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
@@ -102,18 +102,20 @@ const calculateDepth = (node: any): number => {
 
 const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [clusterValue, setClusterValue] = useState<string>('');
+  const [notebookValue, setNotebookValue] = useState<string>('');
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [noCluster, setNoCluster] = useState(false);
+  const [noDpmsInstance, setNoDpmsInstance] = useState(false);
+  const [session, setSession] = useState(false);
+  const [cluster, setCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseDetails, setDatabaseDetails] = useState({});
   const [tableDescription, setTableDescription] = useState({});
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
-    if (credentials && clusterValue) {
+    if (credentials && notebookValue) {
       fetch(`${COLUMN_API}${name}`, {
         method: 'GET',
         headers: {
@@ -146,7 +148,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   };
   const getTableDetails = async (database: string) => {
     const credentials = await authApi();
-    if (credentials && clusterValue) {
+    if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_TABLE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}.${database}`,
         scope: {
@@ -299,7 +301,7 @@ fetching database name from fully qualified name structure */
   };
   const clearState = () => {
     setSearchTerm('');
-    setClusterValue('');
+    setNotebookValue('');
     setDataprocMetastoreServices('');
     setIsLoading(true);
     setEntries([]);
@@ -439,7 +441,7 @@ fetching database name from fully qualified name structure */
   };
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
-    if (credentials && clusterValue) {
+    if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_DATABASE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
         scope: {
@@ -488,9 +490,9 @@ fetching database name from fully qualified name structure */
   };
   const getClusterDetails = async () => {
     const credentials = await authApi();
-    if (credentials && clusterValue) {
+    if (credentials && notebookValue) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterValue}`,
+        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
         {
           method: 'GET',
           headers: {
@@ -513,9 +515,56 @@ fetching database name from fully qualified name structure */
                     ? metastoreServices.substring(lastIndex + 1)
                     : '';
                 setDataprocMetastoreServices(instanceName);
-                setNoCluster(false);
+                setNoDpmsInstance(false);
+                setCluster(false);
               } else {
-                setNoCluster(true);
+                setNoDpmsInstance(true);
+                setCluster(true);
+              }
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          setIsLoading(false);
+          console.error('Error listing session details', err);
+          toast.error('Failed to fetch session details');
+        });
+    }
+  };
+  const getSessionDetails = async () => {
+    const credentials = await authApi();
+    if (credentials && notebookValue) {
+      fetch(
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then(async (responseResult: any) => {
+              const metastoreServices =
+                responseResult.environmentConfig?.peripheralsConfig
+                  ?.metastoreService;
+              if (metastoreServices) {
+                const lastIndex = metastoreServices.lastIndexOf('/');
+                const instanceName =
+                  lastIndex !== -1
+                    ? metastoreServices.substring(lastIndex + 1)
+                    : '';
+                setDataprocMetastoreServices(instanceName);
+                setNoDpmsInstance(false);
+               setSession(false);
+              } else {
+                setNoDpmsInstance(true);
+                setSession(true);
               }
             })
             .catch((e: Error) => {
@@ -530,20 +579,29 @@ fetching database name from fully qualified name structure */
     }
   };
   const getActiveNotebook = () => {
-    const clusterVal = localStorage.getItem('clusterValue');
-    if (clusterVal) {
-      setClusterValue(clusterVal);
+    const notebookVal = localStorage.getItem('notebookValue');
+    // notebookVal: clustername/cluster or sessionname/session getting only the cluster or session name
+    if (notebookVal?.includes('/clusters')) {
+      const clusterName = notebookVal.split('/')
+      const clusterVal = clusterName.slice(0, -1).join('/')
+      setNotebookValue(clusterVal);
       getClusterDetails();
-    } else {
-      setNoCluster(true);
+    } else if(notebookVal?.includes('/sessions')){
+      const sessionName = notebookVal.split('/')
+      const sessionVal = sessionName.slice(0, -1).join('/')
+      setNotebookValue(sessionVal);
+      getSessionDetails();
+    }
+    else {
+      setNoDpmsInstance(true);
     }
   };
   useEffect(() => {
     getActiveNotebook();
     return () => {
-      setClusterValue('');
+      setNotebookValue('');
     };
-  }, [clusterValue]);
+  }, [notebookValue]);
   useEffect(() => {
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
@@ -552,15 +610,6 @@ fetching database name from fully qualified name structure */
       await getColumnDetails(entry);
     });
   }, [entries]);
-  const treeRef = useRef();
-
-  useEffect(() => {
-    const tree = treeRef.current;
-    if (tree) {
-      // const visibleNodes: NodeApi<any>[] = tree.visibleNodes as NodeApi<any>[];
-    }
-    /* See the Tree API reference for all you can do with it. */
-  }, []);
   return (
     <>
       <div>
@@ -575,7 +624,7 @@ fetching database name from fully qualified name structure */
           <iconRefresh.react tag="div" />
         </div>
       </div>
-      {!noCluster ? (
+      {!noDpmsInstance ? (
         <>
           <div>
             {isLoading ? (
@@ -642,10 +691,16 @@ fetching database name from fully qualified name structure */
           </div>
         </>
       ) : (
+        session ? (
         <div className="dpms-error">
+          DPMS is not configured for this runtime template. Please attach DPMS or
+          activate DPMS sync with data catalog
+        </div>) : (cluster ? (<div className="dpms-error">
           DPMS is not configured for this cluster. Please attach DPMS or
           activate DPMS sync with data catalog
-        </div>
+        </div>):(<div className="dpms-error">
+          Please select notebook connected to DPMS
+        </div>))
       )}
     </>
   );

@@ -69,7 +69,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       svgstr: serverlessIcon
     });
     window.addEventListener('beforeunload', () => {
-      localStorage.removeItem('clusterValue');
+      localStorage.removeItem('notebookValue');
     });
     const panel = new Panel();
     panel.id = 'dpms-tab';
@@ -86,7 +86,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     };
 
     panel.addWidget(new dpmsWidget(app as JupyterLab));
-    const localStorageValue = localStorage.getItem('clusterValue');
+    const localStorageValue = localStorage.getItem('notebookValue');
     if (localStorageValue) {
       loadDpmsWidget(localStorageValue);
     }
@@ -94,9 +94,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     let isNotebookConnected = false;
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
-      console.log(isNotebookConnected);
-      console.log(widget);
-      let localStorageValue = localStorage.getItem('clusterValue');
+      let localStorageValue = localStorage.getItem('notebookValue');
       if (widget && widget instanceof NotebookPanel) {
         const kernel = widget.sessionContext.session?.kernel;
         if (kernel) {
@@ -107,27 +105,43 @@ const extension: JupyterFrontEndPlugin<void> = {
           ) {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
-            const clusterValue = parts[parts.length - 1];
+            const clusterValue = parts[parts.length - 1]+'/clusters';
             if (localStorageValue === null) {
-              localStorage.setItem('clusterValue', clusterValue);
-              localStorageValue = localStorage.getItem('clusterValue');
+              localStorage.setItem('notebookValue', clusterValue);
+              localStorageValue = localStorage.getItem('notebookValue');
               loadDpmsWidget(localStorageValue || '');
             } else if (localStorageValue !== clusterValue) {
-              localStorage.setItem('clusterValue', clusterValue);
-              localStorageValue = localStorage.getItem('clusterValue');
+              localStorage.setItem('notebookValue', clusterValue);
+              localStorageValue = localStorage.getItem('notebookValue');
               loadDpmsWidget(localStorageValue || '');
             }
           }
-        } else {
-          localStorage.removeItem('clusterValue');
+          else if (
+            kernelSpec?.resources.endpointParentResource.includes('/sessions')
+          ) {
+            const parts =
+              kernelSpec?.name.split('-')
+            const sessionValue = parts.slice(1).join('-')+'/sessions';
+            if (localStorageValue === null) {
+              localStorage.setItem('notebookValue', sessionValue);
+              localStorageValue = localStorage.getItem('notebookValue');
+              loadDpmsWidget(localStorageValue || '');
+            } else if (localStorageValue !== sessionValue) {
+              localStorage.setItem('notebookValue', sessionValue);
+              localStorageValue = localStorage.getItem('notebookValue');
+              loadDpmsWidget(localStorageValue || '');
+            }
+          }
+
+        } 
+        else {
+          localStorage.removeItem('notebookValue');
           loadDpmsWidget('');
         }
         document.title = title.label;
       } else {
         document.title = title.label;
       }
-      console.log(localStorage.getItem('clusterValue'));
-      console.log(localStorageValue);
       console.log(Kernel);
     };
     labShell.currentChanged.connect(async (_, change) => {
