@@ -30,6 +30,7 @@ import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
+import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
@@ -43,6 +44,7 @@ const iconDpms = new LabIcon({
 });
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
+import { GcsBucket } from './gcs/gcsBucket';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'cluster',
@@ -68,10 +70,21 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
+    const iconStorage = new LabIcon({
+      name: 'launcher:storage-icon',
+      svgstr: storageIcon
+    });
+
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
     const panel = new Panel();
+
+    panel.id = 'GCS-bucket-tab';
+    panel.title.icon = iconStorage; 
+    panel.addWidget(new GcsBucket());
+    app.shell.add(panel, 'left');
+
     panel.id = 'dpms-tab';
     panel.title.icon = iconDpms;
     const loadDpmsWidget = (value: string) => {

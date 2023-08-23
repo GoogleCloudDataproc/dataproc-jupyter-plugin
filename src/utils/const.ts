@@ -125,7 +125,7 @@ export const ARTIFACT_REGISTERY = 'https://console.cloud.google.com/artifacts';
 export const METASTORE_MESSAGE =
   'We recommend this option to persist table metadata when the batch finishes processing. A metastore can be shared across many serverless batches in different projects and GCP regions.';
 export const CUSTOM_CONTAINER_MESSAGE =
-  ' Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on';
+  'Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on';
 export const SPARK = 'Spark';
 export const SPARKSQL = 'SparkSQL';
 export const SPARKR = 'SparkR';
@@ -137,3 +137,4 @@ export const SPARK_HISTORY_SERVER = 'Spark History Server';
 export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';
 export const JOB_FIELDS_EXCLUDED = ['queryList', 'properties', 'args'];
 export const BATCH_FIELDS_EXCLUDED = ['queryList', 'properties'];
+export const GCS_URL = 'https://storage.googleapis.com/storage/v1/b';
