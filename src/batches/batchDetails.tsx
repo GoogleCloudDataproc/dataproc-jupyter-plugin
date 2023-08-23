@@ -603,7 +603,11 @@ function BatchDetails({
 
             <div className="row-details">
               <div className="details-label">Encryption type</div>
-              <div className="details-value">Google-managed</div>
+              <div className="details-value">
+                {batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey
+                  ? 'Customer-managed'
+                  : 'Google-managed'}
+              </div>
             </div>
             {batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey && (
               <div className="row-details">

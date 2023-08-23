@@ -18,7 +18,7 @@
 import React from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
-import createClusterIcon from '../../style/icons/create_cluster_icon.svg';
+import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
@@ -39,9 +39,9 @@ import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
 
-const iconCreateCluster = new LabIcon({
-  name: 'launcher:create-cluster-icon',
-  svgstr: createClusterIcon
+const iconSubmitJob = new LabIcon({
+  name: 'launcher:submit-job-icon',
+  svgstr: SubmitJobIcon
 });
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -214,7 +214,7 @@ function ListBatches({
               }}
             >
               <div className="create-cluster-icon">
-                <iconCreateCluster.react tag="div" />
+                <iconSubmitJob.react tag="div" />
               </div>
               <div className="create-cluster-text">Create Batch</div>
             </div>
