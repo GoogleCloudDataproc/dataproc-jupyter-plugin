@@ -140,6 +140,7 @@ function CreateRunTime({
     ];
     setTimeList(timeData);
     updateLogic();
+    
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
