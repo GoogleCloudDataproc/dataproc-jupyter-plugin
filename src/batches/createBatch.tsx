@@ -438,7 +438,7 @@ function CreateBatch({
                 }));
               setSubNetworklist(keyLabelStructureSubNetwork);
               setDefaultValue(keyLabelStructureSubNetwork[0].value);
-             setSubNetworkSelected(keyLabelStructureSubNetwork[0].value);
+              setSubNetworkSelected(keyLabelStructureSubNetwork[0].value);
             })
 
             .catch((e: Error) => {
@@ -1341,7 +1341,6 @@ function CreateBatch({
                   <Radio
                     className="select-batch-radio-style"
                     value="googleManaged"
-                    disabled
                     checked={selectedEncryptionRadio === 'customerManaged'}
                     onChange={() =>
                       setSelectedEncryptionRadio('customerManaged')
@@ -1363,17 +1362,42 @@ function CreateBatch({
                   </div>
                 </div>
                 {selectedEncryptionRadio === 'customerManaged' && (
-                  <div className="create-batch-input">
-                    <Dropdown
-                      className="select-job-style"
-                      search
-                      selection
-                      value={clusterSelected}
-                      onChange={handleClusterSelected}
-                      options={clustersList}
-                      placeholder="Search..."
-                    />
-                  </div>
+                  <>
+                    <div className="create-batch-network">
+                      <div className="create-batch-network-message">
+                        keyRings
+                      </div>
+                      <div className="create-batch-network-message">keys</div>
+                    </div>
+                    <div>
+                      <div className="create-batch-network">
+                        <Select
+                          search
+                          className="select-primary-network-style"
+                          value={''}
+                          type="text"
+                          options={[]}
+                        />
+
+                        <Select
+                          search
+                          className="select-sub-network-style"
+                          value={''}
+                          type="text"
+                          options={[]}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                    <div className="create-batch-network-message">Enter key Manually</div>
+                    <Input
+              className="create-batch-style "
+              value={''}
+              type="text"
+            />
+                    </div>
+
+                  </>
                 )}
               </div>
             </div>
