@@ -79,12 +79,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       localStorage.removeItem('notebookValue');
     });
     const panel = new Panel();
-
-    panel.id = 'GCS-bucket-tab';
-    panel.title.icon = iconStorage; 
-    panel.addWidget(new GcsBucket());
-    app.shell.add(panel, 'left');
-
     panel.id = 'dpms-tab';
     panel.title.icon = iconDpms;
     const loadDpmsWidget = (value: string) => {
@@ -104,6 +98,13 @@ const extension: JupyterFrontEndPlugin<void> = {
       loadDpmsWidget(localStorageValue);
     }
     app.shell.add(panel, 'left', { rank: 1000 });
+
+    const panelGcs = new Panel();
+    panelGcs.id = 'GCS-bucket-tab';
+    panelGcs.title.icon = iconStorage; 
+    panelGcs.addWidget(new GcsBucket());
+    app.shell.add(panelGcs, 'left', { rank: 1001 });
+
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
       let localStorageValue = localStorage.getItem('notebookValue');
