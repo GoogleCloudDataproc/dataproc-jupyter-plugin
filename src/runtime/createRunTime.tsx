@@ -137,9 +137,9 @@ function CreateRunTime({
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
+   
     setTimeList(timeData);
     updateLogic();
-    
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
@@ -1101,7 +1101,6 @@ function CreateRunTime({
               setLabelDetail={setPropertyDetail}
               labelDetailUpdated={propertyDetailUpdated}
               setLabelDetailUpdated={setPropertyDetailUpdated}
-              selectedRuntimeClone={selectedRuntimeClone}
               buttonText="ADD PROPERTY"
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
@@ -1109,6 +1108,7 @@ function CreateRunTime({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              selectedRuntimeClone={selectedRuntimeClone}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
