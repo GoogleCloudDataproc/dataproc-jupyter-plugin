@@ -129,7 +129,6 @@ function CreateRunTime({
   const [autoSelected, setAutoSelected] = useState('');
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
-  const [runtimeUpdated, setRuntimeUpdated] = useState(false);
   const [userInfo, setUserInfo] = useState('');
 
   useEffect(() => {
@@ -191,7 +190,6 @@ function CreateRunTime({
   };
   const updateLogic = () => {
     if (selectedRuntimeClone !== undefined) {
-      setRuntimeUpdated(true);
       const {
         jupyterSession,
         name,
@@ -1103,7 +1101,7 @@ function CreateRunTime({
               setLabelDetail={setPropertyDetail}
               labelDetailUpdated={propertyDetailUpdated}
               setLabelDetailUpdated={setPropertyDetailUpdated}
-              runtimeUpdated={runtimeUpdated}
+              selectedRuntimeClone={selectedRuntimeClone}
               buttonText="ADD PROPERTY"
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
@@ -1119,7 +1117,7 @@ function CreateRunTime({
               labelDetailUpdated={labelDetailUpdated}
               setLabelDetailUpdated={setLabelDetailUpdated}
               buttonText="ADD LABEL"
-              runtimeUpdated={runtimeUpdated}
+              selectedRuntimeClone={selectedRuntimeClone}
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
               valueValidation={valueValidation}
