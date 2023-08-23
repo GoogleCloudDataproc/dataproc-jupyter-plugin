@@ -104,7 +104,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           ) {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
-            const clusterValue = parts[parts.length - 1]+'/clusters';
+            const clusterValue = parts[parts.length - 1] + '/clusters';
             if (localStorageValue === null) {
               localStorage.setItem('notebookValue', clusterValue);
               localStorageValue = localStorage.getItem('notebookValue');
@@ -114,13 +114,11 @@ const extension: JupyterFrontEndPlugin<void> = {
               localStorageValue = localStorage.getItem('notebookValue');
               loadDpmsWidget(localStorageValue || '');
             }
-          }
-          else if (
+          } else if (
             kernelSpec?.resources.endpointParentResource.includes('/sessions')
           ) {
-            const parts =
-              kernelSpec?.name.split('-')
-            const sessionValue = parts.slice(1).join('-')+'/sessions';
+            const parts = kernelSpec?.name.split('-');
+            const sessionValue = parts.slice(1).join('-') + '/sessions';
             if (localStorageValue === null) {
               localStorage.setItem('notebookValue', sessionValue);
               localStorageValue = localStorage.getItem('notebookValue');
@@ -131,9 +129,7 @@ const extension: JupyterFrontEndPlugin<void> = {
               loadDpmsWidget(localStorageValue || '');
             }
           }
-
-        } 
-        else {
+        } else {
           localStorage.removeItem('notebookValue');
           loadDpmsWidget('');
         }
@@ -210,9 +206,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    const createAuthLoginComponentCommand = 'dataproc:configure';
+    const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
-      label: 'Setup',
+      label: 'Cloud Dataproc Settings',
       execute: () => {
         const content = new AuthLogin();
         const widget = new MainAreaWidget<AuthLogin>({ content });

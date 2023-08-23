@@ -9,20 +9,10 @@
         "items": [
           {
             "type": "separator",
-            "rank": 99
+            "rank": 98
           },
           {
-            "type": "submenu",
-            "submenu": {
-              "id": "jp-mainmenu-settings-dataproc",
-              "label": "Dataproc",
-              "items": [
-                {
-                  "command": "dataproc:configure",
-                  "rank": 99.1
-                }
-              ]
-            },
+            "command": "cloud-dataproc-settings:configure",
             "rank": 99
           }
         ]
