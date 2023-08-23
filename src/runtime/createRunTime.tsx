@@ -77,9 +77,7 @@ function CreateRunTime({
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
 }) {
-  console.log(selectedRuntimeClone);
   const [generationCompleted, setGenerationCompleted] = useState(false);
-  const [hexNumber, setHexNumber] = useState('');
   const [displayNameSelected, setDisplayNameSelected] = useState('');
   const [desciptionSelected, setDescriptionSelected] = useState('');
   const [runTimeSelected, setRunTimeSelected] = useState('');
@@ -130,10 +128,9 @@ function CreateRunTime({
   const [autoTimeSelected, setAutoTimeSelected] = useState('');
   const [autoSelected, setAutoSelected] = useState('');
   const [timeList, setTimeList] = useState([{}]);
-  const [userInfo, setUserInfo] = useState({
-    email: '',
-    picture: ''
-  });
+  const [createTime, setCreateTime] = useState('');
+  const [runtimeUpdated, setRuntimeUpdated] = useState(false);
+  const [userInfo, setUserInfo] = useState('');
 
   useEffect(() => {
     const timeData = [
@@ -141,16 +138,17 @@ function CreateRunTime({
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
-
     setTimeList(timeData);
-    displayUserInfo();
+    updateLogic();
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
-  }, [clusterSelected, defaultValue]);
+  }, [selectedRuntimeClone, clusterSelected, defaultValue]);
 
   useEffect(() => {
-    generateRandomHex();
+    if (selectedRuntimeClone === undefined) {
+      generateRandomHex();
+    }
   }, [
     runTimeSelected,
     keyValidation,
@@ -180,7 +178,7 @@ function CreateRunTime({
           response
             .json()
             .then((responseResult: any) => {
-              setUserInfo(responseResult);
+              setUserInfo(responseResult.email);
             })
             .catch((e: Error) => console.log(e));
         })
@@ -188,6 +186,117 @@ function CreateRunTime({
           console.error('Error displaying user info', err);
           toast.error('Failed to fetch user information');
         });
+    }
+  };
+  const updateLogic = () => {
+    if (selectedRuntimeClone !== undefined) {
+      setRuntimeUpdated(true);
+      const {
+        jupyterSession,
+        name,
+        description,
+        runtimeConfig,
+        creator,
+        createTime,
+        environmentConfig
+      } = selectedRuntimeClone;
+
+      setDisplayNameSelected(jupyterSession.displayName);
+      setRunTimeSelected(name.split('/')[5]);
+      setDescriptionSelected(description);
+      setVersionSelected(runtimeConfig.version);
+      setUserInfo(creator);
+      setCreateTime(createTime);
+
+      let runtimeKeys: string[] = [];
+      if (Object.keys(selectedRuntimeClone).length !== 0) {
+        if (selectedRuntimeClone.hasOwnProperty('labels')) {
+          const updatedLabelDetail = Object.entries(
+            selectedRuntimeClone.labels
+          ).map(([k, v]) => `${k}:${v}`);
+          setLabelDetail(prevLabelDetail => [
+            ...prevLabelDetail,
+            ...updatedLabelDetail
+          ]);
+          setLabelDetailUpdated(prevLabelDetailUpdated => [
+            ...prevLabelDetailUpdated,
+            ...updatedLabelDetail
+          ]);
+          for (const key in selectedRuntimeClone) {
+            runtimeKeys.push(key);
+          }
+
+          if (selectedRuntimeClone.runtimeConfig.hasOwnProperty('properties')) {
+            const updatedPropertyDetail = Object.entries(
+              selectedRuntimeClone.runtimeConfig.properties
+            ).map(([k, v]) => `${k}:${v}`);
+            setPropertyDetail(prevPropertyDetail => [
+              ...prevPropertyDetail,
+              ...updatedPropertyDetail
+            ]);
+            setPropertyDetailUpdated(prevPropertyDetailUpdated => [
+              ...prevPropertyDetailUpdated,
+              ...updatedPropertyDetail
+            ]);
+          }
+        }
+      }
+
+      if (environmentConfig) {
+        const executionConfig = environmentConfig.executionConfig;
+        const peripheralsConfig = environmentConfig.peripheralsConfig;
+
+        if (executionConfig) {
+          setSubNetworkSelected(executionConfig.subnetworkUri);
+          if (executionConfig.hasOwnProperty('idleTtl')) {
+            const idleTtlUnit = executionConfig.idleTtl.slice(-1); // Extracting the last character 's'
+
+            setTimeSelected(idleTtlUnit);
+
+            const idleTtlInSecondsWithoutUnit = executionConfig.idleTtl
+              .toString()
+              .slice(0, -1);
+            setIdleTimeSelected(idleTtlInSecondsWithoutUnit);
+          }
+          if (executionConfig.hasOwnProperty('ttl')) {
+            const ttlUnit = executionConfig.idleTtl.slice(-1); // Extracting the last character 's'
+
+            setAutoSelected(ttlUnit);
+
+            const ttlInSecondsWithoutUnit = executionConfig.ttl
+              .toString()
+              .slice(0, -1);
+            setAutoTimeSelected(ttlInSecondsWithoutUnit);
+          }
+          setNetworkTagSelected(
+            executionConfig.hasOwnProperty('networkTags')
+              ? executionConfig.networkTags
+              : []
+          );
+        }
+
+        if (
+          peripheralsConfig &&
+          peripheralsConfig.metastoreService !== undefined
+        ) {
+          setServicesSelected(peripheralsConfig.metastoreService);
+        }
+
+        if (
+          peripheralsConfig &&
+          peripheralsConfig.sparkHistoryServerConfig &&
+          peripheralsConfig.sparkHistoryServerConfig.hasOwnProperty(
+            'dataprocCluster'
+          )
+        ) {
+          const dataprocCluster =
+            peripheralsConfig.sparkHistoryServerConfig.dataprocCluster;
+          setClusterSelected(dataprocCluster.split('/')[5]);
+        }
+      }
+    } else {
+      displayUserInfo();
+      setCreateTime(new Date().toISOString());
     }
   };
   const listClustersAPI = async () => {
@@ -473,14 +582,12 @@ function CreateRunTime({
       crypto.getRandomValues(array);
       const hex = array[0].toString(16);
       const paddedHex = hex.padStart(12, '0');
-      setHexNumber('runtime-' + paddedHex);
       setRunTimeSelected('runtime-' + paddedHex);
       setGenerationCompleted(true);
     }
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setHexNumber(event.target.value);
     event.target.value.length > 0
       ? setRuntimeValidation(false)
       : setRuntimeValidation(true);
@@ -514,36 +621,30 @@ function CreateRunTime({
   };
   const handleIdleSelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
-    
-    // Regular expression to match numeric values or an empty string
     const numericRegex = /^[0-9]*$/;
-  
-    if (numericRegex.test(inputValue) || inputValue === "") {
-      setIdleValidation(false); // Numeric values or empty string
+
+    if (numericRegex.test(inputValue) || inputValue === '') {
+      setIdleValidation(false);
     } else {
-      setIdleValidation(true); // Non-numeric values
+      setIdleValidation(true);
     }
-  
+
     setIdleTimeSelected(inputValue);
   };
   const handletimeSelected = (event: any, data: any) => {
     setTimeSelected(data.value);
   };
   const handleAutoTimeSelected = (event: ChangeEvent<HTMLInputElement>) => {
-    
-      const inputValue = event.target.value;
-      
-      // Regular expression to match numeric values or an empty string
-      const numericRegex = /^[0-9]*$/;
-    
-      if (numericRegex.test(inputValue) || inputValue === "") {
-        setAutoValidation(false); // Numeric values or empty string
-      } else {
-        setAutoValidation(true); // Non-numeric values
-      }
-    
-      setAutoTimeSelected(inputValue);
-    
+    const inputValue = event.target.value;
+    const numericRegex = /^[0-9]*$/;
+
+    if (numericRegex.test(inputValue) || inputValue === '') {
+      setAutoValidation(false);
+    } else {
+      setAutoValidation(true);
+    }
+
+    setAutoTimeSelected(inputValue);
   };
   const handleAutoSelected = (event: any, data: any) => {
     setAutoSelected(data.value);
@@ -553,8 +654,8 @@ function CreateRunTime({
     setProjectId(data.value);
     data.value === 'None' && setRegion('');
     data.value === 'None' && setServicesSelected('');
-    data.value ==='None' && setRegionList([]);
-    data.value ==='None' && setServicesList([]);
+    data.value === 'None' && setRegionList([]);
+    data.value === 'None' && setServicesList([]);
   };
   const handleRegionChange = (event: any, data: any) => {
     setRegion(data.value);
@@ -570,6 +671,11 @@ function CreateRunTime({
   };
   const handleCancelButton = () => {
     setOpenCreateTemplate(false);
+    // const content = new AuthLogin();
+    // const widget = new MainAreaWidget<AuthLogin>({ content });
+    // widget.title.label = 'Config Setup';
+    // //widget.title.icon = iconCluster;
+    // app.shell.add(widget, 'main');
   };
 
   const handleClusterSelected = (event: any, data: any) => {
@@ -589,77 +695,9 @@ function CreateRunTime({
       autoValidation
     );
   }
-
-  const handleSave = async () => {
+  const createRuntimeApi = async (payload: any) => {
     const credentials = await authApi();
     if (credentials) {
-      const labelObject: { [key: string]: string } = {};
-      labelDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        labelObject[key] = value;
-      });
-      const propertyObject: { [key: string]: string } = {};
-      propertyDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      const payload = {
-        name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
-        description: desciptionSelected,
-        creator: userInfo.email,
-        createTime: new Date().toISOString(),
-        jupyterSession: {
-          kernel: 'PYTHON',
-          displayName: displayNameSelected
-        },
-        labels: labelObject,
-        runtimeConfig: {
-          ...(versionSelected && { version: versionSelected }),
-          ...(propertyObject && { properties: propertyObject }),
-
-          ...(pythonRepositorySelected && {
-            repositoryConfig: {
-              pypiRepositoryConfig: {
-                pypiRepository: pythonRepositorySelected
-              }
-            }
-          })
-        },
-        environmentConfig: {
-          executionConfig: {
-            ...(networkTagSelected.length > 0 && {
-              networkTags: networkTagSelected
-            }),
-            // ...(networkSelected && {networkUri:networkSelected}),
-            ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
-
-            ...(idleTimeSelected && {
-              idleTtl: idleTimeSelected + timeSelected
-            }),
-            ...(autoTimeSelected && {
-              ttl: autoTimeSelected + autoSelected
-            }),
-
-            ...((servicesSelected !== 'None' || clusterSelected !== '') && {})
-          },
-          peripheralsConfig: {
-            ...(servicesSelected !== 'None' && {
-              metastoreService: servicesSelected
-            }),
-            ...(clusterSelected !== '' && {
-              sparkHistoryServerConfig: {
-                dataprocCluster: `projects/${credentials.project_id}/locations/${credentials.region_id}/clusters/${clusterSelected}`
-              }
-            })
-          }
-        },
-
-        updateTime: new Date().toISOString()
-      };
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
         {
@@ -691,6 +729,116 @@ function CreateRunTime({
         });
     }
   };
+  const updateRuntimeApi = async (payload: any) => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then(async (response: Response) => {
+          if (response.ok) {
+            const responseResult = await response.json();
+            setOpenCreateTemplate(false);
+            toast.success(
+              `RuntimeTemplate ${displayNameSelected} successfully updated`
+            );
+            console.log(responseResult);
+          } else {
+            const errorResponse = await response.json();
+            console.log(errorResponse);
+            setError({ isOpen: true, message: errorResponse.error.message });
+          }
+        })
+        .catch((err: Error) => {
+          console.error('Error updating template', err);
+          toast.error('Failed to update the template');
+        });
+    }
+  };
+
+  const handleSave = async () => {
+    const credentials = await authApi();
+    if (credentials) {
+      const labelObject: { [key: string]: string } = {};
+      labelDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        labelObject[key] = value;
+      });
+      const propertyObject: { [key: string]: string } = {};
+      propertyDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        propertyObject[key] = value;
+      });
+      const payload = {
+        name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
+        description: desciptionSelected,
+        creator: userInfo,
+        createTime: createTime,
+        jupyterSession: {
+          kernel: 'PYTHON',
+          displayName: displayNameSelected
+        },
+        labels: labelObject,
+        runtimeConfig: {
+          ...(versionSelected && { version: versionSelected }),
+          ...(propertyObject && { properties: propertyObject }),
+
+          ...(pythonRepositorySelected && {
+            repositoryConfig: {
+              pypiRepositoryConfig: {
+                pypiRepository: pythonRepositorySelected
+              }
+            }
+          })
+        },
+        environmentConfig: {
+          executionConfig: {
+            ...(networkTagSelected.length > 0 && {
+              networkTags: networkTagSelected
+            }),
+            // ...(networkSelected && {networkUri:networkSelected}),
+            ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
+
+            ...(idleTimeSelected && {
+              idleTtl: idleTimeSelected + timeSelected
+            }),
+            ...(autoTimeSelected && {
+              ttl: autoTimeSelected + autoSelected
+            })
+          },
+          peripheralsConfig: {
+            ...(servicesSelected !== 'None' && {
+              metastoreService: servicesSelected
+            }),
+            ...(clusterSelected !== '' && {
+              sparkHistoryServerConfig: {
+                dataprocCluster: `projects/${credentials.project_id}/locations/${credentials.region_id}/clusters/${clusterSelected}`
+              }
+            })
+          }
+        },
+
+        updateTime: new Date().toISOString()
+      };
+      if (selectedRuntimeClone !== undefined) {
+        updateRuntimeApi(payload);
+      } else {
+        createRuntimeApi(payload);
+      }
+    }
+  };
 
   return (
     <div>
@@ -718,7 +866,7 @@ function CreateRunTime({
 
             <Input
               className="create-batch-style "
-              value={hexNumber}
+              value={runTimeSelected}
               onChange={e => handleInputChange(e)}
               type="text"
               disabled={selectedRuntimeClone !== undefined}
@@ -877,6 +1025,10 @@ function CreateRunTime({
                 options={timeList}
               />
             </div>
+            <div className="create-messagelist">
+              Max notebook idle time before the session is auto-terminated 10
+              mins to 330 hours.
+            </div>
             {idleValidation && (
               <div className="error-key-parent">
                 <iconError.react tag="div" />
@@ -903,6 +1055,9 @@ function CreateRunTime({
                 type="text"
                 options={timeList}
               />
+            </div>
+            <div className="create-messagelist">
+              Max lifetime of a session. 10 mins and 330 hours.
             </div>
             {autoValidation && (
               <div className="error-key-parent">
@@ -947,6 +1102,7 @@ function CreateRunTime({
               setLabelDetail={setPropertyDetail}
               labelDetailUpdated={propertyDetailUpdated}
               setLabelDetailUpdated={setPropertyDetailUpdated}
+              runtimeUpdated={runtimeUpdated}
               buttonText="ADD PROPERTY"
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
@@ -962,6 +1118,7 @@ function CreateRunTime({
               labelDetailUpdated={labelDetailUpdated}
               setLabelDetailUpdated={setLabelDetailUpdated}
               buttonText="ADD LABEL"
+              runtimeUpdated={runtimeUpdated}
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
               valueValidation={valueValidation}

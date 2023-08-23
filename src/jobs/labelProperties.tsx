@@ -54,7 +54,8 @@ function LabelProperties({
   setValueValidation,
   duplicateKeyError,
   setDuplicateKeyError,
-  labelEditMode
+  labelEditMode,
+  runtimeUpdated
 }: any) {
   /* 
   labelDetail used to store the permanent label details when onblur 
@@ -62,7 +63,7 @@ function LabelProperties({
   */
   useEffect(() => {
     if (!labelEditMode) {
-      if (buttonText === 'ADD LABEL' && !selectedJobClone) {
+      if (buttonText === 'ADD LABEL' && !selectedJobClone && runtimeUpdated) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
       } else {

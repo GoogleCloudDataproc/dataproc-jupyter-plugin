@@ -155,7 +155,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconAddRuntime),
       execute: () => {
-        const content = new RuntimeTemplate();
+        const content = new RuntimeTemplate(app as JupyterLab);
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;

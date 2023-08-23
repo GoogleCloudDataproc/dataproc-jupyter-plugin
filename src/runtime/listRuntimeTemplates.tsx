@@ -90,7 +90,7 @@ function ListRuntimeTemplates({
       description: '',
       updateTime: '',
     }]);  
-  console.log(runTimeTemplateAllList);
+ 
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingRuntimeTemplates = async (
@@ -281,18 +281,18 @@ function ListRuntimeTemplates({
     );
   };
 
-  // const handleRuntimeTemplatesName = (selectedValue: any) => {
-  //   let selectedRunTimeAll: SessionTemplate[] = []
+  const handleRuntimeTemplatesName = (selectedValue: any) => {
+    let selectedRunTimeAll: SessionTemplate[] = []
     
-  //   runTimeTemplateAllList.forEach((data: SessionTemplate)=>{
-  //     if(data.name.split('/')[5] === selectedValue.row.original.id) {
-  //       selectedRunTimeAll.push(data)
-  //     }
-  //   })
-  //   pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
-  //   setSelectedRuntimeClone(selectedRunTimeAll[0]);
-  //   setOpenCreateTemplate(true);
-  // };
+    runTimeTemplateAllList.forEach((data: SessionTemplate)=>{
+      if(data.name.split('/')[5] === selectedValue.row.original.id) {
+        selectedRunTimeAll.push(data)
+      }
+    })
+    pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
+    setSelectedRuntimeClone(selectedRunTimeAll[0]);
+    setOpenCreateTemplate(true);
+  };
 
   const handleCreateBatchOpen = () => {
     setOpenCreateTemplate(true);
@@ -306,7 +306,7 @@ function ListRuntimeTemplates({
           role="button"
           {...cell.getCellProps()}
           className="cluster-name"
-          // onClick={() => handleRuntimeTemplatesName(cell)}
+          onClick={() => handleRuntimeTemplatesName(cell)}
         >
           {cell.value}
         </td>
