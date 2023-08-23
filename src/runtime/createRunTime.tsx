@@ -129,7 +129,6 @@ function CreateRunTime({
   const [autoSelected, setAutoSelected] = useState('');
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
-  const [runtimeUpdated, setRuntimeUpdated] = useState(false);
   const [userInfo, setUserInfo] = useState('');
 
   useEffect(() => {
@@ -138,9 +137,9 @@ function CreateRunTime({
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
+   
     setTimeList(timeData);
     updateLogic();
-    
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
@@ -191,7 +190,6 @@ function CreateRunTime({
   };
   const updateLogic = () => {
     if (selectedRuntimeClone !== undefined) {
-      setRuntimeUpdated(true);
       const {
         jupyterSession,
         name,
@@ -1103,7 +1101,6 @@ function CreateRunTime({
               setLabelDetail={setPropertyDetail}
               labelDetailUpdated={propertyDetailUpdated}
               setLabelDetailUpdated={setPropertyDetailUpdated}
-              runtimeUpdated={runtimeUpdated}
               buttonText="ADD PROPERTY"
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
@@ -1111,6 +1108,7 @@ function CreateRunTime({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              selectedRuntimeClone={selectedRuntimeClone}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
@@ -1119,13 +1117,13 @@ function CreateRunTime({
               labelDetailUpdated={labelDetailUpdated}
               setLabelDetailUpdated={setLabelDetailUpdated}
               buttonText="ADD LABEL"
-              runtimeUpdated={runtimeUpdated}
               keyValidation={keyValidation}
               setKeyValidation={setKeyValidation}
               valueValidation={valueValidation}
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              selectedRuntimeClone={selectedRuntimeClone}
             />
             <div className="job-button-style-parent">
               <div
