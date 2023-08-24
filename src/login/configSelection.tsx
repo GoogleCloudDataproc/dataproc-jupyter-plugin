@@ -157,10 +157,13 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
     }
   };
 
-  const projectListAPI = async () => {
+  const projectListAPI = async (    
+    nextPageToken?: string,
+    previousProjectList?: object) => {
     const credentials = await authApi();
+    const pageToken = nextPageToken ?? '';
     if (credentials) {
-      fetch(PROJECT_LIST_URL, {
+      fetch(`${PROJECT_LIST_URL}?pageToken=${pageToken}`, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -181,8 +184,22 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                   };
                 }
               );
-              setProjectList(transformedProjectList);
-              setIsLoadingProject(false);
+              const existingProjectData = previousProjectList ?? [];
+              //setStateAction never type issue
+              const allProjectData: any = [
+                ...(existingProjectData as []),
+                ...transformedProjectList
+              ];
+
+              if (responseResult.nextPageToken) {
+                projectListAPI(responseResult.nextPageToken, allProjectData);
+              } else {
+                setProjectList(transformedProjectList);
+                console.log(transformedProjectList);
+                setIsLoadingProject(false);
+              }
+              // setProjectList(transformedProjectList);
+              // setIsLoadingProject(false);
             })
             .catch((e: any) => console.log(e));
         })
