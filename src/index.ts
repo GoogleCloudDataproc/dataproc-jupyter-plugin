@@ -217,6 +217,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         app.shell.add(widget, 'main');
       }
     });
+    mainMenu.settingsMenu.addGroup([
+      {
+        command: createAuthLoginComponentCommand
+      }
+    ]);
 
     let serverlessIndex = -1;
 
