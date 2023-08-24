@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import 'semantic-ui-css/semantic.min.css';
@@ -28,6 +28,7 @@ import {
   ARGUMENTS_MESSAGE,
   ARTIFACT_REGISTERY,
   BASE_URL,
+  BASE_URL_KEY,
   BASE_URL_META,
   BASE_URL_NETWORKS,
   CONTAINER_REGISTERY,
@@ -35,6 +36,7 @@ import {
   CUSTOM_CONTAINER_MESSAGE,
   FILES_MESSAGE,
   JAR_FILE_MESSAGE,
+  KEY_MESSAGE,
   METASTORE_MESSAGE,
   PROJECT_LIST_URL,
   QUERY_FILE_MESSAGE,
@@ -110,6 +112,7 @@ function CreateBatch({
   const [batchTypeSelected, setBatchTypeSelected] = useState('spark');
   const [versionSelected, setVersionSelected] = useState('2.1');
   const [selectedRadio, setSelectedRadio] = useState('mainClass');
+  const [selectedRadioValue, setSelectedRadioValue] = useState('key');
   const [mainClassSelected, setMainClassSelected] = useState('');
   const [mainJarSelected, setMainJarSelected] = useState('');
   const [mainRSelected, setMainRSelected] = useState('');
@@ -149,6 +152,7 @@ function CreateBatch({
     { value: string; key: string; text: string }[]
   >([]);
   const [networkList, setNetworklist] = useState([{}]);
+  const [keyRinglist, setKeyRinglist] = useState([{}]);
   const [subNetworkList, setSubNetworklist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
@@ -176,6 +180,13 @@ function CreateBatch({
   const [batchIdValidation, setBatchIdValidation] = useState(false);
   const [mainJarValidation, setMainJarValidation] = useState(true);
   const [defaultValue, setDefaultValue] = useState('default');
+  const [keyRingSelected, setKeyRingSelected] = useState('');
+  const [keySelected, setKeySelected] = useState('');
+  const [manualKeySelected, setManualKeySelected] = useState('');
+  const [manualValidation, setManualValidation] = useState(true);
+  const [keylist, setKeylist] = useState<
+    { key: string; value: string; text: string }[]
+  >([]);
 
   const handleCreateBatchBackView = () => {
     setCreateBatchView(false);
@@ -185,10 +196,20 @@ function CreateBatch({
     setMainJarSelected('');
     setMainClassSelected('');
   };
+
   const handleMainJarRadio = () => {
     setSelectedRadio('mainJarURI');
     setMainClassSelected('');
     setMainJarSelected('');
+  };
+  const handlekeyRingRadio = () => {
+    setSelectedRadioValue('key');
+    setManualKeySelected('');
+  };
+  const handlekeyManuallyRadio = () => {
+    setSelectedRadioValue('manually');
+    setKeyRingSelected('');
+    setKeySelected('');
   };
   useEffect(() => {
     const batchTypeData = [
@@ -202,6 +223,7 @@ function CreateBatch({
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
+    listKeyRingsAPI();
   }, [clusterSelected, defaultValue]);
 
   useEffect(() => {
@@ -222,11 +244,16 @@ function CreateBatch({
     keyValidation,
     valueValidation,
     batchIdValidation,
-    duplicateKeyError
+    duplicateKeyError,
+    manualValidation
   ]);
 
   function isSubmitDisabled() {
-    const commonConditions = batchIdSelected === '' || regionName === '';
+    const commonConditions =
+      batchIdSelected === '' ||
+      regionName === '' ||
+      batchIdValidation
+      ;
 
     switch (batchTypeSelected) {
       case 'spark':
@@ -236,7 +263,8 @@ function CreateBatch({
           (selectedRadio === 'mainJarURI' && mainJarSelected === '') ||
           !mainJarValidation ||
           !fileValidation ||
-          !archieveFileValidation
+          !archieveFileValidation ||
+          !manualValidation
         );
       case 'sparkR':
         return (
@@ -244,7 +272,8 @@ function CreateBatch({
           mainRSelected === '' ||
           !mainRValidation ||
           !fileValidation ||
-          !archieveFileValidation
+          !archieveFileValidation ||
+          !manualValidation
         );
       case 'pySpark':
         return (
@@ -253,14 +282,16 @@ function CreateBatch({
           !mainPythonValidation ||
           !additionalPythonFileValidation ||
           !fileValidation ||
-          !archieveFileValidation
+          !archieveFileValidation ||
+          !manualValidation
         );
       case 'sparkSql':
         return (
           commonConditions ||
           queryFileSelected === '' ||
           !queryFileValidation ||
-          !jarFileValidation
+          !jarFileValidation ||
+          !manualValidation
         );
       default:
         return false;
@@ -384,6 +415,101 @@ function CreateBatch({
                 })
               );
               setNetworklist(keyLabelStructureNetwork);
+            })
+
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing Networks', err);
+        });
+    }
+  };
+  const listKeyRingsAPI = async () => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: any) => {
+              let transformedKeyList = [];
+              /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
+      */
+
+              transformedKeyList = responseResult.keyRings.map((data: any) => {
+                return {
+                  name: data.name.split('/')[5]
+                };
+              });
+              const keyLabelStructureKeyRing = transformedKeyList.map(
+                (obj: { name: any }) => ({
+                  key: obj.name,
+                  value: obj.name,
+                  text: obj.name
+                })
+              );
+              setKeyRinglist(keyLabelStructureKeyRing);
+            })
+
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing Networks', err);
+        });
+    }
+  };
+  const listKeysAPI = async (keyRing: any) => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRing}/cryptoKeys`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: any) => {
+              let transformedKeyList = [];
+              /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
+      */
+
+              transformedKeyList = responseResult.cryptoKeys.map(
+                (data: any) => {
+                  return {
+                    name: data.name.split('/')[7]
+                  };
+                }
+              );
+              const keyLabelStructureKeyRing = transformedKeyList.map(
+                (obj: { name: any }) => ({
+                  key: obj.name,
+                  value: obj.name,
+                  text: obj.name
+                })
+              );
+              setKeylist(keyLabelStructureKeyRing);
+              setKeySelected(keyLabelStructureKeyRing[0].value);
             })
 
             .catch((e: Error) => {
@@ -662,6 +788,14 @@ function CreateBatch({
         ...(serviceAccountSelected !== '' && {
           serviceAccount: serviceAccountSelected
         }),
+        ...(keySelected !== '' &&
+          selectedRadioValue === 'key' && {
+            kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+          }),
+        ...(manualKeySelected !== '' &&
+          selectedRadioValue === 'manually' && {
+            kmsKey: manualKeySelected
+          }),
         subnetworkUri: subNetworkSelected,
         // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
@@ -818,9 +952,29 @@ function CreateBatch({
   const handleSubNetworkChange = (event: any, data: any) => {
     setSubNetworkSelected(data.value);
   };
+  const handleKeyRingChange = (event: any, data: any) => {
+    setKeyRingSelected(data.value);
+    listKeysAPI(data.value);
+  };
+  const handlekeyChange = (event: any, data: any) => {
+    setKeySelected(data.value);
+  };
 
   const handleClusterSelected = (event: any, data: any) => {
     setClusterSelected(data.value);
+  };
+  const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    const numericRegex =
+      /^projects\/[^/]+\/locations\/[^/]+\/keyRings\/[^/]+\/cryptoKeys\/[^/]+$/;
+
+    if (numericRegex.test(inputValue) || inputValue === '') {
+      setManualValidation(true);
+    } else {
+      setManualValidation(false);
+    }
+
+    setManualKeySelected(inputValue);
   };
 
   return (
@@ -1363,40 +1517,71 @@ function CreateBatch({
                 </div>
                 {selectedEncryptionRadio === 'customerManaged' && (
                   <>
-                    <div className="create-batch-network">
-                      <div className="create-batch-network-message">
+                    <div className="create-batch-encrypt">
+                      <div className="create-batch-encrypt-message">
                         keyRings
                       </div>
-                      <div className="create-batch-network-message">keys</div>
+                      <div className="create-batch-encrypt-message">keys</div>
                     </div>
                     <div>
-                      <div className="create-batch-network">
+                      <div className="create-batch-encrypt">
+                        <Radio
+                          className="select-batch-encrypt-radio-style"
+                          value="mainClass"
+                          checked={selectedRadioValue === 'key'}
+                          onChange={handlekeyRingRadio}
+                        />
+
                         <Select
                           search
                           className="select-primary-network-style"
-                          value={''}
+                          value={keyRingSelected}
                           type="text"
-                          options={[]}
+                          disabled={selectedRadioValue === 'manually'}
+                          onChange={handleKeyRingChange}
+                          options={keyRinglist}
                         />
 
                         <Select
                           search
                           className="select-sub-network-style"
-                          value={''}
+                          value={keySelected}
+                          disabled={selectedRadioValue === 'manually'}
+                          onChange={handlekeyChange}
                           type="text"
-                          options={[]}
+                          options={keylist}
                         />
                       </div>
                     </div>
-                    <div>
-                    <div className="create-batch-network-message">Enter key Manually</div>
-                    <Input
-              className="create-batch-style "
-              value={''}
-              type="text"
-            />
+                    <div className="manual-input">
+                      <div className="create-batch-encrypt-message">
+                        Enter key Manually
+                      </div>
+                      <div className="encrypt">
+                        <Radio
+                          className="select-batch-encrypt-radio-style "
+                          value="mainClass"
+                          checked={selectedRadioValue === 'manually'}
+                          onChange={handlekeyManuallyRadio}
+                        />
+                        <Input
+                          className="create-batch-style "
+                          value={manualKeySelected}
+                          type="text"
+                          disabled={selectedRadioValue === 'key'}
+                          onChange={handleManualKeySelected}
+                        />
+                       
+                      </div>
+                      {!manualValidation && (
+                          <div className="error-key-parent">
+                            <iconError.react tag="div" />
+                            <div className="error-key-missing">
+                              {KEY_MESSAGE}
+                            </div>
+                          </div>
+                        )}
                     </div>
-
                   </>
                 )}
               </div>
