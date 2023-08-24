@@ -30,7 +30,7 @@ import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
-import { Menu, Panel, Title, Widget } from '@lumino/widgets';
+import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
@@ -69,7 +69,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       svgstr: serverlessIcon
     });
     window.addEventListener('beforeunload', () => {
-      localStorage.removeItem('clusterValue');
+      localStorage.removeItem('notebookValue');
     });
     const panel = new Panel();
     panel.id = 'dpms-tab';
@@ -86,15 +86,14 @@ const extension: JupyterFrontEndPlugin<void> = {
     };
 
     panel.addWidget(new dpmsWidget(app as JupyterLab));
-    const localStorageValue = localStorage.getItem('clusterValue');
+    const localStorageValue = localStorage.getItem('notebookValue');
     if (localStorageValue) {
       loadDpmsWidget(localStorageValue);
     }
     app.shell.add(panel, 'left', { rank: 1000 });
-
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
-      let localStorageValue = localStorage.getItem('clusterValue');
+      let localStorageValue = localStorage.getItem('notebookValue');
       if (widget && widget instanceof NotebookPanel) {
         const kernel = widget.sessionContext.session?.kernel;
         if (kernel) {
@@ -105,19 +104,33 @@ const extension: JupyterFrontEndPlugin<void> = {
           ) {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
-            const clusterValue = parts[parts.length - 1];
+            const clusterValue = parts[parts.length - 1] + '/clusters';
             if (localStorageValue === null) {
-              localStorage.setItem('clusterValue', clusterValue);
-              localStorageValue = localStorage.getItem('clusterValue');
+              localStorage.setItem('notebookValue', clusterValue);
+              localStorageValue = localStorage.getItem('notebookValue');
               loadDpmsWidget(localStorageValue || '');
             } else if (localStorageValue !== clusterValue) {
-              localStorage.setItem('clusterValue', clusterValue);
-              localStorageValue = localStorage.getItem('clusterValue');
+              localStorage.setItem('notebookValue', clusterValue);
+              localStorageValue = localStorage.getItem('notebookValue');
+              loadDpmsWidget(localStorageValue || '');
+            }
+          } else if (
+            kernelSpec?.resources.endpointParentResource.includes('/sessions')
+          ) {
+            const parts = kernelSpec?.name.split('-');
+            const sessionValue = parts.slice(1).join('-') + '/sessions';
+            if (localStorageValue === null) {
+              localStorage.setItem('notebookValue', sessionValue);
+              localStorageValue = localStorage.getItem('notebookValue');
+              loadDpmsWidget(localStorageValue || '');
+            } else if (localStorageValue !== sessionValue) {
+              localStorage.setItem('notebookValue', sessionValue);
+              localStorageValue = localStorage.getItem('notebookValue');
               loadDpmsWidget(localStorageValue || '');
             }
           }
         } else {
-          localStorage.removeItem('clusterValue');
+          localStorage.removeItem('notebookValue');
           loadDpmsWidget('');
         }
         document.title = title.label;
@@ -155,7 +168,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconAddRuntime),
       execute: () => {
-        const content = new RuntimeTemplate();
+        const content = new RuntimeTemplate(app as JupyterLab);
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;
@@ -193,10 +206,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    const createAuthLoginComponentCommand = 'create-authlogin-component';
+    const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
-      label: 'Setup',
-      caption: 'Setup',
+      label: 'Cloud Dataproc Settings',
       execute: () => {
         const content = new AuthLogin();
         const widget = new MainAreaWidget<AuthLogin>({ content });
@@ -205,11 +217,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         app.shell.add(widget, 'main');
       }
     });
-
-    const snippetMenu = new Menu({ commands });
-    snippetMenu.title.label = 'Dataproc';
-    snippetMenu.addItem({ command: createAuthLoginComponentCommand });
-    mainMenu.addMenu(snippetMenu);
 
     let serverlessIndex = -1;
 
