@@ -2,6 +2,23 @@
   "jupyter.lab.shortcuts": [],
   "title": "dataproc_jupyter_plugin",
   "description": "dataproc_jupyter_plugin settings.",
+  "jupyter.lab.menus": {
+    "main": [
+      {
+        "id": "jp-mainmenu-settings",
+        "items": [
+          {
+            "type": "separator",
+            "rank": 98
+          },
+          {
+            "command": "cloud-dataproc-settings:configure",
+            "rank": 99
+          }
+        ]
+      }
+    ]
+  },
   "type": "object",
   "properties": {},
   "additionalProperties": false

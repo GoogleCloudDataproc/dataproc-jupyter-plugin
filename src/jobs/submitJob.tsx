@@ -303,7 +303,7 @@ function SubmitJob(
     jobIdValidation,
     duplicateKeyError
   ]);
-  const disableSubmitButtonIfInvalid  = () => {
+  const disableSubmitButtonIfInvalid = () => {
     const isSparkJob = jobTypeSelected === 'spark';
     const isSparkRJob = jobTypeSelected === 'sparkR';
     const isPySparkJob = jobTypeSelected === 'pySpark';
@@ -699,6 +699,7 @@ function SubmitJob(
             />
           ) : (
             <Select
+              search
               placeholder="Cluster*"
               onChange={handleClusterSelected}
               className="select-job-style"
@@ -723,6 +724,7 @@ function SubmitJob(
           <div className="submit-job-cluster-message">Job type*</div>
 
           <Select
+            search
             onChange={handleJobTypeSelected}
             className="select-job-style"
             options={jobTypeList}
@@ -735,6 +737,7 @@ function SubmitJob(
                 Query source type*
               </div>
               <Select
+                search
                 onChange={handleQuerySourceTypeSelected}
                 className="select-job-style"
                 options={querySourceTypeList}
@@ -881,7 +884,7 @@ function SubmitJob(
                 Additional python files
               </div>
               <TagsInput
-                className="input-style"
+                className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
                     e,
@@ -986,7 +989,9 @@ function SubmitJob(
                 </div>
               )}
               {archieveFileValidation && (
-                <div className="submit-job-message">{ARCHIVE_FILES_MESSAGE}</div>
+                <div className="submit-job-message">
+                  {ARCHIVE_FILES_MESSAGE}
+                </div>
               )}
             </>
           )}

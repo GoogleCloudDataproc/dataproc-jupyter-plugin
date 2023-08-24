@@ -22,6 +22,7 @@ export const CREATE_BATCH_URL =
 export const BASE_URL = 'https://dataproc.googleapis.com/v1';
 export const BASE_URL_NETWORKS = 'https://compute.googleapis.com/compute/v1';
 export const BASE_URL_META = 'https://metastore.googleapis.com/v1';
+export const BASE_URL_KEY ='https://cloudkms.googleapis.com/v1';
 export const VIEW_LOGS_URL = 'https://console.cloud.google.com/logs';
 export const POLLING_TIME_LIMIT = 10000;
 export const API_HEADER_CONTENT_TYPE = 'application/json';
@@ -55,6 +56,13 @@ export const NETWORK_KEY = 'networkUri';
 export const NETWORK_LABEL = 'Network';
 export const SUBNETWORK_KEY = 'subnetworkUri';
 export const SUBNETWORK_LABEL = 'Sub network';
+export const NETWORK_TAGS_KEY = 'networkTags';
+export const NETWORK_TAGS_LABEL = 'Network tags';
+export const METASTORE_SERVICE_KEY = 'metastoreService';
+export const METASTORE_SERVICE_LABEL = 'Metastore service';
+export const DATAPROC_CLUSTER_KEY = 'dataprocCluster';
+export const DATAPROC_CLUSTER_LABEL = 'Dataproc cluster';
+export const SPARK_HISTORY_SERVER_KEY = 'sparkHistoryServerConfig';
 export const PROJECT_LIST_URL =
   'https://cloudresourcemanager.googleapis.com/v1/projects';
 export const USER_INFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
@@ -115,8 +123,10 @@ export const CUSTOM_CONTAINERS_MESSAGE =
   'Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on Container Registry or Artifact Registry .';
 export const CONTAINER_REGISTERY = 'https://console.cloud.google.com/gcr';
 export const ARTIFACT_REGISTERY = 'https://console.cloud.google.com/artifacts';
-export const METASTORE_MESSAGE='We recommend this option to persist table metadata when the batch finishes processing. A metastore can be shared across many serverless batches in different projects and GCP regions.';
-export const CUSTOM_CONTAINER_MESSAGE=' Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on';
+export const METASTORE_MESSAGE =
+  'We recommend this option to persist table metadata when the batch finishes processing. A metastore can be shared across many serverless batches in different projects and GCP regions.';
+export const CUSTOM_CONTAINER_MESSAGE =
+  ' Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on';
 export const SPARK = 'Spark';
 export const SPARKSQL = 'SparkSQL';
 export const SPARKR = 'SparkR';
@@ -126,3 +136,6 @@ export const GB_MONTHS = 2592000;
 export const TITLE_LAUNCHER_CATEGORY = 'Dataproc Jobs and Sessions';
 export const SPARK_HISTORY_SERVER = 'Spark History Server';
 export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';
+export const JOB_FIELDS_EXCLUDED = ['queryList', 'properties', 'args'];
+export const BATCH_FIELDS_EXCLUDED = ['queryList', 'properties'];
+export const KEY_MESSAGE='Example format:projects/<project-name>/locations/<location-name>/keyRings/<keyring-name>/cryptoKeys/<key-name>';

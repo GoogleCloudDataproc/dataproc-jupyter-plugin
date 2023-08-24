@@ -22,6 +22,17 @@
   overflow-wrap: anywhere;
 }
 
+.batch-details-label-level-three {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  width: 65%;
+  padding-left: 45px;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+
 .batch-details-container {
   width: 80%;
   padding-left: 15px;

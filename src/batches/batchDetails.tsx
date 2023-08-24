@@ -27,16 +27,26 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
+  DATAPROC_CLUSTER_KEY,
+  DATAPROC_CLUSTER_LABEL,
+  BATCH_FIELDS_EXCLUDED,
+  METASTORE_SERVICE_KEY,
+  METASTORE_SERVICE_LABEL,
   NETWORK_KEY,
   NETWORK_LABEL,
+  NETWORK_TAGS_KEY,
+  NETWORK_TAGS_LABEL,
   SERVICE_ACCOUNT_KEY,
   SERVICE_ACCOUNT_LABEL,
+  SPARK_HISTORY_SERVER,
+  SPARK_HISTORY_SERVER_KEY,
   SUBNETWORK_KEY,
   SUBNETWORK_LABEL
 } from '../utils/const';
 import {
   BatchTypeValue,
   authApi,
+  batchDetailsOptionalDisplay,
   convertToDCUHours,
   convertToGBMonths,
   elapsedTime,
@@ -77,6 +87,7 @@ function BatchDetails({
     state: '',
     createTime: '',
     runtimeInfo: {
+      endpoints: {},
       approximateUsage: { milliDcuSeconds: '', shuffleStorageGbSeconds: '' }
     },
     creator: '',
@@ -109,7 +120,15 @@ function BatchDetails({
     environmentConfig: {
       executionConfig: {
         serviceAccount: '',
-        subnetworkUri: ''
+        subnetworkUri: '',
+        networkTags: [],
+        kmsKey: ''
+      },
+      peripheralsConfig: {
+        metastoreService: '',
+        sparkHistoryServerConfig: {
+          dataprocCluster: ''
+        }
       }
     },
     stateHistory: [{ state: '', stateStartTime: '' }],
@@ -204,7 +223,9 @@ function BatchDetails({
   }
 
   const batch = BatchTypeValue(batchInfoResponse);
-
+  const batchConcat = Object.keys(batchInfoResponse).filter(key =>
+    key.endsWith('Batch')
+  );
   const elapsedTimeString = elapsedTime(
     new Date(batchInfoResponse.stateTime),
     startTimeElapsed
@@ -367,61 +388,58 @@ function BatchDetails({
               <div className="details-label">Batch type</div>
               <div className="details-value">{batch}</div>
             </div>
-            {batch === 'Spark' &&
-              batchInfoResponse.sparkBatch.mainJarFileUri && (
-                <div className="row-details">
-                  <div className="details-label">Main jar</div>
-                  <div className="details-value">
-                    {batchInfoResponse.sparkBatch.mainJarFileUri}
-                  </div>
-                </div>
-              )}
-            {batch === 'Spark' && batchInfoResponse.sparkBatch.mainClass && (
-              <>
-                <div className="row-details">
-                  <div className="details-label">Main class</div>
-                  <div className="details-value">
-                    {batchInfoResponse.sparkBatch.mainClass}
-                  </div>
-                </div>
-                <div className="row-details">
-                  <div className="details-label">Jar files</div>
-                  <div className="details-value">
-                    {batchInfoResponse.sparkBatch.jarFileUris ? (
-                      <div className="cluster-details-value">
-                        {batchInfoResponse.sparkBatch.jarFileUris}
-                      </div>
-                    ) : (
-                      <div className="cluster-details-value">None</div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-            {batch === 'PySpark' && (
-              <div className="row-details">
-                <div className="details-label">Main python file</div>
-                <div className="details-value">
-                  {batchInfoResponse.pysparkBatch.mainPythonFileUri}
-                </div>
-              </div>
-            )}
-            {batch === 'SparkR' && (
-              <div className="row-details">
-                <div className="details-label">Main R file</div>
-                <div className="details-value">
-                  {batchInfoResponse.sparkRBatch.mainRFileUri}
-                </div>
-              </div>
-            )}
-            {batch === 'SparkSQL' && (
-              <div className="row-details">
-                <div className="details-label">Query file</div>
-                <div className="details-value">
-                  {batchInfoResponse.sparkSqlBatch.queryFileUri}
-                </div>
-              </div>
-            )}
+
+            {
+              //@ts-ignore string used as index
+              Object.keys(batchInfoResponse[batchConcat]).map(
+                (titleData: string) => {
+                  //@ts-ignore string used as index
+                  const valueData = batchInfoResponse[batchConcat][titleData];
+                  return (
+                    !BATCH_FIELDS_EXCLUDED.includes(titleData) && (
+                      <>
+                        <div className="row-details">
+                          <div className="details-label">
+                            {batchDetailsOptionalDisplay(titleData)}
+                          </div>
+                          {typeof valueData === 'string' ? (
+                            <div className="details-value">{valueData}</div>
+                          ) : (
+                            valueData.length > 0 &&
+                            !BATCH_FIELDS_EXCLUDED.includes(titleData) && (
+                              <div className="details-value">
+                                {valueData.map((item: string) => {
+                                  return <div>{item}</div>;
+                                })}
+                              </div>
+                            )
+                          )}
+                        </div>
+                        {titleData === 'queryVariables' &&
+                          //@ts-ignore string used as index
+                          batchInfoResponse[batchConcat] &&
+                          //@ts-ignore string used as index
+                          batchInfoResponse[batchConcat][titleData] &&
+                          Object.entries(
+                            //@ts-ignore string used as index
+                            batchInfoResponse[batchConcat][titleData]
+                          ).map(([key, value]) => (
+                            <div className="row-details" key={key}>
+                              <div className="batch-details-label-level-one">
+                                {key}
+                              </div>
+                              <div className="details-value">
+                                {value as string}
+                              </div>
+                            </div>
+                          ))}
+                      </>
+                    )
+                  );
+                }
+              )
+            }
+
             <div className="row-details">
               <div className="details-label">Properties</div>
               <div className="details-value"></div>
@@ -434,10 +452,37 @@ function BatchDetails({
                 </div>
               )
             )}
+            {batchInfoResponse &&
+              batchInfoResponse?.runtimeInfo?.endpoints &&
+              //@ts-ignore string used as index
+              batchInfoResponse?.runtimeInfo?.endpoints[
+                SPARK_HISTORY_SERVER
+              ] && (
+                <div>
+                  <div className="row-details">
+                    <div className="details-label">End Points</div>
+                    <div className="details-value"></div>
+                  </div>
+                  <div className="row-details">
+                    <div className="batch-details-label-level-one">
+                      {SPARK_HISTORY_SERVER}
+                    </div>
+                    <div className="details-value">
+                      {
+                        //@ts-ignore string used as index
+                        batchInfoResponse.runtimeInfo.endpoints[
+                          SPARK_HISTORY_SERVER
+                        ]
+                      }
+                    </div>
+                  </div>
+                </div>
+              )}
             <div className="row-details">
               <div className="details-label">Environment config</div>
               <div className="details-value"></div>
             </div>
+
             <div className="row-details">
               <div className="batch-details-label-level-one">
                 Execution config
@@ -454,6 +499,8 @@ function BatchDetails({
                 label = NETWORK_LABEL;
               } else if (key === SUBNETWORK_KEY) {
                 label = SUBNETWORK_LABEL;
+              } else if (key === NETWORK_TAGS_KEY) {
+                label = NETWORK_TAGS_LABEL;
               } else {
                 label = '';
               }
@@ -468,13 +515,108 @@ function BatchDetails({
                     <div className="details-value">{value}</div>
                   </div>
                 );
+              } else if (key === NETWORK_TAGS_KEY) {
+                return (
+                  <div className="row-details" key={key}>
+                    <div className="batch-details-label-level-two">{label}</div>
+                    <div className="details-value">
+                      {
+                        //@ts-ignore value type issue
+                        value.map((item: string) => {
+                          return <div>{item}</div>;
+                        })
+                      }
+                    </div>
+                  </div>
+                );
+              }
+            })}
+
+            {(batchInfoResponse?.environmentConfig?.peripheralsConfig
+              ?.metastoreService ||
+              batchInfoResponse?.environmentConfig?.peripheralsConfig
+                ?.sparkHistoryServerConfig?.dataprocCluster) && (
+              <div className="row-details">
+                <div className="batch-details-label-level-one">
+                  Peripherals config
+                </div>
+                <div className="details-value"></div>
+              </div>
+            )}
+            {Object.entries(
+              batchInfoResponse.environmentConfig.peripheralsConfig
+            ).map(([key, value]) => {
+              let label;
+              if (key === METASTORE_SERVICE_KEY) {
+                label = METASTORE_SERVICE_LABEL;
+              } else if (key === SPARK_HISTORY_SERVER_KEY) {
+                label = SPARK_HISTORY_SERVER;
+              } else {
+                label = '';
+              }
+              <div className="row-details">
+                <div className="batch-details-label-level-one">
+                  Peripherals config
+                </div>
+                <div className="details-value"></div>
+              </div>;
+              if (key === METASTORE_SERVICE_KEY) {
+                return (
+                  <div className="row-details" key={key}>
+                    <div className="batch-details-label-level-two">{label}</div>
+                    <div className="details-value">
+                      {
+                        batchInfoResponse.environmentConfig.peripheralsConfig[
+                          METASTORE_SERVICE_KEY
+                        ]
+                      }
+                    </div>
+                  </div>
+                );
+              } else if (
+                key === SPARK_HISTORY_SERVER_KEY &&
+                batchInfoResponse?.environmentConfig?.peripheralsConfig
+                  ?.sparkHistoryServerConfig?.dataprocCluster
+              ) {
+                return (
+                  <div>
+                    <div className="row-details" key={key}>
+                      <div className="batch-details-label-level-two">
+                        {label}
+                      </div>
+                    </div>
+                    <div className="row-details" key={DATAPROC_CLUSTER_KEY}>
+                      <div className="batch-details-label-level-three">
+                        {DATAPROC_CLUSTER_LABEL}
+                      </div>
+                      <div className="details-value">
+                        {
+                          batchInfoResponse.environmentConfig.peripheralsConfig
+                            .sparkHistoryServerConfig[DATAPROC_CLUSTER_KEY]
+                        }
+                      </div>
+                    </div>
+                  </div>
+                );
               }
             })}
 
             <div className="row-details">
               <div className="details-label">Encryption type</div>
-              <div className="details-value">Google-managed</div>
+              <div className="details-value">
+                {batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey
+                  ? 'Customer-managed'
+                  : 'Google-managed'}
+              </div>
             </div>
+            {batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey && (
+              <div className="row-details">
+                <div className="details-label">Encryption key</div>
+                <div className="details-value">
+                  {batchInfoResponse.environmentConfig.executionConfig.kmsKey}
+                </div>
+              </div>
+            )}
             <div className="batch-details-row-label">
               <div className="details-label">Labels</div>
               <div className="details-value">
