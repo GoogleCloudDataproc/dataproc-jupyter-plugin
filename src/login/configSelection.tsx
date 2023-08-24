@@ -183,23 +183,19 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                     text: data.projectId
                   };
                 }
-              );
+              );  
               const existingProjectData = previousProjectList ?? [];
               //setStateAction never type issue
               const allProjectData: any = [
                 ...(existingProjectData as []),
                 ...transformedProjectList
               ];
-
               if (responseResult.nextPageToken) {
                 projectListAPI(responseResult.nextPageToken, allProjectData);
               } else {
-                setProjectList(transformedProjectList);
-                console.log(transformedProjectList);
+                setProjectList(allProjectData);
                 setIsLoadingProject(false);
               }
-              // setProjectList(transformedProjectList);
-              // setIsLoadingProject(false);
             })
             .catch((e: any) => console.log(e));
         })
