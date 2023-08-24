@@ -654,6 +654,7 @@ fetching database name from fully qualified name structure */
                     <div className="search-icon">
                       <iconSearch.react tag="div" />
                     </div>
+                    {searchTerm &&
                     <div
                       role="button"
                       className="search-clear-icon"
@@ -661,6 +662,7 @@ fetching database name from fully qualified name structure */
                     >
                       <iconSearchClear.react tag="div" />
                     </div>
+                    }
                   </div>
                 </div>
                 <div className="tree-container">
