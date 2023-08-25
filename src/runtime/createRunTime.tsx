@@ -137,7 +137,7 @@ function CreateRunTime({
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
-   
+
     setTimeList(timeData);
     updateLogic();
     projectListAPI();
@@ -201,7 +201,7 @@ function CreateRunTime({
       } = selectedRuntimeClone;
 
       setDisplayNameSelected(jupyterSession.displayName);
-       /*
+      /*
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
@@ -294,7 +294,7 @@ function CreateRunTime({
         ) {
           const dataprocCluster =
             peripheralsConfig.sparkHistoryServerConfig.dataprocCluster;
-            /*
+          /*
          Extracting clusterName from dataprocCluster
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{dataprocCluster}",
       */
@@ -963,56 +963,71 @@ function CreateRunTime({
             </div>
 
             <div className="submit-job-label-header">Metastore</div>
-            <div className="create-batches-message">Metastore project</div>
-            <Select
-              className="select-job-style"
-              search
-              selection
-              placeholder={projectId}
-              value={projectId}
-              onChange={handleProjectIdChange}
-              options={projectList}
-            />
-            <div className="create-batches-message">Metastore region</div>
-            {isLoadingRegion ? (
-              <ClipLoader
-                loading={true}
-                size={25}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            ) : (
-              <Select
-                className="select-job-style"
-                search
-                selection
-                placeholder={region}
-                value={region}
-                onChange={handleRegionChange}
-                options={regionList}
-              />
-            )}
 
-            <div className="create-batches-message">Metastore service</div>
-            {isLoadingService ? (
-              <ClipLoader
-                loading={true}
-                size={25}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            ) : (
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="metastore-project">
+                Metastore project
+              </label>
               <Select
-                className="select-job-style"
+                className="project-region-select"
                 search
                 selection
-                value={servicesSelected}
-                type="text"
-                options={servicesList}
-                onChange={handleServiceSelected}
-                placeholder={servicesSelected}
+                placeholder={projectId}
+                value={projectId}
+                onChange={handleProjectIdChange}
+                options={projectList}
               />
-            )}
+            </div>
+
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="metastore-region">
+                Metastore region
+              </label>
+              {isLoadingRegion ? (
+                <ClipLoader
+                  loading={true}
+                  size={25}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              ) : (
+                <Select
+                  className="project-region-select"
+                  search
+                  selection
+                  placeholder={region}
+                  value={region}
+                  onChange={handleRegionChange}
+                  options={regionList}
+                />
+              )}
+            </div>
+
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="metastore-service">
+                Metastore service
+              </label>
+              {isLoadingService ? (
+                <ClipLoader
+                  loading={true}
+                  size={25}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              ) : (
+                <Select
+                  className="project-region-select"
+                  search
+                  selection
+                  value={servicesSelected}
+                  type="text"
+                  options={servicesList}
+                  onChange={handleServiceSelected}
+                  placeholder={servicesSelected}
+                />
+              )}
+            </div>
+
             <div className="single-line">
               <div className="create-batches-subMessage">Max idle time</div>
             </div>

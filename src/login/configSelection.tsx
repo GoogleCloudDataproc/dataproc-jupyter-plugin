@@ -343,7 +343,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 <Select
                   search
                   placeholder={projectId}
-                  className="project-select"
+                  className="project-region-select"
                   value={projectId}
                   onChange={handleProjectIdChange}
                   options={projectList}
@@ -359,7 +359,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                   search
                   onClick={handleDropdownOpen}
                   placeholder={region}
-                  className="region-select"
+                  className="project-region-select"
                   value={region}
                   onChange={handleRegionChange}
                   options={regionList}
@@ -442,7 +442,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           <div>
             <div className="runtime-title-section">
               <div className="runtime-title-part">
-                Serverless Runtime configurations
+                Serverless Runtime Templates
               </div>
               <div
                 className="expand-icon"
