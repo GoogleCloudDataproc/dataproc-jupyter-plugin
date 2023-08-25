@@ -442,7 +442,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           <div>
             <div className="runtime-title-section">
               <div className="runtime-title-part">
-                Serverless Runtime configurations
+                Serverless Runtime Templates
               </div>
               <div
                 className="expand-icon"
