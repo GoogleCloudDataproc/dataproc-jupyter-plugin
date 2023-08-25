@@ -25,7 +25,7 @@ import GlobalFilter from '../utils/globalFilter';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
+  BASE_URL
 } from '../utils/const';
 import TableData from '../utils/tableData';
 import { ICellProps, authApi, jobTimeFormat } from '../utils/utils';
@@ -36,7 +36,11 @@ import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
-import { SessionTemplate, SessionTemplateDisplay, SessionTemplateRoot } from '../utils/listRuntimeTemplateInterface';
+import {
+  SessionTemplate,
+  SessionTemplateDisplay,
+  SessionTemplateRoot
+} from '../utils/listRuntimeTemplateInterface';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -54,7 +58,7 @@ const iconSubmitJob = new LabIcon({
 interface IListRuntimeTemplate {
   openCreateTemplate: boolean;
   setOpenCreateTemplate: (value: boolean) => void;
-  setSelectedRuntimeClone:(value: SessionTemplate | undefined) => void ;
+  setSelectedRuntimeClone: (value: SessionTemplate | undefined) => void;
 }
 
 function ListRuntimeTemplates({
@@ -62,17 +66,24 @@ function ListRuntimeTemplates({
   setOpenCreateTemplate,
   setSelectedRuntimeClone
 }: IListRuntimeTemplate) {
-  const [runtimeTemplateslist, setRuntimeTemplateslist] = useState<SessionTemplateDisplay[]>([]);
+  const [runtimeTemplateslist, setRuntimeTemplateslist] = useState<
+    SessionTemplateDisplay[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
-  
+
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedRuntimeTemplateValue, setSelectedRuntimeTemplateValue] =
     useState('');
-    const [selectedRuntimeTemplateDisplayName, setSelectedRuntimeTemplateDisplayName] =
-    useState('');
-    const [runTimeTemplateAllList, setRunTimeTemplateAllList] =
-    useState<SessionTemplate[]>([{name: '',
+  const [
+    selectedRuntimeTemplateDisplayName,
+    setSelectedRuntimeTemplateDisplayName
+  ] = useState('');
+  const [runTimeTemplateAllList, setRunTimeTemplateAllList] = useState<
+    SessionTemplate[]
+  >([
+    {
+      name: '',
       createTime: '',
       jupyterSession: {
         kernel: '',
@@ -88,9 +99,10 @@ function ListRuntimeTemplates({
         }
       },
       description: '',
-      updateTime: '',
-    }]);  
-  console.log(runTimeTemplateAllList);
+      updateTime: ''
+    }
+  ]);
+
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingRuntimeTemplates = async (
@@ -152,7 +164,8 @@ function ListRuntimeTemplates({
           response
             .json()
             .then((responseResult: SessionTemplateRoot) => {
-              let transformRuntimeTemplatesListData: SessionTemplateDisplay[] = [];
+              let transformRuntimeTemplatesListData: SessionTemplateDisplay[] =
+                [];
               if (responseResult && responseResult.sessionTemplates) {
                 setRunTimeTemplateAllList(responseResult.sessionTemplates);
                 let runtimeTemplatesListNew = responseResult.sessionTemplates;
@@ -165,13 +178,22 @@ function ListRuntimeTemplates({
                 );
                 transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
                   (data: SessionTemplate) => {
-                    const startTimeDisplay = data.updateTime ? jobTimeFormat(data.updateTime): '';
+                    const startTimeDisplay = data.updateTime
+                      ? jobTimeFormat(data.updateTime)
+                      : '';
 
                     let displayName = '';
 
-                    if (data.jupyterSession && data.jupyterSession.displayName) {
+                    if (
+                      data.jupyterSession &&
+                      data.jupyterSession.displayName
+                    ) {
                       displayName = data.jupyterSession.displayName;
                     }
+                    /*
+         Extracting runtimeId from name
+         Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
+      */
 
                     return {
                       name: displayName,
@@ -179,7 +201,7 @@ function ListRuntimeTemplates({
                       description: data.description,
                       lastModified: startTimeDisplay,
                       actions: renderActions(data),
-                      id:data.name.split('/')[5]
+                      id: data.name.split('/')[5]
                     };
                   }
                 );
@@ -216,8 +238,10 @@ function ListRuntimeTemplates({
     }
   };
 
-  const handleDeleteRuntimeTemplate = (runtimeTemplateName: string,runtimeTemplateDisplayName:string) => {
-
+  const handleDeleteRuntimeTemplate = (
+    runtimeTemplateName: string,
+    runtimeTemplateDisplayName: string
+  ) => {
     setSelectedRuntimeTemplateValue(runtimeTemplateName);
     setSelectedRuntimeTemplateDisplayName(runtimeTemplateDisplayName);
     setDeletePopupOpen(true);
@@ -227,7 +251,10 @@ function ListRuntimeTemplates({
   };
 
   const handleDelete = async () => {
-    await deleteRuntimeTemplateAPI(selectedRuntimeTemplateValue,selectedRuntimeTemplateDisplayName);
+    await deleteRuntimeTemplateAPI(
+      selectedRuntimeTemplateValue,
+      selectedRuntimeTemplateDisplayName
+    );
     setDeletePopupOpen(false);
   };
   const {
@@ -266,14 +293,19 @@ function ListRuntimeTemplates({
 
   const renderActions = (data: SessionTemplate) => {
     let runtimeTemplateName = data.name;
-    let runtimeTemplateDisplayName=data.jupyterSession.displayName;
+    let runtimeTemplateDisplayName = data.jupyterSession.displayName;
     return (
       <div className="actions-icon">
         <div
           role="button"
           className="icon-buttons-style"
           title="Delete Runtime Template"
-          onClick={() => handleDeleteRuntimeTemplate(runtimeTemplateName,runtimeTemplateDisplayName)}
+          onClick={() =>
+            handleDeleteRuntimeTemplate(
+              runtimeTemplateName,
+              runtimeTemplateDisplayName
+            )
+          }
         >
           <iconDelete.react tag="div" />
         </div>
@@ -281,18 +313,21 @@ function ListRuntimeTemplates({
     );
   };
 
-  // const handleRuntimeTemplatesName = (selectedValue: any) => {
-  //   let selectedRunTimeAll: SessionTemplate[] = []
-    
-  //   runTimeTemplateAllList.forEach((data: SessionTemplate)=>{
-  //     if(data.name.split('/')[5] === selectedValue.row.original.id) {
-  //       selectedRunTimeAll.push(data)
-  //     }
-  //   })
-  //   pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
-  //   setSelectedRuntimeClone(selectedRunTimeAll[0]);
-  //   setOpenCreateTemplate(true);
-  // };
+  const handleRuntimeTemplatesName = (selectedValue: any) => {
+    let selectedRunTimeAll: SessionTemplate[] = [];
+    /*
+         Extracting runtimeId from name
+         Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
+      */
+    runTimeTemplateAllList.forEach((data: SessionTemplate) => {
+      if (data.name.split('/')[5] === selectedValue.row.original.id) {
+        selectedRunTimeAll.push(data);
+      }
+    });
+    pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
+    setSelectedRuntimeClone(selectedRunTimeAll[0]);
+    setOpenCreateTemplate(true);
+  };
 
   const handleCreateBatchOpen = () => {
     setOpenCreateTemplate(true);
@@ -306,7 +341,7 @@ function ListRuntimeTemplates({
           role="button"
           {...cell.getCellProps()}
           className="cluster-name"
-          // onClick={() => handleRuntimeTemplatesName(cell)}
+          onClick={() => handleRuntimeTemplatesName(cell)}
         >
           {cell.value}
         </td>
