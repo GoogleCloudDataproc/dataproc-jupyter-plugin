@@ -1,4 +1,5 @@
 import { ReactWidget } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
 import React, { useState, useEffect } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { useTable, useGlobalFilter } from 'react-table';
@@ -16,6 +17,12 @@ import {
 } from '../utils/const';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
+
+import { FileBrowser, FilterFileBrowserModel } from '@jupyterlab/filebrowser';
+import { DocumentManager } from '@jupyterlab/docmanager';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { ServiceManager } from '@jupyterlab/services';
+import { Widget, DockPanel } from '@lumino/widgets';
 
 const iconGcsRefresh = new LabIcon({
   name: 'launcher:gcs-refresh-icon',
@@ -42,7 +49,7 @@ const iconGcsSearch = new LabIcon({
   svgstr: gcsSearchIcon
 });
 
-const GcsBucketComponent = (): JSX.Element => {
+const GcsBucketComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [bucketsList, setBucketsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [gcsFolderPath, setGcsFolderPath] = useState<string[]>([]);
@@ -79,11 +86,11 @@ const GcsBucketComponent = (): JSX.Element => {
     listBucketsAPI();
   };
 
-  const handleFileClick = async(fileName: string) => {
+  const handleFileClick = async (fileName: string) => {
     console.log(fileName);
     const credentials = await authApi();
     if (credentials) {
-    let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${fileName}?alt=media`;
+      let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${fileName}?alt=media`;
       fetch(apiURL, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -98,6 +105,75 @@ const GcsBucketComponent = (): JSX.Element => {
             .text()
             .then((responseResult: any) => {
               console.log(responseResult);
+              const { commands } = app;
+
+              const widgets: Widget[] = [];
+              // let activeWidget: Widget;
+
+              const dock = new DockPanel();
+
+              const opener = {
+                open: (widget: Widget) => {
+                  if (widgets.indexOf(widget) === -1) {
+                    dock.addWidget(widget, { mode: 'tab-after' });
+                    widgets.push(widget);
+                  }
+                  dock.activateWidget(widget);
+                  // let activeWidget = widget;
+                  widget.disposed.connect((w: Widget) => {
+                    const index = widgets.indexOf(w);
+                    widgets.splice(index, 1);
+                  });
+                },
+                get opened() {
+                  return {
+                    connect: () => {
+                      return false;
+                    },
+                    disconnect: () => {
+                      return false;
+                    }
+                  };
+                }
+              };
+
+              const manager = new ServiceManager();
+
+              const docRegistry = new DocumentRegistry();
+              const docManager = new DocumentManager({
+                registry: docRegistry,
+                manager,
+                opener
+              });
+
+              const fbModel = new FilterFileBrowserModel({
+                manager: docManager
+              });
+              const fbWidget = new FileBrowser({
+                id: 'filebrowser',
+                model: fbModel
+              });
+
+              // Add commands.
+              commands.addCommand('gcs-file-open', {
+                label: 'Open',
+                iconClass: 'fa fa-folder-open-o',
+                mnemonic: 0,
+                execute: () => {
+                  console.log("aaaaa")
+                  for (const item of fbWidget.selectedItems()) {
+                    console.log(item)
+                    docManager.openOrReveal(item.path);
+                  }
+                }
+              });
+
+              commands.addKeyBinding({
+                keys: ['Enter'],
+                selector: '.jp-DirListing',
+                command: 'gcs-file-open'
+              });
+
               setIsLoading(false);
             })
             .catch((e: any) => {
@@ -108,7 +184,7 @@ const GcsBucketComponent = (): JSX.Element => {
         .catch((err: any) => {
           console.error('Error listing batches', err);
         });
-      }
+    }
   };
 
   const tableDataCondition = (cell: any) => {
@@ -193,10 +269,10 @@ const GcsBucketComponent = (): JSX.Element => {
           response
             .json()
             .then((responseResult: any) => {
-              let sortedResponse = responseResult.items
-                .sort((itemOne: any, itemTwo: any) =>
+              let sortedResponse = responseResult.items.sort(
+                (itemOne: any, itemTwo: any) =>
                   itemOne.updated < itemTwo.updated ? -1 : 1
-                )
+              );
               console.log(sortedResponse);
               let transformBucketsData = [];
               transformBucketsData = sortedResponse.map((data: any) => {
@@ -221,10 +297,10 @@ const GcsBucketComponent = (): JSX.Element => {
                   ])
                 ).values()
               ];
-              finalBucketsData = finalBucketsData
-                .sort((itemOne: any, itemTwo: any) =>
+              finalBucketsData = finalBucketsData.sort(
+                (itemOne: any, itemTwo: any) =>
                   itemOne.folderName < itemTwo.folderName ? -1 : 1
-                )
+              );
               console.log(finalBucketsData);
               //@ts-ignore
               setBucketsList(finalBucketsData);
@@ -308,13 +384,14 @@ const GcsBucketComponent = (): JSX.Element => {
 };
 
 export class GcsBucket extends ReactWidget {
-  menu: any;
-  constructor() {
+  app: JupyterLab;
+
+  constructor(app: JupyterLab) {
     super();
-    this.addClass('jp-ReactWidget');
+    this.app = app;
   }
 
   render(): JSX.Element {
-    return <GcsBucketComponent />;
+    return <GcsBucketComponent app={this.app} />;
   }
 }

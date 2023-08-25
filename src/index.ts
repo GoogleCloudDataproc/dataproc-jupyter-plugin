@@ -102,7 +102,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     const panelGcs = new Panel();
     panelGcs.id = 'GCS-bucket-tab';
     panelGcs.title.icon = iconStorage; 
-    panelGcs.addWidget(new GcsBucket());
+    panelGcs.addWidget(new GcsBucket(app as JupyterLab));
     app.shell.add(panelGcs, 'left', { rank: 1001 });
 
     const onTitleChanged = async (title: Title<Widget>) => {
