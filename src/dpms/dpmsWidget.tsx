@@ -613,7 +613,7 @@ fetching database name from fully qualified name structure */
   return (
     <>
       <div>
-        <div className="dpms-title">Dataproc Metastore</div>
+        <div className="dpms-title">Metadata Explorer</div>
         <div
           role="button"
           aria-label="refresh"
