@@ -137,7 +137,7 @@ function CreateRunTime({
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
-   
+
     setTimeList(timeData);
     updateLogic();
     projectListAPI();
@@ -201,13 +201,13 @@ function CreateRunTime({
       } = selectedRuntimeClone;
 
       setDisplayNameSelected(jupyterSession.displayName);
-       /*
+      /*
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
       setRunTimeSelected(name.split('/')[5]);
       setDescriptionSelected(description);
-      setVersionSelected(runtimeConfig.version);
+      setVersionSelected(runtimeConfig?.version ?? '');
       setUserInfo(creator);
       setCreateTime(createTime);
 
@@ -294,7 +294,7 @@ function CreateRunTime({
         ) {
           const dataprocCluster =
             peripheralsConfig.sparkHistoryServerConfig.dataprocCluster;
-            /*
+          /*
          Extracting clusterName from dataprocCluster
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{dataprocCluster}",
       */
