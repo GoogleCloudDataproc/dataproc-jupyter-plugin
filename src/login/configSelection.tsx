@@ -115,7 +115,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
             toast.error(configStatus, toastifyCustomStyle);
           } else {
             toast.success(
-              `${configStatus} - You will need to restart Jupyter in order for the new project and region to take effect.`,
+              `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
               toastifyCustomStyle
             );
           }
