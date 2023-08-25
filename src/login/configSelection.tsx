@@ -114,7 +114,10 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           if (configStatus.includes('Failed')) {
             toast.error(configStatus, toastifyCustomStyle);
           } else {
-            toast.success(configStatus, toastifyCustomStyle);
+            toast.success(
+              `${configStatus} - You will need to restart Jupyter in order for the new project and region to take effect.`,
+              toastifyCustomStyle
+            );
           }
         }
       }
