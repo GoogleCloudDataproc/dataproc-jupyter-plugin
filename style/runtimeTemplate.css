@@ -58,3 +58,9 @@
   padding-left: 28px;
   cursor: pointer;
 }
+
+.logo-alignment-style {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
