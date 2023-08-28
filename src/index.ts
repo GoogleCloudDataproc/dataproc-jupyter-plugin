@@ -47,7 +47,7 @@ import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import { GcsBucket } from './gcs/gcsBucket';
 
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'cluster',
+  id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
   optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker],
   activate: async (
