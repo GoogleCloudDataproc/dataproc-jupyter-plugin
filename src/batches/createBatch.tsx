@@ -147,6 +147,11 @@ function CreateBatch({
   let serviceAccount = '';
   let network = 'default';
   let historyServer = 'None';
+  let metastoreService = '';
+  let metaProject = '';
+  let metaRegion = '';
+  let metaService = 'None';
+  let containerImage = '';
   if(batchInfoResponse !== undefined){
   if (Object.keys(batchInfoResponse).length !== 0) {
     batchKeys = batchKey(batchInfoResponse);
@@ -180,7 +185,16 @@ function CreateBatch({
     networkUris = batchInfoResponse?.environmentConfig?.executionConfig?.networkTags || '';
     network = batchInfoResponse?.environmentConfig?.executionConfig?.networkUri;
     historyServer = batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster || '';
-
+    batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster;
+    metastoreService = batchInfoResponse?.environmentConfig?.peripheralsConfig?.metastoreService|| '';
+    containerImage = batchInfoResponse?.runtimeConfig?.containerImage || '';
+    const metastoreDetails = metastoreService.split("/");
+    console.log(metastoreService);
+    console.log(metastoreDetails);
+    metaProject = metastoreDetails[1];
+    metaRegion = metastoreDetails[3];
+    metaService = metastoreDetails[5];
+    console.log(batchInfoResponse.environmentConfig.peripheralsConfig.sparkHistoryServerConfig);
 
 
   }
@@ -201,7 +215,7 @@ function CreateBatch({
   const [mainJarSelected, setMainJarSelected] = useState(mainJarFileUri);
   const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [selectedRadioValue, setSelectedRadioValue] = useState('key');
-  const [containerImageSelected, setContainerImageSelected] = useState('');
+  const [containerImageSelected, setContainerImageSelected] = useState(containerImage);
   const [jarFilesSelected, setJarFilesSelected] = useState([...jarFileUris]);
   const [filesSelected, setFilesSelected] = useState([...fileUris]);
   const [queryFileSelected, setQueryFileSelected] = useState(queryFileUri);
@@ -227,11 +241,11 @@ function CreateBatch({
   const [servicesList, setServicesList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
-  const [servicesSelected, setServicesSelected] = useState('None');
+  const [servicesSelected, setServicesSelected] = useState(metaService);
 
   const [clusterSelected, setClusterSelected] = useState(historyServer);
-  const [projectId, setProjectId] = useState('');
-  const [region, setRegion] = useState('');
+  const [projectId, setProjectId] = useState(metaProject);
+  const [region, setRegion] = useState(metaRegion);
   const [projectList, setProjectList] = useState([{}]);
   const [regionList, setRegionList] = useState<
     { value: string; key: string; text: string }[]
