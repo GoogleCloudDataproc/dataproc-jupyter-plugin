@@ -28,7 +28,6 @@
     height: 36px !important;
     margin-top: 20px !important;
     margin-left: 13px !important;
-    width: 225px !important;
     padding-left: 35px !important;
     font-size: 13px;
 }
@@ -107,4 +106,7 @@
     left: 215px !important;
     transform: translateY(-50%);
     cursor: pointer;
+  }
+  .ui.icon.input{
+    width: 95% !important;
   }
