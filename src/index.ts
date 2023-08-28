@@ -45,7 +45,7 @@ import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'cluster',
+  id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
   optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker],
   activate: async (
