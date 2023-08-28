@@ -54,6 +54,7 @@ import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
+// import { set } from 'lib0/encoding';
 
 type Project = {
   projectId: string;
@@ -87,9 +88,12 @@ const iconError = new LabIcon({
 });
 
 interface ICreateBatchProps {
-  setCreateBatchView: (value: boolean) => void;
+  setCreateBatchView?: (value: boolean) => void;
   regionName: string;
   projectName: string;
+  batchInfoResponse?: any;
+  createBatch?: boolean;
+  setCreateBatch?: (value: boolean) => void;
 }
 let jarFileUris: string[] = [];
 let fileUris: string[] = [];
@@ -99,34 +103,115 @@ let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
 let pythonFileUris: string[] = [];
+function batchKey(batchSelected: any) {
+  const batchKeys: string[] = [];
 
+  for (const key in batchSelected) {
+    if (key.endsWith('Batch')) {
+      batchKeys.push(key);
+    }
+  }
+  return batchKeys;
+}
+function batchTypeFunction(batchKey: string) {
+  let batchType = 'spark';
+  switch (batchKey) {
+    case 'sparkRBatch':
+      batchType = 'sparkR';
+      return batchType;
+    case 'pysparkBatch':
+      batchType = 'pySpark';
+      return batchType;
+    case 'sparkSqlBatch':
+      batchType = 'sparkSql';
+      return batchType;
+    default:
+      return batchType;
+  }
+}
 function CreateBatch({
   setCreateBatchView,
   regionName,
-  projectName
+  projectName,
+  batchInfoResponse,
+  setCreateBatch,
+  createBatch
 }: ICreateBatchProps) {
+  let batchKeys: string[] = [];
+  let batchType = 'spark';
+  let mainClass = '';
+  let mainJarFileUri = '';
+  let mainRFileUri = '';
+  let mainPythonFileUri = '';
+  let queryFileUri = '';
+  let serviceAccount = '';
+  let network = 'default';
+  let historyServer = 'None';
+  if(batchInfoResponse !== undefined){
+  if (Object.keys(batchInfoResponse).length !== 0) {
+    batchKeys = batchKey(batchInfoResponse);
+    batchType = batchTypeFunction(batchKeys[0]);
+    const batchTypeKey = batchKeys[0];
+    console.log(batchTypeKey)
+    if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryFileUri')) {
+      queryFileUri = batchInfoResponse[batchKeys[0]].queryFileUri;
+    }
+    mainJarFileUri = batchInfoResponse[batchKeys[0]].mainJarFileUri;
+    mainClass = batchInfoResponse[batchKeys[0]].mainClass;
+    mainRFileUri = batchInfoResponse[batchKeys[0]].mainRFileUri;
+    mainPythonFileUri = batchInfoResponse[batchKeys[0]].mainPythonFileUri;
+    if (batchInfoResponse[batchTypeKey].hasOwnProperty('jarFileUris')) {
+    jarFileUris = [batchInfoResponse[batchKeys[0]].jarFileUris];
+    }
+    if (batchInfoResponse[batchTypeKey].hasOwnProperty('fileUris')) {
+    fileUris = [batchInfoResponse[batchKeys[0]].fileUris];
+    }
+    if (batchInfoResponse[batchTypeKey].hasOwnProperty('archiveUris')) {
+    archiveFileUris = [batchInfoResponse[batchKeys[0]].archiveUris];
+    }
+    if (batchInfoResponse[batchTypeKey].hasOwnProperty('args')) {
+    argumentsUris = [batchInfoResponse[batchKeys[0]].args];
+    }
+    if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
+      pythonFileUris = [batchInfoResponse[batchKeys[0]].pythonFileUris];
+    }
+    console.log(batchInfoResponse.environmentConfig.executionConfig);
+    serviceAccount = batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount|| '';
+    networkUris = batchInfoResponse?.environmentConfig?.executionConfig?.networkTags || '';
+    network = batchInfoResponse?.environmentConfig?.executionConfig?.networkUri;
+    historyServer = batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster || '';
+
+
+
+  }
+}
+  console.log(batchType);
+  console.log(mainClass)
+  const selectedRadioInitialValue = mainClass ? 'mainClass' : 'mainJar';
+  console.log(selectedRadioInitialValue);
+  console.log(mainJarFileUri);
   const [batchTypeList, setBatchTypeList] = useState([{}]);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [batchIdSelected, setBatchIdSelected] = useState('');
-  const [batchTypeSelected, setBatchTypeSelected] = useState('spark');
+  const [batchTypeSelected, setBatchTypeSelected] = useState(batchType);
   const [versionSelected, setVersionSelected] = useState('2.1');
-  const [selectedRadio, setSelectedRadio] = useState('mainClass');
+  const [selectedRadio, setSelectedRadio] = useState(selectedRadioInitialValue);
+  const [mainClassSelected, setMainClassSelected] = useState(mainClass);
+  const [mainJarSelected, setMainJarSelected] = useState(mainJarFileUri);
+  const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [selectedRadioValue, setSelectedRadioValue] = useState('key');
-  const [mainClassSelected, setMainClassSelected] = useState('');
-  const [mainJarSelected, setMainJarSelected] = useState('');
-  const [mainRSelected, setMainRSelected] = useState('');
   const [containerImageSelected, setContainerImageSelected] = useState('');
   const [jarFilesSelected, setJarFilesSelected] = useState([...jarFileUris]);
   const [filesSelected, setFilesSelected] = useState([...fileUris]);
-  const [queryFileSelected, setQueryFileSelected] = useState('');
+  const [queryFileSelected, setQueryFileSelected] = useState(queryFileUri);
   const [ArchiveFilesSelected, setArchiveFileSelected] = useState([
     ...archiveFileUris
   ]);
   const [argumentsSelected, setArgumentsSelected] = useState([
     ...argumentsUris
   ]);
-  const [serviceAccountSelected, setServiceAccountSelected] = useState('');
+  const [serviceAccountSelected, setServiceAccountSelected] = useState(serviceAccount);
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
   ]);
@@ -144,7 +229,7 @@ function CreateBatch({
   >([]);
   const [servicesSelected, setServicesSelected] = useState('None');
 
-  const [clusterSelected, setClusterSelected] = useState('');
+  const [clusterSelected, setClusterSelected] = useState(historyServer);
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
   const [projectList, setProjectList] = useState([{}]);
@@ -157,7 +242,7 @@ function CreateBatch({
     { key: string; value: string; text: string }[]
   >([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
-  const [networkSelected, setNetworkSelected] = useState('default');
+  const [networkSelected, setNetworkSelected] = useState(network);
   const [subNetworkSelected, setSubNetworkSelected] = useState('default');
   const [isLoadingService, setIsLoadingService] = useState(false);
   const [error, setError] = useState({ isOpen: false, message: '' });
@@ -165,7 +250,7 @@ function CreateBatch({
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
   const [additionalPythonFileSelected, setAdditionalPythonFileSelected] =
     useState([...pythonFileUris]);
-  const [mainPythonSelected, setMainPythonSelected] = useState('');
+  const [mainPythonSelected, setMainPythonSelected] = useState(mainPythonFileUri);
   const [clustersList, setClustersList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
@@ -187,9 +272,14 @@ function CreateBatch({
   const [keylist, setKeylist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
-
+  
   const handleCreateBatchBackView = () => {
+    if(setCreateBatchView){
     setCreateBatchView(false);
+    }
+    if(setCreateBatch){
+    setCreateBatch(false);
+    }
   };
   const handleMainClassRadio = () => {
     setSelectedRadio('mainClass');
@@ -247,6 +337,43 @@ function CreateBatch({
     duplicateKeyError,
     manualValidation
   ]);
+  useEffect(() => {
+    let batchKeys: string[] = [];
+    if (Object.keys(batchInfoResponse).length !== 0) {
+      if (batchInfoResponse.hasOwnProperty('labels')) {
+        const updatedLabelDetail = Object.entries(batchInfoResponse.labels).map(
+          ([k, v]) => `${k}:${v}`
+        );
+        setLabelDetail(prevLabelDetail => [
+          ...prevLabelDetail,
+          ...updatedLabelDetail
+        ]);
+        setLabelDetailUpdated(prevLabelDetailUpdated => [
+          ...prevLabelDetailUpdated,
+          ...updatedLabelDetail
+        ]);
+        for (const key in batchInfoResponse) {
+          if (key.endsWith('Batch')) {
+            batchKeys.push(key);
+          }
+        }
+        batchKeys = batchKey(batchInfoResponse);
+        if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
+          const updatedPropertyDetail = Object.entries(
+            batchInfoResponse.runtimeConfig.properties
+          ).map(([k, v]) => `${k.substr(6)}: ${v}`);
+          setPropertyDetail(prevPropertyDetail => [
+            ...prevPropertyDetail,
+            ...updatedPropertyDetail
+          ]);
+          setPropertyDetailUpdated(prevPropertyDetailUpdated => [
+            ...prevPropertyDetailUpdated,
+            ...updatedPropertyDetail
+          ]);
+        }
+      }
+    }
+  }, []);
 
   function isSubmitDisabled() {
     const commonConditions =
@@ -887,7 +1014,12 @@ function CreateBatch({
           if (response.ok) {
             const responseResult = await response.json();
             console.log(responseResult);
+            if(setCreateBatchView){
             setCreateBatchView(false);
+            }
+            if(setCreateBatch){
+              setCreateBatch(false);
+            }
           } else {
             const errorResponse = await response.json();
             console.log(errorResponse);
