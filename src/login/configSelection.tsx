@@ -15,28 +15,28 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
+import React, { useEffect, useState } from 'react';
+import ClipLoader from 'react-spinners/ClipLoader';
+import { ToastContainer, ToastOptions, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import 'semantic-ui-css/semantic.min.css';
+import { Select } from 'semantic-ui-react';
+import expandLessIcon from '../../style/icons/expand_less.svg';
+import expandMoreIcon from '../../style/icons/expand_more.svg';
 import settingsIcon from '../../style/icons/settings_icon.svg';
+import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
+import { requestAPI } from '../handler/handler';
+import CreateRuntime from '../runtime/createRunTime';
+import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   REGION_URL,
   USER_INFO_URL
 } from '../utils/const';
-import { authApi } from '../utils/utils';
-import { Select } from 'semantic-ui-react';
-import 'semantic-ui-css/semantic.min.css';
-import { requestAPI } from '../handler/handler';
-import ClipLoader from 'react-spinners/ClipLoader';
-import { ToastContainer, ToastOptions, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
-import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
-import expandLessIcon from '../../style/icons/expand_less.svg';
-import expandMoreIcon from '../../style/icons/expand_more.svg';
-import CreateRuntime from '../runtime/createRunTime';
 import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
+import { useAuth } from '../utils/utils';
 import { ProjectIDDropdown } from './projectIdDropdown';
 
 const iconExpandLess = new LabIcon({
@@ -72,6 +72,8 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
 
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
     useState<SessionTemplate>();
+
+  const credentials = useAuth();
 
   const handleProjectIdChange = (projectId: string) => {
     setRegionList([]);
@@ -127,7 +129,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   };
 
   const displayUserInfo = async () => {
-    const credentials = await authApi();
     if (credentials) {
       fetch(USER_INFO_URL, {
         method: 'GET',
@@ -155,7 +156,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
 
   const regionListAPI = async (projectId: any) => {
     try {
-      const credentials = await authApi();
       if (credentials) {
         fetch(`${REGION_URL}${projectId}/regions`, {
           method: 'GET',
@@ -226,7 +226,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   };
 
   const fetchProjectRegion = async () => {
-    const credentials = await authApi();
     if (credentials && credentials.project_id && credentials.region_id) {
       handleProjectIdChange(credentials.project_id);
       setProjectId(credentials.project_id);
@@ -250,7 +249,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
       displayUserInfo();
     }
     setSelectedRuntimeClone(undefined);
-  }, []);
+  }, [credentials]);
   return (
     <div>
       <ToastContainer />

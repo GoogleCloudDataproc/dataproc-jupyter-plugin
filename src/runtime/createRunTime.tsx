@@ -15,11 +15,17 @@
  * limitations under the License.
  */
 
-import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import 'semantic-ui-css/semantic.min.css';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { ClipLoader } from 'react-spinners';
+import TagsInput from 'react-tagsinput';
+import 'react-tagsinput/react-tagsinput.css';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import 'semantic-ui-css/semantic.min.css';
 import { Input, Select } from 'semantic-ui-react';
+import errorIcon from '../../style/icons/error_icon.svg';
+import LabelProperties from '../jobs/labelProperties';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -31,14 +37,8 @@ import {
   STATUS_RUNNING,
   USER_INFO_URL
 } from '../utils/const';
-import TagsInput from 'react-tagsinput';
-import 'react-tagsinput/react-tagsinput.css';
-import LabelProperties from '../jobs/labelProperties';
-import { authApi } from '../utils/utils';
-import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
-import errorIcon from '../../style/icons/error_icon.svg';
-import { toast } from 'react-toastify';
+import { useAuth } from '../utils/utils';
 
 type Project = {
   projectId: string;
@@ -130,6 +130,7 @@ function CreateRunTime({
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
+  const credentials = useAuth();
 
   useEffect(() => {
     const timeData = [
@@ -143,7 +144,7 @@ function CreateRunTime({
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
-  }, [selectedRuntimeClone, clusterSelected, defaultValue]);
+  }, [selectedRuntimeClone, clusterSelected, defaultValue, credentials]);
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
@@ -165,7 +166,6 @@ function CreateRunTime({
     servicesSelected
   ]);
   const displayUserInfo = async () => {
-    const credentials = await authApi();
     if (credentials) {
       fetch(USER_INFO_URL, {
         method: 'GET',
@@ -307,7 +307,6 @@ function CreateRunTime({
     }
   };
   const listClustersAPI = async () => {
-    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=100`,
@@ -351,7 +350,6 @@ function CreateRunTime({
     }
   };
   const listNetworksAPI = async () => {
-    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks`,
@@ -402,7 +400,6 @@ function CreateRunTime({
     subnetworks: string;
   };
   const listSubNetworksAPI = async (subnetwork: string) => {
-    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks/${subnetwork}`,
@@ -456,7 +453,6 @@ function CreateRunTime({
 
   const listMetaStoreAPI = async (data: undefined) => {
     setIsLoadingService(true);
-    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL_META}/projects/${projectId}/locations/${data}/services`,
@@ -502,7 +498,6 @@ function CreateRunTime({
     }
   };
   const projectListAPI = async () => {
-    const credentials = await authApi();
     if (credentials) {
       fetch(PROJECT_LIST_URL, {
         method: 'GET',
@@ -545,7 +540,6 @@ function CreateRunTime({
 
   const regionListAPI = async (projectId: string) => {
     setIsLoadingRegion(true);
-    const credentials = await authApi();
     if (credentials) {
       fetch(`${REGION_URL}${projectId}/regions`, {
         headers: {
@@ -678,11 +672,6 @@ function CreateRunTime({
   };
   const handleCancelButton = () => {
     setOpenCreateTemplate(false);
-    // const content = new AuthLogin();
-    // const widget = new MainAreaWidget<AuthLogin>({ content });
-    // widget.title.label = 'Config Setup';
-    // //widget.title.icon = iconCluster;
-    // app.shell.add(widget, 'main');
   };
 
   const handleClusterSelected = (event: any, data: any) => {
@@ -703,7 +692,6 @@ function CreateRunTime({
     );
   }
   const createRuntimeApi = async (payload: any) => {
-    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
@@ -737,7 +725,6 @@ function CreateRunTime({
     }
   };
   const updateRuntimeApi = async (payload: any) => {
-    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
@@ -772,7 +759,6 @@ function CreateRunTime({
   };
 
   const handleSave = async () => {
-    const credentials = await authApi();
     if (credentials) {
       const labelObject: { [key: string]: string } = {};
       labelDetailUpdated.forEach((label: string) => {

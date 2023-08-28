@@ -15,17 +15,18 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
-import filterIcon from '../../style/icons/filter_icon.svg';
-import SucceededIcon from '../../style/icons/succeeded_icon.svg';
-import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
-import stopIcon from '../../style/icons/stop_icon.svg';
-import stopDisableIcon from '../../style/icons/stop_disable_icon.svg';
-import deleteIcon from '../../style/icons/delete_icon.svg';
+import React, { useEffect, useRef, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
-import GlobalFilter from '../utils/globalFilter';
+import { useGlobalFilter, usePagination, useTable } from 'react-table';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
+import deleteIcon from '../../style/icons/delete_icon.svg';
+import filterIcon from '../../style/icons/filter_icon.svg';
+import stopDisableIcon from '../../style/icons/stop_disable_icon.svg';
+import stopIcon from '../../style/icons/stop_icon.svg';
+import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -40,20 +41,19 @@ import {
   STATUS_TERMINATED,
   STATUS_TERMINATING
 } from '../utils/const';
+import DeletePopup from '../utils/deletePopup';
+import GlobalFilter from '../utils/globalFilter';
+import { PaginationView } from '../utils/paginationView';
+import PollingTimer from '../utils/pollingTimer';
+import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
 import TableData from '../utils/tableData';
 import {
   ICellProps,
-  authApi,
   elapsedTime,
-  jobTimeFormat
+  jobTimeFormat,
+  useAuth
 } from '../utils/utils';
 import SessionDetails from './sessionDetails';
-import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
-import { PaginationView } from '../utils/paginationView';
-import PollingTimer from '../utils/pollingTimer';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -92,6 +92,7 @@ function ListSessions() {
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedSessionValue, setSelectedSessionValue] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const credentials = useAuth();
 
   const pollingSessions = async (
     pollingFunction: () => void,
@@ -144,7 +145,6 @@ function ListSessions() {
     nextPageToken?: string,
     previousSessionsList?: object
   ) => {
-    const credentials = await authApi();
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
@@ -266,7 +266,7 @@ function ListSessions() {
     return () => {
       pollingSessions(listSessionsAPI, true);
     };
-  }, [pollingDisable, detailedSessionView]);
+  }, [pollingDisable, detailedSessionView, credentials]);
 
   const renderActions = (data: { state: ClusterStatus; name: string }) => {
     /*

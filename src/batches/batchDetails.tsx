@@ -15,21 +15,24 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
+import React, { useEffect, useRef, useState } from 'react';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
-import ViewLogs from '../utils/viewLogs';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
+import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
+import ViewLogs from '../utils/viewLogs';
 
 import { ClipLoader } from 'react-spinners';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { deleteBatchAPI } from '../utils/batchService';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
+  BATCH_FIELDS_EXCLUDED,
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
-  BATCH_FIELDS_EXCLUDED,
   METASTORE_SERVICE_KEY,
   METASTORE_SERVICE_LABEL,
   NETWORK_KEY,
@@ -43,22 +46,19 @@ import {
   SUBNETWORK_KEY,
   SUBNETWORK_LABEL
 } from '../utils/const';
+import DeletePopup from '../utils/deletePopup';
+import PollingTimer from '../utils/pollingTimer';
+import { statusDisplay } from '../utils/statusDisplay';
 import {
   BatchTypeValue,
-  authApi,
   batchDetailsOptionalDisplay,
   convertToDCUHours,
   convertToGBMonths,
   elapsedTime,
   jobTimeFormat,
-  statusMessageBatch
+  statusMessageBatch,
+  useAuth
 } from '../utils/utils';
-import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { deleteBatchAPI } from '../utils/batchService';
-import { statusDisplay } from '../utils/statusDisplay';
-import PollingTimer from '../utils/pollingTimer';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -140,6 +140,7 @@ function BatchDetails({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const credentials = useAuth();
 
   const pollingBatchDetails = async (
     pollingFunction: () => void,
@@ -164,10 +165,9 @@ function BatchDetails({
     return () => {
       pollingBatchDetails(getBatchDetails, true);
     };
-  }, []);
+  }, [credentials]);
 
   const getBatchDetails = async () => {
-    const credentials = await authApi();
     if (credentials) {
       setRegionName(credentials.region_id || '');
       fetch(
