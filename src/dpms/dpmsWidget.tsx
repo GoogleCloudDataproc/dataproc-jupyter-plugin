@@ -23,7 +23,6 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
 import columnsIcon from '../../style/icons/columns_icon.svg';
-import refreshIcon from '../../style/icons/refresh_icon.svg';
 import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
 import datasetsIcon from '../../style/icons/datasets_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
@@ -68,10 +67,6 @@ const iconDatasets = new LabIcon({
 const iconDatabaseWidget = new LabIcon({
   name: 'launcher:databse-widget-icon',
   svgstr: databaseWidgetIcon
-});
-const iconRefresh = new LabIcon({
-  name: 'launcher:refresh-icon',
-  svgstr: refreshIcon
 });
 const iconSearch = new LabIcon({
   name: 'launcher:search-icon',
@@ -298,20 +293,6 @@ fetching database name from fully qualified name structure */
       }
       openedWidgets[widgetTitle] = node.data.name;
     }
-  };
-  const clearState = () => {
-    setSearchTerm('');
-    setNotebookValue('');
-    setDataprocMetastoreServices('');
-    setIsLoading(true);
-    setEntries([]);
-    setColumnResponse([]);
-    setDatabaseDetails({});
-  };
-  const handleRefreshClick = () => {
-    clearState();
-    setIsLoading(true);
-    getActiveNotebook();
   };
   const handleSearchClear = () => {
     setSearchTerm('');
@@ -614,15 +595,6 @@ fetching database name from fully qualified name structure */
     <>
       <div>
         <div className="dpms-title">Metadata Explorer</div>
-        <div
-          role="button"
-          aria-label="refresh"
-          className="refresh-icon"
-          data-tip="Refresh"
-          onClick={handleRefreshClick}
-        >
-          <iconRefresh.react tag="div" />
-        </div>
       </div>
       {!noDpmsInstance ? (
         <>

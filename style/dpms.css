@@ -20,7 +20,7 @@
   position: absolute !important;
   top: 73% !important;
   left: 20px !important;
-  transform: translateY(-50%);
+  transform: translateY(-50%);  
 }
 .search-field{
     border-radius: 4px !important;
@@ -101,9 +101,9 @@
   .search-clear-icon{
     position: absolute !important;
     top: 73% !important;
-    left: 215px !important;
     transform: translateY(-50%);
     cursor: pointer;
+    right: 2%;
   }
   .ui.icon.input{
     width: 95% !important;
