@@ -341,10 +341,8 @@ const GcsBucketComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
           <div className="filter-cluster-section">
             <GlobalFilter
               preGlobalFilteredRows={preGlobalFilteredRows}
-              //@ts-ignore
               globalFilter={state.globalFilter}
               setGlobalFilter={setGlobalFilter}
-              listBucketsAPI={listBucketsAPI}
               gcsBucket={true}
             />
           </div>

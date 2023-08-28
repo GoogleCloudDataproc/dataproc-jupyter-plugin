@@ -27,7 +27,7 @@ function GlobalFilter({
   const onChange = (value: string) => {
     setGlobalFilter(value || undefined);
   };
-  if (value !== undefined) {
+  if (value !== undefined && !gcsBucket) {
     if (value.length !== 0) {
       setPollingDisable(true);
     } else {
