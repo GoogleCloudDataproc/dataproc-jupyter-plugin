@@ -53,3 +53,8 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+.runtime-table-data:last-child {
+  padding-left: 28px;
+  cursor: pointer;
+}
