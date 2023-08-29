@@ -11,7 +11,7 @@
     font-size: 15px;
 }
 .refresh-icon{
-    margin-left: 225px !important;
+    margin-left: 90% !important;
     margin-top: -20px;
     width: 20px;
     cursor: pointer;
@@ -20,7 +20,7 @@
   position: absolute !important;
   top: 73% !important;
   left: 20px !important;
-  transform: translateY(-50%);
+  transform: translateY(-50%);  
 }
 .search-field{
     border-radius: 4px !important;
@@ -28,7 +28,6 @@
     height: 36px !important;
     margin-top: 20px !important;
     margin-left: 13px !important;
-    width: 225px !important;
     padding-left: 35px !important;
     font-size: 13px;
 }
@@ -53,14 +52,13 @@
     cursor: pointer;
   }
   
-  div[role="treeitem"][aria-level="2"] > div {
+ div[role="treeitem"][aria-level="2"] > div {
     display: flex;
     margin-left: 20px;
-  }
-  
+  }   
   div[role="treeitem"][aria-level="2"] > div > div > svg {
     margin-right: 10px;
-  }
+  } 
   div[role="treeitem"] > div > div:last-child {
     cursor: pointer;
   }
@@ -74,10 +72,9 @@
   }
   .table-icon{
     pointer-events: none;
+    margin-top: 2px;
   }
-  .caret-icon.right{
-  margin-top: -2px;
-  }
+
   .dpms-error{
     margin-top: 50px;
     margin-left: 10px;
@@ -97,14 +94,17 @@
   }
   .Tree{
     overflow: auto;
-    height: 90% !important;
+    height: 100% !important;
     width: auto !important;
     overflow-wrap: anywhere;
   }
   .search-clear-icon{
     position: absolute !important;
     top: 73% !important;
-    left: 215px !important;
     transform: translateY(-50%);
     cursor: pointer;
+    right: 2%;
+  }
+  .ui.icon.input{
+    width: 95% !important;
   }

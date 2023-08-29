@@ -21,7 +21,6 @@ import settingsIcon from '../../style/icons/settings_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  PROJECT_LIST_URL,
   REGION_URL,
   USER_INFO_URL
 } from '../utils/const';
@@ -37,9 +36,8 @@ import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import CreateRuntime from '../runtime/createRunTime';
-import {
-  SessionTemplate
-} from '../utils/listRuntimeTemplateInterface';
+import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
+import { ProjectIDDropdown } from './projectIdDropdown';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -58,11 +56,9 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
 
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
-  const [projectList, setProjectList] = useState([{}]);
   const [regionList, setRegionList] = useState([{}]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [isLoadingProject, setIsLoadingProject] = useState(true);
   const [isLoadingRegion, setIsLoadingRegion] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [regionEmpty, SetRegionEmpty] = useState(true);
@@ -73,19 +69,16 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   });
   const [expandRuntimeTemplate, setExpandRuntimeTemplate] = useState(true);
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
- 
+
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
     useState<SessionTemplate>();
-  const handleProjectIdChange = (event: any, data: any) => {
+
+  const handleProjectIdChange = (projectId: string) => {
     setRegionList([]);
     SetRegionEmpty(true);
-    if (data.value === undefined) {
-      regionListAPI(data);
-    } else {
-      regionListAPI(data.value);
-      setProjectId(data.value);
-    }
     if (projectId.length !== 0) {
+      regionListAPI(projectId);
+      setProjectId(projectId);
       setIsSaveDisabled(false);
     }
   };
@@ -121,7 +114,10 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           if (configStatus.includes('Failed')) {
             toast.error(configStatus, toastifyCustomStyle);
           } else {
-            toast.success(configStatus, toastifyCustomStyle);
+            toast.success(
+              `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
+              toastifyCustomStyle
+            );
           }
         }
       }
@@ -157,55 +153,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
     }
   };
 
-  const projectListAPI = async (    
-    nextPageToken?: string,
-    previousProjectList?: object) => {
-    const credentials = await authApi();
-    const pageToken = nextPageToken ?? '';
-    if (credentials) {
-      fetch(`${PROJECT_LIST_URL}?pageToken=${pageToken}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: any) => {
-          response
-            .json()
-            .then((responseResult: any) => {
-              let transformedProjectList = [];
-              transformedProjectList = responseResult.projects.map(
-                (data: any) => {
-                  return {
-                    value: data.projectId,
-                    key: data.projectId,
-                    text: data.projectId
-                  };
-                }
-              );  
-              const existingProjectData = previousProjectList ?? [];
-              //setStateAction never type issue
-              const allProjectData: any = [
-                ...(existingProjectData as []),
-                ...transformedProjectList
-              ];
-              if (responseResult.nextPageToken) {
-                projectListAPI(responseResult.nextPageToken, allProjectData);
-              } else {
-                setProjectList(allProjectData);
-                setIsLoadingProject(false);
-              }
-            })
-            .catch((e: any) => console.log(e));
-        })
-        .catch((err: any) => {
-          setIsLoadingProject(false);
-          console.error('Error fetching project list', err);
-          toast.error('Failed to fetch the projects');
-        });
-    }
-  };
   const regionListAPI = async (projectId: any) => {
     try {
       const credentials = await authApi();
@@ -281,7 +228,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   const fetchProjectRegion = async () => {
     const credentials = await authApi();
     if (credentials && credentials.project_id && credentials.region_id) {
-      handleProjectIdChange(Event, credentials.project_id);
+      handleProjectIdChange(credentials.project_id);
       setProjectId(credentials.project_id);
       setRegion(credentials.region_id);
       setConfigError(false);
@@ -298,10 +245,8 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   useEffect(() => {
     if (loginState) {
       fetchProjectRegion();
-      projectListAPI();
       displayUserInfo();
     } else {
-      projectListAPI();
       displayUserInfo();
     }
     setSelectedRuntimeClone(undefined);
@@ -309,7 +254,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   return (
     <div>
       <ToastContainer />
-      {isLoadingUser && isLoadingProject && isLoadingRegion && !configError ? (
+      {isLoadingUser && isLoadingRegion && !configError ? (
         <div className="spin-loaderMain">
           <ClipLoader
             color="#8A8A8A"
@@ -340,13 +285,9 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 <label className="project-text" htmlFor="project-id">
                   Project ID
                 </label>
-                <Select
-                  search
-                  placeholder={projectId}
-                  className="project-region-select"
-                  value={projectId}
-                  onChange={handleProjectIdChange}
-                  options={projectList}
+                <ProjectIDDropdown
+                  projectId={projectId}
+                  onProjectIdChange={handleProjectIdChange}
                 />
               </div>
 
