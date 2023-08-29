@@ -34,7 +34,7 @@
 }
 .create-batch-network {
   display: flex;
-  width: 50%;
+  width: 512px;
 }
 .create-batch-encrypt {
   display: flex;
@@ -81,7 +81,14 @@
 
 .create-batch-style {
   background: #ffffff;
-  width: 50%;
+  width: 512px;
+  margin-top: 10px;
+  min-height: 40px;
+  outline: none;
+}
+.create-batch-style-mini{
+  background: #ffffff;
+  width: 490px;
   margin-top: 10px;
   min-height: 40px;
   outline: none;
@@ -91,7 +98,7 @@
 }
 .single-line{
   display: flex;
-  width:50%;
+  width:512px;
 
 }
 .create-batch-learn-more {
@@ -108,7 +115,7 @@
   line-height: 15px;
   padding-left: 5px;
   color: #575757;
-  width: 50%;
+  width: 512px;
   overflow: hidden;
   word-wrap: break-word;
   display: flex;
@@ -121,7 +128,7 @@
   line-height: 15px;
   padding-left: 5px;
   color: #575757;
-  width: 50%;
+  width: 512px;
   overflow: hidden;
   word-wrap: break-word;
   margin-top: 5px;

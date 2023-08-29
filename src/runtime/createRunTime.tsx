@@ -148,7 +148,7 @@ function CreateRunTime({
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
-  }, [selectedRuntimeClone, clusterSelected, defaultValue]);
+  }, []);
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
@@ -887,22 +887,23 @@ function CreateRunTime({
   return (
     <div>
       <div className="scroll-comp">
-        
         <div className="cluster-details-header">
-        <div
+          <div
             role="button"
             className="back-arrow-icon"
             onClick={handleCancelButton}
           >
             <iconLeftArrow.react tag="div" />
           </div>
-          <div className="cluster-details-title">Serverless Runtime Template</div>
+          <div className="cluster-details-title">
+            Serverless Runtime Template
+          </div>
         </div>
         <div className="submit-job-container">
           <form>
             <div className="create-batches-message">Display name*</div>
             <Input
-              className="create-batch-style "
+              className="create-runtime-style "
               value={displayNameSelected}
               onChange={e => handleDisplayNameChange(e)}
               type="text"
@@ -917,7 +918,7 @@ function CreateRunTime({
             <div className="create-batches-message">Runtime ID*</div>
 
             <Input
-              className="create-batch-style "
+              className="create-runtime-style "
               value={runTimeSelected}
               onChange={e => handleInputChange(e)}
               type="text"
@@ -932,7 +933,7 @@ function CreateRunTime({
 
             <div className="create-batches-message">Description*</div>
             <Input
-              className="create-batch-style "
+              className="create-runtime-style "
               value={desciptionSelected}
               onChange={e => handleDescriptionChange(e)}
               type="text"
@@ -947,7 +948,7 @@ function CreateRunTime({
             <div className="create-batches-message">Runtime version*</div>
 
             <Input
-              className="create-batch-style "
+              className="create-runtime-style "
               value={versionSelected}
               onChange={e => handleVersionChange(e)}
               type="text"
@@ -962,40 +963,49 @@ function CreateRunTime({
             <div className="runtime-message">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="runtime-message">
-              Networks in this project
-            </div>
-            <div className="create-batch-network">
-              <div className="create-batch-network-message">
-                Primary network
-              </div>
-              <div className="create-batch-network-message">Subnetwork</div>
-            </div>
+            <div className="runtime-message">Networks in this project</div>
+           
             <div>
               <div className="create-batch-network">
-                <Select
-                  search
-                  className="select-primary-network-style"
-                  value={networkSelected}
-                  onChange={handleNetworkChange}
-                  type="text"
-                  options={networkList}
-                />
+                <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="metastore-project"
+                  >
+                     Primary network
+                  </label>
+                  <Select
+                    className="project-region-select"
+                    search
+                    value={networkSelected}
+                    onChange={handleNetworkChange}
+                    type="text"
+                    options={networkList}
+                  />
+                </div>
 
-                <Select
-                  search
-                  className="select-sub-network-style"
-                  value={subNetworkSelected}
-                  onChange={handleSubNetworkChange}
-                  type="text"
-                  options={subNetworkList}
-                  placeholder={defaultValue}
-                />
+                <div className="select-text-overlay subnetwork-style">
+                  <label
+                    className="select-title-text"
+                    htmlFor="metastore-project"
+                  >
+                    Subnetwork
+                  </label>
+                  <Select
+                    className="project-region-select"
+                    search
+                    value={subNetworkSelected}
+                    onChange={handleSubNetworkChange}
+                    type="text"
+                    options={subNetworkList}
+                    placeholder={defaultValue}
+                  />
+                </div>
               </div>
             </div>
             <div className="create-batches-message">Network tags</div>
             <TagsInput
-              className="select-job-style"
+              className="select-runtime-style"
               onChange={e => setNetworkTagSelected(e)}
               addOnBlur={true}
               value={networkTagSelected}
@@ -1137,7 +1147,7 @@ function CreateRunTime({
               Python packages repository
             </div>
             <Input
-              className="create-batch-style "
+              className="create-runtime-style "
               value={pythonRepositorySelected}
               onChange={e => setPythonRepositorySelected(e.target.value)}
               type="text"
@@ -1150,19 +1160,22 @@ function CreateRunTime({
             <div className="submit-job-label-header">
               Persistent Spark History Server
             </div>
-            <div className="create-batches-message">
-              Choose a history server cluster to store logs in.{' '}
-            </div>
 
-            <Select
-              className="select-job-style"
-              search
-              clearable
-              value={clusterSelected}
-              onChange={handleClusterSelected}
-              options={clustersList}
-              placeholder="History server cluster"
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="metastore-project">
+                Choose a history server cluster to store logs in.{' '}
+              </label>
+
+              <Select
+                className="project-region-select"
+                search
+                clearable
+                value={clusterSelected}
+                onChange={handleClusterSelected}
+                options={clustersList}
+                placeholder="History server cluster"
+              />
+            </div>
             <div className="submit-job-label-header">Spark Properties</div>
             <LabelProperties
               labelDetail={propertyDetail}

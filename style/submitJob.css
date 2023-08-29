@@ -55,14 +55,14 @@
   background: #ffffff;
   border: 1px solid black !important;
   border-radius: 4px;
-  width: 50%;
+  width: 512px;
   margin-top: 10px;
   min-height: 40px;
   outline: none;
 }
 .select-text-overlay {
   position: relative;
-  width: 50%;
+  width: 512px;
   margin-top: 20px;
 }
 .select-title-text {
@@ -84,7 +84,7 @@
 
 .input-style {
   background: #ffffff;
-  width: 50%;
+  width: 512px;
   margin-top: 10px;
   min-height: 40px;
   outline: none;
@@ -155,7 +155,7 @@ a:hover {
   line-height: 15px;
   padding-left: 5px;
   color: #575757;
-  width: 50%;
+  width: 512px;
   overflow: hidden;
   word-wrap: break-word;
 }
@@ -167,7 +167,7 @@ a:hover {
   line-height: 15px;
   padding-left: 5px;
   color: #575757;
-  width: 50%;
+  width: 512px;
   overflow: hidden;
   display: flex;
   word-wrap: break-word;

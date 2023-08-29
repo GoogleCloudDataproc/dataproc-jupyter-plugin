@@ -688,9 +688,7 @@ function SubmitJob(
         </div>
         <div className="submit-job-container">
           <div className="submit-job-label-header">Cluster</div>
-          <div className="submit-job-cluster-message">
-            Choose a cluster to run your job in.
-          </div>
+          
           {clusterList.length === 0 ? (
             <Input
               className="input-style"
@@ -698,14 +696,22 @@ function SubmitJob(
               readOnly
             />
           ) : (
-            <Select
+            <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="metastore-project"
+                  >
+                     Choose a cluster to run your job in.
+                  </label>
+                  <Select
+                    className="project-region-select"
               search
               placeholder="Cluster*"
               onChange={handleClusterSelected}
-              className="select-job-style"
               options={clusterList}
               value={clusterSelected}
             />
+            </div>
           )}
           <div className="submit-job-label-header">Job</div>
           <div className="submit-job-cluster-message">Job ID*</div>
@@ -721,28 +727,44 @@ function SubmitJob(
               <div className="error-key-missing">ID is required</div>
             </div>
           )}
-          <div className="submit-job-cluster-message">Job type*</div>
+         
 
-          <Select
+          <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="metastore-project"
+                  >
+                     Job type*
+                  </label>
+                  <Select
+                    className="project-region-select"
             search
             onChange={handleJobTypeSelected}
-            className="select-job-style"
             options={jobTypeList}
             value={jobTypeSelected}
           />
+          </div>
 
           {jobTypeSelected === 'sparkSql' && (
             <>
-              <div className="submit-job-cluster-message">
-                Query source type*
-              </div>
-              <Select
+            
+              <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="metastore-project"
+                  >
+                    Query source type*
+                  </label>
+                  <Select
+                    className="project-region-select"
+            
                 search
                 onChange={handleQuerySourceTypeSelected}
-                className="select-job-style"
+               
                 options={querySourceTypeList}
                 value={querySourceSelected}
               />
+              </div>
             </>
           )}
           {querySourceSelected === 'queryFile' &&
