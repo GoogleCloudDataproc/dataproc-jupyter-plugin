@@ -828,7 +828,7 @@ function CreateBatch({
         }),
         ...(clusterSelected !== '' && {
           sparkHistoryServerConfig: {
-            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
+            dataprocCluster: `projects/${projectName}/regions/${regionName}/clusters/${clusterSelected}`
           } as SparkHistoryServerConfig
         })
       }
