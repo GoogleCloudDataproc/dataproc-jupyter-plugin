@@ -1,0 +1,16 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "dataproc_jupyter_plugin",
+  "description": "dataproc_jupyter_plugin settings.",
+  "jupyter.lab.toolbars": {
+    "Cell": [
+      {
+        "name": "generate-code",
+        "command": "dataproc_jupyter_plugin:generate-code"
+      }
+    ]
+  },
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
