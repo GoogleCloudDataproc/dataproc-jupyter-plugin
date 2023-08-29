@@ -250,11 +250,7 @@ function CreateBatch({
 
   function isSubmitDisabled() {
     const commonConditions =
-      batchIdSelected === '' ||
-      regionName === '' ||
-      batchIdValidation
-      ;
-
+      batchIdSelected === '' || regionName === '' || batchIdValidation;
     switch (batchTypeSelected) {
       case 'spark':
         return (
@@ -746,12 +742,27 @@ function CreateBatch({
     if (batchTypeSelected === 'spark') {
       payload.sparkBatch = {
         ...(mainJarSelected !== '' && { mainJarFileUri: mainJarSelected }),
-        ...(mainClassSelected !== '' && { mainClass: mainClassSelected })
+        ...(mainClassSelected !== '' && { mainClass: mainClassSelected }),
+        ...(ArchiveFilesSelected.length > 0 && {
+          archiveUris: ArchiveFilesSelected
+        }),
+        ...(filesSelected.length > 0 && {
+          fileUris: filesSelected
+        }),
+        ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected }),
+        ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
     if (batchTypeSelected === 'sparkR') {
       payload.sparkRBatch = {
-        ...(mainRSelected !== '' && { mainRFileUri: mainRSelected })
+        ...(mainRSelected !== '' && { mainRFileUri: mainRSelected }),
+        ...(ArchiveFilesSelected.length > 0 && {
+          archiveUris: ArchiveFilesSelected
+        }),
+        ...(filesSelected.length > 0 && {
+          fileUris: filesSelected
+        }),
+        ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
     if (batchTypeSelected === 'pySpark') {
@@ -761,13 +772,22 @@ function CreateBatch({
         }),
         ...(mainPythonSelected !== '' && {
           mainPythonFileUri: mainPythonSelected
-        })
+        }),
+        ...(ArchiveFilesSelected.length > 0 && {
+          archiveUris: ArchiveFilesSelected
+        }),
+        ...(filesSelected.length > 0 && {
+          fileUris: filesSelected
+        }),
+        ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected }),
+        ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
     if (batchTypeSelected === 'sparkSql') {
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
-        ...(parameterObject && { queryVariables: { query: parameterObject } })
+        ...(parameterObject && { queryVariables: { query: parameterObject } }),
+        ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected }),
       };
     }
 
@@ -801,11 +821,8 @@ function CreateBatch({
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
         })
-      } as ExecutionConfig
-    };
-
-    if (servicesSelected !== 'None' || clusterSelected !== '') {
-      payload.peripheralsConfig = {
+      } as ExecutionConfig,
+      peripheralsConfig :{
         ...(servicesSelected !== 'None' && {
           metastoreService: servicesSelected
         }),
@@ -814,15 +831,12 @@ function CreateBatch({
             dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
           } as SparkHistoryServerConfig
         })
-      };
-    }
+      }
 
-    payload.archiveUris =
-      ArchiveFilesSelected.length > 0 ? ArchiveFilesSelected : undefined;
-    payload.fileUris = filesSelected.length > 0 ? filesSelected : undefined;
-    payload.jarFileUris =
-      jarFilesSelected.length > 0 ? jarFilesSelected : undefined;
-    payload.args = argumentsSelected.length > 0 ? argumentsSelected : undefined;
+
+    };
+
+   
 
     return payload;
   };
@@ -1263,7 +1277,7 @@ function CreateBatch({
                 >
                   Container Registry
                 </div>
-                {' or '}
+                {'  or '}
                 <div
                   className="create-batch-learn-more"
                   onClick={() => {
@@ -1283,8 +1297,7 @@ function CreateBatch({
                 </div>
               </div>
             </div>
-            {batchTypeSelected === 'spark' ||
-              (batchTypeSelected === 'sparkSql' && (
+            {batchTypeSelected !== 'sparkR' && 
                 <>
                   <div className="create-batches-message">Jar files</div>
                   <TagsInput
@@ -1313,7 +1326,8 @@ function CreateBatch({
                     <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
                   )}
                 </>
-              ))}
+             //) )
+            }
             {batchTypeSelected !== 'sparkSql' && (
               <>
                 <div className="create-batches-message">Files</div>
@@ -1430,10 +1444,10 @@ function CreateBatch({
               </div>
             </div>
             <div className="submit-job-label-header">Network Configuration</div>
-            <div className="create-batches-message">
+            <div className="runtime-message ">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="create-batches-message">
+            <div className="runtime-message ">
               Networks in this project
             </div>
             <div className="create-batch-network">
@@ -1519,9 +1533,9 @@ function CreateBatch({
                   <>
                     <div className="create-batch-encrypt">
                       <div className="create-batch-encrypt-message">
-                        keyRings
+                        Key rings
                       </div>
-                      <div className="create-batch-encrypt-message">keys</div>
+                      <div className="create-batch-encrypt-message">Keys</div>
                     </div>
                     <div>
                       <div className="create-batch-encrypt">
@@ -1555,7 +1569,7 @@ function CreateBatch({
                     </div>
                     <div className="manual-input">
                       <div className="create-batch-encrypt-message">
-                        Enter key Manually
+                        Enter key manually
                       </div>
                       <div className="encrypt">
                         <Radio
@@ -1571,16 +1585,13 @@ function CreateBatch({
                           disabled={selectedRadioValue === 'key'}
                           onChange={handleManualKeySelected}
                         />
-                       
                       </div>
                       {!manualValidation && (
-                          <div className="error-key-parent">
-                            <iconError.react tag="div" />
-                            <div className="error-key-missing">
-                              {KEY_MESSAGE}
-                            </div>
-                          </div>
-                        )}
+                        <div className="error-key-parent">
+                          <iconError.react tag="div" />
+                          <div className="error-key-missing">{KEY_MESSAGE}</div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

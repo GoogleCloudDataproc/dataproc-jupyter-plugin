@@ -39,10 +39,15 @@ import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
+import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 
 type Project = {
   projectId: string;
 };
+const iconLeftArrow = new LabIcon({
+  name: 'launcher:left-arrow-icon',
+  svgstr: LeftArrowIcon
+});
 
 type Cluster = {
   clusterName: string;
@@ -137,7 +142,7 @@ function CreateRunTime({
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
-   
+
     setTimeList(timeData);
     updateLogic();
     projectListAPI();
@@ -201,7 +206,7 @@ function CreateRunTime({
       } = selectedRuntimeClone;
 
       setDisplayNameSelected(jupyterSession.displayName);
-       /*
+      /*
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
@@ -294,7 +299,7 @@ function CreateRunTime({
         ) {
           const dataprocCluster =
             peripheralsConfig.sparkHistoryServerConfig.dataprocCluster;
-            /*
+          /*
          Extracting clusterName from dataprocCluster
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{dataprocCluster}",
       */
@@ -626,17 +631,24 @@ function CreateRunTime({
   const handleServiceSelected = (event: any, data: any) => {
     setServicesSelected(data.value);
   };
-  const handleIdleSelected = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleIdleSelected = (event: any) => {
     const inputValue = event.target.value;
     const numericRegex = /^[0-9]*$/;
+    const inputValueHour = Number(inputValue) * 3600;
+    const inputValueMin = Number(inputValue) * 60;
+    if (timeSelected === 'h') {
+      setIdleTimeSelected(inputValueHour.toString());
+    } else if (timeSelected === 'm') {
+      setIdleTimeSelected(inputValueMin.toString());
+    } else {
+      setIdleTimeSelected(inputValue);
+    }
 
     if (numericRegex.test(inputValue) || inputValue === '') {
       setIdleValidation(false);
     } else {
       setIdleValidation(true);
     }
-
-    setIdleTimeSelected(inputValue);
   };
   const handletimeSelected = (event: any, data: any) => {
     setTimeSelected(data.value);
@@ -788,6 +800,11 @@ function CreateRunTime({
         const value = labelSplit[1];
         propertyObject[key] = value;
       });
+      const inputValueHour = Number(idleTimeSelected) * 3600;
+      const inputValueMin = Number(idleTimeSelected) * 60;
+      const inputValueHourAuto = Number(autoTimeSelected) * 3600;
+      const inputValueMinAuto = Number(autoTimeSelected) * 60;
+
       const payload = {
         name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
         description: desciptionSelected,
@@ -815,15 +832,35 @@ function CreateRunTime({
             ...(networkTagSelected.length > 0 && {
               networkTags: networkTagSelected
             }),
-            // ...(networkSelected && {networkUri:networkSelected}),
+
             ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
 
-            ...(idleTimeSelected && {
-              idleTtl: idleTimeSelected + timeSelected
-            }),
-            ...(autoTimeSelected && {
-              ttl: autoTimeSelected + autoSelected
-            })
+            ...(timeSelected === 'h' &&
+              idleTimeSelected && {
+                idleTtl: inputValueHour.toString() + 's'
+              }),
+            ...(timeSelected === 'm' &&
+              idleTimeSelected && {
+                idleTtl: inputValueMin.toString() + 's'
+              }),
+            ...(timeSelected === 's' &&
+              idleTimeSelected && {
+                idleTtl: idleTimeSelected + 's'
+              }),
+
+            ...(autoSelected === 'h' &&
+              autoTimeSelected && {
+                ttl: inputValueHourAuto.toString() + 's'
+              }),
+            ...(autoSelected === 'm' &&
+              autoTimeSelected && {
+                ttl: inputValueMinAuto.toString() + 's'
+              }),
+
+            ...(autoSelected === 's' &&
+              autoTimeSelected && {
+                ttl: autoTimeSelected + 's'
+              })
           },
           peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
@@ -850,8 +887,16 @@ function CreateRunTime({
   return (
     <div>
       <div className="scroll-comp">
+        
         <div className="cluster-details-header">
-          <div className="cluster-details-title">Basics</div>
+        <div
+            role="button"
+            className="back-arrow-icon"
+            onClick={handleCancelButton}
+          >
+            <iconLeftArrow.react tag="div" />
+          </div>
+          <div className="cluster-details-title">Serverless Runtime Template</div>
         </div>
         <div className="submit-job-container">
           <form>
@@ -914,10 +959,10 @@ function CreateRunTime({
               </div>
             )}
             <div className="submit-job-label-header">Network Configuration</div>
-            <div className="create-batches-message">
+            <div className="runtime-message">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="create-batches-message">
+            <div className="runtime-message">
               Networks in this project
             </div>
             <div className="create-batch-network">
