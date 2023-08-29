@@ -86,6 +86,7 @@ h2 {
 .ui.search.dropdown.active>input.search:focus, .ui.search.dropdown.visible>input.search:focus {
   cursor: auto;
   border: 2px solid #3367D6 !important;
+  border-radius: 4px !important;
 }
 
 .ui.selection.dropdown {
