@@ -268,3 +268,11 @@
 .footer-divider{
   margin: 0 5px;
 }
+
+.feedback-container {
+  color: #3367D6;
+  font-weight: bold;
+}
+.feedback-version-container {
+  margin-right: 25px;
+}

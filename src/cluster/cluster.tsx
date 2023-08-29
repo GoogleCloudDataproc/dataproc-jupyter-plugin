@@ -289,9 +289,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_STOPPED ? (
-          <iconStart.react tag="div" />
+          <iconStart.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconStartDisable.react tag="div" />
+          <iconStartDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );
@@ -318,9 +318,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconStop.react tag="div" />
+          <iconStop.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconStopDisable.react tag="div" />
+          <iconStopDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );
@@ -347,9 +347,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconRestart.react tag="div" />
+          <iconRestart.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconRestartDisable.react tag="div" />
+          <iconRestartDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );

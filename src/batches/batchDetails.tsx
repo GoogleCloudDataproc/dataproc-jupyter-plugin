@@ -282,12 +282,12 @@ function BatchDetails({
               className="back-arrow-icon"
               onClick={() => handleDetailedBatchView()}
             >
-              <iconLeftArrow.react tag="div" />
+              <iconLeftArrow.react tag="div" className='logo-alignment-style' />
             </div>
             <div className="cluster-details-title">{batchSelected}</div>
             <div className="action-disabled action-cluster-section">
               <div className="action-cluster-icon">
-                <iconCloneJob.react tag="div" />
+                <iconCloneJob.react tag="div" className='logo-alignment-style' />
               </div>
               <div className="action-cluster-text">CLONE</div>
             </div>
@@ -298,7 +298,7 @@ function BatchDetails({
               onClick={() => handleDeleteBatch(batchSelected)}
             >
               <div className="action-cluster-icon">
-                <iconDeleteCluster.react tag="div" />
+                <iconDeleteCluster.react tag="div" className='logo-alignment-style' />
               </div>
               <div className="action-cluster-text">DELETE</div>
             </div>
