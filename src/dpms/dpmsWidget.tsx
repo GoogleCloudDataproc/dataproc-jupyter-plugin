@@ -303,9 +303,6 @@ fetching database name from fully qualified name structure */
     }
     
   };
-  app.shell.disposed.connect((_, widget) => {
-    console.log(widget);
-  });
   const handleSearchClear = () => {
     setSearchTerm('');
   };
