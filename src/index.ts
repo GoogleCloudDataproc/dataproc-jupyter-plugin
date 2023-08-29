@@ -43,6 +43,7 @@ const iconDpms = new LabIcon({
 });
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
+import { DataprocCompanionAiCompletionPlugin } from './completionExtension/dataprocCompanionAiCompletionPlugin';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
@@ -100,7 +101,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           const kernelName = kernel.name;
           const kernelSpec = kernels[kernelName];
           if (
-            kernelSpec?.resources.endpointParentResource.includes('/clusters/')
+            kernelSpec?.resources?.endpointParentResource?.includes('/clusters/')
           ) {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
@@ -115,7 +116,7 @@ const extension: JupyterFrontEndPlugin<void> = {
               loadDpmsWidget(localStorageValue || '');
             }
           } else if (
-            kernelSpec?.resources.endpointParentResource.includes('/sessions')
+            kernelSpec?.resources?.endpointParentResource?.includes('/sessions')
           ) {
             const parts = kernelSpec?.name.split('-');
             const sessionValue = parts.slice(1).join('-') + '/sessions';
@@ -318,4 +319,4 @@ const extension: JupyterFrontEndPlugin<void> = {
   }
 };
 
-export default extension;
+export default [extension, DataprocCompanionAiCompletionPlugin];
