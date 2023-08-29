@@ -300,7 +300,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                   search
                   onClick={handleDropdownOpen}
                   placeholder={region}
-                  className="region-select"
+                  className="project-region-select"
                   value={region}
                   onChange={handleRegionChange}
                   options={regionList}
