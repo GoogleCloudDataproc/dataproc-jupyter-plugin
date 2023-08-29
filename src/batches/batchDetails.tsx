@@ -21,7 +21,6 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
 import ViewLogs from '../utils/viewLogs';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
-
 import { ClipLoader } from 'react-spinners';
 import {
   API_HEADER_BEARER,
@@ -60,7 +59,6 @@ import { deleteBatchAPI } from '../utils/batchService';
 import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';
 import CreateBatch from './createBatch';
-
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -253,7 +251,6 @@ function BatchDetails({
     setDeletePopupOpen(false);
   };
   const handleCloneBatch = async (batchInfoResponse: any) => {
-    console.log('clone click');
     setCreateBatch(true);
   }
 

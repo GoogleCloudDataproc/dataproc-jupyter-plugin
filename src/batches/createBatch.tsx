@@ -157,7 +157,6 @@ function CreateBatch({
       batchKeys = batchKey(batchInfoResponse);
       batchType = batchTypeFunction(batchKeys[0]);
       const batchTypeKey = batchKeys[0];
-      console.log(batchTypeKey)
       if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryFileUri')) {
         queryFileUri = batchInfoResponse[batchKeys[0]].queryFileUri;
       }
@@ -180,7 +179,6 @@ function CreateBatch({
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
         pythonFileUris = [batchInfoResponse[batchKeys[0]].pythonFileUris];
       }
-      console.log(batchInfoResponse.environmentConfig.executionConfig);
       serviceAccount = batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount || '';
       networkUris = batchInfoResponse?.environmentConfig?.executionConfig?.networkTags || '';
       network = batchInfoResponse?.environmentConfig?.executionConfig?.networkUri || 'default';
@@ -194,8 +192,6 @@ function CreateBatch({
       containerImage = batchInfoResponse?.runtimeConfig?.containerImage || '';
       if (metastoreService != 'None') {
         const metastoreDetails = metastoreService.split("/");
-        console.log(metastoreService);
-        console.log(metastoreDetails);
         metaProject = metastoreDetails[1];
         metaRegion = metastoreDetails[3];
       }
@@ -242,7 +238,6 @@ function CreateBatch({
   const [servicesList, setServicesList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
-  console.log(metaProject, metaRegion, metaRegion);
   const [servicesSelected, setServicesSelected] = useState(metastoreService);
 
   const [clusterSelected, setClusterSelected] = useState(historyServer);
@@ -288,7 +283,6 @@ function CreateBatch({
   const [keylist, setKeylist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
-  console.log(servicesSelected);
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -375,7 +369,6 @@ function CreateBatch({
             }
           }
           batchKeys = batchKey(batchInfoResponse);
-          console.log(updatedLabelDetail);
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
@@ -390,7 +383,6 @@ function CreateBatch({
               ...updatedPropertyDetail
             ]);
           }
-          console.log(batchInfoResponse[batchKeys[0]].queryVariables);
           if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryVariables')) {
             const updatedParamDetail = Object.entries(
               batchInfoResponse[batchKeys[0]].queryVariables
@@ -1070,7 +1062,6 @@ function CreateBatch({
             }
           } else {
             const errorResponse = await response.json();
-            console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
           }
         })
