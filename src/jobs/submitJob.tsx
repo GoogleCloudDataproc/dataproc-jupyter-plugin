@@ -682,13 +682,13 @@ function SubmitJob(
             className="back-arrow-icon"
             onClick={() => handleSubmitJobBackView()}
           >
-            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
           </div>
           <div className="cluster-details-title">Submit a job</div>
         </div>
         <div className="submit-job-container">
           <div className="submit-job-label-header">Cluster</div>
-          
+
           {clusterList.length === 0 ? (
             <Input
               className="input-style"
@@ -697,20 +697,17 @@ function SubmitJob(
             />
           ) : (
             <div className="select-text-overlay">
-                  <label
-                    className="select-title-text"
-                    htmlFor="metastore-project"
-                  >
-                     Choose a cluster to run your job in.
-                  </label>
-                  <Select
-                    className="project-region-select"
-              search
-              placeholder="Cluster*"
-              onChange={handleClusterSelected}
-              options={clusterList}
-              value={clusterSelected}
-            />
+              <label className="select-title-text" htmlFor="metastore-project">
+                Choose a cluster to run your job in.
+              </label>
+              <Select
+                className="project-region-select"
+                search
+                placeholder="Cluster*"
+                onChange={handleClusterSelected}
+                options={clusterList}
+                value={clusterSelected}
+              />
             </div>
           )}
           <div className="submit-job-label-header">Job</div>
@@ -723,47 +720,40 @@ function SubmitJob(
           />
           {!jobIdValidation && (
             <div className="error-key-parent">
-              <iconError.react tag="div" className='logo-alignment-style' />
+              <iconError.react tag="div" className="logo-alignment-style" />
               <div className="error-key-missing">ID is required</div>
             </div>
           )}
-         
 
           <div className="select-text-overlay">
-                  <label
-                    className="select-title-text"
-                    htmlFor="metastore-project"
-                  >
-                     Job type*
-                  </label>
-                  <Select
-                    className="project-region-select"
-            search
-            onChange={handleJobTypeSelected}
-            options={jobTypeList}
-            value={jobTypeSelected}
-          />
+            <label className="select-title-text" htmlFor="metastore-project">
+              Job type*
+            </label>
+            <Select
+              className="project-region-select"
+              search
+              onChange={handleJobTypeSelected}
+              options={jobTypeList}
+              value={jobTypeSelected}
+            />
           </div>
 
           {jobTypeSelected === 'sparkSql' && (
             <>
-            
               <div className="select-text-overlay">
-                  <label
-                    className="select-title-text"
-                    htmlFor="metastore-project"
-                  >
-                    Query source type*
-                  </label>
-                  <Select
-                    className="project-region-select"
-            
-                search
-                onChange={handleQuerySourceTypeSelected}
-               
-                options={querySourceTypeList}
-                value={querySourceSelected}
-              />
+                <label
+                  className="select-title-text"
+                  htmlFor="metastore-project"
+                >
+                  Query source type*
+                </label>
+                <Select
+                  className="project-region-select"
+                  search
+                  onChange={handleQuerySourceTypeSelected}
+                  options={querySourceTypeList}
+                  value={querySourceSelected}
+                />
               </div>
             </>
           )}
@@ -785,7 +775,10 @@ function SubmitJob(
                 />
                 {!queryFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" className='logo-alignment-style' />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -829,7 +822,7 @@ function SubmitJob(
               />
               {mainClassSelected === '' && mainClassActive && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" className='logo-alignment-style' />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     Main class or jar is required
                   </div>
@@ -857,7 +850,7 @@ function SubmitJob(
               />
               {!mainRValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" className='logo-alignment-style' />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     File must include a valid scheme prefix: 'file://', 'gs://',
                     or 'hdfs://'
@@ -888,7 +881,7 @@ function SubmitJob(
               />
               {!mainPythonValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" className='logo-alignment-style' />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     File must include a valid scheme prefix: 'file://', 'gs://',
                     or 'hdfs://'
@@ -920,7 +913,7 @@ function SubmitJob(
               />
               {!additionalPythonFileValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" className='logo-alignment-style' />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
@@ -947,7 +940,7 @@ function SubmitJob(
               />
               {!jarFileValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" className='logo-alignment-style' />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
@@ -973,7 +966,7 @@ function SubmitJob(
               />
               {!fileValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" className='logo-alignment-style' />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
@@ -1003,7 +996,7 @@ function SubmitJob(
               />
               {!archieveFileValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" className='logo-alignment-style' />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
