@@ -307,7 +307,7 @@ function ListRuntimeTemplates({
             )
           }
         >
-          <iconDelete.react tag="div" />
+          <iconDelete.react tag="div" className='logo-alignment-style' />
         </div>
       </div>
     );
@@ -387,7 +387,7 @@ function ListRuntimeTemplates({
           </div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" />
+              <iconFilter.react tag="div" className='logo-alignment-style' />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

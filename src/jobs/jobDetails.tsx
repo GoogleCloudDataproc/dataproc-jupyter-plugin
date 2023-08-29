@@ -382,10 +382,10 @@ function JobDetails({
             className="back-arrow-icon"
             onClick={() => setErrorView(false)}
           >
-            <iconLeftArrow.react tag="div" />
+            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
           </div>
           <div className="error-view-message-parent">
-            <iconError.react tag="div" />
+            <iconError.react tag="div" className='logo-alignment-style' />
             <div className="error-view-message">
               Unable to find the resource you requested
             </div>
@@ -433,7 +433,7 @@ function JobDetails({
                   aria-label="Delete Job"
                   onClick={() => handleDetailedJobView()}
                 >
-                  <iconLeftArrow.react tag="div" />
+                  <iconLeftArrow.react tag="div" className='logo-alignment-style' />
                 </div>
                 <div className="cluster-details-title">Job details</div>
                 <div
@@ -442,7 +442,7 @@ function JobDetails({
                   onClick={() => handleCloneJob()}
                 >
                   <div className="action-cluster-icon">
-                    <iconCloneJob.react tag="div" />
+                    <iconCloneJob.react tag="div" className='logo-alignment-style' />
                   </div>
                   <div className="action-cluster-text">CLONE</div>
                 </div>
@@ -457,9 +457,9 @@ function JobDetails({
                 >
                   <div className="action-cluster-icon">
                     {jobInfo.status.state === STATUS_RUNNING ? (
-                      <iconStopCluster.react tag="div" />
+                      <iconStopCluster.react tag="div" className='logo-alignment-style' />
                     ) : (
-                      <iconStopClusterDisable.react tag="div" />
+                      <iconStopClusterDisable.react tag="div" className='logo-alignment-style' />
                     )}
                   </div>
                   <div className="action-cluster-text">STOP</div>
@@ -470,7 +470,7 @@ function JobDetails({
                   onClick={() => handleDeleteJob(jobInfo.reference.jobId)}
                 >
                   <div className="action-cluster-icon">
-                    <iconDeleteCluster.react tag="div" />
+                    <iconDeleteCluster.react tag="div" className='logo-alignment-style' />
                   </div>
                   <div className="action-cluster-text">DELETE</div>
                 </div>

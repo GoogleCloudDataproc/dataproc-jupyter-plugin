@@ -194,7 +194,7 @@ const BatchesComponent = (): React.JSX.Element => {
           title="Delete Batch"
           onClick={() => handleDeleteBatch(data.name.split('/')[5])}
         >
-          <iconDelete.react tag="div" />
+          <iconDelete.react tag="div" className='logo-alignment-style' />
         </div>
       </div>
     );

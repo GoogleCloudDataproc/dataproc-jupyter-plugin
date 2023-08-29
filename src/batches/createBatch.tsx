@@ -999,7 +999,7 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react tag="div" />
+            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
@@ -1015,7 +1015,7 @@ function CreateBatch({
             />
             {batchIdValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className='logo-alignment-style' />
                 <div className="error-key-missing">ID is required</div>
               </div>
             )}
@@ -1076,7 +1076,7 @@ function CreateBatch({
                     {selectedRadio === 'mainClass' &&
                       mainClassSelected === '' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react tag="div" className='logo-alignment-style' />
                           <div className="error-key-missing">
                             Main class is required
                           </div>
@@ -1120,7 +1120,7 @@ function CreateBatch({
                     {selectedRadio === 'mainJarURI' &&
                       mainJarSelected === '' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react tag="div" className='logo-alignment-style' />
                           <div className="error-key-missing">
                             Main jar is required
                           </div>
@@ -1128,7 +1128,7 @@ function CreateBatch({
                       )}
                     {!mainJarValidation && (
                       <div className="error-key-parent">
-                        <iconError.react tag="div" />
+                        <iconError.react tag="div" className='logo-alignment-style' />
                         <div className="error-key-missing">
                           File must include a valid scheme prefix: 'file://',
                           'gs://', or 'hdfs://'
@@ -1157,7 +1157,7 @@ function CreateBatch({
                 />
                 {!mainRValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react tag="div" className='logo-alignment-style' />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1187,7 +1187,7 @@ function CreateBatch({
                 />
                 {!mainPythonValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react tag="div" className='logo-alignment-style' />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1219,7 +1219,7 @@ function CreateBatch({
                 />
                 {!additionalPythonFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react tag="div" className='logo-alignment-style' />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1246,7 +1246,7 @@ function CreateBatch({
                 />
                 {!queryFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react tag="div" className='logo-alignment-style' />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1315,7 +1315,7 @@ function CreateBatch({
                   />
                   {!jarFileValidation && (
                     <div className="error-key-parent">
-                      <iconError.react tag="div" />
+                      <iconError.react tag="div" className='logo-alignment-style' />
                       <div className="error-key-missing">
                         All files must include a valid scheme prefix: 'file://',
                         'gs://', or 'hdfs://'
@@ -1346,7 +1346,7 @@ function CreateBatch({
                 />
                 {!fileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react tag="div" className='logo-alignment-style' />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1376,7 +1376,7 @@ function CreateBatch({
                 />
                 {!archieveFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react tag="div" className='logo-alignment-style' />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1588,7 +1588,7 @@ function CreateBatch({
                       </div>
                       {!manualValidation && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react tag="div" className='logo-alignment-style' />
                           <div className="error-key-missing">{KEY_MESSAGE}</div>
                         </div>
                       )}

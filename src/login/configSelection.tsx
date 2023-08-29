@@ -22,7 +22,8 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   REGION_URL,
-  USER_INFO_URL
+  USER_INFO_URL,
+  VERSION_DETAIL
 } from '../utils/const';
 import { authApi } from '../utils/utils';
 import { Select } from 'semantic-ui-react';
@@ -274,7 +275,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         <div className="settings-component">
           <div className="settings-overlay">
             <div>
-              <Iconsettings.react tag="div" />
+              <Iconsettings.react tag="div" className='logo-alignment-style' />
             </div>
             <div className="settings-text">Settings</div>
           </div>
@@ -339,6 +340,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 />
               </div>
             )}
+            <div>
             <div className="user-info-card">
               <div className="google-header">
                 This account is managed by google.com
@@ -379,6 +381,24 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 </a>
               </div>
             </div>
+            <div className="feedback-version-container">
+            <div className="google-header">
+                <div
+                  className="feedback-container"
+                >
+                  Provive Feedback
+                </div>
+                <span className="privacy-terms"> • </span>
+                <a
+                  href="https://github.com/GoogleCloudDataproc/dataproc-jupyter-plugin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Version {VERSION_DETAIL}
+                </a>
+              </div>
+            </div>
+            </div>
           </div>
           <div>
             <div className="runtime-title-section">
@@ -390,9 +410,9 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 onClick={() => handleRuntimeExpand()}
               >
                 {expandRuntimeTemplate ? (
-                  <iconExpandLess.react tag="div" />
+                  <iconExpandLess.react tag="div" className='logo-alignment-style' />
                 ) : (
-                  <iconExpandMore.react tag="div" />
+                  <iconExpandMore.react tag="div" className='logo-alignment-style' />
                 )}
               </div>
             </div>

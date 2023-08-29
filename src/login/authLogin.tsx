@@ -97,7 +97,7 @@ const AuthLoginComponent = (): React.JSX.Element => {
               }
               onClick={isloginDisabled ? undefined : login}
             >
-              <IconsigninGoogle.react tag="div" />
+              <IconsigninGoogle.react tag="div" className='logo-alignment-style' />
             </div>
           </div>
         </>
