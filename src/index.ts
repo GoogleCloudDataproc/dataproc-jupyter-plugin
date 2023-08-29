@@ -46,11 +46,19 @@ import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import { GcsBucket } from './gcs/gcsBucket';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import { DataprocCompanionAiCompletionPlugin } from './completionExtension/dataprocCompanionAiCompletionPlugin';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
-  optional: [IFileBrowserFactory, ILauncher, IMainMenu, ILabShell, INotebookTracker, IThemeManager],
+  optional: [
+    IFileBrowserFactory,
+    ILauncher,
+    IMainMenu,
+    ILabShell,
+    INotebookTracker,
+    IThemeManager
+  ],
   activate: async (
     app: JupyterFrontEnd,
     factory: IFileBrowserFactory,
@@ -97,7 +105,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       panel.addWidget(newWidget);
     };
 
-  
     panel.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
     lastClusterName = localStorage.getItem('notebookValue') || '';
     if (lastClusterName) {
@@ -107,8 +114,10 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const panelGcs = new Panel();
     panelGcs.id = 'GCS-bucket-tab';
-    panelGcs.title.icon = iconStorage; 
-    panelGcs.addWidget(new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory));
+    panelGcs.title.icon = iconStorage;
+    panelGcs.addWidget(
+      new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory)
+    );
     app.shell.add(panelGcs, 'left', { rank: 1001 });
 
     const onTitleChanged = async (title: Title<Widget>) => {
@@ -120,7 +129,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           const kernelName = kernel.name;
           const kernelSpec = kernels[kernelName];
           if (
-            kernelSpec?.resources.endpointParentResource.includes('/clusters/')
+            kernelSpec?.resources?.endpointParentResource?.includes(
+              '/clusters/'
+            )
           ) {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
@@ -135,7 +146,7 @@ const extension: JupyterFrontEndPlugin<void> = {
               loadDpmsWidget(lastClusterName || '');
             }
           } else if (
-            kernelSpec?.resources.endpointParentResource.includes('/sessions')
+            kernelSpec?.resources?.endpointParentResource?.includes('/sessions')
           ) {
             const parts = kernelSpec?.name.split('-');
             const sessionValue = parts.slice(1).join('-') + '/sessions';
@@ -212,7 +223,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconAddRuntime),
       execute: () => {
-        const content = new RuntimeTemplate(app as JupyterLab,launcher as ILauncher, themeManager);
+        const content = new RuntimeTemplate(
+          app as JupyterLab,
+          launcher as ILauncher,
+          themeManager
+        );
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;
@@ -254,7 +269,11 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Cloud Dataproc Settings',
       execute: () => {
-        const content = new AuthLogin(app as JupyterLab,launcher as ILauncher, themeManager);
+        const content = new AuthLogin(
+          app as JupyterLab,
+          launcher as ILauncher,
+          themeManager
+        );
         const widget = new MainAreaWidget<AuthLogin>({ content });
         widget.title.label = 'Config Setup';
         widget.title.icon = iconCluster;
@@ -362,4 +381,4 @@ const extension: JupyterFrontEndPlugin<void> = {
   }
 };
 
-export default extension;
+export default [extension, DataprocCompanionAiCompletionPlugin];

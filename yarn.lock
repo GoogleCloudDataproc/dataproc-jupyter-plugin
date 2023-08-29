@@ -2846,6 +2846,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jupyterlab/completer@npm:^4.0.5":
+  version: 4.0.5
+  resolution: "@jupyterlab/completer@npm:4.0.5"
+  dependencies:
+    "@jupyter/ydoc": ^1.0.2
+    "@jupyterlab/apputils": ^4.1.5
+    "@jupyterlab/codeeditor": ^4.0.5
+    "@jupyterlab/coreutils": ^6.0.5
+    "@jupyterlab/rendermime": ^4.0.5
+    "@jupyterlab/services": ^7.0.5
+    "@jupyterlab/statedb": ^4.0.5
+    "@jupyterlab/ui-components": ^4.0.5
+    "@lumino/algorithm": ^2.0.1
+    "@lumino/coreutils": ^2.1.2
+    "@lumino/disposable": ^2.1.2
+    "@lumino/domutils": ^2.0.1
+    "@lumino/messaging": ^2.0.1
+    "@lumino/signaling": ^2.1.2
+    "@lumino/widgets": ^2.3.0
+  checksum: bca52950049bfad7a03a2a36d8ed0ac0c430bb4b7cbd833be5ece0d03293edd474349ff462dfe25a5dd76c9de77dd1c68d42d1444f43faec6dd4d1f79cefb162
+  languageName: node
+  linkType: hard
+
 "@jupyterlab/console@npm:^4.0.5":
   version: 4.0.5
   resolution: "@jupyterlab/console@npm:4.0.5"
@@ -8947,6 +8970,7 @@ __metadata:
     "@emotion/styled": ^11.11.0
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/builder": ^4.0.0
+    "@jupyterlab/completer": ^4.0.5
     "@jupyterlab/coreutils": ^6.0.0
     "@jupyterlab/launcher": ^4.0.0
     "@jupyterlab/mainmenu": ^4.0.0
