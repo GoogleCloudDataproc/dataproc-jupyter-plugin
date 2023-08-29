@@ -203,7 +203,7 @@ function SessionDetails({
                   className="back-arrow-icon"
                   onClick={() => handleDetailedView()}
                 >
-                  <iconLeftArrow.react tag="div" />
+                  <iconLeftArrow.react tag="div" className='logo-alignment-style' />
                 </div>
                 <div className="cluster-details-title">Session details</div>
                 <div
@@ -220,9 +220,9 @@ function SessionDetails({
                 >
                   <div className="action-cluster-icon">
                     {sessionInfo.state === STATUS_ACTIVE ? (
-                      <iconStopCluster.react tag="div" />
+                      <iconStopCluster.react tag="div" className='logo-alignment-style' />
                     ) : (
-                      <iconStopClusterDisable.react tag="div" />
+                      <iconStopClusterDisable.react tag="div" className='logo-alignment-style' />
                     )}
                   </div>
                   <div className="action-cluster-text">TERMINATE</div>
@@ -247,16 +247,16 @@ function SessionDetails({
                   <div className="cluster-details-label">Status</div>
                   <div className="session-detail-status-parent">
                     {sessionInfo.state === STATUS_ACTIVE && (
-                      <iconSucceeded.react tag="div" />
+                      <iconSucceeded.react tag="div" className='logo-alignment-style' />
                     )}
                     {sessionInfo.state === STATUS_TERMINATED && (
-                      <iconSucceeded.react tag="div" />
+                      <iconSucceeded.react tag="div" className='logo-alignment-style' />
                     )}
                     {sessionInfo.state === STATUS_ERROR && (
-                      <iconClusterError.react tag="div" />
+                      <iconClusterError.react tag="div" className='logo-alignment-style' />
                     )}
                     {sessionInfo.state === STATUS_FAIL && (
-                      <iconClusterError.react tag="div" />
+                      <iconClusterError.react tag="div" className='logo-alignment-style' />
                     )}
                     {(sessionInfo.state === STATUS_PROVISIONING ||
                       sessionInfo.state === STATUS_CREATING ||

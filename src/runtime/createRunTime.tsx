@@ -894,7 +894,7 @@ function CreateRunTime({
             className="back-arrow-icon"
             onClick={handleCancelButton}
           >
-            <iconLeftArrow.react tag="div" />
+            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
           </div>
           <div className="cluster-details-title">Serverless Runtime Template</div>
         </div>
@@ -909,7 +909,7 @@ function CreateRunTime({
             />
             {displayNameValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className='logo-alignment-style' />
                 <div className="error-key-missing">Name is required</div>
               </div>
             )}
@@ -925,7 +925,7 @@ function CreateRunTime({
             />
             {runTimeValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className='logo-alignment-style' />
                 <div className="error-key-missing">ID is required</div>
               </div>
             )}
@@ -939,7 +939,7 @@ function CreateRunTime({
             />
             {descriptionValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className='logo-alignment-style' />
                 <div className="error-key-missing">Description is required</div>
               </div>
             )}
@@ -954,7 +954,7 @@ function CreateRunTime({
             />
             {versionValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className='logo-alignment-style' />
                 <div className="error-key-missing">Version is required</div>
               </div>
             )}
@@ -1098,7 +1098,7 @@ function CreateRunTime({
             </div>
             {idleValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className='logo-alignment-style' />
                 <div className="error-key-missing">Only Numeric is allowed</div>
               </div>
             )}
@@ -1128,7 +1128,7 @@ function CreateRunTime({
             </div>
             {autoValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className='logo-alignment-style' />
                 <div className="error-key-missing">Only Numeric is allowed</div>
               </div>
             )}

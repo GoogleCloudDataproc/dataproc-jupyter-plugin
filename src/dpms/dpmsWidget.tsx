@@ -335,7 +335,7 @@ fetching database name from fully qualified name structure */
               className="caret-icon right"
               onClick={handleIconClick}
             >
-              <iconDownArrow.react tag="div" />
+              <iconDownArrow.react tag="div" className='logo-alignment-style' />
             </div>
           </>
         ) : (
@@ -344,7 +344,7 @@ fetching database name from fully qualified name structure */
             className="caret-icon down"
             onClick={handleIconClick}
           >
-            <iconRightArrow.react tag="div" />
+            <iconRightArrow.react tag="div" className='logo-alignment-style' />
           </div>
         )
       ) : null;
@@ -357,7 +357,7 @@ fetching database name from fully qualified name structure */
                 className="caret-icon right"
                 onClick={handleIconClick}
               >
-                <iconDownArrow.react tag="div" />
+                <iconDownArrow.react tag="div" className='logo-alignment-style' />
               </div>
             </>
           ) : (
@@ -366,7 +366,7 @@ fetching database name from fully qualified name structure */
               className="caret-icon down"
               onClick={handleIconClick}
             >
-              <iconRightArrow.react tag="div" />
+              <iconRightArrow.react tag="div" className='logo-alignment-style' />
             </div>
           );
         if (depth === 1) {
@@ -374,7 +374,7 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconDatabase.react tag="div" />
+                <iconDatabase.react tag="div" className='logo-alignment-style' />
               </div>
             </>
           );
@@ -383,7 +383,7 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="table-icon" onClick={handleIconClick}>
-                <iconTable.react tag="div" />
+                <iconTable.react tag="div" className='logo-alignment-style' />
               </div>
             </>
           );
@@ -391,7 +391,7 @@ fetching database name from fully qualified name structure */
 
         return (
           <>
-            <iconColumns.react tag="div" />
+            <iconColumns.react tag="div" className='logo-alignment-style' />
           </>
         );
       }
@@ -400,7 +400,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              <iconDatabase.react tag="div" />
+              <iconDatabase.react tag="div" className='logo-alignment-style' />
             </div>
           </>
         );
@@ -409,7 +409,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="table-icon" onClick={handleIconClick}>
-              <iconTable.react tag="div" />
+              <iconTable.react tag="div" className='logo-alignment-style' />
             </div>
           </>
         );
@@ -417,7 +417,7 @@ fetching database name from fully qualified name structure */
 
       return (
         <>
-          <iconColumns.react tag="div" />
+          <iconColumns.react tag="div" className='logo-alignment-style' />
         </>
       );
     };
@@ -649,7 +649,7 @@ fetching database name from fully qualified name structure */
                       placeholder="Search your DBs and tables"
                     />
                     <div className="search-icon">
-                      <iconSearch.react tag="div" />
+                      <iconSearch.react tag="div" className='logo-alignment-style' />
                     </div>
                     {searchTerm &&
                     <div
@@ -657,7 +657,7 @@ fetching database name from fully qualified name structure */
                       className="search-clear-icon"
                       onClick={handleSearchClear}
                     >
-                      <iconSearchClear.react tag="div" />
+                      <iconSearchClear.react tag="div" className='logo-alignment-style' />
                     </div>
                     }
                   </div>
