@@ -1068,7 +1068,7 @@ function CreateBatch({
                   <div className="create-batch-input">
                     <div className="create-batch-message">Main class*</div>
                     <Input
-                      className="create-batch-style "
+                      className="create-batch-style-mini"
                       value={mainClassSelected}
                       onChange={e => setMainClassSelected(e.target.value)}
                       type="text"
@@ -1106,7 +1106,7 @@ function CreateBatch({
                   <div className="create-batch-input">
                     <div className="create-batch-message">Main jar*</div>
                     <Input
-                      className="create-batch-style "
+                      className="create-batch-style-mini"
                       value={mainJarSelected}
                       onChange={e =>
                         handleValidationFiles(

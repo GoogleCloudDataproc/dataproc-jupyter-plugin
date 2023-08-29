@@ -18,13 +18,12 @@
   padding-left: 15px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
-.runtimetemplate-max-idle{
-    background: #ffffff;
-    width: 90%;
-    margin-top: 10px;
-    min-height: 40px;
-    outline: none;
- 
+.runtimetemplate-max-idle {
+  background: #ffffff;
+  width: 100%;
+  margin-top: 10px;
+  min-height: 40px;
+  outline: none;
 }
 .runtime-message {
   font-style: normal;
@@ -46,6 +45,25 @@
 
 .create-runtime-button-wrapper {
   border-bottom: 1px solid #e0e0e0;
+}
+.subnetwork-style {
+  margin-left: 20px;
+}
+.select-runtime-style {
+  background: #ffffff;
+  border: 1px solid black !important;
+  border-radius: 4px;
+  width: 512px;
+  margin-top: 10px;
+  min-height: 40px;
+  outline: none;
+}
+.create-runtime-style {
+  background: #ffffff;
+  width: 512px;
+  margin-top: 10px;
+  min-height: 40px;
+  outline: none;
 }
 
 .create-runtime-overlay {
