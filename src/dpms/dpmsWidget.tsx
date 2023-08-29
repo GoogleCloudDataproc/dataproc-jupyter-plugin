@@ -255,7 +255,7 @@ fetching database name from fully qualified name structure */
   const searchMatch = (node: { data: { name: string } }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
-  const openedWidgets: string[] = [];
+  const openedWidgets: Record<string, boolean> = {};
   const handleNodeClick = (node: any) => {
     const depth = calculateDepth(node);
     const widgetTitle = node.data.name;
@@ -273,6 +273,10 @@ fetching database name from fully qualified name structure */
         widget.title.closable = true;
         widget.title.icon = iconDatabaseWidget;
         app.shell.add(widget, 'main');
+        widget.disposed.connect(() => {
+          const widgetTitle = widget.title.label;
+            delete openedWidgets[widgetTitle];
+          });
       } else if (depth === 2) {
         const database = node.parent.data.name;
         const column = node.data.children;
@@ -290,10 +294,18 @@ fetching database name from fully qualified name structure */
         widget.title.closable = true;
         widget.title.icon = iconDatasets;
         app.shell.add(widget, 'main');
+        widget.disposed.connect(() => {
+        const widgetTitle = widget.title.label;
+          delete openedWidgets[widgetTitle];
+        });
       }
       openedWidgets[widgetTitle] = node.data.name;
     }
+    
   };
+  app.shell.disposed.connect((_, widget) => {
+    console.log(widget);
+  });
   const handleSearchClear = () => {
     setSearchTerm('');
   };
@@ -442,6 +454,7 @@ fetching database name from fully qualified name structure */
           response
             .json()
             .then(async (responseResult: any) => {
+              if(responseResult.length > 0){
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -458,6 +471,11 @@ fetching database name from fully qualified name structure */
               databaseNames.map(async (db: string) => {
                 await getTableDetails(db);
               });
+            }
+            else{
+              setNoDpmsInstance(true);
+              setIsLoading(false);
+            }
             })
             .catch((e: Error) => {
               console.log(e);
