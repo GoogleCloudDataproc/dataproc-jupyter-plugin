@@ -153,11 +153,11 @@ function ListCluster({
             aria-labels={cell.value}
           >
             {cell.value === STATUS_RUNNING && (
-              <iconClusterRunning.react tag="div" />
+              <iconClusterRunning.react tag="div" className='logo-alignment-style' />
             )}
-            {cell.value === STATUS_STOPPED && <iconStop.react tag="div" />}
+            {cell.value === STATUS_STOPPED && <iconStop.react tag="div" className='logo-alignment-style' />}
             {cell.value === STATUS_ERROR && (
-              <iconClusterError.react tag="div" />
+              <iconClusterError.react tag="div" className='logo-alignment-style' />
             )}
             {(cell.value === STATUS_PROVISIONING ||
               cell.value === STATUS_CREATING ||
@@ -224,7 +224,7 @@ function ListCluster({
           }}
         >
           <div className="create-cluster-icon">
-            <iconCreateCluster.react tag="div" />
+            <iconCreateCluster.react tag="div" className='logo-alignment-style' />
           </div>
           <div className="create-cluster-text">Create cluster</div>
         </div>
@@ -234,7 +234,7 @@ function ListCluster({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" />
+              <iconFilter.react tag="div" className='logo-alignment-style' />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

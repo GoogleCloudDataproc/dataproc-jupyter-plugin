@@ -123,7 +123,7 @@ function ViewLogs({
         }}
       >
         <div className="action-cluster-icon">
-          <iconViewLogs.react tag="div" />
+          <iconViewLogs.react tag="div" className='logo-alignment-style' />
         </div>
         {clusterInfo ? (
           <div className="action-cluster-text">VIEW CLOUD LOGS</div>
@@ -163,7 +163,7 @@ function ViewLogs({
         {!clusterInfo && !clusterName && (
           <>
             <div className="action-cluster-icon">
-              <iconViewLogs.react tag="div" />
+              <iconViewLogs.react tag="div" className='logo-alignment-style' />
             </div>
             <div className="action-cluster-text">VIEW CLOUD LOGS</div>
           </>
