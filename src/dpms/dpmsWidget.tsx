@@ -108,6 +108,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseDetails, setDatabaseDetails] = useState({});
   const [tableDescription, setTableDescription] = useState({});
+  const [apiError, setApiError] = useState(false);
+  const [schemaError, setSchemaError] = useState(false);
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -451,7 +453,7 @@ fetching database name from fully qualified name structure */
           response
             .json()
             .then(async (responseResult: any) => {
-              if(responseResult.length > 0){
+              if(responseResult?.results){
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -470,8 +472,16 @@ fetching database name from fully qualified name structure */
               });
             }
             else{
+              if(responseResult?.error?.code){
+                setApiError(true);
+                setNoDpmsInstance(true);
+                setIsLoading(false);
+              }
+             else{
               setNoDpmsInstance(true);
+              setSchemaError(true)
               setIsLoading(false);
+             }
             }
             })
             .catch((e: Error) => {
@@ -687,9 +697,13 @@ fetching database name from fully qualified name structure */
         </div>) : (cluster ? (<div className="dpms-error">
           DPMS is not configured for this cluster. Please attach DPMS or
           activate DPMS sync with data catalog
+        </div>):(apiError ? (<div className="dpms-error">
+          Datacatalog API is not enabled
+        </div>):(schemaError ? (<div className="dpms-error">
+          No schema available
         </div>):(<div className="dpms-error">
         DPMS schema explorer not set up
-        </div>))
+        </div>))))
       )}
     </>
   );
