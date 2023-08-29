@@ -248,7 +248,7 @@
 }
 .scroll-comp{
   overflow-y: auto;
-  max-height: 79vh;
+  max-height: 91vh;
 }
 .login-error{
   align-items: center;
