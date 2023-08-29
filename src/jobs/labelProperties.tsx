@@ -61,8 +61,6 @@ function LabelProperties({
   labelDetail used to store the permanent label details when onblur 
   labelDetailUpdated used to store the temporay label details when onchange 
   */
- console.log(labelDetailUpdated);
-
   useEffect(() => {
     if (!labelEditMode) {
       if (buttonText === 'ADD LABEL' && !selectedJobClone && selectedRuntimeClone===undefined) {
