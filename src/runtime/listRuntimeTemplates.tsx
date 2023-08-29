@@ -380,7 +380,7 @@ function ListRuntimeTemplates({
               }}
             >
               <div className="create-cluster-icon">
-                <iconSubmitJob.react tag="div" />
+                <iconSubmitJob.react tag="div" className='logo-alignment-style'/>
               </div>
               <div className="create-cluster-text">Create</div>
             </div>

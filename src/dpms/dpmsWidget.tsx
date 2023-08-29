@@ -23,7 +23,6 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
 import columnsIcon from '../../style/icons/columns_icon.svg';
-import refreshIcon from '../../style/icons/refresh_icon.svg';
 import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
 import datasetsIcon from '../../style/icons/datasets_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
@@ -69,10 +68,6 @@ const iconDatabaseWidget = new LabIcon({
   name: 'launcher:databse-widget-icon',
   svgstr: databaseWidgetIcon
 });
-const iconRefresh = new LabIcon({
-  name: 'launcher:refresh-icon',
-  svgstr: refreshIcon
-});
 const iconSearch = new LabIcon({
   name: 'launcher:search-icon',
   svgstr: searchIcon
@@ -113,6 +108,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseDetails, setDatabaseDetails] = useState({});
   const [tableDescription, setTableDescription] = useState({});
+  const [apiError, setApiError] = useState(false);
+  const [schemaError, setSchemaError] = useState(false);
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -260,7 +257,7 @@ fetching database name from fully qualified name structure */
   const searchMatch = (node: { data: { name: string } }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
-  const openedWidgets: string[] = [];
+  const openedWidgets: Record<string, boolean> = {};
   const handleNodeClick = (node: any) => {
     const depth = calculateDepth(node);
     const widgetTitle = node.data.name;
@@ -278,6 +275,10 @@ fetching database name from fully qualified name structure */
         widget.title.closable = true;
         widget.title.icon = iconDatabaseWidget;
         app.shell.add(widget, 'main');
+        widget.disposed.connect(() => {
+          const widgetTitle = widget.title.label;
+            delete openedWidgets[widgetTitle];
+          });
       } else if (depth === 2) {
         const database = node.parent.data.name;
         const column = node.data.children;
@@ -295,23 +296,14 @@ fetching database name from fully qualified name structure */
         widget.title.closable = true;
         widget.title.icon = iconDatasets;
         app.shell.add(widget, 'main');
+        widget.disposed.connect(() => {
+        const widgetTitle = widget.title.label;
+          delete openedWidgets[widgetTitle];
+        });
       }
       openedWidgets[widgetTitle] = node.data.name;
     }
-  };
-  const clearState = () => {
-    setSearchTerm('');
-    setNotebookValue('');
-    setDataprocMetastoreServices('');
-    setIsLoading(true);
-    setEntries([]);
-    setColumnResponse([]);
-    setDatabaseDetails({});
-  };
-  const handleRefreshClick = () => {
-    clearState();
-    setIsLoading(true);
-    getActiveNotebook();
+    
   };
   const handleSearchClear = () => {
     setSearchTerm('');
@@ -461,6 +453,7 @@ fetching database name from fully qualified name structure */
           response
             .json()
             .then(async (responseResult: any) => {
+              if(responseResult?.results){
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -477,6 +470,19 @@ fetching database name from fully qualified name structure */
               databaseNames.map(async (db: string) => {
                 await getTableDetails(db);
               });
+            }
+            else{
+              if(responseResult?.error?.code){
+                setApiError(true);
+                setNoDpmsInstance(true);
+                setIsLoading(false);
+              }
+             else{
+              setNoDpmsInstance(true);
+              setSchemaError(true)
+              setIsLoading(false);
+             }
+            }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -614,15 +620,6 @@ fetching database name from fully qualified name structure */
     <>
       <div>
         <div className="dpms-title">Metadata Explorer</div>
-        <div
-          role="button"
-          aria-label="refresh"
-          className="refresh-icon"
-          data-tip="Refresh"
-          onClick={handleRefreshClick}
-        >
-          <iconRefresh.react tag="div" />
-        </div>
       </div>
       {!noDpmsInstance ? (
         <>
@@ -672,7 +669,7 @@ fetching database name from fully qualified name structure */
                     openByDefault={false}
                     indent={24}
                     width={auto}
-                    height={500}
+                    height={550}
                     rowHeight={36}
                     overscanCount={1}
                     paddingTop={30}
@@ -700,9 +697,13 @@ fetching database name from fully qualified name structure */
         </div>) : (cluster ? (<div className="dpms-error">
           DPMS is not configured for this cluster. Please attach DPMS or
           activate DPMS sync with data catalog
+        </div>):(apiError ? (<div className="dpms-error">
+          Datacatalog API is not enabled
+        </div>):(schemaError ? (<div className="dpms-error">
+          No schema available
         </div>):(<div className="dpms-error">
         DPMS schema explorer not set up
-        </div>))
+        </div>))))
       )}
     </>
   );

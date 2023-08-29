@@ -26,6 +26,15 @@
     outline: none;
  
 }
+.runtime-message {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 10px;
+  padding-top: 13px;
+  color: #000000;
+  display: flex;
+}
 .runtimetemplate-max-idle-select {
   background: #ffffff;
   border: 1px solid black !important;
@@ -52,4 +61,15 @@
   color: #3367d6;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.runtime-table-data:last-child {
+  padding-left: 28px;
+  cursor: pointer;
+}
+
+.logo-alignment-style {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

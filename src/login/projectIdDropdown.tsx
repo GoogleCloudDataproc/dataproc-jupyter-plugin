@@ -72,7 +72,7 @@ export function ProjectIDDropdown(props: Props) {
     <Select
       search
       placeholder={projectId}
-      className="project-select"
+      className="project-region-select"
       value={projectId}
       onClose={() => setProjectPrefix('')}
       // Update the hoisted project ID everytime the dropdown is open.
