@@ -208,7 +208,7 @@ function LabelProperties({
                       defaultValue={labelSplit[0]}
                     />
 
-                    {labelDetailUpdated[index].split(':')[0] === '' ? (
+                    {labelDetailUpdated[index].split(':')[0] === '' && labelDetailUpdated[index] !== '' ? (
                       <div role="alert" className="error-key-parent">
                         <iconError.react tag="div" className='logo-alignment-style' />
                         <div className="error-key-missing">key is required</div>

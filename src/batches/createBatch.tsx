@@ -233,7 +233,7 @@ function CreateBatch({
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
     useState('googleManaged');
-  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>([]);
+  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
@@ -389,11 +389,21 @@ function CreateBatch({
               ...prevPropertyDetailUpdated,
               ...updatedPropertyDetail
             ]);
-            console.log(updatedPropertyDetail)
-            console.log( ...propertyDetailUpdated)
           }
-          // setPropertyDetailUpdated(updatedLabelDetail);
-          console.log(propertyDetailUpdated);
+          console.log(batchInfoResponse[batchKeys[0]].queryVariables);
+          if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryVariables')) {
+            const updatedParamDetail = Object.entries(
+              batchInfoResponse[batchKeys[0]].queryVariables
+            ).map(([k, v]) => `${k}:${v}`);
+            setPropertyDetail(prevParameterDetail => [
+              ...prevParameterDetail,
+              ...updatedParamDetail
+            ]);
+            setPropertyDetailUpdated(prevParameterDetailUpdated => [
+              ...prevParameterDetailUpdated,
+              ...updatedParamDetail
+            ]);
+          }
         }
       }
     }
@@ -1699,12 +1709,6 @@ function CreateBatch({
                 </div>
                 {selectedEncryptionRadio === 'customerManaged' && (
                   <>
-                    {/* <div className="create-batch-encrypt">
-                      <div className="create-batch-encrypt-message">
-                        Key rings
-                      </div>
-                      <div className="create-batch-encrypt-message">Keys</div>
-                    </div> */}
                     <div>
                       <div className="create-batch-encrypt">
                         <Radio
