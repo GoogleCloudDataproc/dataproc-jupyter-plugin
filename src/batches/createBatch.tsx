@@ -147,63 +147,64 @@ function CreateBatch({
   let serviceAccount = '';
   let network = 'default';
   let historyServer = 'None';
+  let historyServerValue = 'None';
   let metastoreService = '';
   let metaProject = '';
   let metaRegion = '';
-  let metaService = 'None';
   let containerImage = '';
-  if(batchInfoResponse !== undefined){
-  if (Object.keys(batchInfoResponse).length !== 0) {
-    batchKeys = batchKey(batchInfoResponse);
-    batchType = batchTypeFunction(batchKeys[0]);
-    const batchTypeKey = batchKeys[0];
-    console.log(batchTypeKey)
-    if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryFileUri')) {
-      queryFileUri = batchInfoResponse[batchKeys[0]].queryFileUri;
-    }
-    mainJarFileUri = batchInfoResponse[batchKeys[0]].mainJarFileUri;
-    mainClass = batchInfoResponse[batchKeys[0]].mainClass;
-    mainRFileUri = batchInfoResponse[batchKeys[0]].mainRFileUri;
-    mainPythonFileUri = batchInfoResponse[batchKeys[0]].mainPythonFileUri;
-    if (batchInfoResponse[batchTypeKey].hasOwnProperty('jarFileUris')) {
-    jarFileUris = [batchInfoResponse[batchKeys[0]].jarFileUris];
-    }
-    if (batchInfoResponse[batchTypeKey].hasOwnProperty('fileUris')) {
-    fileUris = [batchInfoResponse[batchKeys[0]].fileUris];
-    }
-    if (batchInfoResponse[batchTypeKey].hasOwnProperty('archiveUris')) {
-    archiveFileUris = [batchInfoResponse[batchKeys[0]].archiveUris];
-    }
-    if (batchInfoResponse[batchTypeKey].hasOwnProperty('args')) {
-    argumentsUris = [batchInfoResponse[batchKeys[0]].args];
-    }
-    if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
-      pythonFileUris = [batchInfoResponse[batchKeys[0]].pythonFileUris];
-    }
-    console.log(batchInfoResponse.environmentConfig.executionConfig);
-    serviceAccount = batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount|| '';
-    networkUris = batchInfoResponse?.environmentConfig?.executionConfig?.networkTags || '';
-    network = batchInfoResponse?.environmentConfig?.executionConfig?.networkUri;
-    historyServer = batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster || '';
-    batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster;
-    metastoreService = batchInfoResponse?.environmentConfig?.peripheralsConfig?.metastoreService|| '';
-    containerImage = batchInfoResponse?.runtimeConfig?.containerImage || '';
-    const metastoreDetails = metastoreService.split("/");
-    console.log(metastoreService);
-    console.log(metastoreDetails);
-    metaProject = metastoreDetails[1];
-    metaRegion = metastoreDetails[3];
-    metaService = metastoreDetails[5];
-    console.log(batchInfoResponse.environmentConfig.peripheralsConfig.sparkHistoryServerConfig);
+  if (batchInfoResponse !== undefined) {
+    if (Object.keys(batchInfoResponse).length !== 0) {
+      batchKeys = batchKey(batchInfoResponse);
+      batchType = batchTypeFunction(batchKeys[0]);
+      const batchTypeKey = batchKeys[0];
+      console.log(batchTypeKey)
+      if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryFileUri')) {
+        queryFileUri = batchInfoResponse[batchKeys[0]].queryFileUri;
+      }
+      mainJarFileUri = batchInfoResponse[batchKeys[0]].mainJarFileUri;
+      mainClass = batchInfoResponse[batchKeys[0]].mainClass;
+      mainRFileUri = batchInfoResponse[batchKeys[0]].mainRFileUri;
+      mainPythonFileUri = batchInfoResponse[batchKeys[0]].mainPythonFileUri;
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('jarFileUris')) {
+        jarFileUris = [batchInfoResponse[batchKeys[0]].jarFileUris];
+      }
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('fileUris')) {
+        fileUris = [batchInfoResponse[batchKeys[0]].fileUris];
+      }
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('archiveUris')) {
+        archiveFileUris = [batchInfoResponse[batchKeys[0]].archiveUris];
+      }
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('args')) {
+        argumentsUris = [batchInfoResponse[batchKeys[0]].args];
+      }
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
+        pythonFileUris = [batchInfoResponse[batchKeys[0]].pythonFileUris];
+      }
+      console.log(batchInfoResponse.environmentConfig.executionConfig);
+      serviceAccount = batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount || '';
+      networkUris = batchInfoResponse?.environmentConfig?.executionConfig?.networkTags || '';
+      network = batchInfoResponse?.environmentConfig?.executionConfig?.networkUri || 'default';
+      historyServerValue = batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster || 'None';
+      if (historyServerValue !== 'None') {
+        const parts = historyServerValue.split("/"); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
+        historyServer = parts[parts.length - 1];
+      }
+      batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster;
+      metastoreService = batchInfoResponse?.environmentConfig?.peripheralsConfig?.metastoreService || 'None';
+      containerImage = batchInfoResponse?.runtimeConfig?.containerImage || '';
+      if (metastoreService != 'None') {
+        const metastoreDetails = metastoreService.split("/");
+        console.log(metastoreService);
+        console.log(metastoreDetails);
+        metaProject = metastoreDetails[1];
+        metaRegion = metastoreDetails[3];
+      }
 
 
+    }
   }
-}
-  console.log(batchType);
-  console.log(mainClass)
+
   const selectedRadioInitialValue = mainClass ? 'mainClass' : 'mainJarURI';
-  console.log(selectedRadioInitialValue);
-  console.log(mainJarFileUri);
   const [batchTypeList, setBatchTypeList] = useState([{}]);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
@@ -232,7 +233,7 @@ function CreateBatch({
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
     useState('googleManaged');
-  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
+  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>([]);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
@@ -241,7 +242,8 @@ function CreateBatch({
   const [servicesList, setServicesList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
-  const [servicesSelected, setServicesSelected] = useState(metaService);
+  console.log(metaProject, metaRegion, metaRegion);
+  const [servicesSelected, setServicesSelected] = useState(metastoreService);
 
   const [clusterSelected, setClusterSelected] = useState(historyServer);
   const [projectId, setProjectId] = useState(metaProject);
@@ -286,13 +288,13 @@ function CreateBatch({
   const [keylist, setKeylist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
-  
+  console.log(servicesSelected);
   const handleCreateBatchBackView = () => {
-    if(setCreateBatchView){
-    setCreateBatchView(false);
+    if (setCreateBatchView) {
+      setCreateBatchView(false);
     }
-    if(setCreateBatch){
-    setCreateBatch(false);
+    if (setCreateBatch) {
+      setCreateBatch(false);
     }
   };
   const handleMainClassRadio = () => {
@@ -353,42 +355,50 @@ function CreateBatch({
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
-    if (Object.keys(batchInfoResponse).length !== 0) {
-      if (batchInfoResponse.hasOwnProperty('labels')) {
-        const updatedLabelDetail = Object.entries(batchInfoResponse.labels).map(
-          ([k, v]) => `${k}:${v}`
-        );
-        setLabelDetail(prevLabelDetail => [
-          ...prevLabelDetail,
-          ...updatedLabelDetail
-        ]);
-        setLabelDetailUpdated(prevLabelDetailUpdated => [
-          ...prevLabelDetailUpdated,
-          ...updatedLabelDetail
-        ]);
-        for (const key in batchInfoResponse) {
-          if (key.endsWith('Batch')) {
-            batchKeys.push(key);
+    if (batchInfoResponse) {
+      if (Object.keys(batchInfoResponse).length !== 0) {
+        if (batchInfoResponse.hasOwnProperty('labels')) {
+          const updatedLabelDetail = Object.entries(batchInfoResponse.labels).map(
+            ([k, v]) => `${k}:${v}`
+          );
+          setLabelDetail(prevLabelDetail => [
+            ...prevLabelDetail,
+            ...updatedLabelDetail
+          ]);
+          setLabelDetailUpdated(prevLabelDetailUpdated => [
+            ...prevLabelDetailUpdated,
+            ...updatedLabelDetail
+          ]);
+          for (const key in batchInfoResponse) {
+            if (key.endsWith('Batch')) {
+              batchKeys.push(key);
+            }
           }
-        }
-        batchKeys = batchKey(batchInfoResponse);
-        if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
-          const updatedPropertyDetail = Object.entries(
-            batchInfoResponse.runtimeConfig.properties
-          ).map(([k, v]) => `${k.substr(6)}: ${v}`);
-          setPropertyDetail(prevPropertyDetail => [
-            ...prevPropertyDetail,
-            ...updatedPropertyDetail
-          ]);
-          setPropertyDetailUpdated(prevPropertyDetailUpdated => [
-            ...prevPropertyDetailUpdated,
-            ...updatedPropertyDetail
-          ]);
+          batchKeys = batchKey(batchInfoResponse);
+          console.log(updatedLabelDetail);
+          if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
+            const updatedPropertyDetail = Object.entries(
+              batchInfoResponse.runtimeConfig.properties
+            ).map(([k, v]) => `${k.substring(6)}: ${v}`);
+
+            setPropertyDetail(prevPropertyDetail => [
+              ...prevPropertyDetail,
+              ...updatedPropertyDetail
+            ]);
+            setPropertyDetailUpdated(prevPropertyDetailUpdated => [
+              ...prevPropertyDetailUpdated,
+              ...updatedPropertyDetail
+            ]);
+            console.log(updatedPropertyDetail)
+            console.log( ...propertyDetailUpdated)
+          }
+          // setPropertyDetailUpdated(updatedLabelDetail);
+          console.log(propertyDetailUpdated);
         }
       }
     }
+   
   }, []);
-
   function isSubmitDisabled() {
     const commonConditions =
       batchIdSelected === '' || regionName === '' || batchIdValidation;
@@ -951,19 +961,19 @@ function CreateBatch({
         }),
         ...(keySelected !== '' &&
           selectedRadioValue === 'key' && {
-            kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-          }),
+          kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+        }),
         ...(manualKeySelected !== '' &&
           selectedRadioValue === 'manually' && {
-            kmsKey: manualKeySelected
-          }),
+          kmsKey: manualKeySelected
+        }),
         subnetworkUri: subNetworkSelected,
         // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
         })
       } as ExecutionConfig,
-      peripheralsConfig :{
+      peripheralsConfig: {
         ...(servicesSelected !== 'None' && {
           metastoreService: servicesSelected
         }),
@@ -977,7 +987,7 @@ function CreateBatch({
 
     };
 
-   
+
 
     return payload;
   };
@@ -1042,10 +1052,10 @@ function CreateBatch({
           if (response.ok) {
             const responseResult = await response.json();
             console.log(responseResult);
-            if(setCreateBatchView){
-            setCreateBatchView(false);
+            if (setCreateBatchView) {
+              setCreateBatchView(false);
             }
-            if(setCreateBatch){
+            if (setCreateBatch) {
               setCreateBatch(false);
             }
           } else {
@@ -1165,26 +1175,34 @@ function CreateBatch({
                 <div className="error-key-missing">ID is required</div>
               </div>
             )}
-            <div className="create-batches-message">Region*</div>
-            <Select
-              search
-              className="select-job-style"
-              value={regionName}
-              type="text"
-              disabled={true}
-              options={[]}
-              placeholder={regionName}
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="region">
+                Region*
+              </label>
+              <Select
+                search
+                className="project-region-select"
+                value={regionName}
+                type="text"
+                disabled={true}
+                options={[]}
+                placeholder={regionName}
+              />
+            </div>
             <div className="submit-job-label-header">Container</div>
-            <div className="create-batches-message">Batch type*</div>
-            <Select
-              search
-              className="select-job-style"
-              value={batchTypeSelected}
-              type="text"
-              options={batchTypeList}
-              onChange={handleBatchTypeSelected}
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="batch-type">
+                Batch type*
+              </label>
+              <Select
+                search
+                className="project-region-select"
+                value={batchTypeSelected}
+                type="text"
+                options={batchTypeList}
+                onChange={handleBatchTypeSelected}
+              />
+            </div>
             <div className="create-batches-message">Runtime version*</div>
 
             <Input
@@ -1443,36 +1461,36 @@ function CreateBatch({
                 </div>
               </div>
             </div>
-            {batchTypeSelected !== 'sparkR' && 
-                <>
-                  <div className="create-batches-message">Jar files</div>
-                  <TagsInput
-                    className="select-job-style"
-                    onChange={e =>
-                      handleValidationFiles(
-                        e,
-                        setJarFilesSelected,
-                        setJarFileValidation
-                      )
-                    }
-                    addOnBlur={true}
-                    value={jarFilesSelected}
-                    inputProps={{ placeholder: '' }}
-                  />
-                  {!jarFileValidation && (
-                    <div className="error-key-parent">
-                      <iconError.react tag="div" />
-                      <div className="error-key-missing">
-                        All files must include a valid scheme prefix: 'file://',
-                        'gs://', or 'hdfs://'
-                      </div>
+            {batchTypeSelected !== 'sparkR' &&
+              <>
+                <div className="create-batches-message">Jar files</div>
+                <TagsInput
+                  className="select-job-style"
+                  onChange={e =>
+                    handleValidationFiles(
+                      e,
+                      setJarFilesSelected,
+                      setJarFileValidation
+                    )
+                  }
+                  addOnBlur={true}
+                  value={jarFilesSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+                {!jarFileValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react tag="div" />
+                    <div className="error-key-missing">
+                      All files must include a valid scheme prefix: 'file://',
+                      'gs://', or 'hdfs://'
                     </div>
-                  )}
-                  {jarFileValidation && (
-                    <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
-                  )}
-                </>
-             //) )
+                  </div>
+                )}
+                {jarFileValidation && (
+                  <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
+                )}
+              </>
+              //) )
             }
             {batchTypeSelected !== 'sparkSql' && (
               <>
@@ -1596,32 +1614,36 @@ function CreateBatch({
             <div className="runtime-message ">
               Networks in this project
             </div>
-            <div className="create-batch-network">
-              <div className="create-batch-network-message">
-                Primary network*
-              </div>
-              <div className="create-batch-network-message">Subnetwork</div>
-            </div>
             <div>
               <div className="create-batch-network">
-                <Select
-                  search
-                  className="select-primary-network-style"
-                  value={networkSelected}
-                  onChange={handleNetworkChange}
-                  type="text"
-                  options={networkList}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="primary-network">
+                    Primary network*
+                  </label>
+                  <Select
+                    search
+                    className="project-region-select"
+                    value={networkSelected}
+                    onChange={handleNetworkChange}
+                    type="text"
+                    options={networkList}
+                  />
+                </div>
+                <div className="select-text-overlay subnetwork-style">
+                  <label className="select-title-text" htmlFor="subnetwork">
+                    subnetwork
+                  </label>
 
-                <Select
-                  search
-                  className="select-sub-network-style"
-                  value={subNetworkSelected}
-                  onChange={handleSubNetworkChange}
-                  type="text"
-                  options={subNetworkList}
-                  placeholder={defaultValue}
-                />
+                  <Select
+                    search
+                    className="project-region-select"
+                    value={subNetworkSelected}
+                    onChange={handleSubNetworkChange}
+                    type="text"
+                    options={subNetworkList}
+                    placeholder={defaultValue}
+                  />
+                </div>
               </div>
             </div>
             <div className="create-batches-message">Network tags*</div>
@@ -1677,12 +1699,12 @@ function CreateBatch({
                 </div>
                 {selectedEncryptionRadio === 'customerManaged' && (
                   <>
-                    <div className="create-batch-encrypt">
+                    {/* <div className="create-batch-encrypt">
                       <div className="create-batch-encrypt-message">
                         Key rings
                       </div>
                       <div className="create-batch-encrypt-message">Keys</div>
-                    </div>
+                    </div> */}
                     <div>
                       <div className="create-batch-encrypt">
                         <Radio
@@ -1691,26 +1713,36 @@ function CreateBatch({
                           checked={selectedRadioValue === 'key'}
                           onChange={handlekeyRingRadio}
                         />
-
+                        <div className="select-text-overlay">
+                          <label className="select-title-text" htmlFor="key-rings">
+                            Key rings
+                          </label>
+                         
                         <Select
                           search
-                          className="select-primary-network-style"
+                          className="project-region-select"
                           value={keyRingSelected}
                           type="text"
                           disabled={selectedRadioValue === 'manually'}
                           onChange={handleKeyRingChange}
                           options={keyRinglist}
                         />
-
-                        <Select
+                        </div>
+                        <div className="select-text-overlay subnetwork-style">
+                          <label className="select-title-text" htmlFor="keys">
+                            Keys
+                          </label>
+                         
+                          <Select
                           search
-                          className="select-sub-network-style"
+                          className="project-region-select"
                           value={keySelected}
                           disabled={selectedRadioValue === 'manually'}
                           onChange={handlekeyChange}
                           type="text"
                           options={keylist}
                         />
+                        </div>
                       </div>
                     </div>
                     <div className="manual-input">
@@ -1760,54 +1792,64 @@ function CreateBatch({
               </div>
             </div>
             <div className="create-messagelist">{METASTORE_MESSAGE}</div>
-            <div className="create-batches-message">Metastore project</div>
-            <Select
-              search
-              placeholder={projectId}
-              className="select-job-style"
-              value={projectId}
-              onChange={handleProjectIdChange}
-              options={projectList}
-            />
-            <div className="create-batches-message">Metastore region</div>
-            {isLoadingRegion ? (
-              <ClipLoader
-                loading={true}
-                size={25}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            ) : (
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="meta-project">
+                Metastore project
+              </label>
               <Select
                 search
-                placeholder={region}
-                className="select-job-style"
-                value={region}
-                onChange={handleRegionChange}
-                options={regionList}
+                placeholder={projectId}
+                className="project-region-select"
+                value={projectId}
+                onChange={handleProjectIdChange}
+                options={projectList}
               />
-            )}
-
-            <div className="create-batches-message">Metastore service</div>
-            {isLoadingService ? (
-              <ClipLoader
-                loading={true}
-                size={25}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            ) : (
-              <Select
-                search
-                className="select-job-style"
-                value={servicesSelected}
-                type="text"
-                options={servicesList}
-                onChange={handleServiceSelected}
-                placeholder="None"
-              />
-            )}
-
+            </div>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="meta-region">
+                Metastore region
+              </label>
+              {isLoadingRegion ? (
+                <ClipLoader
+                  loading={true}
+                  size={25}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              ) : (
+                <Select
+                  search
+                  placeholder={region}
+                  className="project-region-select"
+                  value={region}
+                  onChange={handleRegionChange}
+                  options={regionList}
+                />
+              )}
+            </div>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="meta-service">
+                Metastore service
+              </label>
+              {isLoadingService ? (
+                <ClipLoader
+                  loading={true}
+                  size={25}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              ) : (
+                <Select
+                  search
+                  className="project-region-select"
+                  value={servicesSelected}
+                  type="text"
+                  options={servicesList}
+                  onChange={handleServiceSelected}
+                  placeholder={servicesSelected}
+                />
+              )}
+            </div>
             <div className="submit-job-label-header">
               History server cluster
             </div>
