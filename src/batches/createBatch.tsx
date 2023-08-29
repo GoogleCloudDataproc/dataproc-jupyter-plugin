@@ -201,7 +201,7 @@ function CreateBatch({
 }
   console.log(batchType);
   console.log(mainClass)
-  const selectedRadioInitialValue = mainClass ? 'mainClass' : 'mainJar';
+  const selectedRadioInitialValue = mainClass ? 'mainClass' : 'mainJarURI';
   console.log(selectedRadioInitialValue);
   console.log(mainJarFileUri);
   const [batchTypeList, setBatchTypeList] = useState([{}]);
