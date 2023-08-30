@@ -43,10 +43,10 @@ import {
   QUERY_DATABASE,
   QUERY_TABLE
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
@@ -139,7 +139,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error getting column details', err);
-          toast.error('Error getting column details');
+          toast.error('Error getting column details',toastifyCustomStyle);
         });
     }
   };
@@ -192,7 +192,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error getting table details', err);
-          toast.error('Error getting table details');
+          toast.error('Error getting table details',toastifyCustomStyle);
         });
     }
   };
@@ -490,7 +490,7 @@ fetching database name from fully qualified name structure */
         })
         .catch((err: Error) => {
           console.error('Error getting database details', err);
-          toast.error('Error getting database details');
+          toast.error('Error getting database details',toastifyCustomStyle);
         });
     }
   };
@@ -535,7 +535,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing session details', err);
-          toast.error('Failed to fetch session details');
+          toast.error('Failed to fetch session details'),toastifyCustomStyle;
         });
     }
   };
@@ -580,7 +580,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters details', err);
-          toast.error('Failed to fetch cluster details');
+          toast.error('Failed to fetch cluster details',toastifyCustomStyle);
         });
     }
   };
@@ -683,7 +683,6 @@ fetching database name from fully qualified name structure */
                       <Node {...props} onClick={handleNodeClick} />
                     )}
                   </Tree>
-                  <ToastContainer />
                 </div>
               </>
             )}

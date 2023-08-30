@@ -43,10 +43,10 @@ import {
   SUBNETWORK_KEY,
   SUBNETWORK_LABEL
 } from '../utils/const';
-import { authApi, elapsedTime, jobTimeFormat } from '../utils/utils';
+import { authApi, elapsedTime, jobTimeFormat, toastifyCustomStyle } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
 import PollingTimer from '../utils/pollingTimer';
@@ -152,7 +152,7 @@ function SessionDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error loading session details', err);
-          toast.error(`Failed to fetch session details ${sessionSelected}`);
+          toast.error(`Failed to fetch session details ${sessionSelected}`,toastifyCustomStyle);
         });
     }
   };
@@ -192,7 +192,6 @@ function SessionDetails({
 
   return (
     <div>
-      <ToastContainer />
       {sessionInfo.name !== '' ? (
         <div className="scroll-comp">
           {detailedSessionView && (

@@ -25,12 +25,12 @@ import {
   USER_INFO_URL,
   VERSION_DETAIL
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { Select } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
-import { ToastContainer, ToastOptions, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
@@ -105,13 +105,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         const configStatus = (data as { config: string }).config;
         setIsLoading(false);
         if (configStatus && !toast.isActive('custom-toast')) {
-          const toastifyCustomStyle: ToastOptions<{}> = {
-            hideProgressBar: true,
-            autoClose: false,
-            theme: 'dark',
-            position: toast.POSITION.BOTTOM_CENTER,
-            toastId: 'custom-toast'
-          };
           if (configStatus.includes('Failed')) {
             toast.error(configStatus, toastifyCustomStyle);
           } else {
@@ -149,7 +142,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         .catch((err: any) => {
           setIsLoadingUser(false);
           console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information');
+          toast.error('Failed to fetch user information',toastifyCustomStyle);
         });
     }
   };
@@ -174,10 +167,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
               setIsSaveDisabled(true);
               SetRegionEmpty(false);
               if (!toast.isActive('custom-toast-error')) {
-                toast.error(response.status + ' Permission Denied', {
-                  position: toast.POSITION.BOTTOM_CENTER,
-                  toastId: 'custom-toast-error'
-                });
+                toast.error(response.status + ' Permission Denied', toastifyCustomStyle);
               }
               throw new Error(`Request failed with status ${response.status}`);
             }
@@ -204,7 +194,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
     } catch (error) {
       setIsLoadingRegion(false);
       console.error('Error fetching region list:');
-      toast.error('Failed to fetch the regions');
+      toast.error('Failed to fetch the regions',toastifyCustomStyle);
     }
   };
   const handleDropdownOpen = () => {
@@ -254,7 +244,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   }, []);
   return (
     <div>
-      <ToastContainer />
       {isLoadingUser && isLoadingRegion && !configError ? (
         <div className="spin-loaderMain">
           <ClipLoader

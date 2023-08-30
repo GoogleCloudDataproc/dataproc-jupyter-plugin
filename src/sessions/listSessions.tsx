@@ -45,11 +45,12 @@ import {
   ICellProps,
   authApi,
   elapsedTime,
-  jobTimeFormat
+  jobTimeFormat,
+  toastifyCustomStyle
 } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
 import { PaginationView } from '../utils/paginationView';
@@ -218,7 +219,7 @@ function ListSessions() {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing Sessions', err);
-          toast.error('Failed to fetch sessions');
+          toast.error('Failed to fetch sessions',toastifyCustomStyle);
         });
     }
   };
@@ -367,7 +368,6 @@ function ListSessions() {
 
   return (
     <div>
-      <ToastContainer />
       {deletePopupOpen && (
         <DeletePopup
           onCancel={() => handleCancelDelete()}

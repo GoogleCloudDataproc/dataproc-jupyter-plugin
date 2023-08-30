@@ -50,10 +50,11 @@ import {
   convertToGBMonths,
   elapsedTime,
   jobTimeFormat,
-  statusMessageBatch
+  statusMessageBatch,
+  toastifyCustomStyle
 } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
 import { statusDisplay } from '../utils/statusDisplay';
@@ -207,7 +208,7 @@ function BatchDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting Batch details', err);
-          toast.error(`Failed to fetch batch details ${batchSelected}`);
+          toast.error(`Failed to fetch batch details ${batchSelected}`,toastifyCustomStyle);
         });
     }
   };
@@ -256,7 +257,6 @@ function BatchDetails({
 
   return (
     <div>
-      <ToastContainer />
       {batchInfoResponse.uuid === '' && (
         <div className="loader-full-style">
           {isLoading && (

@@ -21,7 +21,7 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 
 export const deleteClusterApi = async (selectedcluster: string) => {
   const credentials = await authApi();
@@ -76,7 +76,7 @@ export const startStopAPI = async (
       })
       .catch((err: Error) => {
         console.error(`Error ${operation} cluster`, err);
-        toast.error(`Failed to ${operation} the cluster ${selectedcluster}`);
+        toast.error(`Failed to ${operation} the cluster ${selectedcluster}`,toastifyCustomStyle);
       });
   }
 };
