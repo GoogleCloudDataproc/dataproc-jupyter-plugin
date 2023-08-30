@@ -952,7 +952,7 @@ function CreateBatch({
     if (batchTypeSelected === 'sparkSql') {
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
-        ...(parameterObject && { queryVariables: { query: parameterObject } }),
+        ...(parameterObject && { queryVariables: { query: parameterObject }  }),
         ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected })
       };
     }
@@ -1758,7 +1758,7 @@ function CreateBatch({
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
-                Network tags*
+                Network tags
               </label>
               <TagsInput
                 className="select-job-style"
