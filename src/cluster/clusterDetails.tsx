@@ -46,11 +46,11 @@ import {
   STATUS_STOPPED,
   STATUS_STOPPING
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SubmitJob from '../jobs/submitJob';
 import PollingTimer from '../utils/pollingTimer';
@@ -196,7 +196,7 @@ function ClusterDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters Details', err);
-          toast.error(`Failed to fetch cluster details ${clusterSelected}`);
+          toast.error(`Failed to fetch cluster details ${clusterSelected}`,toastifyCustomStyle);
         });
     }
   };
@@ -314,7 +314,6 @@ function ClusterDetails({
       )}
       {!submitJobView && (
         <div className="scroll-comp">
-          <ToastContainer />
           {!errorView && clusterInfo.clusterName !== '' ? (
             <div>
               {!detailedJobView && (
