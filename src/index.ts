@@ -22,7 +22,7 @@ import {
   ILabShell
 } from '@jupyterlab/application';
 import { MainAreaWidget } from '@jupyterlab/apputils';
-import { ILauncher } from '@jupyterlab/launcher';
+import { ILauncher} from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
@@ -153,6 +153,10 @@ const extension: JupyterFrontEndPlugin<void> = {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
+        }
+        else{
+          localStorage.removeItem('notebookValue');
+          loadDpmsWidget('');
         }
       }
     });
