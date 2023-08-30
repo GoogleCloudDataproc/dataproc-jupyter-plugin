@@ -21,8 +21,7 @@
 .runtimetemplate-max-idle {
   background: #ffffff;
   width: 100%;
-  margin-top: 10px;
-  min-height: 40px;
+  height: 36px;
   outline: none;
 }
 .runtime-message {
@@ -38,9 +37,10 @@
   background: #ffffff;
   border: 1px solid black !important;
   border-radius: 4px;
-  margin-top: 10px;
-  min-height: 40px;
+  margin-top: 20px;
+  height: 36px;
   margin-left: 15px;
+  min-height: unset !important;
 }
 
 .create-runtime-button-wrapper {
@@ -55,14 +55,13 @@
   border-radius: 4px;
   width: 512px;
   margin-top: 10px;
-  min-height: 40px;
+  height: 36px;
   outline: none;
 }
 .create-runtime-style {
   background: #ffffff;
   width: 512px;
-  margin-top: 10px;
-  min-height: 40px;
+  height: 36px;
   outline: none;
 }
 

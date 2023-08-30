@@ -50,7 +50,6 @@
   margin-top: 50px;
 }
 .project-text {
-  width: 60px;
   height: 13px;
   font-style: normal;
   font-weight: 1000;
@@ -61,8 +60,8 @@
   color: #000000;
   position: absolute;
   background-color: #fff;
-  bottom: 34px;
-  padding-left: 2px;
+  bottom: 30px;
+  padding: 0px 3px;
   left: 7px;
   z-index: 3;
 }
@@ -78,9 +77,8 @@
   color: #000000;
   position: absolute;
   background-color: #fff;
-  padding-right: 4px;
-  bottom: 34px;
-  padding-left: 2px;
+  bottom: 30px;
+  padding: 0px 3px;
   left: 7px;
   z-index: 3;
 }
@@ -90,7 +88,7 @@
   background: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.38) !important;
   display: block !important;
-  height: 40px;
+  height: 36px;
   width: 100%;
   border-radius: 4px !important;
   appearance: none !important;
@@ -98,6 +96,7 @@
   -moz-appearance: none;
   transform: none !important;
   position: unset !important;
+  min-height: unset !important;
 }
 .region-loader {
   margin-left: 1px;
