@@ -56,7 +56,6 @@
   border: 1px solid black !important;
   border-radius: 4px;
   width: 512px;
-  margin-top: 10px;
   min-height: 40px;
   outline: none;
 }
@@ -86,6 +85,12 @@
   background: #ffffff;
   width: 512px;
   margin-top: 10px;
+  min-height: 40px;
+  outline: none;
+}
+.submit-job-input-style {
+  background: #ffffff;
+  width: 512px;
   min-height: 40px;
   outline: none;
 }

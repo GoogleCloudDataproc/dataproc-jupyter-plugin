@@ -50,7 +50,6 @@
   margin-top: 50px;
 }
 .project-text {
-  width: 60px;
   height: 13px;
   font-style: normal;
   font-weight: 1000;
@@ -62,7 +61,7 @@
   position: absolute;
   background-color: #fff;
   bottom: 34px;
-  padding-left: 2px;
+  padding: 0px 3px;
   left: 7px;
   z-index: 3;
 }
@@ -78,9 +77,8 @@
   color: #000000;
   position: absolute;
   background-color: #fff;
-  padding-right: 4px;
   bottom: 34px;
-  padding-left: 2px;
+  padding: 0px 3px;
   left: 7px;
   z-index: 3;
 }

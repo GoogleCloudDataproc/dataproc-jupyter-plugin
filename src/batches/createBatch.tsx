@@ -179,24 +179,33 @@ function CreateBatch({
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
         pythonFileUris = [batchInfoResponse[batchKeys[0]].pythonFileUris];
       }
-      serviceAccount = batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount || '';
-      networkUris = batchInfoResponse?.environmentConfig?.executionConfig?.networkTags || '';
-      network = batchInfoResponse?.environmentConfig?.executionConfig?.networkUri || 'default';
-      historyServerValue = batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster || 'None';
+      serviceAccount =
+        batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount ||
+        '';
+      networkUris =
+        batchInfoResponse?.environmentConfig?.executionConfig?.networkTags ||
+        '';
+      network =
+        batchInfoResponse?.environmentConfig?.executionConfig?.networkUri ||
+        'default';
+      historyServerValue =
+        batchInfoResponse?.environmentConfig?.peripheralsConfig
+          ?.sparkHistoryServerConfig?.dataprocCluster || 'None';
       if (historyServerValue !== 'None') {
-        const parts = historyServerValue.split("/"); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
+        const parts = historyServerValue.split('/'); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
         historyServer = parts[parts.length - 1];
       }
-      batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster;
-      metastoreService = batchInfoResponse?.environmentConfig?.peripheralsConfig?.metastoreService || 'None';
+      batchInfoResponse?.environmentConfig?.peripheralsConfig
+        ?.sparkHistoryServerConfig?.dataprocCluster;
+      metastoreService =
+        batchInfoResponse?.environmentConfig?.peripheralsConfig
+          ?.metastoreService || 'None';
       containerImage = batchInfoResponse?.runtimeConfig?.containerImage || '';
       if (metastoreService != 'None') {
-        const metastoreDetails = metastoreService.split("/");
+        const metastoreDetails = metastoreService.split('/');
         metaProject = metastoreDetails[1];
         metaRegion = metastoreDetails[3];
       }
-
-
     }
   }
 
@@ -212,7 +221,8 @@ function CreateBatch({
   const [mainJarSelected, setMainJarSelected] = useState(mainJarFileUri);
   const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [selectedRadioValue, setSelectedRadioValue] = useState('key');
-  const [containerImageSelected, setContainerImageSelected] = useState(containerImage);
+  const [containerImageSelected, setContainerImageSelected] =
+    useState(containerImage);
   const [jarFilesSelected, setJarFilesSelected] = useState([...jarFileUris]);
   const [filesSelected, setFilesSelected] = useState([...fileUris]);
   const [queryFileSelected, setQueryFileSelected] = useState(queryFileUri);
@@ -222,7 +232,8 @@ function CreateBatch({
   const [argumentsSelected, setArgumentsSelected] = useState([
     ...argumentsUris
   ]);
-  const [serviceAccountSelected, setServiceAccountSelected] = useState(serviceAccount);
+  const [serviceAccountSelected, setServiceAccountSelected] =
+    useState(serviceAccount);
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
   ]);
@@ -261,7 +272,8 @@ function CreateBatch({
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
   const [additionalPythonFileSelected, setAdditionalPythonFileSelected] =
     useState([...pythonFileUris]);
-  const [mainPythonSelected, setMainPythonSelected] = useState(mainPythonFileUri);
+  const [mainPythonSelected, setMainPythonSelected] =
+    useState(mainPythonFileUri);
   const [clustersList, setClustersList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
@@ -352,9 +364,9 @@ function CreateBatch({
     if (batchInfoResponse) {
       if (Object.keys(batchInfoResponse).length !== 0) {
         if (batchInfoResponse.hasOwnProperty('labels')) {
-          const updatedLabelDetail = Object.entries(batchInfoResponse.labels).map(
-            ([k, v]) => `${k}:${v}`
-          );
+          const updatedLabelDetail = Object.entries(
+            batchInfoResponse.labels
+          ).map(([k, v]) => `${k}:${v}`);
           setLabelDetail(prevLabelDetail => [
             ...prevLabelDetail,
             ...updatedLabelDetail
@@ -383,7 +395,9 @@ function CreateBatch({
               ...updatedPropertyDetail
             ]);
           }
-          if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryVariables')) {
+          if (
+            batchInfoResponse[batchKeys[0]].hasOwnProperty('queryVariables')
+          ) {
             const updatedParamDetail = Object.entries(
               batchInfoResponse[batchKeys[0]].queryVariables
             ).map(([k, v]) => `${k}:${v}`);
@@ -399,7 +413,6 @@ function CreateBatch({
         }
       }
     }
-   
   }, []);
   function isSubmitDisabled() {
     const commonConditions =
@@ -940,7 +953,7 @@ function CreateBatch({
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
         ...(parameterObject && { queryVariables: { query: parameterObject } }),
-        ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected }),
+        ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected })
       };
     }
 
@@ -963,12 +976,12 @@ function CreateBatch({
         }),
         ...(keySelected !== '' &&
           selectedRadioValue === 'key' && {
-          kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-        }),
+            kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+          }),
         ...(manualKeySelected !== '' &&
           selectedRadioValue === 'manually' && {
-          kmsKey: manualKeySelected
-        }),
+            kmsKey: manualKeySelected
+          }),
         subnetworkUri: subNetworkSelected,
         // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
@@ -985,11 +998,7 @@ function CreateBatch({
           } as SparkHistoryServerConfig
         })
       }
-
-
     };
-
-
 
     return payload;
   };
@@ -1156,23 +1165,27 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
         <div className="submit-job-container">
           <form onSubmit={handleSubmit}>
             <div className="submit-job-label-header">Batch info</div>
-            <div className="create-batches-message">Batch ID*</div>
-            <Input
-              className="create-batch-style "
-              value={hexNumber}
-              onChange={e => handleInputChange(e)}
-              type="text"
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="batch-id">
+                Batch ID*
+              </label>
+              <Input
+                className="create-batch-style "
+                value={hexNumber}
+                onChange={e => handleInputChange(e)}
+                type="text"
+              />
+            </div>
             {batchIdValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" className='logo-alignment-style' />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">ID is required</div>
               </div>
             )}
@@ -1204,14 +1217,17 @@ function CreateBatch({
                 onChange={handleBatchTypeSelected}
               />
             </div>
-            <div className="create-batches-message">Runtime version*</div>
-
-            <Input
-              className="create-batch-style "
-              value={versionSelected}
-              onChange={e => setVersionSelected(e.target.value)}
-              type="text"
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="runtime-version">
+                Runtime version*
+              </label>
+              <Input
+                className="create-batch-style "
+                value={versionSelected}
+                onChange={e => setVersionSelected(e.target.value)}
+                type="text"
+              />
+            </div>
             {batchTypeSelected === 'spark' && (
               <div>
                 <div>
@@ -1231,17 +1247,25 @@ function CreateBatch({
                 </div>
                 {selectedRadio === 'mainClass' && (
                   <div className="create-batch-input">
-                    <div className="create-batch-message">Main class*</div>
-                    <Input
-                      className="create-batch-style-mini"
-                      value={mainClassSelected}
-                      onChange={e => setMainClassSelected(e.target.value)}
-                      type="text"
-                    />
+                    <div className="select-text-overlay">
+                      <label className="select-title-text" htmlFor="main-class">
+                        Main class*
+                      </label>
+                      <Input
+                        className="create-batch-style-mini"
+                        value={mainClassSelected}
+                        onChange={e => setMainClassSelected(e.target.value)}
+                        type="text"
+                      />
+                    </div>
+
                     {selectedRadio === 'mainClass' &&
                       mainClassSelected === '' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" className='logo-alignment-style' />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             Main class is required
                           </div>
@@ -1269,23 +1293,31 @@ function CreateBatch({
                 </div>
                 {selectedRadio === 'mainJarURI' && (
                   <div className="create-batch-input">
-                    <div className="create-batch-message">Main jar*</div>
-                    <Input
-                      className="create-batch-style-mini"
-                      value={mainJarSelected}
-                      onChange={e =>
-                        handleValidationFiles(
-                          e.target.value,
-                          setMainJarSelected,
-                          setMainJarValidation
-                        )
-                      }
-                      type="text"
-                    />
+                    <div className="select-text-overlay">
+                      <label className="select-title-text" htmlFor="main-jar">
+                        Main jar*
+                      </label>
+                      <Input
+                        className="create-batch-style-mini"
+                        value={mainJarSelected}
+                        onChange={e =>
+                          handleValidationFiles(
+                            e.target.value,
+                            setMainJarSelected,
+                            setMainJarValidation
+                          )
+                        }
+                        type="text"
+                      />
+                    </div>
+
                     {selectedRadio === 'mainJarURI' &&
                       mainJarSelected === '' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" className='logo-alignment-style' />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             Main jar is required
                           </div>
@@ -1293,7 +1325,10 @@ function CreateBatch({
                       )}
                     {!mainJarValidation && (
                       <div className="error-key-parent">
-                        <iconError.react tag="div" className='logo-alignment-style' />
+                        <iconError.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
                         <div className="error-key-missing">
                           File must include a valid scheme prefix: 'file://',
                           'gs://', or 'hdfs://'
@@ -1307,22 +1342,30 @@ function CreateBatch({
 
             {batchTypeSelected === 'sparkR' && (
               <>
-                <div className="create-batch-message">Main R file*</div>
-                <Input
-                  className="create-batch-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setMainRSelected,
-                      setMainRValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={mainRSelected}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="main-r-file">
+                    Main R file*
+                  </label>
+                  <Input
+                    className="create-batch-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e.target.value,
+                        setMainRSelected,
+                        setMainRValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={mainRSelected}
+                  />
+                </div>
+
                 {!mainRValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" className='logo-alignment-style' />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1336,23 +1379,33 @@ function CreateBatch({
             )}
             {batchTypeSelected === 'pySpark' && (
               <>
-                <div className="create-batch-message">Main python file*</div>
-                <Input
-                  //placeholder="Main R file*"
-                  className="create-batch-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setMainPythonSelected,
-                      setMainPythonValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={mainPythonSelected}
-                />
+                <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="main-python-file"
+                  >
+                    Main python file*
+                  </label>
+                  <Input
+                    //placeholder="Main R file*"
+                    className="create-batch-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e.target.value,
+                        setMainPythonSelected,
+                        setMainPythonValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={mainPythonSelected}
+                  />
+                </div>
                 {!mainPythonValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" className='logo-alignment-style' />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1366,25 +1419,33 @@ function CreateBatch({
             )}
             {batchTypeSelected === 'pySpark' && (
               <>
-                <div className="create-batches-message">
-                  Additional python files
+                <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="additional-python-files"
+                  >
+                    Additional python files
+                  </label>
+                  <TagsInput
+                    className="select-job-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e,
+                        setAdditionalPythonFileSelected,
+                        setAdditionalPythonFileValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={additionalPythonFileSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
                 </div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setAdditionalPythonFileSelected,
-                      setAdditionalPythonFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={additionalPythonFileSelected}
-                  inputProps={{ placeholder: '' }}
-                />
                 {!additionalPythonFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" className='logo-alignment-style' />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1395,23 +1456,31 @@ function CreateBatch({
             )}
             {batchTypeSelected === 'sparkSql' && (
               <>
-                <div className="create-batch-message">Query file*</div>
-                <Input
-                  //placeholder="Main R file*"
-                  className="create-batch-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setQueryFileSelected,
-                      setQueryFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={queryFileSelected}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="query-file">
+                    Query file*
+                  </label>
+                  <Input
+                    //placeholder="Main R file*"
+                    className="create-batch-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e.target.value,
+                        setQueryFileSelected,
+                        setQueryFileValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={queryFileSelected}
+                  />
+                </div>
+
                 {!queryFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" className='logo-alignment-style' />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1423,14 +1492,21 @@ function CreateBatch({
                 )}
               </>
             )}
-            <div className="create-batches-message">Custom container image</div>
-            <Input
-              className="create-batch-style "
-              value={containerImageSelected}
-              onChange={e => setContainerImageSelected(e.target.value)}
-              type="text"
-              placeholder=""
-            />
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text"
+                htmlFor="custom-container-image"
+              >
+                Custom container image
+              </label>
+              <Input
+                className="create-batch-style "
+                value={containerImageSelected}
+                onChange={e => setContainerImageSelected(e.target.value)}
+                type="text"
+                placeholder=""
+              />
+            </div>
             <div className="create-custom-messagelist">
               {CUSTOM_CONTAINER_MESSAGE}
               <div className="create-container-message">
@@ -1462,56 +1538,73 @@ function CreateBatch({
                 </div>
               </div>
             </div>
-            {batchTypeSelected !== 'sparkR' &&
-              <>
-                <div className="create-batches-message">Jar files</div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setJarFilesSelected,
-                      setJarFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={jarFilesSelected}
-                  inputProps={{ placeholder: '' }}
-                />
-                {!jarFileValidation && (
-                  <div className="error-key-parent">
-                    <iconError.react tag="div" className='logo-alignment-style'/>
-                    <div className="error-key-missing">
-                      All files must include a valid scheme prefix: 'file://',
-                      'gs://', or 'hdfs://'
-                    </div>
+            {
+              batchTypeSelected !== 'sparkR' && (
+                <>
+                  <div className="select-text-overlay">
+                    <label className="select-title-text" htmlFor="jar-files">
+                      Jar files
+                    </label>
+                    <TagsInput
+                      className="select-job-style"
+                      onChange={e =>
+                        handleValidationFiles(
+                          e,
+                          setJarFilesSelected,
+                          setJarFileValidation
+                        )
+                      }
+                      addOnBlur={true}
+                      value={jarFilesSelected}
+                      inputProps={{ placeholder: '' }}
+                    />
                   </div>
-                )}
-                {jarFileValidation && (
-                  <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
-                )}
-              </>
+
+                  {!jarFileValidation && (
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        All files must include a valid scheme prefix: 'file://',
+                        'gs://', or 'hdfs://'
+                      </div>
+                    </div>
+                  )}
+                  {jarFileValidation && (
+                    <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
+                  )}
+                </>
+              )
               //) )
             }
             {batchTypeSelected !== 'sparkSql' && (
               <>
-                <div className="create-batches-message">Files</div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setFilesSelected,
-                      setFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={filesSelected}
-                  inputProps={{ placeholder: '' }}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="files">
+                    Files
+                  </label>
+                  <TagsInput
+                    className="select-job-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e,
+                        setFilesSelected,
+                        setFileValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={filesSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
+                </div>
                 {!fileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" className='logo-alignment-style' />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1525,23 +1618,30 @@ function CreateBatch({
             )}
             {batchTypeSelected !== 'sparkSql' && (
               <>
-                <div className="create-batches-message">Archive files</div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setArchiveFileSelected,
-                      setArchieveFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={ArchiveFilesSelected}
-                  inputProps={{ placeholder: '' }}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="archive-files">
+                    Archive files
+                  </label>
+                  <TagsInput
+                    className="select-job-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e,
+                        setArchiveFileSelected,
+                        setArchieveFileValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={ArchiveFilesSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
+                </div>
                 {!archieveFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" className='logo-alignment-style' />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1557,14 +1657,18 @@ function CreateBatch({
             )}
             {batchTypeSelected !== 'sparkSql' && (
               <>
-                <div className="create-batches-message">Arguments</div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e => setArgumentsSelected(e)}
-                  addOnBlur={true}
-                  value={argumentsSelected}
-                  inputProps={{ placeholder: '' }}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="arguments">
+                    Arguments
+                  </label>
+                  <TagsInput
+                    className="select-job-style"
+                    onChange={e => setArgumentsSelected(e)}
+                    addOnBlur={true}
+                    value={argumentsSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
+                </div>
                 <div className="create-messagelist">{ARGUMENTS_MESSAGE}</div>
               </>
             )}
@@ -1589,14 +1693,18 @@ function CreateBatch({
             <div className="submit-job-label-header">
               Execution Configuration
             </div>
-            <div className="create-batches-message">Service account</div>
-            <Input
-              className="create-batch-style "
-              value={serviceAccountSelected}
-              onChange={e => setServiceAccountSelected(e.target.value)}
-              type="text"
-              placeholder=""
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="service-account">
+                Service account
+              </label>
+              <Input
+                className="create-batch-style "
+                value={serviceAccountSelected}
+                onChange={e => setServiceAccountSelected(e.target.value)}
+                type="text"
+                placeholder=""
+              />
+            </div>
             <div className="create-messagelist">
               If not provided, the default GCE service account will be used.
               <div
@@ -1612,13 +1720,14 @@ function CreateBatch({
             <div className="runtime-message ">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="runtime-message ">
-              Networks in this project
-            </div>
+            <div className="runtime-message ">Networks in this project</div>
             <div>
               <div className="create-batch-network">
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="primary-network">
+                  <label
+                    className="select-title-text"
+                    htmlFor="primary-network"
+                  >
                     Primary network*
                   </label>
                   <Select
@@ -1647,14 +1756,18 @@ function CreateBatch({
                 </div>
               </div>
             </div>
-            <div className="create-batches-message">Network tags*</div>
-            <TagsInput
-              className="select-job-style"
-              onChange={e => setNetworkTagSelected(e)}
-              addOnBlur={true}
-              value={networkTagSelected}
-              inputProps={{ placeholder: '' }}
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="network-tags">
+                Network tags*
+              </label>
+              <TagsInput
+                className="select-job-style"
+                onChange={e => setNetworkTagSelected(e)}
+                addOnBlur={true}
+                value={networkTagSelected}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
             <div>
               <div className="submit-job-label-header">Encryption</div>
               <div>
@@ -1709,41 +1822,41 @@ function CreateBatch({
                           onChange={handlekeyRingRadio}
                         />
                         <div className="select-text-overlay">
-                          <label className="select-title-text" htmlFor="key-rings">
+                          <label
+                            className="select-title-text"
+                            htmlFor="key-rings"
+                          >
                             Key rings
                           </label>
-                         
-                        <Select
-                          search
-                          className="project-region-select"
-                          value={keyRingSelected}
-                          type="text"
-                          disabled={selectedRadioValue === 'manually'}
-                          onChange={handleKeyRingChange}
-                          options={keyRinglist}
-                        />
+
+                          <Select
+                            search
+                            className="project-region-select"
+                            value={keyRingSelected}
+                            type="text"
+                            disabled={selectedRadioValue === 'manually'}
+                            onChange={handleKeyRingChange}
+                            options={keyRinglist}
+                          />
                         </div>
                         <div className="select-text-overlay subnetwork-style">
                           <label className="select-title-text" htmlFor="keys">
                             Keys
                           </label>
-                         
+
                           <Select
-                          search
-                          className="project-region-select"
-                          value={keySelected}
-                          disabled={selectedRadioValue === 'manually'}
-                          onChange={handlekeyChange}
-                          type="text"
-                          options={keylist}
-                        />
+                            search
+                            className="project-region-select"
+                            value={keySelected}
+                            disabled={selectedRadioValue === 'manually'}
+                            onChange={handlekeyChange}
+                            type="text"
+                            options={keylist}
+                          />
                         </div>
                       </div>
                     </div>
                     <div className="manual-input">
-                      <div className="create-batch-encrypt-message">
-                        Enter key manually
-                      </div>
                       <div className="encrypt">
                         <Radio
                           className="select-batch-encrypt-radio-style "
@@ -1751,17 +1864,28 @@ function CreateBatch({
                           checked={selectedRadioValue === 'manually'}
                           onChange={handlekeyManuallyRadio}
                         />
-                        <Input
-                          className="create-batch-style "
-                          value={manualKeySelected}
-                          type="text"
-                          disabled={selectedRadioValue === 'key'}
-                          onChange={handleManualKeySelected}
-                        />
+                        <div className="select-text-overlay">
+                          <label
+                            className="select-title-text"
+                            htmlFor="enter-key-manually"
+                          >
+                            Enter key manually
+                          </label>
+                          <Input
+                            className="create-batch-style "
+                            value={manualKeySelected}
+                            type="text"
+                            disabled={selectedRadioValue === 'key'}
+                            onChange={handleManualKeySelected}
+                          />
+                        </div>
                       </div>
                       {!manualValidation && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" className='logo-alignment-style' />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">{KEY_MESSAGE}</div>
                         </div>
                       )}
@@ -1851,17 +1975,24 @@ function CreateBatch({
             <div className="create-batches-message">
               Choose a history server cluster to store logs in.{' '}
             </div>
-            <div className="create-batches-message">History server cluster</div>
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text"
+                htmlFor="history-server-cluster"
+              >
+                History server cluster
+              </label>
+              <Dropdown
+                className="select-job-style"
+                search
+                selection
+                value={clusterSelected}
+                onChange={handleClusterSelected}
+                options={clustersList}
+                placeholder="Search..."
+              />
+            </div>
 
-            <Dropdown
-              className="select-job-style"
-              search
-              selection
-              value={clusterSelected}
-              onChange={handleClusterSelected}
-              options={clustersList}
-              placeholder="Search..."
-            />
             <div className="submit-job-label-header">Properties</div>
             <LabelProperties
               labelDetail={propertyDetail}

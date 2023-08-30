@@ -21,7 +21,6 @@
 .runtimetemplate-max-idle {
   background: #ffffff;
   width: 100%;
-  margin-top: 10px;
   min-height: 40px;
   outline: none;
 }
@@ -38,7 +37,7 @@
   background: #ffffff;
   border: 1px solid black !important;
   border-radius: 4px;
-  margin-top: 10px;
+  margin-top: 20px;
   min-height: 40px;
   margin-left: 15px;
 }
@@ -61,7 +60,6 @@
 .create-runtime-style {
   background: #ffffff;
   width: 512px;
-  margin-top: 10px;
   min-height: 40px;
   outline: none;
 }

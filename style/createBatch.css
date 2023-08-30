@@ -39,6 +39,7 @@
 .create-batch-encrypt {
   display: flex;
   width: 45%;
+  align-items: center;
   margin-left: 55px;
 }
 .manual-input{
@@ -95,6 +96,7 @@
 }
 .encrypt{
   display:flex;
+  align-items: center;
 }
 .single-line{
   display: flex;
