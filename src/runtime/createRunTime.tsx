@@ -204,15 +204,23 @@ function CreateRunTime({
         createTime,
         environmentConfig
       } = selectedRuntimeClone;
+      const displayName = jupyterSession?.displayName
+        ? jupyterSession.displayName
+        : '';
+      const runTimeID = name.split('/')[5] ? name.split('/')[5] : '';
+      const descriptionDetail = description ? description : '';
+      const versionDetail = runtimeConfig?.version
+        ? runtimeConfig.version
+        : '2.1';
 
-      setDisplayNameSelected(jupyterSession.displayName);
+      setDisplayNameSelected(displayName);
       /*
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
-      setRunTimeSelected(name.split('/')[5]);
-      setDescriptionSelected(description);
-      setVersionSelected(runtimeConfig.version);
+      setRunTimeSelected(runTimeID);
+      setDescriptionSelected(descriptionDetail);
+      setVersionSelected(versionDetail);
       setUserInfo(creator);
       setCreateTime(createTime);
 
@@ -1119,14 +1127,17 @@ function CreateRunTime({
                   type="text"
                 />
               </div>
-
-              <Select
-                className="runtimetemplate-max-idle-select"
-                value={timeSelected}
-                onChange={handletimeSelected}
-                type="text"
-                options={timeList}
-              />
+              <div>
+                <Select
+                  className="runtimetemplate-max-idle-select"
+                  value={timeSelected}
+                  onChange={handletimeSelected}
+                  type="text"
+                  search
+                  selection
+                  options={timeList}
+                />
+              </div>
             </div>
             <div className="create-messagelist">
               Max notebook idle time before the session is auto-terminated 10
@@ -1152,15 +1163,17 @@ function CreateRunTime({
                 />
               </div>
 
-              <Select
-                search
-                selection
-                className="runtimetemplate-max-idle-select"
-                value={autoSelected}
-                onChange={handleAutoSelected}
-                type="text"
-                options={timeList}
-              />
+              <div>
+                <Select
+                  search
+                  selection
+                  className="runtimetemplate-max-idle-select"
+                  value={autoSelected}
+                  onChange={handleAutoSelected}
+                  type="text"
+                  options={timeList}
+                />
+              </div>
             </div>
             <div className="create-messagelist">
               Max lifetime of a session. 10 mins and 330 hours.

@@ -188,7 +188,7 @@ const BatchesComponent = (): React.JSX.Element => {
     return (
       <div className="actions-icon" role="button" aria-label="Delete Job">
         <div
-          className="icon-buttons-style"
+          className="icon-buttons-style-delete-batch"
           title="Delete Batch"
           onClick={() => handleDeleteBatch(data.name.split('/')[5])}
         >
