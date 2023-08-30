@@ -1127,17 +1127,15 @@ function CreateRunTime({
                   type="text"
                 />
               </div>
-              <div>
-                <Select
-                  className="runtimetemplate-max-idle-select"
-                  value={timeSelected}
-                  onChange={handletimeSelected}
-                  type="text"
-                  search
-                  selection
-                  options={timeList}
-                />
-              </div>
+              <Select
+                className="runtimetemplate-max-idle-select"
+                value={timeSelected}
+                onChange={handletimeSelected}
+                type="text"
+                search
+                selection
+                options={timeList}
+              />
             </div>
             <div className="create-messagelist">
               Max notebook idle time before the session is auto-terminated 10
@@ -1163,17 +1161,15 @@ function CreateRunTime({
                 />
               </div>
 
-              <div>
-                <Select
-                  search
-                  selection
-                  className="runtimetemplate-max-idle-select"
-                  value={autoSelected}
-                  onChange={handleAutoSelected}
-                  type="text"
-                  options={timeList}
-                />
-              </div>
+              <Select
+                search
+                selection
+                className="runtimetemplate-max-idle-select"
+                value={autoSelected}
+                onChange={handleAutoSelected}
+                type="text"
+                options={timeList}
+              />
             </div>
             <div className="create-messagelist">
               Max lifetime of a session. 10 mins and 330 hours.
