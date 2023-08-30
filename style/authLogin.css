@@ -88,7 +88,7 @@
   background: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.38) !important;
   display: block !important;
-  height: 36px;
+  min-height: 36px;
   width: 100%;
   border-radius: 4px !important;
   appearance: none !important;
@@ -96,7 +96,7 @@
   -moz-appearance: none;
   transform: none !important;
   position: unset !important;
-  min-height: unset !important;
+  /* min-height: unset !important; */
 }
 .region-loader {
   margin-left: 1px;
