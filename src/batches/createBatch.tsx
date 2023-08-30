@@ -1872,7 +1872,7 @@ function CreateBatch({
                             Enter key manually
                           </label>
                           <Input
-                            className="create-batch-style "
+                            className="create-batch-style manual-key"
                             value={manualKeySelected}
                             type="text"
                             disabled={selectedRadioValue === 'key'}
