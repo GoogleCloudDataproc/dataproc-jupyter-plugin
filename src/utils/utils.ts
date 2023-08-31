@@ -68,11 +68,19 @@ export const authApi = async (): Promise<IAuthCredentials | undefined> => {
   }
 };
 
+/**
+ * Wraps a fetch call with initial authentication to pass credentials to the request
+ * 
+ * @param uri the endpoint to call e.g. "/clusters"
+ * @param queryParams
+ * @returns a promise of the fetch result
+ */
 export const authenticatedFetch = async (
   uri: string,
   queryParams: URLSearchParams
 ) => {
   const credentials = await authApi();
+  // If there is an issue with getting credentials, there is no point continuing the request. 
   if (!credentials) {
     throw new Error('Error during authentication');
   }
@@ -88,6 +96,11 @@ export const authenticatedFetch = async (
   return fetch(requestUrl, requestOptions);
 };
 
+/**
+ * Makes a request to the auth api to get the current project ID
+ * 
+ * @returns the project id if it exists otherwise an empty string
+ */
 export const getProjectId = async (): Promise<string> => {
   const credentials = await authApi();
   return credentials?.project_id ?? '';
