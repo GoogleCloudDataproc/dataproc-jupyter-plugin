@@ -7,7 +7,7 @@
 html,
 body,
 html * {
-  font-family: 'Roboto';
+  font-family: 'Roboto' !important;
 }
 
 button,

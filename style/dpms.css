@@ -19,6 +19,7 @@
 .search-icon {
   position: fixed !important;
   left: 50px;
+  padding-right: 2px
  
 }
 .search-field{
@@ -99,6 +100,8 @@
   .search-clear-icon{
     position: absolute !important;
     right: 2%;
+    padding-right: 2px;
+    padding-left: 2px;
   }
   .ui.icon.input{
     width: 95% !important;
