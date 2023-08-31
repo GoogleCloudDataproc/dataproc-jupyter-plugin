@@ -208,7 +208,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
                 <Button
                   variant="contained"
                   disabled={
-                    isSaving || (projectId.length == 0 && region.length == 0)
+                    isSaving || projectId.length == 0 || region.length == 0
                   }
                   onClick={handleSave}
                 >
