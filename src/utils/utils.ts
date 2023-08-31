@@ -27,6 +27,7 @@ import {
   BASE_URL,
   DCU_HOURS,
   GB_MONTHS,
+  HTTP_METHOD,
   PYSPARK,
   SPARK,
   SPARKR,
@@ -77,7 +78,8 @@ export const authApi = async (): Promise<IAuthCredentials | undefined> => {
  */
 export const authenticatedFetch = async (
   uri: string,
-  queryParams: URLSearchParams
+  method: HTTP_METHOD,
+  queryParams?: URLSearchParams
 ) => {
   const credentials = await authApi();
   // If there is an issue with getting credentials, there is no point continuing the request. 
@@ -86,13 +88,18 @@ export const authenticatedFetch = async (
   }
 
   const requestOptions = {
+    method: method,
     headers: {
       'Content-Type': API_HEADER_CONTENT_TYPE,
       Authorization: API_HEADER_BEARER + credentials.access_token
     }
   };
-  const serializedQueryParams = queryParams.toString();
-  const requestUrl = `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/${uri}?${serializedQueryParams}`;
+
+  const serializedQueryParams = queryParams?.toString();
+  let requestUrl = `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/${uri}`;
+  // if serializedQueryParams is defined and non empty, then add it(them) to the request url, otherwise just use the request url
+  requestUrl = serializedQueryParams ? requestUrl + `?${serializedQueryParams}` : requestUrl;
+  
   return fetch(requestUrl, requestOptions);
 };
 
