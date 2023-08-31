@@ -19,7 +19,13 @@ import { ReactWidget } from '@jupyterlab/apputils';
 import React, { useState, useEffect, useRef } from 'react';
 import JobComponent from '../jobs/jobs';
 import ClusterDetails from './clusterDetails';
-import { authApi, checkConfig, statusValue } from '../utils/utils';
+import {
+  authApi,
+  authenticatedFetch,
+  checkConfig,
+  getProjectId,
+  statusValue
+} from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import startIcon from '../../style/icons/start_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
@@ -107,81 +113,66 @@ const ClusterComponent = (): React.JSX.Element => {
     nextPageToken?: string,
     previousClustersList?: object
   ) => {
-    const credentials = await authApi();
     const pageToken = nextPageToken ?? '';
-    if (credentials) {
-      setProjectId(credentials.project_id || '');
-      fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=50&pageToken=${pageToken}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('pageSize', '50');
+    queryParams.append('pageToken', pageToken);
+
+    try {
+      const projectId = await getProjectId();
+      setProjectId(projectId);
+
+      const response = await authenticatedFetch('clusters', queryParams);
+      const formattedResponse = await response.json();
+      let transformClusterListData = [];
+      if (formattedResponse && formattedResponse.clusters) {
+        setClusterResponse(formattedResponse);
+        transformClusterListData = formattedResponse.clusters.map(
+          (data: any) => {
+            const statusVal = statusValue(data);
+            // Extracting zone from zoneUri
+            // Example: "projects/{project}/zones/{zone}"
+
+            const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
+
+            return {
+              clusterUuid: data.clusterUuid,
+              status: statusVal,
+              clusterName: data.clusterName,
+              clusterImage: data.config.softwareConfig.imageVersion,
+              region: data.labels['goog-dataproc-location'],
+              zone: zoneUri[zoneUri.length - 1],
+              totalWorkersNode: data.config.workerConfig
+                ? data.config.workerConfig.numInstances
+                : 0,
+              schedulesDeletion: data.config.lifecycleConfig ? 'On' : 'Off',
+              actions: renderActions(data)
+            };
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: any) => {
-              let transformClusterListData = [];
-              if (responseResult && responseResult.clusters) {
-                setClusterResponse(responseResult);
-                transformClusterListData = responseResult.clusters.map(
-                  (data: any) => {
-                    const statusVal = statusValue(data);
-                    /*
-                     Extracting zone from zoneUri
-                      Example: "projects/{project}/zones/{zone}"
-                  */
-                    const zoneUri =
-                      data.config.gceClusterConfig.zoneUri.split('/');
+        );
+      }
+      const existingClusterData = previousClustersList ?? [];
+      //setStateAction never type issue
+      const allClustersData: any = [
+        ...(existingClusterData as []),
+        ...transformClusterListData
+      ];
 
-                    return {
-                      clusterUuid: data.clusterUuid,
-                      status: statusVal,
-                      clusterName: data.clusterName,
-                      clusterImage: data.config.softwareConfig.imageVersion,
-                      region: data.labels['goog-dataproc-location'],
-                      zone: zoneUri[zoneUri.length - 1],
-                      totalWorkersNode: data.config.workerConfig
-                        ? data.config.workerConfig.numInstances
-                        : 0,
-                      schedulesDeletion: data.config.lifecycleConfig
-                        ? 'On'
-                        : 'Off',
-                      actions: renderActions(data)
-                    };
-                  }
-                );
-              }
-              const existingClusterData = previousClustersList ?? [];
-              //setStateAction never type issue
-              const allClustersData: any = [
-                ...(existingClusterData as []),
-                ...transformClusterListData
-              ];
-
-              if (responseResult.nextPageToken) {
-                listClustersAPI(responseResult.nextPageToken, allClustersData);
-              } else {
-                setclustersList(allClustersData);
-                setIsLoading(false);
-                setLoggedIn(true);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing clusters', err);
-          toast.error('Failed to fetch clusters');
-        });
+      if (formattedResponse.nextPageToken) {
+        listClustersAPI(formattedResponse.nextPageToken, allClustersData);
+      } else {
+        setclustersList(allClustersData);
+        setIsLoading(false);
+        setLoggedIn(true);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error listing clusters', error);
+      toast.error('Failed to fetch clusters');
     }
   };
+
   const handleClusterDetails = (selectedName: string) => {
     pollingClusters(listClustersAPI, true);
     setClusterSelected(selectedName);
@@ -459,7 +450,6 @@ const ClusterComponent = (): React.JSX.Element => {
                     clustersList={clustersList}
                     isLoading={isLoading}
                     setPollingDisable={setPollingDisable}
-                    listClustersAPI={listClustersAPI}
                     handleClusterDetails={handleClusterDetails}
                     project_id={projectId}
                   />

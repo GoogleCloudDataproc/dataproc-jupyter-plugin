@@ -15,8 +15,16 @@
  * limitations under the License.
  */
 
+import { LabIcon } from '@jupyterlab/ui-components';
+import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
+import pythonLogo from '../../third_party/icons/python_logo.svg';
+import scalaLogo from '../../third_party/icons/scala_logo.svg';
+import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
 import { requestAPI } from '../handler/handler';
 import {
+  API_HEADER_BEARER,
+  API_HEADER_CONTENT_TYPE,
+  BASE_URL,
   DCU_HOURS,
   GB_MONTHS,
   PYSPARK,
@@ -32,11 +40,6 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
-import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
-import pythonLogo from '../../third_party/icons/python_logo.svg';
-import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
-import scalaLogo from '../../third_party/icons/scala_logo.svg';
-import { LabIcon } from '@jupyterlab/ui-components';
 interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
@@ -64,6 +67,31 @@ export const authApi = async (): Promise<IAuthCredentials | undefined> => {
     console.error(`Error on GET credentials.\n${reason}`);
   }
 };
+
+export const authenticatedFetch = async (
+  uri: string,
+  queryParams: URLSearchParams
+) => {
+  const credentials = await authApi();
+  if (!credentials) {
+    throw new Error('Error during authentication');
+  }
+
+  const requestOptions = {
+    headers: {
+      'Content-Type': API_HEADER_CONTENT_TYPE,
+      Authorization: API_HEADER_BEARER + credentials.access_token
+    }
+  };
+  const serializedQueryParams = queryParams.toString();
+  const requestUrl = `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/${uri}?${serializedQueryParams}`;
+  return fetch(requestUrl, requestOptions);
+};
+
+export const getProjectId = async (): Promise<string> => {
+  const credentials = await authApi();
+  return credentials?.project_id ?? '';
+}
 
 export const jobTimeFormat = (startTime: string) => {
   const date = new Date(startTime);
@@ -254,7 +282,6 @@ export const iconDisplay = (kernelType: any) => {
   }
 };
 
-
 export interface ICellProps {
   getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
   value: string | any;
@@ -282,7 +309,7 @@ export const detailsPageOptionalDisplay = (data: string) => {
     default:
       return data;
   }
-}
+};
 
 export const jobDetailsOptionalDisplay = (data: string) => {
   switch (data) {
