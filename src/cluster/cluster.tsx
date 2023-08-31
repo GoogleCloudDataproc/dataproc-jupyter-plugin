@@ -225,6 +225,10 @@ const ClusterComponent = (): React.JSX.Element => {
       console.error('Error restarting cluster', error);
       toast.error(`Failed to restart the cluster ${selectedCluster}`);
     }
+    catch(error) {
+      console.error('Error restarting cluster', error);
+          toast.error(`Failed to restart the cluster ${selectedCluster}`);
+    }
   };
 
   const startButton = (data: {
