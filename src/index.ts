@@ -154,7 +154,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
         }
-        else{
+        else if(newValue.title.label === 'Launcher') {
           localStorage.removeItem('notebookValue');
           loadDpmsWidget('');
         }

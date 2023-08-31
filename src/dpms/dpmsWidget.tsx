@@ -640,7 +640,7 @@ fetching database name from fully qualified name structure */
             ) : (
               <>
                 <div className="ui category search">
-                  <div className="ui icon input">
+                  <div className="ui icon input dpms-search">
                     <input
                       className="search-field"
                       type="text"
@@ -648,6 +648,7 @@ fetching database name from fully qualified name structure */
                       onChange={handleSearch}
                       placeholder="Search your DBs and tables"
                     />
+                    
                     <div className="search-icon">
                       <iconSearch.react tag="div" className='logo-alignment-style' />
                     </div>

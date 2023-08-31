@@ -42,6 +42,13 @@
   margin-left: 15px;
   /* min-height: unset !important; */
 }
+.runtimetemplate-max-idle-select.ui.active.selection.dropdown,
+.runtimetemplate-max-idle-select.ui.selection.active.dropdown {
+    border-color: #3367d6 !important; 
+    border-bottom-left-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
+    box-shadow: 0 2px 3px 0 rgba(34, 36, 38, 0.15); 
+}
 
 .create-runtime-button-wrapper {
   border-bottom: 1px solid #e0e0e0;

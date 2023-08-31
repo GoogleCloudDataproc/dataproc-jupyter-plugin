@@ -17,18 +17,16 @@
     cursor: pointer;
 }
 .search-icon {
-  position: absolute !important;
-  top: 73% !important;
-  left: 20px !important;
-  transform: translateY(-50%);  
+  position: fixed !important;
+  left: 5%;
+ 
 }
 .search-field{
     border-radius: 4px !important;
     border: solid 1px !important;
     height: 36px !important;
-    margin-top: 20px !important;
     margin-left: 13px !important;
-    padding-left: 35px !important;
+    padding-left: 30px !important;
     font-size: 13px;
 }
   .columns.icon{
@@ -100,11 +98,13 @@
   }
   .search-clear-icon{
     position: absolute !important;
-    top: 73% !important;
-    transform: translateY(-50%);
-    cursor: pointer;
     right: 2%;
   }
   .ui.icon.input{
     width: 95% !important;
+  }
+  .dpms-search{
+    margin-top: 20px;
+    justify-content: center;
+    align-items: center;
   }
