@@ -56,9 +56,9 @@
   border: 1px solid black !important;
   border-radius: 4px;
   width: 512px;
-  margin-top: 10px;
-  min-height: 40px;
+  height: 36px;
   outline: none;
+  min-height: unset !important;
 }
 .select-text-overlay {
   position: relative;
@@ -76,7 +76,7 @@
   color: #000000;
   position: absolute;
   background-color: #fff;
-  bottom: 34px;
+  bottom: 30px;
   padding: 0px 3px;
   left: 7px;
   z-index: 3;
@@ -87,6 +87,12 @@
   width: 512px;
   margin-top: 10px;
   min-height: 40px;
+  outline: none;
+}
+.submit-job-input-style {
+  background: #ffffff;
+  width: 512px;
+  height: 36px;
   outline: none;
 }
 .react-tagsinput-input {

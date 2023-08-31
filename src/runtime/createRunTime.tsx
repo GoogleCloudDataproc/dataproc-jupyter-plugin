@@ -206,15 +206,23 @@ function CreateRunTime({
         createTime,
         environmentConfig
       } = selectedRuntimeClone;
+      const displayName = jupyterSession?.displayName
+        ? jupyterSession.displayName
+        : '';
+      const runTimeID = name.split('/')[5] ? name.split('/')[5] : '';
+      const descriptionDetail = description ? description : '';
+      const versionDetail = runtimeConfig?.version
+        ? runtimeConfig.version
+        : '2.1';
 
-      setDisplayNameSelected(jupyterSession.displayName);
+      setDisplayNameSelected(displayName);
       /*
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
-      setRunTimeSelected(name.split('/')[5]);
-      setDescriptionSelected(description);
-      setVersionSelected(runtimeConfig.version);
+      setRunTimeSelected(runTimeID);
+      setDescriptionSelected(descriptionDetail);
+      setVersionSelected(versionDetail);
       setUserInfo(creator);
       setCreateTime(createTime);
 
@@ -930,7 +938,7 @@ function CreateRunTime({
             className="back-arrow-icon"
             onClick={handleCancelButton}
           >
-            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
           </div>
           <div className="cluster-details-title">
             Serverless Runtime Template
@@ -938,61 +946,78 @@ function CreateRunTime({
         </div>
         <div className="submit-job-container">
           <form>
-            <div className="create-batches-message">Display name*</div>
-            <Input
-              className="create-runtime-style "
-              value={displayNameSelected}
-              onChange={e => handleDisplayNameChange(e)}
-              type="text"
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="display-name">
+                Display name*
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={displayNameSelected}
+                onChange={e => handleDisplayNameChange(e)}
+                type="text"
+              />
+            </div>
             {displayNameValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" className='logo-alignment-style' />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Name is required</div>
               </div>
             )}
 
-            <div className="create-batches-message">Runtime ID*</div>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="runtime-id">
+                Runtime ID*
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={runTimeSelected}
+                onChange={e => handleInputChange(e)}
+                type="text"
+                disabled={selectedRuntimeClone !== undefined}
+              />
+            </div>
 
-            <Input
-              className="create-runtime-style "
-              value={runTimeSelected}
-              onChange={e => handleInputChange(e)}
-              type="text"
-              disabled={selectedRuntimeClone !== undefined}
-            />
             {runTimeValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" className='logo-alignment-style' />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">ID is required</div>
               </div>
             )}
 
-            <div className="create-batches-message">Description*</div>
-            <Input
-              className="create-runtime-style "
-              value={desciptionSelected}
-              onChange={e => handleDescriptionChange(e)}
-              type="text"
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="description">
+                Description*
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={desciptionSelected}
+                onChange={e => handleDescriptionChange(e)}
+                type="text"
+              />
+            </div>
+
             {descriptionValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" className='logo-alignment-style' />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Description is required</div>
               </div>
             )}
 
-            <div className="create-batches-message">Runtime version*</div>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="runtime-version">
+                Runtime version*
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={versionSelected}
+                onChange={e => handleVersionChange(e)}
+                type="text"
+              />
+            </div>
 
-            <Input
-              className="create-runtime-style "
-              value={versionSelected}
-              onChange={e => handleVersionChange(e)}
-              type="text"
-            />
             {versionValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" className='logo-alignment-style' />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Version is required</div>
               </div>
             )}
@@ -1001,7 +1026,7 @@ function CreateRunTime({
               Establishes connectivity for the VM instances in this cluster.
             </div>
             <div className="runtime-message">Networks in this project</div>
-           
+
             <div>
               <div className="create-batch-network">
                 <div className="select-text-overlay">
@@ -1009,7 +1034,7 @@ function CreateRunTime({
                     className="select-title-text"
                     htmlFor="metastore-project"
                   >
-                     Primary network
+                    Primary network
                   </label>
                   <Select
                     className="project-region-select"
@@ -1040,14 +1065,18 @@ function CreateRunTime({
                 </div>
               </div>
             </div>
-            <div className="create-batches-message">Network tags</div>
-            <TagsInput
-              className="select-runtime-style"
-              onChange={e => setNetworkTagSelected(e)}
-              addOnBlur={true}
-              value={networkTagSelected}
-              inputProps={{ placeholder: '' }}
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="network-tags">
+                Network tags
+              </label>
+              <TagsInput
+                className="select-runtime-style"
+                onChange={e => setNetworkTagSelected(e)}
+                addOnBlur={true}
+                value={networkTagSelected}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
 
             <div className="create-messagelist">
               Network tags are text attributes you can add to make firewall
@@ -1120,22 +1149,28 @@ function CreateRunTime({
               )}
             </div>
 
+            {/* <div className="single-line">
+              <div className="create-batches-subMessage"></div>
+            </div> */}
             <div className="single-line">
-              <div className="create-batches-subMessage">Max idle time</div>
-            </div>
-            <div className="single-line">
-              <Input
-                className="runtimetemplate-max-idle"
-                value={idleTimeSelected}
-                onChange={e => handleIdleSelected(e)}
-                type="text"
-              />
-
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="max-idle-time">
+                  Max idle time
+                </label>
+                <Input
+                  className="runtimetemplate-max-idle"
+                  value={idleTimeSelected}
+                  onChange={e => handleIdleSelected(e)}
+                  type="text"
+                />
+              </div>
               <Select
                 className="runtimetemplate-max-idle-select"
                 value={timeSelected}
                 onChange={handletimeSelected}
                 type="text"
+                search
+                selection
                 options={timeList}
               />
             </div>
@@ -1145,20 +1180,23 @@ function CreateRunTime({
             </div>
             {idleValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" className='logo-alignment-style' />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Only Numeric is allowed</div>
               </div>
             )}
+
             <div className="single-line">
-              <div className="create-batches-subMessage">Max session time</div>
-            </div>
-            <div className="single-line">
-              <Input
-                className="runtimetemplate-max-idle"
-                value={autoTimeSelected}
-                onChange={e => handleAutoTimeSelected(e)}
-                type="text"
-              />
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="max-session-time">
+                  Max session time
+                </label>
+                <Input
+                  className="runtimetemplate-max-idle"
+                  value={autoTimeSelected}
+                  onChange={e => handleAutoTimeSelected(e)}
+                  type="text"
+                />
+              </div>
 
               <Select
                 search
@@ -1175,20 +1213,25 @@ function CreateRunTime({
             </div>
             {autoValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" className='logo-alignment-style' />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Only Numeric is allowed</div>
               </div>
             )}
 
-            <div className="create-batches-message">
-              Python packages repository
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text"
+                htmlFor="python-packages-repository"
+              >
+                Python packages repository
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={pythonRepositorySelected}
+                onChange={e => setPythonRepositorySelected(e.target.value)}
+                type="text"
+              />
             </div>
-            <Input
-              className="create-runtime-style "
-              value={pythonRepositorySelected}
-              onChange={e => setPythonRepositorySelected(e.target.value)}
-              type="text"
-            />
             <div className="create-messagelist">
               Enter the URI for the repository to install Python packages. By
               default packages are installed to PyPI mirror on GCP.

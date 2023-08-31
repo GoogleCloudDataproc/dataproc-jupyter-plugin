@@ -386,7 +386,7 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
                 <div
                   className="feedback-container"
                 >
-                  Provive Feedback
+                  Provide Feedback
                 </div>
                 <span className="privacy-terms"> • </span>
                 <a
