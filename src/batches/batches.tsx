@@ -16,32 +16,32 @@
  */
 
 import { ReactWidget } from '@jupyterlab/apputils';
-import { LabIcon } from '@jupyterlab/ui-components';
-import React, { useEffect, useRef, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import deleteIcon from '../../style/icons/delete_icon.svg';
-import ListSessions from '../sessions/listSessions';
-import { deleteBatchAPI } from '../utils/batchService';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL,
-  LOGIN_STATE
-} from '../utils/const';
-import DeletePopup from '../utils/deletePopup';
-import PollingTimer from '../utils/pollingTimer';
-import {
+  authApi,
   checkConfig,
   elapsedTime,
   jobTimeFormat,
-  jobTypeDisplay,
-  useAuth
+  jobTypeDisplay
 } from '../utils/utils';
-import BatchDetails from './batchDetails';
-import CreateBatch from './createBatch';
+import {
+  API_HEADER_CONTENT_TYPE,
+  BASE_URL,
+  API_HEADER_BEARER,
+  LOGIN_STATE
+} from '../utils/const';
 import ListBatches from './listBatches';
+import { LabIcon } from '@jupyterlab/ui-components';
+import deleteIcon from '../../style/icons/delete_icon.svg';
+import BatchDetails from './batchDetails';
+import ListSessions from '../sessions/listSessions';
+import { ClipLoader } from 'react-spinners';
+import DeletePopup from '../utils/deletePopup';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { deleteBatchAPI } from '../utils/batchService';
+import CreateBatch from './createBatch';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -67,7 +67,6 @@ const BatchesComponent = (): React.JSX.Element => {
 
   const [createBatchView, setCreateBatchView] = useState(false);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const credentials = useAuth();
 
   const pollingBatches = async (
     pollingFunction: () => void,
@@ -88,11 +87,11 @@ const BatchesComponent = (): React.JSX.Element => {
     nextPageToken?: string,
     previousBatchesList?: object
   ) => {
+    const credentials = await authApi();
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
-
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
@@ -224,7 +223,7 @@ const BatchesComponent = (): React.JSX.Element => {
     return () => {
       pollingBatches(listBatchAPI, true);
     };
-  }, [pollingDisable, detailedBatchView, selectedMode, credentials]);
+  }, [pollingDisable, detailedBatchView, selectedMode]);
 
   return (
     <div className="component-level">
@@ -294,6 +293,7 @@ const BatchesComponent = (): React.JSX.Element => {
                     batchesList={batchesList}
                     isLoading={isLoading}
                     setPollingDisable={setPollingDisable}
+                    listBatchAPI={listBatchAPI}
                     handleBatchDetails={handleBatchDetails}
                     setCreateBatchView={setCreateBatchView}
                     createBatchView={createBatchView}

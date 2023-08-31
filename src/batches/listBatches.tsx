@@ -26,6 +26,7 @@ import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
 import {
+  // CREATE_BATCH_URL,
   STATUS_CREATING,
   STATUS_DELETING,
   STATUS_FAIL,
@@ -76,6 +77,7 @@ interface IListBatchesProps {
   batchesList: IBatch[];
   isLoading: boolean;
   setPollingDisable: (value: boolean) => void;
+  listBatchAPI: () => void;
   handleBatchDetails: (batchID: string) => void;
   setCreateBatchView: (value: boolean) => void;
   createBatchView: boolean;
@@ -85,6 +87,7 @@ function ListBatches({
   batchesList,
   isLoading,
   setPollingDisable,
+  listBatchAPI,
   handleBatchDetails,
   setCreateBatchView,
   createBatchView

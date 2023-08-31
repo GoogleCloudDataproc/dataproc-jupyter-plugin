@@ -16,31 +16,31 @@
  */
 
 import { ReactWidget } from '@jupyterlab/apputils';
-import { LabIcon } from '@jupyterlab/ui-components';
-import React, { useEffect, useRef, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import restartIcon from '../../style/icons/restart_icon.svg';
-import restartDisableIcon from '../../style/icons/restart_icon_disable.svg';
-import startIcon from '../../style/icons/start_icon.svg';
-import startDisableIcon from '../../style/icons/start_icon_disable.svg';
-import stopIcon from '../../style/icons/stop_icon.svg';
-import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
+import React, { useState, useEffect, useRef } from 'react';
 import JobComponent from '../jobs/jobs';
-import { startClusterApi, stopClusterApi } from '../utils/clusterServices';
+import ClusterDetails from './clusterDetails';
+import { authApi, checkConfig, statusValue } from '../utils/utils';
+import { LabIcon } from '@jupyterlab/ui-components';
+import startIcon from '../../style/icons/start_icon.svg';
+import stopIcon from '../../style/icons/stop_icon.svg';
+import restartIcon from '../../style/icons/restart_icon.svg';
+import startDisableIcon from '../../style/icons/start_icon_disable.svg';
+import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
+import restartDisableIcon from '../../style/icons/restart_icon_disable.svg';
 import {
-  API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
-  ClusterStatus,
+  POLLING_TIME_LIMIT,
+  API_HEADER_BEARER,
   LOGIN_STATE,
-  POLLING_TIME_LIMIT
+  ClusterStatus
 } from '../utils/const';
-import PollingTimer from '../utils/pollingTimer';
-import { checkConfig, statusValue, useAuth } from '../utils/utils';
-import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
+import { ClipLoader } from 'react-spinners';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { startClusterApi, stopClusterApi } from '../utils/clusterServices';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconStart = new LabIcon({
   name: 'launcher:start-icon',
@@ -87,7 +87,6 @@ const ClusterComponent = (): React.JSX.Element => {
   const [projectId, setProjectId] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [selectedJobClone, setSelectedJobClone] = useState({});
-  const credentials = useAuth();
 
   const pollingClusters = async (
     pollingFunction: () => void,
@@ -108,6 +107,7 @@ const ClusterComponent = (): React.JSX.Element => {
     nextPageToken?: string,
     previousClustersList?: object
   ) => {
+    const credentials = await authApi();
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       setProjectId(credentials.project_id || '');
@@ -189,6 +189,7 @@ const ClusterComponent = (): React.JSX.Element => {
   };
 
   const statusApi = async (selectedcluster: string) => {
+    const credentials = await authApi();
     if (credentials) {
       await fetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
@@ -229,6 +230,7 @@ const ClusterComponent = (): React.JSX.Element => {
 
   const restartClusterApi = async (selectedcluster: string) => {
     setRestartEnabled(true);
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:stop`,
@@ -388,7 +390,7 @@ const ClusterComponent = (): React.JSX.Element => {
     return () => {
       pollingClusters(listClustersAPI, true);
     };
-  }, [pollingDisable, detailedView, selectedMode, credentials]);
+  }, [pollingDisable, detailedView, selectedMode]);
 
   return (
     <div className="component-level">

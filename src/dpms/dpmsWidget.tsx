@@ -15,38 +15,39 @@
  * limitations under the License.
  */
 
+import { ReactWidget } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import { MainAreaWidget, ReactWidget } from '@jupyterlab/apputils';
-import { LabIcon } from '@jupyterlab/ui-components';
-import { auto } from '@popperjs/core';
 import React, { useEffect, useState } from 'react';
-import { NodeRendererProps, Tree } from 'react-arborist';
-import { ClipLoader } from 'react-spinners';
-import { ToastContainer, toast } from 'react-toastify';
-import 'semantic-ui-css/semantic.min.css';
-import { v4 as uuidv4 } from 'uuid';
-import columnsIcon from '../../style/icons/columns_icon.svg';
+import { Tree, NodeRendererProps } from 'react-arborist';
+import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
+import tableIcon from '../../style/icons/table_icon.svg';
+import columnsIcon from '../../style/icons/columns_icon.svg';
+import refreshIcon from '../../style/icons/refresh_icon.svg';
 import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
 import datasetsIcon from '../../style/icons/datasets_icon.svg';
-import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
-import refreshIcon from '../../style/icons/refresh_icon.svg';
-import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
-import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
-import tableIcon from '../../style/icons/table_icon.svg';
+import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
+import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
+import searchClearIcon from '../../style/icons/search_clear_icon.svg';
+import { Database } from './databaseInfo';
+import { MainAreaWidget } from '@jupyterlab/apputils';
+import { v4 as uuidv4 } from 'uuid';
+import 'semantic-ui-css/semantic.min.css';
+import { auto } from '@popperjs/core';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
   BASE_URL,
+  API_HEADER_CONTENT_TYPE,
+  API_HEADER_BEARER,
   CATALOG_SEARCH,
   COLUMN_API,
   QUERY_DATABASE,
   QUERY_TABLE
 } from '../utils/const';
-import { useAuth } from '../utils/utils';
-import { Database } from './databaseInfo';
+import { authApi } from '../utils/utils';
 import { Table } from './tableInfo';
+import { ClipLoader } from 'react-spinners';
+import { ToastContainer, toast } from 'react-toastify';
 
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
@@ -112,8 +113,8 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseDetails, setDatabaseDetails] = useState({});
   const [tableDescription, setTableDescription] = useState({});
-  const credentials = useAuth();
   const getColumnDetails = async (name: string) => {
+    const credentials = await authApi();
     if (credentials && notebookValue) {
       fetch(`${COLUMN_API}${name}`, {
         method: 'GET',
@@ -146,6 +147,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     }
   };
   const getTableDetails = async (database: string) => {
+    const credentials = await authApi();
     if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_TABLE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}.${database}`,
@@ -438,6 +440,7 @@ fetching database name from fully qualified name structure */
     );
   };
   const getDatabaseDetails = async () => {
+    const credentials = await authApi();
     if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_DATABASE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
@@ -486,6 +489,7 @@ fetching database name from fully qualified name structure */
     }
   };
   const getClusterDetails = async () => {
+    const credentials = await authApi();
     if (credentials && notebookValue) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
@@ -530,6 +534,7 @@ fetching database name from fully qualified name structure */
     }
   };
   const getSessionDetails = async () => {
+    const credentials = await authApi();
     if (credentials && notebookValue) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,

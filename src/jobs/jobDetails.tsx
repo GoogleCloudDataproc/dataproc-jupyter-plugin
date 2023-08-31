@@ -15,16 +15,17 @@
  * limitations under the License.
  */
 
-import { LabIcon } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef, useState } from 'react';
+import { LabIcon } from '@jupyterlab/ui-components';
+import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import 'semantic-ui-css/semantic.min.css';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
+import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
+import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
 import EditIcon from '../../style/icons/edit_icon.svg';
 import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
-import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
-import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
+import DeletePopup from '../utils/deletePopup';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -33,30 +34,29 @@ import {
   LABEL_TEXT,
   STATUS_RUNNING
 } from '../utils/const';
-import DeletePopup from '../utils/deletePopup';
 import {
+  authApi,
   elapsedTime,
   jobDetailsOptionalDisplay,
   jobTimeFormat,
   jobTypeDisplay,
   jobTypeValue,
   jobTypeValueArguments,
-  statusMessage,
-  useAuth
+  statusMessage
 } from '../utils/utils';
 
-import { ClipLoader } from 'react-spinners';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import errorIcon from '../../style/icons/error_icon.svg';
 import ClusterDetails from '../cluster/clusterDetails';
-import { IJobDetails } from '../utils/jobDetailsInterface';
-import { deleteJobApi, stopJobApi } from '../utils/jobServices';
-import PollingTimer from '../utils/pollingTimer';
-import { statusDisplay } from '../utils/statusDisplay';
-import ViewLogs from '../utils/viewLogs';
+import { ClipLoader } from 'react-spinners';
 import LabelProperties from './labelProperties';
 import SubmitJob from './submitJob';
+import ViewLogs from '../utils/viewLogs';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { statusDisplay } from '../utils/statusDisplay';
+import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import errorIcon from '../../style/icons/error_icon.svg';
+import PollingTimer from '../utils/pollingTimer';
+import { IJobDetails } from '../utils/jobDetailsInterface';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -173,7 +173,6 @@ function JobDetails({
   const [selectedJobId, setSelectedJobId] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [errorView, setErrorView] = useState(false);
-  const credentials = useAuth();
 
   const pollingJobDetails = async (
     pollingFunction: () => void,
@@ -210,7 +209,7 @@ function JobDetails({
     return () => {
       pollingJobDetails(getJobDetails, true);
     };
-  }, [labelEditMode, credentials]);
+  }, [labelEditMode]);
 
   const handleJobLabelEdit = () => {
     setLabelEditMode(true);
@@ -235,6 +234,7 @@ function JobDetails({
   };
 
   const updateJobDetails = async (payloadJob: object) => {
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}?updateMask=${LABEL_TEXT}`,
@@ -288,6 +288,7 @@ function JobDetails({
   };
 
   const getJobDetails = async () => {
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}`,

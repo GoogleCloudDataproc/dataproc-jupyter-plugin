@@ -15,23 +15,19 @@
  * limitations under the License.
  */
 
+import React, { useState, useEffect, useRef } from 'react';
+import JobComponent from '../jobs/jobs';
 import { LabIcon } from '@jupyterlab/ui-components';
-import React, { useEffect, useRef, useState } from 'react';
-import ClipLoader from 'react-spinners/ClipLoader';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
-import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
-import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
-import errorIcon from '../../style/icons/error_icon.svg';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import StartClusterIcon from '../../style/icons/start_cluster_icon.svg';
 import StartClusterDisableIcon from '../../style/icons/start_cluster_icon_disable.svg';
-import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
 import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
+import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
+import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
+import errorIcon from '../../style/icons/error_icon.svg';
+import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
+import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
-import JobComponent from '../jobs/jobs';
-import SubmitJob from '../jobs/submitJob';
 import {
   deleteClusterApi,
   startClusterApi,
@@ -50,10 +46,14 @@ import {
   STATUS_STOPPED,
   STATUS_STOPPING
 } from '../utils/const';
-import DeletePopup from '../utils/deletePopup';
-import PollingTimer from '../utils/pollingTimer';
-import { useAuth } from '../utils/utils';
+import { authApi } from '../utils/utils';
+import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
+import DeletePopup from '../utils/deletePopup';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import SubmitJob from '../jobs/submitJob';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -130,7 +130,6 @@ function ClusterDetails({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedCluster, setSelectedCluster] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const credentials = useAuth();
 
   const pollingClusterDetails = async (
     pollingFunction: () => void,
@@ -166,6 +165,7 @@ function ClusterDetails({
   };
 
   const getClusterDetails = async () => {
+    const credentials = await authApi();
     if (credentials) {
       setProjectName(credentials.project_id || '');
       fetch(
@@ -273,7 +273,7 @@ function ClusterDetails({
     return () => {
       pollingClusterDetails(getClusterDetails, true);
     };
-  }, [credentials]);
+  }, []);
 
   return (
     <div>

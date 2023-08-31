@@ -15,18 +15,12 @@
  * limitations under the License.
  */
 
-import { LabIcon } from '@jupyterlab/ui-components';
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
-import TagsInput from 'react-tagsinput';
-import 'react-tagsinput/react-tagsinput.css';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import 'semantic-ui-css/semantic.min.css';
-import { Dropdown, Input, Radio, Select } from 'semantic-ui-react';
-import errorIcon from '../../style/icons/error_icon.svg';
+import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import LabelProperties from '../jobs/labelProperties';
+import 'semantic-ui-css/semantic.min.css';
+import 'react-toastify/dist/ReactToastify.css';
+import { Input, Radio, Select, Dropdown } from 'semantic-ui-react';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -52,8 +46,14 @@ import {
   SERVICE_ACCOUNT,
   STATUS_RUNNING
 } from '../utils/const';
+import TagsInput from 'react-tagsinput';
+import 'react-tagsinput/react-tagsinput.css';
+import LabelProperties from '../jobs/labelProperties';
+import { authApi } from '../utils/utils';
+import { ClipLoader } from 'react-spinners';
+import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
-import { useAuth } from '../utils/utils';
+import errorIcon from '../../style/icons/error_icon.svg';
 
 type Project = {
   projectId: string;
@@ -187,7 +187,6 @@ function CreateBatch({
   const [keylist, setKeylist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
-  const credentials = useAuth();
 
   const handleCreateBatchBackView = () => {
     setCreateBatchView(false);
@@ -225,7 +224,7 @@ function CreateBatch({
     listClustersAPI();
     listNetworksAPI();
     listKeyRingsAPI();
-  }, [clusterSelected, defaultValue, credentials]);
+  }, [clusterSelected, defaultValue]);
 
   useEffect(() => {
     generateRandomHex();
@@ -336,6 +335,7 @@ function CreateBatch({
   };
 
   const listClustersAPI = async () => {
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=100`,
@@ -379,6 +379,7 @@ function CreateBatch({
     }
   };
   const listNetworksAPI = async () => {
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks`,
@@ -426,6 +427,7 @@ function CreateBatch({
     }
   };
   const listKeyRingsAPI = async () => {
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings`,
@@ -471,6 +473,7 @@ function CreateBatch({
     }
   };
   const listKeysAPI = async (keyRing: any) => {
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRing}/cryptoKeys`,
@@ -522,6 +525,7 @@ function CreateBatch({
     subnetworks: string;
   };
   const listSubNetworksAPI = async (subnetwork: string) => {
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks/${subnetwork}`,
@@ -574,6 +578,7 @@ function CreateBatch({
   };
   const listMetaStoreAPI = async (data: undefined) => {
     setIsLoadingService(true);
+    const credentials = await authApi();
     if (credentials) {
       fetch(
         `${BASE_URL_META}/projects/${projectId}/locations/${data}/services`,
@@ -619,6 +624,7 @@ function CreateBatch({
     }
   };
   const projectListAPI = async () => {
+    const credentials = await authApi();
     if (credentials) {
       fetch(PROJECT_LIST_URL, {
         method: 'GET',
@@ -657,6 +663,7 @@ function CreateBatch({
 
   const regionListAPI = async (projectId: string) => {
     setIsLoadingRegion(true);
+    const credentials = await authApi();
     if (credentials) {
       fetch(`${REGION_URL}${projectId}/regions`, {
         headers: {
@@ -821,6 +828,7 @@ function CreateBatch({
   };
 
   const handleSubmit = async () => {
+    const credentials = await authApi();
     if (credentials) {
       const labelObject: { [key: string]: string } = {};
       labelDetailUpdated.forEach((label: string) => {

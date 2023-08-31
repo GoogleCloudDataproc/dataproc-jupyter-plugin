@@ -15,12 +15,6 @@
  * limitations under the License.
  */
 
-import { LabIcon } from '@jupyterlab/ui-components';
-import { useEffect, useState } from 'react';
-import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
-import pythonLogo from '../../third_party/icons/python_logo.svg';
-import scalaLogo from '../../third_party/icons/scala_logo.svg';
-import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
 import { requestAPI } from '../handler/handler';
 import {
   DCU_HOURS,
@@ -38,7 +32,12 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
-export interface IAuthCredentials {
+import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
+import pythonLogo from '../../third_party/icons/python_logo.svg';
+import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
+import scalaLogo from '../../third_party/icons/scala_logo.svg';
+import { LabIcon } from '@jupyterlab/ui-components';
+interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
   region_id?: string;
@@ -60,31 +59,11 @@ export const authApi = async (): Promise<IAuthCredentials | undefined> => {
       return credentials;
     } else {
       console.error('Invalid data format.');
-      throw new Error('Invalid data format.');
     }
   } catch (reason) {
     console.error(`Error on GET credentials.\n${reason}`);
-    throw reason;
   }
 };
-
-export function useAuth(initialValue?: IAuthCredentials) {
-  const [credentials, setCredentials] =
-    useState<IAuthCredentials|undefined>(initialValue);
-  useEffect(() => {
-    authApi()
-      .then(credentials => {
-        if (credentials) {
-          setCredentials(credentials);
-        }
-      })
-      .catch((error: Error) => {
-        throw error;
-      });
-  }, []);
-
-  return credentials;
-}
 
 export const jobTimeFormat = (startTime: string) => {
   const date = new Date(startTime);
@@ -275,6 +254,7 @@ export const iconDisplay = (kernelType: any) => {
   }
 };
 
+
 export interface ICellProps {
   getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
   value: string | any;
@@ -302,7 +282,7 @@ export const detailsPageOptionalDisplay = (data: string) => {
     default:
       return data;
   }
-};
+}
 
 export const jobDetailsOptionalDisplay = (data: string) => {
   switch (data) {

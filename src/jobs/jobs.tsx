@@ -15,21 +15,28 @@
  * limitations under the License.
  */
 
+import React, { useState, useEffect, useRef } from 'react';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
+import {
+  authApi,
+  jobTimeFormat,
+  jobTypeValue,
+  elapsedTime,
+  statusMessage,
+  jobTypeDisplay,
+  ICellProps
+} from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
-import React, { useEffect, useRef, useState } from 'react';
-import ClipLoader from 'react-spinners/ClipLoader';
-import { useGlobalFilter, usePagination, useTable } from 'react-table';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import cloneIcon from '../../style/icons/clone_icon.svg';
-import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
-import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
-import deleteIcon from '../../style/icons/delete_icon.svg';
 import filterIcon from '../../style/icons/filter_icon.svg';
-import stopDisableIcon from '../../style/icons/stop_disable_icon.svg';
+import cloneIcon from '../../style/icons/clone_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
-import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
+import JobDetails from './jobDetails';
+import stopDisableIcon from '../../style/icons/stop_disable_icon.svg';
+import deleteIcon from '../../style/icons/delete_icon.svg';
+import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
+import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
+import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -44,23 +51,16 @@ import {
   STATUS_STOPPING,
   STATUS_SUCCESS
 } from '../utils/const';
-import DeletePopup from '../utils/deletePopup';
+import ClipLoader from 'react-spinners/ClipLoader';
+import SubmitJob from './submitJob';
 import GlobalFilter from '../utils/globalFilter';
-import { deleteJobApi, stopJobApi } from '../utils/jobServices';
+import TableData from '../utils/tableData';
+import DeletePopup from '../utils/deletePopup';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
-import TableData from '../utils/tableData';
-import {
-  ICellProps,
-  elapsedTime,
-  jobTimeFormat,
-  jobTypeDisplay,
-  jobTypeValue,
-  statusMessage,
-  useAuth
-} from '../utils/utils';
-import JobDetails from './jobDetails';
-import SubmitJob from './submitJob';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -119,7 +119,6 @@ function JobComponent({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const credentials = useAuth();
 
   const pollingJobs = async (
     pollingFunction: () => void,
@@ -209,6 +208,7 @@ function JobComponent({
     nextPageToken?: string,
     previousJobsList?: object
   ) => {
+    const credentials = await authApi();
     const clusterName = clusterSelected ?? '';
     const pageToken = nextPageToken ?? '';
     if (credentials) {
@@ -364,7 +364,7 @@ function JobComponent({
     return () => {
       pollingJobs(listJobsAPI, true);
     };
-  }, [pollingDisable, detailedJobView, credentials]);
+  }, [pollingDisable, detailedJobView]);
 
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Job ID') {

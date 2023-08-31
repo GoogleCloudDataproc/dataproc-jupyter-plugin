@@ -15,32 +15,32 @@
  * limitations under the License.
  */
 
+import React, { useState, useEffect, useRef } from 'react';
+import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
-import React, { useEffect, useRef, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
-import { useGlobalFilter, usePagination, useTable } from 'react-table';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import deleteIcon from '../../style/icons/delete_icon.svg';
 import filterIcon from '../../style/icons/filter_icon.svg';
-import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
+import deleteIcon from '../../style/icons/delete_icon.svg';
+import { ClipLoader } from 'react-spinners';
+import GlobalFilter from '../utils/globalFilter';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   BASE_URL
 } from '../utils/const';
+import TableData from '../utils/tableData';
+import { ICellProps, authApi, jobTimeFormat } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import GlobalFilter from '../utils/globalFilter';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
+import { PaginationView } from '../utils/paginationView';
+import PollingTimer from '../utils/pollingTimer';
+import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 import {
   SessionTemplate,
   SessionTemplateDisplay,
   SessionTemplateRoot
 } from '../utils/listRuntimeTemplateInterface';
-import { PaginationView } from '../utils/paginationView';
-import PollingTimer from '../utils/pollingTimer';
-import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
-import TableData from '../utils/tableData';
-import { ICellProps, jobTimeFormat, useAuth } from '../utils/utils';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -104,7 +104,7 @@ function ListRuntimeTemplates({
   ]);
 
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const credentials = useAuth();
+
   const pollingRuntimeTemplates = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -148,6 +148,7 @@ function ListRuntimeTemplates({
     nextPageToken?: string,
     previousRuntimeTemplatesList?: object
   ) => {
+    const credentials = await authApi();
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       fetch(
@@ -288,7 +289,7 @@ function ListRuntimeTemplates({
     return () => {
       pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
     };
-  }, [pollingDisable, openCreateTemplate, credentials]);
+  }, [pollingDisable, openCreateTemplate]);
 
   const renderActions = (data: SessionTemplate) => {
     let runtimeTemplateName = data.name;
