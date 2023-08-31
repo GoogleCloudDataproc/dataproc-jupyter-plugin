@@ -41,11 +41,6 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
-import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
-import pythonLogo from '../../third_party/icons/python_logo.svg';
-import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
-import scalaLogo from '../../third_party/icons/scala_logo.svg';
-import { LabIcon } from '@jupyterlab/ui-components';
 export interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
