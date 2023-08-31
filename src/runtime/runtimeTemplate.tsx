@@ -27,6 +27,7 @@ const RuntimeTemplateComponent  = ({ app }: { app: JupyterLab }): JSX.Element =>
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
   useState<SessionTemplate>();
   useEffect(() => {
+    console.log(app);
     setSelectedRuntimeClone(undefined);
   })
   return (

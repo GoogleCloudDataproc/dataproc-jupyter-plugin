@@ -20,7 +20,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import 'semantic-ui-css/semantic.min.css';
 import 'react-toastify/dist/ReactToastify.css';
-import { Input, Radio, Select, Dropdown } from 'semantic-ui-react';
+import { Input, Radio, Select } from 'semantic-ui-react';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -129,6 +129,7 @@ function batchTypeFunction(batchKey: string) {
       return batchType;
   }
 }
+
 function CreateBatch({
   setCreateBatchView,
   regionName,
@@ -145,11 +146,12 @@ function CreateBatch({
   let mainPythonFileUri = '';
   let queryFileUri = '';
   let serviceAccount = '';
-  let network = 'default';
+  let subNetwork = 'default';
+  let network ='default';
   let historyServer = 'None';
   let historyServerValue = 'None';
   let metastoreService = '';
-  let metaProject = '';
+  let metaProject = 'None';
   let metaRegion = '';
   let containerImage = '';
   if (batchInfoResponse !== undefined) {
@@ -181,7 +183,7 @@ function CreateBatch({
       }
       serviceAccount = batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount || '';
       networkUris = batchInfoResponse?.environmentConfig?.executionConfig?.networkTags || '';
-      network = batchInfoResponse?.environmentConfig?.executionConfig?.networkUri || 'default';
+      subNetwork = batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri || 'default';
       historyServerValue = batchInfoResponse?.environmentConfig?.peripheralsConfig?.sparkHistoryServerConfig?.dataprocCluster || 'None';
       if (historyServerValue !== 'None') {
         const parts = historyServerValue.split("/"); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
@@ -196,9 +198,16 @@ function CreateBatch({
         metaRegion = metastoreDetails[3];
       }
 
+    
+   
+     
+
 
     }
+   
+    
   }
+
 
   const selectedRadioInitialValue = mainClass ? 'mainClass' : 'mainJarURI';
   const [batchTypeList, setBatchTypeList] = useState([{}]);
@@ -254,7 +263,7 @@ function CreateBatch({
   >([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState(network);
-  const [subNetworkSelected, setSubNetworkSelected] = useState('default');
+  const [subNetworkSelected, setSubNetworkSelected] = useState(subNetwork);
   const [isLoadingService, setIsLoadingService] = useState(false);
   const [error, setError] = useState({ isOpen: false, message: '' });
   const [parameterDetail, setParameterDetail] = useState(['']);
@@ -275,7 +284,7 @@ function CreateBatch({
   const [mainRValidation, setMainRValidation] = useState(true);
   const [batchIdValidation, setBatchIdValidation] = useState(false);
   const [mainJarValidation, setMainJarValidation] = useState(true);
-  const [defaultValue, setDefaultValue] = useState('default');
+  const [defaultValue, setDefaultValue] = useState(subNetwork);
   const [keyRingSelected, setKeyRingSelected] = useState('');
   const [keySelected, setKeySelected] = useState('');
   const [manualKeySelected, setManualKeySelected] = useState('');
@@ -296,6 +305,7 @@ function CreateBatch({
     setMainJarSelected('');
     setMainClassSelected('');
   };
+ 
 
   const handleMainJarRadio = () => {
     setSelectedRadio('mainJarURI');
@@ -398,9 +408,44 @@ function CreateBatch({
           }
         }
       }
+      listNetworksFromSubNetworkAPI(subNetwork);
     }
    
   }, []);
+  const listNetworksFromSubNetworkAPI = async (subNetwork: any) => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subNetwork}`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: any) => {
+              let transformedNetworkSelected = '';
+              
+              transformedNetworkSelected = responseResult.network.split('/')[9];
+              
+              setNetworkSelected(transformedNetworkSelected);
+              
+             
+            })
+
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error selecting Network', err);
+        });
+    }
+  };
   function isSubmitDisabled() {
     const commonConditions =
       batchIdSelected === '' || regionName === '' || batchIdValidation;
@@ -888,7 +933,8 @@ function CreateBatch({
     mainRSelected: string,
     additionalPythonFileSelected: string[],
     mainPythonSelected: string,
-    queryFileSelected: string
+    queryFileSelected: string,
+  
   ): Payload => {
     const payload: Payload = {};
 
@@ -939,7 +985,7 @@ function CreateBatch({
     if (batchTypeSelected === 'sparkSql') {
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
-        ...(parameterObject && { queryVariables: { query: parameterObject } }),
+        ...(parameterObject && { queryVariables:  parameterObject }),
         ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected }),
       };
     }
@@ -979,7 +1025,7 @@ function CreateBatch({
         ...(servicesSelected !== 'None' && {
           metastoreService: servicesSelected
         }),
-        ...(clusterSelected !== '' && {
+        ...(clusterSelected !== '' && clusterSelected !== 'None' &&{
           sparkHistoryServerConfig: {
             dataprocCluster: `projects/${projectName}/regions/${regionName}/clusters/${clusterSelected}`
           } as SparkHistoryServerConfig
@@ -1018,7 +1064,7 @@ function CreateBatch({
         const value = labelSplit[1];
         parameterObject[key] = value;
       });
-      const payload = createPayload(
+            const payload = createPayload(
         batchTypeSelected,
         mainJarSelected,
         mainClassSelected,
@@ -1853,7 +1899,7 @@ function CreateBatch({
             </div>
             <div className="create-batches-message">History server cluster</div>
 
-            <Dropdown
+            <Select
               className="select-job-style"
               search
               selection
