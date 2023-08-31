@@ -212,7 +212,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
                   }
                   onClick={handleSave}
                 >
-                  {isSaving ? 'Save' : 'Saving'}
+                  {isSaving ? 'Saving' : 'Save'}
                 </Button>
               </div>
             </div>
