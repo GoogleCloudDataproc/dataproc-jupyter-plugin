@@ -17,6 +17,7 @@
   flex-direction: row;
   align-items: flex-end;
   padding-bottom: 10px;
+  padding-left: 5px;
 }
 
 .settings-text {
@@ -33,11 +34,12 @@
   border: 1px solid #e0e0e0;
   width: 100%;
   height: 0px;
+  margin-left: 5px;
 }
 .config-form {
   display: flex;
   flex-direction: column;
-  padding-top: 60px;
+  padding-top: 30px;
   padding-left: 5px;
   width: 100%;
   width: 630px;
@@ -88,7 +90,7 @@
   background: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.38) !important;
   display: block !important;
-  height: 36px;
+  min-height: 36px;
   width: 100%;
   border-radius: 4px !important;
   appearance: none !important;
@@ -96,7 +98,7 @@
   -moz-appearance: none;
   transform: none !important;
   position: unset !important;
-  min-height: unset !important;
+  /* min-height: unset !important; */
 }
 .region-loader {
   margin-left: 1px;
@@ -274,4 +276,12 @@
 }
 .feedback-version-container {
   margin-right: 25px;
+}
+.project-header{
+  padding-top: 40px;
+  padding-left: 5px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  color: #000000;
 }

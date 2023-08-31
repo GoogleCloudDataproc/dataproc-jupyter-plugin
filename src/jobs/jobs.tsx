@@ -24,7 +24,8 @@ import {
   elapsedTime,
   statusMessage,
   jobTypeDisplay,
-  ICellProps
+  ICellProps,
+  toastifyCustomStyle
 } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -56,7 +57,7 @@ import SubmitJob from './submitJob';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import { PaginationView } from '../utils/paginationView';
@@ -284,7 +285,7 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
-          toast.error('Failed to fetch jobs');
+          toast.error('Failed to fetch jobs',toastifyCustomStyle);
         });
     }
   };
@@ -455,7 +456,6 @@ function JobComponent({
 
   return (
     <div>
-      <ToastContainer />
       {submitJobView && !detailedJobView && (
         <SubmitJob
           setSubmitJobView={setSubmitJobView}

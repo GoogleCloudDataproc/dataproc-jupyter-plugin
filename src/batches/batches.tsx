@@ -22,7 +22,8 @@ import {
   checkConfig,
   elapsedTime,
   jobTimeFormat,
-  jobTypeDisplay
+  jobTypeDisplay,
+  toastifyCustomStyle
 } from '../utils/utils';
 import {
   API_HEADER_CONTENT_TYPE,
@@ -37,7 +38,7 @@ import BatchDetails from './batchDetails';
 import ListSessions from '../sessions/listSessions';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
@@ -159,7 +160,7 @@ const BatchesComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing batches', err);
-          toast.error('Failed to fetch batches');
+          toast.error('Failed to fetch batches',toastifyCustomStyle);
         });
     }
   };
@@ -299,7 +300,6 @@ const BatchesComponent = (): React.JSX.Element => {
                   />
                 )}
               </div>
-              <ToastContainer />
             </div>
           )}
         </>

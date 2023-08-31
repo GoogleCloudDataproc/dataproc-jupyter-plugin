@@ -35,7 +35,7 @@ import {
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
@@ -191,7 +191,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information');
+          toast.error('Failed to fetch user information',toastifyCustomStyle);
         });
     }
   };
@@ -779,7 +779,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully submitted`
+              `RuntimeTemplate ${displayNameSelected} successfully submitted`,toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -790,7 +790,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error Creating template', err);
-          toast.error('Failed to create the template');
+          toast.error('Failed to create the template',toastifyCustomStyle);
         });
     }
   };
@@ -813,7 +813,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully updated`
+              `RuntimeTemplate ${displayNameSelected} successfully updated`,toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -824,7 +824,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error updating template', err);
-          toast.error('Failed to update the template');
+          toast.error('Failed to update the template',toastifyCustomStyle);
         });
     }
   };

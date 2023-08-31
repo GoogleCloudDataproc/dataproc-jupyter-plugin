@@ -49,7 +49,7 @@ import {
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
@@ -1110,7 +1110,7 @@ function CreateBatch({
         })
         .catch((err: Error) => {
           console.error('Error submitting Batch', err);
-          toast.error('Failed to submit the Batch');
+          toast.error('Failed to submit the Batch',toastifyCustomStyle);
         });
     }
   };

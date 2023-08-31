@@ -21,7 +21,7 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { Input, Select } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 import LabelProperties from './labelProperties';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
 import {
@@ -39,7 +39,7 @@ import {
   STATUS_RUNNING
 } from '../utils/const';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const iconLeftArrow = new LabIcon({
@@ -613,7 +613,7 @@ function SubmitJob(
               .json()
               .then((responseResult: any) => {
                 console.log(responseResult);
-                toast.success(`Job ${jobIdSelected} successfully submitted`);
+                toast.success(`Job ${jobIdSelected} successfully submitted`,toastifyCustomStyle);
               })
               .catch((e: any) => {
                 console.log(e);
@@ -624,7 +624,7 @@ function SubmitJob(
         })
         .catch((err: any) => {
           console.error('Error submitting job', err);
-          toast.error('Failed to submit the job');
+          toast.error('Failed to submit the job',toastifyCustomStyle);
         });
     }
   };
@@ -1176,7 +1176,6 @@ function SubmitJob(
               </div>
             </div>
           </div>
-          <ToastContainer />
         </div>
       </div>
     </div>
