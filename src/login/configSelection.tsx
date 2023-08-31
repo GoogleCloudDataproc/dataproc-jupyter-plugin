@@ -56,7 +56,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
 
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({
     email: '',
@@ -67,10 +67,9 @@ function ConfigSelection({ configError, setConfigError }: any) {
 
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
     useState<SessionTemplate>();
-  console.log(isLoading);
 
   const handleSave = async () => {
-    setIsLoading(true);
+    setIsSaving(true);
     const dataToSend = { projectId, region };
     try {
       const data = await requestAPI<any>('configuration', {
@@ -79,7 +78,6 @@ function ConfigSelection({ configError, setConfigError }: any) {
       });
       if (typeof data === 'object' && data !== null) {
         const configStatus = (data as { config: string }).config;
-        setIsLoading(false);
         if (configStatus && !toast.isActive('custom-toast')) {
           const toastifyCustomStyle: ToastOptions<{}> = {
             hideProgressBar: true,
@@ -100,6 +98,8 @@ function ConfigSelection({ configError, setConfigError }: any) {
       }
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -207,10 +207,12 @@ function ConfigSelection({ configError, setConfigError }: any) {
               <div className="save-overlay">
                 <Button
                   variant="contained"
-                  disabled={projectId.length == 0 && region.length == 0}
+                  disabled={
+                    isSaving || (projectId.length == 0 && region.length == 0)
+                  }
                   onClick={handleSave}
                 >
-                  Save
+                  {isSaving ? 'Save' : 'Saving'}
                 </Button>
               </div>
             </div>
