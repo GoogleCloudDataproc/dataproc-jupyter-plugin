@@ -177,7 +177,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;
         app.shell.add(widget, 'main');
-      }
+              }
     });
 
     const createClusterComponentCommand = 'create-cluster-component';

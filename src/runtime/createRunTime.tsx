@@ -20,6 +20,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import 'semantic-ui-css/semantic.min.css';
 import 'react-toastify/dist/ReactToastify.css';
 import { Input, Select } from 'semantic-ui-react';
+import { MainAreaWidget } from '@jupyterlab/apputils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -40,6 +41,7 @@ import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
+import { AuthLogin } from '../login/authLogin';
 
 type Project = {
   projectId: string;
@@ -274,6 +276,7 @@ function CreateRunTime({
               .slice(0, -1);
             setIdleTimeSelected(idleTtlInSecondsWithoutUnit);
           }
+         
           if (executionConfig.hasOwnProperty('ttl')) {
             const ttlUnit = executionConfig.idleTtl.slice(-1); // Extracting the last character 's'
 
@@ -313,10 +316,45 @@ function CreateRunTime({
       */
           setClusterSelected(dataprocCluster.split('/')[5]);
         }
+        listNetworksFromSubNetworkAPI(executionConfig.subnetworkUri)
       }
     } else {
       displayUserInfo();
       setCreateTime(new Date().toISOString());
+    }
+  };
+  const listNetworksFromSubNetworkAPI = async (subnetwork: any) => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subnetwork}`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: any) => {
+              let transformedNetworkSelected = '';
+              transformedNetworkSelected = responseResult.network.split('/')[9];
+              
+              
+              setNetworkSelected(transformedNetworkSelected);
+              setSubNetworkSelected(subnetwork);
+              setDefaultValue(subnetwork);
+            })
+
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error selecting Network', err);
+        });
     }
   };
   const listClustersAPI = async () => {
@@ -411,6 +449,7 @@ function CreateRunTime({
         });
     }
   };
+ 
   type SubnetworkData = {
     subnetworks: string;
   };
@@ -698,11 +737,10 @@ function CreateRunTime({
   };
   const handleCancelButton = () => {
     setOpenCreateTemplate(false);
-    // const content = new AuthLogin();
-    // const widget = new MainAreaWidget<AuthLogin>({ content });
-    // widget.title.label = 'Config Setup';
-    // //widget.title.icon = iconCluster;
-    // app.shell.add(widget, 'main');
+    const content = new AuthLogin();
+    const widget = new MainAreaWidget<AuthLogin>({ content });
+    widget.title.label = 'Config Setup';
+  
   };
 
   const handleClusterSelected = (event: any, data: any) => {
@@ -842,7 +880,6 @@ function CreateRunTime({
             }),
 
             ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
-
             ...(timeSelected === 'h' &&
               idleTimeSelected && {
                 idleTtl: inputValueHour.toString() + 's'
@@ -1204,13 +1241,19 @@ function CreateRunTime({
               Persistent Spark History Server
             </div>
 
+            <div className="create-batches-message">
+              Choose a history server cluster to store logs in.{' '}
+            </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-project">
-                Choose a history server cluster to store logs in.{' '}
+              <label
+                className="select-title-text"
+                htmlFor="history-server-cluster"
+              >
+                History server cluster
               </label>
-
+               
               <Select
-                className="project-region-select"
+              className="select-job-style"
                 search
                 clearable
                 value={clusterSelected}
