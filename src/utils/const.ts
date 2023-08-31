@@ -139,3 +139,7 @@ export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';
 export const JOB_FIELDS_EXCLUDED = ['queryList', 'properties', 'args'];
 export const BATCH_FIELDS_EXCLUDED = ['queryList', 'properties'];
 export const KEY_MESSAGE='Example format:projects/<project-name>/locations/<location-name>/keyRings/<keyring-name>/cryptoKeys/<key-name>';
+export enum HTTP_METHOD {
+  GET = 'GET',
+  POST = 'POST'
+};
