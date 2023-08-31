@@ -1241,13 +1241,19 @@ function CreateRunTime({
               Persistent Spark History Server
             </div>
 
+            <div className="create-batches-message">
+              Choose a history server cluster to store logs in.{' '}
+            </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-project">
-                Choose a history server cluster to store logs in.{' '}
+              <label
+                className="select-title-text"
+                htmlFor="history-server-cluster"
+              >
+                History server cluster
               </label>
-
+               
               <Select
-                className="project-region-select"
+              className="select-job-style"
                 search
                 clearable
                 value={clusterSelected}

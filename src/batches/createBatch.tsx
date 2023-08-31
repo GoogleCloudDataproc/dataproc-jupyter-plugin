@@ -2023,7 +2023,7 @@ function CreateBatch({
                 value={clusterSelected}
                 onChange={handleClusterSelected}
                 options={clustersList}
-                placeholder="Search..."
+                placeholder=""
               />
             </div>
 
