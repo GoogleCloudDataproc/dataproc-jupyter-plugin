@@ -37,7 +37,7 @@ import pythonLogo from '../../third_party/icons/python_logo.svg';
 import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
 import scalaLogo from '../../third_party/icons/scala_logo.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
-interface IAuthCredentials {
+export interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
   region_id?: string;
@@ -254,7 +254,6 @@ export const iconDisplay = (kernelType: any) => {
   }
 };
 
-
 export interface ICellProps {
   getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
   value: string | any;
@@ -282,7 +281,7 @@ export const detailsPageOptionalDisplay = (data: string) => {
     default:
       return data;
   }
-}
+};
 
 export const jobDetailsOptionalDisplay = (data: string) => {
   switch (data) {
