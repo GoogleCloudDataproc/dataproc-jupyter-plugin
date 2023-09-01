@@ -191,7 +191,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information',toastifyCustomStyle);
+          toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
   };
@@ -276,7 +276,7 @@ function CreateRunTime({
               .slice(0, -1);
             setIdleTimeSelected(idleTtlInSecondsWithoutUnit);
           }
-         
+
           if (executionConfig.hasOwnProperty('ttl')) {
             const ttlUnit = executionConfig.idleTtl.slice(-1); // Extracting the last character 's'
 
@@ -341,8 +341,8 @@ function CreateRunTime({
             .then((responseResult: any) => {
               let transformedNetworkSelected = '';
               transformedNetworkSelected = responseResult.network.split('/')[9];
-              
-              
+
+
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
@@ -449,7 +449,7 @@ function CreateRunTime({
         });
     }
   };
- 
+
   type SubnetworkData = {
     subnetworks: string;
   };
@@ -740,7 +740,7 @@ function CreateRunTime({
     const content = new AuthLogin();
     const widget = new MainAreaWidget<AuthLogin>({ content });
     widget.title.label = 'Config Setup';
-  
+
   };
 
   const handleClusterSelected = (event: any, data: any) => {
@@ -779,7 +779,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully submitted`,toastifyCustomStyle
+              `RuntimeTemplate ${displayNameSelected} successfully submitted`, toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -790,7 +790,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error Creating template', err);
-          toast.error('Failed to create the template',toastifyCustomStyle);
+          toast.error('Failed to create the template', toastifyCustomStyle);
         });
     }
   };
@@ -813,7 +813,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully updated`,toastifyCustomStyle
+              `RuntimeTemplate ${displayNameSelected} successfully updated`, toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -824,7 +824,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error updating template', err);
-          toast.error('Failed to update the template',toastifyCustomStyle);
+          toast.error('Failed to update the template', toastifyCustomStyle);
         });
     }
   };
@@ -882,30 +882,30 @@ function CreateRunTime({
             ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
             ...(timeSelected === 'h' &&
               idleTimeSelected && {
-                idleTtl: inputValueHour.toString() + 's'
-              }),
+              idleTtl: inputValueHour.toString() + 's'
+            }),
             ...(timeSelected === 'm' &&
               idleTimeSelected && {
-                idleTtl: inputValueMin.toString() + 's'
-              }),
+              idleTtl: inputValueMin.toString() + 's'
+            }),
             ...(timeSelected === 's' &&
               idleTimeSelected && {
-                idleTtl: idleTimeSelected + 's'
-              }),
+              idleTtl: idleTimeSelected + 's'
+            }),
 
             ...(autoSelected === 'h' &&
               autoTimeSelected && {
-                ttl: inputValueHourAuto.toString() + 's'
-              }),
+              ttl: inputValueHourAuto.toString() + 's'
+            }),
             ...(autoSelected === 'm' &&
               autoTimeSelected && {
-                ttl: inputValueMinAuto.toString() + 's'
-              }),
+              ttl: inputValueMinAuto.toString() + 's'
+            }),
 
             ...(autoSelected === 's' &&
               autoTimeSelected && {
-                ttl: autoTimeSelected + 's'
-              })
+              ttl: autoTimeSelected + 's'
+            })
           },
           peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
@@ -1105,12 +1105,14 @@ function CreateRunTime({
                 Metastore region
               </label>
               {isLoadingRegion ? (
-                <ClipLoader
-                  loading={true}
-                  size={25}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
+                <div className='metastore-loader'>
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
               ) : (
                 <Select
                   className="project-region-select"
@@ -1129,12 +1131,14 @@ function CreateRunTime({
                 Metastore service
               </label>
               {isLoadingService ? (
-                <ClipLoader
-                  loading={true}
-                  size={25}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
+                <div className='metastore-loader'>
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
               ) : (
                 <Select
                   className="project-region-select"
@@ -1251,9 +1255,9 @@ function CreateRunTime({
               >
                 History server cluster
               </label>
-               
+
               <Select
-              className="select-job-style"
+                className="select-job-style"
                 search
                 clearable
                 value={clusterSelected}

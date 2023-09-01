@@ -139,7 +139,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error getting column details', err);
-          toast.error('Error getting column details',toastifyCustomStyle);
+          toast.error('Error getting column details', toastifyCustomStyle);
         });
     }
   };
@@ -192,7 +192,7 @@ const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error getting table details', err);
-          toast.error('Error getting table details',toastifyCustomStyle);
+          toast.error('Error getting table details', toastifyCustomStyle);
         });
     }
   };
@@ -277,8 +277,8 @@ fetching database name from fully qualified name structure */
         app.shell.add(widget, 'main');
         widget.disposed.connect(() => {
           const widgetTitle = widget.title.label;
-            delete openedWidgets[widgetTitle];
-          });
+          delete openedWidgets[widgetTitle];
+        });
       } else if (depth === 2) {
         const database = node.parent.data.name;
         const column = node.data.children;
@@ -297,13 +297,13 @@ fetching database name from fully qualified name structure */
         widget.title.icon = iconDatasets;
         app.shell.add(widget, 'main');
         widget.disposed.connect(() => {
-        const widgetTitle = widget.title.label;
+          const widgetTitle = widget.title.label;
           delete openedWidgets[widgetTitle];
         });
       }
       openedWidgets[widgetTitle] = node.data.name;
     }
-    
+
   };
   const handleSearchClear = () => {
     setSearchTerm('');
@@ -453,36 +453,36 @@ fetching database name from fully qualified name structure */
           response
             .json()
             .then(async (responseResult: any) => {
-              if(responseResult?.results){
-              const filteredEntries = responseResult.results.filter(
-                (entry: { displayName: string }) => entry.displayName
-              );
-              const databaseNames: string[] = [];
-              const updatedDatabaseDetails: { [key: string]: string } = {};
-              filteredEntries.forEach(
-                (entry: { description: string; displayName: string }) => {
-                  databaseNames.push(entry.displayName);
-                  const description = entry.description || 'None';
-                  updatedDatabaseDetails[entry.displayName] = description;
-                }
-              );
-              setDatabaseDetails(updatedDatabaseDetails);
-              databaseNames.map(async (db: string) => {
-                await getTableDetails(db);
-              });
-            }
-            else{
-              if(responseResult?.error?.code){
-                setApiError(true);
-                setNoDpmsInstance(true);
-                setIsLoading(false);
+              if (responseResult?.results) {
+                const filteredEntries = responseResult.results.filter(
+                  (entry: { displayName: string }) => entry.displayName
+                );
+                const databaseNames: string[] = [];
+                const updatedDatabaseDetails: { [key: string]: string } = {};
+                filteredEntries.forEach(
+                  (entry: { description: string; displayName: string }) => {
+                    databaseNames.push(entry.displayName);
+                    const description = entry.description || 'None';
+                    updatedDatabaseDetails[entry.displayName] = description;
+                  }
+                );
+                setDatabaseDetails(updatedDatabaseDetails);
+                databaseNames.map(async (db: string) => {
+                  await getTableDetails(db);
+                });
               }
-             else{
-              setNoDpmsInstance(true);
-              setSchemaError(true)
-              setIsLoading(false);
-             }
-            }
+              else {
+                if (responseResult?.error?.code) {
+                  setApiError(true);
+                  setNoDpmsInstance(true);
+                  setIsLoading(false);
+                }
+                else {
+                  setNoDpmsInstance(true);
+                  setSchemaError(true)
+                  setIsLoading(false);
+                }
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -490,7 +490,7 @@ fetching database name from fully qualified name structure */
         })
         .catch((err: Error) => {
           console.error('Error getting database details', err);
-          toast.error('Error getting database details',toastifyCustomStyle);
+          toast.error('Error getting database details', toastifyCustomStyle);
         });
     }
   };
@@ -535,7 +535,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing session details', err);
-          toast.error('Failed to fetch session details'),toastifyCustomStyle;
+          toast.error('Failed to fetch session details'), toastifyCustomStyle;
         });
     }
   };
@@ -567,7 +567,7 @@ fetching database name from fully qualified name structure */
                     : '';
                 setDataprocMetastoreServices(instanceName);
                 setNoDpmsInstance(false);
-               setSession(false);
+                setSession(false);
               } else {
                 setNoDpmsInstance(true);
                 setSession(true);
@@ -580,7 +580,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters details', err);
-          toast.error('Failed to fetch cluster details',toastifyCustomStyle);
+          toast.error('Failed to fetch cluster details', toastifyCustomStyle);
         });
     }
   };
@@ -592,7 +592,7 @@ fetching database name from fully qualified name structure */
       const clusterVal = clusterName.slice(0, -1).join('/')
       setNotebookValue(clusterVal);
       getClusterDetails();
-    } else if(notebookVal?.includes('/sessions')){
+    } else if (notebookVal?.includes('/sessions')) {
       const sessionName = notebookVal.split('/')
       const sessionVal = sessionName.slice(0, -1).join('/')
       setNotebookValue(sessionVal);
@@ -648,18 +648,18 @@ fetching database name from fully qualified name structure */
                       onChange={handleSearch}
                       placeholder="Search your DBs and tables"
                     />
-                    
+
                     <div className="search-icon">
                       <iconSearch.react tag="div" className='logo-alignment-style' />
                     </div>
                     {searchTerm &&
-                    <div
-                      role="button"
-                      className="search-clear-icon"
-                      onClick={handleSearchClear}
-                    >
-                      <iconSearchClear.react tag="div" className='logo-alignment-style' />
-                    </div>
+                      <div
+                        role="button"
+                        className="search-clear-icon"
+                        onClick={handleSearchClear}
+                      >
+                        <iconSearchClear.react tag="div" className='logo-alignment-style' />
+                      </div>
                     }
                   </div>
                 </div>
@@ -691,19 +691,19 @@ fetching database name from fully qualified name structure */
         </>
       ) : (
         session ? (
-        <div className="dpms-error">
-          DPMS is not configured for this runtime template. Please attach DPMS or
-          activate DPMS sync with data catalog
-        </div>) : (cluster ? (<div className="dpms-error">
-          DPMS is not configured for this cluster. Please attach DPMS or
-          activate DPMS sync with data catalog
-        </div>):(apiError ? (<div className="dpms-error">
-          Datacatalog API is not enabled
-        </div>):(schemaError ? (<div className="dpms-error">
-          No schema available
-        </div>):(<div className="dpms-error">
-        DPMS schema explorer not set up
-        </div>))))
+          <div className="dpms-error">
+            DPMS is not configured for this runtime template. Please attach DPMS or
+            activate DPMS sync with data catalog
+          </div>) : (cluster ? (<div className="dpms-error">
+            DPMS is not configured for this cluster. Please attach DPMS or
+            activate DPMS sync with data catalog
+          </div>) : (apiError ? (<div className="dpms-error">
+            Datacatalog API is not enabled
+          </div>) : (schemaError ? (<div className="dpms-error">
+            No schema available
+          </div>) : (<div className="dpms-error">
+            DPMS schema explorer not set up
+          </div>))))
       )}
     </>
   );

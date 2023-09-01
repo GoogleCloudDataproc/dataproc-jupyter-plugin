@@ -22,7 +22,7 @@ import {
   ILabShell
 } from '@jupyterlab/application';
 import { MainAreaWidget } from '@jupyterlab/apputils';
-import { ILauncher} from '@jupyterlab/launcher';
+import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
@@ -71,6 +71,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
+
     const panel = new Panel();
     panel.id = 'dpms-tab';
     panel.title.icon = iconDpms;
@@ -154,7 +155,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
         }
-        else{
+        else if ((newValue.title.label === 'Launcher') || (newValue.title.label === 'Clusters') || (newValue.title.label === 'Batches') || (newValue.title.label === 'Config Setup')) {
           localStorage.removeItem('notebookValue');
           loadDpmsWidget('');
         }
@@ -177,7 +178,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;
         app.shell.add(widget, 'main');
-              }
+      }
     });
 
     const createClusterComponentCommand = 'create-cluster-component';

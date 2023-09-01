@@ -39,10 +39,11 @@ export const deleteSessionAPI = async (selectedSession: string) => {
     )
       .then((response: Response) => {
         console.log(response);
+        toast.error(`Session ${selectedSession} deleted successfully`, toastifyCustomStyle);
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
-        toast.error(`Failed to delete the session ${selectedSession}`,toastifyCustomStyle);
+        toast.error(`Failed to delete the session ${selectedSession}`, toastifyCustomStyle);
       });
   }
 };
@@ -69,7 +70,7 @@ export const terminateSessionAPI = async (selectedSession: string) => {
       })
       .catch((err: Error) => {
         console.error('Error terminating session', err);
-        toast.error(`Failed to terminate session ${selectedSession}`,toastifyCustomStyle);
+        toast.error(`Failed to terminate session ${selectedSession}`, toastifyCustomStyle);
       });
   }
 };

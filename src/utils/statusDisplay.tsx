@@ -65,14 +65,14 @@ export const statusDisplay = (statusMsg: string) => {
         statusMsg === STATUS_STOPPING ||
         statusMsg === STATUS_PENDING ||
         statusMsg === STATUS_DELETING) && (
-        <ClipLoader
-          color="#8A8A8A"
-          loading={true}
-          size={15}
-          aria-label="Loading Spinner"
-          data-testid="loader"
-        />
-      )}
+          <ClipLoader
+            color="#8A8A8A"
+            loading={true}
+            size={15}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+        )}
       <div className="cluster-status">{statusMsg.toLowerCase()}</div>
     </div>
   );

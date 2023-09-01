@@ -42,12 +42,13 @@ export const deleteBatchAPI = async (selectedBatch: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
+            toast.error(`Batch ${selectedBatch} deleted successfully`, toastifyCustomStyle);
           })
           .catch((e: Error) => console.log(e));
       })
       .catch((err: Error) => {
         console.error('Error deleting batches', err);
-        toast.error(`Failed to delete the batch ${selectedBatch}`,toastifyCustomStyle);
+        toast.error(`Failed to delete the batch ${selectedBatch}`, toastifyCustomStyle);
       });
   }
 };

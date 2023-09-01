@@ -7,7 +7,7 @@
 html,
 body,
 html * {
-  font-family: 'Roboto' !important;
+  font-family: 'Roboto';
 }
 
 button,
@@ -84,7 +84,7 @@ h2 {
   margin: 15px 0px !important;
 }
 
-.ui.dropdown:not(.button) > .default.text {
+.ui.dropdown:not(.button)>.default.text {
   color: rgba(0, 0, 0, 0.66) !important;
 }
 
@@ -93,8 +93,8 @@ h2 {
   border: 3px solid #3367d6 !important;
 }
 
-.ui.search.dropdown.active > input.search:focus,
-.ui.search.dropdown.visible > input.search:focus {
+.ui.search.dropdown.active>input.search:focus,
+.ui.search.dropdown.visible>input.search:focus {
   left: 0px !important;
   bottom: 0px !important;
   cursor: auto;

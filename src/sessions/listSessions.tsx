@@ -50,7 +50,7 @@ import {
 } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import DeletePopup from '../utils/deletePopup';
-import { toast} from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
 import { PaginationView } from '../utils/paginationView';
@@ -219,7 +219,7 @@ function ListSessions() {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing Sessions', err);
-          toast.error('Failed to fetch sessions',toastifyCustomStyle);
+          toast.error('Failed to fetch sessions', toastifyCustomStyle);
         });
     }
   };
@@ -343,14 +343,14 @@ function ListSessions() {
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_TERMINATING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={15}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            )}
+                <ClipLoader
+                  color="#8A8A8A"
+                  loading={true}
+                  size={15}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>

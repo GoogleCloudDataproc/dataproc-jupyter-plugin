@@ -19,20 +19,20 @@ import React from 'react';
 import { Button, Modal } from 'semantic-ui-react';
 
 function ErrorPopup({ onCancel, errorPopupOpen, DeleteMsg }: any) {
-    const modalStyle = {
-        width: 'auto', // Set the desired width
-        backgroundColor: 'white' // Set the desired background color
-      };
+  const modalStyle = {
+    width: 'auto', // Set the desired width
+    backgroundColor: 'white' // Set the desired background color
+  };
   return (
     <Modal open={errorPopupOpen} onClose={onCancel} style={modalStyle}>
-    <Modal.Header>Error</Modal.Header>
-    <Modal.Content>
-      <p>{DeleteMsg}</p>
-    </Modal.Content>
-    <Modal.Actions>
-      <Button onClick={onCancel}>Close</Button>
-    </Modal.Actions>
-  </Modal>
+      <Modal.Header>Error</Modal.Header>
+      <Modal.Content>
+        <p>{DeleteMsg}</p>
+      </Modal.Content>
+      <Modal.Actions>
+        <Button onClick={onCancel}>Close</Button>
+      </Modal.Actions>
+    </Modal>
   );
 }
 

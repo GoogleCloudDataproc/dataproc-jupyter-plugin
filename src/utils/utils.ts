@@ -38,6 +38,7 @@ import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
 import scalaLogo from '../../third_party/icons/scala_logo.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { ToastOptions, toast } from 'react-toastify';
+import { v4 as uuidv4 } from 'uuid';
 interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
@@ -328,5 +329,5 @@ export const toastifyCustomStyle: ToastOptions<{}> = {
   autoClose: false,
   theme: 'dark',
   position: toast.POSITION.BOTTOM_CENTER,
-  toastId: 'custom-toast'
+  toastId: uuidv4(),
 };

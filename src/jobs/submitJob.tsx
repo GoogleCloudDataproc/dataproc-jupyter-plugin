@@ -613,7 +613,7 @@ function SubmitJob(
               .json()
               .then((responseResult: any) => {
                 console.log(responseResult);
-                toast.success(`Job ${jobIdSelected} successfully submitted`,toastifyCustomStyle);
+                toast.success(`Job ${jobIdSelected} successfully submitted`, toastifyCustomStyle);
               })
               .catch((e: any) => {
                 console.log(e);
@@ -624,7 +624,7 @@ function SubmitJob(
         })
         .catch((err: any) => {
           console.error('Error submitting job', err);
-          toast.error('Failed to submit the job',toastifyCustomStyle);
+          toast.error('Failed to submit the job', toastifyCustomStyle);
         });
     }
   };

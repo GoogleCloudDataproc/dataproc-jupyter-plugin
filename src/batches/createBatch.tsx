@@ -147,7 +147,7 @@ function CreateBatch({
   let queryFileUri = '';
   let serviceAccount = '';
   let subNetwork = 'default';
-  let network ='default';
+  let network = 'default';
   let historyServer = 'None';
   let historyServerValue = 'None';
   let metastoreService = '';
@@ -201,8 +201,8 @@ function CreateBatch({
         metaRegion = metastoreDetails[3];
       }
     }
-   
-    
+
+
   }
 
 
@@ -305,7 +305,7 @@ function CreateBatch({
     setMainJarSelected('');
     setMainClassSelected('');
   };
- 
+
 
   const handleMainJarRadio = () => {
     setSelectedRadio('mainJarURI');
@@ -430,12 +430,12 @@ function CreateBatch({
             .json()
             .then((responseResult: any) => {
               let transformedNetworkSelected = '';
-              
+
               transformedNetworkSelected = responseResult.network.split('/')[9];
-              
+
               setNetworkSelected(transformedNetworkSelected);
-              
-             
+
+
             })
 
             .catch((e: Error) => {
@@ -935,7 +935,7 @@ function CreateBatch({
     additionalPythonFileSelected: string[],
     mainPythonSelected: string,
     queryFileSelected: string,
-  
+
   ): Payload => {
     const payload: Payload = {};
 
@@ -986,7 +986,7 @@ function CreateBatch({
     if (batchTypeSelected === 'sparkSql') {
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
-        ...(parameterObject && { queryVariables:  parameterObject }),
+        ...(parameterObject && { queryVariables: parameterObject }),
         ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected }),
       };
     }
@@ -1010,12 +1010,12 @@ function CreateBatch({
         }),
         ...(keySelected !== '' &&
           selectedRadioValue === 'key' && {
-            kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-          }),
+          kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+        }),
         ...(manualKeySelected !== '' &&
           selectedRadioValue === 'manually' && {
-            kmsKey: manualKeySelected
-          }),
+          kmsKey: manualKeySelected
+        }),
         subnetworkUri: subNetworkSelected,
         // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
@@ -1026,7 +1026,7 @@ function CreateBatch({
         ...(servicesSelected !== 'None' && {
           metastoreService: servicesSelected
         }),
-        ...(clusterSelected !== '' && clusterSelected !== 'None' &&{
+        ...(clusterSelected !== '' && clusterSelected !== 'None' && {
           sparkHistoryServerConfig: {
             dataprocCluster: `projects/${projectName}/regions/${regionName}/clusters/${clusterSelected}`
           } as SparkHistoryServerConfig
@@ -1061,7 +1061,7 @@ function CreateBatch({
         const value = labelSplit[1];
         parameterObject[key] = value;
       });
-            const payload = createPayload(
+      const payload = createPayload(
         batchTypeSelected,
         mainJarSelected,
         mainClassSelected,
@@ -1103,6 +1103,7 @@ function CreateBatch({
             if (setCreateBatch) {
               setCreateBatch(false);
             }
+            toast.error(`Batch ${batchIdSelected} created successfully`, toastifyCustomStyle);
           } else {
             const errorResponse = await response.json();
             setError({ isOpen: true, message: errorResponse.error.message });
@@ -1110,7 +1111,7 @@ function CreateBatch({
         })
         .catch((err: Error) => {
           console.error('Error submitting Batch', err);
-          toast.error('Failed to submit the Batch',toastifyCustomStyle);
+          toast.error('Failed to submit the Batch', toastifyCustomStyle);
         });
     }
   };
@@ -1962,35 +1963,41 @@ function CreateBatch({
               <label className="select-title-text" htmlFor="meta-region">
                 Metastore region
               </label>
+
               {isLoadingRegion ? (
-                <ClipLoader
-                  loading={true}
-                  size={25}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-              ) : (
-                <Select
-                  search
-                  placeholder={region}
-                  className="project-region-select"
-                  value={region}
-                  onChange={handleRegionChange}
-                  options={regionList}
-                />
-              )}
+                <div className='metastore-loader'>
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              )
+                : (
+                  <Select
+                    search
+                    placeholder={region}
+                    className="project-region-select"
+                    value={region}
+                    onChange={handleRegionChange}
+                    options={regionList}
+                  />
+                )}
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="meta-service">
                 Metastore service
               </label>
               {isLoadingService ? (
-                <ClipLoader
-                  loading={true}
-                  size={25}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
+                <div className='metastore-loader'>
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
               ) : (
                 <Select
                   search
