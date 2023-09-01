@@ -155,10 +155,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
         }
-        else if ((newValue.title.label === 'Launcher') || (newValue.title.label === 'Clusters') || (newValue.title.label === 'Batches') || (newValue.title.label === 'Config Setup')) {
-          localStorage.removeItem('notebookValue');
-          loadDpmsWidget('');
-        }
       }
     });
 

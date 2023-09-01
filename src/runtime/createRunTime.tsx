@@ -1257,13 +1257,13 @@ function CreateRunTime({
               </label>
 
               <Select
-                className="select-job-style"
+                className="project-region-select"
                 search
                 clearable
                 value={clusterSelected}
                 onChange={handleClusterSelected}
                 options={clustersList}
-                placeholder="History server cluster"
+                placeholder=""
               />
             </div>
             <div className="submit-job-label-header">Spark Properties</div>
