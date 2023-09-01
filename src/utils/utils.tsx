@@ -16,6 +16,7 @@
  */
 
 import { LabIcon } from '@jupyterlab/ui-components';
+import React, { createContext, useContext, useState } from 'react';
 import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
 import pythonLogo from '../../third_party/icons/python_logo.svg';
 import scalaLogo from '../../third_party/icons/scala_logo.svg';
@@ -49,6 +50,30 @@ export interface IAuthCredentials {
   login_error?: number;
 }
 
+export const AuthContext = createContext<IAuthCredentials | undefined>(undefined);
+
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+export function useProvideAuth() {
+  const [credentials, setCredentials] = useState<
+    IAuthCredentials | undefined
+  >();
+
+  authApi()
+    .then(creds => {
+      if (creds) {
+        setCredentials(creds);
+      }
+    })
+    .catch(error => {
+      throw error;
+    });
+
+  return credentials;
+}
+
 export const authApi = async (): Promise<IAuthCredentials | undefined> => {
   try {
     const data = await requestAPI('credentials');
@@ -63,15 +88,17 @@ export const authApi = async (): Promise<IAuthCredentials | undefined> => {
       return credentials;
     } else {
       console.error('Invalid data format.');
+      throw new Error('Invalid data format.');
     }
   } catch (reason) {
     console.error(`Error on GET credentials.\n${reason}`);
+    throw reason;
   }
 };
 
 /**
  * Wraps a fetch call with initial authentication to pass credentials to the request
- * 
+ *
  * @param uri the endpoint to call e.g. "/clusters"
  * @param queryParams
  * @returns a promise of the fetch result
@@ -82,7 +109,7 @@ export const authenticatedFetch = async (
   queryParams?: URLSearchParams
 ) => {
   const credentials = await authApi();
-  // If there is an issue with getting credentials, there is no point continuing the request. 
+  // If there is an issue with getting credentials, there is no point continuing the request.
   if (!credentials) {
     throw new Error('Error during authentication');
   }
@@ -98,20 +125,22 @@ export const authenticatedFetch = async (
   const serializedQueryParams = queryParams?.toString();
   let requestUrl = `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/${uri}`;
   // if serializedQueryParams is defined and non empty, then add it(them) to the request url, otherwise just use the request url
-  requestUrl = serializedQueryParams ? requestUrl + `?${serializedQueryParams}` : requestUrl;
-  
+  requestUrl = serializedQueryParams
+    ? requestUrl + `?${serializedQueryParams}`
+    : requestUrl;
+
   return fetch(requestUrl, requestOptions);
 };
 
 /**
  * Makes a request to the auth api to get the current project ID
- * 
+ *
  * @returns the project id if it exists otherwise an empty string
  */
 export const getProjectId = async (): Promise<string> => {
   const credentials = await authApi();
   return credentials?.project_id ?? '';
-}
+};
 
 export const jobTimeFormat = (startTime: string) => {
   const date = new Date(startTime);

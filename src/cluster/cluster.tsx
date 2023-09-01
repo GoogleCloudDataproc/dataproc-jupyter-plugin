@@ -37,10 +37,13 @@ import {
 } from '../utils/const';
 import PollingTimer from '../utils/pollingTimer';
 import {
+  AuthContext,
+  ProvideAuth,
   authenticatedFetch,
   checkConfig,
   getProjectId,
-  statusValue
+  statusValue,
+  useProvideAuth
 } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
@@ -439,6 +442,8 @@ export class Cluster extends ReactWidget {
   }
 
   render(): React.JSX.Element {
-    return <ClusterComponent />;
+    const auth = useProvideAuth();
+    return <AuthContext.Provider value={auth}><ClusterComponent /></AuthContext.Provider>
+    // return <ClusterComponent />;
   }
 }

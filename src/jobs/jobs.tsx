@@ -18,13 +18,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import {
-  authApi,
   jobTimeFormat,
   jobTypeValue,
   elapsedTime,
   statusMessage,
   jobTypeDisplay,
-  ICellProps
+  ICellProps,
+  useAuth
 } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -119,6 +119,7 @@ function JobComponent({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const credentialContext = useAuth();
 
   const pollingJobs = async (
     pollingFunction: () => void,
@@ -208,16 +209,15 @@ function JobComponent({
     nextPageToken?: string,
     previousJobsList?: object
   ) => {
-    const credentials = await authApi();
     const clusterName = clusterSelected ?? '';
     const pageToken = nextPageToken ?? '';
-    if (credentials) {
+    if (credentialContext) {
       fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
+        `${BASE_URL}/projects/${credentialContext.project_id}/regions/${credentialContext.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+            Authorization: API_HEADER_BEARER + credentialContext.access_token
           }
         }
       )
@@ -253,7 +253,7 @@ function JobComponent({
                   return {
                     jobid: data.reference.jobId,
                     status: statusMsg,
-                    region: credentials.region_id,
+                    region: credentialContext.region_id,
                     type: jobType,
                     starttime: startTime,
                     elapsedtime: elapsedTimeString,
