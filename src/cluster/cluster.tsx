@@ -227,7 +227,7 @@ const ClusterComponent = (): React.JSX.Element => {
     }
     catch(error) {
       console.error('Error restarting cluster', error);
-          toast.error(`Failed to restart the cluster ${selectedCluster}`);
+      toast.error(`Failed to restart the cluster ${selectedCluster}`);
     }
   };
 

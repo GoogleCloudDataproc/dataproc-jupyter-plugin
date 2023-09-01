@@ -41,6 +41,7 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
+
 export interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
