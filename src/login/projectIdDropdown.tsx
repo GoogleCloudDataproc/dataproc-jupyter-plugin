@@ -16,9 +16,9 @@
  */
 
 import React, { useMemo, useState } from 'react';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
 import { useProjectList } from '../utils/projectService';
-import { Select } from 'semantic-ui-react';
-import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
 
 type Props = {
   /** The currently selected project ID */
@@ -31,6 +31,7 @@ type Props = {
  * Component to render a Cloud Project selector dropdown.
  */
 export function ProjectIDDropdown(props: Props) {
+  console.log({ props });
   const { projectId, onProjectIdChange } = props;
   const [projectPrefix, setProjectPrefix] = useState('');
   const prefixedProjectList = useProjectList(projectPrefix);
@@ -41,13 +42,10 @@ export function ProjectIDDropdown(props: Props) {
    * preppending it if necessary.
    */
   const [hoistedProjectId, setHoistedProjectId] = useState(projectId);
-
-  const finalProjectList = useMemo<DropdownItemProps[]>(() => {
-    const prefixedDropdownItems = prefixedProjectList.map(project => ({
-      value: project.projectId,
-      key: project.projectId,
-      text: project.projectId
-    }));
+  const finalProjectList = useMemo(() => {
+    const prefixedDropdownItems = prefixedProjectList.map(
+      project => project.projectId
+    );
     if (
       projectId.length > 0 &&
       !prefixedProjectList.find(
@@ -56,30 +54,21 @@ export function ProjectIDDropdown(props: Props) {
     ) {
       // If the hoisted project ID is not in the results from the API
       // call, prepend it.
-      return [
-        {
-          value: hoistedProjectId,
-          key: hoistedProjectId,
-          text: hoistedProjectId
-        },
-        ...prefixedDropdownItems
-      ];
+      return [hoistedProjectId, ...prefixedDropdownItems];
     }
     return prefixedDropdownItems;
   }, [prefixedProjectList, hoistedProjectId]);
-
   return (
-    <Select
-      search
-      placeholder={projectId}
-      className="project-region-select"
+    <Autocomplete
       value={projectId}
-      onClose={() => setProjectPrefix('')}
-      // Update the hoisted project ID everytime the dropdown is open.
-      onOpen={() => setHoistedProjectId(projectId)}
-      onChange={(_, data) => onProjectIdChange(data.value as string)}
-      onSearchChange={(_, data) => setProjectPrefix(data.searchQuery)}
+      inputValue={projectPrefix}
       options={finalProjectList}
+      onOpen={() => setHoistedProjectId(projectId)}
+      getOptionLabel={projectId => projectId}
+      onInputChange={(_, value) => setProjectPrefix(value)}
+      onChange={(_, value) => onProjectIdChange(value ?? '')}
+      filterOptions={options => options}
+      renderInput={params => <TextField {...params} label="Project ID" />}
     />
   );
 }

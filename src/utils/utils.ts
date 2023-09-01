@@ -15,10 +15,19 @@
  * limitations under the License.
  */
 
+import { LabIcon } from '@jupyterlab/ui-components';
+import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
+import pythonLogo from '../../third_party/icons/python_logo.svg';
+import scalaLogo from '../../third_party/icons/scala_logo.svg';
+import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
 import { requestAPI } from '../handler/handler';
 import {
+  API_HEADER_BEARER,
+  API_HEADER_CONTENT_TYPE,
+  BASE_URL,
   DCU_HOURS,
   GB_MONTHS,
+  HTTP_METHOD,
   PYSPARK,
   SPARK,
   SPARKR,
@@ -32,14 +41,9 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
-import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
-import pythonLogo from '../../third_party/icons/python_logo.svg';
-import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
-import scalaLogo from '../../third_party/icons/scala_logo.svg';
-import { LabIcon } from '@jupyterlab/ui-components';
 import { ToastOptions, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
-interface IAuthCredentials {
+export interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
   region_id?: string;
@@ -66,6 +70,50 @@ export const authApi = async (): Promise<IAuthCredentials | undefined> => {
     console.error(`Error on GET credentials.\n${reason}`);
   }
 };
+
+/**
+ * Wraps a fetch call with initial authentication to pass credentials to the request
+ * 
+ * @param uri the endpoint to call e.g. "/clusters"
+ * @param queryParams
+ * @returns a promise of the fetch result
+ */
+export const authenticatedFetch = async (
+  uri: string,
+  method: HTTP_METHOD,
+  queryParams?: URLSearchParams
+) => {
+  const credentials = await authApi();
+  // If there is an issue with getting credentials, there is no point continuing the request. 
+  if (!credentials) {
+    throw new Error('Error during authentication');
+  }
+
+  const requestOptions = {
+    method: method,
+    headers: {
+      'Content-Type': API_HEADER_CONTENT_TYPE,
+      Authorization: API_HEADER_BEARER + credentials.access_token
+    }
+  };
+
+  const serializedQueryParams = queryParams?.toString();
+  let requestUrl = `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/${uri}`;
+  // if serializedQueryParams is defined and non empty, then add it(them) to the request url, otherwise just use the request url
+  requestUrl = serializedQueryParams ? requestUrl + `?${serializedQueryParams}` : requestUrl;
+  
+  return fetch(requestUrl, requestOptions);
+};
+
+/**
+ * Makes a request to the auth api to get the current project ID
+ * 
+ * @returns the project id if it exists otherwise an empty string
+ */
+export const getProjectId = async (): Promise<string> => {
+  const credentials = await authApi();
+  return credentials?.project_id ?? '';
+}
 
 export const jobTimeFormat = (startTime: string) => {
   const date = new Date(startTime);
@@ -256,7 +304,6 @@ export const iconDisplay = (kernelType: any) => {
   }
 };
 
-
 export interface ICellProps {
   getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
   value: string | any;
@@ -284,7 +331,7 @@ export const detailsPageOptionalDisplay = (data: string) => {
     default:
       return data;
   }
-}
+};
 
 export const jobDetailsOptionalDisplay = (data: string) => {
   switch (data) {

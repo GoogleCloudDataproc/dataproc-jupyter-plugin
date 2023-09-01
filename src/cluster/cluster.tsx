@@ -16,31 +16,35 @@
  */
 
 import { ReactWidget } from '@jupyterlab/apputils';
-import React, { useState, useEffect, useRef } from 'react';
-import JobComponent from '../jobs/jobs';
-import ClusterDetails from './clusterDetails';
-import { authApi, checkConfig, statusValue, toastifyCustomStyle } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
-import startIcon from '../../style/icons/start_icon.svg';
-import stopIcon from '../../style/icons/stop_icon.svg';
-import restartIcon from '../../style/icons/restart_icon.svg';
-import startDisableIcon from '../../style/icons/start_icon_disable.svg';
-import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
-import restartDisableIcon from '../../style/icons/restart_icon_disable.svg';
-import {
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL,
-  POLLING_TIME_LIMIT,
-  API_HEADER_BEARER,
-  LOGIN_STATE,
-  ClusterStatus
-} from '../utils/const';
-import ListCluster from './listCluster';
+import React, { useEffect, useRef, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import restartIcon from '../../style/icons/restart_icon.svg';
+import restartDisableIcon from '../../style/icons/restart_icon_disable.svg';
+import startIcon from '../../style/icons/start_icon.svg';
+import startDisableIcon from '../../style/icons/start_icon_disable.svg';
+import stopIcon from '../../style/icons/stop_icon.svg';
+import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
+import JobComponent from '../jobs/jobs';
 import { startClusterApi, stopClusterApi } from '../utils/clusterServices';
+import {
+  ClusterStatus,
+  HTTP_METHOD,
+  LOGIN_STATE,
+  POLLING_TIME_LIMIT
+} from '../utils/const';
 import PollingTimer from '../utils/pollingTimer';
+import {
+  authenticatedFetch,
+  checkConfig,
+  getProjectId,
+  statusValue,
+  toastifyCustomStyle
+} from '../utils/utils';
+import ClusterDetails from './clusterDetails';
+import ListCluster from './listCluster';
 
 const iconStart = new LabIcon({
   name: 'launcher:start-icon',
@@ -107,160 +111,108 @@ const ClusterComponent = (): React.JSX.Element => {
     nextPageToken?: string,
     previousClustersList?: object
   ) => {
-    const credentials = await authApi();
     const pageToken = nextPageToken ?? '';
-    if (credentials) {
-      setProjectId(credentials.project_id || '');
-      fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=50&pageToken=${pageToken}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+
+    const queryParams = new URLSearchParams();
+    queryParams.append('pageSize', '50');
+    queryParams.append('pageToken', pageToken);
+
+    try {
+      const projectId = await getProjectId();
+      setProjectId(projectId);
+
+      const response = await authenticatedFetch('clusters', HTTP_METHOD.GET, queryParams);
+      const formattedResponse = await response.json();
+      let transformClusterListData = [];
+      if (formattedResponse && formattedResponse.clusters) {
+        setClusterResponse(formattedResponse);
+        transformClusterListData = formattedResponse.clusters.map(
+          (data: any) => {
+            const statusVal = statusValue(data);
+            // Extracting zone from zoneUri
+            // Example: "projects/{project}/zones/{zone}"
+
+            const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
+
+            return {
+              clusterUuid: data.clusterUuid,
+              status: statusVal,
+              clusterName: data.clusterName,
+              clusterImage: data.config.softwareConfig.imageVersion,
+              region: data.labels['goog-dataproc-location'],
+              zone: zoneUri[zoneUri.length - 1],
+              totalWorkersNode: data.config.workerConfig
+                ? data.config.workerConfig.numInstances
+                : 0,
+              schedulesDeletion: data.config.lifecycleConfig ? 'On' : 'Off',
+              actions: renderActions(data)
+            };
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: any) => {
-              let transformClusterListData = [];
-              if (responseResult && responseResult.clusters) {
-                setClusterResponse(responseResult);
-                transformClusterListData = responseResult.clusters.map(
-                  (data: any) => {
-                    const statusVal = statusValue(data);
-                    /*
-                     Extracting zone from zoneUri
-                      Example: "projects/{project}/zones/{zone}"
-                  */
-                    const zoneUri =
-                      data.config.gceClusterConfig.zoneUri.split('/');
+        );
+      }
+      const existingClusterData = previousClustersList ?? [];
+      //setStateAction never type issue
+      const allClustersData: any = [
+        ...(existingClusterData as []),
+        ...transformClusterListData
+      ];
 
-                    return {
-                      clusterUuid: data.clusterUuid,
-                      status: statusVal,
-                      clusterName: data.clusterName,
-                      clusterImage: data.config.softwareConfig.imageVersion,
-                      region: data.labels['goog-dataproc-location'],
-                      zone: zoneUri[zoneUri.length - 1],
-                      totalWorkersNode: data.config.workerConfig
-                        ? data.config.workerConfig.numInstances
-                        : 0,
-                      schedulesDeletion: data.config.lifecycleConfig
-                        ? 'On'
-                        : 'Off',
-                      actions: renderActions(data)
-                    };
-                  }
-                );
-              }
-              const existingClusterData = previousClustersList ?? [];
-              //setStateAction never type issue
-              const allClustersData: any = [
-                ...(existingClusterData as []),
-                ...transformClusterListData
-              ];
-
-              if (responseResult.nextPageToken) {
-                listClustersAPI(responseResult.nextPageToken, allClustersData);
-              } else {
-                setclustersList(allClustersData);
-                setIsLoading(false);
-                setLoggedIn(true);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing clusters', err);
-          toast.error('Failed to fetch clusters', toastifyCustomStyle);
-        });
+      if (formattedResponse.nextPageToken) {
+        listClustersAPI(formattedResponse.nextPageToken, allClustersData);
+      } else {
+        setclustersList(allClustersData);
+        setIsLoading(false);
+        setLoggedIn(true);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error listing clusters', error);
+      toast.error('Failed to fetch clusters', toastifyCustomStyle);
     }
   };
+
   const handleClusterDetails = (selectedName: string) => {
     pollingClusters(listClustersAPI, true);
     setClusterSelected(selectedName);
     setDetailedView(true);
   };
 
-  const statusApi = async (selectedcluster: string) => {
-    const credentials = await authApi();
-    if (credentials) {
-      await fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                status: { state: ClusterStatus };
-                clusterName: string;
-              }) => {
-                if (
-                  responseResult.status.state === ClusterStatus.STATUS_STOPPED
-                ) {
-                  startClusterApi(selectedcluster);
-                  clearInterval(timer.current);
-                }
-              }
-            )
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          console.error('Error fetching status', err);
-          toast.error(`Failed to fetch the status ${selectedcluster}`, toastifyCustomStyle);
-        });
+  const statusApi = async (selectedCluster: string) => {
+    try {
+      const response = await authenticatedFetch(`clusters/${selectedCluster}`, HTTP_METHOD.GET);
+      const formattedResponse = await response.json();
 
+      if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
+        startClusterApi(formattedResponse);
+        clearInterval(timer.current);
+      }
       listClustersAPI();
+    } catch (error) {
+      console.error('Error fetching status', error);
+      toast.error(`Failed to fetch the status ${selectedCluster}`, toastifyCustomStyle);
     }
   };
 
-  const restartClusterApi = async (selectedcluster: string) => {
+  const restartClusterApi = async (selectedCluster: string) => {
     setRestartEnabled(true);
-    const credentials = await authApi();
-    if (credentials) {
-      fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:stop`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: Response) => {
-              console.log(responseResult);
-              listClustersAPI();
-              timer.current = setInterval(() => {
-                statusApi(selectedcluster);
-              }, POLLING_TIME_LIMIT);
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          console.error('Error restarting cluster', err);
-          toast.error(`Failed to restart the cluster ${selectedcluster}`, toastifyCustomStyle);
-        });
 
+    try {
+      const response = await authenticatedFetch(`clusters/${selectedCluster}:stop`, HTTP_METHOD.POST);
+      const formattedResponse = await response.json();
+      console.log(formattedResponse);
       listClustersAPI();
+      timer.current = setInterval(() => {
+        statusApi(selectedCluster);
+      }, POLLING_TIME_LIMIT);
+
+      // This is an artifact of the refactoring
+      listClustersAPI();
+
       setRestartEnabled(false);
+    }
+    catch(error) {
+      console.error('Error restarting cluster', error);
+          toast.error(`Failed to restart the cluster ${selectedCluster}`, toastifyCustomStyle);
     }
   };
 
@@ -459,7 +411,6 @@ const ClusterComponent = (): React.JSX.Element => {
                     clustersList={clustersList}
                     isLoading={isLoading}
                     setPollingDisable={setPollingDisable}
-                    listClustersAPI={listClustersAPI}
                     handleClusterDetails={handleClusterDetails}
                     project_id={projectId}
                   />

@@ -21,12 +21,10 @@ import settingsIcon from '../../style/icons/settings_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  REGION_URL,
   USER_INFO_URL,
   VERSION_DETAIL
 } from '../utils/const';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
-import { Select } from 'semantic-ui-react';
+import { IAuthCredentials, authApi, toastifyCustomStyle  } from '../utils/utils';
 import 'semantic-ui-css/semantic.min.css';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
@@ -39,6 +37,8 @@ import expandMoreIcon from '../../style/icons/expand_more.svg';
 import CreateRuntime from '../runtime/createRunTime';
 import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
 import { ProjectIDDropdown } from './projectIdDropdown';
+import { RegionDropdown } from './regionDropdown';
+import { Button } from '@mui/material';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -49,7 +49,7 @@ const iconExpandMore = new LabIcon({
   svgstr: expandMoreIcon
 });
 
-function ConfigSelection({ loginState, configError, setConfigError }: any) {
+function ConfigSelection({ configError, setConfigError }: any) {
   const Iconsettings = new LabIcon({
     name: 'launcher:settings_icon',
     svgstr: settingsIcon
@@ -57,13 +57,8 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
 
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
-  const [regionList, setRegionList] = useState([{}]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [isLoadingRegion, setIsLoadingRegion] = useState(true);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [regionEmpty, SetRegionEmpty] = useState(true);
-  const [isSaveDisabled, setIsSaveDisabled] = useState(true);
   const [userInfo, setUserInfo] = useState({
     email: '',
     picture: ''
@@ -74,28 +69,9 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
     useState<SessionTemplate>();
 
-  const handleProjectIdChange = (projectId: string) => {
-    setRegionList([]);
-    SetRegionEmpty(true);
-    if (projectId.length !== 0) {
-      regionListAPI(projectId);
-      setProjectId(projectId);
-      setIsSaveDisabled(false);
-    }
-  };
-
-  const handleRegionChange = (event: any, data: any) => {
-    setRegion(data.value);
-    if (projectId) {
-      setIsSaveDisabled(false);
-    }
-    setIsDropdownOpen(false);
-  };
-
   const handleSave = async () => {
-    setIsLoading(true);
-    setIsSaveDisabled(true);
-    const dataToSend = { projectId: projectId, region: region };
+    setIsSaving(true);
+    const dataToSend = { projectId, region };
     try {
       const data = await requestAPI<any>('configuration', {
         body: JSON.stringify(dataToSend),
@@ -103,7 +79,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
       });
       if (typeof data === 'object' && data !== null) {
         const configStatus = (data as { config: string }).config;
-        setIsLoading(false);
         if (configStatus && !toast.isActive('custom-toast')) {
           if (configStatus.includes('Failed')) {
             toast.error(configStatus, toastifyCustomStyle);
@@ -117,11 +92,12 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
       }
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const displayUserInfo = async () => {
-    const credentials = await authApi();
+  const displayUserInfo = async (credentials: IAuthCredentials | undefined) => {
     if (credentials) {
       fetch(USER_INFO_URL, {
         method: 'GET',
@@ -146,63 +122,6 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
         });
     }
   };
-
-  const regionListAPI = async (projectId: any) => {
-    try {
-      const credentials = await authApi();
-      if (credentials) {
-        fetch(`${REGION_URL}${projectId}/regions`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        })
-          .then((response: any) => {
-            if (response.ok) {
-              SetRegionEmpty(true);
-              return response.json();
-            } else {
-              setIsDropdownOpen(false);
-              setIsSaveDisabled(true);
-              SetRegionEmpty(false);
-              if (!toast.isActive('custom-toast-error')) {
-                toast.error(response.status + ' Permission Denied', toastifyCustomStyle);
-              }
-              throw new Error(`Request failed with status ${response.status}`);
-            }
-          })
-          .then((responseResult: any) => {
-            let transformedRegionList = [];
-            transformedRegionList = responseResult.items.map((data: any) => {
-              return {
-                value: data.name,
-                key: data.name,
-                text: data.name
-              };
-            });
-            setRegionList(transformedRegionList);
-            setIsDropdownOpen(false);
-            SetRegionEmpty(false);
-            setIsLoadingRegion(false);
-          })
-          .catch((error: any) => {
-            setIsLoadingRegion(false);
-            console.error('Error fetching region list:', error.message);
-          });
-      }
-    } catch (error) {
-      setIsLoadingRegion(false);
-      console.error('Error fetching region list:');
-      toast.error('Failed to fetch the regions', toastifyCustomStyle);
-    }
-  };
-  const handleDropdownOpen = () => {
-    if (regionEmpty) {
-      setIsDropdownOpen(true);
-    }
-  };
-
   /**
    * onClick handler for when user's click on the "license" link in
    * the user info box.
@@ -216,35 +135,28 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
     }
   };
 
-  const fetchProjectRegion = async () => {
-    const credentials = await authApi();
-    if (credentials && credentials.project_id && credentials.region_id) {
-      handleProjectIdChange(credentials.project_id);
-      setProjectId(credentials.project_id);
-      setRegion(credentials.region_id);
-      setConfigError(false);
-    } else if (credentials && credentials.config_error === 1) {
-      setConfigError(true);
-    }
-  };
-
   const handleRuntimeExpand = () => {
     let runTimeMode = !expandRuntimeTemplate;
     setExpandRuntimeTemplate(runTimeMode);
   };
 
   useEffect(() => {
-    if (loginState) {
-      fetchProjectRegion();
-      displayUserInfo();
-    } else {
-      displayUserInfo();
-    }
-    setSelectedRuntimeClone(undefined);
+    authApi().then(credentials => {
+      displayUserInfo(credentials);
+      setSelectedRuntimeClone(undefined);
+
+      if (credentials && credentials.project_id && credentials.region_id) {
+        setProjectId(credentials.project_id);
+        setRegion(credentials.region_id);
+        setConfigError(false);
+      } else {
+        setConfigError(true);
+      }
+    });
   }, []);
   return (
     <div>
-      {isLoadingUser && isLoadingRegion && !configError ? (
+      {isLoadingUser && !configError ? (
         <div className="spin-loaderMain">
           <ClipLoader
             color="#8A8A8A"
@@ -273,67 +185,43 @@ function ConfigSelection({ loginState, configError, setConfigError }: any) {
           <div className="config-overlay">
             <div className="config-form">
               <div className="project-overlay">
-                <label className="project-text" htmlFor="project-id">
-                  Project ID
-                </label>
                 <ProjectIDDropdown
                   projectId={projectId}
-                  onProjectIdChange={handleProjectIdChange}
+                  onProjectIdChange={projectId => setProjectId(projectId)}
                 />
               </div>
 
               <div className="region-overlay">
-                <label className="region-text" htmlFor="region-id">
-                  Region
-                </label>
-
-                <Select
-                  search
-                  onClick={handleDropdownOpen}
-                  placeholder={region}
-                  className="project-region-select"
-                  value={region}
-                  onChange={handleRegionChange}
-                  options={regionList}
-                  isDisabled={isDropdownOpen}
+                <RegionDropdown
+                  projectId={projectId}
+                  region={region}
+                  onRegionChange={region => setRegion(region)}
                 />
               </div>
               <div className="save-overlay">
-                <button
-                  className={
-                    isSaveDisabled ? 'save-button disabled' : 'save-button'
+                <Button
+                  variant="contained"
+                  disabled={
+                    isSaving || projectId.length == 0 || region.length == 0
                   }
-                  disabled={isSaveDisabled}
                   onClick={handleSave}
                 >
-                  Save
-                </button>
-                {isLoading && (
-                  <div className="save-loader">
-                    <ClipLoader
-                      loading={true}
-                      size={25}
-                      aria-label="Loading Spinner"
-                      data-testid="loader"
-                    />
-                  </div>
-                )}
+                  {isSaving ? 'Saving' : 'Save'}
+                </Button>
               </div>
             </div>
-            {isDropdownOpen && (
-              <div className="region-loader">
-                <ClipLoader
-                  loading={true}
-                  size={15}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
+            <div className="user-info-card">
+              <div className="google-header">
+                This account is managed by google.com
               </div>
-            )}
-            <div>
-              <div className="user-info-card">
-                <div className="google-header">
-                  This account is managed by google.com
+              <div className="seperator"></div>
+              <div className="user-overlay">
+                <div className="user-image-overlay">
+                  <img
+                    src={userInfo.picture}
+                    alt="User Image"
+                    className="user-image"
+                  />
                 </div>
                 <div className="seperator"></div>
                 <div className="user-overlay">
