@@ -22,7 +22,7 @@
   font-weight: 400;
   font-size: 10px;
   line-height: 15px;
-  padding-left: 25px;
+  padding-left: 28px;
   color: #575757;
   width: 50%;
   overflow: hidden;
@@ -219,4 +219,7 @@
 .metastore-loader {
   padding-top: 15px;
   padding-left: 10px;
+}
+.region-disable{
+  color: lightgrey;
 }

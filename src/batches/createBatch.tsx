@@ -38,6 +38,7 @@ import {
   JAR_FILE_MESSAGE,
   KEY_MESSAGE,
   METASTORE_MESSAGE,
+  NETWORK_TAG_MESSAGE,
   PROJECT_LIST_URL,
   QUERY_FILE_MESSAGE,
   REGION_URL,
@@ -1225,7 +1226,7 @@ function CreateBatch({
               </div>
             )}
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="region">
+              <label className="select-title-text region-disable" htmlFor="region">
                 Region*
               </label>
               <Select
@@ -1803,6 +1804,9 @@ function CreateBatch({
                 inputProps={{ placeholder: '' }}
               />
             </div>
+            <div className="create-messagelist">
+              {NETWORK_TAG_MESSAGE}
+            </div>
             <div>
               <div className="submit-job-label-header">Encryption</div>
               <div>
@@ -2024,7 +2028,7 @@ function CreateBatch({
                 History server cluster
               </label>
               <Select
-                className="select-job-style"
+                className="project-region-select"
                 search
                 selection
                 value={clusterSelected}
