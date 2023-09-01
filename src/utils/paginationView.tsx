@@ -43,7 +43,7 @@ interface IPaginationViewProps {
   pageIndex: number;
   allData: IBatch[] | ICluster[] | SessionTemplateDisplay[];
   previousPage: () => void;
-  nextPage:  () => void;
+  nextPage: () => void;
   canPreviousPage: boolean;
   canNextPage: boolean;
 }
@@ -76,15 +76,16 @@ export const PaginationView = ({
       </select>
       {(pageIndex + 1) * pageSize > allData.length ? (
         <div className="page-display-part">
-          {pageIndex * pageSize + 1} -{' '} {allData.length} of {allData.length}
+          {pageIndex * pageSize + 1} - {allData.length} of {allData.length}
         </div>
       ) : (
         <div className="page-display-part">
-          {pageIndex * pageSize + 1} -{' '} {(pageIndex + 1) * pageSize} of{' '}
+          {pageIndex * pageSize + 1} - {(pageIndex + 1) * pageSize} of{' '}
           {allData.length}
         </div>
       )}
-      <div role="button"
+      <div
+        role="button"
         className={
           !canPreviousPage ? 'page-move-button disabled' : 'page-move-button'
         }
@@ -92,7 +93,8 @@ export const PaginationView = ({
       >
         {'<'}
       </div>
-      <div role="button"
+      <div
+        role="button"
         onClick={() => nextPage()}
         className={
           !canNextPage ? 'page-move-button disabled' : 'page-move-button'
