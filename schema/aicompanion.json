@@ -7,10 +7,27 @@
       {
         "name": "generate-code",
         "command": "dataproc_jupyter_plugin:generate-code"
+      },
+      {
+        "name": "fix-code",
+        "command": "dataproc_jupyter_plugin:fix-code"
       }
     ]
   },
   "type": "object",
-  "properties": {},
+  "properties": {
+    "delayMs": {
+      "type": "integer",
+      "title": "Delay (ms)",
+      "description": "How long (in milliseconds) to wait between keystrokes before making an Codey Code Completion request.",
+      "default": 500
+    },
+    "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "description": "Whether or not AI Code Completion is enabled.",
+      "default": false
+    }
+  },
   "additionalProperties": false
 }
