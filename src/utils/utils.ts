@@ -41,6 +41,7 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
+
 export interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
@@ -71,18 +72,23 @@ export const authApi = async (): Promise<IAuthCredentials | undefined> => {
 
 /**
  * Wraps a fetch call with initial authentication to pass credentials to the request
- * 
+ *
  * @param uri the endpoint to call e.g. "/clusters"
+ * @param method the HTTP method used for the request
+ * @param regionIdentifier option param to define what region identifier (location, region) to use
  * @param queryParams
  * @returns a promise of the fetch result
  */
-export const authenticatedFetch = async (
-  uri: string,
-  method: HTTP_METHOD,
-  queryParams?: URLSearchParams
-) => {
+export const authenticatedFetch = async (config: {
+  baseUrl?: string;
+  uri: string;
+  method: HTTP_METHOD;
+  regionIdentifier?: 'regions' | 'locations' | 'global';
+  queryParams?: URLSearchParams;
+}) => {
+  const { baseUrl, uri, method, regionIdentifier, queryParams } = config;
   const credentials = await authApi();
-  // If there is an issue with getting credentials, there is no point continuing the request. 
+  // If there is an issue with getting credentials, there is no point continuing the request.
   if (!credentials) {
     throw new Error('Error during authentication');
   }
@@ -96,22 +102,42 @@ export const authenticatedFetch = async (
   };
 
   const serializedQueryParams = queryParams?.toString();
-  let requestUrl = `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/${uri}`;
-  // if serializedQueryParams is defined and non empty, then add it(them) to the request url, otherwise just use the request url
-  requestUrl = serializedQueryParams ? requestUrl + `?${serializedQueryParams}` : requestUrl;
-  
+  const base = baseUrl ?? BASE_URL;
+  let requestUrl = `${base}/projects/${credentials.project_id}`;
+
+  if (regionIdentifier) {
+    switch (regionIdentifier) {
+      case 'regions':
+        requestUrl = `${requestUrl}/regions/${credentials.region_id}`;
+        break;
+      case 'locations':
+        requestUrl = `${requestUrl}/locations/${credentials.region_id}`;
+        break;
+      case 'global':
+        requestUrl = `${requestUrl}/global`;
+        break;
+      default:
+        assumeNeverHit(regionIdentifier);
+    }
+  }
+
+  requestUrl = `${requestUrl}/${uri}`;
+  if (serializedQueryParams) {
+    requestUrl = `${requestUrl}?${serializedQueryParams}`;
+  }
+
   return fetch(requestUrl, requestOptions);
 };
 
 /**
  * Makes a request to the auth api to get the current project ID
- * 
+ *
  * @returns the project id if it exists otherwise an empty string
  */
 export const getProjectId = async (): Promise<string> => {
   const credentials = await authApi();
   return credentials?.project_id ?? '';
-}
+};
 
 export const jobTimeFormat = (startTime: string) => {
   const date = new Date(startTime);
@@ -368,3 +394,5 @@ export const batchDetailsOptionalDisplay = (data: string) => {
       return detailsPageOptionalDisplay(data);
   }
 };
+
+export function assumeNeverHit(_: never): void {}
