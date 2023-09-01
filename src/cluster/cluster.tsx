@@ -38,11 +38,11 @@ import {
 import PollingTimer from '../utils/pollingTimer';
 import {
   AuthContext,
-  IAuthCredentials,
   authenticatedFetch,
   checkConfig,
   getProjectId,
   statusValue,
+  useProvideAuth,
 } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
