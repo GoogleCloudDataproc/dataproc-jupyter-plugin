@@ -32,7 +32,7 @@ const regionListAPI = async (projectId: string) => {
   if (!credentials) {
     return [];
   }
-  const resp = await fetch(`${REGION_URL}${projectId}/regions`, {
+  const resp = await fetch(`${REGION_URL}/${projectId}/regions`, {
     method: 'GET',
     headers: {
       'Content-Type': API_HEADER_CONTENT_TYPE,
