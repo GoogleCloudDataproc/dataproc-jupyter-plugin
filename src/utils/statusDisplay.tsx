@@ -55,24 +55,24 @@ export const statusDisplay = (statusMsg: string) => {
 
   return (
     <div className="cluster-detail-status-parent">
-      {statusMsg === STATUS_CANCELLED && <iconStop.react tag="div" />}
-      {statusMsg === STATUS_RUNNING && <iconClusterRunning.react tag="div" />}
-      {statusMsg === STATUS_SUCCESS && <iconSucceeded.react tag="div" />}
-      {statusMsg === STATUS_FAIL && <iconClusterError.react tag="div" />}
+      {statusMsg === STATUS_CANCELLED && <iconStop.react tag="div" className='logo-alignment-style' />}
+      {statusMsg === STATUS_RUNNING && <iconClusterRunning.react tag="div" className='logo-alignment-style' />}
+      {statusMsg === STATUS_SUCCESS && <iconSucceeded.react tag="div" className='logo-alignment-style' />}
+      {statusMsg === STATUS_FAIL && <iconClusterError.react tag="div" className='logo-alignment-style' />}
       {(statusMsg === STATUS_PROVISIONING ||
         statusMsg === STATUS_CREATING ||
         statusMsg === STATUS_STARTING ||
         statusMsg === STATUS_STOPPING ||
         statusMsg === STATUS_PENDING ||
         statusMsg === STATUS_DELETING) && (
-        <ClipLoader
-          color="#8A8A8A"
-          loading={true}
-          size={15}
-          aria-label="Loading Spinner"
-          data-testid="loader"
-        />
-      )}
+          <ClipLoader
+            color="#8A8A8A"
+            loading={true}
+            size={15}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+        )}
       <div className="cluster-status">{statusMsg.toLowerCase()}</div>
     </div>
   );

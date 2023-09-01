@@ -43,7 +43,7 @@ interface IPaginationViewProps {
   pageIndex: number;
   allData: IBatch[] | ICluster[] | SessionTemplateDisplay[];
   previousPage: () => void;
-  nextPage:  () => void;
+  nextPage: () => void;
   canPreviousPage: boolean;
   canNextPage: boolean;
 }

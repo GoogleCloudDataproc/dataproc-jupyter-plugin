@@ -20,6 +20,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import 'semantic-ui-css/semantic.min.css';
 import 'react-toastify/dist/ReactToastify.css';
 import { Input, Select } from 'semantic-ui-react';
+import { MainAreaWidget } from '@jupyterlab/apputils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -34,15 +35,21 @@ import {
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
+import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
+import { AuthLogin } from '../login/authLogin';
 
 type Project = {
   projectId: string;
 };
+const iconLeftArrow = new LabIcon({
+  name: 'launcher:left-arrow-icon',
+  svgstr: LeftArrowIcon
+});
 
 type Cluster = {
   clusterName: string;
@@ -137,13 +144,13 @@ function CreateRunTime({
       { key: 'm', value: 'm', text: 'min' },
       { key: 's', value: 's', text: 'sec' }
     ];
-   
+
     setTimeList(timeData);
     updateLogic();
     projectListAPI();
     listClustersAPI();
     listNetworksAPI();
-  }, [selectedRuntimeClone, clusterSelected, defaultValue]);
+  }, []);
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
@@ -184,7 +191,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information');
+          toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
   };
@@ -199,15 +206,23 @@ function CreateRunTime({
         createTime,
         environmentConfig
       } = selectedRuntimeClone;
+      const displayName = jupyterSession?.displayName
+        ? jupyterSession.displayName
+        : '';
+      const runTimeID = name.split('/')[5] ? name.split('/')[5] : '';
+      const descriptionDetail = description ? description : '';
+      const versionDetail = runtimeConfig?.version
+        ? runtimeConfig.version
+        : '2.1';
 
-      setDisplayNameSelected(jupyterSession.displayName);
-       /*
+      setDisplayNameSelected(displayName);
+      /*
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
-      setRunTimeSelected(name.split('/')[5]);
-      setDescriptionSelected(description);
-      setVersionSelected(runtimeConfig.version);
+      setRunTimeSelected(runTimeID);
+      setDescriptionSelected(descriptionDetail);
+      setVersionSelected(versionDetail);
       setUserInfo(creator);
       setCreateTime(createTime);
 
@@ -261,6 +276,7 @@ function CreateRunTime({
               .slice(0, -1);
             setIdleTimeSelected(idleTtlInSecondsWithoutUnit);
           }
+
           if (executionConfig.hasOwnProperty('ttl')) {
             const ttlUnit = executionConfig.idleTtl.slice(-1); // Extracting the last character 's'
 
@@ -294,16 +310,51 @@ function CreateRunTime({
         ) {
           const dataprocCluster =
             peripheralsConfig.sparkHistoryServerConfig.dataprocCluster;
-            /*
+          /*
          Extracting clusterName from dataprocCluster
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{dataprocCluster}",
       */
           setClusterSelected(dataprocCluster.split('/')[5]);
         }
+        listNetworksFromSubNetworkAPI(executionConfig.subnetworkUri)
       }
     } else {
       displayUserInfo();
       setCreateTime(new Date().toISOString());
+    }
+  };
+  const listNetworksFromSubNetworkAPI = async (subnetwork: any) => {
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subnetwork}`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: any) => {
+              let transformedNetworkSelected = '';
+              transformedNetworkSelected = responseResult.network.split('/')[9];
+
+
+              setNetworkSelected(transformedNetworkSelected);
+              setSubNetworkSelected(subnetwork);
+              setDefaultValue(subnetwork);
+            })
+
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error selecting Network', err);
+        });
     }
   };
   const listClustersAPI = async () => {
@@ -398,6 +449,7 @@ function CreateRunTime({
         });
     }
   };
+
   type SubnetworkData = {
     subnetworks: string;
   };
@@ -626,17 +678,24 @@ function CreateRunTime({
   const handleServiceSelected = (event: any, data: any) => {
     setServicesSelected(data.value);
   };
-  const handleIdleSelected = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleIdleSelected = (event: any) => {
     const inputValue = event.target.value;
     const numericRegex = /^[0-9]*$/;
+    const inputValueHour = Number(inputValue) * 3600;
+    const inputValueMin = Number(inputValue) * 60;
+    if (timeSelected === 'h') {
+      setIdleTimeSelected(inputValueHour.toString());
+    } else if (timeSelected === 'm') {
+      setIdleTimeSelected(inputValueMin.toString());
+    } else {
+      setIdleTimeSelected(inputValue);
+    }
 
     if (numericRegex.test(inputValue) || inputValue === '') {
       setIdleValidation(false);
     } else {
       setIdleValidation(true);
     }
-
-    setIdleTimeSelected(inputValue);
   };
   const handletimeSelected = (event: any, data: any) => {
     setTimeSelected(data.value);
@@ -678,11 +737,10 @@ function CreateRunTime({
   };
   const handleCancelButton = () => {
     setOpenCreateTemplate(false);
-    // const content = new AuthLogin();
-    // const widget = new MainAreaWidget<AuthLogin>({ content });
-    // widget.title.label = 'Config Setup';
-    // //widget.title.icon = iconCluster;
-    // app.shell.add(widget, 'main');
+    const content = new AuthLogin();
+    const widget = new MainAreaWidget<AuthLogin>({ content });
+    widget.title.label = 'Config Setup';
+
   };
 
   const handleClusterSelected = (event: any, data: any) => {
@@ -721,7 +779,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully submitted`
+              `RuntimeTemplate ${displayNameSelected} successfully submitted`, toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -732,7 +790,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error Creating template', err);
-          toast.error('Failed to create the template');
+          toast.error('Failed to create the template', toastifyCustomStyle);
         });
     }
   };
@@ -755,7 +813,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully updated`
+              `RuntimeTemplate ${displayNameSelected} successfully updated`, toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -766,7 +824,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error updating template', err);
-          toast.error('Failed to update the template');
+          toast.error('Failed to update the template', toastifyCustomStyle);
         });
     }
   };
@@ -788,6 +846,11 @@ function CreateRunTime({
         const value = labelSplit[1];
         propertyObject[key] = value;
       });
+      const inputValueHour = Number(idleTimeSelected) * 3600;
+      const inputValueMin = Number(idleTimeSelected) * 60;
+      const inputValueHourAuto = Number(autoTimeSelected) * 3600;
+      const inputValueMinAuto = Number(autoTimeSelected) * 60;
+
       const payload = {
         name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
         description: desciptionSelected,
@@ -815,14 +878,33 @@ function CreateRunTime({
             ...(networkTagSelected.length > 0 && {
               networkTags: networkTagSelected
             }),
-            // ...(networkSelected && {networkUri:networkSelected}),
-            ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
 
-            ...(idleTimeSelected && {
-              idleTtl: idleTimeSelected + timeSelected
+            ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
+            ...(timeSelected === 'h' &&
+              idleTimeSelected && {
+              idleTtl: inputValueHour.toString() + 's'
             }),
-            ...(autoTimeSelected && {
-              ttl: autoTimeSelected + autoSelected
+            ...(timeSelected === 'm' &&
+              idleTimeSelected && {
+              idleTtl: inputValueMin.toString() + 's'
+            }),
+            ...(timeSelected === 's' &&
+              idleTimeSelected && {
+              idleTtl: idleTimeSelected + 's'
+            }),
+
+            ...(autoSelected === 'h' &&
+              autoTimeSelected && {
+              ttl: inputValueHourAuto.toString() + 's'
+            }),
+            ...(autoSelected === 'm' &&
+              autoTimeSelected && {
+              ttl: inputValueMinAuto.toString() + 's'
+            }),
+
+            ...(autoSelected === 's' &&
+              autoTimeSelected && {
+              ttl: autoTimeSelected + 's'
             })
           },
           peripheralsConfig: {
@@ -851,111 +933,150 @@ function CreateRunTime({
     <div>
       <div className="scroll-comp">
         <div className="cluster-details-header">
-          <div className="cluster-details-title">Basics</div>
+          <div
+            role="button"
+            className="back-arrow-icon"
+            onClick={handleCancelButton}
+          >
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+          </div>
+          <div className="cluster-details-title">
+            Serverless Runtime Template
+          </div>
         </div>
         <div className="submit-job-container">
           <form>
-            <div className="create-batches-message">Display name*</div>
-            <Input
-              className="create-batch-style "
-              value={displayNameSelected}
-              onChange={e => handleDisplayNameChange(e)}
-              type="text"
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="display-name">
+                Display name*
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={displayNameSelected}
+                onChange={e => handleDisplayNameChange(e)}
+                type="text"
+              />
+            </div>
             {displayNameValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Name is required</div>
               </div>
             )}
 
-            <div className="create-batches-message">Runtime ID*</div>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="runtime-id">
+                Runtime ID*
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={runTimeSelected}
+                onChange={e => handleInputChange(e)}
+                type="text"
+                disabled={selectedRuntimeClone !== undefined}
+              />
+            </div>
 
-            <Input
-              className="create-batch-style "
-              value={runTimeSelected}
-              onChange={e => handleInputChange(e)}
-              type="text"
-              disabled={selectedRuntimeClone !== undefined}
-            />
             {runTimeValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">ID is required</div>
               </div>
             )}
 
-            <div className="create-batches-message">Description*</div>
-            <Input
-              className="create-batch-style "
-              value={desciptionSelected}
-              onChange={e => handleDescriptionChange(e)}
-              type="text"
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="description">
+                Description*
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={desciptionSelected}
+                onChange={e => handleDescriptionChange(e)}
+                type="text"
+              />
+            </div>
+
             {descriptionValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Description is required</div>
               </div>
             )}
 
-            <div className="create-batches-message">Runtime version*</div>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="runtime-version">
+                Runtime version*
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={versionSelected}
+                onChange={e => handleVersionChange(e)}
+                type="text"
+              />
+            </div>
 
-            <Input
-              className="create-batch-style "
-              value={versionSelected}
-              onChange={e => handleVersionChange(e)}
-              type="text"
-            />
             {versionValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Version is required</div>
               </div>
             )}
             <div className="submit-job-label-header">Network Configuration</div>
-            <div className="create-batches-message">
+            <div className="runtime-message">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="create-batches-message">
-              Networks in this project
-            </div>
-            <div className="create-batch-network">
-              <div className="create-batch-network-message">
-                Primary network
-              </div>
-              <div className="create-batch-network-message">Subnetwork</div>
-            </div>
+            <div className="runtime-message">Networks in this project</div>
+
             <div>
               <div className="create-batch-network">
-                <Select
-                  search
-                  className="select-primary-network-style"
-                  value={networkSelected}
-                  onChange={handleNetworkChange}
-                  type="text"
-                  options={networkList}
-                />
+                <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="metastore-project"
+                  >
+                    Primary network
+                  </label>
+                  <Select
+                    className="project-region-select"
+                    search
+                    value={networkSelected}
+                    onChange={handleNetworkChange}
+                    type="text"
+                    options={networkList}
+                  />
+                </div>
 
-                <Select
-                  search
-                  className="select-sub-network-style"
-                  value={subNetworkSelected}
-                  onChange={handleSubNetworkChange}
-                  type="text"
-                  options={subNetworkList}
-                  placeholder={defaultValue}
-                />
+                <div className="select-text-overlay subnetwork-style">
+                  <label
+                    className="select-title-text"
+                    htmlFor="metastore-project"
+                  >
+                    Subnetwork
+                  </label>
+                  <Select
+                    className="project-region-select"
+                    search
+                    value={subNetworkSelected}
+                    onChange={handleSubNetworkChange}
+                    type="text"
+                    options={subNetworkList}
+                    placeholder={defaultValue}
+                  />
+                </div>
               </div>
             </div>
-            <div className="create-batches-message">Network tags</div>
-            <TagsInput
-              className="select-job-style"
-              onChange={e => setNetworkTagSelected(e)}
-              addOnBlur={true}
-              value={networkTagSelected}
-              inputProps={{ placeholder: '' }}
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="network-tags">
+                Network tags
+              </label>
+              <TagsInput
+                className="select-runtime-style"
+                onChange={e => setNetworkTagSelected(e)}
+                addOnBlur={true}
+                value={networkTagSelected}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
 
             <div className="create-messagelist">
               Network tags are text attributes you can add to make firewall
@@ -963,72 +1084,97 @@ function CreateRunTime({
             </div>
 
             <div className="submit-job-label-header">Metastore</div>
-            <div className="create-batches-message">Metastore project</div>
-            <Select
-              className="select-job-style"
-              search
-              selection
-              placeholder={projectId}
-              value={projectId}
-              onChange={handleProjectIdChange}
-              options={projectList}
-            />
-            <div className="create-batches-message">Metastore region</div>
-            {isLoadingRegion ? (
-              <ClipLoader
-                loading={true}
-                size={25}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            ) : (
-              <Select
-                className="select-job-style"
-                search
-                selection
-                placeholder={region}
-                value={region}
-                onChange={handleRegionChange}
-                options={regionList}
-              />
-            )}
 
-            <div className="create-batches-message">Metastore service</div>
-            {isLoadingService ? (
-              <ClipLoader
-                loading={true}
-                size={25}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            ) : (
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="metastore-project">
+                Metastore project
+              </label>
               <Select
-                className="select-job-style"
+                className="project-region-select"
                 search
                 selection
-                value={servicesSelected}
-                type="text"
-                options={servicesList}
-                onChange={handleServiceSelected}
-                placeholder={servicesSelected}
+                placeholder={projectId}
+                value={projectId}
+                onChange={handleProjectIdChange}
+                options={projectList}
               />
-            )}
-            <div className="single-line">
-              <div className="create-batches-subMessage">Max idle time</div>
             </div>
-            <div className="single-line">
-              <Input
-                className="runtimetemplate-max-idle"
-                value={idleTimeSelected}
-                onChange={e => handleIdleSelected(e)}
-                type="text"
-              />
 
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="metastore-region">
+                Metastore region
+              </label>
+              {isLoadingRegion ? (
+                <div className='metastore-loader'>
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
+                <Select
+                  className="project-region-select"
+                  search
+                  selection
+                  placeholder={region}
+                  value={region}
+                  onChange={handleRegionChange}
+                  options={regionList}
+                />
+              )}
+            </div>
+
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="metastore-service">
+                Metastore service
+              </label>
+              {isLoadingService ? (
+                <div className='metastore-loader'>
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
+                <Select
+                  className="project-region-select"
+                  search
+                  selection
+                  value={servicesSelected}
+                  type="text"
+                  options={servicesList}
+                  onChange={handleServiceSelected}
+                  placeholder={servicesSelected}
+                />
+              )}
+            </div>
+
+            {/* <div className="single-line">
+              <div className="create-batches-subMessage"></div>
+            </div> */}
+            <div className="single-line">
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="max-idle-time">
+                  Max idle time
+                </label>
+                <Input
+                  className="runtimetemplate-max-idle"
+                  value={idleTimeSelected}
+                  onChange={e => handleIdleSelected(e)}
+                  type="text"
+                />
+              </div>
               <Select
                 className="runtimetemplate-max-idle-select"
                 value={timeSelected}
                 onChange={handletimeSelected}
                 type="text"
+                search
+                selection
                 options={timeList}
               />
             </div>
@@ -1038,20 +1184,23 @@ function CreateRunTime({
             </div>
             {idleValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Only Numeric is allowed</div>
               </div>
             )}
+
             <div className="single-line">
-              <div className="create-batches-subMessage">Max session time</div>
-            </div>
-            <div className="single-line">
-              <Input
-                className="runtimetemplate-max-idle"
-                value={autoTimeSelected}
-                onChange={e => handleAutoTimeSelected(e)}
-                type="text"
-              />
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="max-session-time">
+                  Max session time
+                </label>
+                <Input
+                  className="runtimetemplate-max-idle"
+                  value={autoTimeSelected}
+                  onChange={e => handleAutoTimeSelected(e)}
+                  type="text"
+                />
+              </div>
 
               <Select
                 search
@@ -1068,20 +1217,25 @@ function CreateRunTime({
             </div>
             {autoValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Only Numeric is allowed</div>
               </div>
             )}
 
-            <div className="create-batches-message">
-              Python packages repository
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text"
+                htmlFor="python-packages-repository"
+              >
+                Python packages repository
+              </label>
+              <Input
+                className="create-runtime-style "
+                value={pythonRepositorySelected}
+                onChange={e => setPythonRepositorySelected(e.target.value)}
+                type="text"
+              />
             </div>
-            <Input
-              className="create-batch-style "
-              value={pythonRepositorySelected}
-              onChange={e => setPythonRepositorySelected(e.target.value)}
-              type="text"
-            />
             <div className="create-messagelist">
               Enter the URI for the repository to install Python packages. By
               default packages are installed to PyPI mirror on GCP.
@@ -1090,19 +1244,28 @@ function CreateRunTime({
             <div className="submit-job-label-header">
               Persistent Spark History Server
             </div>
+
             <div className="create-batches-message">
               Choose a history server cluster to store logs in.{' '}
             </div>
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text"
+                htmlFor="history-server-cluster"
+              >
+                History server cluster
+              </label>
 
-            <Select
-              className="select-job-style"
-              search
-              clearable
-              value={clusterSelected}
-              onChange={handleClusterSelected}
-              options={clustersList}
-              placeholder="History server cluster"
-            />
+              <Select
+                className="project-region-select"
+                search
+                clearable
+                value={clusterSelected}
+                onChange={handleClusterSelected}
+                options={clustersList}
+                placeholder=""
+              />
+            </div>
             <div className="submit-job-label-header">Spark Properties</div>
             <LabelProperties
               labelDetail={propertyDetail}

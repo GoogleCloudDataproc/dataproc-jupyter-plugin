@@ -21,11 +21,11 @@ import CreateRuntime from './createRunTime';
 import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
 import { JupyterLab } from '@jupyterlab/application';
 
-const RuntimeTemplateComponent  = ({ app }: { app: JupyterLab }): JSX.Element =>  {
+const RuntimeTemplateComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
- 
+
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
-  useState<SessionTemplate>();
+    useState<SessionTemplate>();
   useEffect(() => {
     setSelectedRuntimeClone(undefined);
   })
@@ -35,9 +35,9 @@ const RuntimeTemplateComponent  = ({ app }: { app: JupyterLab }): JSX.Element =>
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
-        
+
         />)}
-      
+
     </div>
   );
 };

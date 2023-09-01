@@ -71,6 +71,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
+
     const panel = new Panel();
     panel.id = 'dpms-tab';
     panel.title.icon = iconDpms;

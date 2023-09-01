@@ -4,6 +4,20 @@
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
+html,
+body,
+html * {
+  font-family: 'Roboto';
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: 'Roboto' !important;
+}
+
 /*Hiding Notebook section cards with name Remote for Remote kernels*/
 .jp-LauncherCard[data-category='Notebook'][title~='(Remote)'] {
   display: none;
@@ -15,7 +29,7 @@
 }
 
 /*Changing Icon for category with image pyspark*/
-.f1hgkb35 svg[data-icon="launcher:pyspark-logo-icon"] {
+.f1hgkb35 svg[data-icon='launcher:pyspark-logo-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -25,7 +39,7 @@
 }
 
 /*Changing Icon for category with image cluster*/
-.f1hgkb35 svg[data-icon="launcher:clusters-icon"] {
+.f1hgkb35 svg[data-icon='launcher:clusters-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -35,7 +49,7 @@
 }
 
 /*Changing Icon for category with image python*/
-.f1hgkb35 svg[data-icon="launcher:python-logo-icon"] {
+.f1hgkb35 svg[data-icon='launcher:python-logo-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -45,7 +59,7 @@
 }
 
 /*Changing Icon for category with image sparkR*/
-.f1hgkb35 svg[data-icon="launcher:sparkr-logo-icon"] {
+.f1hgkb35 svg[data-icon='launcher:sparkr-logo-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -55,7 +69,7 @@
 }
 
 /*Changing Icon for category with image scala*/
-.f1hgkb35 svg[data-icon="launcher:scala-logo-icon"] {
+.f1hgkb35 svg[data-icon='launcher:scala-logo-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -76,9 +90,18 @@ h2 {
 
 /* Highlight select dropdown field when focus */
 .ui.selection.active.dropdown:focus {
-  border: 3px solid #3367D6 !important;
-}
-.ui.selection.dropdown {
-  min-width:5em !important;
+  border: 3px solid #3367d6 !important;
 }
 
+.ui.search.dropdown.active>input.search:focus,
+.ui.search.dropdown.visible>input.search:focus {
+  left: 0px !important;
+  bottom: 0px !important;
+  cursor: auto;
+  border: 2px solid #3367d6 !important;
+  border-radius: 3px !important;
+}
+
+.ui.selection.dropdown {
+  min-width: 5em !important;
+}

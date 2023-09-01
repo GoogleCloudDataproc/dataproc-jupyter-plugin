@@ -46,11 +46,11 @@ import {
   STATUS_STOPPED,
   STATUS_STOPPING
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SubmitJob from '../jobs/submitJob';
 import PollingTimer from '../utils/pollingTimer';
@@ -196,7 +196,7 @@ function ClusterDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters Details', err);
-          toast.error(`Failed to fetch cluster details ${clusterSelected}`);
+          toast.error(`Failed to fetch cluster details ${clusterSelected}`, toastifyCustomStyle);
         });
     }
   };
@@ -223,9 +223,9 @@ function ClusterDetails({
             aria-disabled={clusterInfo.status.state !== STATUS_STOPPED}
           >
             {clusterInfo.status.state === STATUS_STOPPED ? (
-              <iconStartCluster.react tag="div" />
+              <iconStartCluster.react tag="div" className='logo-alignment-style' />
             ) : (
-              <iconStartClusterDisable.react tag="div" />
+              <iconStartClusterDisable.react tag="div" className='logo-alignment-style' />
             )}
           </div>
           <div className="action-cluster-text">START</div>
@@ -245,9 +245,9 @@ function ClusterDetails({
         >
           <div className="action-cluster-icon">
             {clusterInfo.status.state === STATUS_RUNNING ? (
-              <iconStopCluster.react tag="div" />
+              <iconStopCluster.react tag="div" className='logo-alignment-style' />
             ) : (
-              <iconStopClusterDisable.react tag="div" />
+              <iconStopClusterDisable.react tag="div" className='logo-alignment-style' />
             )}
           </div>
           <div className="action-cluster-text">STOP</div>
@@ -258,7 +258,7 @@ function ClusterDetails({
           onClick={() => handleDeleteCluster(clusterInfo.clusterName)}
         >
           <div className="action-cluster-icon">
-            <iconDeleteCluster.react tag="div" />
+            <iconDeleteCluster.react tag="div" className='logo-alignment-style' />
           </div>
           <div className="action-cluster-text">DELETE</div>
         </div>
@@ -285,10 +285,10 @@ function ClusterDetails({
             className="back-arrow-icon"
             onClick={() => handleDetailedView()}
           >
-            <iconLeftArrow.react tag="div" />
+            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
           </div>
           <div className="error-view-message-parent">
-            <iconError.react tag="div" />
+            <iconError.react tag="div" className='logo-alignment-style' />
             <div role="alert" className="error-view-message">
               Unable to find the resource you requested
             </div>
@@ -314,7 +314,6 @@ function ClusterDetails({
       )}
       {!submitJobView && (
         <div className="scroll-comp">
-          <ToastContainer />
           {!errorView && clusterInfo.clusterName !== '' ? (
             <div>
               {!detailedJobView && (
@@ -326,7 +325,7 @@ function ClusterDetails({
                       className="back-arrow-icon"
                       onClick={() => handleDetailedView()}
                     >
-                      <iconLeftArrow.react tag="div" />
+                      <iconLeftArrow.react tag="div" className='logo-alignment-style' />
                     </div>
                     <div className="cluster-details-title">Cluster details</div>
                     {clusterDetailsAction()}
@@ -363,29 +362,29 @@ function ClusterDetails({
                         aria-label={clusterInfo.status.state}
                       >
                         {clusterInfo.status.state === STATUS_RUNNING && (
-                          <iconClusterRunning.react tag="div" />
+                          <iconClusterRunning.react tag="div" className='logo-alignment-style' />
                         )}
                         {clusterInfo.status.state === STATUS_STOPPED && (
-                          <iconStop.react tag="div" />
+                          <iconStop.react tag="div" className='logo-alignment-style' />
                         )}
                         {clusterInfo.status.state === STATUS_ERROR && (
-                          <iconClusterError.react tag="div" />
+                          <iconClusterError.react tag="div" className='logo-alignment-style' />
                         )}
                         {(clusterInfo.status.state === STATUS_PROVISIONING ||
                           clusterInfo.status.state === STATUS_CREATING ||
                           clusterInfo.status.state === STATUS_STARTING ||
                           clusterInfo.status.state === STATUS_STOPPING ||
                           clusterInfo.status.state === STATUS_DELETING) && (
-                          <div>
-                            <ClipLoader
-                              color="#8A8A8A"
-                              loading={true}
-                              size={15}
-                              aria-label="Loading Spinner"
-                              data-testid="loader"
-                            />
-                          </div>
-                        )}
+                            <div>
+                              <ClipLoader
+                                color="#8A8A8A"
+                                loading={true}
+                                size={15}
+                                aria-label="Loading Spinner"
+                                data-testid="loader"
+                              />
+                            </div>
+                          )}
                         <div className="cluster-status">
                           {clusterInfo.status.state === STATUS_CREATING
                             ? STATUS_PROVISIONING

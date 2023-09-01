@@ -29,7 +29,7 @@ function TableData({
   tableDataCondition,
   fromPage
 }: any) {
-  const displayData = page ? page: rows
+  const displayData = page ? page : rows
   return (
     <table {...getTableProps()} className="clusters-list-table">
       <thead>

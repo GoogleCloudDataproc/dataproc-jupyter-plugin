@@ -1,16 +1,16 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto);
 
-.db-title{
-    width: 124px;
-    height: 28px;
-    font-size: 20px;
-    line-height: 28px;
-    font-weight: 600;
-    margin-top: 50px;
-    margin-left: 20px;
+.db-title {
+  width: 124px;
+  height: 28px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  margin-top: 50px;
+  margin-left: 20px;
 }
 
-.title-overlay{
+.title-overlay {
   height: 37px;
   display: flex;
   flex-direction: row;
@@ -21,33 +21,37 @@
   font-size: 15px;
   font-weight: 600;
 }
+
 .tr-row-even {
-    background-color: #F5F5F5;
-  }
-  
-  .tr-row-odd {
-    background-color: white;
-  }
-  .db-table {
-    width: 100%;
-    border-collapse: collapse; 
-  }
-  
-  .db-table td {
-    padding-left: 10px;
-    height: 29px;
-    width: 10px;
-    font-size: 13px;
-    line-height: 20px;
-  }
-  .table-container {
-    width: 100%;
-    overflow-y: auto;
-    margin-top: 25px;
-    margin-left: 20px;
-    padding-right: 30px;
-    display: flex;
-  }
+  background-color: #F5F5F5;
+}
+
+.tr-row-odd {
+  background-color: white;
+}
+
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.db-table td {
+  padding-left: 10px;
+  height: 29px;
+  width: 10px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.table-container {
+  width: 100%;
+  overflow-y: auto;
+  margin-top: 25px;
+  margin-left: 20px;
+  padding-right: 30px;
+  display: flex;
+}
+
 .db-table td:nth-child(2) {
   width: 70%;
 }
@@ -57,33 +61,37 @@
   text-align: left;
   background-color: #F5F5F5;
 }
- .schema-td {
+
+.schema-td {
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
+
 .schema-table {
   width: 50%;
   border-collapse: collapse;
 }
 
 .schema-table td {
-  padding-left: 10px; 
+  padding-left: 10px;
   height: 29px;
   font-size: 13px;
   line-height: 18px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
+
 .schema-table th {
   padding-left: 10px;
   text-align: left;
   background-color: #F5F5F5;
   line-height: 30px;
 }
+
 .bold-column {
-  font-weight: 700; 
-}
-.table-info-overlay{
-  max-height: 100%;
-overflow-y: auto;
-overflow-x: hidden;
+  font-weight: 700;
 }
 
+.table-info-overlay {
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}

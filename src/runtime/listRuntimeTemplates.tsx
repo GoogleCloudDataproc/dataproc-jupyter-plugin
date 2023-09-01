@@ -28,9 +28,14 @@ import {
   BASE_URL
 } from '../utils/const';
 import TableData from '../utils/tableData';
-import { ICellProps, authApi, jobTimeFormat } from '../utils/utils';
+import {
+  ICellProps,
+  authApi,
+  jobTimeFormat,
+  toastifyCustomStyle
+} from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
 import { PaginationView } from '../utils/paginationView';
@@ -233,7 +238,7 @@ function ListRuntimeTemplates({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing runtime templates', err);
-          toast.error('Failed to fetch runtime templates');
+          toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
         });
     }
   };
@@ -307,7 +312,7 @@ function ListRuntimeTemplates({
             )
           }
         >
-          <iconDelete.react tag="div" />
+          <iconDelete.react tag="div" className="logo-alignment-style" />
         </div>
       </div>
     );
@@ -357,7 +362,6 @@ function ListRuntimeTemplates({
 
   return (
     <div className="list-runtime-template-wrapper">
-      <ToastContainer />
       {deletePopupOpen && (
         <DeletePopup
           onCancel={() => handleCancelDelete()}
@@ -370,24 +374,24 @@ function ListRuntimeTemplates({
           }
         />
       )}
+      <div className="create-runtime-button-wrapper">
+        <div
+          className="create-runtime-overlay"
+          onClick={() => {
+            handleCreateBatchOpen();
+          }}
+        >
+          <div className="create-cluster-icon">
+            <iconSubmitJob.react tag="div" className="logo-alignment-style" />
+          </div>
+          <div className="create-cluster-text">Create</div>
+        </div>
+      </div>
       {runtimeTemplateslist.length > 0 && !openCreateTemplate ? (
         <div>
-          <div className="create-runtime-button-wrapper">
-            <div
-              className="create-runtime-overlay"
-              onClick={() => {
-                handleCreateBatchOpen();
-              }}
-            >
-              <div className="create-cluster-icon">
-                <iconSubmitJob.react tag="div" />
-              </div>
-              <div className="create-cluster-text">Create</div>
-            </div>
-          </div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" />
+              <iconFilter.react tag="div" className="logo-alignment-style" />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

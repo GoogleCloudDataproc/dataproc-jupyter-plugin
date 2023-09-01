@@ -1,4 +1,5 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto);
+
 .cluster-details-value-job {
   font-style: normal;
   font-weight: 400;
@@ -29,6 +30,7 @@
 .edit-input-style {
   margin-right: 20px;
   width: 90%;
+  height: 36px;
 }
 
 .key-message-wrapper {
@@ -40,7 +42,7 @@
   font-weight: 400;
   font-size: 13px;
   line-height: 18px;
-  width: 50%;
+  width: 512px;
   color: rgba(0, 0, 0, 0.66);
   padding: 10px;
 }
@@ -106,6 +108,7 @@
   border-radius: 4px;
   font-weight: 600;
 }
+
 .job-cancel-button-style:hover {
   background-color: #d3d3d3;
 }
@@ -242,6 +245,7 @@
   height: 49vh;
   overflow: auto;
 }
+
 .job-details-label-row {
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   display: flex;
