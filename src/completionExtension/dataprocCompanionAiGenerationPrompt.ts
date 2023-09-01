@@ -1,6 +1,6 @@
 import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 
-export async function generatePrompt(
+export async function generatePromptWithKernel(
   userPrompt: string,
   kernel: IKernelConnection | null | undefined
 ): Promise<string> {
@@ -31,9 +31,19 @@ export async function generatePrompt(
 
       return `${schemaDescriptions.join(
         '\n'
-      )}\n. Write Python code that generates ${sanitizedPrompt}`;
+      )}\n. Generate python .ipynb code that generates ${sanitizedPrompt}.  `;
     }
   }
   console.error('failed to extract dataframe schema for Duet AI');
-  return `Write pyspark code that generates ${sanitizedPrompt}`;
+  return `Generate python .ipynb code that generates ${sanitizedPrompt}.  `;
+}
+
+export async function generatePrompt(
+  filePath: string,
+  prevCellContext: string[],
+  prompt: string
+): Promise<string> {
+  return `Write python code to generate ${prompt}.  This code will be added to ${filePath}.  The previous cell's code and output is provided in markup below: \n ${prevCellContext.join(
+    '\n\n'
+  )}`;
 }

@@ -5,7 +5,7 @@ import {
   ICompletionContext
 } from '@jupyterlab/completer';
 import { DataprocCompanionAiFetcherService } from './dataprocCompanionAiFetcherService';
-import { generatePrompt } from './dataprocCompanionAiGenerationPrompt';
+import { generatePromptWithKernel } from './dataprocCompanionAiGenerationPrompt';
 
 export class DataprocCompanionAiCompletionProvider
   implements ICompletionProvider
@@ -46,7 +46,7 @@ export class DataprocCompanionAiCompletionProvider
     ) {
       const promptPieces = firstComment.value.split(this.genPrefix);
       const kernel = context.session?.kernel;
-      const prompt = await generatePrompt(
+      const prompt = await generatePromptWithKernel(
         promptPieces.at(1)?.trim() ?? '',
         kernel
       );
