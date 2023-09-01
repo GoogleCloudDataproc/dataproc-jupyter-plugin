@@ -171,10 +171,20 @@ function ListBatches({
         <td {...cell.getCellProps()} className="clusters-table-data">
           <div key="Status" className="cluster-status-parent">
             {cell.value === STATUS_RUNNING && (
-              <iconClusterRunning.react tag="div" />
+              <iconClusterRunning.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             )}
-            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" />}
-            {cell.value === STATUS_SUCCESS && <iconSucceeded.react tag="div" />}
+            {cell.value === STATUS_FAIL && (
+              <iconClusterError.react
+                tag="div"
+                className="logo-alignment-style"
+              />
+            )}
+            {cell.value === STATUS_SUCCESS && (
+              <iconSucceeded.react tag="div" className="logo-alignment-style" />
+            )}
             {(cell.value === STATUS_PROVISIONING ||
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
@@ -204,24 +214,23 @@ function ListBatches({
 
   return (
     <div>
+      <div
+        className="create-batch-overlay"
+        onClick={() => {
+          handleCreateBatchOpen();
+        }}
+      >
+        <div className="create-cluster-icon">
+          <iconSubmitJob.react tag="div" className="logo-alignment-style" />
+        </div>
+        <div className="create-cluster-text">Create Batch</div>
+      </div>
       {batchesList.length > 0 && !createBatchView ? (
         <div>
-          <div className="batch-header-part">
-            <div
-              className="create-batch-overlay"
-              onClick={() => {
-                handleCreateBatchOpen();
-              }}
-            >
-              <div className="create-cluster-icon">
-                <iconSubmitJob.react tag="div" />
-              </div>
-              <div className="create-cluster-text">Create Batch</div>
-            </div>
-          </div>
+          <div className="batch-header-part"></div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" />
+              <iconFilter.react tag="div" className="logo-alignment-style" />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

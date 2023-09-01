@@ -43,10 +43,10 @@ import {
   SUBNETWORK_KEY,
   SUBNETWORK_LABEL
 } from '../utils/const';
-import { authApi, elapsedTime, jobTimeFormat } from '../utils/utils';
+import { authApi, elapsedTime, jobTimeFormat, toastifyCustomStyle } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
 import PollingTimer from '../utils/pollingTimer';
@@ -152,7 +152,7 @@ function SessionDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error loading session details', err);
-          toast.error(`Failed to fetch session details ${sessionSelected}`);
+          toast.error(`Failed to fetch session details ${sessionSelected}`,toastifyCustomStyle);
         });
     }
   };
@@ -192,7 +192,6 @@ function SessionDetails({
 
   return (
     <div>
-      <ToastContainer />
       {sessionInfo.name !== '' ? (
         <div className="scroll-comp">
           {detailedSessionView && (
@@ -203,7 +202,7 @@ function SessionDetails({
                   className="back-arrow-icon"
                   onClick={() => handleDetailedView()}
                 >
-                  <iconLeftArrow.react tag="div" />
+                  <iconLeftArrow.react tag="div" className='logo-alignment-style' />
                 </div>
                 <div className="cluster-details-title">Session details</div>
                 <div
@@ -220,9 +219,9 @@ function SessionDetails({
                 >
                   <div className="action-cluster-icon">
                     {sessionInfo.state === STATUS_ACTIVE ? (
-                      <iconStopCluster.react tag="div" />
+                      <iconStopCluster.react tag="div" className='logo-alignment-style' />
                     ) : (
-                      <iconStopClusterDisable.react tag="div" />
+                      <iconStopClusterDisable.react tag="div" className='logo-alignment-style' />
                     )}
                   </div>
                   <div className="action-cluster-text">TERMINATE</div>
@@ -247,16 +246,16 @@ function SessionDetails({
                   <div className="cluster-details-label">Status</div>
                   <div className="session-detail-status-parent">
                     {sessionInfo.state === STATUS_ACTIVE && (
-                      <iconSucceeded.react tag="div" />
+                      <iconSucceeded.react tag="div" className='logo-alignment-style' />
                     )}
                     {sessionInfo.state === STATUS_TERMINATED && (
-                      <iconSucceeded.react tag="div" />
+                      <iconSucceeded.react tag="div" className='logo-alignment-style' />
                     )}
                     {sessionInfo.state === STATUS_ERROR && (
-                      <iconClusterError.react tag="div" />
+                      <iconClusterError.react tag="div" className='logo-alignment-style' />
                     )}
                     {sessionInfo.state === STATUS_FAIL && (
-                      <iconClusterError.react tag="div" />
+                      <iconClusterError.react tag="div" className='logo-alignment-style' />
                     )}
                     {(sessionInfo.state === STATUS_PROVISIONING ||
                       sessionInfo.state === STATUS_CREATING ||

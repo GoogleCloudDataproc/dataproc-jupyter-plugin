@@ -206,16 +206,16 @@ function LabelProperties({
                       defaultValue={labelSplit[0]}
                     />
 
-                    {labelDetailUpdated[index].split(':')[0] === '' ? (
+                    {labelDetailUpdated[index].split(':')[0] === '' && labelDetailUpdated[index] !== '' ? (
                       <div role="alert" className="error-key-parent">
-                        <iconError.react tag="div" />
+                        <iconError.react tag="div" className='logo-alignment-style' />
                         <div className="error-key-missing">key is required</div>
                       </div>
                     ) : (
                       keyValidation === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react tag="div" className='logo-alignment-style' />
                           <div className="error-key-missing">
                             Only hyphens (-), underscores (_), lowercase
                             characters, and numbers are allowed. Keys must start
@@ -228,7 +228,7 @@ function LabelProperties({
                     {duplicateKeyError === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react tag="div" className='logo-alignment-style' />
                           <div className="error-key-missing">
                             The key is already present
                           </div>
@@ -252,7 +252,7 @@ function LabelProperties({
                     {valueValidation === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react tag="div" className='logo-alignment-style' />
                           <div className="error-key-missing">
                             Only hyphens (-), underscores (_), lowercase
                             characters, and numbers are allowed. International
@@ -281,7 +281,7 @@ function LabelProperties({
                       }
                     }}
                   >
-                    <iconDelete.react tag="div" />
+                    <iconDelete.react tag="div" className='logo-alignment-style' />
                   </div>
                   <></>
                 </div>
@@ -299,9 +299,9 @@ function LabelProperties({
         >
           {labelDetail.length === 0 ||
           labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
-            <iconPlus.react tag="div" />
+            <iconPlus.react tag="div" className='logo-alignment-style' />
           ) : (
-            <iconPlusDisable.react tag="div" />
+            <iconPlusDisable.react tag="div" className='logo-alignment-style' />
           )}
           <div
             className={

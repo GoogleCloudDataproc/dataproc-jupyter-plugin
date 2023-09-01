@@ -86,6 +86,12 @@
   padding-right: 5px;
 }
 
+.icon-buttons-style-delete-batch {
+  cursor: pointer;
+  padding-right: 5px;
+  padding-left: 15px;
+}
+
 .icon-buttons-style-disable{
   /* cursor: not-allowed; */
   padding-right: 5px;

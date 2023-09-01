@@ -45,11 +45,12 @@ import {
   ICellProps,
   authApi,
   elapsedTime,
-  jobTimeFormat
+  jobTimeFormat,
+  toastifyCustomStyle
 } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
 import { PaginationView } from '../utils/paginationView';
@@ -218,7 +219,7 @@ function ListSessions() {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing Sessions', err);
-          toast.error('Failed to fetch sessions');
+          toast.error('Failed to fetch sessions',toastifyCustomStyle);
         });
     }
   };
@@ -293,9 +294,9 @@ function ListSessions() {
           }
         >
           {data.state === ClusterStatus.STATUS_ACTIVE ? (
-            <iconStop.react tag="div" />
+            <iconStop.react tag="div" className='logo-alignment-style' />
           ) : (
-            <iconStopDisable.react tag="div" />
+            <iconStopDisable.react tag="div" className='logo-alignment-style' />
           )}
         </div>
         <div
@@ -304,7 +305,7 @@ function ListSessions() {
           title="Delete Session"
           onClick={() => handleDeleteSession(sessionValue)}
         >
-          <iconDelete.react tag="div" />
+          <iconDelete.react tag="div" className='logo-alignment-style' />
         </div>
       </div>
     );
@@ -332,11 +333,11 @@ function ListSessions() {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           <div key="Status" className="cluster-status-parent">
-            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" />}
+            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" className='logo-alignment-style' />}
             {cell.value === STATUS_TERMINATED && (
-              <iconSucceeded.react tag="div" />
+              <iconSucceeded.react tag="div" className='logo-alignment-style' />
             )}
-            {cell.value === STATUS_ACTIVE && <iconSucceeded.react tag="div" />}
+            {cell.value === STATUS_ACTIVE && <iconSucceeded.react tag="div" className='logo-alignment-style' />}
             {(cell.value === STATUS_PROVISIONING ||
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
@@ -367,7 +368,6 @@ function ListSessions() {
 
   return (
     <div>
-      <ToastContainer />
       {deletePopupOpen && (
         <DeletePopup
           onCancel={() => handleCancelDelete()}
@@ -391,7 +391,7 @@ function ListSessions() {
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" />
+              <iconFilter.react tag="div" className='logo-alignment-style' />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

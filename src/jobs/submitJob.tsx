@@ -21,7 +21,7 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { Input, Select } from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
 import LabelProperties from './labelProperties';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
 import {
@@ -39,7 +39,7 @@ import {
   STATUS_RUNNING
 } from '../utils/const';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const iconLeftArrow = new LabIcon({
@@ -613,7 +613,7 @@ function SubmitJob(
               .json()
               .then((responseResult: any) => {
                 console.log(responseResult);
-                toast.success(`Job ${jobIdSelected} successfully submitted`);
+                toast.success(`Job ${jobIdSelected} successfully submitted`,toastifyCustomStyle);
               })
               .catch((e: any) => {
                 console.log(e);
@@ -624,7 +624,7 @@ function SubmitJob(
         })
         .catch((err: any) => {
           console.error('Error submitting job', err);
-          toast.error('Failed to submit the job');
+          toast.error('Failed to submit the job',toastifyCustomStyle);
         });
     }
   };
@@ -682,15 +682,13 @@ function SubmitJob(
             className="back-arrow-icon"
             onClick={() => handleSubmitJobBackView()}
           >
-            <iconLeftArrow.react tag="div" />
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
           </div>
           <div className="cluster-details-title">Submit a job</div>
         </div>
         <div className="submit-job-container">
           <div className="submit-job-label-header">Cluster</div>
-          <div className="submit-job-cluster-message">
-            Choose a cluster to run your job in.
-          </div>
+
           {clusterList.length === 0 ? (
             <Input
               className="input-style"
@@ -698,72 +696,99 @@ function SubmitJob(
               readOnly
             />
           ) : (
-            <Select
-              search
-              placeholder="Cluster*"
-              onChange={handleClusterSelected}
-              className="select-job-style"
-              options={clusterList}
-              value={clusterSelected}
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="metastore-project">
+                Choose a cluster to run your job in.
+              </label>
+              <Select
+                className="project-region-select"
+                search
+                placeholder="Cluster*"
+                onChange={handleClusterSelected}
+                options={clusterList}
+                value={clusterSelected}
+              />
+            </div>
           )}
           <div className="submit-job-label-header">Job</div>
-          <div className="submit-job-cluster-message">Job ID*</div>
-          <Input
-            className="input-style"
-            onChange={e => handleInputChange(e)}
-            type="text"
-            value={hexNumber}
-          />
+          <div className="select-text-overlay">
+            <label className="select-title-text" htmlFor="job-id">
+              Job ID*
+            </label>
+            <Input
+              className="submit-job-input-style"
+              onChange={e => handleInputChange(e)}
+              type="text"
+              value={hexNumber}
+            />
+          </div>
+
           {!jobIdValidation && (
             <div className="error-key-parent">
-              <iconError.react tag="div" />
+              <iconError.react tag="div" className="logo-alignment-style" />
               <div className="error-key-missing">ID is required</div>
             </div>
           )}
-          <div className="submit-job-cluster-message">Job type*</div>
 
-          <Select
-            search
-            onChange={handleJobTypeSelected}
-            className="select-job-style"
-            options={jobTypeList}
-            value={jobTypeSelected}
-          />
+          <div className="select-text-overlay">
+            <label className="select-title-text" htmlFor="metastore-project">
+              Job type*
+            </label>
+            <Select
+              className="project-region-select"
+              search
+              onChange={handleJobTypeSelected}
+              options={jobTypeList}
+              value={jobTypeSelected}
+            />
+          </div>
 
           {jobTypeSelected === 'sparkSql' && (
             <>
-              <div className="submit-job-cluster-message">
-                Query source type*
+              <div className="select-text-overlay">
+                <label
+                  className="select-title-text"
+                  htmlFor="metastore-project"
+                >
+                  Query source type*
+                </label>
+                <Select
+                  className="project-region-select"
+                  search
+                  onChange={handleQuerySourceTypeSelected}
+                  options={querySourceTypeList}
+                  value={querySourceSelected}
+                />
               </div>
-              <Select
-                search
-                onChange={handleQuerySourceTypeSelected}
-                className="select-job-style"
-                options={querySourceTypeList}
-                value={querySourceSelected}
-              />
             </>
           )}
           {querySourceSelected === 'queryFile' &&
             jobTypeSelected === 'sparkSql' && (
               <>
-                <div className="submit-job-cluster-message">Query file*</div>
-                <Input
-                  className="input-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setQueryFileSelected,
-                      setQueryFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={queryFileSelected}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="query-file">
+                    Query file*
+                  </label>
+                  <Input
+                    className="submit-job-input-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e.target.value,
+                        setQueryFileSelected,
+                        setQueryFileValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={queryFileSelected}
+                  />
+                </div>
+
                 {!queryFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -778,36 +803,47 @@ function SubmitJob(
           {querySourceSelected === 'queryText' &&
             jobTypeSelected === 'sparkSql' && (
               <>
-                <div className="submit-job-cluster-message">Query text*</div>
-                <Input
-                  className="input-style"
-                  onChange={e => setQueryTextSelected(e.target.value)}
-                  value={queryTextSelected}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="query-text">
+                    Query text*
+                  </label>
+                  <Input
+                    className="submit-job-input-style"
+                    onChange={e => setQueryTextSelected(e.target.value)}
+                    value={queryTextSelected}
+                  />
+                </div>
+
                 <div className="submit-job-message">The query to execute</div>
               </>
             )}
           {jobTypeSelected === 'spark' && (
             <>
-              <div className="submit-job-cluster-message">
-                Main class or jar*
+              <div className="select-text-overlay">
+                <label
+                  className="select-title-text"
+                  htmlFor="main-class-or-jar"
+                >
+                  Main class or jar*
+                </label>
+                <Input
+                  className="submit-job-input-style"
+                  onChange={e =>
+                    handleValidationFiles(
+                      e.target.value,
+                      setMainClassSelected,
+                      setMainClassValidation
+                    )
+                  }
+                  onBlur={() => setMainClassActive(true)}
+                  addOnBlur={true}
+                  value={mainClassSelected}
+                />
               </div>
-              <Input
-                className="input-style"
-                onChange={e =>
-                  handleValidationFiles(
-                    e.target.value,
-                    setMainClassSelected,
-                    setMainClassValidation
-                  )
-                }
-                onBlur={() => setMainClassActive(true)}
-                addOnBlur={true}
-                value={mainClassSelected}
-              />
+
               {mainClassSelected === '' && mainClassActive && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     Main class or jar is required
                   </div>
@@ -820,22 +856,27 @@ function SubmitJob(
           )}
           {jobTypeSelected === 'sparkR' && (
             <>
-              <div className="submit-job-cluster-message">Main R file*</div>
-              <Input
-                className="input-style"
-                onChange={e =>
-                  handleValidationFiles(
-                    e.target.value,
-                    setMainRSelected,
-                    setMainRValidation
-                  )
-                }
-                addOnBlur={true}
-                value={mainRSelected}
-              />
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="main-r-file">
+                  Main R file*
+                </label>
+                <Input
+                  className="submit-job-input-style"
+                  onChange={e =>
+                    handleValidationFiles(
+                      e.target.value,
+                      setMainRSelected,
+                      setMainRValidation
+                    )
+                  }
+                  addOnBlur={true}
+                  value={mainRSelected}
+                />
+              </div>
+
               {!mainRValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     File must include a valid scheme prefix: 'file://', 'gs://',
                     or 'hdfs://'
@@ -849,24 +890,27 @@ function SubmitJob(
           )}
           {jobTypeSelected === 'pySpark' && (
             <>
-              <div className="submit-job-cluster-message">
-                Main Python file*
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="main-python-file">
+                  Main Python file*
+                </label>
+                <Input
+                  className="submit-job-input-style"
+                  onChange={e =>
+                    handleValidationFiles(
+                      e.target.value,
+                      setMainPythonSelected,
+                      setMainPythonValidation
+                    )
+                  }
+                  addOnBlur={true}
+                  value={mainPythonSelected}
+                />
               </div>
-              <Input
-                className="input-style"
-                onChange={e =>
-                  handleValidationFiles(
-                    e.target.value,
-                    setMainPythonSelected,
-                    setMainPythonValidation
-                  )
-                }
-                addOnBlur={true}
-                value={mainPythonSelected}
-              />
+
               {!mainPythonValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     File must include a valid scheme prefix: 'file://', 'gs://',
                     or 'hdfs://'
@@ -880,25 +924,30 @@ function SubmitJob(
           )}
           {jobTypeSelected === 'pySpark' && (
             <>
-              <div className="submit-job-cluster-message">
-                Additional python files
+              <div className="select-text-overlay">
+                <label
+                  className="select-title-text"
+                  htmlFor="additional-python-files"
+                >
+                  Additional python files
+                </label>
+                <TagsInput
+                  className="select-job-style"
+                  onChange={e =>
+                    handleValidationFiles(
+                      e,
+                      setAdditionalPythonFileSelected,
+                      setAdditionalPythonFileValidation
+                    )
+                  }
+                  addOnBlur={true}
+                  value={additionalPythonFileSelected}
+                  inputProps={{ placeholder: '' }}
+                />
               </div>
-              <TagsInput
-                className="select-job-style"
-                onChange={e =>
-                  handleValidationFiles(
-                    e,
-                    setAdditionalPythonFileSelected,
-                    setAdditionalPythonFileValidation
-                  )
-                }
-                addOnBlur={true}
-                value={additionalPythonFileSelected}
-                inputProps={{ placeholder: '' }}
-              />
               {!additionalPythonFileValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
@@ -909,23 +958,27 @@ function SubmitJob(
           )}
           {jobTypeSelected !== 'sparkR' && (
             <>
-              <div className="submit-job-cluster-message">Jar files</div>
-              <TagsInput
-                className="select-job-style"
-                onChange={e =>
-                  handleValidationFiles(
-                    e,
-                    setJarFileSelected,
-                    setJarFileValidation
-                  )
-                }
-                addOnBlur={true}
-                value={jarFileSelected}
-                inputProps={{ placeholder: '' }}
-              />
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="jar-files">
+                  Jar files
+                </label>
+                <TagsInput
+                  className="select-job-style"
+                  onChange={e =>
+                    handleValidationFiles(
+                      e,
+                      setJarFileSelected,
+                      setJarFileValidation
+                    )
+                  }
+                  addOnBlur={true}
+                  value={jarFileSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+              </div>
               {!jarFileValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
@@ -939,19 +992,23 @@ function SubmitJob(
           )}
           {jobTypeSelected !== 'sparkSql' && (
             <>
-              <div className="submit-job-cluster-message">Files</div>
-              <TagsInput
-                className="select-job-style"
-                onChange={e =>
-                  handleValidationFiles(e, setFileSelected, setFileValidation)
-                }
-                addOnBlur={true}
-                value={fileSelected}
-                inputProps={{ placeholder: '' }}
-              />
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="files">
+                  Files
+                </label>
+                <TagsInput
+                  className="select-job-style"
+                  onChange={e =>
+                    handleValidationFiles(e, setFileSelected, setFileValidation)
+                  }
+                  addOnBlur={true}
+                  value={fileSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+              </div>
               {!fileValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
@@ -965,23 +1022,27 @@ function SubmitJob(
           )}
           {(jobTypeSelected === 'spark' || jobTypeSelected === 'pySpark') && (
             <>
-              <div className="submit-job-cluster-message">Archive files</div>
-              <TagsInput
-                className="select-job-style"
-                onChange={e =>
-                  handleValidationFiles(
-                    e,
-                    setArchieveFileSelected,
-                    setArchieveFileValidation
-                  )
-                }
-                addOnBlur={true}
-                value={archieveFileSelected}
-                inputProps={{ placeholder: '' }}
-              />
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="archive-files">
+                  Archive files
+                </label>
+                <TagsInput
+                  className="select-job-style"
+                  onChange={e =>
+                    handleValidationFiles(
+                      e,
+                      setArchieveFileSelected,
+                      setArchieveFileValidation
+                    )
+                  }
+                  addOnBlur={true}
+                  value={archieveFileSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+              </div>
               {!archieveFileValidation && (
                 <div className="error-key-parent">
-                  <iconError.react tag="div" />
+                  <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
@@ -997,13 +1058,17 @@ function SubmitJob(
           )}
           {jobTypeSelected !== 'sparkSql' && (
             <>
-              <div className="submit-job-cluster-message">Arguments</div>
-              <TagsInput
-                className="select-job-style"
-                onChange={e => setArgumentSelected(e)}
-                value={argumentSelected}
-                inputProps={{ placeholder: '' }}
-              />
+              <div className="select-text-overlay">
+                <label className="select-title-text" htmlFor="arguments">
+                  Arguments
+                </label>
+                <TagsInput
+                  className="select-job-style"
+                  onChange={e => setArgumentSelected(e)}
+                  value={argumentSelected}
+                  inputProps={{ placeholder: '' }}
+                />
+              </div>
               <div className="submit-job-message">{ARGUMENTS_MESSAGE}</div>
             </>
           )}
@@ -1027,14 +1092,20 @@ function SubmitJob(
                 />
               </>
             )}
-          <div className="submit-job-cluster-message">
-            Max restarts per hour
+          <div className="select-text-overlay">
+            <label
+              className="select-title-text"
+              htmlFor="max-restarts-per-hour"
+            >
+              Max restarts per hour
+            </label>
+            <Input
+              className="submit-job-input-style"
+              onChange={e => setMaxRestartSelected(e.target.value)}
+              value={maxRestartSelected}
+            />
           </div>
-          <Input
-            className="input-style"
-            onChange={e => setMaxRestartSelected(e.target.value)}
-            value={maxRestartSelected}
-          />
+
           <div className="submit-job-message-with-link">
             {MAX_RESTART_MESSAGE}
             <div
@@ -1105,7 +1176,6 @@ function SubmitJob(
               </div>
             </div>
           </div>
-          <ToastContainer />
         </div>
       </div>
     </div>

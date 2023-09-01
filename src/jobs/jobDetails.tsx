@@ -42,7 +42,8 @@ import {
   jobTypeDisplay,
   jobTypeValue,
   jobTypeValueArguments,
-  statusMessage
+  statusMessage,
+  toastifyCustomStyle
 } from '../utils/utils';
 
 import ClusterDetails from '../cluster/clusterDetails';
@@ -50,7 +51,7 @@ import { ClipLoader } from 'react-spinners';
 import LabelProperties from './labelProperties';
 import SubmitJob from './submitJob';
 import ViewLogs from '../utils/viewLogs';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
@@ -251,14 +252,14 @@ function JobDetails({
           response
             .json()
             .then((responseResultJob: Response) => {
-              toast.success(`Request to update job ${jobSelected} submitted`);
+              toast.success(`Request to update job ${jobSelected} submitted`,toastifyCustomStyle);
               console.log(responseResultJob);
             })
             .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
           console.error('Error in updating job', err);
-          toast.error(`Failed to update the job ${jobSelected}`);
+          toast.error(`Failed to update the job ${jobSelected}`,toastifyCustomStyle);
         });
     }
   };
@@ -326,7 +327,7 @@ function JobDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting job details', err);
-          toast.error(`Failed to fetch job details ${jobSelected}`);
+          toast.error(`Failed to fetch job details ${jobSelected}`,toastifyCustomStyle);
         });
     }
   };
@@ -382,10 +383,10 @@ function JobDetails({
             className="back-arrow-icon"
             onClick={() => setErrorView(false)}
           >
-            <iconLeftArrow.react tag="div" />
+            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
           </div>
           <div className="error-view-message-parent">
-            <iconError.react tag="div" />
+            <iconError.react tag="div" className='logo-alignment-style' />
             <div className="error-view-message">
               Unable to find the resource you requested
             </div>
@@ -433,7 +434,7 @@ function JobDetails({
                   aria-label="Delete Job"
                   onClick={() => handleDetailedJobView()}
                 >
-                  <iconLeftArrow.react tag="div" />
+                  <iconLeftArrow.react tag="div" className='logo-alignment-style' />
                 </div>
                 <div className="cluster-details-title">Job details</div>
                 <div
@@ -442,7 +443,7 @@ function JobDetails({
                   onClick={() => handleCloneJob()}
                 >
                   <div className="action-cluster-icon">
-                    <iconCloneJob.react tag="div" />
+                    <iconCloneJob.react tag="div" className='logo-alignment-style' />
                   </div>
                   <div className="action-cluster-text">CLONE</div>
                 </div>
@@ -457,9 +458,9 @@ function JobDetails({
                 >
                   <div className="action-cluster-icon">
                     {jobInfo.status.state === STATUS_RUNNING ? (
-                      <iconStopCluster.react tag="div" />
+                      <iconStopCluster.react tag="div" className='logo-alignment-style' />
                     ) : (
-                      <iconStopClusterDisable.react tag="div" />
+                      <iconStopClusterDisable.react tag="div" className='logo-alignment-style' />
                     )}
                   </div>
                   <div className="action-cluster-text">STOP</div>
@@ -470,7 +471,7 @@ function JobDetails({
                   onClick={() => handleDeleteJob(jobInfo.reference.jobId)}
                 >
                   <div className="action-cluster-icon">
-                    <iconDeleteCluster.react tag="div" />
+                    <iconDeleteCluster.react tag="div" className='logo-alignment-style' />
                   </div>
                   <div className="action-cluster-text">DELETE</div>
                 </div>
@@ -500,7 +501,6 @@ function JobDetails({
                   <div className="cluster-details-label">Status</div>
                   {statusDisplay(statusMsg)}
                 </div>
-                <ToastContainer />
               </div>
               <div className="cluster-details-header">
                 <div className="cluster-details-title">Configuration</div>
@@ -740,7 +740,6 @@ function JobDetails({
                   </div>
                 )}
               </div>
-              <ToastContainer />
             </div>
           )}
 

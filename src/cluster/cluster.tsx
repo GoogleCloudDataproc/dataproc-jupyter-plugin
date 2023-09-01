@@ -19,7 +19,7 @@ import { ReactWidget } from '@jupyterlab/apputils';
 import React, { useState, useEffect, useRef } from 'react';
 import JobComponent from '../jobs/jobs';
 import ClusterDetails from './clusterDetails';
-import { authApi, checkConfig, statusValue } from '../utils/utils';
+import { authApi, checkConfig, statusValue, toastifyCustomStyle } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import startIcon from '../../style/icons/start_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
@@ -37,7 +37,7 @@ import {
 } from '../utils/const';
 import ListCluster from './listCluster';
 import { ClipLoader } from 'react-spinners';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { startClusterApi, stopClusterApi } from '../utils/clusterServices';
 import PollingTimer from '../utils/pollingTimer';
@@ -178,7 +178,7 @@ const ClusterComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters', err);
-          toast.error('Failed to fetch clusters');
+          toast.error('Failed to fetch clusters',toastifyCustomStyle);
         });
     }
   };
@@ -221,7 +221,7 @@ const ClusterComponent = (): React.JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error fetching status', err);
-          toast.error(`Failed to fetch the status ${selectedcluster}`);
+          toast.error(`Failed to fetch the status ${selectedcluster}`,toastifyCustomStyle);
         });
 
       listClustersAPI();
@@ -256,7 +256,7 @@ const ClusterComponent = (): React.JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error restarting cluster', err);
-          toast.error(`Failed to restart the cluster ${selectedcluster}`);
+          toast.error(`Failed to restart the cluster ${selectedcluster}`,toastifyCustomStyle);
         });
 
       listClustersAPI();
@@ -289,9 +289,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_STOPPED ? (
-          <iconStart.react tag="div" />
+          <iconStart.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconStartDisable.react tag="div" />
+          <iconStartDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );
@@ -318,9 +318,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconStop.react tag="div" />
+          <iconStop.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconStopDisable.react tag="div" />
+          <iconStopDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );
@@ -347,9 +347,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconRestart.react tag="div" />
+          <iconRestart.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconRestartDisable.react tag="div" />
+          <iconRestartDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );
@@ -465,7 +465,6 @@ const ClusterComponent = (): React.JSX.Element => {
                   />
                 )}
               </div>
-              <ToastContainer />
             </div>
           )}
         </>

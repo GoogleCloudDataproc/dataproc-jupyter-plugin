@@ -37,6 +37,7 @@ import pythonLogo from '../../third_party/icons/python_logo.svg';
 import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
 import scalaLogo from '../../third_party/icons/scala_logo.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
+import { ToastOptions, toast } from 'react-toastify';
 interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
@@ -254,7 +255,6 @@ export const iconDisplay = (kernelType: any) => {
   }
 };
 
-
 export interface ICellProps {
   getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
   value: string | any;
@@ -282,7 +282,7 @@ export const detailsPageOptionalDisplay = (data: string) => {
     default:
       return data;
   }
-}
+};
 
 export const jobDetailsOptionalDisplay = (data: string) => {
   switch (data) {
@@ -348,4 +348,12 @@ export const lastModifiedFormat = (lastModifiedDate: any) => {
     return Math.floor(interval) + ' minutes ago';
   }
   return Math.floor(seconds) + ' seconds ago';
+};
+
+export const toastifyCustomStyle: ToastOptions<{}> = {
+  hideProgressBar: true,
+  autoClose: false,
+  theme: 'dark',
+  position: toast.POSITION.BOTTOM_CENTER,
+  toastId: 'custom-toast'
 };

@@ -20,7 +20,7 @@ import {
   BASE_URL,
   API_HEADER_BEARER
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -42,7 +42,7 @@ export const deleteSessionAPI = async (selectedSession: string) => {
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
-        toast.error(`Failed to delete the session ${selectedSession}`);
+        toast.error(`Failed to delete the session ${selectedSession}`,toastifyCustomStyle);
       });
   }
 };
@@ -69,7 +69,7 @@ export const terminateSessionAPI = async (selectedSession: string) => {
       })
       .catch((err: Error) => {
         console.error('Error terminating session', err);
-        toast.error(`Failed to terminate session ${selectedSession}`);
+        toast.error(`Failed to terminate session ${selectedSession}`,toastifyCustomStyle);
       });
   }
 };
