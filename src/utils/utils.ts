@@ -41,6 +41,7 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
+import { createContext, useContext, useState } from 'react';
 
 export interface IAuthCredentials {
   access_token?: string;
@@ -48,6 +49,45 @@ export interface IAuthCredentials {
   region_id?: string;
   config_error?: number;
   login_error?: number;
+}
+
+export const AuthContext = createContext<IAuthCredentials | undefined>(
+  undefined
+);
+
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+export function useProvideAuth() {
+  const [credentials, setCredentials] = useState<IAuthCredentials | undefined>(
+    undefined
+  );
+
+  authApi()
+    .then(creds => {
+      if (creds) {
+        // Check to make sure we actually want to update credentials.
+        // We want to update the credentials if and only if credentials is
+        // undefined or if any of the properties of credentials don't match
+        // what we have stored previously.
+        if (
+          credentials === undefined ||
+          creds?.access_token !== credentials?.access_token ||
+          creds?.config_error !== credentials?.config_error ||
+          creds?.login_error !== credentials?.login_error ||
+          creds?.project_id !== credentials?.project_id ||
+          creds?.region_id !== credentials?.region_id
+        ) {
+          setCredentials(creds);
+        }
+      }
+    })
+    .catch(error => {
+      throw error;
+    });
+
+  return credentials;
 }
 
 export const authApi = async (): Promise<IAuthCredentials | undefined> => {

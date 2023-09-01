@@ -37,10 +37,12 @@ import {
 } from '../utils/const';
 import PollingTimer from '../utils/pollingTimer';
 import {
+  AuthContext,
+  IAuthCredentials,
   authenticatedFetch,
   checkConfig,
   getProjectId,
-  statusValue
+  statusValue,
 } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
@@ -90,6 +92,7 @@ const ClusterComponent = (): React.JSX.Element => {
   const [projectId, setProjectId] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [selectedJobClone, setSelectedJobClone] = useState({});
+  const credentialsContext = useProvideAuth();
 
   const pollingClusters = async (
     pollingFunction: () => void,
@@ -108,7 +111,7 @@ const ClusterComponent = (): React.JSX.Element => {
 
   const listClustersAPI = async (
     nextPageToken?: string,
-    previousClustersList?: object
+    previousClustersList?: object,
   ) => {
     const pageToken = nextPageToken ?? '';
 
@@ -356,6 +359,7 @@ const ClusterComponent = (): React.JSX.Element => {
   }, [pollingDisable, detailedView, selectedMode]);
 
   return (
+    <AuthContext.Provider value={credentialsContext}>
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loaderMain">
@@ -442,6 +446,7 @@ const ClusterComponent = (): React.JSX.Element => {
         </div>
       )}
     </div>
+    </AuthContext.Provider>
   );
 };
 
