@@ -63,6 +63,7 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@jupyterlab/application": "^4.0.0",
+    "@jupyterlab/completer": "^4.0.5",
     "@jupyterlab/coreutils": "^6.0.0",
     "@jupyterlab/launcher": "^4.0.0",
     "@jupyterlab/mainmenu": "^4.0.0",
