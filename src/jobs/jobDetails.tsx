@@ -252,14 +252,14 @@ function JobDetails({
           response
             .json()
             .then((responseResultJob: Response) => {
-              toast.success(`Request to update job ${jobSelected} submitted`,toastifyCustomStyle);
+              toast.success(`Request to update job ${jobSelected} submitted`, toastifyCustomStyle);
               console.log(responseResultJob);
             })
             .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
           console.error('Error in updating job', err);
-          toast.error(`Failed to update the job ${jobSelected}`,toastifyCustomStyle);
+          toast.error(`Failed to update the job ${jobSelected}`, toastifyCustomStyle);
         });
     }
   };
@@ -327,7 +327,7 @@ function JobDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting job details', err);
-          toast.error(`Failed to fetch job details ${jobSelected}`,toastifyCustomStyle);
+          toast.error(`Failed to fetch job details ${jobSelected}`, toastifyCustomStyle);
         });
     }
   };
@@ -641,22 +641,22 @@ function JobDetails({
                 {
                   //@ts-ignore string used as index
                   jobInfo[jobTypeConcat].properties &&
-                    //@ts-ignore string used as index
-                    Object.keys(jobInfo[jobTypeConcat].properties).map(
-                      (titleData: string) => (
-                        <div className="row-details" key={titleData}>
-                          <div className="job-details-label-level-one">
-                            {titleData}
-                          </div>
-                          <div className="details-value">
-                            {
-                              //@ts-ignore string used as index
-                              jobInfo[jobTypeConcat].properties[titleData]
-                            }
-                          </div>
+                  //@ts-ignore string used as index
+                  Object.keys(jobInfo[jobTypeConcat].properties).map(
+                    (titleData: string) => (
+                      <div className="row-details" key={titleData}>
+                        <div className="job-details-label-level-one">
+                          {titleData}
                         </div>
-                      )
+                        <div className="details-value">
+                          {
+                            //@ts-ignore string used as index
+                            jobInfo[jobTypeConcat].properties[titleData]
+                          }
+                        </div>
+                      </div>
                     )
+                  )
                 }
                 {argumentsList && (
                   <div className="row-details">
@@ -664,15 +664,15 @@ function JobDetails({
                     <div className="cluster-details-value">
                       {argumentsList.length > 0
                         ? argumentsList.map((argument: string) => {
-                            return (
-                              <div
-                                key={argument}
-                                className="job-argument-style"
-                              >
-                                {argument}
-                              </div>
-                            );
-                          })
+                          return (
+                            <div
+                              key={argument}
+                              className="job-argument-style"
+                            >
+                              {argument}
+                            </div>
+                          );
+                        })
                         : ''}
                     </div>
                   </div>
@@ -683,18 +683,18 @@ function JobDetails({
                     <div className="job-label-style-parent">
                       {labelDetail.length > 0
                         ? labelDetail.map(label => {
-                            /*
-                            Extracting key, value from label
-                               Example: "{client:dataproc_jupyter_plugin}"
-                         */
-                            const labelParts = label.split(':');
+                          /*
+                          Extracting key, value from label
+                             Example: "{client:dataproc_jupyter_plugin}"
+                       */
+                          const labelParts = label.split(':');
 
-                            return (
-                              <div key={label} className="job-label-style">
-                                {labelParts[0]} : {labelParts[1]}
-                              </div>
-                            );
-                          })
+                          return (
+                            <div key={label} className="job-label-style">
+                              {labelParts[0]} : {labelParts[1]}
+                            </div>
+                          );
+                        })
                         : 'None'}
                     </div>
                   ) : (

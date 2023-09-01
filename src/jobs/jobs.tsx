@@ -285,7 +285,7 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
-          toast.error('Failed to fetch jobs',toastifyCustomStyle);
+          toast.error('Failed to fetch jobs', toastifyCustomStyle);
         });
     }
   };
@@ -395,14 +395,14 @@ function JobComponent({
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={15}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            )}
+                <ClipLoader
+                  color="#8A8A8A"
+                  loading={true}
+                  size={15}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
             <div className="cluster-status">{cell.value.toLowerCase()}</div>
           </div>
         </td>

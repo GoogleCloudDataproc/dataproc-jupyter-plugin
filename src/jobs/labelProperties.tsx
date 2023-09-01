@@ -63,7 +63,7 @@ function LabelProperties({
   */
   useEffect(() => {
     if (!labelEditMode) {
-      if (buttonText === 'ADD LABEL' && !selectedJobClone && selectedRuntimeClone===undefined) {
+      if (buttonText === 'ADD LABEL' && !selectedJobClone && selectedRuntimeClone === undefined) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
       } else {
@@ -194,8 +194,8 @@ function LabelProperties({
                       className="edit-input-style"
                       disabled={
                         labelSplit[0] === '' ||
-                        buttonText !== 'ADD LABEL' ||
-                        duplicateKeyError !== -1
+                          buttonText !== 'ADD LABEL' ||
+                          duplicateKeyError !== -1
                           ? false
                           : true
                       }
@@ -266,7 +266,7 @@ function LabelProperties({
                     role="button"
                     className={
                       label === DEFAULT_LABEL_DETAIL &&
-                      buttonText === 'ADD LABEL'
+                        buttonText === 'ADD LABEL'
                         ? 'labels-delete-icon-hide'
                         : 'labels-delete-icon'
                     }
@@ -298,7 +298,7 @@ function LabelProperties({
           }}
         >
           {labelDetail.length === 0 ||
-          labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
+            labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
             <iconPlus.react tag="div" className='logo-alignment-style' />
           ) : (
             <iconPlusDisable.react tag="div" className='logo-alignment-style' />
@@ -306,7 +306,7 @@ function LabelProperties({
           <div
             className={
               labelDetail.length === 0 ||
-              labelDetail[labelDetail.length - 1].split(':')[0].length > 0
+                labelDetail[labelDetail.length - 1].split(':')[0].length > 0
                 ? 'job-edit-text'
                 : 'job-edit-text-disabled'
             }

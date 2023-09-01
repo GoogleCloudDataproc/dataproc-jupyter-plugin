@@ -37,7 +37,7 @@ import {
 } from '../utils/const';
 import ListCluster from './listCluster';
 import { ClipLoader } from 'react-spinners';
-import { toast} from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { startClusterApi, stopClusterApi } from '../utils/clusterServices';
 import PollingTimer from '../utils/pollingTimer';
@@ -178,7 +178,7 @@ const ClusterComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters', err);
-          toast.error('Failed to fetch clusters',toastifyCustomStyle);
+          toast.error('Failed to fetch clusters', toastifyCustomStyle);
         });
     }
   };
@@ -221,7 +221,7 @@ const ClusterComponent = (): React.JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error fetching status', err);
-          toast.error(`Failed to fetch the status ${selectedcluster}`,toastifyCustomStyle);
+          toast.error(`Failed to fetch the status ${selectedcluster}`, toastifyCustomStyle);
         });
 
       listClustersAPI();
@@ -256,7 +256,7 @@ const ClusterComponent = (): React.JSX.Element => {
         })
         .catch((err: Error) => {
           console.error('Error restarting cluster', err);
-          toast.error(`Failed to restart the cluster ${selectedcluster}`,toastifyCustomStyle);
+          toast.error(`Failed to restart the cluster ${selectedcluster}`, toastifyCustomStyle);
         });
 
       listClustersAPI();
@@ -277,7 +277,7 @@ const ClusterComponent = (): React.JSX.Element => {
         }
         className={
           data.status.state === ClusterStatus.STATUS_STOPPED &&
-          restartEnabled !== true
+            restartEnabled !== true
             ? 'icon-buttons-style'
             : 'icon-buttons-style-disable'
         }

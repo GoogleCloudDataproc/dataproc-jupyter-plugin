@@ -2,9 +2,11 @@
   display: flex;
   align-items: center;
 }
+
 .select-batch-radio-style {
   margin-top: 10px;
 }
+
 .create-batch-message {
   font-style: normal;
   font-weight: 400;
@@ -14,6 +16,7 @@
   padding-left: 10px;
   color: #000000;
 }
+
 .create-batch-sub-message {
   font-style: normal;
   font-weight: 400;
@@ -27,32 +30,39 @@
   margin-top: 5px;
   display: flex;
 }
+
 .create-batch-input {
   width: 98%;
   padding-left: 25px;
   margin-top: 5px;
 }
+
 .create-batch-network {
   display: flex;
   width: 512px;
 }
+
 .create-batch-encrypt {
   display: flex;
   width: 457px;
   align-items: center;
   margin-left: 55px;
 }
-.manual-input{
+
+.manual-input {
   margin-left: 55px;
   width: 457px;
 }
-.manual-key{
+
+.manual-key {
   width: 430px !important;
 }
+
 .select-batch-encrypt-radio-style {
   margin-top: 20px;
   margin-right: 10px;
 }
+
 .create-batch-encrypt-message {
   font-style: normal;
   font-weight: 400;
@@ -74,6 +84,7 @@
   min-height: 40px;
   margin-left: 15px;
 }
+
 .select-primary-network-style {
   background: #ffffff;
   border: 1px solid black !important;
@@ -89,21 +100,25 @@
   height: 36px;
   outline: none;
 }
-.create-batch-style-mini{
+
+.create-batch-style-mini {
   background: #ffffff;
   width: 490px;
   height: 36px;
   outline: none;
 }
-.encrypt{
-  display:flex;
+
+.encrypt {
+  display: flex;
   align-items: center;
 }
-.single-line{
+
+.single-line {
   display: flex;
-  width:512px;
+  width: 512px;
 
 }
+
 .create-batch-learn-more {
   color: #7b1fa2;
   text-decoration: underline;
@@ -123,6 +138,7 @@
   display: flex;
   margin-top: 5px;
 }
+
 .create-custom-messagelist {
   font-style: normal;
   font-weight: 400;
@@ -135,9 +151,11 @@
   word-wrap: break-word;
   margin-top: 5px;
 }
-.create-container-message{
+
+.create-container-message {
   display: flex;
 }
+
 .create-batch-network-message {
   font-style: normal;
   font-weight: 400;
@@ -169,18 +187,21 @@
   padding-left: 5px;
   color: #000000;
   display: flex;
-  width:50%;
+  width: 50%;
 }
-.ui.radio.checkbox input:checked~label:after{
-  background-color:#3367d6 !important;
+
+.ui.radio.checkbox input:checked~label:after {
+  background-color: #3367d6 !important;
   border-color: #3367d6 !important;
   border-width: 2px !important;
 }
+
 .ui.checkbox input:checked~label:before {
   background: #fff;
   border-color: grey;
   border-width: 2px !important;
 }
+
 .ui.radio.checkbox label:before {
   content: '';
   transform: none;
@@ -189,4 +210,13 @@
   border-radius: 500rem;
   top: 1px;
   left: 0;
+}
+
+.ui.modal>.header {
+  font-family: 'Roboto' !important;
+}
+
+.metastore-loader {
+  padding-top: 15px;
+  padding-left: 10px;
 }

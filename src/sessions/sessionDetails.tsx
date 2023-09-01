@@ -46,7 +46,7 @@ import {
 import { authApi, elapsedTime, jobTimeFormat, toastifyCustomStyle } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
-import { toast} from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
 import PollingTimer from '../utils/pollingTimer';
@@ -152,7 +152,7 @@ function SessionDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error loading session details', err);
-          toast.error(`Failed to fetch session details ${sessionSelected}`,toastifyCustomStyle);
+          toast.error(`Failed to fetch session details ${sessionSelected}`, toastifyCustomStyle);
         });
     }
   };
@@ -180,8 +180,8 @@ function SessionDetails({
   }
   const sessionActiveTime =
     sessionInfo.stateHistory &&
-    sessionInfo.stateHistory.length > 1 &&
-    sessionInfo.stateHistory[1].stateStartTime
+      sessionInfo.stateHistory.length > 1 &&
+      sessionInfo.stateHistory[1].stateStartTime
       ? new Date(sessionInfo.stateHistory[1].stateStartTime)
       : '';
   let runTimeString = '';
@@ -263,16 +263,16 @@ function SessionDetails({
                       sessionInfo.state === STATUS_STOPPING ||
                       sessionInfo.state === STATUS_TERMINATING ||
                       sessionInfo.state === STATUS_DELETING) && (
-                      <div>
-                        <ClipLoader
-                          color="#8A8A8A"
-                          loading={true}
-                          size={15}
-                          aria-label="Loading Spinner"
-                          data-testid="loader"
-                        />
-                      </div>
-                    )}
+                        <div>
+                          <ClipLoader
+                            color="#8A8A8A"
+                            loading={true}
+                            size={15}
+                            aria-label="Loading Spinner"
+                            data-testid="loader"
+                          />
+                        </div>
+                      )}
                     <div className="cluster-status">
                       {sessionInfo.state === STATUS_CREATING
                         ? STATUS_PROVISIONING
@@ -299,11 +299,11 @@ function SessionDetails({
                 </div>
                 {(sessionInfo.state === STATUS_ACTIVE ||
                   sessionInfo.state === STATUS_TERMINATED) && (
-                  <div className="row-details">
-                    <div className="cluster-details-label">Run time</div>
-                    <div className="session-details-value">{runTimeString}</div>
-                  </div>
-                )}
+                    <div className="row-details">
+                      <div className="cluster-details-label">Run time</div>
+                      <div className="session-details-value">{runTimeString}</div>
+                    </div>
+                  )}
                 <div className="row-details">
                   <div className="cluster-details-label">Properties</div>
                 </div>
@@ -358,18 +358,18 @@ function SessionDetails({
                   <div className="session-label-style-parent">
                     {labelDetail.length > 0
                       ? labelDetail.map(label => {
-                          /*
-                            Extracting key, value from label
-                               Example: "{client:dataproc_jupyter_plugin}"
-                         */
-                          const labelParts = label.split(':');
+                        /*
+                          Extracting key, value from label
+                             Example: "{client:dataproc_jupyter_plugin}"
+                       */
+                        const labelParts = label.split(':');
 
-                          return (
-                            <div key={label} className="job-label-style">
-                              {labelParts[0]} : {labelParts[1]}
-                            </div>
-                          );
-                        })
+                        return (
+                          <div key={label} className="job-label-style">
+                            {labelParts[0]} : {labelParts[1]}
+                          </div>
+                        );
+                      })
                       : 'None'}
                   </div>
                 </div>

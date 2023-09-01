@@ -30,7 +30,7 @@ import {
 import TableData from '../utils/tableData';
 import { ICellProps, authApi, jobTimeFormat, toastifyCustomStyle } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import { toast} from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
 import { PaginationView } from '../utils/paginationView';
@@ -233,7 +233,7 @@ function ListRuntimeTemplates({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing runtime templates', err);
-          toast.error('Failed to fetch runtime templates',toastifyCustomStyle);
+          toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
         });
     }
   };
@@ -379,7 +379,7 @@ function ListRuntimeTemplates({
               }}
             >
               <div className="create-cluster-icon">
-                <iconSubmitJob.react tag="div" className='logo-alignment-style'/>
+                <iconSubmitJob.react tag="div" className='logo-alignment-style' />
               </div>
               <div className="create-cluster-text">Create</div>
             </div>
