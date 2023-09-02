@@ -119,7 +119,6 @@ function JobComponent({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-  // const credentialContext = useAuth();
 
   const pollingJobs = async (
     pollingFunction: () => void,

@@ -70,7 +70,6 @@ export function useProvideAuth() {
 
   useEffect(() => {
     const fetchCreds = async () => {
-      console.log("TEST TEST");
       const creds = await authApi();
 
       setCredentials(creds);
