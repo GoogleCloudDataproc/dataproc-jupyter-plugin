@@ -18,13 +18,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import {
-  authApi,
   jobTimeFormat,
   jobTypeValue,
   elapsedTime,
   statusMessage,
   jobTypeDisplay,
-  ICellProps
+  ICellProps,
+  authApi
 } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -119,6 +119,7 @@ function JobComponent({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  // const credentialContext = useAuth();
 
   const pollingJobs = async (
     pollingFunction: () => void,

@@ -41,7 +41,7 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 export interface IAuthCredentials {
   access_token?: string;
@@ -51,11 +51,15 @@ export interface IAuthCredentials {
   login_error?: number;
 }
 
-export const AuthContext = createContext<IAuthCredentials | undefined>(
-  undefined
-);
+export interface AuthContext {
+  credentials: IAuthCredentials | undefined;
+}
 
-export const useAuth = () => {
+export const AuthContext = createContext<AuthContext>({
+  credentials: undefined
+});
+
+export const useAuthContext = () => {
   return useContext(AuthContext);
 };
 
@@ -64,30 +68,22 @@ export function useProvideAuth() {
     undefined
   );
 
-  authApi()
-    .then(creds => {
-      if (creds) {
-        // Check to make sure we actually want to update credentials.
-        // We want to update the credentials if and only if credentials is
-        // undefined or if any of the properties of credentials don't match
-        // what we have stored previously.
-        if (
-          credentials === undefined ||
-          creds?.access_token !== credentials?.access_token ||
-          creds?.config_error !== credentials?.config_error ||
-          creds?.login_error !== credentials?.login_error ||
-          creds?.project_id !== credentials?.project_id ||
-          creds?.region_id !== credentials?.region_id
-        ) {
-          setCredentials(creds);
-        }
-      }
-    })
-    .catch(error => {
+  useEffect(() => {
+    const fetchCreds = async () => {
+      console.log("TEST TEST");
+      const creds = await authApi();
+
+      setCredentials(creds);
+    };
+
+    fetchCreds().catch(error => {
       throw error;
     });
+  }, []);
 
-  return credentials;
+  return {
+    credentials
+  };
 }
 
 export const authApi = async (): Promise<IAuthCredentials | undefined> => {
@@ -125,11 +121,19 @@ export const authenticatedFetch = async (config: {
   method: HTTP_METHOD;
   regionIdentifier?: 'regions' | 'locations' | 'global';
   queryParams?: URLSearchParams;
+  credentialContext?: AuthContext;
 }) => {
-  const { baseUrl, uri, method, regionIdentifier, queryParams } = config;
-  const credentials = await authApi();
-  // If there is an issue with getting credentials, there is no point continuing the request.
-  if (!credentials) {
+  const {
+    baseUrl,
+    uri,
+    method,
+    regionIdentifier,
+    queryParams,
+    credentialContext
+  } = config;
+
+  // If there is no credential context, there is no point continuing the request.
+  if (!credentialContext) {
     throw new Error('Error during authentication');
   }
 
@@ -137,21 +141,22 @@ export const authenticatedFetch = async (config: {
     method: method,
     headers: {
       'Content-Type': API_HEADER_CONTENT_TYPE,
-      Authorization: API_HEADER_BEARER + credentials.access_token
+      Authorization:
+        API_HEADER_BEARER + credentialContext?.credentials?.access_token
     }
   };
 
   const serializedQueryParams = queryParams?.toString();
   const base = baseUrl ?? BASE_URL;
-  let requestUrl = `${base}/projects/${credentials.project_id}`;
+  let requestUrl = `${base}/projects/${credentialContext?.credentials?.project_id}`;
 
   if (regionIdentifier) {
     switch (regionIdentifier) {
       case 'regions':
-        requestUrl = `${requestUrl}/regions/${credentials.region_id}`;
+        requestUrl = `${requestUrl}/regions/${credentialContext?.credentials?.region_id}`;
         break;
       case 'locations':
-        requestUrl = `${requestUrl}/locations/${credentials.region_id}`;
+        requestUrl = `${requestUrl}/locations/${credentialContext?.credentials?.region_id}`;
         break;
       case 'global':
         requestUrl = `${requestUrl}/global`;
