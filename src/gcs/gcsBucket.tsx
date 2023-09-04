@@ -1,6 +1,6 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { useTable, useGlobalFilter } from 'react-table';
 import gcsRefreshIcon from '../../style/icons/gcs_refresh_icon.svg';
@@ -13,6 +13,7 @@ import { authApi, lastModifiedFormat } from '../utils/utils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
+  GCS_UPLOAD_URL,
   GCS_URL
 } from '../utils/const';
 import GlobalFilter from '../utils/globalFilter';
@@ -50,6 +51,7 @@ const iconGcsSearch = new LabIcon({
 });
 
 const GcsBucketComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
+  const inputFile = useRef<HTMLInputElement | null>(null);
   const [bucketsList, setBucketsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [gcsFolderPath, setGcsFolderPath] = useState<string[]>([]);
@@ -160,9 +162,9 @@ const GcsBucketComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
                 iconClass: 'fa fa-folder-open-o',
                 mnemonic: 0,
                 execute: () => {
-                  console.log("aaaaa")
+                  console.log('aaaaa');
                   for (const item of fbWidget.selectedItems()) {
-                    console.log(item)
+                    console.log(item);
                     docManager.openOrReveal(item.path);
                   }
                 }
@@ -322,6 +324,53 @@ const GcsBucketComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
     console.log(gcsFolderPath);
   }, [gcsFolderPath]);
 
+  const handleFileChange = () => {
+    console.log(inputFile.current, inputFile.current?.value);
+    //@ts-ignore
+    inputFile.current.click();
+  };
+
+  const fileUploadAction = () => {
+    console.log(inputFile.current, inputFile.current?.files?.[0]);
+    uploadFileToGCS(inputFile.current?.files?.[0]);
+  }
+
+  const uploadFileToGCS = async (payload: any) => {
+    console.log(payload);
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(      
+        `${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${inputFile.current?.files?.[0].name}`,
+        {
+          method: 'POST',
+          body: payload,
+          headers: {
+            'Content-Type': payload.type,
+            Authorization: API_HEADER_BEARER + credentials.access_token,
+          }
+        }
+      )
+        .then(async (response: Response) => {
+          if (response.ok) {
+            const responseResult = await response.json();
+            // setOpenCreateTemplate(false);
+            // toast.success(
+            //   `RuntimeTemplate ${displayNameSelected} successfully submitted`,toastifyCustomStyle
+            // );
+            console.log(responseResult);
+          } else {
+            const errorResponse = await response.json();
+            console.log(errorResponse);
+            // setError({ isOpen: true, message: errorResponse.error.message });
+          }
+        })
+        .catch((err: Error) => {
+          console.error('Error Creating template', err);
+          // toast.error('Failed to create the template',toastifyCustomStyle);
+        });
+    }
+  };
+
   return (
     <>
       <div className="gcs-panel-parent">
@@ -331,7 +380,16 @@ const GcsBucketComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
             <iconGcsRefresh.react tag="div" className="gcs-title-icons" />
           </div>
           <iconGcsFolderNew.react tag="div" className="gcs-title-icons" />
-          <iconGcsUpload.react tag="div" className="gcs-title-icons" />
+          <input
+            type="file"
+            id="file"
+            ref={inputFile}
+            style={{ display: 'none' }}
+            onChange={fileUploadAction}
+          />
+          <div onClick={handleFileChange} >
+            <iconGcsUpload.react tag="div" className="gcs-title-icons" />
+          </div>
         </div>
         <div className="gcs-filter-overlay">
           <div className="filter-cluster-icon">
@@ -393,3 +451,44 @@ export class GcsBucket extends ReactWidget {
     return <GcsBucketComponent app={this.app} />;
   }
 }
+
+
+// {
+//   "kind": "storage#object",
+//   "id": "dataproc-extension/sample.txt/1693567318811803",
+//   "selfLink": "https://www.googleapis.com/storage/v1_internal/b/dataproc-extension/o/sample.txt",
+//   "mediaLink": "https://storage.mtls.clients6.google.com/download/storage/v1_internal/b/dataproc-extension/o/sample.txt?generation=1693567318811803&alt=media",
+//   "name": "sample.txt",
+//   "bucket": "dataproc-extension",
+//   "generation": "1693567318811803",
+//   "metageneration": "1",
+//   "contentType": "text/plain",
+//   "storageClass": "STANDARD",
+//   "size": "14",
+//   "md5Hash": "Vh8mrW48JncqPsTjJvhPEg==",
+//   "crc32c": "VR3MZw==",
+//   "etag": "CJvJw/OliYEDEAE=",
+//   "timeCreated": "2023-09-01T11:21:58.851Z",
+//   "updated": "2023-09-01T11:21:58.851Z",
+//   "timeStorageClassUpdated": "2023-09-01T11:21:58.851Z"
+// }
+
+// {
+//   "kind": "storage#object",
+//   "id": "dataproc-extension/test.txt/1693567462302119",
+//   "selfLink": "https://www.googleapis.com/storage/v1/b/dataproc-extension/o/test.txt",
+//   "mediaLink": "https://storage.googleapis.com/download/storage/v1/b/dataproc-extension/o/test.txt?generation=1693567462302119&alt=media",
+//   "name": "test.txt",
+//   "bucket": "dataproc-extension",
+//   "generation": "1693567462302119",
+//   "metageneration": "1",
+//   "contentType": "plain/text",
+//   "storageClass": "STANDARD",
+//   "size": "2",
+//   "md5Hash": "mZFLkyvTelC5g8XnyQrpOw==",
+//   "crc32c": "KXvQqg==",
+//   "etag": "CKfD+bemiYEDEAE=",
+//   "timeCreated": "2023-09-01T11:24:22.341Z",
+//   "updated": "2023-09-01T11:24:22.341Z",
+//   "timeStorageClassUpdated": "2023-09-01T11:24:22.341Z"
+// }
