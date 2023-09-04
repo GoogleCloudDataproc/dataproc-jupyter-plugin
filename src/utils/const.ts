@@ -67,7 +67,7 @@ export const SPARK_HISTORY_SERVER_KEY = 'sparkHistoryServerConfig';
 export const PROJECT_LIST_URL =
   'https://cloudresourcemanager.googleapis.com/v1/projects';
 export const USER_INFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
-export const REGION_URL = 'https://compute.googleapis.com/compute/v1/projects/';
+export const REGION_URL = 'https://compute.googleapis.com/compute/v1/projects';
 export const LOGIN_STATE = '1';
 export const QUERY_TABLE = 'system=dataproc_metastore AND type=TABLE parent=';
 export const QUERY_DATABASE =
