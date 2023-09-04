@@ -196,7 +196,7 @@ function ClusterDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters Details', err);
-          toast.error(`Failed to fetch cluster details ${clusterSelected}`,toastifyCustomStyle);
+          toast.error(`Failed to fetch cluster details ${clusterSelected}`, toastifyCustomStyle);
         });
     }
   };
@@ -375,16 +375,16 @@ function ClusterDetails({
                           clusterInfo.status.state === STATUS_STARTING ||
                           clusterInfo.status.state === STATUS_STOPPING ||
                           clusterInfo.status.state === STATUS_DELETING) && (
-                          <div>
-                            <ClipLoader
-                              color="#8A8A8A"
-                              loading={true}
-                              size={15}
-                              aria-label="Loading Spinner"
-                              data-testid="loader"
-                            />
-                          </div>
-                        )}
+                            <div>
+                              <ClipLoader
+                                color="#8A8A8A"
+                                loading={true}
+                                size={15}
+                                aria-label="Loading Spinner"
+                                data-testid="loader"
+                              />
+                            </div>
+                          )}
                         <div className="cluster-status">
                           {clusterInfo.status.state === STATUS_CREATING
                             ? STATUS_PROVISIONING

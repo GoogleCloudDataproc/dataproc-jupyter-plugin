@@ -16,23 +16,26 @@
  */
 
 import React from 'react';
-import { Button, Modal } from 'semantic-ui-react';
+import Button from '@mui/material/Button';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
+} from '@mui/material';
 
-function ErrorPopup({ onCancel, errorPopupOpen, DeleteMsg }: any) {
-    const modalStyle = {
-        width: 'auto', // Set the desired width
-        backgroundColor: 'white' // Set the desired background color
-      };
+function ErrorPopup({ onCancel, errorPopupOpen, errorMsg }: any) {
   return (
-    <Modal open={errorPopupOpen} onClose={onCancel} style={modalStyle}>
-    <Modal.Header>Error</Modal.Header>
-    <Modal.Content>
-      <p>{DeleteMsg}</p>
-    </Modal.Content>
-    <Modal.Actions>
-      <Button onClick={onCancel}>Close</Button>
-    </Modal.Actions>
-  </Modal>
+    <Dialog open={errorPopupOpen} onClose={onCancel}>
+      <DialogTitle>Error</DialogTitle>
+      <DialogContent>
+        <DialogContentText>{errorMsg}</DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onCancel}>Close</Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 

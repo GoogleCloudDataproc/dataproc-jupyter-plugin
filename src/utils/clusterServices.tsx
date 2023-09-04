@@ -41,6 +41,7 @@ export const deleteClusterApi = async (selectedcluster: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
+            toast.error(`Cluster ${selectedcluster} deleted successfully`, toastifyCustomStyle);
           })
           .catch((e: Error) => console.log(e));
       })
@@ -76,7 +77,7 @@ export const startStopAPI = async (
       })
       .catch((err: Error) => {
         console.error(`Error ${operation} cluster`, err);
-        toast.error(`Failed to ${operation} the cluster ${selectedcluster}`,toastifyCustomStyle);
+        toast.error(`Failed to ${operation} the cluster ${selectedcluster}`, toastifyCustomStyle);
       });
   }
 };

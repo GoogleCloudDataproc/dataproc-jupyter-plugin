@@ -20,7 +20,7 @@
   font-weight: 500;
   font-size: 13px;
   line-height: 20px;
-  
+
   text-transform: uppercase;
 
   color: #3367D6;
@@ -38,7 +38,7 @@
   font-weight: 500;
   font-size: 13px;
   line-height: 20px;
-  
+
   text-transform: uppercase;
 
   color: rgba(0, 0, 0, 0.66);
@@ -52,8 +52,9 @@
   display: flex;
   align-items: center;
 }
-.create-cluster-sub-overlay{
-  width:20%;
+
+.create-cluster-sub-overlay {
+  width: 20%;
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -64,17 +65,18 @@
   text-transform: capitalize;
 }
 
- .actions-icon {
+.actions-icon {
   display: flex;
 }
-.cluster-status-parent{
+
+.cluster-status-parent {
   display: flex;
   align-items: center;
   height: 29px;
   color: rgba(0, 0, 0, 0.66);
 }
 
-.cluster-detail-status-parent{
+.cluster-detail-status-parent {
   display: flex;
   align-items: center;
   height: 29px;
@@ -92,19 +94,20 @@
   padding-left: 15px;
 }
 
-.icon-buttons-style-disable{
+.icon-buttons-style-disable {
   /* cursor: not-allowed; */
   padding-right: 5px;
-  color:rgb(245,245,245);
+  color: rgb(245, 245, 245);
   opacity: 0.5;
 }
 
-.spin-loader{
+.spin-loader {
   display: flex;
   margin-top: 10px;
   margin-left: 10px;
 }
-.spin-loaderMain{
+
+.spin-loaderMain {
   display: flex;
   margin-top: 20%;
   margin-left: 50%;
@@ -128,7 +131,7 @@
   font-weight: 500;
   font-size: 13px;
   line-height: 32px;
-  
+
   display: flex;
   align-items: center;
   text-align: center;
@@ -142,7 +145,7 @@
   font-weight: 500;
   font-size: 13px;
   line-height: 20px;
-  
+
   display: flex;
   align-items: center;
   text-align: center;
@@ -168,7 +171,7 @@
   font-weight: 400;
   font-size: 13px;
   line-height: 20px;
-  
+
   color: #757575;
 }
 
@@ -199,7 +202,7 @@
   font-weight: 400;
   font-size: 13px;
   line-height: 18px;
-  
+
   color: rgba(0, 0, 0, 0.66);
 }
 
@@ -249,14 +252,16 @@
   padding-right: 3px;
 }
 
-.component-level{
+.component-level {
   max-height: 85vh;
 }
-.scroll-comp{
+
+.scroll-comp {
   overflow-y: auto;
   max-height: 91vh;
 }
-.login-error{
+
+.login-error {
   align-items: center;
   justify-content: center;
   display: flex;
@@ -264,11 +269,12 @@
   font-weight: 600;
   padding: 50px;
 }
+
 .no-data-style {
   margin: 10px 15px
 }
 
-.error-view-parent{
+.error-view-parent {
   display: flex;
   align-items: center;
   padding: 0px 30px;
@@ -277,11 +283,11 @@
   color: #000000;
 }
 
-.error-view-message-parent{
+.error-view-message-parent {
   display: flex;
   margin-left: 35%;
 }
 
-.error-view-message{
+.error-view-message {
   margin-left: 30px;
 }

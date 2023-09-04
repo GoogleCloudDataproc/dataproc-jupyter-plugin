@@ -45,8 +45,10 @@ const projectListAPI = async (prefix: string): Promise<Project[]> => {
       Authorization: API_HEADER_BEARER + credentials.access_token
     }
   });
-  const { projects } = (await resp.json()) as { projects: Project[] };
-  return projects;
+  const { projects } = (await resp.json()) as {
+    projects: Project[] | undefined;
+  };
+  return projects ?? [];
 };
 
 /**

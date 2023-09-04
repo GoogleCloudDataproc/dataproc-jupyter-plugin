@@ -189,14 +189,14 @@ function ListBatches({
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={15}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            )}
+                <ClipLoader
+                  color="#8A8A8A"
+                  loading={true}
+                  size={15}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>

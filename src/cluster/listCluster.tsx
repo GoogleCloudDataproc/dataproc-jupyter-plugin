@@ -77,7 +77,6 @@ interface IListClusterProps {
   clustersList: ICluster[];
   isLoading: boolean;
   setPollingDisable: (value: boolean) => void;
-  listClustersAPI: () => void;
   handleClusterDetails: (clusterName: string) => void;
   project_id: string;
 }
@@ -85,7 +84,6 @@ function ListCluster({
   clustersList,
   isLoading,
   setPollingDisable,
-  listClustersAPI,
   handleClusterDetails,
   project_id
 }: IListClusterProps) {
@@ -164,14 +162,14 @@ function ListCluster({
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={15}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            )}
+                <ClipLoader
+                  color="#8A8A8A"
+                  loading={true}
+                  size={15}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>

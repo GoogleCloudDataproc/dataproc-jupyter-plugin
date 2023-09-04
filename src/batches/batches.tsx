@@ -38,7 +38,7 @@ import BatchDetails from './batchDetails';
 import ListSessions from '../sessions/listSessions';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
-import { toast} from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
@@ -160,7 +160,7 @@ const BatchesComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing batches', err);
-          toast.error('Failed to fetch batches',toastifyCustomStyle);
+          toast.error('Failed to fetch batches', toastifyCustomStyle);
         });
     }
   };
@@ -254,14 +254,14 @@ const BatchesComponent = (): React.JSX.Element => {
             <BatchDetails
               batchSelected={batchSelected}
               setDetailedBatchView={setDetailedBatchView}
-              setCreateBatchView ={setCreateBatchView}
+              setCreateBatchView={setCreateBatchView}
             />
           )}
           {createBatchView && (
             <CreateBatch
               setCreateBatchView={setCreateBatchView}
               regionName={regionName}
-              projectName={projectName}         />
+              projectName={projectName} />
           )
           }
 

@@ -64,7 +64,7 @@ function ViewLogs({
               } else {
                 window.open(
                   responseResult.config.endpointConfig.httpPorts[
-                    SPARK_HISTORY_SERVER
+                  SPARK_HISTORY_SERVER
                   ]
                 );
               }
@@ -86,10 +86,10 @@ function ViewLogs({
         className={
           (batchInfoResponse?.runtimeInfo?.endpoints &&
             batchInfoResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
-          (sessionInfo?.runtimeInfo?.endpoints &&
-            sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
-          (clusterName) ||
-          (clusterInfo)
+            (sessionInfo?.runtimeInfo?.endpoints &&
+              sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
+            (clusterName) ||
+            (clusterInfo)
             ? 'action-cluster-section'
             : 'action-disabled action-cluster-section'
         }
