@@ -24,7 +24,7 @@ import {
   USER_INFO_URL,
   VERSION_DETAIL
 } from '../utils/const';
-import { IAuthCredentials, authApi, toastifyCustomStyle  } from '../utils/utils';
+import { IAuthCredentials, authApi, toastifyCustomStyle } from '../utils/utils';
 import 'semantic-ui-css/semantic.min.css';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
@@ -176,12 +176,12 @@ function ConfigSelection({ configError, setConfigError }: any) {
         <div className="settings-component">
           <div className="settings-overlay">
             <div>
-              <Iconsettings.react tag="div" className='logo-alignment-style' />
+              <Iconsettings.react tag="div" className="logo-alignment-style" />
             </div>
             <div className="settings-text">Settings</div>
           </div>
           <div className="settings-seperator"></div>
-          <div className='project-header'>Project Info </div>
+          <div className="project-header">Project Info </div>
           <div className="config-overlay">
             <div className="config-form">
               <div className="project-overlay">
@@ -214,6 +214,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
               <div className="google-header">
                 This account is managed by google.com
               </div>
+
               <div className="seperator"></div>
               <div className="user-overlay">
                 <div className="user-image-overlay">
@@ -223,49 +224,35 @@ function ConfigSelection({ configError, setConfigError }: any) {
                     className="user-image"
                   />
                 </div>
-                <div className="seperator"></div>
-                <div className="user-overlay">
-                  <div className="user-image-overlay">
-                    <img
-                      src={userInfo.picture}
-                      alt="User Image"
-                      className="user-image"
-                    />
-                  </div>
-                  <div className="user-details">
-                    <div className="user-email">{userInfo.email}</div>
-                  </div>
+                <div className="user-details">
+                  <div className="user-email">{userInfo.email}</div>
                 </div>
-                <div className="seperator"></div>
-                <div className="google-header">
-                  <a
-                    href="https://policies.google.com/privacy?hl=en"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Privacy Policy
-                  </a>
-                  <span className="privacy-terms"> • </span>
-                  <a
-                    href="https://policies.google.com/terms?hl=en"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Terms of Service
-                  </a>
-                  <span className="footer-divider"> • </span>
-                  <a onClick={handleLicenseClick} href="#">
-                    Licenses
-                  </a>
-                </div>
+              </div>
+              <div className="seperator"></div>
+              <div className="google-header">
+                <a
+                  href="https://policies.google.com/privacy?hl=en"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Privacy Policy
+                </a>
+                <span className="privacy-terms"> • </span>
+                <a
+                  href="https://policies.google.com/terms?hl=en"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Terms of Service
+                </a>
+                <span className="footer-divider"> • </span>
+                <a onClick={handleLicenseClick} href="#">
+                  Licenses
+                </a>
               </div>
               <div className="feedback-version-container">
                 <div className="google-header">
-                  <div
-                    className="feedback-container"
-                  >
-                    Provide Feedback
-                  </div>
+                  <div className="feedback-container">Provide Feedback</div>
                   <span className="privacy-terms"> • </span>
                   <a
                     href="https://github.com/GoogleCloudDataproc/dataproc-jupyter-plugin"
@@ -288,9 +275,15 @@ function ConfigSelection({ configError, setConfigError }: any) {
                 onClick={() => handleRuntimeExpand()}
               >
                 {expandRuntimeTemplate ? (
-                  <iconExpandLess.react tag="div" className='logo-alignment-style' />
+                  <iconExpandLess.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 ) : (
-                  <iconExpandMore.react tag="div" className='logo-alignment-style' />
+                  <iconExpandMore.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 )}
               </div>
             </div>
