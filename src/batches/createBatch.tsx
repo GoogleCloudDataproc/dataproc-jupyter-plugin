@@ -96,14 +96,7 @@ interface ICreateBatchProps {
   createBatch?: boolean;
   setCreateBatch?: (value: boolean) => void;
 }
-let jarFileUris: string[] = [];
-let fileUris: string[] = [];
-let archiveFileUris: string[] = [];
-let argumentsUris: string[] = [];
-let networkUris: string[] = [];
-let key: string[] | (() => string[]) = [];
-let value: string[] | (() => string[]) = [];
-let pythonFileUris: string[] = [];
+
 function batchKey(batchSelected: any) {
   const batchKeys: string[] = [];
 
@@ -155,6 +148,14 @@ function CreateBatch({
   let metaProject = 'None';
   let metaRegion = '';
   let containerImage = '';
+  let jarFileUris: string[] = [];
+  let fileUris: string[] = [];
+  let archiveFileUris: string[] = [];
+  let argumentsUris: string[] = [];
+  let networkUris: string[] = [];
+  let key: string[] | (() => string[]) = [];
+  let value: string[] | (() => string[]) = [];
+  let pythonFileUris: string[] = [];
   if (batchInfoResponse !== undefined) {
     if (Object.keys(batchInfoResponse).length !== 0) {
       batchKeys = batchKey(batchInfoResponse);
@@ -1110,8 +1111,8 @@ function CreateBatch({
             if (setCreateBatch) {
               setCreateBatch(false);
             }
-            toast.error(
-              `Batch ${batchIdSelected} created successfully`,
+            toast.success(
+              `Batch ${batchIdSelected} successfully submitted`,
               toastifyCustomStyle
             );
           } else {
@@ -1878,7 +1879,11 @@ function CreateBatch({
                         />
                         <div className="select-text-overlay">
                           <label
-                            className="select-title-text"
+                            className={
+                              selectedRadioValue === 'manually'
+                                ? 'select-title-text disable-text'
+                                : 'select-title-text'
+                            }
                             htmlFor="key-rings"
                           >
                             Key rings
@@ -1895,7 +1900,14 @@ function CreateBatch({
                           />
                         </div>
                         <div className="select-text-overlay subnetwork-style">
-                          <label className="select-title-text" htmlFor="keys">
+                          <label
+                            className={
+                              selectedRadioValue === 'manually'
+                                ? 'select-title-text disable-text'
+                                : 'select-title-text'
+                            }
+                            htmlFor="keys"
+                          >
                             Keys
                           </label>
 
@@ -1921,7 +1933,11 @@ function CreateBatch({
                         />
                         <div className="select-text-overlay">
                           <label
-                            className="select-title-text"
+                            className={
+                              selectedRadioValue === 'key'
+                                ? 'select-title-text disable-text'
+                                : 'select-title-text'
+                            }
                             htmlFor="enter-key-manually"
                           >
                             Enter key manually
