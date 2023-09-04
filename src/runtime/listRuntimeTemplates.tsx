@@ -372,7 +372,6 @@ function ListRuntimeTemplates({
       </div>
       {runtimeTemplateslist.length > 0 && !openCreateTemplate ? (
         <div>
-           <div className="batch-header-part"></div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
               <iconFilter.react tag="div" className="logo-alignment-style" />
