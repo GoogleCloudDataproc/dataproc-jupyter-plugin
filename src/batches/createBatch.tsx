@@ -861,7 +861,7 @@ function CreateBatch({
     setIsLoadingRegion(true);
     const credentials = await authApi();
     if (credentials) {
-      fetch(`${REGION_URL}${projectId}/regions`, {
+      fetch(`${REGION_URL}/${projectId}/regions`, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
           Authorization: API_HEADER_BEARER + credentials.access_token

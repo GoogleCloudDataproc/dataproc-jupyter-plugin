@@ -15,22 +15,21 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
-import filterIcon from '../../style/icons/filter_icon.svg';
-import SucceededIcon from '../../style/icons/succeeded_icon.svg';
-import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
-import stopIcon from '../../style/icons/stop_icon.svg';
-import stopDisableIcon from '../../style/icons/stop_disable_icon.svg';
-import deleteIcon from '../../style/icons/delete_icon.svg';
+import React, { useEffect, useRef, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
-import GlobalFilter from '../utils/globalFilter';
+import { useGlobalFilter, usePagination, useTable } from 'react-table';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
+import deleteIcon from '../../style/icons/delete_icon.svg';
+import filterIcon from '../../style/icons/filter_icon.svg';
+import stopDisableIcon from '../../style/icons/stop_disable_icon.svg';
+import stopIcon from '../../style/icons/stop_icon.svg';
+import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   ClusterStatus,
+  HTTP_METHOD,
   STATUS_ACTIVE,
   STATUS_CREATING,
   STATUS_DELETING,
@@ -40,21 +39,20 @@ import {
   STATUS_TERMINATED,
   STATUS_TERMINATING
 } from '../utils/const';
+import DeletePopup from '../utils/deletePopup';
+import GlobalFilter from '../utils/globalFilter';
+import { PaginationView } from '../utils/paginationView';
+import PollingTimer from '../utils/pollingTimer';
+import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
 import TableData from '../utils/tableData';
 import {
   ICellProps,
-  authApi,
+  authenticatedFetch,
   elapsedTime,
   jobTimeFormat,
   toastifyCustomStyle
 } from '../utils/utils';
 import SessionDetails from './sessionDetails';
-import DeletePopup from '../utils/deletePopup';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
-import { PaginationView } from '../utils/paginationView';
-import PollingTimer from '../utils/pollingTimer';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -81,7 +79,6 @@ const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
   svgstr: deleteIcon
 });
-
 
 function ListSessions() {
   const [sessionsList, setSessionsList] = useState([]);
@@ -145,82 +142,69 @@ function ListSessions() {
     nextPageToken?: string,
     previousSessionsList?: object
   ) => {
-    const credentials = await authApi();
-    const pageToken = nextPageToken ?? '';
-    if (credentials) {
-      fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions?pageSize=50&pageToken=${pageToken}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+    try {
+      const pageToken = nextPageToken ?? '';
+      const queryParams = new URLSearchParams();
+      queryParams.append('pageSize', '50');
+      queryParams.append('pageToken', pageToken);
+
+      const response = await authenticatedFetch({
+        uri: 'sessions',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'locations',
+        queryParams: queryParams
+      });
+      const formattedResponse = await response.json();
+      let transformSessionListData = [];
+      if (formattedResponse && formattedResponse.sessions) {
+        let sessionsListNew = formattedResponse.sessions;
+        sessionsListNew.sort(
+          (a: { createTime: string }, b: { createTime: string }) => {
+            const dateA = new Date(a.createTime);
+            const dateB = new Date(b.createTime);
+            return Number(dateB) - Number(dateA);
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: any) => {
-              let transformSessionListData = [];
-              if (responseResult && responseResult.sessions) {
-                let sessionsListNew = responseResult.sessions;
-                sessionsListNew.sort(
-                  (a: { createTime: string }, b: { createTime: string }) => {
-                    const dateA = new Date(a.createTime);
-                    const dateB = new Date(b.createTime);
-                    return Number(dateB) - Number(dateA);
-                  }
-                );
-                transformSessionListData = sessionsListNew.map((data: any) => {
-                  const startTimeDisplay = jobTimeFormat(data.createTime);
-                  const startTime = new Date(data.createTime);
-                  let elapsedTimeString = '';
-                  if (
-                    data.state === STATUS_TERMINATED ||
-                    data.state === STATUS_FAIL
-                  ) {
-                    elapsedTimeString = elapsedTime(data.stateTime, startTime);
-                  }
-                  /*
-                    Extracting sessionID, location from sessionInfo.name
-                    Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
-                  */
-                  return {
-                    sessionID: data.name.split('/')[5],
-                    status: data.state,
-                    location: data.name.split('/')[3],
-                    creator: data.creator,
-                    creationTime: startTimeDisplay,
-                    elapsedTime: elapsedTimeString,
-                    actions: renderActions(data)
-                  };
-                });
-              }
+        );
+        transformSessionListData = sessionsListNew.map((data: any) => {
+          const startTimeDisplay = jobTimeFormat(data.createTime);
+          const startTime = new Date(data.createTime);
+          let elapsedTimeString = '';
+          if (data.state === STATUS_TERMINATED || data.state === STATUS_FAIL) {
+            elapsedTimeString = elapsedTime(data.stateTime, startTime);
+          }
 
-              const existingSessionsData = previousSessionsList ?? [];
-              //setStateAction never type issue
-              let allSessionsData: any = [
-                ...(existingSessionsData as []),
-                ...transformSessionListData
-              ];
+          // Extracting sessionID, location from sessionInfo.name
+          // Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
 
-              if (responseResult.nextPageToken) {
-                listSessionsAPI(responseResult.nextPageToken, allSessionsData);
-              } else {
-                setSessionsList(allSessionsData);
-                setIsLoading(false);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing Sessions', err);
-          toast.error('Failed to fetch sessions', toastifyCustomStyle);
+          return {
+            sessionID: data.name.split('/')[5],
+            status: data.state,
+            location: data.name.split('/')[3],
+            creator: data.creator,
+            creationTime: startTimeDisplay,
+            elapsedTime: elapsedTimeString,
+            actions: renderActions(data)
+          };
         });
+      }
+
+      const existingSessionsData = previousSessionsList ?? [];
+      // setStateAction never type issue
+      let allSessionsData: any = [
+        ...(existingSessionsData as []),
+        ...transformSessionListData
+      ];
+
+      if (formattedResponse.nextPageToken) {
+        listSessionsAPI(formattedResponse.nextPageToken, allSessionsData);
+      } else {
+        setSessionsList(allSessionsData);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error listing Sessions', error);
+      toast.error('Failed to fetch sessions', toastifyCustomStyle);
     }
   };
 
