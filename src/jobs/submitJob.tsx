@@ -688,6 +688,9 @@ function SubmitJob(
         </div>
         <div className="submit-job-container">
           <div className="submit-job-label-header">Cluster</div>
+          <div>
+                Choose a cluster to run your job in.
+          </div>
 
           {clusterList.length === 0 ? (
             <Input
@@ -698,7 +701,7 @@ function SubmitJob(
           ) : (
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="metastore-project">
-                Choose a cluster to run your job in.
+                Cluster*
               </label>
               <Select
                 className="project-region-select"
