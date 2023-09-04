@@ -307,17 +307,7 @@ function CreateBatch({
       setCreateBatch(false);
     }
   };
-  const handleMainClassRadio = () => {
-    setSelectedRadio('mainClass');
-    setMainJarSelected('');
-    setMainClassSelected('');
-  };
 
-  const handleMainJarRadio = () => {
-    setSelectedRadio('mainJarURI');
-    setMainClassSelected('');
-    setMainJarSelected('');
-  };
   const handlekeyRingRadio = () => {
     setSelectedRadioValue('key');
     setManualKeySelected('');
@@ -361,7 +351,8 @@ function CreateBatch({
     valueValidation,
     batchIdValidation,
     duplicateKeyError,
-    manualValidation
+    manualValidation,
+    mainJarSelected
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
@@ -419,6 +410,19 @@ function CreateBatch({
       listNetworksFromSubNetworkAPI(subNetwork);
     }
   }, []);
+  const handleMainClassRadio = () => {
+    setSelectedRadio('mainClass');
+    setMainJarSelected('');
+    setMainClassSelected('');
+    setMainJarValidation(true);
+  };
+
+  const handleMainJarRadio = () => {
+    setSelectedRadio('mainJarURI');
+    setMainClassSelected('');
+    setMainJarSelected('');
+    setMainJarValidation(true);
+  };
   const listNetworksFromSubNetworkAPI = async (subNetwork: any) => {
     const credentials = await authApi();
     if (credentials) {
@@ -1160,10 +1164,16 @@ function CreateBatch({
     setServicesSelected(data.value);
   };
   const handleProjectIdChange = (event: any, data: any) => {
+    setRegion('');
+    setRegionList([]);
+    setServicesList([]);
+    setServicesSelected('');
     regionListAPI(data.value);
     setProjectId(data.value);
   };
   const handleRegionChange = (event: any, data: any) => {
+    setServicesSelected('');
+    setServicesList([]);
     setRegion(data.value);
     listMetaStoreAPI(data.value);
   };

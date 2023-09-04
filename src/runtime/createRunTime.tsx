@@ -318,7 +318,7 @@ function CreateRunTime({
       */
           setClusterSelected(dataprocCluster.split('/')[5]);
         }
-        listNetworksFromSubNetworkAPI(executionConfig.subnetworkUri)
+        listNetworksFromSubNetworkAPI(executionConfig.subnetworkUri);
       }
     } else {
       displayUserInfo();
@@ -343,7 +343,6 @@ function CreateRunTime({
             .then((responseResult: any) => {
               let transformedNetworkSelected = '';
               transformedNetworkSelected = responseResult.network.split('/')[9];
-
 
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
@@ -682,14 +681,16 @@ function CreateRunTime({
     setAutoSelected(data.value);
   };
   const handleProjectIdChange = (event: any, data: any) => {
+    setRegion('');
+    setRegionList([]);
+    setServicesList([]);
+    setServicesSelected('');
     regionListAPI(data.value);
     setProjectId(data.value);
-    data.value === 'None' && setRegion('');
-    data.value === 'None' && setServicesSelected('');
-    data.value === 'None' && setRegionList([]);
-    data.value === 'None' && setServicesList([]);
   };
   const handleRegionChange = (event: any, data: any) => {
+    setServicesSelected('');
+    setServicesList([]);
     setRegion(data.value);
     listMetaStoreAPI(data.value);
   };
@@ -706,7 +707,6 @@ function CreateRunTime({
     const content = new AuthLogin();
     const widget = new MainAreaWidget<AuthLogin>({ content });
     widget.title.label = 'Config Setup';
-
   };
 
   const handleClusterSelected = (event: any, data: any) => {
@@ -745,7 +745,8 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully submitted`, toastifyCustomStyle
+              `RuntimeTemplate ${displayNameSelected} successfully submitted`,
+              toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -779,7 +780,8 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully updated`, toastifyCustomStyle
+              `RuntimeTemplate ${displayNameSelected} successfully updated`,
+              toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -848,30 +850,30 @@ function CreateRunTime({
             ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
             ...(timeSelected === 'h' &&
               idleTimeSelected && {
-              idleTtl: inputValueHour.toString() + 's'
-            }),
+                idleTtl: inputValueHour.toString() + 's'
+              }),
             ...(timeSelected === 'm' &&
               idleTimeSelected && {
-              idleTtl: inputValueMin.toString() + 's'
-            }),
+                idleTtl: inputValueMin.toString() + 's'
+              }),
             ...(timeSelected === 's' &&
               idleTimeSelected && {
-              idleTtl: idleTimeSelected + 's'
-            }),
+                idleTtl: idleTimeSelected + 's'
+              }),
 
             ...(autoSelected === 'h' &&
               autoTimeSelected && {
-              ttl: inputValueHourAuto.toString() + 's'
-            }),
+                ttl: inputValueHourAuto.toString() + 's'
+              }),
             ...(autoSelected === 'm' &&
               autoTimeSelected && {
-              ttl: inputValueMinAuto.toString() + 's'
-            }),
+                ttl: inputValueMinAuto.toString() + 's'
+              }),
 
             ...(autoSelected === 's' &&
               autoTimeSelected && {
-              ttl: autoTimeSelected + 's'
-            })
+                ttl: autoTimeSelected + 's'
+              })
           },
           peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
@@ -1071,7 +1073,7 @@ function CreateRunTime({
                 Metastore region
               </label>
               {isLoadingRegion ? (
-                <div className='metastore-loader'>
+                <div className="metastore-loader">
                   <ClipLoader
                     loading={true}
                     size={25}
@@ -1097,7 +1099,7 @@ function CreateRunTime({
                 Metastore service
               </label>
               {isLoadingService ? (
-                <div className='metastore-loader'>
+                <div className="metastore-loader">
                   <ClipLoader
                     loading={true}
                     size={25}
