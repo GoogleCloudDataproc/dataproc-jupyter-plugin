@@ -93,6 +93,12 @@
   padding-right: 5px;
   padding-left: 15px;
 }
+.icon-buttons-style-delete-batch-disable {
+  cursor: context-menu;
+  padding-right: 5px;
+  padding-left: 15px;
+
+}
 
 .icon-buttons-style-disable {
   /* cursor: not-allowed; */

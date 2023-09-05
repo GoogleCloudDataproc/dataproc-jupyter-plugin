@@ -32,6 +32,9 @@ export enum ClusterStatus {
   STATUS_STOPPED = 'STOPPED',
   STATUS_ACTIVE = 'ACTIVE'
 }
+export enum BatchStatus {
+  STATUS_PENDING = 'PENDING'
+}
 export const STATUS_RUNNING = 'RUNNING';
 export const STATUS_ERROR = 'ERROR';
 export const STATUS_DONE = 'DONE';
