@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-export const VERSION_DETAIL = "0.1.15"
+export const VERSION_DETAIL = "0.1.16"
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
@@ -31,6 +31,9 @@ export enum ClusterStatus {
   STATUS_RUNNING = 'RUNNING',
   STATUS_STOPPED = 'STOPPED',
   STATUS_ACTIVE = 'ACTIVE'
+}
+export enum BatchStatus {
+  STATUS_PENDING = 'PENDING'
 }
 export const STATUS_RUNNING = 'RUNNING';
 export const STATUS_ERROR = 'ERROR';

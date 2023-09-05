@@ -213,7 +213,7 @@ function CreateBatch({
     }
   }
 
-  const selectedRadioInitialValue = mainClass ? 'mainClass' : 'mainJarURI';
+  const selectedRadioInitialValue = mainJarFileUri ? 'mainJarURI' : 'mainClass';
   const [batchTypeList, setBatchTypeList] = useState([{}]);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
@@ -352,7 +352,8 @@ function CreateBatch({
     batchIdValidation,
     duplicateKeyError,
     manualValidation,
-    mainJarSelected
+    mainJarSelected,
+    jarFilesSelected
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
@@ -467,7 +468,8 @@ function CreateBatch({
           !mainJarValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation ||
+          !jarFileValidation
         );
       case 'sparkR':
         return (
@@ -486,7 +488,8 @@ function CreateBatch({
           !additionalPythonFileValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation||
+          !jarFileValidation
         );
       case 'sparkSql':
         return (
@@ -1118,6 +1121,7 @@ function CreateBatch({
           } else {
             const errorResponse = await response.json();
             setError({ isOpen: true, message: errorResponse.error.message });
+            console.log(error);
           }
         })
         .catch((err: Error) => {
@@ -1571,9 +1575,9 @@ function CreateBatch({
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
                 >
-                  Container Registry
+                  Container Registry 
                 </div>
-                {'  or '}
+                &nbsp;{'  or '}
                 <div
                   className="create-batch-learn-more"
                   onClick={() => {
@@ -2126,7 +2130,7 @@ function CreateBatch({
                 <ErrorPopup
                   onCancel={() => setError({ isOpen: false, message: '' })}
                   errorPopupOpen={error.isOpen}
-                  DeleteMsg={error.message}
+                  errorMsg={error.message}
                 />
               )}
             </div>

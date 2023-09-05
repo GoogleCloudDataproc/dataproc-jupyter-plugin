@@ -1293,7 +1293,7 @@ function CreateRunTime({
                 <ErrorPopup
                   onCancel={() => setError({ isOpen: false, message: '' })}
                   errorPopupOpen={error.isOpen}
-                  DeleteMsg={error.message}
+                  errorMsg={error.message}
                 />
               )}
             </div>

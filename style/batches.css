@@ -32,6 +32,18 @@
   color: #000000;
   overflow-wrap: anywhere;
 }
+.scroll-comp-batchdetails{
+  overflow-y: auto;
+  max-height: 90.1vh;
+}
+.create-batches-overlay {
+  height: 48px;
+  /* padding-left: 15px; */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+}
+
 
 .batch-details-container {
   width: 80%;

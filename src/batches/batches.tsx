@@ -29,7 +29,8 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   API_HEADER_BEARER,
-  LOGIN_STATE
+  LOGIN_STATE,
+  BatchStatus
 } from '../utils/const';
 import ListBatches from './listBatches';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -185,15 +186,30 @@ const BatchesComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  const renderActions = (data: { name: string }) => {
+  const renderActions = (data: {
+    state: BatchStatus; name: string 
+}) => {
     return (
       <div className="actions-icon" role="button" aria-label="Delete Job">
         <div
-          className="icon-buttons-style-delete-batch"
+         className={
+          data.state === BatchStatus.STATUS_PENDING
+            ? 'icon-buttons-style-delete-batch-disable'
+            : 'icon-buttons-style-delete-batch'
+         }
           title="Delete Batch"
-          onClick={() => handleDeleteBatch(data.name.split('/')[5])}
+          onClick={
+            data.state === BatchStatus.STATUS_PENDING
+              ? undefined
+              : () => handleDeleteBatch(data.name.split('/')[5])
+          }
         >
-          <iconDelete.react tag="div" className='logo-alignment-style' />
+           {data.state === BatchStatus.STATUS_PENDING ? (
+          <iconDelete.react tag="div" className='logo-alignment-style icon-delete' />
+        ) : (
+          <iconDelete.react tag="div" className='logo-alignment-style'/>
+        )} 
+         
         </div>
       </div>
     );
