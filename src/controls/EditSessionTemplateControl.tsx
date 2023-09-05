@@ -44,7 +44,7 @@ export function EditSessionTemplateControl({
   return (
     <Box component={'form'} sx={{ m: 3 }} onSubmit={formik.handleSubmit}>
       <Stack spacing={3} maxWidth="sm">
-        <Typography variant="h5">Add an interactive session</Typography>
+        <Typography variant="h5">Add a Runtime Template</Typography>
         <TextField
           required
           label="Interactive Session Name"
