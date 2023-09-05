@@ -214,7 +214,7 @@ function ListBatches({
 
   return (
     <div>
-      <div className="create-cluster-overlay">
+      <div className="create-batches-overlay ">
         <div
           className="create-batch-overlay"
           onClick={() => {

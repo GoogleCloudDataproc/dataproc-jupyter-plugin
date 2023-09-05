@@ -298,7 +298,7 @@ function BatchDetails({
       )}
 
       {!createBatch && batchInfoResponse.uuid !== '' && (
-        <div className="scroll-comp">
+        <div className="scroll-comp-batchdetails">
           <div className="cluster-details-header">
             <div
               role="button"
