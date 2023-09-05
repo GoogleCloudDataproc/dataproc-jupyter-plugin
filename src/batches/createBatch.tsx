@@ -1121,6 +1121,7 @@ function CreateBatch({
           } else {
             const errorResponse = await response.json();
             setError({ isOpen: true, message: errorResponse.error.message });
+            console.log(error);
           }
         })
         .catch((err: Error) => {
@@ -2129,7 +2130,7 @@ function CreateBatch({
                 <ErrorPopup
                   onCancel={() => setError({ isOpen: false, message: '' })}
                   errorPopupOpen={error.isOpen}
-                  DeleteMsg={error.message}
+                  errorMsg={error.message}
                 />
               )}
             </div>
