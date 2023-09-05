@@ -6,6 +6,7 @@
   padding: 0px 15px;
   font-size: 25px;
   color: #000000;
+  cursor: pointer;
 }
 
 .page-size-selection {
@@ -17,6 +18,7 @@
   display: flex;
   justify-content: flex-end;
   margin: 10px;
+  align-items: center;
 }
 
 .page-display-part {

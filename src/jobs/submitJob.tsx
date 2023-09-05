@@ -706,7 +706,7 @@ function SubmitJob(
               <Select
                 className="project-region-select"
                 search
-                placeholder="Cluster*"
+                placeholder=""
                 onChange={handleClusterSelected}
                 options={clusterList}
                 value={clusterSelected}

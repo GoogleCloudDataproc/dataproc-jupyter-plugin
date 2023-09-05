@@ -223,3 +223,6 @@
 .region-disable{
   color: lightgrey;
 }
+.icon-delete{
+  opacity: 0.5;
+}
