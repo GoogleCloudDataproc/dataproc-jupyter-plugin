@@ -480,10 +480,16 @@ function CreateRunTime({
 
   const projectListAPI = async () => {
     try {
-      const response = await authenticatedFetch({
-        baseUrl: PROJECT_LIST_URL,
-        uri: '',
-        method: HTTP_METHOD.GET
+      const credentials = await authApi();
+      if (!credentials) {
+        return;
+      }
+      const response = await fetch(PROJECT_LIST_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
       });
       const formattedResponse: { projects: Project[] } = await response.json();
 
