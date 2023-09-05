@@ -237,12 +237,15 @@
 }
 
 .jobs-list-table-parent {
-  height: 63vh;
+  height: 75.8vh;
   overflow: auto;
 }
-
+.scroll-comp-jobdetails{
+  overflow-y: auto;
+  max-height: 90vh;
+}
 .jobs-list-table-parent-small {
-  height: 49vh;
+  height: 55vh;
   overflow: auto;
 }
 

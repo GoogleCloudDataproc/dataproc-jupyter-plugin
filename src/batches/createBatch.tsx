@@ -351,7 +351,8 @@ function CreateBatch({
     batchIdValidation,
     duplicateKeyError,
     manualValidation,
-    mainJarSelected
+    mainJarSelected,
+    jarFilesSelected
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
@@ -466,7 +467,8 @@ function CreateBatch({
           !mainJarValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation ||
+          !jarFileValidation
         );
       case 'sparkR':
         return (
@@ -485,7 +487,8 @@ function CreateBatch({
           !additionalPythonFileValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation||
+          !jarFileValidation
         );
       case 'sparkSql':
         return (

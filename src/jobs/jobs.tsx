@@ -112,6 +112,7 @@ function JobComponent({
   setSelectedJobClone,
   clustersList
 }: any) {
+  console.log(clusterSelected);
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -523,9 +524,9 @@ function JobComponent({
               </div>
               <div
                 className={
-                  clusterResponse
-                    ? 'jobs-list-table-parent'
-                    : 'jobs-list-table-parent-small'
+                  clusterSelected
+                    ? 'jobs-list-table-parent-small'
+                    : 'jobs-list-table-parent'
                 }
               >
                 <TableData

@@ -67,6 +67,6 @@
 }
 
 .session-list-table-parent {
-    height: 70vh;
+    max-height: 81vh;
     overflow: auto;
 }
