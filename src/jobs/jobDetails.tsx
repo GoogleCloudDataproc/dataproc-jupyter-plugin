@@ -424,7 +424,7 @@ function JobDetails({
         />
       )}
       {!submitJobView && !detailedClusterView && !errorView && (
-        <div className="scroll-comp">
+        <div className="scroll-comp-jobdetails">
           {jobInfo.jobUuid !== '' && (
             <div>
               <div className="cluster-details-header">

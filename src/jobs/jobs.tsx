@@ -523,9 +523,9 @@ function JobComponent({
               </div>
               <div
                 className={
-                  clusterResponse
-                    ? 'jobs-list-table-parent'
-                    : 'jobs-list-table-parent-small'
+                  clusterSelected
+                    ? 'jobs-list-table-parent-small'
+                    : 'jobs-list-table-parent'
                 }
               >
                 <TableData

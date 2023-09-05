@@ -352,7 +352,8 @@ function CreateBatch({
     batchIdValidation,
     duplicateKeyError,
     manualValidation,
-    mainJarSelected
+    mainJarSelected,
+    jarFilesSelected
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
@@ -467,7 +468,8 @@ function CreateBatch({
           !mainJarValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation ||
+          !jarFileValidation
         );
       case 'sparkR':
         return (
@@ -486,7 +488,8 @@ function CreateBatch({
           !additionalPythonFileValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation||
+          !jarFileValidation
         );
       case 'sparkSql':
         return (
@@ -1118,6 +1121,7 @@ function CreateBatch({
           } else {
             const errorResponse = await response.json();
             setError({ isOpen: true, message: errorResponse.error.message });
+            console.log(error);
           }
         })
         .catch((err: Error) => {
@@ -2126,7 +2130,7 @@ function CreateBatch({
                 <ErrorPopup
                   onCancel={() => setError({ isOpen: false, message: '' })}
                   errorPopupOpen={error.isOpen}
-                  DeleteMsg={error.message}
+                  errorMsg={error.message}
                 />
               )}
             </div>
