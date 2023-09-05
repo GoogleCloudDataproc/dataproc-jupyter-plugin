@@ -112,7 +112,6 @@ function JobComponent({
   setSelectedJobClone,
   clustersList
 }: any) {
-  console.log(clusterSelected);
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState({});
   const [isLoading, setIsLoading] = useState(true);
