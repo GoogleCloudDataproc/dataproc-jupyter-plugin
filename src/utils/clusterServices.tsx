@@ -41,7 +41,7 @@ export const deleteClusterApi = async (selectedcluster: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
-            toast.error(`Cluster ${selectedcluster} deleted successfully`, toastifyCustomStyle);
+            toast.success(`Cluster ${selectedcluster} deleted successfully`, toastifyCustomStyle);
           })
           .catch((e: Error) => console.log(e));
       })

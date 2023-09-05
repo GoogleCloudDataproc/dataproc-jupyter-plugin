@@ -1,5 +1,6 @@
 .page-move-button.disabled {
   opacity: 0.5;
+  cursor: default;
 }
 
 .page-move-button {
