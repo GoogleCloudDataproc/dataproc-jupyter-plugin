@@ -213,7 +213,7 @@ function CreateBatch({
     }
   }
 
-  const selectedRadioInitialValue = mainClass ? 'mainClass' : 'mainJarURI';
+  const selectedRadioInitialValue = mainJarFileUri ? 'mainJarURI' : 'mainClass';
   const [batchTypeList, setBatchTypeList] = useState([{}]);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
@@ -1571,9 +1571,9 @@ function CreateBatch({
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
                 >
-                  Container Registry
+                  Container Registry 
                 </div>
-                {'  or '}
+                &nbsp;{'  or '}
                 <div
                   className="create-batch-learn-more"
                   onClick={() => {

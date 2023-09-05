@@ -17,6 +17,7 @@
 
 import React from 'react';
 import { SessionTemplateDisplay } from './listRuntimeTemplateInterface';
+import { Select } from 'semantic-ui-react';
 
 interface IBatch {
   batchID: string;
@@ -61,7 +62,20 @@ export const PaginationView = ({
   return (
     <div className="pagination-parent-view">
       <div>Rows per page: </div>
-      <select
+      <Select
+      className="page-size-selection"
+      value={pageSize.toString()} // Convert pageSize to string for compatibility
+      onChange={(e, { value }) => {
+        const selectedPageSize = parseInt(value as string, 10); // Parse the value to a number
+        setPageSize(selectedPageSize); // Use the parsed number as the new pageSize
+      }}
+      options={[
+        { key: '50', value: '50', text: '50' },
+        { key: '100', value: '100', text: '100' },
+        { key: '200', value: '200', text: '200' }
+      ]}
+    />
+      {/* <select
         className="page-size-selection"
         value={pageSize}
         onChange={e => {
@@ -73,7 +87,7 @@ export const PaginationView = ({
             {pageSize}
           </option>
         ))}
-      </select>
+      </select> */}
       {(pageIndex + 1) * pageSize > allData.length ? (
         <div className="page-display-part">
           {pageIndex * pageSize + 1} -{' '} {allData.length} of {allData.length}

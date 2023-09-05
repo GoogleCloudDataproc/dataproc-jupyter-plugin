@@ -41,6 +41,7 @@
 
 .Tree div[role="treeitem"][aria-level="0"]>div {
   display: flex;
+  align-items: center;
 }
 
 .Tree div[role="treeitem"][aria-level="0"]>div>div>div>svg {
@@ -50,6 +51,7 @@
 
 .Tree div[role="treeitem"][aria-level="1"]>div {
   display: flex;
+  align-items: center;
 }
 
 .Tree div[role="treeitem"][aria-level="1"]>div>div>div>svg {
@@ -113,7 +115,7 @@
 
 .search-clear-icon {
   position: absolute !important;
-  right: 2%;
+  right: 5px;
   padding-right: 2px;
   padding-left: 2px;
 }

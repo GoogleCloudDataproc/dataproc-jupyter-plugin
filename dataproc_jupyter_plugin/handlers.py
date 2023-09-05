@@ -53,7 +53,8 @@ def get_cached_credentials():
 
             token_expiry = config_data['credential']['token_expiry']
             utc_datetime = datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
-            credentials_cache = TTLCache(maxsize=1, ttl=(utc_datetime - datetime.utcnow()).total_seconds())
+            ttl_seconds = max(0, (utc_datetime - datetime.utcnow()).total_seconds())
+            credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
             credentials_cache['credentials'] = credentials
             return credentials
         else:
@@ -133,14 +134,13 @@ class RouteHandler(APIHandler):
         try:
             if credentials_cache is None or 'credentials' not in credentials_cache:
                 cached_credentials = get_cached_credentials()
-                self.finish(json.dumps(cached_credentials))
-               
+                self.finish(json.dumps(cached_credentials))               
             else:
                 self.finish(json.dumps(credentials_cache['credentials']))
         except Exception:
-            print("exception gcloud")
             cached_credentials = get_cached_credentials()
             self.finish(json.dumps(cached_credentials))
+
 
 class LoginHandler(APIHandler):
     @tornado.web.authenticated
