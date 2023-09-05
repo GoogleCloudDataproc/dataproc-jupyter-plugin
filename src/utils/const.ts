@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-export const VERSION_DETAIL = "0.1.15"
+export const VERSION_DETAIL = "0.1.16"
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
