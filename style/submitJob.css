@@ -83,6 +83,9 @@
   left: 7px;
   z-index: 3;
 }
+.disable-text{
+  color:#80868b;
+}
 
 .input-style {
   background: #ffffff;

@@ -27,6 +27,7 @@ import {
   BASE_URL,
   BASE_URL_META,
   BASE_URL_NETWORKS,
+  HTTP_METHOD,
   PROJECT_LIST_URL,
   REGION_URL,
   STATUS_RUNNING,
@@ -35,7 +36,7 @@ import {
 import TagsInput from 'react-tagsinput';
 import 'react-tagsinput/react-tagsinput.css';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
+import { authApi, toastifyCustomStyle, authenticatedFetch } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
@@ -195,6 +196,7 @@ function CreateRunTime({
         });
     }
   };
+
   const updateLogic = () => {
     if (selectedRuntimeClone !== undefined) {
       const {
@@ -316,7 +318,7 @@ function CreateRunTime({
       */
           setClusterSelected(dataprocCluster.split('/')[5]);
         }
-        listNetworksFromSubNetworkAPI(executionConfig.subnetworkUri)
+        listNetworksFromSubNetworkAPI(executionConfig.subnetworkUri);
       }
     } else {
       displayUserInfo();
@@ -342,7 +344,6 @@ function CreateRunTime({
               let transformedNetworkSelected = '';
               transformedNetworkSelected = responseResult.network.split('/')[9];
 
-
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
@@ -358,101 +359,73 @@ function CreateRunTime({
     }
   };
   const listClustersAPI = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=100`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+    try {
+      const queryParams = new URLSearchParams({ pageSize: '100' });
+      const response = await authenticatedFetch({
+        uri: 'clusters',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'regions',
+        queryParams: queryParams
+      });
+      const formattedResponse: { clusters: Cluster[] } = await response.json();
+      let transformClusterListData = [];
+
+      transformClusterListData = formattedResponse.clusters.filter(
+        (data: Cluster) => {
+          if (data.status.state === STATUS_RUNNING) {
+            return {
+              clusterName: data.clusterName
+            };
           }
         }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: { clusters: Cluster[] }) => {
-              let transformClusterListData = [];
+      );
 
-              transformClusterListData = responseResult.clusters.filter(
-                (data: Cluster) => {
-                  if (data.status.state === STATUS_RUNNING) {
-                    return {
-                      clusterName: data.clusterName
-                    };
-                  }
-                }
-              );
-
-              const keyLabelStructure = transformClusterListData.map(obj => ({
-                key: obj.clusterName,
-                value: obj.clusterName,
-                text: obj.clusterName
-              }));
-              setClustersList(keyLabelStructure);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing clusters', err);
-        });
+      const keyLabelStructure = transformClusterListData.map(obj => ({
+        key: obj.clusterName,
+        value: obj.clusterName,
+        text: obj.clusterName
+      }));
+      setClustersList(keyLabelStructure);
+    } catch (error) {
+      console.error('Error listing clusters', error);
     }
   };
+
   const listNetworksAPI = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      fetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: { items: Network[] }) => {
-              let transformedNetworkList = [];
-              /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-      */
+    try {
+      const response = await authenticatedFetch({
+        baseUrl: BASE_URL_NETWORKS,
+        uri: 'networks',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'global'
+      });
+      const formattedResponse: { items: Network[] } = await response.json();
+      let transformedNetworkList = [];
+      /*
+ Extracting network from items
+ Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
+*/
 
-              transformedNetworkList = responseResult.items.map(
-                (data: Network) => {
-                  return {
-                    network: data.selfLink.split('/')[9]
-                  };
-                }
-              );
-              const keyLabelStructureNetwork = transformedNetworkList.map(
-                obj => ({
-                  key: obj.network,
-                  value: obj.network,
-                  text: obj.network
-                })
-              );
-              setNetworklist(keyLabelStructureNetwork);
-            })
-
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing Networks', err);
-        });
+      transformedNetworkList = formattedResponse.items.map((data: Network) => {
+        return {
+          network: data.selfLink.split('/')[9]
+        };
+      });
+      const keyLabelStructureNetwork = transformedNetworkList.map(obj => ({
+        key: obj.network,
+        value: obj.network,
+        text: obj.network
+      }));
+      setNetworklist(keyLabelStructureNetwork);
+    } catch (error) {
+      console.error('Error listing Networks', error);
     }
   };
 
   type SubnetworkData = {
     subnetworks: string;
   };
+
   const listSubNetworksAPI = async (subnetwork: string) => {
     const credentials = await authApi();
     if (credentials) {
@@ -553,41 +526,33 @@ function CreateRunTime({
         });
     }
   };
+
   const projectListAPI = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      fetch(PROJECT_LIST_URL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
+    try {
+      const response = await authenticatedFetch({
+        baseUrl: PROJECT_LIST_URL,
+        uri: '',
+        method: HTTP_METHOD.GET
+      });
+      const formattedResponse: { projects: Project[] } = await response.json();
+
+      let transformedProjectList = [];
+      transformedProjectList = formattedResponse.projects.map(
+        (data: Project) => {
+          return {
+            projectId: data.projectId
+          };
         }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: { projects: Project[] }) => {
-              let transformedProjectList = [];
-              transformedProjectList = responseResult.projects.map(
-                (data: Project) => {
-                  return {
-                    projectId: data.projectId
-                  };
-                }
-              );
-              const keyLabelStructure = transformedProjectList.map(obj => ({
-                key: obj.projectId,
-                value: obj.projectId,
-                text: obj.projectId
-              }));
-              const noneOption = { key: 'None', value: 'None', text: 'None' };
-              setProjectList([noneOption, ...keyLabelStructure]);
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          console.error('Error fetching project list', err);
-        });
+      );
+      const keyLabelStructure = transformedProjectList.map(obj => ({
+        key: obj.projectId,
+        value: obj.projectId,
+        text: obj.projectId
+      }));
+      const noneOption = { key: 'None', value: 'None', text: 'None' };
+      setProjectList([noneOption, ...keyLabelStructure]);
+    } catch (error) {
+      console.error('Error fetching project list', error);
     }
   };
 
@@ -599,7 +564,7 @@ function CreateRunTime({
     setIsLoadingRegion(true);
     const credentials = await authApi();
     if (credentials) {
-      fetch(`${REGION_URL}${projectId}/regions`, {
+      fetch(`${REGION_URL}/${projectId}/regions`, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
           Authorization: API_HEADER_BEARER + credentials.access_token
@@ -716,14 +681,16 @@ function CreateRunTime({
     setAutoSelected(data.value);
   };
   const handleProjectIdChange = (event: any, data: any) => {
+    setRegion('');
+    setRegionList([]);
+    setServicesList([]);
+    setServicesSelected('');
     regionListAPI(data.value);
     setProjectId(data.value);
-    data.value === 'None' && setRegion('');
-    data.value === 'None' && setServicesSelected('');
-    data.value === 'None' && setRegionList([]);
-    data.value === 'None' && setServicesList([]);
   };
   const handleRegionChange = (event: any, data: any) => {
+    setServicesSelected('');
+    setServicesList([]);
     setRegion(data.value);
     listMetaStoreAPI(data.value);
   };
@@ -740,7 +707,6 @@ function CreateRunTime({
     const content = new AuthLogin();
     const widget = new MainAreaWidget<AuthLogin>({ content });
     widget.title.label = 'Config Setup';
-
   };
 
   const handleClusterSelected = (event: any, data: any) => {
@@ -779,7 +745,8 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully submitted`, toastifyCustomStyle
+              `RuntimeTemplate ${displayNameSelected} successfully submitted`,
+              toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -813,7 +780,8 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully updated`, toastifyCustomStyle
+              `RuntimeTemplate ${displayNameSelected} successfully updated`,
+              toastifyCustomStyle
             );
             console.log(responseResult);
           } else {
@@ -882,30 +850,30 @@ function CreateRunTime({
             ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
             ...(timeSelected === 'h' &&
               idleTimeSelected && {
-              idleTtl: inputValueHour.toString() + 's'
-            }),
+                idleTtl: inputValueHour.toString() + 's'
+              }),
             ...(timeSelected === 'm' &&
               idleTimeSelected && {
-              idleTtl: inputValueMin.toString() + 's'
-            }),
+                idleTtl: inputValueMin.toString() + 's'
+              }),
             ...(timeSelected === 's' &&
               idleTimeSelected && {
-              idleTtl: idleTimeSelected + 's'
-            }),
+                idleTtl: idleTimeSelected + 's'
+              }),
 
             ...(autoSelected === 'h' &&
               autoTimeSelected && {
-              ttl: inputValueHourAuto.toString() + 's'
-            }),
+                ttl: inputValueHourAuto.toString() + 's'
+              }),
             ...(autoSelected === 'm' &&
               autoTimeSelected && {
-              ttl: inputValueMinAuto.toString() + 's'
-            }),
+                ttl: inputValueMinAuto.toString() + 's'
+              }),
 
             ...(autoSelected === 's' &&
               autoTimeSelected && {
-              ttl: autoTimeSelected + 's'
-            })
+                ttl: autoTimeSelected + 's'
+              })
           },
           peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
@@ -1105,7 +1073,7 @@ function CreateRunTime({
                 Metastore region
               </label>
               {isLoadingRegion ? (
-                <div className='metastore-loader'>
+                <div className="metastore-loader">
                   <ClipLoader
                     loading={true}
                     size={25}
@@ -1131,7 +1099,7 @@ function CreateRunTime({
                 Metastore service
               </label>
               {isLoadingService ? (
-                <div className='metastore-loader'>
+                <div className="metastore-loader">
                   <ClipLoader
                     loading={true}
                     size={25}

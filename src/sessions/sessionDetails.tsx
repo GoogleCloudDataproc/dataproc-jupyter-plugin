@@ -23,9 +23,7 @@ import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL,
+  HTTP_METHOD,
   NETWORK_KEY,
   NETWORK_LABEL,
   SERVICE_ACCOUNT_KEY,
@@ -43,7 +41,7 @@ import {
   SUBNETWORK_KEY,
   SUBNETWORK_LABEL
 } from '../utils/const';
-import { authApi, elapsedTime, jobTimeFormat, toastifyCustomStyle } from '../utils/utils';
+import {  authenticatedFetch, elapsedTime, jobTimeFormat, toastifyCustomStyle } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import { toast } from 'react-toastify';
@@ -116,44 +114,27 @@ function SessionDetails({
     setDetailedSessionView(false);
   };
   const getSessionDetails = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${sessionSelected}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
+    try {
+      const response = await authenticatedFetch({
+        uri: `sessions/${sessionSelected}`,
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'locations'
+      });
+
+      const formattedResponse = await response.json();
+      setSessionInfo(formattedResponse);
+      const labelValue: string[] = [];
+      if (formattedResponse.labels) {
+        for (const [key, value] of Object.entries(formattedResponse.labels)) {
+          labelValue.push(`${key}:${value}`);
         }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: any) => {
-              setSessionInfo(responseResult);
-              const labelValue: string[] = [];
-              if (responseResult.labels) {
-                for (const [key, value] of Object.entries(
-                  responseResult.labels
-                )) {
-                  labelValue.push(`${key}:${value}`);
-                }
-              }
-              setLabelDetail(labelValue);
-              setIsLoading(false);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error loading session details', err);
-          toast.error(`Failed to fetch session details ${sessionSelected}`, toastifyCustomStyle);
-        });
+      }
+      setLabelDetail(labelValue);
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error loading session details', error);
+      toast.error(`Failed to fetch session details ${sessionSelected}`,toastifyCustomStyle);
     }
   };
 
