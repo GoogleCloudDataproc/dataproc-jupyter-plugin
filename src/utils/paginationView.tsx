@@ -75,19 +75,6 @@ export const PaginationView = ({
         { key: '200', value: '200', text: '200' }
       ]}
     />
-      {/* <select
-        className="page-size-selection"
-        value={pageSize}
-        onChange={e => {
-          setPageSize(Number(e.target.value));
-        }}
-      >
-        {[50, 100, 200].map(pageSize => (
-          <option key={pageSize} value={pageSize}>
-            {pageSize}
-          </option>
-        ))}
-      </select> */}
       {(pageIndex + 1) * pageSize > allData.length ? (
         <div className="page-display-part">
           {pageIndex * pageSize + 1} -{' '} {allData.length} of {allData.length}
