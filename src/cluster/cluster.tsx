@@ -112,15 +112,20 @@ const ClusterComponent = (): React.JSX.Element => {
   ) => {
     const pageToken = nextPageToken ?? '';
 
-    const queryParams = new URLSearchParams();
-    queryParams.append('pageSize', '50');
-    queryParams.append('pageToken', pageToken);
-
     try {
       const projectId = await getProjectId();
       setProjectId(projectId);
 
-      const response = await authenticatedFetch('clusters', HTTP_METHOD.GET, queryParams);
+      const queryParams = new URLSearchParams();
+      queryParams.append('pageSize', '50');
+      queryParams.append('pageToken', pageToken);
+
+      const response = await authenticatedFetch({
+        uri: 'clusters',
+        regionIdentifier: 'regions',
+        method: HTTP_METHOD.GET,
+        queryParams: queryParams
+      });
       const formattedResponse = await response.json();
       let transformClusterListData = [];
       if (formattedResponse && formattedResponse.clusters) {
@@ -178,7 +183,11 @@ const ClusterComponent = (): React.JSX.Element => {
 
   const statusApi = async (selectedCluster: string) => {
     try {
-      const response = await authenticatedFetch(`clusters/${selectedCluster}`, HTTP_METHOD.GET);
+      const response = await authenticatedFetch({
+        uri: `clusters/${selectedCluster}`,
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'regions'
+      });
       const formattedResponse = await response.json();
 
       if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
@@ -196,7 +205,11 @@ const ClusterComponent = (): React.JSX.Element => {
     setRestartEnabled(true);
 
     try {
-      const response = await authenticatedFetch(`clusters/${selectedCluster}:stop`, HTTP_METHOD.POST);
+      const response = await authenticatedFetch({
+        uri: `clusters/${selectedCluster}:stop`,
+        method: HTTP_METHOD.POST,
+        regionIdentifier: 'regions'
+      });
       const formattedResponse = await response.json();
       console.log(formattedResponse);
       listClustersAPI();
@@ -208,10 +221,9 @@ const ClusterComponent = (): React.JSX.Element => {
       listClustersAPI();
 
       setRestartEnabled(false);
-    }
-    catch(error) {
+    } catch (error) {
       console.error('Error restarting cluster', error);
-          toast.error(`Failed to restart the cluster ${selectedCluster}`);
+      toast.error(`Failed to restart the cluster ${selectedCluster}`);
     }
   };
 

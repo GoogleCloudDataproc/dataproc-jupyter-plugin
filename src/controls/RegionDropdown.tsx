@@ -40,7 +40,7 @@ export function RegionDropdown(props: Props) {
     () => regions.map(region => region.name),
     [regions]
   );
-  console.log({ regions, regionStrList });
+
   return (
     <Autocomplete
       value={region}

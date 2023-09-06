@@ -18,26 +18,29 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 import React, { useEffect, useState } from 'react';
 import CreateRuntime from './createRunTime';
-import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
 import { JupyterLab } from '@jupyterlab/application';
+import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
 
-const RuntimeTemplateComponent  = ({ app }: { app: JupyterLab }): JSX.Element =>  {
+const RuntimeTemplateComponent = ({
+  app
+}: {
+  app: JupyterLab;
+}): JSX.Element => {
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
- 
+
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
-  useState<SessionTemplate>();
+    useState<SessionTemplate>();
   useEffect(() => {
     setSelectedRuntimeClone(undefined);
-  })
+  });
   return (
     <div>
       {!openCreateTemplate && (
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
-        
-        />)}
-      
+        />
+      )}
     </div>
   );
 };

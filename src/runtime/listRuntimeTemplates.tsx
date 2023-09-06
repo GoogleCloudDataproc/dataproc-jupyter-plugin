@@ -22,13 +22,9 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
-import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL
-} from '../utils/const';
+import { HTTP_METHOD } from '../utils/const';
 import TableData from '../utils/tableData';
-import { ICellProps, authApi, jobTimeFormat } from '../utils/utils';
+import { ICellProps, authenticatedFetch, jobTimeFormat } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -148,93 +144,78 @@ function ListRuntimeTemplates({
     nextPageToken?: string,
     previousRuntimeTemplatesList?: object
   ) => {
-    const credentials = await authApi();
-    const pageToken = nextPageToken ?? '';
-    if (credentials) {
-      fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates?pageSize=50&pageToken=${pageToken}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+    try {
+      const pageToken = nextPageToken ?? '';
+      const queryParams = new URLSearchParams({
+        pageSize: '50',
+        pageToken: pageToken
+      });
+
+      const response = await authenticatedFetch({
+        uri: 'sessionTemplates',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'locations',
+        queryParams: queryParams
+      });
+      const formattedResponse: SessionTemplateRoot = await response.json();
+      let transformRuntimeTemplatesListData: SessionTemplateDisplay[] = [];
+      if (formattedResponse && formattedResponse.sessionTemplates) {
+        setRunTimeTemplateAllList(formattedResponse.sessionTemplates);
+        let runtimeTemplatesListNew = formattedResponse.sessionTemplates;
+        runtimeTemplatesListNew.sort(
+          (a: { updateTime: string }, b: { updateTime: string }) => {
+            const dateA = new Date(a.updateTime);
+            const dateB = new Date(b.updateTime);
+            return Number(dateB) - Number(dateA);
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: SessionTemplateRoot) => {
-              let transformRuntimeTemplatesListData: SessionTemplateDisplay[] =
-                [];
-              if (responseResult && responseResult.sessionTemplates) {
-                setRunTimeTemplateAllList(responseResult.sessionTemplates);
-                let runtimeTemplatesListNew = responseResult.sessionTemplates;
-                runtimeTemplatesListNew.sort(
-                  (a: { updateTime: string }, b: { updateTime: string }) => {
-                    const dateA = new Date(a.updateTime);
-                    const dateB = new Date(b.updateTime);
-                    return Number(dateB) - Number(dateA);
-                  }
-                );
-                transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
-                  (data: SessionTemplate) => {
-                    const startTimeDisplay = data.updateTime
-                      ? jobTimeFormat(data.updateTime)
-                      : '';
+        );
+        transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
+          (data: SessionTemplate) => {
+            const startTimeDisplay = data.updateTime
+              ? jobTimeFormat(data.updateTime)
+              : '';
 
-                    let displayName = '';
+            let displayName = '';
 
-                    if (
-                      data.jupyterSession &&
-                      data.jupyterSession.displayName
-                    ) {
-                      displayName = data.jupyterSession.displayName;
-                    }
-                    /*
-         Extracting runtimeId from name
-         Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
-      */
+            if (data.jupyterSession && data.jupyterSession.displayName) {
+              displayName = data.jupyterSession.displayName;
+            }
 
-                    return {
-                      name: displayName,
-                      owner: data.creator,
-                      description: data.description,
-                      lastModified: startTimeDisplay,
-                      actions: renderActions(data),
-                      id: data.name.split('/')[5]
-                    };
-                  }
-                );
-              }
+            // Extracting runtimeId from name
+            // Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
 
-              const existingRuntimeTemplatesData =
-                previousRuntimeTemplatesList ?? [];
-              //setStateAction never type issue
-              let allRuntimeTemplatesData: SessionTemplateDisplay[] = [
-                ...(existingRuntimeTemplatesData as []),
-                ...transformRuntimeTemplatesListData
-              ];
+            return {
+              name: displayName,
+              owner: data.creator,
+              description: data.description,
+              lastModified: startTimeDisplay,
+              actions: renderActions(data),
+              id: data.name.split('/')[5]
+            };
+          }
+        );
+      }
 
-              if (responseResult.nextPageToken) {
-                listRuntimeTemplatesAPI(
-                  responseResult.nextPageToken,
-                  allRuntimeTemplatesData
-                );
-              } else {
-                setRuntimeTemplateslist(allRuntimeTemplatesData);
-                setIsLoading(false);
-              }
-            })
-            .catch((e: Error) => {
-              console.error(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing runtime templates', err);
-          toast.error('Failed to fetch runtime templates');
-        });
+      const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
+      //setStateAction never type issue
+      let allRuntimeTemplatesData: SessionTemplateDisplay[] = [
+        ...(existingRuntimeTemplatesData as []),
+        ...transformRuntimeTemplatesListData
+      ];
+
+      if (formattedResponse.nextPageToken) {
+        listRuntimeTemplatesAPI(
+          formattedResponse.nextPageToken,
+          allRuntimeTemplatesData
+        );
+      } else {
+        setRuntimeTemplateslist(allRuntimeTemplatesData);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error listing runtime templates', error);
+      toast.error('Failed to fetch runtime templates');
     }
   };
 
