@@ -39,7 +39,7 @@ export const deleteSessionAPI = async (selectedSession: string) => {
     )
       .then((response: Response) => {
         console.log(response);
-        toast.error(`Session ${selectedSession} deleted successfully`, toastifyCustomStyle);
+        toast.success(`Session ${selectedSession} deleted successfully`, toastifyCustomStyle);
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
