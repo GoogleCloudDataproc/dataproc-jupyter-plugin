@@ -34,11 +34,12 @@ import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
+import { Button } from '@mui/material';
+import { RegionDropdown } from '../controls/RegionDropdown';
+import { projectListAPI } from '../utils/projectService';
+import { DynamicDropdown } from '../controls/DynamicDropdown';
 import CreateRuntime from '../runtime/createRunTime';
 import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
-import { ProjectIDDropdown } from './projectIdDropdown';
-import { RegionDropdown } from './regionDropdown';
-import { Button } from '@mui/material';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -185,9 +186,11 @@ function ConfigSelection({ configError, setConfigError }: any) {
           <div className="config-overlay">
             <div className="config-form">
               <div className="project-overlay">
-                <ProjectIDDropdown
-                  projectId={projectId}
-                  onProjectIdChange={projectId => setProjectId(projectId)}
+                <DynamicDropdown
+                  value={projectId}
+                  onChange={(_, projectId) => setProjectId(projectId ?? '')}
+                  fetchFunc={projectListAPI}
+                  label="Project ID"
                 />
               </div>
 

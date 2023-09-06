@@ -22,9 +22,7 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
-import {
-  HTTP_METHOD
-} from '../utils/const';
+import { HTTP_METHOD } from '../utils/const';
 import TableData from '../utils/tableData';
 import {
   ICellProps,
