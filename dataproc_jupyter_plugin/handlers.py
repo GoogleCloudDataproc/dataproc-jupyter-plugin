@@ -17,9 +17,9 @@ from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 import tornado
 import subprocess
-from datetime import datetime
-from datetime import datetime
+# from datetime import datetime
 from cachetools import TTLCache
+import datetime
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url
 
@@ -46,14 +46,20 @@ def get_cached_credentials():
         if process.returncode == 0:
             config_data = json.loads(output)
             credentials = {
-                'project_id': config_data['configuration']['properties']['core']['project'],
-                'region_id': config_data['configuration']['properties']['compute']['region'],
-                'access_token': config_data['credential']['access_token']
-            }
+                    'project_id': config_data['configuration']['properties']['core']['project'],
+                    'region_id': config_data['configuration']['properties']['compute']['region'],
+                    'access_token': config_data['credential']['access_token']
+                }
 
             token_expiry = config_data['credential']['token_expiry']
-            utc_datetime = datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
-            ttl_seconds = max(0, (utc_datetime - datetime.utcnow()).total_seconds())
+            utc_datetime = datetime.datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
+            current_utc_datetime = datetime.datetime.utcnow()
+            expiry_timedelta = utc_datetime - current_utc_datetime  # Calculate the time difference
+            expiry_seconds = expiry_timedelta.total_seconds()
+            if expiry_seconds > 1000:
+                ttl_seconds = 1000
+            else:
+                ttl_seconds = expiry_seconds
             credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
             credentials_cache['credentials'] = credentials
             return credentials
@@ -66,41 +72,41 @@ def get_cached_credentials():
                 process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 project, error = process.communicate()
                 if project == '':
-                    credentials = {
-                'project_id': '',
-                'region_id': '',
-                'access_token': '',
-                'config_error': 1,
-                'login_error': 0
-                }
+                        credentials = {
+                    'project_id': '',
+                    'region_id': '',
+                    'access_token': '',
+                    'config_error': 1,
+                    'login_error': 0
+                    }
                 else:
                     cmd = "gcloud config get-value compute/region"
                     process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                     region, error = process.communicate()
                     if region == '':
                         credentials = {
-                        'project_id': '',
-                        'region_id': '',
-                        'access_token': '',
-                        'config_error': 1,
-                        'login_error': 0
-                     }
+                            'project_id': '',
+                            'region_id': '',
+                            'access_token': '',
+                            'config_error': 1,
+                            'login_error': 0
+                        }
                     else:
                         credentials = {
-                        'project_id': '',
-                        'region_id': '',
-                        'access_token': '',
-                        'config_error': 0,
-                        'login_error': 1
-                        }
+                            'project_id': '',
+                            'region_id': '',
+                            'access_token': '',
+                            'config_error': 0,
+                            'login_error': 1
+                            }
             else:
                 credentials = {
-                'project_id': '',
-                'region_id': '',
-                'access_token': '',
-                'config_error': 1,
-                'login_error': 0
-                }
+                    'project_id': '',
+                    'region_id': '',
+                    'access_token': '',
+                    'config_error': 1,
+                    'login_error': 0
+                    }
             credentials_cache = TTLCache(maxsize=1, ttl=5)
             credentials_cache['credentials'] = credentials
             return credentials

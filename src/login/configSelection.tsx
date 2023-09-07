@@ -58,6 +58,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
 
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
+  const [gcloudRegion, setGcloudRegion] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({
@@ -149,6 +150,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
       if (credentials && credentials.project_id && credentials.region_id) {
         setProjectId(credentials.project_id);
         setRegion(credentials.region_id);
+        setGcloudRegion(credentials.region_id);
         setConfigError(false);
       } else {
         setConfigError(true);
@@ -205,7 +207,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
                 <Button
                   variant="contained"
                   disabled={
-                    isSaving || projectId.length == 0 || region.length == 0
+                    isSaving || projectId.length == 0 || region.length == 0 || gcloudRegion === region
                   }
                   onClick={handleSave}
                 >

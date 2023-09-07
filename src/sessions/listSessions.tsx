@@ -155,52 +155,55 @@ function ListSessions() {
         queryParams: queryParams
       });
       const formattedResponse = await response.json();
-      let transformSessionListData = [];
+      let transformSessionListData: React.SetStateAction<never[]> = [];
       if (formattedResponse && formattedResponse.sessions) {
         let sessionsListNew = formattedResponse.sessions;
-        sessionsListNew.sort(
-          (a: { createTime: string }, b: { createTime: string }) => {
-            const dateA = new Date(a.createTime);
-            const dateB = new Date(b.createTime);
-            return Number(dateB) - Number(dateA);
-          }
-        );
-        transformSessionListData = sessionsListNew.map((data: any) => {
-          const startTimeDisplay = jobTimeFormat(data.createTime);
-          const startTime = new Date(data.createTime);
-          let elapsedTimeString = '';
-          if (data.state === STATUS_TERMINATED || data.state === STATUS_FAIL) {
-            elapsedTimeString = elapsedTime(data.stateTime, startTime);
-          }
 
-          // Extracting sessionID, location from sessionInfo.name
-          // Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
-
-          return {
-            sessionID: data.name.split('/')[5],
-            status: data.state,
-            location: data.name.split('/')[3],
-            creator: data.creator,
-            creationTime: startTimeDisplay,
-            elapsedTime: elapsedTimeString,
-            actions: renderActions(data)
-          };
-        });
+        const existingSessionsData = previousSessionsList ?? [];
+        // setStateAction never type issue
+        let allSessionsData: any = [
+          ...(existingSessionsData as []),
+          ...sessionsListNew
+        ];
+  
+        if (formattedResponse.nextPageToken) {
+          listSessionsAPI(formattedResponse.nextPageToken, allSessionsData);
+        } else {
+          allSessionsData.sort(
+            (a: { createTime: string }, b: { createTime: string }) => {
+              const dateA = new Date(a.createTime);
+              const dateB = new Date(b.createTime);
+              return Number(dateB) - Number(dateA);
+            }
+          );
+          transformSessionListData = allSessionsData.map((data: any) => {
+            const startTimeDisplay = jobTimeFormat(data.createTime);
+            const startTime = new Date(data.createTime);
+            let elapsedTimeString = '';
+            if (data.state === STATUS_TERMINATED || data.state === STATUS_FAIL) {
+              elapsedTimeString = elapsedTime(data.stateTime, startTime);
+            }
+  
+            // Extracting sessionID, location from sessionInfo.name
+            // Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
+  
+            return {
+              sessionID: data.name.split('/')[5],
+              status: data.state,
+              location: data.name.split('/')[3],
+              creator: data.creator,
+              creationTime: startTimeDisplay,
+              elapsedTime: elapsedTimeString,
+              actions: renderActions(data)
+            };
+          });
+          setSessionsList(transformSessionListData);
+          setIsLoading(false);
+        }
       }
+      
 
-      const existingSessionsData = previousSessionsList ?? [];
-      // setStateAction never type issue
-      let allSessionsData: any = [
-        ...(existingSessionsData as []),
-        ...transformSessionListData
-      ];
 
-      if (formattedResponse.nextPageToken) {
-        listSessionsAPI(formattedResponse.nextPageToken, allSessionsData);
-      } else {
-        setSessionsList(allSessionsData);
-        setIsLoading(false);
-      }
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing Sessions', error);
