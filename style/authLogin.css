@@ -297,7 +297,7 @@
 }
 
 .feedback-container {
-  color: #3367D6;
+  color: #3367D6 !important;
   font-weight: bold;
 }
 

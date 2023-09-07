@@ -257,7 +257,12 @@ function ConfigSelection({ configError, setConfigError }: any) {
               </div>
               <div className="feedback-version-container">
                 <div className="google-header">
-                  <div className="feedback-container">Provide Feedback</div>
+                <a
+                 className="feedback-container"
+                  href="https://forms.gle/19dngtRAwHZYtNtQ6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >Provide Feedback</a>
                   <span className="privacy-terms"> • </span>
                   <a
                     href="https://github.com/GoogleCloudDataproc/dataproc-jupyter-plugin"
