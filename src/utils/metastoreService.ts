@@ -18,21 +18,21 @@
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  PROJECT_LIST_URL
-} from '../utils/const';
-import { authApi } from '../utils/utils';
+  BASE_URL_META
+} from './const';
+import { authApi } from './utils';
 
-interface Project {
-  projectId: string;
-  name: string;
-}
-
-export const projectListAPI = async (prefix: string): Promise<string[]> => {
+export const metastoreServiceListAPI = async (
+  projectId: string,
+  prefix: string
+): Promise<string[]> => {
   const credentials = await authApi();
   if (!credentials) {
     return [];
   }
-  const requestUrl = new URL(PROJECT_LIST_URL);
+  const requestUrl = new URL(
+    `${BASE_URL_META}/projects/${projectId}/locations/${credentials.region_id}/services`
+  );
   if (prefix.length > 0) {
     requestUrl.searchParams.append('filter', `name:${prefix}*`);
   }
@@ -44,8 +44,7 @@ export const projectListAPI = async (prefix: string): Promise<string[]> => {
       Authorization: API_HEADER_BEARER + credentials.access_token
     }
   });
-  const { projects } = (await resp.json()) as {
-    projects: Project[] | undefined;
-  };
-  return (projects ?? []).map(project => project.projectId);
+
+  const json = (await resp.json()) as { services: { name: string }[] };
+  return json.services.map(service => service.name);
 };
