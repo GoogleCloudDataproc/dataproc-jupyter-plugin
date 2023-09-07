@@ -17,7 +17,6 @@ from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 import tornado
 import subprocess
-# from datetime import datetime
 from cachetools import TTLCache
 import datetime
 
@@ -54,7 +53,7 @@ def get_cached_credentials():
             token_expiry = config_data['credential']['token_expiry']
             utc_datetime = datetime.datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
             current_utc_datetime = datetime.datetime.utcnow()
-            expiry_timedelta = utc_datetime - current_utc_datetime  # Calculate the time difference
+            expiry_timedelta = utc_datetime - current_utc_datetime 
             expiry_seconds = expiry_timedelta.total_seconds()
             if expiry_seconds > 1000:
                 ttl_seconds = 1000
