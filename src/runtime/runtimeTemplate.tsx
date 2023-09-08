@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 
-import { ReactWidget } from '@jupyterlab/apputils';
 import React, { useEffect, useState } from 'react';
 import CreateRuntime from './createRunTime';
 import { JupyterLab } from '@jupyterlab/application';
 import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { DataprocWidget } from '../controls/DataprocWidget';
 
 const RuntimeTemplateComponent = ({
   app
@@ -45,15 +46,15 @@ const RuntimeTemplateComponent = ({
   );
 };
 
-export class RuntimeTemplate extends ReactWidget {
+export class RuntimeTemplate extends DataprocWidget {
   app: JupyterLab;
 
-  constructor(app: JupyterLab) {
-    super();
+  constructor(app: JupyterLab, themeManager: IThemeManager) {
+    super(themeManager);
     this.app = app;
   }
 
-  render(): React.JSX.Element {
+  renderInternal(): React.JSX.Element {
     return <RuntimeTemplateComponent app={this.app} />;
   }
 }

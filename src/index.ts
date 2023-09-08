@@ -21,7 +21,7 @@ import {
   JupyterLab,
   ILabShell
 } from '@jupyterlab/application';
-import { MainAreaWidget } from '@jupyterlab/apputils';
+import { MainAreaWidget, IThemeManager } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
@@ -47,13 +47,14 @@ import { RuntimeTemplate } from './runtime/runtimeTemplate';
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
-  optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker],
+  optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker, IThemeManager],
   activate: async (
     app: JupyterFrontEnd,
     launcher: ILauncher,
     mainMenu: IMainMenu,
     labShell: ILabShell,
-    notebookTracker: INotebookTracker
+    notebookTracker: INotebookTracker,
+    themeManager: IThemeManager
   ) => {
     const { commands } = app;
     const iconAddRuntime = new LabIcon({
@@ -81,11 +82,11 @@ const extension: JupyterFrontEndPlugin<void> = {
           widget.dispose();
         }
       });
-      const newWidget = new dpmsWidget(app as JupyterLab);
+      const newWidget = new dpmsWidget(app as JupyterLab, themeManager);
       panel.addWidget(newWidget);
     };
 
-    panel.addWidget(new dpmsWidget(app as JupyterLab));
+    panel.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
     const localStorageValue = localStorage.getItem('notebookValue');
     if (localStorageValue) {
       loadDpmsWidget(localStorageValue);
@@ -168,7 +169,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconAddRuntime),
       execute: () => {
-        const content = new RuntimeTemplate(app as JupyterLab);
+        const content = new RuntimeTemplate(app as JupyterLab, themeManager);
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;
@@ -183,7 +184,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
-        const content = new Cluster();
+        const content = new Cluster(themeManager);
         const widget = new MainAreaWidget<Cluster>({ content });
         widget.title.label = 'Clusters';
         widget.title.icon = iconCluster;
@@ -198,7 +199,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-        const content = new Batches();
+        const content = new Batches(themeManager);
         const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;
@@ -210,7 +211,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Cloud Dataproc Settings',
       execute: () => {
-        const content = new AuthLogin();
+        const content = new AuthLogin(themeManager);
         const widget = new MainAreaWidget<AuthLogin>({ content });
         widget.title.label = 'Config Setup';
         widget.title.icon = iconCluster;

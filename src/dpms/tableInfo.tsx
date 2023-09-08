@@ -16,8 +16,9 @@
  */
 
 import React from 'react';
-import { ReactWidget } from '@jupyterlab/apputils';
 import { useTable } from 'react-table';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { DataprocWidget } from '../controls/DataprocWidget';
 interface IColumn {
   name: string;
   type: string;
@@ -41,8 +42,8 @@ const TableInfo = ({
 }: IDatabaseProps): React.JSX.Element => {
   const table = {
     'Table name': title,
-    'Description': tableDescription[title],
-    'Database': database,
+    Description: tableDescription[title],
+    Database: database,
     'Dataproc Metastore Instance': dataprocMetastoreServices
   };
 
@@ -145,27 +146,19 @@ const TableInfo = ({
   );
 };
 
-export class Table extends ReactWidget {
-  dataprocMetastoreServices: string;
-  database!: string;
-  column: IColumn[];
-  tableDescription: Record<string, string>;
-
+export class Table extends DataprocWidget {
   constructor(
     title: string,
-    dataprocMetastoreServices: string,
-    database: string,
-    column: IColumn[],
-    tableDescription: Record<string, string>
+    private dataprocMetastoreServices: string,
+    private database: string,
+    private column: IColumn[],
+    private tableDescription: Record<string, string>,
+    themeManager: IThemeManager
   ) {
-    super();
-    this.dataprocMetastoreServices = dataprocMetastoreServices;
-    this.database = database;
-    this.column = column;
-    this.tableDescription = tableDescription;
+    super(themeManager);
   }
 
-  render(): React.JSX.Element {
+  renderInternal(): React.JSX.Element {
     return (
       <TableInfo
         title={this.title.label}
