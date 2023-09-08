@@ -24,7 +24,6 @@ import {
   USER_INFO_URL
 } from '../utils/const';
 import { IAuthCredentials, authApi } from '../utils/utils';
-import 'semantic-ui-css/semantic.min.css';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { ToastContainer, ToastOptions, toast } from 'react-toastify';

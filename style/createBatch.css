@@ -9,9 +9,7 @@
   font-style: normal;
   font-weight: 400;
   font-size: 13px;
-  line-height: 10px;
-  padding-top: 10px;
-  padding-left: 10px;
+  margin: auto 0;
   color: #000000;
 }
 .create-batch-sub-message {
@@ -41,7 +39,7 @@
   width: 45%;
   margin-left: 55px;
 }
-.manual-input{
+.manual-input {
   margin-left: 55px;
   width: 85%;
 }
@@ -86,13 +84,12 @@
   min-height: 40px;
   outline: none;
 }
-.encrypt{
-  display:flex;
-}
-.single-line{
+.encrypt {
   display: flex;
-  width:50%;
-
+}
+.single-line {
+  display: flex;
+  width: 50%;
 }
 .create-batch-learn-more {
   color: #7b1fa2;
@@ -126,7 +123,7 @@
   word-wrap: break-word;
   margin-top: 5px;
 }
-.create-container-message{
+.create-container-message {
   display: flex;
 }
 .create-batch-network-message {
@@ -160,14 +157,14 @@
   padding-left: 5px;
   color: #000000;
   display: flex;
-  width:50%;
+  width: 50%;
 }
-.ui.radio.checkbox input:checked~label:after{
-  background-color:#3367d6 !important;
+.ui.radio.checkbox input:checked ~ label:after {
+  background-color: #3367d6 !important;
   border-color: #3367d6 !important;
   border-width: 2px !important;
 }
-.ui.checkbox input:checked~label:before {
+.ui.checkbox input:checked ~ label:before {
   background: #fff;
   border-color: grey;
   border-width: 2px !important;
