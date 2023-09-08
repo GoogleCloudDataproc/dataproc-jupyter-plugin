@@ -55,7 +55,6 @@ import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { Skip } from 'yjs/dist/src/internals';
 // import { set } from 'lib0/encoding';
 
 type Project = {
@@ -306,8 +305,6 @@ function CreateBatch({
   const [defaultValue, setDefaultValue] = useState(subNetwork);
   const [keyRingSelected, setKeyRingSelected] = useState(keyRing);
   const [keySelected, setKeySelected] = useState(keys);
-  console.log(keyRingSelected,keyRing);
-  console.log(keySelected,keys);
   const [manualKeySelected, setManualKeySelected] = useState('');
   const [manualValidation, setManualValidation] = useState(true);
   const [keylist, setKeylist] = useState<
@@ -330,7 +327,6 @@ function CreateBatch({
     setSelectedRadioValue('manually');
     setKeyRingSelected('');
     setKeySelected('');
-    console.log(keySelected);
   };
   useEffect(() => {
     listKeysAPI(keyRingSelected);
@@ -398,13 +394,7 @@ function CreateBatch({
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
-            ).map(([k, v]) => {
-              if (k.substring(6) === 'spark.eventLog.dir') {
-                // Skip processing for 'spart.eventlog' key
-                Skip;
-              }
-              return `${k.substring(6)}:${v}`;
-            });
+            ).map(([k, v]) => `${k.substring(6)}:${v}`);
             setPropertyDetail(prevPropertyDetail => [
               ...prevPropertyDetail,
               ...updatedPropertyDetail
@@ -414,7 +404,6 @@ function CreateBatch({
               ...updatedPropertyDetail
             ]);
           }
-          console.log(propertyDetailUpdated);
           if (
             batchInfoResponse[batchKeys[0]].hasOwnProperty('queryVariables')
           ) {
@@ -740,7 +729,6 @@ function CreateBatch({
               );
               setKeylist(keyLabelStructureKeyRing);
               setKeySelected(keyLabelStructureKeyRing[0].value);
-              console.log(keySelected);
             })
 
             .catch((e: Error) => {
@@ -1219,7 +1207,6 @@ function CreateBatch({
   };
   const handlekeyChange = (event: any, data: any) => {
     setKeySelected(data.value);
-    console.log(keySelected);
   };
 
   const handleClusterSelected = (event: any, data: any) => {
