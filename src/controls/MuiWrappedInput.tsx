@@ -38,8 +38,5 @@ export const Input = styled(InputInternal)<InputProps>({
   marginTop: '10px',
   '& .MuiInputBase-input': {
     padding: '9.5px 14px'
-  },
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'rgb(0,0,0)'
   }
 });
