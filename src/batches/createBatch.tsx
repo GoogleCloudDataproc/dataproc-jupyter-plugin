@@ -2099,6 +2099,7 @@ function CreateBatch({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              batchInfoResponse = {batchInfoResponse}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
