@@ -212,7 +212,7 @@ function SubmitJob(
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [jobIdValidation, setjobIdValidation] = useState(true);
-  const [jobIdSpecialValidation, setjobIdSpecialValidation] = useState(true);
+  const [jobIdSpecialValidation, setjobIdSpecialValidation] = useState(false);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [mainClassActive, setMainClassActive] = useState(false);
 
@@ -643,7 +643,7 @@ function SubmitJob(
       ? setjobIdValidation(true)
       : setjobIdValidation(false);
 
-    const regexp = /^[a-z0-9-_]+$/;
+    const regexp = /^[a-zA-Z0-9-_]+$/;
     event.target.value.search(regexp)
       ? setjobIdSpecialValidation(true)
       : setjobIdSpecialValidation(false);
@@ -745,7 +745,7 @@ function SubmitJob(
               <div className="error-key-missing">ID is required</div>
             </div>
           )}
-          {!jobIdSpecialValidation && (
+          {jobIdSpecialValidation && jobIdValidation && (
             <div className="error-key-parent">
               <iconError.react tag="div" className="logo-alignment-style" />
               <div className="error-key-missing">

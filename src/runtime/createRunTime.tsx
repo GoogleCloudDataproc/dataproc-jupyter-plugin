@@ -138,7 +138,7 @@ function CreateRunTime({
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
-  const[isloadingNetwork,setIsloadingNetwork]=useState('false');
+  const[isloadingNetwork,setIsloadingNetwork]=useState(false);
 
   useEffect(() => {
     const timeData = [
@@ -327,7 +327,7 @@ function CreateRunTime({
     }
   };
   const listNetworksFromSubNetworkAPI = async (subnetwork: any) => {
-    setIsloadingNetwork('true');
+    setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -349,7 +349,7 @@ function CreateRunTime({
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
-              setIsloadingNetwork('false');
+              setIsloadingNetwork(false);
             })
 
             .catch((e: Error) => {

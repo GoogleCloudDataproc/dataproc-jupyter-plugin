@@ -222,7 +222,9 @@ function CreateBatch({
   const [versionSelected, setVersionSelected] = useState('2.1');
   const [selectedRadio, setSelectedRadio] = useState(selectedRadioInitialValue);
   const [mainClassSelected, setMainClassSelected] = useState(mainClass);
+  const [mainClassUpdated, setMainClassUpdated] = useState(false);
   const [mainJarSelected, setMainJarSelected] = useState(mainJarFileUri);
+  const [mainJarUpdated, setMainJarUpdated] = useState(false);
   const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [selectedRadioValue, setSelectedRadioValue] = useState('key');
   const [containerImageSelected, setContainerImageSelected] =
@@ -1195,6 +1197,18 @@ function CreateBatch({
   const handlekeyChange = (event: any, data: any) => {
     setKeySelected(data.value);
   };
+  const handleMainClassSelected = (value: string) => {
+    setMainClassUpdated(true);
+    setMainClassSelected(value);
+  }
+  const handleMainJarSelected = (value: string) => {
+    setMainJarUpdated(true);
+    handleValidationFiles(
+      value,
+      setMainJarSelected,
+      setMainJarValidation
+    )
+  }
 
   const handleClusterSelected = (event: any, data: any) => {
     setClusterSelected(data.value);
@@ -1313,13 +1327,13 @@ function CreateBatch({
                       <Input
                         className="create-batch-style-mini"
                         value={mainClassSelected}
-                        onChange={e => setMainClassSelected(e.target.value)}
+                        onChange={e => handleMainClassSelected(e.target.value)}
                         type="text"
                       />
                     </div>
 
                     {selectedRadio === 'mainClass' &&
-                      mainClassSelected === '' && (
+                      mainClassSelected === '' && mainClassUpdated && (
                         <div className="error-key-parent">
                           <iconError.react
                             tag="div"
@@ -1360,18 +1374,14 @@ function CreateBatch({
                         className="create-batch-style-mini"
                         value={mainJarSelected}
                         onChange={e =>
-                          handleValidationFiles(
-                            e.target.value,
-                            setMainJarSelected,
-                            setMainJarValidation
-                          )
+                          handleMainJarSelected(e.target.value)
                         }
                         type="text"
                       />
                     </div>
 
                     {selectedRadio === 'mainJarURI' &&
-                      mainJarSelected === '' && (
+                      mainJarSelected === '' && mainJarUpdated && mainJarValidation && (
                         <div className="error-key-parent">
                           <iconError.react
                             tag="div"
@@ -1382,7 +1392,7 @@ function CreateBatch({
                           </div>
                         </div>
                       )}
-                    {!mainJarValidation && (
+                    {!mainJarValidation && mainJarSelected !== '' && (
                       <div className="error-key-parent">
                         <iconError.react
                           tag="div"
