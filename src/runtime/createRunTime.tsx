@@ -17,9 +17,7 @@
 
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import 'semantic-ui-css/semantic.min.css';
 import 'react-toastify/dist/ReactToastify.css';
-import { Input, Select } from 'semantic-ui-react';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -40,6 +38,8 @@ import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
+import { Input } from '../controls/MuiWrappedInput';
+import { Select } from '../controls/MuiWrappedSelect';
 
 type Project = {
   projectId: string;

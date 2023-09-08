@@ -21,8 +21,8 @@ import plusIcon from '../../style/icons/plus_icon.svg';
 import plusIconDisable from '../../style/icons/plus_icon_disable.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { Input } from 'semantic-ui-react';
 import { DEFAULT_LABEL_DETAIL } from '../utils/const';
+import { Input } from '../controls/MuiWrappedInput';
 
 const iconPlus = new LabIcon({
   name: 'launcher:plus-icon',
@@ -57,13 +57,17 @@ function LabelProperties({
   labelEditMode,
   selectedRuntimeClone
 }: any) {
-  /* 
-  labelDetail used to store the permanent label details when onblur 
-  labelDetailUpdated used to store the temporay label details when onchange 
+  /*
+  labelDetail used to store the permanent label details when onblur
+  labelDetailUpdated used to store the temporay label details when onchange
   */
   useEffect(() => {
     if (!labelEditMode) {
-      if (buttonText === 'ADD LABEL' && !selectedJobClone && selectedRuntimeClone===undefined) {
+      if (
+        buttonText === 'ADD LABEL' &&
+        !selectedJobClone &&
+        selectedRuntimeClone === undefined
+      ) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
       } else {
@@ -132,7 +136,7 @@ function LabelProperties({
             setValueValidation(-1);
           }
           /*
-          value is split from labels 
+          value is split from labels
           Example:"client:dataproc_jupyter_plugin"
           */
           if (data.split(':')[1] === '') {
@@ -190,6 +194,7 @@ function LabelProperties({
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
                     <Input
+                      sx={{ margin: 0 }}
                       placeholder={`Key ${index + 1}*`}
                       className="edit-input-style"
                       disabled={
@@ -237,6 +242,7 @@ function LabelProperties({
                   </div>
                   <div className="key-message-wrapper">
                     <Input
+                      sx={{ margin: 0 }}
                       placeholder={`Value ${index + 1}`}
                       className="edit-input-style"
                       onBlur={() => handleEditLabelSwitch()}
