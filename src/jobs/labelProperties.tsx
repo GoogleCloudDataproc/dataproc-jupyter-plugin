@@ -61,7 +61,7 @@ function LabelProperties({
   labelDetail used to store the permanent label details when onblur 
   labelDetailUpdated used to store the temporay label details when onchange 
   */
-  useEffect(() => {
+   useEffect(() => {
     if (!labelEditMode) {
       if (buttonText === 'ADD LABEL' && !selectedJobClone && selectedRuntimeClone === undefined) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
@@ -97,7 +97,7 @@ function LabelProperties({
   };
   const handleEditLabel = (value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
-
+    
     labelEdit.forEach((data, dataNumber: any) => {
       if (index === dataNumber) {
         /*
@@ -105,9 +105,9 @@ function LabelProperties({
         */
         const regexp = /^[a-z0-9-_]+$/;
         if (keyValue === 'key') {
-          if (
+          if ((
             value.search(regexp) === -1 ||
-            value.charAt(0) !== value.charAt(0).toLowerCase()
+            value.charAt(0) !== value.charAt(0).toLowerCase())&&(buttonText === 'ADD LABEL')
           ) {
             setKeyValidation(index);
           } else {
@@ -127,7 +127,7 @@ function LabelProperties({
 
           data = data.replace(data.split(':')[0], value);
         } else {
-          if (value.search(regexp) === -1) {
+          if (value.search(regexp) === -1 &&(buttonText === 'ADD LABEL')) {
             setValueValidation(index);
           } else {
             setValueValidation(-1);

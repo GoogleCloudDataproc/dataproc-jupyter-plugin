@@ -138,6 +138,7 @@ function CreateRunTime({
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
+  const[isloadingNetwork,setIsloadingNetwork]=useState('false');
 
   useEffect(() => {
     const timeData = [
@@ -326,6 +327,7 @@ function CreateRunTime({
     }
   };
   const listNetworksFromSubNetworkAPI = async (subnetwork: any) => {
+    setIsloadingNetwork('true');
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -347,6 +349,7 @@ function CreateRunTime({
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
+              setIsloadingNetwork('false');
             })
 
             .catch((e: Error) => {
@@ -1002,6 +1005,16 @@ function CreateRunTime({
             <div className="runtime-message">Networks in this project</div>
 
             <div>
+            {isloadingNetwork ? (
+                <div className="metastore-loader">
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
               <div className="create-batch-network">
                 <div className="select-text-overlay">
                   <label
@@ -1038,6 +1051,7 @@ function CreateRunTime({
                   />
                 </div>
               </div>
+              )}
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">

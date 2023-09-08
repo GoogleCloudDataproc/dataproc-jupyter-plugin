@@ -212,6 +212,7 @@ function SubmitJob(
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [jobIdValidation, setjobIdValidation] = useState(true);
+  const [jobIdSpecialValidation, setjobIdSpecialValidation] = useState(true);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [mainClassActive, setMainClassActive] = useState(false);
 
@@ -301,6 +302,7 @@ function SubmitJob(
     keyValidation,
     valueValidation,
     jobIdValidation,
+    jobIdSpecialValidation,
     duplicateKeyError
   ]);
   const disableSubmitButtonIfInvalid = () => {
@@ -319,6 +321,7 @@ function SubmitJob(
         keyValidation === -1 &&
         valueValidation === -1 &&
         jobIdValidation &&
+        jobIdSpecialValidation &&
         duplicateKeyError === -1) ||
         (isSparkRJob &&
           mainRSelected !== '' &&
@@ -327,6 +330,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
+          jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isPySparkJob &&
           mainPythonSelected !== '' &&
@@ -338,6 +342,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
+          jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isSparkSqlJob &&
           queryFileSelected !== '' &&
@@ -347,6 +352,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
+          jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isSparkSqlJob &&
           queryTextSelected !== '' &&
@@ -355,6 +361,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
+          jobIdSpecialValidation &&
           duplicateKeyError === -1))
     ) {
       setSubmitDisabled(false);
@@ -613,7 +620,10 @@ function SubmitJob(
               .json()
               .then((responseResult: any) => {
                 console.log(responseResult);
-                toast.success(`Job ${jobIdSelected} successfully submitted`, toastifyCustomStyle);
+                toast.success(
+                  `Job ${jobIdSelected} successfully submitted`,
+                  toastifyCustomStyle
+                );
               })
               .catch((e: any) => {
                 console.log(e);
@@ -632,6 +642,11 @@ function SubmitJob(
     event.target.value.length > 0
       ? setjobIdValidation(true)
       : setjobIdValidation(false);
+
+    const regexp = /^[a-z0-9-_]+$/;
+    event.target.value.search(regexp)
+      ? setjobIdSpecialValidation(true)
+      : setjobIdSpecialValidation(false);
     setHexNumber(event.target.value);
     const newJobId = event.target.value;
     setJobIdSelected(newJobId);
@@ -688,9 +703,7 @@ function SubmitJob(
         </div>
         <div className="submit-job-container">
           <div className="submit-job-label-header">Cluster</div>
-          <div>
-                Choose a cluster to run your job in.
-          </div>
+          <div>Choose a cluster to run your job in.</div>
 
           {clusterList.length === 0 ? (
             <Input
@@ -730,6 +743,14 @@ function SubmitJob(
             <div className="error-key-parent">
               <iconError.react tag="div" className="logo-alignment-style" />
               <div className="error-key-missing">ID is required</div>
+            </div>
+          )}
+          {!jobIdSpecialValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">
+                Id must contain only letters numbers hyphens and underscores
+              </div>
             </div>
           )}
 

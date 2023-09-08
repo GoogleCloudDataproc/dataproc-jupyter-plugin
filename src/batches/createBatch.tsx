@@ -1570,7 +1570,7 @@ function CreateBatch({
               {CUSTOM_CONTAINER_MESSAGE}
               <div className="create-container-message">
                 <div
-                  className="create-batch-learn-more"
+                  className="submit-job-learn-more"
                   onClick={() => {
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
@@ -1579,7 +1579,7 @@ function CreateBatch({
                 </div>
                 &nbsp;{'  or '}
                 <div
-                  className="create-batch-learn-more"
+                  className="submit-job-learn-more"
                   onClick={() => {
                     window.open(`${ARTIFACT_REGISTERY}`, '_blank');
                   }}
@@ -1767,7 +1767,7 @@ function CreateBatch({
             <div className="create-messagelist">
               If not provided, the default GCE service account will be used.
               <div
-                className="create-batch-learn-more"
+                className="submit-job-learn-more"
                 onClick={() => {
                   window.open(`${SERVICE_ACCOUNT}`, '_blank');
                 }}
@@ -1863,7 +1863,7 @@ function CreateBatch({
                 <div className="create-batch-sub-message">
                   Manage via{' '}
                   <div
-                    className="create-batch-learn-more"
+                    className="submit-job-learn-more"
                     onClick={() => {
                       window.open(`${SECURITY_KEY}`, '_blank');
                     }}
@@ -1977,7 +1977,7 @@ function CreateBatch({
               Configure Dataproc to use Dataproc Metastore as its Hive
               metastore.
               <div
-                className="create-batch-learn-more"
+                className="submit-job-learn-more"
                 onClick={() => {
                   window.open(`${SELF_MANAGED_CLUSTER}`, '_blank');
                 }}
