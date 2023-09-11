@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import { ReactWidget } from '@jupyterlab/apputils';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   authApi,
@@ -42,6 +41,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
+import { DataprocWidget } from '../controls/DataprocWidget';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -320,12 +320,8 @@ const BatchesComponent = (): React.JSX.Element => {
   );
 };
 
-export class Batches extends ReactWidget {
-  constructor() {
-    super();
-  }
-
-  render(): React.JSX.Element {
+export class Batches extends DataprocWidget {
+  renderInternal(): React.JSX.Element {
     return <BatchesComponent />;
   }
 }

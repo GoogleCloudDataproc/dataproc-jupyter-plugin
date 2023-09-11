@@ -44,8 +44,6 @@ import {
   SERVICE_ACCOUNT,
   STATUS_RUNNING
 } from '../utils/const';
-import TagsInput from 'react-tagsinput';
-import 'react-tagsinput/react-tagsinput.css';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
@@ -56,6 +54,7 @@ import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
 import { Radio } from '@mui/material';
 import { Dropdown } from '../controls/MuiWrappedDropdown';
+import { TagsInput } from '../controls/MuiWrappedTagsInput';
 
 type Project = {
   projectId: string;

@@ -82,11 +82,11 @@ const extension: JupyterFrontEndPlugin<void> = {
           widget.dispose();
         }
       });
-      const newWidget = new dpmsWidget(app as JupyterLab);
+      const newWidget = new dpmsWidget(app as JupyterLab, themeManager);
       panel.addWidget(newWidget);
     };
 
-    panel.addWidget(new dpmsWidget(app as JupyterLab));
+    panel.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
     const localStorageValue = localStorage.getItem('notebookValue');
     if (localStorageValue) {
       loadDpmsWidget(localStorageValue);
@@ -184,7 +184,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
-        const content = new Cluster();
+        const content = new Cluster(themeManager);
         const widget = new MainAreaWidget<Cluster>({ content });
         widget.title.label = 'Clusters';
         widget.title.icon = iconCluster;
@@ -199,7 +199,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-        const content = new Batches();
+        const content = new Batches(themeManager);
         const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;

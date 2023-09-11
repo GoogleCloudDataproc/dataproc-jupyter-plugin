@@ -19,8 +19,8 @@ import React, { useEffect, useState } from 'react';
 import CreateRuntime from './createRunTime';
 import { JupyterLab } from '@jupyterlab/application';
 import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
-import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
+import { DataprocWidget } from '../controls/DataprocWidget';
 
 const RuntimeTemplateComponent = ({
   app

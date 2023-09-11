@@ -30,8 +30,6 @@ import {
   STATUS_RUNNING,
   USER_INFO_URL
 } from '../utils/const';
-import TagsInput from 'react-tagsinput';
-import 'react-tagsinput/react-tagsinput.css';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi, authenticatedFetch } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
@@ -40,6 +38,7 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
+import { TagsInput } from '../controls/MuiWrappedTagsInput';
 
 type Project = {
   projectId: string;
