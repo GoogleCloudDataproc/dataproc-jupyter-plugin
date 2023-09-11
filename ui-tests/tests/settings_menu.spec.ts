@@ -15,24 +15,14 @@
  * limitations under the License.
  */
 
-import { expect, test } from '@jupyterlab/galata';
+import { test } from '@jupyterlab/galata';
 
-/**
- * Don't load JupyterLab webpage before running the tests.
- * This is required to ensure we capture all log messages.
- */
-test.use({ autoGoto: false });
-
-test('should emit an activation console message', async ({ page }) => {
-  const logs: string[] = [];
-
-  page.on('console', message => {
-    logs.push(message.text());
+test.describe('Settings Menu', () => {
+  test('Settings Menu is visible and clickable', async ({ page }) => {
+    await page
+      .getByLabel('main', { exact: true })
+      .getByText('Settings')
+      .click();
+    await page.getByText('Cloud Dataproc Settings').click();
   });
-
-  await page.goto();
-
-  expect(
-    logs.filter(s => s === 'JupyterLab extension dataproc_jupyter_plugin is activated!')
-  ).toHaveLength(1);
 });
