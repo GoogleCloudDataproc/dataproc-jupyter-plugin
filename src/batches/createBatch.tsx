@@ -56,7 +56,7 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
 import { Radio } from '@mui/material';
-// import { Dropdown } from '../controls/MuiWrappedDropdown';
+import { Dropdown } from '../controls/MuiWrappedDropdown';
 
 type Project = {
   projectId: string;
@@ -281,9 +281,7 @@ function CreateBatch({
     useState([...pythonFileUris]);
   const [mainPythonSelected, setMainPythonSelected] =
     useState(mainPythonFileUri);
-  const [clustersList, setClustersList] = useState<
-    Array<{ key: string; value: string; text: string }>
-  >([]);
+  const [clustersList, setClustersList] = useState<string[]>([]);
   const [additionalPythonFileValidation, setAdditionalPythonFileValidation] =
     useState(true);
   const [jarFileValidation, setJarFileValidation] = useState(true);
@@ -2065,14 +2063,11 @@ function CreateBatch({
               >
                 History server cluster
               </label>
-              <Select
+              <Dropdown
                 className="project-region-select"
-                search
-                selection
                 value={clusterSelected}
                 onChange={handleClusterSelected}
                 options={clustersList}
-                placeholder=""
               />
             </div>
 
