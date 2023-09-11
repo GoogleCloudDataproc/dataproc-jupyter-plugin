@@ -25,7 +25,6 @@ import {
   VERSION_DETAIL
 } from '../utils/const';
 import { IAuthCredentials, authApi, toastifyCustomStyle } from '../utils/utils';
-import 'semantic-ui-css/semantic.min.css';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';

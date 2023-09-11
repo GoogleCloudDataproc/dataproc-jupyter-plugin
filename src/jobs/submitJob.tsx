@@ -18,8 +18,6 @@
 import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import { Input, Select } from 'semantic-ui-react';
-import 'semantic-ui-css/semantic.min.css';
 import LabelProperties from './labelProperties';
 import { authApi, toastifyCustomStyle } from '../utils/utils';
 import TagsInput from 'react-tagsinput';
@@ -41,6 +39,8 @@ import {
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Input } from '../controls/MuiWrappedInput';
+import { Select } from '../controls/MuiWrappedSelect';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',

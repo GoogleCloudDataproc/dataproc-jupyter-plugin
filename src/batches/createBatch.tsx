@@ -18,9 +18,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import 'semantic-ui-css/semantic.min.css';
 import 'react-toastify/dist/ReactToastify.css';
-import { Input, Radio, Select } from 'semantic-ui-react';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -55,7 +53,10 @@ import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
-// import { set } from 'lib0/encoding';
+import { Select } from '../controls/MuiWrappedSelect';
+import { Input } from '../controls/MuiWrappedInput';
+import { Radio } from '@mui/material';
+// import { Dropdown } from '../controls/MuiWrappedDropdown';
 
 type Project = {
   projectId: string;
@@ -556,9 +557,7 @@ function CreateBatch({
           response
             .json()
             .then((responseResult: { clusters: Cluster[] }) => {
-              let transformClusterListData = [];
-
-              transformClusterListData = responseResult.clusters.filter(
+              let transformClusterListData = responseResult.clusters.filter(
                 (data: Cluster) => {
                   if (data.status.state === STATUS_RUNNING) {
                     return {
@@ -568,11 +567,9 @@ function CreateBatch({
                 }
               );
 
-              const keyLabelStructure = transformClusterListData.map(obj => ({
-                key: obj.clusterName,
-                value: obj.clusterName,
-                text: obj.clusterName
-              }));
+              const keyLabelStructure = transformClusterListData.map(
+                obj => obj.clusterName
+              );
               setClustersList(keyLabelStructure);
             })
             .catch((e: Error) => {
@@ -746,13 +743,7 @@ function CreateBatch({
           response
             .json()
             .then((responseResult: { subnetworks: string[] }) => {
-              let transformedSubNetworkList = [];
-              /*
-         Extracting  subnetworks from Network
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/subnetwork",
-      */
-
-              transformedSubNetworkList = responseResult.subnetworks.map(
+              let transformedSubNetworkList = responseResult.subnetworks.map(
                 (data: string) => {
                   return {
                     subnetworks: data.split(
@@ -799,9 +790,7 @@ function CreateBatch({
           response
             .json()
             .then((responseResult: { services: Service[] }) => {
-              let transformClusterListData = [];
-
-              transformClusterListData = responseResult.services.filter(
+              let transformClusterListData = responseResult.services.filter(
                 (data: Service) => {
                   return {
                     name: data.name
@@ -843,8 +832,7 @@ function CreateBatch({
           response
             .json()
             .then((responseResult: { projects: Project[] }) => {
-              let transformedProjectList = [];
-              transformedProjectList = responseResult.projects.map(
+              let transformedProjectList = responseResult.projects.map(
                 (data: Project) => {
                   return {
                     value: data.projectId,
@@ -881,8 +869,7 @@ function CreateBatch({
           response
             .json()
             .then((responseResult: { items: Region[] }) => {
-              let transformedRegionList = [];
-              transformedRegionList = responseResult.items.map(
+              let transformedRegionList = responseResult.items.map(
                 (data: Region) => {
                   return {
                     value: data.name,
@@ -1196,8 +1183,8 @@ function CreateBatch({
     setKeySelected(data.value);
   };
 
-  const handleClusterSelected = (event: any, data: any) => {
-    setClusterSelected(data.value);
+  const handleClusterSelected = (event: any, value: any) => {
+    setClusterSelected(value);
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -1292,6 +1279,7 @@ function CreateBatch({
                 <div>
                   <div className="create-batch-radio">
                     <Radio
+                      size="small"
                       className="select-batch-radio-style"
                       value="mainClass"
                       checked={selectedRadio === 'mainClass'}
@@ -1339,6 +1327,7 @@ function CreateBatch({
                 <div>
                   <div className="create-batch-radio">
                     <Radio
+                      size="small"
                       className="select-batch-radio-style"
                       value="mainJarURI"
                       checked={selectedRadio === 'mainJarURI'}
@@ -1833,6 +1822,7 @@ function CreateBatch({
               <div>
                 <div className="create-batch-radio">
                   <Radio
+                    size="small"
                     className="select-batch-radio-style"
                     value="googleManaged"
                     checked={selectedEncryptionRadio === 'googleManaged'}
@@ -1849,6 +1839,7 @@ function CreateBatch({
               <div>
                 <div className="create-batch-radio">
                   <Radio
+                    size="small"
                     className="select-batch-radio-style"
                     value="googleManaged"
                     checked={selectedEncryptionRadio === 'customerManaged'}
@@ -1876,6 +1867,7 @@ function CreateBatch({
                     <div>
                       <div className="create-batch-encrypt">
                         <Radio
+                          size="small"
                           className="select-batch-encrypt-radio-style"
                           value="mainClass"
                           checked={selectedRadioValue === 'key'}
@@ -1930,6 +1922,7 @@ function CreateBatch({
                     <div className="manual-input">
                       <div className="encrypt">
                         <Radio
+                          size="small"
                           className="select-batch-encrypt-radio-style "
                           value="mainClass"
                           checked={selectedRadioValue === 'manually'}
