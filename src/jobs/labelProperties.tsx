@@ -68,7 +68,7 @@ function LabelProperties({
         buttonText === 'ADD LABEL' &&
         !selectedJobClone &&
         selectedRuntimeClone === undefined &&
-        batchInfoResponse !== undefined
+        batchInfoResponse === undefined
       ) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
