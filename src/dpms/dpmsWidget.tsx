@@ -33,7 +33,6 @@ import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
-import 'semantic-ui-css/semantic.min.css';
 import { auto } from '@popperjs/core';
 import {
   BASE_URL,
@@ -561,7 +560,7 @@ fetching database name from fully qualified name structure */
                     : '';
                 setDataprocMetastoreServices(instanceName);
                 setNoDpmsInstance(false);
-               setSession(false);
+                setSession(false);
               } else {
                 setNoDpmsInstance(true);
                 setSession(true);
@@ -582,17 +581,16 @@ fetching database name from fully qualified name structure */
     const notebookVal = localStorage.getItem('notebookValue');
     // notebookVal: clustername/cluster or sessionname/session getting only the cluster or session name
     if (notebookVal?.includes('/clusters')) {
-      const clusterName = notebookVal.split('/')
-      const clusterVal = clusterName.slice(0, -1).join('/')
+      const clusterName = notebookVal.split('/');
+      const clusterVal = clusterName.slice(0, -1).join('/');
       setNotebookValue(clusterVal);
       getClusterDetails();
-    } else if(notebookVal?.includes('/sessions')){
-      const sessionName = notebookVal.split('/')
-      const sessionVal = sessionName.slice(0, -1).join('/')
+    } else if (notebookVal?.includes('/sessions')) {
+      const sessionName = notebookVal.split('/');
+      const sessionVal = sessionName.slice(0, -1).join('/');
       setNotebookValue(sessionVal);
       getSessionDetails();
-    }
-    else {
+    } else {
       setNoDpmsInstance(true);
     }
   };
@@ -654,15 +652,15 @@ fetching database name from fully qualified name structure */
                     <div className="search-icon">
                       <iconSearch.react tag="div" />
                     </div>
-                    {searchTerm &&
-                    <div
-                      role="button"
-                      className="search-clear-icon"
-                      onClick={handleSearchClear}
-                    >
-                      <iconSearchClear.react tag="div" />
-                    </div>
-                    }
+                    {searchTerm && (
+                      <div
+                        role="button"
+                        className="search-clear-icon"
+                        onClick={handleSearchClear}
+                      >
+                        <iconSearchClear.react tag="div" />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="tree-container">
@@ -692,17 +690,18 @@ fetching database name from fully qualified name structure */
             )}
           </div>
         </>
-      ) : (
-        session ? (
+      ) : session ? (
         <div className="dpms-error">
-          DPMS is not configured for this runtime template. Please attach DPMS or
-          activate DPMS sync with data catalog
-        </div>) : (cluster ? (<div className="dpms-error">
+          DPMS is not configured for this runtime template. Please attach DPMS
+          or activate DPMS sync with data catalog
+        </div>
+      ) : cluster ? (
+        <div className="dpms-error">
           DPMS is not configured for this cluster. Please attach DPMS or
           activate DPMS sync with data catalog
-        </div>):(<div className="dpms-error">
-        DPMS schema explorer not set up
-        </div>))
+        </div>
+      ) : (
+        <div className="dpms-error">DPMS schema explorer not set up</div>
       )}
     </>
   );
