@@ -158,7 +158,7 @@ function CreateBatch({
   let pythonFileUris: string[] = [];
   let keyType = '';
   let keyRing = '';
-  let keys = ''
+  let keys = '';
   if (batchInfoResponse !== undefined) {
     if (Object.keys(batchInfoResponse).length !== 0) {
       batchKeys = batchKey(batchInfoResponse);
@@ -196,11 +196,10 @@ function CreateBatch({
         batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri ||
         'default';
       keyType =
-        batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey ||
-        '';
-        const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
-        keyRing = keyringValues[5];
-        keys = keyringValues[7];
+        batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
+      const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
+      keyRing = keyringValues[5];
+      keys = keyringValues[7];
       historyServerValue =
         batchInfoResponse?.environmentConfig?.peripheralsConfig
           ?.sparkHistoryServerConfig?.dataprocCluster || 'None';
@@ -218,7 +217,6 @@ function CreateBatch({
         const metastoreDetails = metastoreService.split('/');
         metaProject = metastoreDetails[1];
         metaRegion = metastoreDetails[3];
-
       }
     }
   }
@@ -233,7 +231,10 @@ function CreateBatch({
   const [versionSelected, setVersionSelected] = useState('2.1');
   const [selectedRadio, setSelectedRadio] = useState(selectedRadioInitialValue);
   const [mainClassSelected, setMainClassSelected] = useState(mainClass);
+  const [mainClassUpdated, setMainClassUpdated] = useState(false);
   const [mainJarSelected, setMainJarSelected] = useState(mainJarFileUri);
+  const [mainJarUpdated, setMainJarUpdated] = useState(false);
+
   const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [selectedRadioValue, setSelectedRadioValue] = useState('key');
   const [containerImageSelected, setContainerImageSelected] =
@@ -330,7 +331,7 @@ function CreateBatch({
   };
   useEffect(() => {
     listKeysAPI(keyRingSelected);
-  },[keyRingSelected]);
+  }, [keyRingSelected]);
   useEffect(() => {
     const batchTypeData = [
       { key: 'spark', value: 'spark', text: 'Spark' },
@@ -501,7 +502,7 @@ function CreateBatch({
           !additionalPythonFileValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation||
+          !manualValidation ||
           !jarFileValidation
         );
       case 'sparkSql':
@@ -1208,6 +1209,14 @@ function CreateBatch({
   const handlekeyChange = (event: any, data: any) => {
     setKeySelected(data.value);
   };
+  const handleMainClassSelected = (value: string) => {
+    setMainClassUpdated(true);
+    setMainClassSelected(value);
+  };
+  const handleMainJarSelected = (value: string) => {
+    setMainJarUpdated(true);
+    handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
+  };
 
   const handleClusterSelected = (event: any, data: any) => {
     setClusterSelected(data.value);
@@ -1326,13 +1335,14 @@ function CreateBatch({
                       <Input
                         className="create-batch-style-mini"
                         value={mainClassSelected}
-                        onChange={e => setMainClassSelected(e.target.value)}
+                        onChange={e => handleMainClassSelected(e.target.value)}
                         type="text"
                       />
                     </div>
 
                     {selectedRadio === 'mainClass' &&
-                      mainClassSelected === '' && (
+                      mainClassSelected === '' &&
+                      mainClassUpdated && (
                         <div className="error-key-parent">
                           <iconError.react
                             tag="div"
@@ -1372,19 +1382,15 @@ function CreateBatch({
                       <Input
                         className="create-batch-style-mini"
                         value={mainJarSelected}
-                        onChange={e =>
-                          handleValidationFiles(
-                            e.target.value,
-                            setMainJarSelected,
-                            setMainJarValidation
-                          )
-                        }
+                        onChange={e => handleMainJarSelected(e.target.value)}
                         type="text"
                       />
                     </div>
 
                     {selectedRadio === 'mainJarURI' &&
-                      mainJarSelected === '' && (
+                      mainJarSelected === '' &&
+                      mainJarUpdated &&
+                      mainJarValidation && (
                         <div className="error-key-parent">
                           <iconError.react
                             tag="div"
@@ -1395,7 +1401,7 @@ function CreateBatch({
                           </div>
                         </div>
                       )}
-                    {!mainJarValidation && (
+                    {!mainJarValidation && mainJarSelected !== '' && (
                       <div className="error-key-parent">
                         <iconError.react
                           tag="div"
@@ -1583,16 +1589,16 @@ function CreateBatch({
               {CUSTOM_CONTAINER_MESSAGE}
               <div className="create-container-message">
                 <div
-                  className="create-batch-learn-more"
+                  className="submit-job-learn-more"
                   onClick={() => {
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
                 >
-                  Container Registry 
+                  Container Registry
                 </div>
                 &nbsp;{'  or '}
                 <div
-                  className="create-batch-learn-more"
+                  className="submit-job-learn-more"
                   onClick={() => {
                     window.open(`${ARTIFACT_REGISTERY}`, '_blank');
                   }}
@@ -1780,7 +1786,7 @@ function CreateBatch({
             <div className="create-messagelist">
               If not provided, the default GCE service account will be used.
               <div
-                className="create-batch-learn-more"
+                className="submit-job-learn-more"
                 onClick={() => {
                   window.open(`${SERVICE_ACCOUNT}`, '_blank');
                 }}
@@ -1876,7 +1882,7 @@ function CreateBatch({
                 <div className="create-batch-sub-message">
                   Manage via{' '}
                   <div
-                    className="create-batch-learn-more"
+                    className="submit-job-learn-more"
                     onClick={() => {
                       window.open(`${SECURITY_KEY}`, '_blank');
                     }}
@@ -1990,7 +1996,7 @@ function CreateBatch({
               Configure Dataproc to use Dataproc Metastore as its Hive
               metastore.
               <div
-                className="create-batch-learn-more"
+                className="submit-job-learn-more"
                 onClick={() => {
                   window.open(`${SELF_MANAGED_CLUSTER}`, '_blank');
                 }}
@@ -2099,7 +2105,7 @@ function CreateBatch({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
-              batchInfoResponse = {batchInfoResponse}
+              batchInfoResponse={batchInfoResponse}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
