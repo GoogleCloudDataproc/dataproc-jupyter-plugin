@@ -15,7 +15,7 @@
   line-height: 28px;
   display: flex;
   align-items: center;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
 }
 
 .job-add-property-button-disabled {
@@ -29,8 +29,8 @@
   width: 150px;
   height: 32px;
 
-  background: #ffffff;
-  color: rgba(0, 0, 0, 0.54);
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color2);
 }
 
 .job-add-property-button {
@@ -45,15 +45,15 @@
   width: 150px;
   height: 32px;
 
-  background: #ffffff;
-  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.12), 0px 2px 2px rgba(0, 0, 0, 0.2),
-    0px 1px 1px rgba(0, 0, 0, 0.14);
+  background: var(--jp-layout-color0);
+  box-shadow: 0px 1px 5px var(--jp-inverse-layout-color3),
+    0px 2px 2px var(--jp-inverse-layout-color3),
+    0px 1px 1px var(--jp-inverse-layout-color3);
   border-radius: 4px;
 }
 
 .select-job-style {
-  background: #ffffff;
-  border: 1px solid black !important;
+  background: var(--jp-layout-color0);
   border-radius: 4px;
   width: 50%;
   margin-top: 10px;
@@ -61,7 +61,7 @@
   outline: none;
 }
 .input-style {
-  background: #ffffff;
+  background: var(--jp-layout-color0);
   width: 50%;
   margin-top: 10px;
   min-height: 40px;
@@ -69,7 +69,7 @@
 }
 .react-tagsinput-input {
   font-family: 'Roboto' !important;
-  color: black !important;
+  color: var(--jp-ui-font-color0) !important;
   font-style: normal;
   font-weight: 400;
   background: transparent;
@@ -94,7 +94,7 @@
   padding: 5px;
   background-color: lightgrey !important;
   border-radius: 20px !important;
-  color: black !important;
+  color: var(--jp-ui-font-color0) !important;
   margin-top: 5px !important;
 }
 .react-tagsinput-remove {
@@ -105,10 +105,10 @@
   padding-right: 6px !important;
 }
 a {
-  color: black !important;
+  color: var(--jp-ui-font-color0) !important;
 }
 a:hover {
-  color: black !important;
+  color: var(--jp-ui-font-color0) !important;
 }
 .submit-job-cluster-message {
   font-style: normal;
@@ -117,7 +117,7 @@ a:hover {
   line-height: 10px;
   padding-top: 10px;
   padding-left: 5px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
 }
 .submit-job-learn-more {
   color: #3367d6;
@@ -132,7 +132,7 @@ a:hover {
   font-size: 10px;
   line-height: 15px;
   padding-left: 5px;
-  color: #575757;
+  color: var(--jp-ui-font-color2);
   width: 50%;
   overflow: hidden;
   word-wrap: break-word;
@@ -144,7 +144,7 @@ a:hover {
   font-size: 10px;
   line-height: 15px;
   padding-left: 5px;
-  color: #575757;
+  color: var(--jp-ui-font-color2);
   width: 50%;
   overflow: hidden;
   display: flex;
@@ -152,8 +152,8 @@ a:hover {
 }
 .jobType-select {
   box-sizing: border-box;
-  background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.38) !important;
+  background: var(--jp-layout-color0) !important;
+  border: 1px solid var(--jp-border-color2) !important;
   display: block !important;
   height: 40px;
   width: 100%;
@@ -171,8 +171,8 @@ a:hover {
 }
 .submit-button-disable-style {
   margin-right: 10px;
-  background: white;
-  color: #575757;
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color2);
   height: 30px;
   font-size: 13px;
   width: 70px;
@@ -184,8 +184,8 @@ a:hover {
 }
 .submit-button-style {
   margin-right: 10px;
-  background: #3367d6;
-  color: #ffffff;
+  background: var(--jp-brand-color1);
+  color: var(--jp-ui-inverse-font-color1);
   height: 30px;
   width: 70px;
   font-size: 13px;
@@ -204,7 +204,7 @@ a:hover {
 }
 
 .error-key-missing {
-  color: #d50000;
+  color: var(--jp-error-color0);
   padding-left: 5px;
   font-size: 10px;
 }
@@ -213,17 +213,17 @@ a:hover {
 .ui.input > input {
   outline: none;
   border-radius: 4px;
-  border: 1px solid black !important;
+  border: 1px solid var(--jp-border-color3) !important;
 }
 .ui.input > input:focus {
-  border: 3px solid #3367d6 !important;
+  border: 3px solid var(--jp-brand-color0) !important;
   border-radius: 4px;
   outline: none;
 }
 
 /* Highlight tags input field when focus */
 .react-tagsinput--focused {
-  border: 3px solid #3367d6 !important;
+  border: 3px solid var(--jp-brand-color0) !important;
 }
 
 .labels-delete-icon {

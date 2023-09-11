@@ -1,6 +1,6 @@
 .batch-header-part {
   display: flex;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--jp-layout-color4);
 }
 
 .create-batch-overlay {
@@ -18,7 +18,7 @@
   line-height: 18px;
   width: 65%;
   padding-left: 30px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
 
@@ -29,7 +29,7 @@
   line-height: 18px;
   width: 65%;
   padding-left: 45px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
 
@@ -47,7 +47,7 @@
   font-size: 13px;
   line-height: 18px;
   width: 65%;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
 }
 .batch-details-label-level-one {
   font-style: normal;
@@ -56,7 +56,7 @@
   line-height: 18px;
   width: 65%;
   padding-left: 15px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
 .details-value {
@@ -65,19 +65,17 @@
   font-size: 13px;
   line-height: 20px;
   width: 35%;
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--jp-ui-font-color2);
 }
 .batch-details-row-label {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--jp-layout-color4);
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
   min-height: 18px;
   margin-bottom: 6px;
 }
-.scroll-comp-batch{
- 
-    overflow-y: auto;
-    max-height: 85vh;
-  
+.scroll-comp-batch {
+  overflow-y: auto;
+  max-height: 85vh;
 }

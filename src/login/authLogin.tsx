@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import { ReactWidget } from '@jupyterlab/apputils';
 import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import signinGoogleIcon from '../../style/icons/signin_google_icon.svg';
@@ -24,6 +23,7 @@ import ConfigSelection from './configSelection';
 import { LOGIN_STATE, STATUS_SUCCESS } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
+import { DataprocWidget } from '../controls/DataprocWidget';
 
 // Create the LabIcon instance outside of the component
 const IconsigninGoogle = new LabIcon({
@@ -111,12 +111,8 @@ const AuthLoginComponent = (): React.JSX.Element => {
   );
 };
 
-export class AuthLogin extends ReactWidget {
-  constructor() {
-    super();
-  }
-
-  render(): React.JSX.Element {
+export class AuthLogin extends DataprocWidget {
+  renderInternal(): React.JSX.Element {
     return <AuthLoginComponent />;
   }
 }
