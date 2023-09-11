@@ -18,7 +18,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import 'semantic-ui-css/semantic.min.css';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
 import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
 import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
@@ -586,37 +585,35 @@ function JobDetails({
                     </div>
                   </div>
                 )}
-                {
-                  Object.keys(jobInfo[jobTypeConcat as keyof IJobDetails]).map(
-                    (titleData: string) => {
-                      //@ts-ignore string used as index
-                      const valueData = jobInfo[jobTypeConcat][titleData];
-                      return (
-                        !JOB_FIELDS_EXCLUDED.includes(titleData) && (
-                          <div className="row-details">
-                            <div className="cluster-details-label">
-                              {jobDetailsOptionalDisplay(titleData)}
-                            </div>
-                            {typeof valueData === 'string' ? (
-                              <div className="cluster-details-value">
-                                {valueData}
-                              </div>
-                            ) : (
-                              valueData.length > 0 &&
-                              !JOB_FIELDS_EXCLUDED.includes(titleData) && (
-                                <div className="cluster-details-value">
-                                  {valueData.map((item: string) => {
-                                    return <div>{item}</div>;
-                                  })}
-                                </div>
-                              )
-                            )}
+                {Object.keys(jobInfo[jobTypeConcat as keyof IJobDetails]).map(
+                  (titleData: string) => {
+                    //@ts-ignore string used as index
+                    const valueData = jobInfo[jobTypeConcat][titleData];
+                    return (
+                      !JOB_FIELDS_EXCLUDED.includes(titleData) && (
+                        <div className="row-details">
+                          <div className="cluster-details-label">
+                            {jobDetailsOptionalDisplay(titleData)}
                           </div>
-                        )
-                      );
-                    }
-                  )
-                }
+                          {typeof valueData === 'string' ? (
+                            <div className="cluster-details-value">
+                              {valueData}
+                            </div>
+                          ) : (
+                            valueData.length > 0 &&
+                            !JOB_FIELDS_EXCLUDED.includes(titleData) && (
+                              <div className="cluster-details-value">
+                                {valueData.map((item: string) => {
+                                  return <div>{item}</div>;
+                                })}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      )
+                    );
+                  }
+                )}
 
                 {jobInfo?.scheduling &&
                   jobInfo.scheduling.maxFailuresPerHour && (

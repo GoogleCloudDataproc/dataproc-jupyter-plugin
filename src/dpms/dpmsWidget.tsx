@@ -32,7 +32,6 @@ import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
-import 'semantic-ui-css/semantic.min.css';
 import { auto } from '@popperjs/core';
 import {
   BASE_URL,
@@ -588,17 +587,16 @@ fetching database name from fully qualified name structure */
     const notebookVal = localStorage.getItem('notebookValue');
     // notebookVal: clustername/cluster or sessionname/session getting only the cluster or session name
     if (notebookVal?.includes('/clusters')) {
-      const clusterName = notebookVal.split('/')
-      const clusterVal = clusterName.slice(0, -1).join('/')
+      const clusterName = notebookVal.split('/');
+      const clusterVal = clusterName.slice(0, -1).join('/');
       setNotebookValue(clusterVal);
       getClusterDetails();
     } else if (notebookVal?.includes('/sessions')) {
-      const sessionName = notebookVal.split('/')
-      const sessionVal = sessionName.slice(0, -1).join('/')
+      const sessionName = notebookVal.split('/');
+      const sessionVal = sessionName.slice(0, -1).join('/');
       setNotebookValue(sessionVal);
       getSessionDetails();
-    }
-    else {
+    } else {
       setNoDpmsInstance(true);
     }
   };
@@ -652,15 +650,15 @@ fetching database name from fully qualified name structure */
                     <div className="search-icon">
                       <iconSearch.react tag="div" className='logo-alignment-style' />
                     </div>
-                    {searchTerm &&
+                    {searchTerm && (
                       <div
                         role="button"
                         className="search-clear-icon"
                         onClick={handleSearchClear}
                       >
-                        <iconSearchClear.react tag="div" className='logo-alignment-style' />
+                        <iconSearchClear.react tag="div" className='logo-alignment-style'/>
                       </div>
-                    }
+                    )}
                   </div>
                 </div>
                 <div className="tree-container">
