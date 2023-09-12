@@ -331,6 +331,9 @@ function CreateBatch({
     listKeysAPI(keyRingSelected);
   }, [keyRingSelected]);
   useEffect(() => {
+    listSubNetworksAPI(networkSelected);
+  }, [networkSelected]);
+  useEffect(() => {
     const batchTypeData = [
       { key: 'spark', value: 'spark', text: 'Spark' },
       { key: 'sparkR', value: 'sparkR', text: 'SparkR' },
@@ -1267,7 +1270,7 @@ function CreateBatch({
             </div>
             <div className="submit-job-label-header">Container</div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="batch-type">
+              <label className="select-dropdown-text" htmlFor="batch-type">
                 Batch type*
               </label>
               <Select
@@ -1766,7 +1769,7 @@ function CreateBatch({
                 placeholder=""
               />
             </div>
-            <div className="create-messagelist">
+            <div className="create-custom-messagelist">
               If not provided, the default GCE service account will be used.
               <div
                 className="submit-job-learn-more"
@@ -1812,7 +1815,6 @@ function CreateBatch({
                     onChange={handleSubNetworkChange}
                     type="text"
                     options={subNetworkList}
-                    placeholder={defaultValue}
                   />
                 </div>
               </div>
@@ -1993,7 +1995,7 @@ function CreateBatch({
             </div>
             <div className="create-messagelist">{METASTORE_MESSAGE}</div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="meta-project">
+              <label className="select-dropdown-text" htmlFor="meta-project">
                 Metastore project
               </label>
               <Select
@@ -2006,7 +2008,7 @@ function CreateBatch({
               />
             </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="meta-region">
+              <label className="select-dropdown-text" htmlFor="meta-region">
                 Metastore region
               </label>
 
@@ -2031,7 +2033,7 @@ function CreateBatch({
               )}
             </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="meta-service">
+              <label className="select-dropdown-text" htmlFor="meta-service">
                 Metastore service
               </label>
               {isLoadingService ? (
@@ -2063,7 +2065,7 @@ function CreateBatch({
             </div>
             <div className="select-text-overlay">
               <label
-                className="select-title-text"
+                className="select-dropdown-text"
                 htmlFor="history-server-cluster"
               >
                 History server cluster
