@@ -31,8 +31,6 @@ import {
   STATUS_RUNNING,
   USER_INFO_URL
 } from '../utils/const';
-import TagsInput from 'react-tagsinput';
-import 'react-tagsinput/react-tagsinput.css';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi, toastifyCustomStyle, authenticatedFetch } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
@@ -43,6 +41,7 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { AuthLogin } from '../login/authLogin';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
+import { TagsInput } from '../controls/MuiWrappedTagsInput';
 
 type Project = {
   projectId: string;

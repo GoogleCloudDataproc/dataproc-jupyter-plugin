@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-import { ReactWidget } from '@jupyterlab/apputils';
 import React from 'react';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { DataprocWidget } from '../controls/DataprocWidget';
 
 interface IDatabaseProps {
   title: string;
@@ -63,21 +64,18 @@ const DatabaseInfo = ({
   );
 };
 
-export class Database extends ReactWidget {
-  dataprocMetastoreServices: string;
-  databaseDetails: Record<string, string>;
+export class Database extends DataprocWidget {
   constructor(
     title: string,
-    dataprocMetastoreServices: string,
-    databaseDetails: Record<string, string>
+    private dataprocMetastoreServices: string,
+    private databaseDetails: Record<string, string>,
+    themeManager: IThemeManager
   ) {
-    super();
+    super(themeManager);
     this.title.label = title;
-    this.dataprocMetastoreServices = dataprocMetastoreServices;
-    this.databaseDetails = databaseDetails;
   }
 
-  render(): React.ReactElement {
+  renderInternal(): React.ReactElement {
     return (
       <DatabaseInfo
         title={this.title.label}

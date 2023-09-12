@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import { ReactWidget } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps } from 'react-arborist';
@@ -46,6 +45,8 @@ import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
+import { DataprocWidget } from '../controls/DataprocWidget';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
@@ -94,7 +95,13 @@ const calculateDepth = (node: any): number => {
   return depth;
 };
 
-const DpmsComponent = ({ app }: { app: JupyterLab }): JSX.Element => {
+const DpmsComponent = ({
+  app,
+  themeManager
+}: {
+  app: JupyterLab;
+  themeManager: IThemeManager;
+}): JSX.Element => {
   const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
@@ -265,7 +272,8 @@ fetching database name from fully qualified name structure */
         const content = new Database(
           node.data.name,
           dataprocMetastoreServices,
-          databaseDetails
+          databaseDetails,
+          themeManager
         );
         const widget = new MainAreaWidget<Database>({ content });
         const widgetId = 'node-widget-db';
@@ -286,7 +294,8 @@ fetching database name from fully qualified name structure */
           dataprocMetastoreServices,
           database,
           column,
-          tableDescription
+          tableDescription,
+          themeManager
         );
         const widget = new MainAreaWidget<Table>({ content });
         const widgetId = `node-widget-${uuidv4()}`;
@@ -707,15 +716,12 @@ fetching database name from fully qualified name structure */
   );
 };
 
-export class dpmsWidget extends ReactWidget {
-  app: JupyterLab;
-
-  constructor(app: JupyterLab) {
-    super();
-    this.app = app;
+export class dpmsWidget extends DataprocWidget {
+  constructor(private app: JupyterLab, themeManager: IThemeManager) {
+    super(themeManager);
   }
 
-  render(): JSX.Element {
-    return <DpmsComponent app={this.app} />;
+  renderInternal(): JSX.Element {
+    return <DpmsComponent app={this.app} themeManager={this.themeManager} />;
   }
 }

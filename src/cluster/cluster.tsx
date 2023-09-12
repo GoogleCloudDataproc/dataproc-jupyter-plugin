@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import { ReactWidget } from '@jupyterlab/apputils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
@@ -45,6 +44,7 @@ import {
 } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
+import { DataprocWidget } from '../controls/DataprocWidget';
 
 const iconStart = new LabIcon({
   name: 'launcher:start-icon',
@@ -445,12 +445,8 @@ const ClusterComponent = (): React.JSX.Element => {
   );
 };
 
-export class Cluster extends ReactWidget {
-  constructor() {
-    super();
-  }
-
-  render(): React.JSX.Element {
+export class Cluster extends DataprocWidget {
+  renderInternal(): React.JSX.Element {
     return <ClusterComponent />;
   }
 }

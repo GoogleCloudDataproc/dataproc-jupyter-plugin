@@ -41,8 +41,5 @@ export const Select = styled(SelectInternal)<SelectProps>({
   marginTop: '10px',
   '& .MuiInputBase-input': {
     padding: '9.5px 14px'
-  },
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderStyle: 'none'
   }
 });
