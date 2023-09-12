@@ -45,19 +45,28 @@ const iconDpms = new LabIcon({
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import { GcsBucket } from './gcs/gcsBucket';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+// import { IDocumentManager } from '@jupyterlab/docmanager';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
-  optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker],
+  optional: [IFileBrowserFactory, ILauncher, IMainMenu, ILabShell, INotebookTracker],
   activate: async (
     app: JupyterFrontEnd,
+    factory: IFileBrowserFactory,
     launcher: ILauncher,
     mainMenu: IMainMenu,
     labShell: ILabShell,
     notebookTracker: INotebookTracker
   ) => {
     const { commands } = app;
+    const widget = factory?.tracker?.currentWidget;
+    console.log(widget);
+    // const { tracker } = factory;
+
+    // console.log(factory, factory?.tracker)
+
     const iconAddRuntime = new LabIcon({
       name: 'launcher:add-runtime-icon',
       svgstr: addRuntimeIcon
@@ -103,7 +112,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     const panelGcs = new Panel();
     panelGcs.id = 'GCS-bucket-tab';
     panelGcs.title.icon = iconStorage; 
-    panelGcs.addWidget(new GcsBucket(app as JupyterLab));
+    // console.log(docManager);
+    panelGcs.addWidget(new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory));
     app.shell.add(panelGcs, 'left', { rank: 1001 });
 
     const onTitleChanged = async (title: Title<Widget>) => {

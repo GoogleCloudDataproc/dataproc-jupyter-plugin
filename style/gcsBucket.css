@@ -9,12 +9,25 @@
   line-height: 20px;
 }
 
-.gcs-folder-path-parent{
+.gcs-folder-path-parent {
   display: flex;
   min-height: 24px;
   padding: 0px 10px;
-  border-top: 1px solid #E9EAED;
+  border-top: 1px solid #e9eaed;
   color: rgba(0, 0, 0, 0.66);
+  cursor: pointer;
+}
+
+.gcs-row-data-parent {
+  background: #ffffff;
+  height: 29px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+
+  color: rgba(0, 0, 0, 0.66);
+  cursor: pointer;
 }
 
 .gcs-file-list-data {
@@ -22,7 +35,7 @@
   overflow: auto;
 }
 
-.gcs-object-name{
+.gcs-object-name {
   display: flex;
   align-items: center;
   height: 20px;
@@ -40,7 +53,7 @@
 
 .gcs-filter-overlay {
   border-radius: 4px;
-  border: 1px solid #80868B;
+  border: 1px solid #80868b;
   height: 38px;
   padding-left: 15px;
   margin: 10px;
@@ -51,7 +64,7 @@
   padding-left: 10px;
   padding-top: 4px;
 }
-.gcs-modified-date{
+.gcs-modified-date {
   padding-left: 15px;
   padding-top: 4px;
 }

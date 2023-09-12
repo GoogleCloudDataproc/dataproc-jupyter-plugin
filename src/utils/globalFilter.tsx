@@ -45,7 +45,9 @@ function GlobalFilter({
         }}
         placeholder={gcsBucket ? 'Filter files by name' : 'Filter Table'}
         aria-label="filterd value"
-        className="filter-section-part"
+        className={
+          gcsBucket ? 'gcs-filter-section-part' : 'filter-section-part'
+        }
       />
     </span>
   );
