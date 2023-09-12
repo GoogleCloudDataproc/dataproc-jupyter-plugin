@@ -1769,7 +1769,7 @@ function CreateBatch({
                 placeholder=""
               />
             </div>
-            <div className="create-messagelist">
+            <div className="create-custom-messagelist">
               If not provided, the default GCE service account will be used.
               <div
                 className="submit-job-learn-more"

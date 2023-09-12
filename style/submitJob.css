@@ -53,7 +53,6 @@
 }
 
 .select-job-style {
-  border: 1px solid #80868b !important;
   background: var(--jp-layout-color0);
   border-radius: 4px;
   width: 512px;
