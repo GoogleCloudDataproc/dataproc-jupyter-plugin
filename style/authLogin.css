@@ -27,7 +27,7 @@
   font-weight: 400;
   font-size: 18px;
   line-height: 22px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   padding-left: 10px;
   padding-bottom: 5px;
 }
@@ -65,13 +65,27 @@
   line-height: 13px;
   display: flex;
   align-items: center;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   position: absolute;
-  background-color: #fff;
-  bottom: 30px;
-  padding: 0px 3px;
+  background-color: var(--jp-layout-color0);
+  bottom: 32px;
+  padding-left: 2px;
   left: 7px;
-  z-index: 3;
+}
+
+.project-select {
+  box-sizing: border-box;
+  background: var(--jp-layout-color0) !important;
+  border: 1px solid var(--jp-ui-font-color2) !important;
+  display: block !important;
+  height: 36px;
+  width: 100%;
+  border-radius: 4px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none;
+  position: unset !important;
+  transform: none !important;
 }
 
 .region-text {
@@ -82,19 +96,20 @@
   line-height: 13px;
   display: flex;
   align-items: center;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   position: absolute;
-  background-color: #fff;
-  bottom: 30px;
-  padding: 0px 3px;
+  background-color: var(--jp-layout-color0);
+  padding-right: 4px;
+  bottom: 34px;
+  padding-left: 2px;
   left: 7px;
   z-index: 3;
 }
 
 .project-region-select {
   box-sizing: border-box;
-  background: #ffffff !important;
-  border: 1px solid #80868B !important;
+  background: var(--jp-layout-color0) !important;
+  border: 1px solid var(--jp-ui-font-color2) !important;
   display: block !important;
   min-height: 36px;
   width: 100%;
@@ -123,8 +138,8 @@
 .save-button {
   height: 32px;
   background: #3367d6;
-  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.12), 0px 2px 2px rgba(0, 0, 0, 0.2),
-    0px 1px 1px rgba(0, 0, 0, 0.14);
+  box-shadow: 0px 1px 5px var(--jp-layout-color4),
+    0px 2px 2px rgba(0, 0, 0, 0.2), 0px 1px 1px var(--jp-layout-color4);
   border-radius: 4px;
   flex: none;
   width: 65px;
@@ -135,14 +150,14 @@
   align-items: center;
   text-align: center;
   text-transform: uppercase;
-  color: #ffffff;
+  color: var(--jp-layout-color0);
   border: none;
   cursor: pointer;
 }
 
 .save-button:disabled {
   background: lightgrey;
-  color: black;
+  color: var(--jp-ui-font-color0);
 }
 
 .save-loader {
@@ -153,7 +168,7 @@
   box-sizing: border-box;
   width: 344px;
   height: fit-content;
-  background: #ffffff;
+  background: var(--jp-layout-color0);
   border: 1px solid #b0b0b0;
   border-radius: 27px;
   margin-top: 30px;
@@ -214,7 +229,7 @@
   font-weight: 500;
   font-size: 12px;
   line-height: 17px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   padding-left: 30px;
   padding-top: 20px;
   justify-content: center;
@@ -262,14 +277,14 @@
 
 .ui.dropdown .menu .selected.item,
 .ui.dropdown.selected {
-  background: rgb(230, 236, 250) !important;
-  color: rgb(28, 58, 169) !important;
+  background: var(--jp-layout-color0) !important;
+  color: var(--jp-brand-color0) !important;
 }
 
 .runtime-title-section {
   display: flex;
   justify-content: space-between;
-  color: #000;
+  color: var(--jp-ui-font-color0);
   font-size: 20px;
   font-style: normal;
   font-weight: 500;
