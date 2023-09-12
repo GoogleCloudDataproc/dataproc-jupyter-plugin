@@ -223,3 +223,6 @@
 .icon-delete{
   opacity: 0.5;
 }
+.css-1gjd5ff-MuiFormControl-root-MuiTextField-root .MuiInputBase-root input {
+  height: 7px;
+}
