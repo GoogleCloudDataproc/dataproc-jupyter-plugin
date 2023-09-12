@@ -821,7 +821,7 @@ function SubmitJob(
                   </div>
                 )}
                 {queryFileValidation && (
-                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -839,7 +839,7 @@ function SubmitJob(
                   />
                 </div>
 
-                <div className="submit-job-message">The query to execute</div>
+                <div className="submit-job-message-input">The query to execute</div>
               </>
             )}
           {jobTypeSelected === 'spark' && (
@@ -875,7 +875,7 @@ function SubmitJob(
                 </div>
               )}
               {(mainClassSelected !== '' || !mainClassActive) && (
-                <div className="submit-job-message">{MAIN_CLASS_MESSAGE}</div>
+                <div className="submit-job-message-input">{MAIN_CLASS_MESSAGE}</div>
               )}
             </>
           )}
@@ -909,7 +909,7 @@ function SubmitJob(
                 </div>
               )}
               {mainRValidation && (
-                <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
               )}
             </>
           )}
@@ -943,7 +943,7 @@ function SubmitJob(
                 </div>
               )}
               {mainPythonValidation && (
-                <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
               )}
             </>
           )}
