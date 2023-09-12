@@ -1267,7 +1267,7 @@ function CreateBatch({
             </div>
             <div className="submit-job-label-header">Container</div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="batch-type">
+              <label className="select-dropdown-text" htmlFor="batch-type">
                 Batch type*
               </label>
               <Select
@@ -1993,7 +1993,7 @@ function CreateBatch({
             </div>
             <div className="create-messagelist">{METASTORE_MESSAGE}</div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="meta-project">
+              <label className="select-dropdown-text" htmlFor="meta-project">
                 Metastore project
               </label>
               <Select
@@ -2006,7 +2006,7 @@ function CreateBatch({
               />
             </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="meta-region">
+              <label className="select-dropdown-text" htmlFor="meta-region">
                 Metastore region
               </label>
 
@@ -2031,7 +2031,7 @@ function CreateBatch({
               )}
             </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="meta-service">
+              <label className="select-dropdown-text" htmlFor="meta-service">
                 Metastore service
               </label>
               {isLoadingService ? (
@@ -2063,7 +2063,7 @@ function CreateBatch({
             </div>
             <div className="select-text-overlay">
               <label
-                className="select-title-text"
+                className="select-dropdown-text"
                 htmlFor="history-server-cluster"
               >
                 History server cluster

@@ -280,7 +280,7 @@ a:hover {
   opacity: 0;
 }
 
-.select-cluster-text{
+.select-dropdown-text{
   height: 13px;
     font-style: normal;
     font-weight: 1000;
@@ -291,7 +291,7 @@ a:hover {
     color: #000000;
     position: absolute;
     background-color: #fff;
-    top: 2px;
+    top: -7px;
     padding: 0px 3px;
     left: 7px;
     z-index: 3;

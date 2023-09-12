@@ -1076,7 +1076,7 @@ function CreateRunTime({
             <div className="submit-job-label-header">Metastore</div>
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-project">
+              <label className="select-dropdown-text" htmlFor="metastore-project">
                 Metastore project
               </label>
               <Select
@@ -1091,7 +1091,7 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-region">
+              <label className="select-dropdown-text" htmlFor="metastore-region">
                 Metastore region
               </label>
               {isLoadingRegion ? (
@@ -1117,7 +1117,7 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-service">
+              <label className="select-dropdown-text" htmlFor="metastore-service">
                 Metastore service
               </label>
               {isLoadingService ? (
@@ -1240,7 +1240,7 @@ function CreateRunTime({
             </div>
             <div className="select-text-overlay">
               <label
-                className="select-title-text"
+                className="select-dropdown-text"
                 htmlFor="history-server-cluster"
               >
                 History server cluster
