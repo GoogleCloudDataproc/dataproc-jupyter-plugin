@@ -331,6 +331,9 @@ function CreateBatch({
     listKeysAPI(keyRingSelected);
   }, [keyRingSelected]);
   useEffect(() => {
+    listSubNetworksAPI(networkSelected);
+  }, [networkSelected]);
+  useEffect(() => {
     const batchTypeData = [
       { key: 'spark', value: 'spark', text: 'Spark' },
       { key: 'sparkR', value: 'sparkR', text: 'SparkR' },
@@ -1812,7 +1815,6 @@ function CreateBatch({
                     onChange={handleSubNetworkChange}
                     type="text"
                     options={subNetworkList}
-                    placeholder={defaultValue}
                   />
                 </div>
               </div>

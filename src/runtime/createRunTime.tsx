@@ -175,6 +175,9 @@ function CreateRunTime({
     region,
     servicesSelected
   ]);
+  useEffect(() => {
+    listSubNetworksAPI(networkSelected);
+  }, [networkSelected]);
   const displayUserInfo = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -1049,7 +1052,6 @@ function CreateRunTime({
                     onChange={handleSubNetworkChange}
                     type="text"
                     options={subNetworkList}
-                    placeholder={defaultValue}
                   />
                 </div>
               </div>
