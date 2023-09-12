@@ -14,29 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TextField, styled } from '@mui/material';
+import { styled } from '@mui/material';
+import { MuiChipsInput } from 'mui-chips-input';
 import React from 'react';
-import type { InputProps } from 'semantic-ui-react';
+import type { ReactTagsInputProps } from 'react-tagsinput';
 
-function InputInternal(props: InputProps) {
-  const { className, value, onChange, placeholder } = props;
+function TagsInputInternal(props: ReactTagsInputProps) {
+  const { className, value, onChange, addOnBlur, inputProps } = props;
   return (
-    <TextField
+    <MuiChipsInput
       className={className}
+      onChange={tags => onChange(tags, [], [])}
+      addOnBlur={!!addOnBlur}
       value={value}
-      onChange={e =>
-        onChange?.(e as React.ChangeEvent<HTMLInputElement>, {
-          value: e.target.value
-        })
-      }
-      placeholder={placeholder}
-    ></TextField>
+      placeholder={inputProps?.placeholder}
+    />
   );
 }
 
-export const Input = styled(InputInternal)<InputProps>({
-  marginTop: '10px',
-  '& .MuiInputBase-input': {
-    padding: '9.5px 14px'
-  }
+export const TagsInput = styled(TagsInputInternal)<ReactTagsInputProps>({
+  marginTop: '10px'
 });

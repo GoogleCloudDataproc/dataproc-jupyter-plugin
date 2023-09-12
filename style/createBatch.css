@@ -12,7 +12,7 @@
   font-weight: 400;
   font-size: 13px;
   margin: auto 0;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
 }
 
 .create-batch-sub-message {
@@ -21,7 +21,7 @@
   font-size: 10px;
   line-height: 15px;
   padding-left: 28px;
-  color: #575757;
+  color: var(--jp-ui-font-color2);
   width: 50%;
   overflow: hidden;
   word-wrap: break-word;
@@ -68,14 +68,13 @@
   line-height: 10px;
   padding-top: 13px;
   padding-left: 5px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   width: 60%;
   margin-left: 23px;
 }
 
 .select-sub-network-style {
-  background: #ffffff;
-  border: 1px solid black !important;
+  background: var(--jp-layout-color0);
   border-radius: 4px;
   width: 50%;
   margin-top: 10px;
@@ -84,8 +83,7 @@
 }
 
 .select-primary-network-style {
-  background: #ffffff;
-  border: 1px solid black !important;
+  background: var(--jp-layout-color0);
   border-radius: 4px;
   width: 50%;
   margin-top: 10px;
@@ -93,9 +91,10 @@
 }
 
 .create-batch-style {
-  background: #ffffff;
   width: 512px;
   height: 36px;
+  background: var(--jp-layout-color0);
+  margin-top: 10px;
   outline: none;
 }
 
@@ -129,8 +128,9 @@
   font-weight: 400;
   font-size: 10px;
   line-height: 15px;
-  color: #575757;
   width: 512px;
+  padding-left: 5px;
+  color: var(--jp-ui-font-color2);
   overflow: hidden;
   word-wrap: break-word;
   display: flex;
@@ -143,8 +143,8 @@
   font-size: 10px;
   line-height: 15px;
   padding-left: 5px;
-  color: #575757;
   width: 512px;
+  color: var(--jp-ui-font-color2);
   overflow: hidden;
   word-wrap: break-word;
   margin-top: 5px;
@@ -161,7 +161,7 @@
   line-height: 10px;
   padding-top: 13px;
   padding-left: 5px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   width: 50%;
 }
 
@@ -171,7 +171,8 @@
   font-size: 13px;
   line-height: 10px;
   padding-top: 13px;
-  color: #000000;
+  padding-left: 5px;
+  color: var(--jp-ui-font-color0);
   display: flex;
 }
 
@@ -183,7 +184,7 @@
   line-height: 10px;
   padding-top: 13px;
   padding-left: 5px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   display: flex;
   width: 50%;
 }
@@ -194,8 +195,9 @@
   border-width: 2px !important;
 }
 
+
 .ui.checkbox input:checked~label:before {
-  background: #fff;
+  background: var(--jp-layout-color0);
   border-color: grey;
   border-width: 2px !important;
 }

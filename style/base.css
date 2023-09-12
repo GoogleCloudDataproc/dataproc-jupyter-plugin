@@ -84,8 +84,8 @@ h2 {
   margin: 15px 0px !important;
 }
 
-.ui.dropdown:not(.button)>.default.text {
-  color: rgba(0, 0, 0, 0.66) !important;
+.ui.dropdown:not(.button) > .default.text {
+  color: var(--jp-ui-font-color2) !important;
 }
 
 /* Highlight select dropdown field when focus */

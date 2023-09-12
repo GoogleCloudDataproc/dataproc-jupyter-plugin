@@ -16,7 +16,7 @@
   background-color: rgba(0, 0, 0, 0.08);
   padding: 0px 10px;
   border-radius: 10px;
-  color: rgb(0, 0, 0);
+  color: var(--jp-ui-font-color0);
   font-weight: 400;
   line-height: 20px;
   margin: 3px 0px;
@@ -43,7 +43,7 @@
   font-size: 13px;
   line-height: 18px;
   width: 512px;
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--jp-ui-font-color2);
   padding: 10px;
 }
 
@@ -61,7 +61,7 @@
   line-height: 18px;
   width: 65%;
   flex-wrap: wrap;
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--jp-ui-font-color2);
 }
 
 .job-edit-header {
@@ -69,13 +69,13 @@
   height: 48px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--jp-layout-color4);
 }
 
 .job-save-button-style {
   margin-right: 10px;
   background: #3367d6;
-  color: #ffffff;
+  color: var(--jp-layout-color0);
   height: 30px;
   font-size: 13px;
   width: 55px;
@@ -87,7 +87,7 @@
 }
 
 .job-button-style-parent {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--jp-layout-color4);
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -96,8 +96,8 @@
 
 .job-cancel-button-style {
   margin-right: 10px;
-  background: white;
-  color: #000000;
+  background: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color0);
   height: 30px;
   width: 75px;
   font-size: 13px;
@@ -123,8 +123,8 @@
   width: 110px;
   height: 32px;
 
-  background: #ffffff;
-  color: rgba(0, 0, 0, 0.54);
+  background: var(--jp-layout-color0);
+  color: var(--jp-ui-font-color2);
 }
 
 .job-add-label-button {
@@ -138,9 +138,9 @@
   width: 110px;
   height: 32px;
 
-  background: #ffffff;
-  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.12), 0px 2px 2px rgba(0, 0, 0, 0.2),
-    0px 1px 1px rgba(0, 0, 0, 0.14);
+  background: var(--jp-layout-color0);
+  box-shadow: 0px 1px 5px var(--jp-layout-color4),
+    0px 2px 2px rgba(0, 0, 0, 0.2), 0px 1px 1px var(--jp-layout-color4);
   border-radius: 4px;
 }
 
@@ -155,9 +155,9 @@
   width: 75px;
   height: 32px;
 
-  background: #ffffff;
-  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.12), 0px 2px 2px rgba(0, 0, 0, 0.2),
-    0px 1px 1px rgba(0, 0, 0, 0.14);
+  background: var(--jp-layout-color0);
+  box-shadow: 0px 1px 5px var(--jp-layout-color4),
+    0px 2px 2px rgba(0, 0, 0, 0.2), 0px 1px 1px var(--jp-layout-color4);
   border-radius: 4px;
 }
 
@@ -167,12 +167,12 @@
   align-items: center;
   padding: 0px 12px;
   gap: 4px;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--jp-ui-font-color2);
 
   width: 75px;
   height: 32px;
 
-  background: #ffffff;
+  background: var(--jp-layout-color0);
   opacity: 0.5;
 }
 
@@ -190,7 +190,7 @@
 
   /* Quick Selection/Blue 700 */
 
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--jp-ui-font-color2);
 }
 
 .color-icon {
@@ -199,7 +199,7 @@
 }
 
 .color-icon-disabled {
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--jp-ui-font-color2);
   display: flex;
 }
 
@@ -230,7 +230,7 @@
   padding: 0px 10px;
   width: fit-content;
   border-radius: 10px;
-  color: rgb(0, 0, 0);
+  color: var(--jp-ui-font-color0);
   font-weight: 400;
   line-height: 20px;
   margin: 3px 0px;
@@ -250,7 +250,7 @@
 }
 
 .job-details-label-row {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid var(--jp-layout-color4);
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
@@ -265,6 +265,6 @@
   line-height: 18px;
   width: 35%;
   padding-left: 15px;
-  color: #000000;
+  color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
