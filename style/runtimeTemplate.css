@@ -40,13 +40,11 @@
 }
 
 .runtimetemplate-max-idle-select {
-  border: 1px solid #80868b  !important;
   background: var(--jp-layout-color0);
   border-radius: 4px;
-  margin-top: 20px;
-  min-height: 36px;
   margin-left: 15px;
-  /* min-height: unset !important; */
+  height: 42px;
+  margin-top: 30px !important;
 }
 
 .runtimetemplate-max-idle-select.ui.active.selection.dropdown,
@@ -67,7 +65,6 @@
 
 .select-runtime-style {
   background: #ffffff;
-  border: 1px solid #80868b !important;
   border-radius: 4px;
   width: 512px;
   margin-top: 10px;
@@ -78,7 +75,7 @@
 .create-runtime-style {
   background: #ffffff;
   width: 512px;
-  height: 36px;
+  height: 40px;
   outline: none;
 }
 

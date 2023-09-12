@@ -213,6 +213,7 @@ function SubmitJob(
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [jobIdValidation, setjobIdValidation] = useState(true);
+  const [jobIdSpecialValidation, setjobIdSpecialValidation] = useState(false);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [mainClassActive, setMainClassActive] = useState(false);
 
@@ -302,6 +303,7 @@ function SubmitJob(
     keyValidation,
     valueValidation,
     jobIdValidation,
+    jobIdSpecialValidation,
     duplicateKeyError
   ]);
   const disableSubmitButtonIfInvalid = () => {
@@ -320,6 +322,7 @@ function SubmitJob(
         keyValidation === -1 &&
         valueValidation === -1 &&
         jobIdValidation &&
+        jobIdSpecialValidation &&
         duplicateKeyError === -1) ||
         (isSparkRJob &&
           mainRSelected !== '' &&
@@ -328,6 +331,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
+          jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isPySparkJob &&
           mainPythonSelected !== '' &&
@@ -339,6 +343,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
+          jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isSparkSqlJob &&
           queryFileSelected !== '' &&
@@ -348,6 +353,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
+          jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isSparkSqlJob &&
           queryTextSelected !== '' &&
@@ -356,6 +362,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
+          jobIdSpecialValidation &&
           duplicateKeyError === -1))
     ) {
       setSubmitDisabled(false);
@@ -614,7 +621,10 @@ function SubmitJob(
               .json()
               .then((responseResult: any) => {
                 console.log(responseResult);
-                toast.success(`Job ${jobIdSelected} successfully submitted`, toastifyCustomStyle);
+                toast.success(
+                  `Job ${jobIdSelected} successfully submitted`,
+                  toastifyCustomStyle
+                );
               })
               .catch((e: any) => {
                 console.log(e);
@@ -633,6 +643,11 @@ function SubmitJob(
     event.target.value.length > 0
       ? setjobIdValidation(true)
       : setjobIdValidation(false);
+
+    const regexp = /^[a-zA-Z0-9-_]+$/;
+    event.target.value.search(regexp)
+      ? setjobIdSpecialValidation(true)
+      : setjobIdSpecialValidation(false);
     setHexNumber(event.target.value);
     const newJobId = event.target.value;
     setJobIdSelected(newJobId);
@@ -689,9 +704,7 @@ function SubmitJob(
         </div>
         <div className="submit-job-container">
           <div className="submit-job-label-header">Cluster</div>
-          <div>
-                Choose a cluster to run your job in.
-          </div>
+          <div>Choose a cluster to run your job in.</div>
 
           {clusterList.length === 0 ? (
             <Input
@@ -731,6 +744,14 @@ function SubmitJob(
             <div className="error-key-parent">
               <iconError.react tag="div" className="logo-alignment-style" />
               <div className="error-key-missing">ID is required</div>
+            </div>
+          )}
+          {jobIdSpecialValidation && jobIdValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">
+                Id must contain only letters numbers hyphens and underscores
+              </div>
             </div>
           )}
 
@@ -800,7 +821,7 @@ function SubmitJob(
                   </div>
                 )}
                 {queryFileValidation && (
-                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -818,7 +839,7 @@ function SubmitJob(
                   />
                 </div>
 
-                <div className="submit-job-message">The query to execute</div>
+                <div className="submit-job-message-input">The query to execute</div>
               </>
             )}
           {jobTypeSelected === 'spark' && (
@@ -854,7 +875,7 @@ function SubmitJob(
                 </div>
               )}
               {(mainClassSelected !== '' || !mainClassActive) && (
-                <div className="submit-job-message">{MAIN_CLASS_MESSAGE}</div>
+                <div className="submit-job-message-input">{MAIN_CLASS_MESSAGE}</div>
               )}
             </>
           )}
@@ -888,7 +909,7 @@ function SubmitJob(
                 </div>
               )}
               {mainRValidation && (
-                <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
               )}
             </>
           )}
@@ -922,7 +943,7 @@ function SubmitJob(
                 </div>
               )}
               {mainPythonValidation && (
-                <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
               )}
             </>
           )}

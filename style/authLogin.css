@@ -109,7 +109,6 @@
 .project-region-select {
   box-sizing: border-box;
   background: var(--jp-layout-color0) !important;
-  border: 1px solid var(--jp-ui-font-color2) !important;
   display: block !important;
   min-height: 36px;
   width: 100%;
@@ -118,7 +117,6 @@
   -webkit-appearance: none !important;
   -moz-appearance: none;
   transform: none !important;
-  position: unset !important;
 }
 
 .region-loader {
@@ -312,7 +310,7 @@
 }
 
 .feedback-container {
-  color: #3367D6;
+  color: #3367D6 !important;
   font-weight: bold;
 }
 

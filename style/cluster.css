@@ -161,7 +161,8 @@
   display: flex;
   height: 18px;
   width: 18px;
-  color: #3367d6;
+  color: #3367D6;
+  margin-top: -1px;
 }
 
 .filter-cluster-icon {

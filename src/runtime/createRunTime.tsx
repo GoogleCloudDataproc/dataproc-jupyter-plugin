@@ -42,6 +42,7 @@ import { AuthLogin } from '../login/authLogin';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 type Project = {
   projectId: string;
@@ -79,10 +80,12 @@ let value: string[] | (() => string[]) = [];
 
 function CreateRunTime({
   setOpenCreateTemplate,
-  selectedRuntimeClone
+  selectedRuntimeClone,
+  themeManager
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
+  themeManager: IThemeManager;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -137,6 +140,7 @@ function CreateRunTime({
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
+  const[isloadingNetwork,setIsloadingNetwork]=useState(false);
 
   useEffect(() => {
     const timeData = [
@@ -171,6 +175,9 @@ function CreateRunTime({
     region,
     servicesSelected
   ]);
+  useEffect(() => {
+    listSubNetworksAPI(networkSelected);
+  }, [networkSelected]);
   const displayUserInfo = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -325,6 +332,7 @@ function CreateRunTime({
     }
   };
   const listNetworksFromSubNetworkAPI = async (subnetwork: any) => {
+    setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -346,6 +354,7 @@ function CreateRunTime({
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
+              setIsloadingNetwork(false);
             })
 
             .catch((e: Error) => {
@@ -709,7 +718,7 @@ function CreateRunTime({
   };
   const handleCancelButton = () => {
     setOpenCreateTemplate(false);
-    const content = new AuthLogin();
+    const content = new AuthLogin(themeManager);
     const widget = new MainAreaWidget<AuthLogin>({ content });
     widget.title.label = 'Config Setup';
   };
@@ -1001,6 +1010,16 @@ function CreateRunTime({
             <div className="runtime-message">Networks in this project</div>
 
             <div>
+            {isloadingNetwork ? (
+                <div className="metastore-loader">
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
               <div className="create-batch-network">
                 <div className="select-text-overlay">
                   <label
@@ -1033,10 +1052,10 @@ function CreateRunTime({
                     onChange={handleSubNetworkChange}
                     type="text"
                     options={subNetworkList}
-                    placeholder={defaultValue}
                   />
                 </div>
               </div>
+              )}
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
@@ -1059,7 +1078,7 @@ function CreateRunTime({
             <div className="submit-job-label-header">Metastore</div>
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-project">
+              <label className="select-dropdown-text" htmlFor="metastore-project">
                 Metastore project
               </label>
               <Select
@@ -1074,7 +1093,7 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-region">
+              <label className="select-dropdown-text" htmlFor="metastore-region">
                 Metastore region
               </label>
               {isLoadingRegion ? (
@@ -1100,7 +1119,7 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-service">
+              <label className="select-dropdown-text" htmlFor="metastore-service">
                 Metastore service
               </label>
               {isLoadingService ? (
@@ -1223,7 +1242,7 @@ function CreateRunTime({
             </div>
             <div className="select-text-overlay">
               <label
-                className="select-title-text"
+                className="select-dropdown-text"
                 htmlFor="history-server-cluster"
               >
                 History server cluster

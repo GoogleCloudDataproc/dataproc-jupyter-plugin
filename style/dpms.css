@@ -18,23 +18,11 @@
   cursor: pointer;
 }
 
-.search-icon {
-  position: absolute !important;
-  left: 16px;
-  padding-right: 2px;
-  padding-left: 3px;
-
+.search-field{
+  padding-right: 13px;
+  margin-top: 20px;
+  padding-left: 13px;
 }
-
-.search-field {
-  border-radius: 4px !important;
-  border: solid 1px !important;
-  height: 36px !important;
-  margin-left: 13px !important;
-  padding-left: 26px !important;
-  font-size: 13px;
-}
-
 .columns.icon {
   margin-left: 20px;
 }
@@ -95,7 +83,7 @@
 }
 
 .tree-container {
-  margin-left: 20px;
+  margin-left: 13px;
   margin-top: 10px;
   height: 100%;
 }
@@ -114,18 +102,15 @@
 }
 
 .search-clear-icon {
-  position: absolute !important;
-  right: 5px;
-  padding-right: 2px;
-  padding-left: 2px;
+margin-right: -7px;
 }
 
-.ui.icon.input {
-  width: 95% !important;
-}
 
 .dpms-search {
   margin-top: 20px;
   justify-content: center;
   align-items: center;
+}
+.css-1ua80n0-MuiInputBase-input-MuiOutlinedInput-input{
+  font-size: 13px !important;
 }

@@ -72,7 +72,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
-
+    let lastClusterName = '';
     const panel = new Panel();
     panel.id = 'dpms-tab';
     panel.title.icon = iconDpms;
@@ -87,15 +87,17 @@ const extension: JupyterFrontEndPlugin<void> = {
       panel.addWidget(newWidget);
     };
 
+  
     panel.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-    const localStorageValue = localStorage.getItem('notebookValue');
-    if (localStorageValue) {
-      loadDpmsWidget(localStorageValue);
+    lastClusterName = localStorage.getItem('notebookValue') || '';
+    if (lastClusterName) {
+      loadDpmsWidget(lastClusterName);
     }
     app.shell.add(panel, 'left', { rank: 1000 });
+
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
-      let localStorageValue = localStorage.getItem('notebookValue');
+      lastClusterName = localStorage.getItem('notebookValue') || '';
       if (widget && widget instanceof NotebookPanel) {
         const kernel = widget.sessionContext.session?.kernel;
         if (kernel) {
@@ -107,28 +109,28 @@ const extension: JupyterFrontEndPlugin<void> = {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
             const clusterValue = parts[parts.length - 1] + '/clusters';
-            if (localStorageValue === null) {
+            if (lastClusterName === null) {
               localStorage.setItem('notebookValue', clusterValue);
-              localStorageValue = localStorage.getItem('notebookValue');
-              loadDpmsWidget(localStorageValue || '');
-            } else if (localStorageValue !== clusterValue) {
+              lastClusterName = localStorage.getItem('notebookValue') || '';
+              loadDpmsWidget(lastClusterName || '');
+            } else if (lastClusterName !== clusterValue) {
               localStorage.setItem('notebookValue', clusterValue);
-              localStorageValue = localStorage.getItem('notebookValue');
-              loadDpmsWidget(localStorageValue || '');
+              lastClusterName = localStorage.getItem('notebookValue') || '';
+              loadDpmsWidget(lastClusterName || '');
             }
           } else if (
             kernelSpec?.resources.endpointParentResource.includes('/sessions')
           ) {
             const parts = kernelSpec?.name.split('-');
             const sessionValue = parts.slice(1).join('-') + '/sessions';
-            if (localStorageValue === null) {
+            if (lastClusterName === null) {
               localStorage.setItem('notebookValue', sessionValue);
-              localStorageValue = localStorage.getItem('notebookValue');
-              loadDpmsWidget(localStorageValue || '');
-            } else if (localStorageValue !== sessionValue) {
+              lastClusterName = localStorage.getItem('notebookValue') || '';
+              loadDpmsWidget(lastClusterName || '');
+            } else if (lastClusterName !== sessionValue) {
               localStorage.setItem('notebookValue', sessionValue);
-              localStorageValue = localStorage.getItem('notebookValue');
-              loadDpmsWidget(localStorageValue || '');
+              lastClusterName = localStorage.getItem('notebookValue') || '';
+              loadDpmsWidget(lastClusterName || '');
             }
           }
         } else {
@@ -155,6 +157,30 @@ const extension: JupyterFrontEndPlugin<void> = {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
+        } else if (
+          (newValue.title.label === 'Launcher' ||
+            newValue.title.label === 'Config Setup' ||
+            newValue.title.label === 'Clusters' ||
+            newValue.title.label === 'Serverless') &&
+          lastClusterName !== ''
+        ) {
+          localStorage.setItem('oldNotebookValue', lastClusterName || '');
+          localStorage.removeItem('notebookValue');
+          lastClusterName = '';
+          loadDpmsWidget('');
+        } else {
+          if (
+            lastClusterName === '' &&
+            newValue.title.label !== 'Launcher' &&
+            newValue.title.label !== 'Config Setup' &&
+            newValue.title.label !== 'Clusters' &&
+            newValue.title.label !== 'Serverless'
+          ) {
+            let oldNotebook = localStorage.getItem('oldNotebookValue');
+            localStorage.setItem('notebookValue', oldNotebook || '');
+            lastClusterName = localStorage.getItem('notebookValue') || '';
+            loadDpmsWidget(oldNotebook || '');
+          }
         }
       }
     });
