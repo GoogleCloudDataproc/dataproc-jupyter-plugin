@@ -118,7 +118,7 @@
   -webkit-appearance: none !important;
   -moz-appearance: none;
   transform: none !important;
-  position: unset !important;
+  /* position: unset !important; */
 }
 
 .region-loader {
