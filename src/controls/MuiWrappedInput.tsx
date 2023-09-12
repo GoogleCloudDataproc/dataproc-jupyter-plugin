@@ -19,7 +19,7 @@ import React from 'react';
 import type { InputProps } from 'semantic-ui-react';
 
 function InputInternal(props: InputProps) {
-  const { className, value, onChange, placeholder, disabled, defaultValue } = props;
+  const { className, value, onChange, placeholder, disabled, defaultValue ,onBlur} = props;
   return (
     <TextField
       className={className}
@@ -29,6 +29,7 @@ function InputInternal(props: InputProps) {
           value: e.target.value
         })
       }
+      onBlur={e=>onBlur(e)}
       placeholder={placeholder}
       disabled = {disabled}
       defaultValue={defaultValue}
