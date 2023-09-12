@@ -2071,7 +2071,7 @@ function CreateBatch({
                 History server cluster
               </label>
               <Dropdown
-                className="project-region-select"
+                className="history-server"
                 value={clusterSelected}
                 onChange={handleClusterSelected}
                 options={clustersList}

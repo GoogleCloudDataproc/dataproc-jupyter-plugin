@@ -47,7 +47,7 @@ import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
-
+import { IconButton, InputAdornment, TextField } from '@mui/material';
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
   svgstr: databaseIcon
@@ -311,7 +311,6 @@ fetching database name from fully qualified name structure */
       }
       openedWidgets[widgetTitle] = node.data.name;
     }
-
   };
   const handleSearchClear = () => {
     setSearchTerm('');
@@ -343,7 +342,7 @@ fetching database name from fully qualified name structure */
               className="caret-icon right"
               onClick={handleIconClick}
             >
-              <iconDownArrow.react tag="div" className='logo-alignment-style' />
+              <iconDownArrow.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         ) : (
@@ -352,7 +351,7 @@ fetching database name from fully qualified name structure */
             className="caret-icon down"
             onClick={handleIconClick}
           >
-            <iconRightArrow.react tag="div" className='logo-alignment-style' />
+            <iconRightArrow.react tag="div" className="logo-alignment-style" />
           </div>
         )
       ) : null;
@@ -365,7 +364,10 @@ fetching database name from fully qualified name structure */
                 className="caret-icon right"
                 onClick={handleIconClick}
               >
-                <iconDownArrow.react tag="div" className='logo-alignment-style' />
+                <iconDownArrow.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
               </div>
             </>
           ) : (
@@ -374,7 +376,10 @@ fetching database name from fully qualified name structure */
               className="caret-icon down"
               onClick={handleIconClick}
             >
-              <iconRightArrow.react tag="div" className='logo-alignment-style' />
+              <iconRightArrow.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             </div>
           );
         if (depth === 1) {
@@ -382,7 +387,10 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconDatabase.react tag="div" className='logo-alignment-style' />
+                <iconDatabase.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
               </div>
             </>
           );
@@ -391,7 +399,7 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="table-icon" onClick={handleIconClick}>
-                <iconTable.react tag="div" className='logo-alignment-style' />
+                <iconTable.react tag="div" className="logo-alignment-style" />
               </div>
             </>
           );
@@ -399,7 +407,7 @@ fetching database name from fully qualified name structure */
 
         return (
           <>
-            <iconColumns.react tag="div" className='logo-alignment-style' />
+            <iconColumns.react tag="div" className="logo-alignment-style" />
           </>
         );
       }
@@ -408,7 +416,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              <iconDatabase.react tag="div" className='logo-alignment-style' />
+              <iconDatabase.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         );
@@ -417,7 +425,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="table-icon" onClick={handleIconClick}>
-              <iconTable.react tag="div" className='logo-alignment-style' />
+              <iconTable.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         );
@@ -425,7 +433,7 @@ fetching database name from fully qualified name structure */
 
       return (
         <>
-          <iconColumns.react tag="div" className='logo-alignment-style' />
+          <iconColumns.react tag="div" className="logo-alignment-style" />
         </>
       );
     };
@@ -478,16 +486,14 @@ fetching database name from fully qualified name structure */
                 databaseNames.map(async (db: string) => {
                   await getTableDetails(db);
                 });
-              }
-              else {
+              } else {
                 if (responseResult?.error?.code) {
                   setApiError(true);
                   setNoDpmsInstance(true);
                   setIsLoading(false);
-                }
-                else {
+                } else {
                   setNoDpmsInstance(true);
-                  setSchemaError(true)
+                  setSchemaError(true);
                   setIsLoading(false);
                 }
               }
@@ -646,30 +652,38 @@ fetching database name from fully qualified name structure */
               </div>
             ) : (
               <>
-                <div className="ui category search">
-                  <div className="ui icon input dpms-search">
-                    <input
-                      className="search-field"
-                      type="text"
-                      value={searchTerm}
-                      onChange={handleSearch}
-                      placeholder="Search your DBs and tables"
-                    />
-
-                    <div className="search-icon">
-                      <iconSearch.react tag="div" className='logo-alignment-style' />
-                    </div>
-                    {searchTerm && (
-                      <div
-                        role="button"
-                        className="search-clear-icon"
+              <div className='search-field'>
+                <TextField
+                  placeholder="Search your DBs and tables"
+                  type="text"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  onChange={handleSearch}
+                  value={searchTerm}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <iconSearch.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchTerm && (
+                      <IconButton
+                        aria-label="toggle password visibility"
                         onClick={handleSearchClear}
                       >
-                        <iconSearchClear.react tag="div" className='logo-alignment-style'/>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                        <iconSearchClear.react
+                          tag="div"
+                          className="logo-alignment-style search-clear-icon"
+                        />
+                      </IconButton>
+                    )
+                  }}
+                />
+              </div>
                 <div className="tree-container">
                   <Tree
                     className="Tree"
@@ -696,21 +710,22 @@ fetching database name from fully qualified name structure */
             )}
           </div>
         </>
+      ) : session ? (
+        <div className="dpms-error">
+          DPMS is not configured for this runtime template. Please attach DPMS
+          or activate DPMS sync with data catalog
+        </div>
+      ) : cluster ? (
+        <div className="dpms-error">
+          DPMS is not configured for this cluster. Please attach DPMS or
+          activate DPMS sync with data catalog
+        </div>
+      ) : apiError ? (
+        <div className="dpms-error">Datacatalog API is not enabled</div>
+      ) : schemaError ? (
+        <div className="dpms-error">No schema available</div>
       ) : (
-        session ? (
-          <div className="dpms-error">
-            DPMS is not configured for this runtime template. Please attach DPMS or
-            activate DPMS sync with data catalog
-          </div>) : (cluster ? (<div className="dpms-error">
-            DPMS is not configured for this cluster. Please attach DPMS or
-            activate DPMS sync with data catalog
-          </div>) : (apiError ? (<div className="dpms-error">
-            Datacatalog API is not enabled
-          </div>) : (schemaError ? (<div className="dpms-error">
-            No schema available
-          </div>) : (<div className="dpms-error">
-            DPMS schema explorer not set up
-          </div>))))
+        <div className="dpms-error">DPMS schema explorer not set up</div>
       )}
     </>
   );

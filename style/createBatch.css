@@ -226,3 +226,7 @@
 .css-1gjd5ff-MuiFormControl-root-MuiTextField-root .MuiInputBase-root input {
   height: 7px;
 }
+.history-server{
+  border: 1px solid lightgray !important;
+  border-radius: 4px;
+}
