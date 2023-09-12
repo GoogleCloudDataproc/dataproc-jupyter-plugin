@@ -88,7 +88,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
-
+    let localStorageValue = '';
     const panel = new Panel();
     panel.id = 'dpms-tab';
     panel.title.icon = iconDpms;
@@ -103,8 +103,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       panel.addWidget(newWidget);
     };
 
+  
     panel.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-    const localStorageValue = localStorage.getItem('notebookValue');
+    localStorageValue = localStorage.getItem('notebookValue') || '';
     if (localStorageValue) {
       loadDpmsWidget(localStorageValue);
     }
@@ -119,7 +120,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
-      let localStorageValue = localStorage.getItem('notebookValue');
+      localStorageValue = localStorage.getItem('notebookValue') || '';
       if (widget && widget instanceof NotebookPanel) {
         const kernel = widget.sessionContext.session?.kernel;
         if (kernel) {
@@ -133,11 +134,11 @@ const extension: JupyterFrontEndPlugin<void> = {
             const clusterValue = parts[parts.length - 1] + '/clusters';
             if (localStorageValue === null) {
               localStorage.setItem('notebookValue', clusterValue);
-              localStorageValue = localStorage.getItem('notebookValue');
+              localStorageValue = localStorage.getItem('notebookValue') || '';
               loadDpmsWidget(localStorageValue || '');
             } else if (localStorageValue !== clusterValue) {
               localStorage.setItem('notebookValue', clusterValue);
-              localStorageValue = localStorage.getItem('notebookValue');
+              localStorageValue = localStorage.getItem('notebookValue') || '';
               loadDpmsWidget(localStorageValue || '');
             }
           } else if (
@@ -147,11 +148,11 @@ const extension: JupyterFrontEndPlugin<void> = {
             const sessionValue = parts.slice(1).join('-') + '/sessions';
             if (localStorageValue === null) {
               localStorage.setItem('notebookValue', sessionValue);
-              localStorageValue = localStorage.getItem('notebookValue');
+              localStorageValue = localStorage.getItem('notebookValue') || '';
               loadDpmsWidget(localStorageValue || '');
             } else if (localStorageValue !== sessionValue) {
               localStorage.setItem('notebookValue', sessionValue);
-              localStorageValue = localStorage.getItem('notebookValue');
+              localStorageValue = localStorage.getItem('notebookValue') || '';
               loadDpmsWidget(localStorageValue || '');
             }
           }
@@ -179,6 +180,30 @@ const extension: JupyterFrontEndPlugin<void> = {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
+        } else if (
+          (newValue.title.label === 'Launcher' ||
+            newValue.title.label === 'Config Setup' ||
+            newValue.title.label === 'Clusters' ||
+            newValue.title.label === 'Serverless') &&
+          localStorageValue !== ''
+        ) {
+          localStorage.setItem('oldNotebookValue', localStorageValue || '');
+          localStorage.removeItem('notebookValue');
+          localStorageValue = '';
+          loadDpmsWidget('');
+        } else {
+          if (
+            localStorageValue === '' &&
+            newValue.title.label !== 'Launcher' &&
+            newValue.title.label !== 'Config Setup' &&
+            newValue.title.label !== 'Clusters' &&
+            newValue.title.label !== 'Serverless'
+          ) {
+            let oldNotebook = localStorage.getItem('oldNotebookValue');
+            localStorage.setItem('notebookValue', oldNotebook || '');
+            localStorageValue = localStorage.getItem('notebookValue') || '';
+            loadDpmsWidget(oldNotebook || '');
+          }
         }
       }
     });

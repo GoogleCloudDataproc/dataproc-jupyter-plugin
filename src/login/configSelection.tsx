@@ -49,7 +49,7 @@ const iconExpandMore = new LabIcon({
   svgstr: expandMoreIcon
 });
 
-function ConfigSelection({ configError, setConfigError }: any) {
+function ConfigSelection({ configError, setConfigError, themeManager }: any) {
   const Iconsettings = new LabIcon({
     name: 'launcher:settings_icon',
     svgstr: settingsIcon
@@ -57,6 +57,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
 
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
+  const [gcloudRegion, setGcloudRegion] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({
@@ -148,6 +149,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
       if (credentials && credentials.project_id && credentials.region_id) {
         setProjectId(credentials.project_id);
         setRegion(credentials.region_id);
+        setGcloudRegion(credentials.region_id);
         setConfigError(false);
       } else {
         setConfigError(true);
@@ -171,6 +173,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
+          themeManager={themeManager}
         />
       ) : (
         <div className="settings-component">
@@ -204,7 +207,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
                 <Button
                   variant="contained"
                   disabled={
-                    isSaving || projectId.length == 0 || region.length == 0
+                    isSaving || projectId.length == 0 || region.length == 0 || gcloudRegion === region
                   }
                   onClick={handleSave}
                 >
@@ -254,7 +257,12 @@ function ConfigSelection({ configError, setConfigError }: any) {
               </div>
               <div className="feedback-version-container">
                 <div className="google-header">
-                  <div className="feedback-container">Provide Feedback</div>
+                <a
+                 className="feedback-container"
+                  href="https://forms.gle/19dngtRAwHZYtNtQ6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >Provide Feedback</a>
                   <span className="privacy-terms"> • </span>
                   <a
                     href="https://github.com/GoogleCloudDataproc/dataproc-jupyter-plugin"

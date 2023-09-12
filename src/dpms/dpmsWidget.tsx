@@ -677,7 +677,7 @@ fetching database name from fully qualified name structure */
                     openByDefault={false}
                     indent={24}
                     width={auto}
-                    height={550}
+                    height={675}
                     rowHeight={36}
                     overscanCount={1}
                     paddingTop={30}

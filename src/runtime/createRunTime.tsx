@@ -42,6 +42,7 @@ import { AuthLogin } from '../login/authLogin';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 type Project = {
   projectId: string;
@@ -79,10 +80,12 @@ let value: string[] | (() => string[]) = [];
 
 function CreateRunTime({
   setOpenCreateTemplate,
-  selectedRuntimeClone
+  selectedRuntimeClone,
+  themeManager
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
+  themeManager: IThemeManager;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -712,7 +715,7 @@ function CreateRunTime({
   };
   const handleCancelButton = () => {
     setOpenCreateTemplate(false);
-    const content = new AuthLogin();
+    const content = new AuthLogin(themeManager);
     const widget = new MainAreaWidget<AuthLogin>({ content });
     widget.title.label = 'Config Setup';
   };

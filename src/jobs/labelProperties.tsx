@@ -55,7 +55,8 @@ function LabelProperties({
   duplicateKeyError,
   setDuplicateKeyError,
   labelEditMode,
-  selectedRuntimeClone
+  selectedRuntimeClone,
+  batchInfoResponse
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
@@ -66,7 +67,8 @@ function LabelProperties({
       if (
         buttonText === 'ADD LABEL' &&
         !selectedJobClone &&
-        selectedRuntimeClone === undefined
+        selectedRuntimeClone === undefined &&
+        batchInfoResponse === undefined
       ) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
@@ -109,9 +111,10 @@ function LabelProperties({
         */
         const regexp = /^[a-z0-9-_]+$/;
         if (keyValue === 'key') {
-          if ((
-            value.search(regexp) === -1 ||
-            value.charAt(0) !== value.charAt(0).toLowerCase())&&(buttonText === 'ADD LABEL')
+          if (
+            (value.search(regexp) === -1 ||
+              value.charAt(0) !== value.charAt(0).toLowerCase()) &&
+            buttonText === 'ADD LABEL'
           ) {
             setKeyValidation(index);
           } else {
@@ -199,8 +202,8 @@ function LabelProperties({
                       className="edit-input-style"
                       disabled={
                         labelSplit[0] === '' ||
-                          buttonText !== 'ADD LABEL' ||
-                          duplicateKeyError !== -1
+                        buttonText !== 'ADD LABEL' ||
+                        duplicateKeyError !== -1
                           ? false
                           : true
                       }
@@ -211,16 +214,23 @@ function LabelProperties({
                       defaultValue={labelSplit[0]}
                     />
 
-                    {labelDetailUpdated[index].split(':')[0] === '' && labelDetailUpdated[index] !== '' ? (
+                    {labelDetailUpdated[index].split(':')[0] === '' &&
+                    labelDetailUpdated[index] !== '' ? (
                       <div role="alert" className="error-key-parent">
-                        <iconError.react tag="div" className='logo-alignment-style' />
+                        <iconError.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
                         <div className="error-key-missing">key is required</div>
                       </div>
                     ) : (
                       keyValidation === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" className='logo-alignment-style' />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             Only hyphens (-), underscores (_), lowercase
                             characters, and numbers are allowed. Keys must start
@@ -233,7 +243,10 @@ function LabelProperties({
                     {duplicateKeyError === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" className='logo-alignment-style' />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             The key is already present
                           </div>
@@ -258,7 +271,10 @@ function LabelProperties({
                     {valueValidation === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" className='logo-alignment-style' />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             Only hyphens (-), underscores (_), lowercase
                             characters, and numbers are allowed. International
@@ -272,7 +288,7 @@ function LabelProperties({
                     role="button"
                     className={
                       label === DEFAULT_LABEL_DETAIL &&
-                        buttonText === 'ADD LABEL'
+                      buttonText === 'ADD LABEL'
                         ? 'labels-delete-icon-hide'
                         : 'labels-delete-icon'
                     }
@@ -287,7 +303,10 @@ function LabelProperties({
                       }
                     }}
                   >
-                    <iconDelete.react tag="div" className='logo-alignment-style' />
+                    <iconDelete.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                   </div>
                   <></>
                 </div>
@@ -304,15 +323,15 @@ function LabelProperties({
           }}
         >
           {labelDetail.length === 0 ||
-            labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
-            <iconPlus.react tag="div" className='logo-alignment-style' />
+          labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
+            <iconPlus.react tag="div" className="logo-alignment-style" />
           ) : (
-            <iconPlusDisable.react tag="div" className='logo-alignment-style' />
+            <iconPlusDisable.react tag="div" className="logo-alignment-style" />
           )}
           <div
             className={
               labelDetail.length === 0 ||
-                labelDetail[labelDetail.length - 1].split(':')[0].length > 0
+              labelDetail[labelDetail.length - 1].split(':')[0].length > 0
                 ? 'job-edit-text'
                 : 'job-edit-text-disabled'
             }

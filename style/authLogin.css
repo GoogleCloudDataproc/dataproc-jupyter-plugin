@@ -118,7 +118,7 @@
   -webkit-appearance: none !important;
   -moz-appearance: none;
   transform: none !important;
-  position: unset !important;
+  /* position: unset !important; */
 }
 
 .region-loader {
@@ -312,7 +312,7 @@
 }
 
 .feedback-container {
-  color: #3367D6;
+  color: #3367D6 !important;
   font-weight: bold;
 }
 

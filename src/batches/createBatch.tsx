@@ -156,6 +156,9 @@ function CreateBatch({
   let key: string[] | (() => string[]) = [];
   let value: string[] | (() => string[]) = [];
   let pythonFileUris: string[] = [];
+  let keyType = '';
+  let keyRing = '';
+  let keys = '';
   if (batchInfoResponse !== undefined) {
     if (Object.keys(batchInfoResponse).length !== 0) {
       batchKeys = batchKey(batchInfoResponse);
@@ -192,6 +195,11 @@ function CreateBatch({
       subNetwork =
         batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri ||
         'default';
+      keyType =
+        batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
+      const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
+      keyRing = keyringValues[5];
+      keys = keyringValues[7];
       historyServerValue =
         batchInfoResponse?.environmentConfig?.peripheralsConfig
           ?.sparkHistoryServerConfig?.dataprocCluster || 'None';
@@ -214,6 +222,7 @@ function CreateBatch({
   }
 
   const selectedRadioInitialValue = mainJarFileUri ? 'mainJarURI' : 'mainClass';
+  const selectedKeyType = keyType ? 'customerManaged' : 'googleManaged';
   const [batchTypeList, setBatchTypeList] = useState([{}]);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
@@ -225,6 +234,7 @@ function CreateBatch({
   const [mainClassUpdated, setMainClassUpdated] = useState(false);
   const [mainJarSelected, setMainJarSelected] = useState(mainJarFileUri);
   const [mainJarUpdated, setMainJarUpdated] = useState(false);
+
   const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [selectedRadioValue, setSelectedRadioValue] = useState('key');
   const [containerImageSelected, setContainerImageSelected] =
@@ -245,7 +255,7 @@ function CreateBatch({
   ]);
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
-    useState('googleManaged');
+    useState(selectedKeyType);
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
@@ -292,8 +302,8 @@ function CreateBatch({
   const [batchIdValidation, setBatchIdValidation] = useState(false);
   const [mainJarValidation, setMainJarValidation] = useState(true);
   const [defaultValue, setDefaultValue] = useState(subNetwork);
-  const [keyRingSelected, setKeyRingSelected] = useState('');
-  const [keySelected, setKeySelected] = useState('');
+  const [keyRingSelected, setKeyRingSelected] = useState(keyRing);
+  const [keySelected, setKeySelected] = useState(keys);
   const [manualKeySelected, setManualKeySelected] = useState('');
   const [manualValidation, setManualValidation] = useState(true);
   const [keylist, setKeylist] = useState<
@@ -317,6 +327,9 @@ function CreateBatch({
     setKeyRingSelected('');
     setKeySelected('');
   };
+  useEffect(() => {
+    listKeysAPI(keyRingSelected);
+  }, [keyRingSelected]);
   useEffect(() => {
     const batchTypeData = [
       { key: 'spark', value: 'spark', text: 'Spark' },
@@ -380,8 +393,7 @@ function CreateBatch({
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
-            ).map(([k, v]) => `${k.substring(6)}: ${v}`);
-
+            ).map(([k, v]) => `${k.substring(6)}:${v}`);
             setPropertyDetail(prevPropertyDetail => [
               ...prevPropertyDetail,
               ...updatedPropertyDetail
@@ -488,7 +500,7 @@ function CreateBatch({
           !additionalPythonFileValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation||
+          !manualValidation ||
           !jarFileValidation
         );
       case 'sparkSql':
@@ -1184,15 +1196,11 @@ function CreateBatch({
   const handleMainClassSelected = (value: string) => {
     setMainClassUpdated(true);
     setMainClassSelected(value);
-  }
+  };
   const handleMainJarSelected = (value: string) => {
     setMainJarUpdated(true);
-    handleValidationFiles(
-      value,
-      setMainJarSelected,
-      setMainJarValidation
-    )
-  }
+    handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
+  };
 
   const handleClusterSelected = (event: any, value: any) => {
     setClusterSelected(value);
@@ -1231,7 +1239,7 @@ function CreateBatch({
                 Batch ID*
               </label>
               <Input
-                className="create-batch-style "
+                className="create-batch-style"
                 value={hexNumber}
                 onChange={e => handleInputChange(e)}
                 type="text"
@@ -1250,14 +1258,11 @@ function CreateBatch({
               >
                 Region*
               </label>
-              <Select
-                search
-                className="project-region-select"
+              <Input
+                className="create-batch-style"
                 value={regionName}
                 type="text"
                 disabled={true}
-                options={[]}
-                placeholder={regionName}
               />
             </div>
             <div className="submit-job-label-header">Container</div>
@@ -1318,7 +1323,8 @@ function CreateBatch({
                     </div>
 
                     {selectedRadio === 'mainClass' &&
-                      mainClassSelected === '' && mainClassUpdated && (
+                      mainClassSelected === '' &&
+                      mainClassUpdated && (
                         <div className="error-key-parent">
                           <iconError.react
                             tag="div"
@@ -1359,15 +1365,15 @@ function CreateBatch({
                       <Input
                         className="create-batch-style-mini"
                         value={mainJarSelected}
-                        onChange={e =>
-                          handleMainJarSelected(e.target.value)
-                        }
+                        onChange={e => handleMainJarSelected(e.target.value)}
                         type="text"
                       />
                     </div>
 
                     {selectedRadio === 'mainJarURI' &&
-                      mainJarSelected === '' && mainJarUpdated && mainJarValidation && (
+                      mainJarSelected === '' &&
+                      mainJarUpdated &&
+                      mainJarValidation && (
                         <div className="error-key-parent">
                           <iconError.react
                             tag="div"
@@ -1571,7 +1577,7 @@ function CreateBatch({
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
                 >
-                  Container Registry 
+                  Container Registry
                 </div>
                 &nbsp;{'  or '}
                 <div
@@ -2083,6 +2089,7 @@ function CreateBatch({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              batchInfoResponse={batchInfoResponse}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties

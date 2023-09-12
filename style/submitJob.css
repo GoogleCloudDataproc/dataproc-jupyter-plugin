@@ -79,7 +79,7 @@
   color: #000000;
   position: absolute;
   background-color: #fff;
-  top: -7px;
+  top: 2px;
   padding: 0px 3px;
   left: 7px;
   z-index: 3;
@@ -278,4 +278,21 @@ a:hover {
 
 .labels-delete-icon-hide {
   opacity: 0;
+}
+
+.select-cluster-text{
+  height: 13px;
+    font-style: normal;
+    font-weight: 1000;
+    font-size: 12px;
+    line-height: 13px;
+    display: flex;
+    align-items: center;
+    color: #000000;
+    position: absolute;
+    background-color: #fff;
+    top: 2px;
+    padding: 0px 3px;
+    left: 7px;
+    z-index: 3;
 }
