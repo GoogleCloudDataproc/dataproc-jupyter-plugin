@@ -396,7 +396,7 @@ function CreateBatch({
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
-            ).map(([k, v]) => `${k.substring(6)}:${v}`);
+            ).map(([k, v]) => `${k.substring(6)}:${v}`); // spark:spark.app.name , spark:spark.driver.cores - every property is appended with 'spark:' therefore getting the porperty key value after 'spark:' 
             setPropertyDetail(prevPropertyDetail => [
               ...prevPropertyDetail,
               ...updatedPropertyDetail
