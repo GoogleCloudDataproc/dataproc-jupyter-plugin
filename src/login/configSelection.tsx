@@ -49,7 +49,7 @@ const iconExpandMore = new LabIcon({
   svgstr: expandMoreIcon
 });
 
-function ConfigSelection({ configError, setConfigError }: any) {
+function ConfigSelection({ configError, setConfigError, themeManager }: any) {
   const Iconsettings = new LabIcon({
     name: 'launcher:settings_icon',
     svgstr: settingsIcon
@@ -173,6 +173,7 @@ function ConfigSelection({ configError, setConfigError }: any) {
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
+          themeManager={themeManager}
         />
       ) : (
         <div className="settings-component">
