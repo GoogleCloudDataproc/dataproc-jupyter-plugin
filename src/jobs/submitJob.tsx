@@ -713,7 +713,7 @@ function SubmitJob(
             />
           ) : (
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-project">
+              <label className="select-cluster-text" htmlFor="metastore-project">
                 Cluster*
               </label>
               <Select

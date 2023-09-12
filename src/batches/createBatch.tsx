@@ -1240,7 +1240,7 @@ function CreateBatch({
                 Batch ID*
               </label>
               <Input
-                className="create-batch-style "
+                className="create-batch-style"
                 value={hexNumber}
                 onChange={e => handleInputChange(e)}
                 type="text"
@@ -1259,14 +1259,11 @@ function CreateBatch({
               >
                 Region*
               </label>
-              <Select
-                search
-                className="project-region-select"
+              <Input
+                className="create-batch-style"
                 value={regionName}
                 type="text"
                 disabled={true}
-                options={[]}
-                placeholder={regionName}
               />
             </div>
             <div className="submit-job-label-header">Container</div>
