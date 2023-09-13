@@ -46,7 +46,6 @@ import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import { GcsBucket } from './gcs/gcsBucket';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
-// import { IDocumentManager } from '@jupyterlab/docmanager';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
@@ -62,11 +61,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     themeManager: IThemeManager
   ) => {
     const { commands } = app;
-    const widget = factory?.tracker?.currentWidget;
-    console.log(widget);
-    // const { tracker } = factory;
-
-    // console.log(factory, factory?.tracker)
 
     const iconAddRuntime = new LabIcon({
       name: 'launcher:add-runtime-icon',
@@ -114,7 +108,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     const panelGcs = new Panel();
     panelGcs.id = 'GCS-bucket-tab';
     panelGcs.title.icon = iconStorage; 
-    // console.log(docManager);
     panelGcs.addWidget(new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory));
     app.shell.add(panelGcs, 'left', { rank: 1001 });
 

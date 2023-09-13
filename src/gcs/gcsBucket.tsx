@@ -46,7 +46,13 @@ const iconGcsSearch = new LabIcon({
   svgstr: gcsSearchIcon
 });
 
-const GcsBucketComponent = ({ app, factory }: { app: JupyterLab, factory: IFileBrowserFactory }): JSX.Element => {
+const GcsBucketComponent = ({
+  app,
+  factory
+}: {
+  app: JupyterLab;
+  factory: IFileBrowserFactory;
+}): JSX.Element => {
   const inputFile = useRef<HTMLInputElement | null>(null);
   const [bucketsList, setBucketsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,6 +89,7 @@ const GcsBucketComponent = ({ app, factory }: { app: JupyterLab, factory: IFileB
   };
 
   const handleFileClick = async (fileName: string) => {
+    console.log("handle file click")
     const credentials = await authApi();
     if (credentials) {
       let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${fileName}?alt=media`;
@@ -97,25 +104,19 @@ const GcsBucketComponent = ({ app, factory }: { app: JupyterLab, factory: IFileB
           response
             .text()
             .then(async (responseResult: any) => {
-
               // Replace 'path/to/save/file.txt' with the desired path and filename
               // const filePath = `/Users/jeyaprakashn/.jupyter/lab/workspaces/`;
               const filePath = `src/gcs/${fileName}`;
-              
 
               // Get the contents manager to save the file
               const contentsManager = app.serviceManager.contents;
 
-              console.log(contentsManager)
               // Listen for the fileChanged event
               contentsManager.fileChanged.connect(async (_, change: any) => {
-                const widget = app.shell.activeWidget
-                console.log(widget, widget?.node, widget?.node?.textContent)
+                const response = await contentsManager.get(filePath);
                 if (change.type === 'save') {
-                  // console.log(change);
-                  console.log(change);
                   // Call your function when a file is saved
-                  handleFileSave(change.newValue, widget?.node?.textContent);
+                  handleFileSave(change.newValue, response.content);
                 }
               });
 
@@ -151,6 +152,7 @@ const GcsBucketComponent = ({ app, factory }: { app: JupyterLab, factory: IFileB
   const tableDataCondition = (cell: any) => {
     if (cell.column.Header === 'Name') {
       let nameIndex = gcsFolderPath.length === 0 ? 0 : gcsFolderPath.length - 1;
+      console.log(cell.value, nameIndex)
       return (
         <td
           {...cell.getCellProps()}
@@ -187,6 +189,7 @@ const GcsBucketComponent = ({ app, factory }: { app: JupyterLab, factory: IFileB
   };
 
   const handleFileSave = async (fileDetail: any, content: any) => {
+    console.log("file save function")
     // Create a Blob object from the content and metadata
     const blob = new Blob([content], { type: fileDetail.mimetype });
 
@@ -194,8 +197,6 @@ const GcsBucketComponent = ({ app, factory }: { app: JupyterLab, factory: IFileB
     const filePayload = new File([blob], fileDetail.name, {
       type: fileDetail.mimetype
     });
-
-    console.log(filePayload);
 
     const credentials = await authApi();
     if (credentials) {
@@ -316,16 +317,49 @@ const GcsBucketComponent = ({ app, factory }: { app: JupyterLab, factory: IFileB
     listBucketsAPI();
   }, [gcsFolderPath]);
 
-  const createNewItem = () => {
-    console.log(factory)
-    const { tracker } = factory;
-    console.log(tracker);
-    const widget = tracker.currentWidget;
-    console.log(widget, widget?.createNewDirectory);
-    if (widget) {
-      console.log(widget);
-      return widget.createNewDirectory();
+  const createNewItem = async () => {
+    console.log(bucketsList) 
+    const currentTime = new Date();
+    const lastModified = lastModifiedFormat(currentTime);
+    const newFolderData =  {
+      name: 'UntitledFolder/',
+      lastModified: lastModified,
+      folderName: "UntitledFolder"
     }
+    let datalist: any = [...bucketsList]
+    datalist.push(newFolderData)
+    setBucketsList(datalist)
+
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=UntitledFolder/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'Folder',
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      })
+        .then(async (response: Response) => {
+          if (response.ok) {
+            const responseResult = await response.json();
+            console.log(responseResult);
+            listBucketsAPI();
+          } else {
+            const errorResponse = await response.json();
+            console.log(errorResponse);
+          }
+        })
+        .catch((err: Error) => {
+          console.error('Error Creating template', err);
+          // toast.error('Failed to create the template',toastifyCustomStyle);
+        });
+    }
+    
+    // const { tracker } = factory;
+    // const widget = tracker.currentWidget;
+    // if (widget) {
+    //   return widget.createNewDirectory();
+    // }
   };
 
   const handleFileChange = () => {
@@ -376,9 +410,11 @@ const GcsBucketComponent = ({ app, factory }: { app: JupyterLab, factory: IFileB
           <div onClick={() => listBucketsAPI()}>
             <iconGcsRefresh.react tag="div" className="gcs-title-icons" />
           </div>
-          <div onClick={() => createNewItem()}>
-            <iconGcsFolderNew.react tag="div" className="gcs-title-icons" />
-          </div>
+          {gcsFolderPath.length > 0 && (
+            <div onClick={() => createNewItem()}>
+              <iconGcsFolderNew.react tag="div" className="gcs-title-icons" />
+            </div>
+          )}
           {gcsFolderPath.length > 0 && (
             <>
               <input
@@ -446,14 +482,13 @@ export class GcsBucket extends ReactWidget {
   app: JupyterLab;
   factory: IFileBrowserFactory;
 
-  constructor(app: JupyterLab,  factory: IFileBrowserFactory) {
+  constructor(app: JupyterLab, factory: IFileBrowserFactory) {
     super();
     this.app = app;
     this.factory = factory;
-    
   }
 
   render(): JSX.Element {
-    return <GcsBucketComponent app={this.app} factory={this.factory}/>;
+    return <GcsBucketComponent app={this.app} factory={this.factory} />;
   }
 }
