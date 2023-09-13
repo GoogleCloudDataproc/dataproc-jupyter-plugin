@@ -17,7 +17,7 @@
 
 import React from 'react';
 import { SessionTemplateDisplay } from './listRuntimeTemplateInterface';
-import { Select } from 'semantic-ui-react';
+import { Select } from '../controls/MuiWrappedSelect';
 
 interface IBatch {
   batchID: string;
