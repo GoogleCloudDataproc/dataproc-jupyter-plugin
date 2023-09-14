@@ -1,0 +1,21 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "AI Code Completion Settings",
+  "description": "Settings to configure Codey integration.",
+  "type": "object",
+  "properties": {
+    "delayMs": {
+      "type": "integer",
+      "title": "Delay (ms)",
+      "description": "How long (in milliseconds) to wait between keystrokes before making an Codey Code Completion request.",
+      "default": 500
+    },
+    "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "description": "Whether or not AI Code Completion is enabled.",
+      "default": false
+    }
+  },
+  "additionalProperties": false
+}

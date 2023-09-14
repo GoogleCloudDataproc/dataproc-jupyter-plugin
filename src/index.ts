@@ -46,7 +46,7 @@ import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import { GcsBucket } from './gcs/gcsBucket';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
-import { DataprocCompanionAiCompletionPlugin } from './completionExtension/dataprocCompanionAiCompletionPlugin';
+import { DataprocCompanionAiCompletionPlugin } from './completionExtension/dataprocCodeCompletionPlugin';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
