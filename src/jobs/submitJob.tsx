@@ -322,7 +322,7 @@ function SubmitJob(
         keyValidation === -1 &&
         valueValidation === -1 &&
         jobIdValidation &&
-        jobIdSpecialValidation &&
+        !jobIdSpecialValidation &&
         duplicateKeyError === -1) ||
         (isSparkRJob &&
           mainRSelected !== '' &&
@@ -331,7 +331,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
-          jobIdSpecialValidation &&
+          !jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isPySparkJob &&
           mainPythonSelected !== '' &&
@@ -343,7 +343,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
-          jobIdSpecialValidation &&
+          !jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isSparkSqlJob &&
           queryFileSelected !== '' &&
@@ -353,7 +353,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
-          jobIdSpecialValidation &&
+          !jobIdSpecialValidation &&
           duplicateKeyError === -1) ||
         (isSparkSqlJob &&
           queryTextSelected !== '' &&
@@ -362,7 +362,7 @@ function SubmitJob(
           keyValidation === -1 &&
           valueValidation === -1 &&
           jobIdValidation &&
-          jobIdSpecialValidation &&
+          !jobIdSpecialValidation &&
           duplicateKeyError === -1))
     ) {
       setSubmitDisabled(false);
@@ -750,7 +750,7 @@ function SubmitJob(
             <div className="error-key-parent">
               <iconError.react tag="div" className="logo-alignment-style" />
               <div className="error-key-missing">
-                Id must contain only letters numbers hyphens and underscores
+              ID must contain only letters, numbers, hyphens, and underscores
               </div>
             </div>
           )}

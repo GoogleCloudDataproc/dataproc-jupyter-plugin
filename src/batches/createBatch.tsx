@@ -309,6 +309,7 @@ function CreateBatch({
   const [keylist, setKeylist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
+  const[isloadingNetwork,setIsloadingNetwork]=useState(false);
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -440,6 +441,7 @@ function CreateBatch({
     setMainJarValidation(true);
   };
   const listNetworksFromSubNetworkAPI = async (subNetwork: any) => {
+    setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -460,6 +462,7 @@ function CreateBatch({
               transformedNetworkSelected = responseResult.network.split('/')[9];
 
               setNetworkSelected(transformedNetworkSelected);
+              setIsloadingNetwork(false);
             })
 
             .catch((e: Error) => {
@@ -1786,6 +1789,16 @@ function CreateBatch({
             </div>
             <div className="runtime-message ">Networks in this project</div>
             <div>
+            {isloadingNetwork ? (
+                <div className="metastore-loader">
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
               <div className="create-batch-network">
                 <div className="select-text-overlay">
                   <label
@@ -1818,6 +1831,7 @@ function CreateBatch({
                   />
                 </div>
               </div>
+               )}
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
