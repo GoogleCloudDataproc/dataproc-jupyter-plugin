@@ -84,3 +84,8 @@
   line-height: 20px;
   padding: 15px 0px;
 }
+.input-folder-name-style {
+  font-size: 12px;
+  height: 18px;
+  width: 95%;
+}

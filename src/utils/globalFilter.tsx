@@ -27,13 +27,23 @@ function GlobalFilter({
   const onChange = (value: string) => {
     setGlobalFilter(value || undefined);
   };
-  if (value !== undefined && !gcsBucket) {
+  if (value !== undefined) {
     if (value.length !== 0) {
       setPollingDisable(true);
     } else {
       setPollingDisable(false);
     }
   }
+
+  // const handleFocusAction = () => {
+  //   setPollingDisable(true);
+  // };
+
+  // const handleBlurAction = () => {
+  //   if (value.length === 0) {
+  //     setPollingDisable(false);
+  //   }
+  // };
 
   return (
     <span>
@@ -43,6 +53,8 @@ function GlobalFilter({
           setValue(e.target.value);
           onChange(e.target.value);
         }}
+        // onFocus={() => handleFocusAction()}
+        // onBlur={() => handleBlurAction()}
         placeholder={gcsBucket ? 'Filter files by name' : 'Filter Table'}
         aria-label="filterd value"
         className={
