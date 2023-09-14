@@ -7,20 +7,57 @@ import { DataprocCompanionAiCompletionProvider } from './dataprocCompanionAiComp
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { generatePrompt } from './dataprocCompanionAiGenerationPrompt';
 import { DataprocCompanionAiFetcherService } from './dataprocCompanionAiFetcherService';
+import {
+  EditorExtensionRegistry,
+  IEditorExtensionRegistry
+} from '@jupyterlab/codemirror';
+import {
+  dataprocCodeCompletionExtension,
+  dataprocCodeCompletionKeyMap
+} from './dataprocCodeCompletionExtension';
 
 export const DataprocCompanionAiCompletionPlugin: JupyterFrontEndPlugin<void> =
   {
     id: 'dataproc_jupyter_plugin:aicompanion',
     autoStart: true,
-    requires: [ICompletionProviderManager, INotebookTracker],
+    requires: [
+      ICompletionProviderManager,
+      INotebookTracker,
+      IEditorExtensionRegistry
+    ],
     activate: async (
       app: JupyterFrontEnd,
       completionProviderManager: ICompletionProviderManager,
-      notebookTracker: INotebookTracker
+      notebookTracker: INotebookTracker,
+      editorExtensionRegistry: IEditorExtensionRegistry
     ) => {
       console.log('dataproc_completer_plugin is now running');
       const completionProvider = new DataprocCompanionAiCompletionProvider();
       completionProviderManager.registerProvider(completionProvider);
+
+      // Register a new editor configurable extension
+      editorExtensionRegistry.addExtension(
+        Object.freeze({
+          name: 'dataproc_jupyter_plugin:autocomplete',
+          // Default CodeMirror extension parameters
+          default: 1000,
+          factory: () =>
+            // The factory will be called for every new CodeMirror editor
+            EditorExtensionRegistry.createConfigurableExtension(
+              (delayMs: number) => [
+                dataprocCodeCompletionKeyMap,
+                dataprocCodeCompletionExtension(notebookTracker, delayMs)
+              ]
+            ),
+          // JSON schema defining the CodeMirror extension parameters
+          schema: {
+            type: 'number',
+            title: 'Autocomplete Delay (ms)',
+            description:
+              'How long to wait before making a request to vertex AI (in ms).'
+          }
+        })
+      );
 
       const command = 'dataproc_jupyter_plugin:generate-code';
       // Add a command
@@ -46,8 +83,9 @@ export const DataprocCompanionAiCompletionPlugin: JupyterFrontEndPlugin<void> =
               kernel
             );
             if (prompt) {
-              const service = new DataprocCompanionAiFetcherService();
-              const suggestions = await service.fetch(prompt);
+              const suggestions = await DataprocCompanionAiFetcherService.fetch(
+                { prefix: prompt }
+              );
               if (suggestions && suggestions.length > 0) {
                 activeCell?.model.sharedModel.updateSource(
                   firstComment.value.length,

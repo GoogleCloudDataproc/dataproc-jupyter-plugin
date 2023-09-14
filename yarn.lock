@@ -1798,7 +1798,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@codemirror/state@npm:^6.0.0, @codemirror/state@npm:^6.1.4, @codemirror/state@npm:^6.2.0":
+"@codemirror/state@npm:^6.0.0, @codemirror/state@npm:^6.1.4, @codemirror/state@npm:^6.2.0, @codemirror/state@npm:^6.2.1":
   version: 6.2.1
   resolution: "@codemirror/state@npm:6.2.1"
   checksum: d12a321d0471b264b9d3259042bff913a8b939e8d28d408ff452004538a71ca9d5329df3f8a1d8a9183f5b42a7ef5b200737bcab1065714f5ae8e0a5ba9d59d3
@@ -1813,6 +1813,17 @@ __metadata:
     style-mod: ^4.1.0
     w3c-keyname: ^2.2.4
   checksum: b70a50632817c75b39f60f1a962206e64787fc58fc7b1d6ce883dc2302d4dcfe077003c9c307358791c1150c96ae623140f069537a6b705f1c3526b2e41954a5
+  languageName: node
+  linkType: hard
+
+"@codemirror/view@npm:^6.19.0":
+  version: 6.19.0
+  resolution: "@codemirror/view@npm:6.19.0"
+  dependencies:
+    "@codemirror/state": ^6.1.4
+    style-mod: ^4.1.0
+    w3c-keyname: ^2.2.4
+  checksum: 58b909c45c7b02758860953f65ce7952e0d89b9e4db35bd5a382ad90a9a1d7e9ed9bf4d60e5a38b9538375427372b9ddf1d4d161d21448691b851db92af7f71f
   languageName: node
   linkType: hard
 
@@ -6644,6 +6655,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-dom@npm:^18.2.7":
+  version: 18.2.7
+  resolution: "@types/react-dom@npm:18.2.7"
+  dependencies:
+    "@types/react": "*"
+  checksum: e02ea908289a7ad26053308248d2b87f6aeafd73d0e2de2a3d435947bcea0422599016ffd1c3e38ff36c42f5e1c87c7417f05b0a157e48649e4a02f21727d54f
+  languageName: node
+  linkType: hard
+
 "@types/react-is@npm:^18.2.1":
   version: 18.2.1
   resolution: "@types/react-is@npm:18.2.1"
@@ -8966,10 +8986,13 @@ __metadata:
     "@babel/preset-env": ^7.22.14
     "@babel/preset-react": ^7.22.5
     "@babel/preset-typescript": ^7.22.11
+    "@codemirror/state": ^6.2.1
+    "@codemirror/view": ^6.19.0
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/builder": ^4.0.0
+    "@jupyterlab/codemirror": ^4.0.5
     "@jupyterlab/completer": ^4.0.5
     "@jupyterlab/coreutils": ^6.0.0
     "@jupyterlab/launcher": ^4.0.0
@@ -8991,6 +9014,7 @@ __metadata:
     "@types/jest": ^29.2.0
     "@types/json-schema": ^7.0.11
     "@types/react": ^18.0.26
+    "@types/react-dom": ^18.2.7
     "@types/react-table": ^7.7.14
     "@types/react-tagsinput": ^3.20.0
     "@types/react-window": ^1.8.5

@@ -7,13 +7,27 @@ interface GenerateCodeResponse {
     score: number;
   }>;
 }
+
+type Options = {
+  prefix: string;
+  postfix?: string;
+  model?: string;
+  maxOutputTokens?: number;
+  stopSequences?: string[];
+};
 export class DataprocCompanionAiFetcherService {
-  async fetch(prefix: string) {
+  static async fetch(options: Options) {
+    const { prefix, postfix, model, maxOutputTokens, stopSequences } = {
+      postfix: '',
+      model: 'code-bison',
+      maxOutputTokens: 256,
+      ...options
+    };
     const credentials = await authApi();
     if (!credentials) return;
 
     const response = await fetch(
-      `https://us-central1-aiplatform.googleapis.com/v1/projects/${credentials.project_id}/locations/${credentials.region_id}/publishers/google/models/code-bison:predict`,
+      `https://us-central1-aiplatform.googleapis.com/v1/projects/${credentials.project_id}/locations/${credentials.region_id}/publishers/google/models/${model}:predict`,
       {
         method: 'POST',
         headers: {
@@ -22,12 +36,14 @@ export class DataprocCompanionAiFetcherService {
         },
         body: JSON.stringify({
           instances: {
-            prefix: prefix
+            prefix,
+            postfix
           },
           parameters: {
             temperature: 0.3,
-            maxOutputTokens: 256,
-            candidateCount: 1
+            maxOutputTokens,
+            candidateCount: 1,
+            stopSequences
           }
         })
       }

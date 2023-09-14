@@ -51,8 +51,9 @@ export class DataprocCompanionAiCompletionProvider
         kernel
       );
       if (prompt) {
-        const service = new DataprocCompanionAiFetcherService();
-        const suggestions = await service.fetch(prompt);
+        const suggestions = await DataprocCompanionAiFetcherService.fetch({
+          prefix: prompt
+        });
         if (suggestions) {
           const completionItems: CompletionHandler.ICompletionItem[] =
             suggestions.map(suggestion => ({
