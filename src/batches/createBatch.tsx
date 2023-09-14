@@ -1023,7 +1023,7 @@ function CreateBatch({
           serviceAccount: serviceAccountSelected
         }),
         ...(keySelected !== '' &&
-          selectedRadioValue === 'key' && {
+          selectedRadioValue === 'key' && keySelected !== undefined && {
             kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
           }),
         ...(manualKeySelected !== '' &&
@@ -2105,7 +2105,6 @@ function CreateBatch({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
-              batchInfoResponse={batchInfoResponse}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
@@ -2120,6 +2119,8 @@ function CreateBatch({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              batchInfoResponse={batchInfoResponse}
+              createBatch={createBatch}
             />
             <div className="job-button-style-parent">
               <div

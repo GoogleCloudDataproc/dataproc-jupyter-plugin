@@ -111,11 +111,14 @@ const DpmsComponent = ({
   const [session, setSession] = useState(false);
   const [cluster, setCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
+  const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseDetails, setDatabaseDetails] = useState({});
   const [tableDescription, setTableDescription] = useState({});
   const [apiError, setApiError] = useState(false);
   const [schemaError, setSchemaError] = useState(false);
+  const [totalDatabase, setTotalDatabase] = useState<number>(0);
+  const [totalTables, setTotalTables] = useState<number>(0);
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -171,6 +174,7 @@ const DpmsComponent = ({
           response
             .json()
             .then((responseResult: any) => {
+              let dbCounter = 0;
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -189,11 +193,17 @@ const DpmsComponent = ({
                   updatedTableDetails[entry.displayName] = description;
                 }
               );
+              dbCounter++;
               setEntries(entryNames);
               setTableDescription(updatedTableDetails);
+                setTotalTables(tableNames.length);
             })
             .catch((e: Error) => {
               console.log(e);
+              if (totalDatabase !== undefined) {
+                console.log('error console');
+                setTotalDatabase(totalDatabase - 1 || 0);
+              }
             });
         })
         .catch((err: Error) => {
@@ -483,9 +493,8 @@ fetching database name from fully qualified name structure */
                   }
                 );
                 setDatabaseDetails(updatedDatabaseDetails);
-                databaseNames.map(async (db: string) => {
-                  await getTableDetails(db);
-                });
+                setDatabaseNames(databaseNames);
+                setTotalDatabase(databaseNames.length);
               } else {
                 if (responseResult?.error?.code) {
                   setApiError(true);
@@ -625,6 +634,11 @@ fetching database name from fully qualified name structure */
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
   useEffect(() => {
+    databaseNames.map(async (db: string) => {
+      await getTableDetails(db);
+    });
+  }, [databaseNames]);
+  useEffect(() => {
     entries.forEach(async (entry: string) => {
       await getColumnDetails(entry);
     });
@@ -685,9 +699,10 @@ fetching database name from fully qualified name structure */
                 />
               </div>
                 <div className="tree-container">
+                {data[totalDatabase-1].children.length === totalTables &&(
                   <Tree
                     className="Tree"
-                    data={data}
+                    initialData={data}
                     openByDefault={false}
                     indent={24}
                     width={auto}
@@ -705,6 +720,7 @@ fetching database name from fully qualified name structure */
                       <Node {...props} onClick={handleNodeClick} />
                     )}
                   </Tree>
+                )}
                 </div>
               </>
             )}

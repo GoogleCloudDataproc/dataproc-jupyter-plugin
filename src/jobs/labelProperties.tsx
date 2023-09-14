@@ -56,20 +56,23 @@ function LabelProperties({
   setDuplicateKeyError,
   labelEditMode,
   selectedRuntimeClone,
-  batchInfoResponse
+  batchInfoResponse,
+  createBatch
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
   useEffect(() => {
+    console.log(createBatch);
     if (!labelEditMode) {
       if (
+
         buttonText === 'ADD LABEL' &&
         !selectedJobClone &&
-        selectedRuntimeClone === undefined &&
-        batchInfoResponse === undefined
+        selectedRuntimeClone === undefined && !createBatch
       ) {
+        console.log(batchInfoResponse,createBatch);
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
       } else {
