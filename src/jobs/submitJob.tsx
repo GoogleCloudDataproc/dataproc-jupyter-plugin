@@ -21,7 +21,6 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import LabelProperties from './labelProperties';
 import { authApi, toastifyCustomStyle } from '../utils/utils';
 
-
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -216,6 +215,17 @@ function SubmitJob(
   const [jobIdSpecialValidation, setjobIdSpecialValidation] = useState(false);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [mainClassActive, setMainClassActive] = useState(false);
+  const [
+    additionalPythonFileDuplicateValidation,
+    setAdditionalPythonFileDuplicateValidation
+  ] = useState(false);
+  const [jarFileDuplicateValidation, setJarFileDuplicateValidation] =
+    useState(false);
+  const [fileDuplicateValidation, setFileDuplicateValidation] = useState(false);
+  const [archiveDuplicateValidation, setArchiveDuplicateValidation] =
+    useState(false);
+  const [argumentsDuplicateValidation, setArgumentsDuplicateValidation] =
+    useState(false);
 
   const handleCancelJobButton = () => {
     setSubmitJobView(false);
@@ -304,7 +314,12 @@ function SubmitJob(
     valueValidation,
     jobIdValidation,
     jobIdSpecialValidation,
-    duplicateKeyError
+    duplicateKeyError,
+    jarFileDuplicateValidation,
+    additionalPythonFileDuplicateValidation,
+    fileDuplicateValidation,
+    argumentsDuplicateValidation,
+    archiveDuplicateValidation
   ]);
   const disableSubmitButtonIfInvalid = () => {
     const isSparkJob = jobTypeSelected === 'spark';
@@ -323,7 +338,11 @@ function SubmitJob(
         valueValidation === -1 &&
         jobIdValidation &&
         !jobIdSpecialValidation &&
-        duplicateKeyError === -1) ||
+        duplicateKeyError === -1 &&
+        !fileDuplicateValidation &&
+        !archiveDuplicateValidation &&
+        !argumentsDuplicateValidation &&
+        !jarFileDuplicateValidation) ||
         (isSparkRJob &&
           mainRSelected !== '' &&
           mainRValidation &&
@@ -332,7 +351,9 @@ function SubmitJob(
           valueValidation === -1 &&
           jobIdValidation &&
           !jobIdSpecialValidation &&
-          duplicateKeyError === -1) ||
+          duplicateKeyError === -1! &&
+          !fileDuplicateValidation &&
+          !argumentsDuplicateValidation) ||
         (isPySparkJob &&
           mainPythonSelected !== '' &&
           mainPythonValidation &&
@@ -344,7 +365,12 @@ function SubmitJob(
           valueValidation === -1 &&
           jobIdValidation &&
           !jobIdSpecialValidation &&
-          duplicateKeyError === -1) ||
+          duplicateKeyError === -1 &&
+          !additionalPythonFileDuplicateValidation &&
+          !fileDuplicateValidation &&
+          !archiveDuplicateValidation &&
+          !argumentsDuplicateValidation &&
+          !jarFileDuplicateValidation) ||
         (isSparkSqlJob &&
           queryFileSelected !== '' &&
           querySourceSelected === 'queryFile' &&
@@ -354,7 +380,8 @@ function SubmitJob(
           valueValidation === -1 &&
           jobIdValidation &&
           !jobIdSpecialValidation &&
-          duplicateKeyError === -1) ||
+          duplicateKeyError === -1 &&
+          !jarFileDuplicateValidation) ||
         (isSparkSqlJob &&
           queryTextSelected !== '' &&
           querySourceSelected === 'queryText' &&
@@ -363,7 +390,8 @@ function SubmitJob(
           valueValidation === -1 &&
           jobIdValidation &&
           !jobIdSpecialValidation &&
-          duplicateKeyError === -1))
+          duplicateKeyError === -1 &&
+          !jarFileDuplicateValidation))
     ) {
       setSubmitDisabled(false);
     } else {
@@ -656,7 +684,8 @@ function SubmitJob(
   const handleValidationFiles = (
     listOfFiles: any,
     setValuesPart: any,
-    setValidationPart: any
+    setValidationPart: any,
+    setDuplicateValidation?: any
   ) => {
     if (typeof listOfFiles === 'string') {
       if (
@@ -685,8 +714,34 @@ function SubmitJob(
           }
         });
       }
+      handleDuplicateValidation(setDuplicateValidation, listOfFiles);
       setValuesPart(listOfFiles);
     }
+  };
+  const handleDuplicateValidation = (
+    setDuplicateValidation: any,
+    listOfFiles: any
+  ) => {
+    if (Array.isArray(listOfFiles)) {
+      const fileNames = listOfFiles.map((fileName: any) =>
+        fileName.toLowerCase()
+      );
+      const uniqueFileNames = new Set<string>();
+      const duplicateFileNames = fileNames.filter((fileName: string) => {
+        const isDuplicate = uniqueFileNames.has(fileName);
+        uniqueFileNames.add(fileName);
+        return isDuplicate;
+      });
+      if (duplicateFileNames.length > 0) {
+        setDuplicateValidation(true);
+      } else {
+        setDuplicateValidation(false);
+      }
+    }
+  };
+  const handleArguments = (setDuplicateValidation: any, listOfFiles: any) => {
+    setArgumentSelected(listOfFiles);
+    handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
 
   return (
@@ -750,7 +805,7 @@ function SubmitJob(
             <div className="error-key-parent">
               <iconError.react tag="div" className="logo-alignment-style" />
               <div className="error-key-missing">
-              ID must contain only letters, numbers, hyphens, and underscores
+                ID must contain only letters, numbers, hyphens, and underscores
               </div>
             </div>
           )}
@@ -821,7 +876,9 @@ function SubmitJob(
                   </div>
                 )}
                 {queryFileValidation && (
-                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">
+                    {QUERY_FILE_MESSAGE}
+                  </div>
                 )}
               </>
             )}
@@ -839,7 +896,9 @@ function SubmitJob(
                   />
                 </div>
 
-                <div className="submit-job-message-input">The query to execute</div>
+                <div className="submit-job-message-input">
+                  The query to execute
+                </div>
               </>
             )}
           {jobTypeSelected === 'spark' && (
@@ -875,7 +934,9 @@ function SubmitJob(
                 </div>
               )}
               {(mainClassSelected !== '' || !mainClassActive) && (
-                <div className="submit-job-message-input">{MAIN_CLASS_MESSAGE}</div>
+                <div className="submit-job-message-input">
+                  {MAIN_CLASS_MESSAGE}
+                </div>
               )}
             </>
           )}
@@ -909,7 +970,9 @@ function SubmitJob(
                 </div>
               )}
               {mainRValidation && (
-                <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
+                <div className="submit-job-message-input">
+                  {QUERY_FILE_MESSAGE}
+                </div>
               )}
             </>
           )}
@@ -943,7 +1006,9 @@ function SubmitJob(
                 </div>
               )}
               {mainPythonValidation && (
-                <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
+                <div className="submit-job-message-input">
+                  {QUERY_FILE_MESSAGE}
+                </div>
               )}
             </>
           )}
@@ -962,7 +1027,8 @@ function SubmitJob(
                     handleValidationFiles(
                       e,
                       setAdditionalPythonFileSelected,
-                      setAdditionalPythonFileValidation
+                      setAdditionalPythonFileValidation,
+                      setAdditionalPythonFileDuplicateValidation
                     )
                   }
                   addOnBlur={true}
@@ -976,6 +1042,14 @@ function SubmitJob(
                   <div className="error-key-missing">
                     All files must include a valid scheme prefix: 'file://',
                     'gs://', or 'hdfs://'
+                  </div>
+                </div>
+              )}
+              {additionalPythonFileDuplicateValidation && (
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    Duplicate paths are not allowed
                   </div>
                 </div>
               )}
@@ -993,7 +1067,8 @@ function SubmitJob(
                     handleValidationFiles(
                       e,
                       setJarFileSelected,
-                      setJarFileValidation
+                      setJarFileValidation,
+                      setJarFileDuplicateValidation
                     )
                   }
                   addOnBlur={true}
@@ -1001,6 +1076,14 @@ function SubmitJob(
                   inputProps={{ placeholder: '' }}
                 />
               </div>
+              {jarFileDuplicateValidation && (
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    Duplicate paths are not allowed
+                  </div>
+                </div>
+              )}
               {!jarFileValidation && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" className="logo-alignment-style" />
@@ -1010,7 +1093,7 @@ function SubmitJob(
                   </div>
                 </div>
               )}
-              {jarFileValidation && (
+              {jarFileValidation && !jarFileDuplicateValidation&& (
                 <div className="submit-job-message">{JAR_FILE_MESSAGE}</div>
               )}
             </>
@@ -1024,13 +1107,26 @@ function SubmitJob(
                 <TagsInput
                   className="select-job-style"
                   onChange={e =>
-                    handleValidationFiles(e, setFileSelected, setFileValidation)
+                    handleValidationFiles(
+                      e,
+                      setFileSelected,
+                      setFileValidation,
+                      setFileDuplicateValidation
+                    )
                   }
                   addOnBlur={true}
                   value={fileSelected}
                   inputProps={{ placeholder: '' }}
                 />
               </div>
+              {fileDuplicateValidation && (
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    Duplicate paths are not allowed
+                  </div>
+                </div>
+              )}
               {!fileValidation && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" className="logo-alignment-style" />
@@ -1040,7 +1136,7 @@ function SubmitJob(
                   </div>
                 </div>
               )}
-              {fileValidation && (
+              {fileValidation && !fileDuplicateValidation&& (
                 <div className="submit-job-message">{FILES_MESSAGE}</div>
               )}
             </>
@@ -1057,7 +1153,8 @@ function SubmitJob(
                     handleValidationFiles(
                       e,
                       setArchieveFileSelected,
-                      setArchieveFileValidation
+                      setArchieveFileValidation,
+                      setArchiveDuplicateValidation
                     )
                   }
                   addOnBlur={true}
@@ -1065,6 +1162,14 @@ function SubmitJob(
                   inputProps={{ placeholder: '' }}
                 />
               </div>
+              {archiveDuplicateValidation && (
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    Duplicate paths are not allowed
+                  </div>
+                </div>
+              )}
               {!archieveFileValidation && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" className="logo-alignment-style" />
@@ -1074,7 +1179,7 @@ function SubmitJob(
                   </div>
                 </div>
               )}
-              {archieveFileValidation && (
+              {archieveFileValidation && !archiveDuplicateValidation && (
                 <div className="submit-job-message">
                   {ARCHIVE_FILES_MESSAGE}
                 </div>
@@ -1089,12 +1194,24 @@ function SubmitJob(
                 </label>
                 <TagsInput
                   className="select-job-style"
-                  onChange={e => setArgumentSelected(e)}
+                  onChange={e =>
+                    handleArguments(setArgumentsDuplicateValidation, e)
+                  }
                   value={argumentSelected}
                   inputProps={{ placeholder: '' }}
                 />
               </div>
-              <div className="submit-job-message">{ARGUMENTS_MESSAGE}</div>
+              {argumentsDuplicateValidation && (
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    Duplicate paths are not allowed
+                  </div>
+                </div>
+              )}
+              {!argumentsDuplicateValidation && (
+                <div className="submit-job-message">{ARGUMENTS_MESSAGE}</div>
+              )}
             </>
           )}
           {querySourceSelected === 'queryFile' &&

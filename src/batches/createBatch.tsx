@@ -306,10 +306,16 @@ function CreateBatch({
   const [keySelected, setKeySelected] = useState(keys);
   const [manualKeySelected, setManualKeySelected] = useState('');
   const [manualValidation, setManualValidation] = useState(true);
+  const [additionalPythonFileDuplicateValidation, setAdditionalPythonFileDuplicateValidation] = useState(false);
+  const [jarFileDuplicateValidation, setJarFileDuplicateValidation] = useState(false);
+  const [fileDuplicateValidation, setFileDuplicateValidation] = useState(false);
+  const [archiveDuplicateValidation, setArchiveDuplicateValidation] = useState(false);
+  const [argumentsDuplicateValidation, setArgumentsDuplicateValidation] = useState(false);
+  const [networkTagsDuplicateValidation, setNetworkTagsDuplicateValidation] = useState(false);
   const [keylist, setKeylist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
-  const[isloadingNetwork,setIsloadingNetwork]=useState(false);
+  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -397,7 +403,7 @@ function CreateBatch({
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
-            ).map(([k, v]) => `${k.substring(6)}:${v}`); // spark:spark.app.name , spark:spark.driver.cores - every property is appended with 'spark:' therefore getting the porperty key value after 'spark:' 
+            ).map(([k, v]) => `${k.substring(6)}:${v}`); // spark:spark.app.name , spark:spark.driver.cores - every property is appended with 'spark:' therefore getting the porperty key value after 'spark:'
             setPropertyDetail(prevPropertyDetail => [
               ...prevPropertyDetail,
               ...updatedPropertyDetail
@@ -487,7 +493,9 @@ function CreateBatch({
           !fileValidation ||
           !archieveFileValidation ||
           !manualValidation ||
-          !jarFileValidation
+          !jarFileValidation||
+          fileDuplicateValidation||archiveDuplicateValidation||argumentsDuplicateValidation||networkTagsDuplicateValidation
+          ||jarFileDuplicateValidation
         );
       case 'sparkR':
         return (
@@ -496,7 +504,9 @@ function CreateBatch({
           !mainRValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation||
+          fileDuplicateValidation||archiveDuplicateValidation||argumentsDuplicateValidation||networkTagsDuplicateValidation
+          
         );
       case 'pySpark':
         return (
@@ -507,7 +517,10 @@ function CreateBatch({
           !fileValidation ||
           !archieveFileValidation ||
           !manualValidation ||
-          !jarFileValidation
+          !jarFileValidation||
+          additionalPythonFileDuplicateValidation||
+          fileDuplicateValidation||archiveDuplicateValidation||argumentsDuplicateValidation||networkTagsDuplicateValidation
+          ||jarFileDuplicateValidation
         );
       case 'sparkSql':
         return (
@@ -515,7 +528,8 @@ function CreateBatch({
           queryFileSelected === '' ||
           !queryFileValidation ||
           !jarFileValidation ||
-          !manualValidation
+          !manualValidation||networkTagsDuplicateValidation
+          ||jarFileDuplicateValidation
         );
       default:
         return false;
@@ -525,7 +539,8 @@ function CreateBatch({
   const handleValidationFiles = (
     listOfFiles: any,
     setValuesPart: any,
-    setValidationPart: any
+    setValidationPart: any,
+    setDuplicateValidation?: any
   ) => {
     if (typeof listOfFiles === 'string') {
       if (
@@ -554,8 +569,38 @@ function CreateBatch({
           }
         });
       }
+      handleDuplicateValidation(setDuplicateValidation, listOfFiles);
       setValuesPart(listOfFiles);
     }
+  };
+  const handleDuplicateValidation = (
+    setDuplicateValidation: any,
+    listOfFiles: any
+  ) => {
+    if (Array.isArray(listOfFiles)) {
+      const fileNames = listOfFiles.map((fileName: any) =>
+        fileName.toLowerCase()
+      );
+      const uniqueFileNames = new Set<string>();
+      const duplicateFileNames = fileNames.filter((fileName: string) => {
+        const isDuplicate = uniqueFileNames.has(fileName);
+        uniqueFileNames.add(fileName);
+        return isDuplicate;
+      });
+      if (duplicateFileNames.length > 0 ) {
+        setDuplicateValidation(true);
+      } else {
+        setDuplicateValidation(false);
+      }
+    }
+  };
+  const handleArguments = (setDuplicateValidation: any, listOfFiles: any) => {
+    setArgumentsSelected(listOfFiles);
+    handleDuplicateValidation(setDuplicateValidation, listOfFiles);
+  };
+  const handleNetworkTags = (setDuplicateValidation: any, listOfFiles: any) => {
+    setNetworkTagSelected(listOfFiles);
+    handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
 
   const listClustersAPI = async () => {
@@ -1023,7 +1068,8 @@ function CreateBatch({
           serviceAccount: serviceAccountSelected
         }),
         ...(keySelected !== '' &&
-          selectedRadioValue === 'key' && keySelected !== undefined && {
+          selectedRadioValue === 'key' &&
+          keySelected !== undefined && {
             kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
           }),
         ...(manualKeySelected !== '' &&
@@ -1205,7 +1251,11 @@ function CreateBatch({
   };
   const handleMainJarSelected = (value: string) => {
     setMainJarUpdated(true);
-    handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
+    handleValidationFiles(
+      value,
+      setMainJarSelected,
+      setMainJarValidation
+    );
   };
 
   const handleClusterSelected = (event: any, value: any) => {
@@ -1499,7 +1549,8 @@ function CreateBatch({
                       handleValidationFiles(
                         e,
                         setAdditionalPythonFileSelected,
-                        setAdditionalPythonFileValidation
+                        setAdditionalPythonFileValidation,
+                        setAdditionalPythonFileDuplicateValidation
                       )
                     }
                     addOnBlur={true}
@@ -1516,6 +1567,17 @@ function CreateBatch({
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
+                    </div>
+                  </div>
+                )}
+                {additionalPythonFileDuplicateValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                    <div className="error-key-missing">
+                      Duplicate paths are not allowed
                     </div>
                   </div>
                 )}
@@ -1618,7 +1680,8 @@ function CreateBatch({
                         handleValidationFiles(
                           e,
                           setJarFilesSelected,
-                          setJarFileValidation
+                          setJarFileValidation,
+                          setJarFileDuplicateValidation
                         )
                       }
                       addOnBlur={true}
@@ -1639,7 +1702,18 @@ function CreateBatch({
                       </div>
                     </div>
                   )}
-                  {jarFileValidation && (
+                  {jarFileDuplicateValidation && (
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        Duplicate paths are not allowed
+                      </div>
+                    </div>
+                  )}
+                  {jarFileValidation &&!jarFileDuplicateValidation && (
                     <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
                   )}
                 </>
@@ -1658,7 +1732,8 @@ function CreateBatch({
                       handleValidationFiles(
                         e,
                         setFilesSelected,
-                        setFileValidation
+                        setFileValidation,
+                        setFileDuplicateValidation
                       )
                     }
                     addOnBlur={true}
@@ -1678,7 +1753,18 @@ function CreateBatch({
                     </div>
                   </div>
                 )}
-                {fileValidation && (
+                {fileDuplicateValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                    <div className="error-key-missing">
+                      Duplicate paths are not allowed
+                    </div>
+                  </div>
+                )}
+                {fileValidation &&!fileDuplicateValidation&& (
                   <div className="create-messagelist">{FILES_MESSAGE}</div>
                 )}
               </>
@@ -1695,7 +1781,8 @@ function CreateBatch({
                       handleValidationFiles(
                         e,
                         setArchiveFileSelected,
-                        setArchieveFileValidation
+                        setArchieveFileValidation,
+                        setArchiveDuplicateValidation
                       )
                     }
                     addOnBlur={true}
@@ -1715,7 +1802,18 @@ function CreateBatch({
                     </div>
                   </div>
                 )}
-                {archieveFileValidation && (
+                {archiveDuplicateValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                    <div className="error-key-missing">
+                      Duplicate paths are not allowed
+                    </div>
+                  </div>
+                )}
+                {archieveFileValidation && !archiveDuplicateValidation&&(
                   <div className="create-messagelist">
                     {ARCHIVE_FILES_MESSAGE}
                   </div>
@@ -1730,13 +1828,26 @@ function CreateBatch({
                   </label>
                   <TagsInput
                     className="select-job-style"
-                    onChange={e => setArgumentsSelected(e)}
+                    onChange={e => handleArguments(setArgumentsDuplicateValidation, e)}
                     addOnBlur={true}
                     value={argumentsSelected}
                     inputProps={{ placeholder: '' }}
                   />
                 </div>
-                <div className="create-messagelist">{ARGUMENTS_MESSAGE}</div>
+                {argumentsDuplicateValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                    <div className="error-key-missing">
+                      Duplicate paths are not allowed
+                    </div>
+                  </div>
+                )}
+                {!argumentsDuplicateValidation && (
+                  <div className="create-messagelist">{ARGUMENTS_MESSAGE}</div>
+                )}
               </>
             )}
             {batchTypeSelected === 'sparkSql' && (
@@ -1789,7 +1900,7 @@ function CreateBatch({
             </div>
             <div className="runtime-message ">Networks in this project</div>
             <div>
-            {isloadingNetwork ? (
+              {isloadingNetwork ? (
                 <div className="metastore-loader">
                   <ClipLoader
                     loading={true}
@@ -1799,39 +1910,39 @@ function CreateBatch({
                   />
                 </div>
               ) : (
-              <div className="create-batch-network">
-                <div className="select-text-overlay">
-                  <label
-                    className="select-title-text"
-                    htmlFor="primary-network"
-                  >
-                    Primary network*
-                  </label>
-                  <Select
-                    search
-                    className="project-region-select"
-                    value={networkSelected}
-                    onChange={handleNetworkChange}
-                    type="text"
-                    options={networkList}
-                  />
-                </div>
-                <div className="select-text-overlay subnetwork-style">
-                  <label className="select-title-text" htmlFor="subnetwork">
-                    subnetwork
-                  </label>
+                <div className="create-batch-network">
+                  <div className="select-text-overlay">
+                    <label
+                      className="select-title-text"
+                      htmlFor="primary-network"
+                    >
+                      Primary network*
+                    </label>
+                    <Select
+                      search
+                      className="project-region-select"
+                      value={networkSelected}
+                      onChange={handleNetworkChange}
+                      type="text"
+                      options={networkList}
+                    />
+                  </div>
+                  <div className="select-text-overlay subnetwork-style">
+                    <label className="select-title-text" htmlFor="subnetwork">
+                      subnetwork
+                    </label>
 
-                  <Select
-                    search
-                    className="project-region-select"
-                    value={subNetworkSelected}
-                    onChange={handleSubNetworkChange}
-                    type="text"
-                    options={subNetworkList}
-                  />
+                    <Select
+                      search
+                      className="project-region-select"
+                      value={subNetworkSelected}
+                      onChange={handleSubNetworkChange}
+                      type="text"
+                      options={subNetworkList}
+                    />
+                  </div>
                 </div>
-              </div>
-               )}
+              )}
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
@@ -1839,13 +1950,23 @@ function CreateBatch({
               </label>
               <TagsInput
                 className="select-job-style"
-                onChange={e => setNetworkTagSelected(e)}
+                onChange={e => handleNetworkTags(setNetworkTagsDuplicateValidation, e)}
                 addOnBlur={true}
                 value={networkTagSelected}
                 inputProps={{ placeholder: '' }}
               />
             </div>
-            <div className="create-messagelist">{NETWORK_TAG_MESSAGE}</div>
+            {networkTagsDuplicateValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Duplicate paths are not allowed
+                </div>
+              </div>
+            )}
+            {!networkTagsDuplicateValidation && (
+              <div className="create-messagelist">{NETWORK_TAG_MESSAGE}</div>
+            )}
             <div>
               <div className="submit-job-label-header">Encryption</div>
               <div>
