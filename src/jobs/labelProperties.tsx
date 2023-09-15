@@ -64,7 +64,6 @@ function LabelProperties({
   labelDetailUpdated used to store the temporay label details when onchange
   */
   useEffect(() => {
-    console.log(createBatch);
     if (!labelEditMode) {
       if (
 
@@ -72,7 +71,6 @@ function LabelProperties({
         !selectedJobClone &&
         selectedRuntimeClone === undefined && !createBatch
       ) {
-        console.log(batchInfoResponse,createBatch);
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
       } else {

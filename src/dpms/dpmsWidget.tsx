@@ -174,7 +174,6 @@ const DpmsComponent = ({
           response
             .json()
             .then((responseResult: any) => {
-             //let dbCounter = 0;
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -193,7 +192,6 @@ const DpmsComponent = ({
                   updatedTableDetails[entry.displayName] = description;
                 }
               );
-              //dbCounter++;
               setEntries(entryNames);
               setTableDescription(updatedTableDetails);
                 setTotalTables(tableNames.length);
