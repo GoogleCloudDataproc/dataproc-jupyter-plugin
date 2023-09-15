@@ -26,8 +26,8 @@ gcloud config set compute/region us-central1
 sudo apt-get update
 sudo apt-get --assume-yes install python3 python3-pip nodejs
 
-# Install jupyter lab.
-pip install jupyterlab
+# Install jupyter lab and build.
+pip install jupyterlab build
 
 # Navigate to repo.
 cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
@@ -40,7 +40,8 @@ jupyter labextension develop . --overwrite
 jupyter server extension enable dataproc_jupyter_plugin
 # Rebuild extension Typescript source after making changes
 jlpm build
-
+# Aslo build python packages to dist/
+python -m build
 
 # Run Playwright Tests
 cd ./ui-tests
