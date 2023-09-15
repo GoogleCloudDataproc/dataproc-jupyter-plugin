@@ -22,10 +22,6 @@ import TableData from '../utils/tableData';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import PollingTimer from '../utils/pollingTimer';
 
-// const iconGcsRefresh = new LabIcon({
-//   name: 'launcher:gcs-refresh-icon',
-//   svgstr: gcsRefreshIcon
-// });
 const iconGcsFolderNew = new LabIcon({
   name: 'launcher:gcs-folder-new-icon',
   svgstr: gcsFolderNewIcon
@@ -59,8 +55,12 @@ const GcsBucketComponent = ({
   const [isLoading, setIsLoading] = useState(true);
   const [gcsFolderPath, setGcsFolderPath] = useState<string[]>([]);
 
-  const [folderName, setFolderName] = useState('Untitled Folder');
+  const [folderName, setFolderName] = useState<string | undefined>(
+    'Untitled Folder'
+  );
   const [folderCreateDone, setFolderCreateDone] = useState(true);
+
+  const [folderNameNew, setFolderNameNew] = useState('Untitled Folder');
 
   const [pollingDisable, setPollingDisable] = useState(false);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -177,7 +177,8 @@ const GcsBucketComponent = ({
             {...cell.getCellProps()}
             className="gcs-name-field"
             onClick={() =>
-              cell.value.split('/')[nameIndex] !== 'Untitled Folder' || folderCreateDone 
+              cell.value.split('/')[nameIndex] !== folderNameNew ||
+              folderCreateDone
                 ? (cell.value.includes('/') &&
                     cell.value.split('/').length - 1 !== nameIndex) ||
                   gcsFolderPath.length === 0
@@ -194,7 +195,8 @@ const GcsBucketComponent = ({
               ) : (
                 <iconGcsFile.react tag="div" />
               )}
-              {cell.value.split('/')[nameIndex] === 'Untitled Folder' && !folderCreateDone ? (
+              {cell.value.split('/')[nameIndex] === folderNameNew &&
+              !folderCreateDone ? (
                 <input
                   value={folderName}
                   className="input-folder-name-style"
@@ -358,23 +360,35 @@ const GcsBucketComponent = ({
     pollingGCSlist(listBucketsAPI, true);
     const currentTime = new Date();
     const lastModified = lastModifiedFormat(currentTime);
+  
     let datalist: any = [...bucketsList];
-    const newFolderData = {
-      name: 'Untitled Folder/',
-      lastModified: lastModified,
-      folderName: 'Untitled Folder'
-    };
-    
+    let existingUntitled = 0;
+    datalist.forEach((data: any) => {
+      if (data.folderName.includes('Untitled Folder')) {
+        existingUntitled = existingUntitled + 1;
+      }
+    });
+    let newFolderData;
+    let folderNameConcat;
+    if (existingUntitled === 0) {
+      newFolderData = {
+        name: 'Untitled Folder/',
+        lastModified: lastModified,
+        folderName: 'Untitled Folder'
+      };
+    } else {
+      folderNameConcat = 'Untitled Folder ' + existingUntitled;
+      newFolderData = {
+        name: folderNameConcat + '/',
+        lastModified: lastModified,
+        folderName: folderNameConcat
+      };
+    }
+    setFolderName(newFolderData.folderName);
+    setFolderNameNew(newFolderData.folderName);
     datalist.unshift(newFolderData);
-    setFolderCreateDone(false)
+    setFolderCreateDone(false);
     setBucketsList(datalist);
-
-    // createFolderAPI()
-    // const { tracker } = factory;
-    // const widget = tracker.currentWidget;
-    // if (widget) {
-    //   return widget.createNewDirectory();
-    // }
   };
 
   const createFolderAPI = async () => {
@@ -453,9 +467,6 @@ const GcsBucketComponent = ({
       <div className="gcs-panel-parent">
         <div className="gcs-panel-header">
           <div className="gcs-panel-title">Google Cloud Storage</div>
-          {/* <div onClick={() => listBucketsAPI()}>
-            <iconGcsRefresh.react tag="div" className="gcs-title-icons" />
-          </div> */}
           {gcsFolderPath.length > 0 && (
             <div onClick={() => createNewItem()}>
               <iconGcsFolderNew.react tag="div" className="gcs-title-icons" />
