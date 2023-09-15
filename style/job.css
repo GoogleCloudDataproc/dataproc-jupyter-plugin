@@ -267,3 +267,7 @@
   color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
+
+.button-alignment{
+  padding-left: 10px;
+}

@@ -2257,7 +2257,7 @@ function CreateBatch({
               batchInfoResponse={batchInfoResponse}
               createBatch={createBatch}
             />
-            <div className="job-button-style-parent">
+            <div className="job-button-style-parent button-alignment">
               <div
                 className={
                   isSubmitDisabled()
