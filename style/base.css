@@ -93,8 +93,8 @@ h2 {
   border: 3px solid #3367d6 !important;
 }
 
-.ui.search.dropdown.active>input.search:focus,
-.ui.search.dropdown.visible>input.search:focus {
+.ui.search.dropdown.active > input.search:focus,
+.ui.search.dropdown.visible > input.search:focus {
   left: 0px !important;
   bottom: 0px !important;
   cursor: auto;
@@ -104,4 +104,7 @@ h2 {
 
 .ui.selection.dropdown {
   min-width: 5em !important;
+}
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper {
+  max-height: 40% !important;
 }

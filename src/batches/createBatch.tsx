@@ -1500,7 +1500,7 @@ function CreateBatch({
                   </div>
                 )}
                 {mainRValidation && (
-                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -1540,7 +1540,7 @@ function CreateBatch({
                   </div>
                 )}
                 {mainPythonValidation && (
-                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
