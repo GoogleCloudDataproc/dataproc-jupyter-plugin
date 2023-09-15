@@ -306,12 +306,19 @@ function CreateBatch({
   const [keySelected, setKeySelected] = useState(keys);
   const [manualKeySelected, setManualKeySelected] = useState('');
   const [manualValidation, setManualValidation] = useState(true);
-  const [additionalPythonFileDuplicateValidation, setAdditionalPythonFileDuplicateValidation] = useState(false);
-  const [jarFileDuplicateValidation, setJarFileDuplicateValidation] = useState(false);
+  const [
+    additionalPythonFileDuplicateValidation,
+    setAdditionalPythonFileDuplicateValidation
+  ] = useState(false);
+  const [jarFileDuplicateValidation, setJarFileDuplicateValidation] =
+    useState(false);
   const [fileDuplicateValidation, setFileDuplicateValidation] = useState(false);
-  const [archiveDuplicateValidation, setArchiveDuplicateValidation] = useState(false);
-  const [argumentsDuplicateValidation, setArgumentsDuplicateValidation] = useState(false);
-  const [networkTagsDuplicateValidation, setNetworkTagsDuplicateValidation] = useState(false);
+  const [archiveDuplicateValidation, setArchiveDuplicateValidation] =
+    useState(false);
+  const [argumentsDuplicateValidation, setArgumentsDuplicateValidation] =
+    useState(false);
+  const [networkTagsDuplicateValidation, setNetworkTagsDuplicateValidation] =
+    useState(false);
   const [keylist, setKeylist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
@@ -493,9 +500,12 @@ function CreateBatch({
           !fileValidation ||
           !archieveFileValidation ||
           !manualValidation ||
-          !jarFileValidation||
-          fileDuplicateValidation||archiveDuplicateValidation||argumentsDuplicateValidation||networkTagsDuplicateValidation
-          ||jarFileDuplicateValidation
+          !jarFileValidation ||
+          fileDuplicateValidation ||
+          archiveDuplicateValidation ||
+          argumentsDuplicateValidation ||
+          networkTagsDuplicateValidation ||
+          jarFileDuplicateValidation
         );
       case 'sparkR':
         return (
@@ -504,9 +514,11 @@ function CreateBatch({
           !mainRValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation||
-          fileDuplicateValidation||archiveDuplicateValidation||argumentsDuplicateValidation||networkTagsDuplicateValidation
-          
+          !manualValidation ||
+          fileDuplicateValidation ||
+          archiveDuplicateValidation ||
+          argumentsDuplicateValidation ||
+          networkTagsDuplicateValidation
         );
       case 'pySpark':
         return (
@@ -517,10 +529,13 @@ function CreateBatch({
           !fileValidation ||
           !archieveFileValidation ||
           !manualValidation ||
-          !jarFileValidation||
-          additionalPythonFileDuplicateValidation||
-          fileDuplicateValidation||archiveDuplicateValidation||argumentsDuplicateValidation||networkTagsDuplicateValidation
-          ||jarFileDuplicateValidation
+          !jarFileValidation ||
+          additionalPythonFileDuplicateValidation ||
+          fileDuplicateValidation ||
+          archiveDuplicateValidation ||
+          argumentsDuplicateValidation ||
+          networkTagsDuplicateValidation ||
+          jarFileDuplicateValidation
         );
       case 'sparkSql':
         return (
@@ -528,8 +543,9 @@ function CreateBatch({
           queryFileSelected === '' ||
           !queryFileValidation ||
           !jarFileValidation ||
-          !manualValidation||networkTagsDuplicateValidation
-          ||jarFileDuplicateValidation
+          !manualValidation ||
+          networkTagsDuplicateValidation ||
+          jarFileDuplicateValidation
         );
       default:
         return false;
@@ -587,7 +603,7 @@ function CreateBatch({
         uniqueFileNames.add(fileName);
         return isDuplicate;
       });
-      if (duplicateFileNames.length > 0 ) {
+      if (duplicateFileNames.length > 0) {
         setDuplicateValidation(true);
       } else {
         setDuplicateValidation(false);
@@ -759,13 +775,11 @@ function CreateBatch({
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
       */
 
-              transformedKeyList = responseResult.cryptoKeys.map(
-                (data: any) => {
-                  return {
-                    name: data.name.split('/')[7]
-                  };
-                }
-              );
+              transformedKeyList = responseResult.cryptoKeys
+                .filter((data: any) => data.primary && data.primary.state==='ENABLED')
+                .map((data: any) => ({
+                  name: data.name.split('/')[7]
+                }));
               const keyLabelStructureKeyRing = transformedKeyList.map(
                 (obj: { name: any }) => ({
                   key: obj.name,
@@ -1251,11 +1265,7 @@ function CreateBatch({
   };
   const handleMainJarSelected = (value: string) => {
     setMainJarUpdated(true);
-    handleValidationFiles(
-      value,
-      setMainJarSelected,
-      setMainJarValidation
-    );
+    handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
   };
 
   const handleClusterSelected = (event: any, value: any) => {
@@ -1713,7 +1723,7 @@ function CreateBatch({
                       </div>
                     </div>
                   )}
-                  {jarFileValidation &&!jarFileDuplicateValidation && (
+                  {jarFileValidation && !jarFileDuplicateValidation && (
                     <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
                   )}
                 </>
@@ -1764,7 +1774,7 @@ function CreateBatch({
                     </div>
                   </div>
                 )}
-                {fileValidation &&!fileDuplicateValidation&& (
+                {fileValidation && !fileDuplicateValidation && (
                   <div className="create-messagelist">{FILES_MESSAGE}</div>
                 )}
               </>
@@ -1813,7 +1823,7 @@ function CreateBatch({
                     </div>
                   </div>
                 )}
-                {archieveFileValidation && !archiveDuplicateValidation&&(
+                {archieveFileValidation && !archiveDuplicateValidation && (
                   <div className="create-messagelist">
                     {ARCHIVE_FILES_MESSAGE}
                   </div>
@@ -1828,7 +1838,9 @@ function CreateBatch({
                   </label>
                   <TagsInput
                     className="select-job-style"
-                    onChange={e => handleArguments(setArgumentsDuplicateValidation, e)}
+                    onChange={e =>
+                      handleArguments(setArgumentsDuplicateValidation, e)
+                    }
                     addOnBlur={true}
                     value={argumentsSelected}
                     inputProps={{ placeholder: '' }}
@@ -1950,7 +1962,9 @@ function CreateBatch({
               </label>
               <TagsInput
                 className="select-job-style"
-                onChange={e => handleNetworkTags(setNetworkTagsDuplicateValidation, e)}
+                onChange={e =>
+                  handleNetworkTags(setNetworkTagsDuplicateValidation, e)
+                }
                 addOnBlur={true}
                 value={networkTagSelected}
                 inputProps={{ placeholder: '' }}
