@@ -107,7 +107,6 @@ const GcsBucketComponent = ({
   };
 
   const handleFileClick = async (fileName: string) => {
-    console.log('handle file click');
     const credentials = await authApi();
     if (credentials) {
       let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${fileName}?alt=media`;
@@ -223,7 +222,6 @@ const GcsBucketComponent = ({
   };
 
   const handleFileSave = async (fileDetail: any, content: any) => {
-    console.log('file save function');
     // Create a Blob object from the content and metadata
     const blob = new Blob([content], { type: fileDetail.mimetype });
 
