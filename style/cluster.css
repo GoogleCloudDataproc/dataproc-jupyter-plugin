@@ -132,6 +132,11 @@
   width: 100%;
 }
 
+.gcs-filter-section-part {
+  border: 0px;
+  width: 95%;
+}
+
 .create-cluster-text {
   font-style: normal;
   font-weight: 500;

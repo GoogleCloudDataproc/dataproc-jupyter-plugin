@@ -63,7 +63,7 @@ function LabelProperties({
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
-  useEffect(() => {
+   useEffect(() => {
     if (!labelEditMode) {
       if (
 
@@ -104,7 +104,7 @@ function LabelProperties({
   };
   const handleEditLabel = (value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
-
+    
     labelEdit.forEach((data, dataNumber: any) => {
       if (index === dataNumber) {
         /*

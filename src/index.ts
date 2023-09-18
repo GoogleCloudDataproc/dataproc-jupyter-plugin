@@ -30,6 +30,7 @@ import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
+import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
@@ -43,13 +44,16 @@ const iconDpms = new LabIcon({
 });
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
+import { GcsBucket } from './gcs/gcsBucket';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
-  optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker, IThemeManager],
+  optional: [IFileBrowserFactory, ILauncher, IMainMenu, ILabShell, INotebookTracker, IThemeManager],
   activate: async (
     app: JupyterFrontEnd,
+    factory: IFileBrowserFactory,
     launcher: ILauncher,
     mainMenu: IMainMenu,
     labShell: ILabShell,
@@ -57,6 +61,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     themeManager: IThemeManager
   ) => {
     const { commands } = app;
+
     const iconAddRuntime = new LabIcon({
       name: 'launcher:add-runtime-icon',
       svgstr: addRuntimeIcon
@@ -69,6 +74,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
+    const iconStorage = new LabIcon({
+      name: 'launcher:storage-icon',
+      svgstr: storageIcon
+    });
+
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
@@ -94,6 +104,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       loadDpmsWidget(lastClusterName);
     }
     app.shell.add(panel, 'left', { rank: 1000 });
+
+    const panelGcs = new Panel();
+    panelGcs.id = 'GCS-bucket-tab';
+    panelGcs.title.icon = iconStorage; 
+    panelGcs.addWidget(new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory));
+    app.shell.add(panelGcs, 'left', { rank: 1001 });
 
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
