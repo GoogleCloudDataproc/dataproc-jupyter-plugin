@@ -107,9 +107,10 @@ const GcsBucketComponent = ({
   };
 
   const handleFileClick = async (fileName: string) => {
+    let editedFileName = fileName.replace(/\//g, '%2F');
     const credentials = await authApi();
     if (credentials) {
-      let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${fileName}?alt=media`;
+      let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${editedFileName}?alt=media`;
       fetch(apiURL, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -123,19 +124,25 @@ const GcsBucketComponent = ({
             .then(async (responseResult: any) => {
               // Replace 'path/to/save/file.txt' with the desired path and filename
               // const filePath = `/Users/jeyaprakashn/.jupyter/lab/workspaces/`;
-              const filePath = `src/gcs/${fileName}`;
+              const filePath = `src/gcs/${editedFileName}`;
 
               // Get the contents manager to save the file
               const contentsManager = app.serviceManager.contents;
 
-              // Listen for the fileChanged event
-              contentsManager.fileChanged.connect(async (_, change: any) => {
+              // Function to handle the fileChanged event
+              async function handleFileChangeConnect(_: any, change: any) {
                 const response = await contentsManager.get(filePath);
                 if (change.type === 'save') {
                   // Call your function when a file is saved
                   handleFileSave(change.newValue, response.content);
                 }
-              });
+              }
+
+              // Remove any existing event handlers before adding a new one
+              contentsManager.fileChanged.disconnect(handleFileChangeConnect);
+
+              // Listen for the fileChanged event
+              contentsManager.fileChanged.connect(handleFileChangeConnect);
 
               // Save the file to the workspace
               await contentsManager.save(filePath, {
@@ -151,7 +158,7 @@ const GcsBucketComponent = ({
                 path: filePath
               });
 
-              // contentsManager.delete(fileName)
+              // contentsManager.delete(editedFileName)
 
               setIsLoading(false);
             })
@@ -167,10 +174,9 @@ const GcsBucketComponent = ({
   };
 
   const tableDataCondition = (cell: any) => {
-    if (cell.row.original.folderName !== '') {
+    let nameIndex = gcsFolderPath.length === 0 ? 0 : gcsFolderPath.length - 1;
+    if (cell.row.original.folderName.length > 0) {
       if (cell.column.Header === 'Name') {
-        let nameIndex =
-          gcsFolderPath.length === 0 ? 0 : gcsFolderPath.length - 1;
         return (
           <td
             {...cell.getCellProps()}
@@ -232,7 +238,18 @@ const GcsBucketComponent = ({
 
     const credentials = await authApi();
     if (credentials) {
-      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${fileDetail.name}`, {
+      let prefixList = '';
+      gcsFolderPath.length > 1 &&
+        gcsFolderPath.slice(1).forEach((folderName: string) => {
+          if (prefixList === '') {
+            prefixList = prefixList + folderName;
+          } else {
+            prefixList = prefixList + '/' + folderName;
+          }
+        });
+      let newFileName = fileDetail.name;
+      
+      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`, {
         method: 'POST',
         body: filePayload,
         headers: {
@@ -317,6 +334,11 @@ const GcsBucketComponent = ({
                       : data.name
                 };
               });
+              transformBucketsData = transformBucketsData.filter(
+                (data: any) => {
+                  return data.folderName !== '';
+                }
+              );
               let finalBucketsData = [];
               finalBucketsData = [
                 ...new Map(
@@ -358,7 +380,7 @@ const GcsBucketComponent = ({
     pollingGCSlist(listBucketsAPI, true);
     const currentTime = new Date();
     const lastModified = lastModifiedFormat(currentTime);
-  
+
     let datalist: any = [...bucketsList];
     let existingUntitled = 0;
     datalist.forEach((data: any) => {
@@ -368,20 +390,40 @@ const GcsBucketComponent = ({
     });
     let newFolderData;
     let folderNameConcat;
-    if (existingUntitled === 0) {
+
+    let prefixList = '';
+    gcsFolderPath.length > 1 &&
+      gcsFolderPath.slice(1).forEach((folderName: string) => {
+        if (prefixList === '') {
+          prefixList = prefixList + folderName;
+        } else {
+          prefixList = prefixList + '/' + folderName;
+        }
+      });
+
+    if (existingUntitled === 0 || datalist.length === 0) {
+      let nameNewFolder = 'Untitled Folder/';
+      if (prefixList !== '') {
+        nameNewFolder = prefixList + '/' + 'Untitled Folder/';
+      }
       newFolderData = {
-        name: 'Untitled Folder/',
+        name: nameNewFolder,
         lastModified: lastModified,
         folderName: 'Untitled Folder'
       };
     } else {
       folderNameConcat = 'Untitled Folder ' + existingUntitled;
+      let nameNewFolder = folderNameConcat + '/';
+      if (prefixList !== '') {
+        nameNewFolder = prefixList + '/' + folderNameConcat + '/';
+      }
       newFolderData = {
-        name: folderNameConcat + '/',
+        name: nameNewFolder,
         lastModified: lastModified,
         folderName: folderNameConcat
       };
     }
+
     setFolderName(newFolderData.folderName);
     setFolderNameNew(newFolderData.folderName);
     datalist.unshift(newFolderData);
@@ -392,7 +434,20 @@ const GcsBucketComponent = ({
   const createFolderAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${folderName}/`, {
+      let prefixList = '';
+      gcsFolderPath.length > 1 &&
+        gcsFolderPath.slice(1).forEach((folderName: string) => {
+          if (prefixList === '') {
+            prefixList = prefixList + folderName;
+          } else {
+            prefixList = prefixList + '/' + folderName;
+          }
+        });
+      let newFolderName = folderName;
+      if (prefixList !== '') {
+        newFolderName = prefixList + '/' + folderName;
+      }
+      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFolderName}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'Folder',
@@ -432,17 +487,27 @@ const GcsBucketComponent = ({
   const uploadFileToGCS = async (payload: any) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
-        `${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${inputFile.current?.files?.[0].name}`,
-        {
-          method: 'POST',
-          body: payload,
-          headers: {
-            'Content-Type': payload.type,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+      let prefixList = '';
+      gcsFolderPath.length > 1 &&
+        gcsFolderPath.slice(1).forEach((folderName: string) => {
+          if (prefixList === '') {
+            prefixList = prefixList + folderName;
+          } else {
+            prefixList = prefixList + '/' + folderName;
           }
+        });
+      let newFileName = inputFile.current?.files?.[0].name;
+      if (prefixList !== '') {
+        newFileName = prefixList + '/' + inputFile.current?.files?.[0].name;
+      }
+      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`, {
+        method: 'POST',
+        body: payload,
+        headers: {
+          'Content-Type': payload.type,
+          Authorization: API_HEADER_BEARER + credentials.access_token
         }
-      )
+      })
         .then(async (response: Response) => {
           if (response.ok) {
             const responseResult = await response.json();
