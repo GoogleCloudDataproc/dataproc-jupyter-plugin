@@ -299,7 +299,7 @@ function BatchDetails({
 
       {!createBatch && batchInfoResponse.uuid !== '' && (
         <div className="scroll-comp-batchdetails">
-          <div className="cluster-details-header">
+          <div className="cluster-details-header scroll-fix-header">
             <div
               role="button"
               className="back-arrow-icon"

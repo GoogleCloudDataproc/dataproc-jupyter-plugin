@@ -29,7 +29,7 @@ function InputInternal(props: InputProps) {
           value: e.target.value
         })
       }
-      onBlur={e=>onBlur(e)}
+      onBlur={onBlur}
       placeholder={placeholder}
       disabled = {disabled}
       defaultValue={defaultValue}

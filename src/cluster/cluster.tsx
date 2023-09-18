@@ -247,12 +247,12 @@ const ClusterComponent = (): React.JSX.Element => {
         }
         title="Start Cluster"
         onClick={
-          data.status.state === ClusterStatus.STATUS_STOPPED
+          data.status.state === ClusterStatus.STATUS_STOPPED && !restartEnabled
             ? () => startClusterApi(data.clusterName)
             : undefined
         }
       >
-        {data.status.state === ClusterStatus.STATUS_STOPPED ? (
+        {data.status.state === ClusterStatus.STATUS_STOPPED && !restartEnabled ? (
           <iconStart.react tag="div" className='logo-alignment-style' />
         ) : (
           <iconStartDisable.react tag="div" className='logo-alignment-style' />

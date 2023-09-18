@@ -139,9 +139,9 @@ function ViewLogs({
             Extracting project, location, session_id from sessionInfo.name
             Example: "projects/{project}/locations/{location}/sessionTemplates/{session_id}"
             */
+          if (sessionInfo) {
           const sessionValueUri = sessionInfo.name.split('/');
 
-          if (sessionInfo) {
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${sessionValueUri[1]}" resource.labels.location="${sessionValueUri[3]}" resource.labels.session_id="${sessionValueUri[5]}";cursorTimestamp=${sessionInfo.createTime};?project=${sessionValueUri[1]}`,
               '_blank'

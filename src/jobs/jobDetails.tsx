@@ -426,7 +426,7 @@ function JobDetails({
         <div className="scroll-comp-jobdetails">
           {jobInfo.jobUuid !== '' && (
             <div>
-              <div className="cluster-details-header">
+              <div className="cluster-details-header scroll-fix-header">
                 <div
                   className="back-arrow-icon"
                   role="button"

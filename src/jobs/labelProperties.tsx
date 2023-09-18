@@ -56,7 +56,8 @@ function LabelProperties({
   setDuplicateKeyError,
   labelEditMode,
   selectedRuntimeClone,
-  batchInfoResponse
+  batchInfoResponse,
+  createBatch
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
@@ -65,10 +66,10 @@ function LabelProperties({
    useEffect(() => {
     if (!labelEditMode) {
       if (
+
         buttonText === 'ADD LABEL' &&
         !selectedJobClone &&
-        selectedRuntimeClone === undefined &&
-        batchInfoResponse === undefined
+        selectedRuntimeClone === undefined && !createBatch
       ) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
