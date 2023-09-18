@@ -204,7 +204,7 @@ function SessionDetails({
         <div className="scroll-comp">
           {detailedSessionView && (
             <div>
-              <div className="cluster-details-header">
+              <div className="cluster-details-header scroll-fix-header">
                 <div
                   role="button"
                   className="back-arrow-icon"

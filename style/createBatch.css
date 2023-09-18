@@ -1,6 +1,7 @@
 .create-batch-radio {
   display: flex;
   align-items: center;
+  margin-top: 10px;
 }
 
 .select-batch-radio-style {

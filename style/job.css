@@ -44,7 +44,6 @@
   line-height: 18px;
   width: 512px;
   color: var(--jp-ui-font-color2);
-  padding: 10px;
 }
 
 .job-label-edit-row {
@@ -267,4 +266,8 @@
   padding-left: 15px;
   color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
+}
+
+.button-alignment{
+  padding-left: 10px;
 }

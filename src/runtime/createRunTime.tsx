@@ -32,7 +32,11 @@ import {
   USER_INFO_URL
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi, toastifyCustomStyle, authenticatedFetch } from '../utils/utils';
+import {
+  authApi,
+  toastifyCustomStyle,
+  authenticatedFetch
+} from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
@@ -140,7 +144,8 @@ function CreateRunTime({
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
-  const[isloadingNetwork,setIsloadingNetwork]=useState(false);
+  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
+  const [duplicateValidation, setDuplicateValidation] = useState(false);
 
   useEffect(() => {
     const timeData = [
@@ -726,6 +731,31 @@ function CreateRunTime({
   const handleClusterSelected = (event: any, data: any) => {
     setClusterSelected(data.value);
   };
+  const handleNetworkTags = (setDuplicateValidation: any, listOfFiles: any) => {
+    setNetworkTagSelected(listOfFiles);
+    handleDuplicateValidation(setDuplicateValidation, listOfFiles);
+  };
+  const handleDuplicateValidation = (
+    setDuplicateValidation: any,
+    listOfFiles: any
+  ) => {
+    if (Array.isArray(listOfFiles)) {
+      const fileNames = listOfFiles.map((fileName: any) =>
+        fileName.toLowerCase()
+      );
+      const uniqueFileNames = new Set<string>();
+      const duplicateFileNames = fileNames.filter((fileName: string) => {
+        const isDuplicate = uniqueFileNames.has(fileName);
+        uniqueFileNames.add(fileName);
+        return isDuplicate;
+      });
+      if (duplicateFileNames.length > 0) {
+        setDuplicateValidation(true);
+      } else {
+        setDuplicateValidation(false);
+      }
+    }
+  };
   function isSaveDisabled() {
     return (
       displayNameSelected === '' ||
@@ -737,7 +767,8 @@ function CreateRunTime({
       descriptionValidation ||
       idleValidation ||
       runTimeValidation ||
-      autoValidation
+      autoValidation ||
+      duplicateValidation
     );
   }
   const createRuntimeApi = async (payload: any) => {
@@ -1010,7 +1041,7 @@ function CreateRunTime({
             <div className="runtime-message">Networks in this project</div>
 
             <div>
-            {isloadingNetwork ? (
+              {isloadingNetwork ? (
                 <div className="metastore-loader">
                   <ClipLoader
                     loading={true}
@@ -1020,41 +1051,41 @@ function CreateRunTime({
                   />
                 </div>
               ) : (
-              <div className="create-batch-network">
-                <div className="select-text-overlay">
-                  <label
-                    className="select-title-text"
-                    htmlFor="metastore-project"
-                  >
-                    Primary network
-                  </label>
-                  <Select
-                    className="project-region-select"
-                    search
-                    value={networkSelected}
-                    onChange={handleNetworkChange}
-                    type="text"
-                    options={networkList}
-                  />
-                </div>
+                <div className="create-batch-network">
+                  <div className="select-text-overlay">
+                    <label
+                      className="select-title-text"
+                      htmlFor="metastore-project"
+                    >
+                      Primary network
+                    </label>
+                    <Select
+                      className="project-region-select"
+                      search
+                      value={networkSelected}
+                      onChange={handleNetworkChange}
+                      type="text"
+                      options={networkList}
+                    />
+                  </div>
 
-                <div className="select-text-overlay subnetwork-style">
-                  <label
-                    className="select-title-text"
-                    htmlFor="metastore-project"
-                  >
-                    Subnetwork
-                  </label>
-                  <Select
-                    className="project-region-select"
-                    search
-                    value={subNetworkSelected}
-                    onChange={handleSubNetworkChange}
-                    type="text"
-                    options={subNetworkList}
-                  />
+                  <div className="select-text-overlay subnetwork-style">
+                    <label
+                      className="select-title-text"
+                      htmlFor="metastore-project"
+                    >
+                      Subnetwork
+                    </label>
+                    <Select
+                      className="project-region-select"
+                      search
+                      value={subNetworkSelected}
+                      onChange={handleSubNetworkChange}
+                      type="text"
+                      options={subNetworkList}
+                    />
+                  </div>
                 </div>
-              </div>
               )}
             </div>
             <div className="select-text-overlay">
@@ -1063,22 +1094,35 @@ function CreateRunTime({
               </label>
               <TagsInput
                 className="select-runtime-style"
-                onChange={e => setNetworkTagSelected(e)}
+                onChange={e => handleNetworkTags(setDuplicateValidation, e)}
                 addOnBlur={true}
                 value={networkTagSelected}
                 inputProps={{ placeholder: '' }}
               />
             </div>
+            {duplicateValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Duplicate paths are not allowed
+                </div>
+              </div>
+            )}
 
-            <div className="create-messagelist">
-              Network tags are text attributes you can add to make firewall
-              rules and routes applicable to specific VM instances.
-            </div>
+            {!duplicateValidation && (
+              <div className="create-messagelist">
+                Network tags are text attributes you can add to make firewall
+                rules and routes applicable to specific VM instances.
+              </div>
+            )}
 
             <div className="submit-job-label-header">Metastore</div>
 
             <div className="select-text-overlay">
-              <label className="select-dropdown-text" htmlFor="metastore-project">
+              <label
+                className="select-dropdown-text"
+                htmlFor="metastore-project"
+              >
                 Metastore project
               </label>
               <Select
@@ -1093,7 +1137,10 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label className="select-dropdown-text" htmlFor="metastore-region">
+              <label
+                className="select-dropdown-text"
+                htmlFor="metastore-region"
+              >
                 Metastore region
               </label>
               {isLoadingRegion ? (
@@ -1119,7 +1166,10 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label className="select-dropdown-text" htmlFor="metastore-service">
+              <label
+                className="select-dropdown-text"
+                htmlFor="metastore-service"
+              >
                 Metastore service
               </label>
               {isLoadingService ? (
@@ -1288,7 +1338,7 @@ function CreateRunTime({
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
             />
-            <div className="job-button-style-parent">
+            <div className="job-button-style-parent button-alignment">
               <div
                 className={
                   isSaveDisabled()
