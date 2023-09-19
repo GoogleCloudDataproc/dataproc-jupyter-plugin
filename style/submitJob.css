@@ -98,6 +98,9 @@
 .disable-text{
   color:#80868b;
 }
+.select-text-overlay-label{
+  position: relative;
+}
 
 .input-style {
   width: 512px;
