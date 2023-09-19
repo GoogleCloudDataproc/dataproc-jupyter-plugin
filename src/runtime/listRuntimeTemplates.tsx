@@ -362,10 +362,10 @@ function ListRuntimeTemplates({
             handleCreateBatchOpen();
           }}
         >
-          <div className="create-cluster-icon">
+          <div className="create-icon">
             <iconSubmitJob.react tag="div" className="logo-alignment-style" />
           </div>
-          <div className="create-cluster-text">Create</div>
+          <div className="create-text">Create</div>
         </div>
       </div>
       {runtimeTemplateslist.length > 0 && !openCreateTemplate ? (

@@ -18,7 +18,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import 'react-toastify/dist/ReactToastify.css';
-import { MainAreaWidget } from '@jupyterlab/apputils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -42,7 +41,6 @@ import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import { AuthLogin } from '../login/authLogin';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
@@ -723,20 +721,17 @@ function CreateRunTime({
   };
   const handleCancelButton = () => {
     setOpenCreateTemplate(false);
-    const content = new AuthLogin(themeManager);
-    const widget = new MainAreaWidget<AuthLogin>({ content });
-    widget.title.label = 'Config Setup';
   };
 
   const handleClusterSelected = (event: any, data: any) => {
     setClusterSelected(data.value);
   };
-  const handleNetworkTags = (setDuplicateValidation: any, listOfFiles: any) => {
+  const handleNetworkTags = (setDuplicateValidation: (value: boolean) => void, listOfFiles: any) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
   const handleDuplicateValidation = (
-    setDuplicateValidation: any,
+    setDuplicateValidation: (value: boolean) => void,
     listOfFiles: any
   ) => {
     if (Array.isArray(listOfFiles)) {

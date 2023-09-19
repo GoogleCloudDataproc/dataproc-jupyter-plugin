@@ -498,10 +498,10 @@ function JobComponent({
                     handleSubmitJobOpen();
                   }}
                 >
-                  <div className="create-cluster-icon">
+                  <div className="create-icon">
                     <iconSubmitJob.react tag="div" className='logo-alignment-style' />
                   </div>
-                  <div className="create-cluster-text">SUBMIT JOB</div>
+                  <div className="create-text">SUBMIT JOB</div>
                 </div>
               </div>
             )}
