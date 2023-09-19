@@ -682,7 +682,7 @@ function SubmitJob(
   };
 
   const handleValidationFiles = (
-    listOfFiles: any,
+    listOfFiles: string | string[],
     setValuesPart: any,
     setValidationPart: (value: boolean) => void,
     setDuplicateValidation?: (value: boolean) => void
@@ -720,7 +720,7 @@ function SubmitJob(
   };
   const handleDuplicateValidation = (
     setDuplicateValidation: any,
-    listOfFiles: any
+    listOfFiles: string | string[]
   ) => {
     if (Array.isArray(listOfFiles)) {
       const fileNames = listOfFiles.map((fileName: string) =>
