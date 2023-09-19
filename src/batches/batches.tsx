@@ -188,7 +188,7 @@ const BatchesComponent = (): React.JSX.Element => {
 
   const renderActions = (data: { name: string }) => {
     return (
-      <div className="actions-icon" role="button" aria-label="Delete Job">
+      <div className="actions-icon" role="button" aria-label="Delete Job" aria-disabled={false}>
         <div
           className="icon-buttons-style"
           title="Delete Batch"
