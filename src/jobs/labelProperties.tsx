@@ -272,7 +272,6 @@ function LabelProperties({
                     </label>
                     <Input
                       sx={{ margin: 0 }}
-                      placeholder={`Value ${index + 1}`}
                       className="edit-input-style"
                       onBlur={() => handleEditLabelSwitch()}
                       onChange={e =>
