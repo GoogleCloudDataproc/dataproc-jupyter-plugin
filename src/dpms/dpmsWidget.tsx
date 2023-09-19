@@ -199,7 +199,6 @@ const DpmsComponent = ({
             .catch((e: Error) => {
               console.log(e);
               if (totalDatabases !== undefined) {
-                console.log('error console');
                 setTotalDatabases(totalDatabases - 1 || 0);
               }
             });
