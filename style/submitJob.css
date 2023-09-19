@@ -269,19 +269,6 @@ a:hover {
   font-size: 10px;
 }
 
-/* Highlight input field when focus */
-.ui.input > input {
-  outline: none;
-  border-radius: 4px;
-  border: 1px solid var(--jp-border-color3) !important;
-}
-
-.ui.input > input:focus {
-  border: 3px solid var(--jp-brand-color0) !important;
-  border-radius: 4px;
-  outline: none;
-}
-
 /* Highlight tags input field when focus */
 .react-tagsinput--focused {
   border: 3px solid var(--jp-brand-color0) !important;

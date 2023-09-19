@@ -214,17 +214,17 @@ function ListBatches({
 
   return (
     <div>
-      <div className="create-batches-overlay ">
+      <div className="create-batch-wrapper ">
         <div
           className="create-batch-overlay"
           onClick={() => {
             handleCreateBatchOpen();
           }}
         >
-          <div className="create-cluster-icon">
+          <div className="create-icon">
             <iconSubmitJob.react tag="div" className="logo-alignment-style" />
           </div>
-          <div className="create-cluster-text">Create Batch</div>
+          <div className="create-text">Create Batch</div>
         </div>
       </div>
       {batchesList.length > 0 && !createBatchView ? (

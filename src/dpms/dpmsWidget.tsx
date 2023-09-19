@@ -117,7 +117,7 @@ const DpmsComponent = ({
   const [tableDescription, setTableDescription] = useState({});
   const [apiError, setApiError] = useState(false);
   const [schemaError, setSchemaError] = useState(false);
-  const [totalDatabase, setTotalDatabase] = useState<number>(0);
+  const [totalDatabases, setTotalDatabases] = useState<number>(0);
   const [totalTables, setTotalTables] = useState<number>(0);
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
@@ -194,13 +194,12 @@ const DpmsComponent = ({
               );
               setEntries(entryNames);
               setTableDescription(updatedTableDetails);
-                setTotalTables(tableNames.length);
+              setTotalTables(tableNames.length);
             })
             .catch((e: Error) => {
               console.log(e);
-              if (totalDatabase !== undefined) {
-                console.log('error console');
-                setTotalDatabase(totalDatabase - 1 || 0);
+              if (totalDatabases !== undefined) {
+                setTotalDatabases(totalDatabases - 1 || 0);
               }
             });
         })
@@ -492,17 +491,15 @@ fetching database name from fully qualified name structure */
                 );
                 setDatabaseDetails(updatedDatabaseDetails);
                 setDatabaseNames(databaseNames);
-                setTotalDatabase(databaseNames.length);
+                setTotalDatabases(databaseNames.length);
               } else {
                 if (responseResult?.error?.code) {
                   setApiError(true);
-                  setNoDpmsInstance(true);
-                  setIsLoading(false);
                 } else {
-                  setNoDpmsInstance(true);
                   setSchemaError(true);
-                  setIsLoading(false);
                 }
+                setNoDpmsInstance(true);
+                setIsLoading(false);
               }
             })
             .catch((e: Error) => {
@@ -632,13 +629,13 @@ fetching database name from fully qualified name structure */
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
   useEffect(() => {
-    databaseNames.map(async (db: string) => {
-      await getTableDetails(db);
+    databaseNames.forEach((db: string) => {
+      getTableDetails(db);
     });
   }, [databaseNames]);
   useEffect(() => {
-    entries.forEach(async (entry: string) => {
-      await getColumnDetails(entry);
+    entries.forEach((entry: string) => {
+      getColumnDetails(entry);
     });
   }, [entries]);
   return (
@@ -664,61 +661,61 @@ fetching database name from fully qualified name structure */
               </div>
             ) : (
               <>
-              <div className='search-field'>
-                <TextField
-                  placeholder="Search your DBs and tables"
-                  type="text"
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                  onChange={handleSearch}
-                  value={searchTerm}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <iconSearch.react
-                          tag="div"
-                          className="logo-alignment-style"
-                        />
-                      </InputAdornment>
-                    ),
-                    endAdornment: searchTerm && (
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={handleSearchClear}
-                      >
-                        <iconSearchClear.react
-                          tag="div"
-                          className="logo-alignment-style search-clear-icon"
-                        />
-                      </IconButton>
-                    )
-                  }}
-                />
-              </div>
+                <div className="search-field">
+                  <TextField
+                    placeholder="Search your DBs and tables"
+                    type="text"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    onChange={handleSearch}
+                    value={searchTerm}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <iconSearch.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
+                        </InputAdornment>
+                      ),
+                      endAdornment: searchTerm && (
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleSearchClear}
+                        >
+                          <iconSearchClear.react
+                            tag="div"
+                            className="logo-alignment-style search-clear-icon"
+                          />
+                        </IconButton>
+                      )
+                    }}
+                  />
+                </div>
                 <div className="tree-container">
-                {data[totalDatabase-1].children.length === totalTables &&(
-                  <Tree
-                    className="Tree"
-                    initialData={data}
-                    openByDefault={false}
-                    indent={24}
-                    width={auto}
-                    height={675}
-                    rowHeight={36}
-                    overscanCount={1}
-                    paddingTop={30}
-                    paddingBottom={10}
-                    padding={25}
-                    searchTerm={searchTerm}
-                    searchMatch={searchMatch}
-                    idAccessor={node => node.id}
-                  >
-                    {(props: NodeRendererProps<any>) => (
-                      <Node {...props} onClick={handleNodeClick} />
-                    )}
-                  </Tree>
-                )}
+                  {data[totalDatabases - 1].children.length === totalTables && (
+                    <Tree
+                      className="Tree"
+                      initialData={data}
+                      openByDefault={false}
+                      indent={24}
+                      width={auto}
+                      height={675}
+                      rowHeight={36}
+                      overscanCount={1}
+                      paddingTop={30}
+                      paddingBottom={10}
+                      padding={25}
+                      searchTerm={searchTerm}
+                      searchMatch={searchMatch}
+                      idAccessor={node => node.id}
+                    >
+                      {(props: NodeRendererProps<any>) => (
+                        <Node {...props} onClick={handleNodeClick} />
+                      )}
+                    </Tree>
+                  )}
                 </div>
               </>
             )}

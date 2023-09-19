@@ -171,9 +171,15 @@ const BatchesComponent = (): React.JSX.Element => {
     setDetailedBatchView(true);
   };
 
-  const handleDeleteBatch = (batch: string) => {
-    setSelectedBatch(batch);
-    setDeletePopupOpen(true);
+  const handleDeleteBatch = (data: any) => {
+    if (data.state !== BatchStatus.STATUS_PENDING) {
+      /*
+      Extracting project id  
+      Example: "projects/{project}/locations/{location}/batches/{batch_id}"
+      */
+      setSelectedBatch(data.name.split('/')[5]);
+      setDeletePopupOpen(true);
+    }
   };
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
@@ -186,30 +192,31 @@ const BatchesComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  const renderActions = (data: {
-    state: BatchStatus; name: string 
-}) => {
+  const renderActions = (data: { state: BatchStatus; name: string }) => {
     return (
-      <div className="actions-icon" role="button" aria-label="Delete Job">
+      <div
+        className="actions-icon"
+        role="button"
+        aria-label="Delete Job"
+        aria-disabled={false}
+      >
         <div
-         className={
-          data.state === BatchStatus.STATUS_PENDING
-            ? 'icon-buttons-style-delete-batch-disable'
-            : 'icon-buttons-style-delete-batch'
-         }
-          title="Delete Batch"
-          onClick={
+          className={
             data.state === BatchStatus.STATUS_PENDING
-              ? undefined
-              : () => handleDeleteBatch(data.name.split('/')[5])
+              ? 'icon-buttons-style-delete-batch-disable'
+              : 'icon-buttons-style-delete-batch'
           }
+          title="Delete Batch"
+          onClick={() => handleDeleteBatch(data)}
         >
-           {data.state === BatchStatus.STATUS_PENDING ? (
-          <iconDelete.react tag="div" className='logo-alignment-style icon-delete' />
-        ) : (
-          <iconDelete.react tag="div" className='logo-alignment-style'/>
-        )} 
-         
+          {data.state === BatchStatus.STATUS_PENDING ? (
+            <iconDelete.react
+              tag="div"
+              className="logo-alignment-style icon-delete"
+            />
+          ) : (
+            <iconDelete.react tag="div" className="logo-alignment-style" />
+          )}
         </div>
       </div>
     );
@@ -277,9 +284,9 @@ const BatchesComponent = (): React.JSX.Element => {
             <CreateBatch
               setCreateBatchView={setCreateBatchView}
               regionName={regionName}
-              projectName={projectName} />
-          )
-          }
+              projectName={projectName}
+            />
+          )}
 
           {!detailedBatchView && !createBatchView && (
             <div className="clusters-list-component" role="tablist">
