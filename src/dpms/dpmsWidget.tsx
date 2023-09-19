@@ -640,7 +640,7 @@ fetching database name from fully qualified name structure */
     });
   }, [entries]);
   return (
-    <>
+    <div className="dpms-Wrapper">
       <div>
         <div className="dpms-title">Metadata Explorer</div>
       </div>
@@ -739,7 +739,7 @@ fetching database name from fully qualified name structure */
       ) : (
         <div className="dpms-error">DPMS schema explorer not set up</div>
       )}
-    </>
+    </div>
   );
 };
 
