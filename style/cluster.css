@@ -266,10 +266,12 @@
 
 .component-level {
   max-height: 85vh;
+  font-family: 'Roboto';
 }
 .scroll-comp {
   overflow-y: auto;
   max-height: 92vh;
+  font-family: 'Roboto';
 }
 .scroll-comp-cluster{
   overflow-y: auto;

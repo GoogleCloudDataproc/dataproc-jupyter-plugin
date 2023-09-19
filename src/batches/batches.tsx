@@ -173,6 +173,10 @@ const BatchesComponent = (): React.JSX.Element => {
 
   const handleDeleteBatch = (data: any) => {
     if (data.state !== BatchStatus.STATUS_PENDING) {
+      /*
+      Extracting project id  
+      Example: "projects/{project}/locations/{location}/batches/{batch_id}"
+      */
       setSelectedBatch(data.name.split('/')[5]);
       setDeletePopupOpen(true);
     }
