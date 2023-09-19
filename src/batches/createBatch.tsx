@@ -594,7 +594,7 @@ function CreateBatch({
     listOfFiles: string | string[]
   ) => {
     if (Array.isArray(listOfFiles)) {
-      const fileNames = listOfFiles.map((fileName: any) =>
+      const fileNames = listOfFiles.map((fileName: string) =>
         fileName.toLowerCase()
       );
       const uniqueFileNames = new Set<string>();
