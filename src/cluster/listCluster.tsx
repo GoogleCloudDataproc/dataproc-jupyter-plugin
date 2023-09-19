@@ -221,10 +221,10 @@ function ListCluster({
             );
           }}
         >
-          <div className="create-cluster-icon">
+          <div className="create-icon">
             <iconCreateCluster.react tag="div" className='logo-alignment-style' />
           </div>
-          <div className="create-cluster-text">Create cluster</div>
+          <div className="create-text">Create cluster</div>
         </div>
       </div>
 

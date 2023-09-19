@@ -197,9 +197,16 @@ function LabelProperties({
               <div key={label}>
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
+                  <div className="select-text-overlay-label">
+                  <label
+                      className="select-dropdown-text"
+                      htmlFor="metastore-project"
+                    >
+                     {`Key ${index + 1}*`}
+                    </label>
+                 
                     <Input
                       sx={{ margin: 0 }}
-                      placeholder={`Key ${index + 1}*`}
                       className="edit-input-style"
                       disabled={
                         labelSplit[0] === '' ||
@@ -214,6 +221,7 @@ function LabelProperties({
                       }
                       defaultValue={labelSplit[0]}
                     />
+                    </div>
 
                     {labelDetailUpdated[index].split(':')[0] === '' &&
                     labelDetailUpdated[index] !== '' ? (
@@ -255,9 +263,15 @@ function LabelProperties({
                       )}
                   </div>
                   <div className="key-message-wrapper">
+                  <div className="select-text-overlay-label">
+                  <label
+                      className="select-dropdown-text"
+                      htmlFor="metastore-project"
+                    >
+                    {`Value ${index + 1}`}
+                    </label>
                     <Input
                       sx={{ margin: 0 }}
-                      placeholder={`Value ${index + 1}`}
                       className="edit-input-style"
                       onBlur={() => handleEditLabelSwitch()}
                       onChange={e =>
@@ -269,6 +283,7 @@ function LabelProperties({
                       }
                       defaultValue={labelSplit[1]}
                     />
+                    </div>
                     {valueValidation === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">

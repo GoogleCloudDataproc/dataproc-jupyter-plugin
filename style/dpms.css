@@ -1,6 +1,8 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto);
 
-
+.dpms-Wrapper{
+  font-family: 'Roboto' !important;
+}
 .dpms-title {
   line-height: 20px;
   width: 150px;
@@ -9,6 +11,7 @@
   margin-left: 13px !important;
   font-weight: 550;
   font-size: 15px;
+  font-family: 'Roboto' !important;
 }
 
 .refresh-icon {

@@ -216,11 +216,7 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
               </div>
             </div>
             <div className="user-info-card">
-              <div className="google-header">
-                This account is managed by google.com
-              </div>
-
-              <div className="seperator"></div>
+              
               <div className="user-overlay">
                 <div className="user-image-overlay">
                   <img

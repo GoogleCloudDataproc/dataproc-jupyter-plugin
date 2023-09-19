@@ -296,6 +296,7 @@
   overflow-y: auto;
   margin-left: 40px;
   overflow-x: hidden;
+  font-family: 'Roboto';
 }
 
 .expand-icon {

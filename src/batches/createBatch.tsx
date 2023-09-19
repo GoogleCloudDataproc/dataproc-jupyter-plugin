@@ -553,10 +553,10 @@ function CreateBatch({
   }
 
   const handleValidationFiles = (
-    listOfFiles: any,
+    listOfFiles: string | string[],
     setValuesPart: any,
-    setValidationPart: any,
-    setDuplicateValidation?: any
+    setValidationPart: (value: boolean) => void,
+    setDuplicateValidation?: (value: boolean) => void
   ) => {
     if (typeof listOfFiles === 'string') {
       if (
@@ -591,10 +591,10 @@ function CreateBatch({
   };
   const handleDuplicateValidation = (
     setDuplicateValidation: any,
-    listOfFiles: any
+    listOfFiles: string | string[]
   ) => {
     if (Array.isArray(listOfFiles)) {
-      const fileNames = listOfFiles.map((fileName: any) =>
+      const fileNames = listOfFiles.map((fileName: string) =>
         fileName.toLowerCase()
       );
       const uniqueFileNames = new Set<string>();
@@ -610,11 +610,11 @@ function CreateBatch({
       }
     }
   };
-  const handleArguments = (setDuplicateValidation: any, listOfFiles: any) => {
+  const handleArguments = (setDuplicateValidation:(value: boolean) => void,listOfFiles: any) => {
     setArgumentsSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
-  const handleNetworkTags = (setDuplicateValidation: any, listOfFiles: any) => {
+  const handleNetworkTags = (setDuplicateValidation:(value: boolean) => void, listOfFiles: any) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };

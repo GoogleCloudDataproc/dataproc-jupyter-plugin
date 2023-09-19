@@ -667,7 +667,7 @@ function SubmitJob(
         });
     }
   };
-  const handleInputChange = (event: any) => {
+  const handleJobIdChange = (event: any) => {
     event.target.value.length > 0
       ? setjobIdValidation(true)
       : setjobIdValidation(false);
@@ -682,10 +682,10 @@ function SubmitJob(
   };
 
   const handleValidationFiles = (
-    listOfFiles: any,
+    listOfFiles: string | string[],
     setValuesPart: any,
-    setValidationPart: any,
-    setDuplicateValidation?: any
+    setValidationPart: (value: boolean) => void,
+    setDuplicateValidation?: (value: boolean) => void
   ) => {
     if (typeof listOfFiles === 'string') {
       if (
@@ -720,10 +720,10 @@ function SubmitJob(
   };
   const handleDuplicateValidation = (
     setDuplicateValidation: any,
-    listOfFiles: any
+    listOfFiles: string | string[]
   ) => {
     if (Array.isArray(listOfFiles)) {
-      const fileNames = listOfFiles.map((fileName: any) =>
+      const fileNames = listOfFiles.map((fileName: string) =>
         fileName.toLowerCase()
       );
       const uniqueFileNames = new Set<string>();
@@ -739,7 +739,7 @@ function SubmitJob(
       }
     }
   };
-  const handleArguments = (setDuplicateValidation: any, listOfFiles: any) => {
+  const handleArgumentsSelection = (setDuplicateValidation:(value: boolean) => void, listOfFiles: any) => {
     setArgumentSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
@@ -789,7 +789,7 @@ function SubmitJob(
             </label>
             <Input
               className="submit-job-input-style"
-              onChange={e => handleInputChange(e)}
+              onChange={e => handleJobIdChange(e)}
               type="text"
               value={hexNumber}
             />
@@ -1195,7 +1195,7 @@ function SubmitJob(
                 <TagsInput
                   className="select-job-style"
                   onChange={e =>
-                    handleArguments(setArgumentsDuplicateValidation, e)
+                    handleArgumentsSelection(setArgumentsDuplicateValidation, e)
                   }
                   value={argumentSelected}
                   inputProps={{ placeholder: '' }}

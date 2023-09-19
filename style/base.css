@@ -4,20 +4,6 @@
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
-html,
-body,
-html * {
-  font-family: 'Roboto';
-}
-
-button,
-input,
-optgroup,
-select,
-textarea {
-  font-family: 'Roboto' !important;
-}
-
 /*Hiding Notebook section cards with name Remote for Remote kernels*/
 .jp-LauncherCard[data-category='Notebook'][title~='(Remote)'] {
   display: none;
