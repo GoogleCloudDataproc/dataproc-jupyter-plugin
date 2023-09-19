@@ -22,7 +22,6 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
 import columnsIcon from '../../style/icons/columns_icon.svg';
-import refreshIcon from '../../style/icons/refresh_icon.svg';
 import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
 import datasetsIcon from '../../style/icons/datasets_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
@@ -42,13 +41,13 @@ import {
   QUERY_DATABASE,
   QUERY_TABLE
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
-
+import { IconButton, InputAdornment, TextField } from '@mui/material';
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
   svgstr: databaseIcon
@@ -68,10 +67,6 @@ const iconDatasets = new LabIcon({
 const iconDatabaseWidget = new LabIcon({
   name: 'launcher:databse-widget-icon',
   svgstr: databaseWidgetIcon
-});
-const iconRefresh = new LabIcon({
-  name: 'launcher:refresh-icon',
-  svgstr: refreshIcon
 });
 const iconSearch = new LabIcon({
   name: 'launcher:search-icon',
@@ -116,9 +111,14 @@ const DpmsComponent = ({
   const [session, setSession] = useState(false);
   const [cluster, setCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
+  const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [columnResponse, setColumnResponse] = useState<string[]>([]);
   const [databaseDetails, setDatabaseDetails] = useState({});
   const [tableDescription, setTableDescription] = useState({});
+  const [apiError, setApiError] = useState(false);
+  const [schemaError, setSchemaError] = useState(false);
+  const [totalDatabase, setTotalDatabase] = useState<number>(0);
+  const [totalTables, setTotalTables] = useState<number>(0);
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -148,7 +148,7 @@ const DpmsComponent = ({
         })
         .catch((err: Error) => {
           console.error('Error getting column details', err);
-          toast.error('Error getting column details');
+          toast.error('Error getting column details', toastifyCustomStyle);
         });
     }
   };
@@ -194,14 +194,19 @@ const DpmsComponent = ({
               );
               setEntries(entryNames);
               setTableDescription(updatedTableDetails);
+                setTotalTables(tableNames.length);
             })
             .catch((e: Error) => {
               console.log(e);
+              if (totalDatabase !== undefined) {
+                console.log('error console');
+                setTotalDatabase(totalDatabase - 1 || 0);
+              }
             });
         })
         .catch((err: Error) => {
           console.error('Error getting table details', err);
-          toast.error('Error getting table details');
+          toast.error('Error getting table details', toastifyCustomStyle);
         });
     }
   };
@@ -266,7 +271,7 @@ fetching database name from fully qualified name structure */
   const searchMatch = (node: { data: { name: string } }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
-  const openedWidgets: string[] = [];
+  const openedWidgets: Record<string, boolean> = {};
   const handleNodeClick = (node: any) => {
     const depth = calculateDepth(node);
     const widgetTitle = node.data.name;
@@ -285,6 +290,10 @@ fetching database name from fully qualified name structure */
         widget.title.closable = true;
         widget.title.icon = iconDatabaseWidget;
         app.shell.add(widget, 'main');
+        widget.disposed.connect(() => {
+          const widgetTitle = widget.title.label;
+          delete openedWidgets[widgetTitle];
+        });
       } else if (depth === 2) {
         const database = node.parent.data.name;
         const column = node.data.children;
@@ -303,23 +312,13 @@ fetching database name from fully qualified name structure */
         widget.title.closable = true;
         widget.title.icon = iconDatasets;
         app.shell.add(widget, 'main');
+        widget.disposed.connect(() => {
+          const widgetTitle = widget.title.label;
+          delete openedWidgets[widgetTitle];
+        });
       }
       openedWidgets[widgetTitle] = node.data.name;
     }
-  };
-  const clearState = () => {
-    setSearchTerm('');
-    setNotebookValue('');
-    setDataprocMetastoreServices('');
-    setIsLoading(true);
-    setEntries([]);
-    setColumnResponse([]);
-    setDatabaseDetails({});
-  };
-  const handleRefreshClick = () => {
-    clearState();
-    setIsLoading(true);
-    getActiveNotebook();
   };
   const handleSearchClear = () => {
     setSearchTerm('');
@@ -351,7 +350,7 @@ fetching database name from fully qualified name structure */
               className="caret-icon right"
               onClick={handleIconClick}
             >
-              <iconDownArrow.react tag="div" />
+              <iconDownArrow.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         ) : (
@@ -360,7 +359,7 @@ fetching database name from fully qualified name structure */
             className="caret-icon down"
             onClick={handleIconClick}
           >
-            <iconRightArrow.react tag="div" />
+            <iconRightArrow.react tag="div" className="logo-alignment-style" />
           </div>
         )
       ) : null;
@@ -373,7 +372,10 @@ fetching database name from fully qualified name structure */
                 className="caret-icon right"
                 onClick={handleIconClick}
               >
-                <iconDownArrow.react tag="div" />
+                <iconDownArrow.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
               </div>
             </>
           ) : (
@@ -382,7 +384,10 @@ fetching database name from fully qualified name structure */
               className="caret-icon down"
               onClick={handleIconClick}
             >
-              <iconRightArrow.react tag="div" />
+              <iconRightArrow.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             </div>
           );
         if (depth === 1) {
@@ -390,7 +395,10 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconDatabase.react tag="div" />
+                <iconDatabase.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
               </div>
             </>
           );
@@ -399,7 +407,7 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="table-icon" onClick={handleIconClick}>
-                <iconTable.react tag="div" />
+                <iconTable.react tag="div" className="logo-alignment-style" />
               </div>
             </>
           );
@@ -407,7 +415,7 @@ fetching database name from fully qualified name structure */
 
         return (
           <>
-            <iconColumns.react tag="div" />
+            <iconColumns.react tag="div" className="logo-alignment-style" />
           </>
         );
       }
@@ -416,7 +424,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              <iconDatabase.react tag="div" />
+              <iconDatabase.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         );
@@ -425,7 +433,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="table-icon" onClick={handleIconClick}>
-              <iconTable.react tag="div" />
+              <iconTable.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         );
@@ -433,7 +441,7 @@ fetching database name from fully qualified name structure */
 
       return (
         <>
-          <iconColumns.react tag="div" />
+          <iconColumns.react tag="div" className="logo-alignment-style" />
         </>
       );
     };
@@ -469,22 +477,33 @@ fetching database name from fully qualified name structure */
           response
             .json()
             .then(async (responseResult: any) => {
-              const filteredEntries = responseResult.results.filter(
-                (entry: { displayName: string }) => entry.displayName
-              );
-              const databaseNames: string[] = [];
-              const updatedDatabaseDetails: { [key: string]: string } = {};
-              filteredEntries.forEach(
-                (entry: { description: string; displayName: string }) => {
-                  databaseNames.push(entry.displayName);
-                  const description = entry.description || 'None';
-                  updatedDatabaseDetails[entry.displayName] = description;
+              if (responseResult?.results) {
+                const filteredEntries = responseResult.results.filter(
+                  (entry: { displayName: string }) => entry.displayName
+                );
+                const databaseNames: string[] = [];
+                const updatedDatabaseDetails: { [key: string]: string } = {};
+                filteredEntries.forEach(
+                  (entry: { description: string; displayName: string }) => {
+                    databaseNames.push(entry.displayName);
+                    const description = entry.description || 'None';
+                    updatedDatabaseDetails[entry.displayName] = description;
+                  }
+                );
+                setDatabaseDetails(updatedDatabaseDetails);
+                setDatabaseNames(databaseNames);
+                setTotalDatabase(databaseNames.length);
+              } else {
+                if (responseResult?.error?.code) {
+                  setApiError(true);
+                  setNoDpmsInstance(true);
+                  setIsLoading(false);
+                } else {
+                  setNoDpmsInstance(true);
+                  setSchemaError(true);
+                  setIsLoading(false);
                 }
-              );
-              setDatabaseDetails(updatedDatabaseDetails);
-              databaseNames.map(async (db: string) => {
-                await getTableDetails(db);
-              });
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -492,7 +511,7 @@ fetching database name from fully qualified name structure */
         })
         .catch((err: Error) => {
           console.error('Error getting database details', err);
-          toast.error('Error getting database details');
+          toast.error('Error getting database details', toastifyCustomStyle);
         });
     }
   };
@@ -537,7 +556,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing session details', err);
-          toast.error('Failed to fetch session details');
+          toast.error('Failed to fetch session details'), toastifyCustomStyle;
         });
     }
   };
@@ -582,7 +601,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters details', err);
-          toast.error('Failed to fetch cluster details');
+          toast.error('Failed to fetch cluster details', toastifyCustomStyle);
         });
     }
   };
@@ -613,6 +632,11 @@ fetching database name from fully qualified name structure */
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
   useEffect(() => {
+    databaseNames.map(async (db: string) => {
+      await getTableDetails(db);
+    });
+  }, [databaseNames]);
+  useEffect(() => {
     entries.forEach(async (entry: string) => {
       await getColumnDetails(entry);
     });
@@ -621,15 +645,6 @@ fetching database name from fully qualified name structure */
     <>
       <div>
         <div className="dpms-title">Metadata Explorer</div>
-        <div
-          role="button"
-          aria-label="refresh"
-          className="refresh-icon"
-          data-tip="Refresh"
-          onClick={handleRefreshClick}
-        >
-          <iconRefresh.react tag="div" />
-        </div>
       </div>
       {!noDpmsInstance ? (
         <>
@@ -649,37 +664,47 @@ fetching database name from fully qualified name structure */
               </div>
             ) : (
               <>
-                <div className="ui category search">
-                  <div className="ui icon input">
-                    <input
-                      className="search-field"
-                      type="text"
-                      value={searchTerm}
-                      onChange={handleSearch}
-                      placeholder="Search your DBs and tables"
-                    />
-                    <div className="search-icon">
-                      <iconSearch.react tag="div" />
-                    </div>
-                    {searchTerm && (
-                      <div
-                        role="button"
-                        className="search-clear-icon"
+              <div className='search-field'>
+                <TextField
+                  placeholder="Search your DBs and tables"
+                  type="text"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  onChange={handleSearch}
+                  value={searchTerm}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <iconSearch.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchTerm && (
+                      <IconButton
+                        aria-label="toggle password visibility"
                         onClick={handleSearchClear}
                       >
-                        <iconSearchClear.react tag="div" />
-                      </div>
-                    )}
-                  </div>
-                </div>
+                        <iconSearchClear.react
+                          tag="div"
+                          className="logo-alignment-style search-clear-icon"
+                        />
+                      </IconButton>
+                    )
+                  }}
+                />
+              </div>
                 <div className="tree-container">
+                {data[totalDatabase-1].children.length === totalTables &&(
                   <Tree
                     className="Tree"
-                    data={data}
+                    initialData={data}
                     openByDefault={false}
                     indent={24}
                     width={auto}
-                    height={500}
+                    height={675}
                     rowHeight={36}
                     overscanCount={1}
                     paddingTop={30}
@@ -693,7 +718,7 @@ fetching database name from fully qualified name structure */
                       <Node {...props} onClick={handleNodeClick} />
                     )}
                   </Tree>
-                  <ToastContainer />
+                )}
                 </div>
               </>
             )}
@@ -709,6 +734,10 @@ fetching database name from fully qualified name structure */
           DPMS is not configured for this cluster. Please attach DPMS or
           activate DPMS sync with data catalog
         </div>
+      ) : apiError ? (
+        <div className="dpms-error">Datacatalog API is not enabled</div>
+      ) : schemaError ? (
+        <div className="dpms-error">No schema available</div>
       ) : (
         <div className="dpms-error">DPMS schema explorer not set up</div>
       )}

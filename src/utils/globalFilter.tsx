@@ -20,7 +20,8 @@ import React from 'react';
 function GlobalFilter({
   globalFilter,
   setGlobalFilter,
-  setPollingDisable
+  setPollingDisable,
+  gcsBucket
 }: any) {
   const [value, setValue] = React.useState(globalFilter);
   const onChange = (value: string) => {
@@ -34,6 +35,16 @@ function GlobalFilter({
     }
   }
 
+  // const handleFocusAction = () => {
+  //   setPollingDisable(true);
+  // };
+
+  // const handleBlurAction = () => {
+  //   if (value.length === 0) {
+  //     setPollingDisable(false);
+  //   }
+  // };
+
   return (
     <span>
       <input
@@ -42,9 +53,13 @@ function GlobalFilter({
           setValue(e.target.value);
           onChange(e.target.value);
         }}
-        placeholder={'Filter Table'}
+        // onFocus={() => handleFocusAction()}
+        // onBlur={() => handleBlurAction()}
+        placeholder={gcsBucket ? 'Filter files by name' : 'Filter Table'}
         aria-label="filterd value"
-        className="filter-section-part"
+        className={
+          gcsBucket ? 'gcs-filter-section-part' : 'filter-section-part'
+        }
       />
     </span>
   );

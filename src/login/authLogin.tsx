@@ -24,6 +24,7 @@ import { LOGIN_STATE, STATUS_SUCCESS } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { DataprocWidget } from '../controls/DataprocWidget';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 // Create the LabIcon instance outside of the component
 const IconsigninGoogle = new LabIcon({
@@ -31,7 +32,7 @@ const IconsigninGoogle = new LabIcon({
   svgstr: signinGoogleIcon
 });
 
-const AuthLoginComponent = (): React.JSX.Element => {
+const AuthLoginComponent = ({themeManager }: {themeManager: IThemeManager}): React.JSX.Element => {
   const [loginState, setLoginState] = useState(false);
   const [isloginDisabled, setIsloginDisabled] = useState(false);
   const [configError, setConfigError] = useState(false);
@@ -82,6 +83,7 @@ const AuthLoginComponent = (): React.JSX.Element => {
           loginState={loginState}
           configError={configError}
           setConfigError={setConfigError}
+          themeManager = {themeManager}
         />
       )}
       {loginError && (
@@ -97,7 +99,7 @@ const AuthLoginComponent = (): React.JSX.Element => {
               }
               onClick={isloginDisabled ? undefined : login}
             >
-              <IconsigninGoogle.react tag="div" />
+              <IconsigninGoogle.react tag="div" className='logo-alignment-style' />
             </div>
           </div>
         </>
@@ -112,7 +114,12 @@ const AuthLoginComponent = (): React.JSX.Element => {
 };
 
 export class AuthLogin extends DataprocWidget {
+
+  constructor(themeManager: IThemeManager) {
+    super(themeManager);
+  }
+
   renderInternal(): React.JSX.Element {
-    return <AuthLoginComponent />;
+    return <AuthLoginComponent themeManager={this.themeManager}/>;
   }
 }

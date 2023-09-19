@@ -18,7 +18,7 @@
 import { LabIcon } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import restartIcon from '../../style/icons/restart_icon.svg';
 import restartDisableIcon from '../../style/icons/restart_icon_disable.svg';
@@ -39,7 +39,8 @@ import {
   authenticatedFetch,
   checkConfig,
   getProjectId,
-  statusValue
+  statusValue,
+  toastifyCustomStyle
 } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
@@ -171,7 +172,7 @@ const ClusterComponent = (): React.JSX.Element => {
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters');
+      toast.error('Failed to fetch clusters', toastifyCustomStyle);
     }
   };
 
@@ -197,7 +198,7 @@ const ClusterComponent = (): React.JSX.Element => {
       listClustersAPI();
     } catch (error) {
       console.error('Error fetching status', error);
-      toast.error(`Failed to fetch the status ${selectedCluster}`);
+      toast.error(`Failed to fetch the status ${selectedCluster}`, toastifyCustomStyle);
     }
   };
 
@@ -223,7 +224,7 @@ const ClusterComponent = (): React.JSX.Element => {
       setRestartEnabled(false);
     } catch (error) {
       console.error('Error restarting cluster', error);
-      toast.error(`Failed to restart the cluster ${selectedCluster}`);
+      toast.error(`Failed to restart the cluster ${selectedCluster}`, toastifyCustomStyle);
     }
   };
 
@@ -240,21 +241,21 @@ const ClusterComponent = (): React.JSX.Element => {
         }
         className={
           data.status.state === ClusterStatus.STATUS_STOPPED &&
-          restartEnabled !== true
+            restartEnabled !== true
             ? 'icon-buttons-style'
             : 'icon-buttons-style-disable'
         }
         title="Start Cluster"
         onClick={
-          data.status.state === ClusterStatus.STATUS_STOPPED
+          data.status.state === ClusterStatus.STATUS_STOPPED && !restartEnabled
             ? () => startClusterApi(data.clusterName)
             : undefined
         }
       >
-        {data.status.state === ClusterStatus.STATUS_STOPPED ? (
-          <iconStart.react tag="div" />
+        {data.status.state === ClusterStatus.STATUS_STOPPED && !restartEnabled ? (
+          <iconStart.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconStartDisable.react tag="div" />
+          <iconStartDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );
@@ -281,9 +282,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconStop.react tag="div" />
+          <iconStop.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconStopDisable.react tag="div" />
+          <iconStopDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );
@@ -310,9 +311,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconRestart.react tag="div" />
+          <iconRestart.react tag="div" className='logo-alignment-style' />
         ) : (
-          <iconRestartDisable.react tag="div" />
+          <iconRestartDisable.react tag="div" className='logo-alignment-style' />
         )}
       </div>
     );
@@ -427,7 +428,6 @@ const ClusterComponent = (): React.JSX.Element => {
                   />
                 )}
               </div>
-              <ToastContainer />
             </div>
           )}
         </>

@@ -32,15 +32,29 @@
   color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
+.scroll-comp-batchdetails{
+  overflow-y: auto;
+  max-height: 90.1vh;
+}
+.create-batches-overlay {
+  height: 48px;
+  /* padding-left: 15px; */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+}
+
 
 .batch-details-container {
   width: 80%;
   padding-left: 15px;
 }
+
 .batch-details-container-top {
   width: 50%;
   padding-left: 15px;
 }
+
 .details-label {
   font-style: normal;
   font-weight: 500;
@@ -49,6 +63,7 @@
   width: 65%;
   color: var(--jp-ui-font-color0);
 }
+
 .batch-details-label-level-one {
   font-style: normal;
   font-weight: 500;
@@ -59,6 +74,7 @@
   color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
+
 .details-value {
   font-style: normal;
   font-weight: 400;
@@ -67,6 +83,7 @@
   width: 35%;
   color: var(--jp-ui-font-color2);
 }
+
 .batch-details-row-label {
   border-bottom: 1px solid var(--jp-layout-color4);
   display: flex;

@@ -20,7 +20,7 @@ import {
   BASE_URL,
   API_HEADER_BEARER
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -39,14 +39,16 @@ export const deleteRuntimeTemplateAPI = async (
     })
       .then((response: Response) => {
         toast.success(
-          `${selectedRuntimeTemplateDisplayName} is deleted successfully`
+          `${selectedRuntimeTemplateDisplayName} is deleted successfully`,
+          toastifyCustomStyle
         );
         console.log(response);
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
         toast.error(
-          `Failed to delete the session ${selectedRuntimeTemplateDisplayName}`
+          `Failed to delete the session ${selectedRuntimeTemplateDisplayName}`,
+          toastifyCustomStyle
         );
       });
   }

@@ -23,11 +23,19 @@ import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import {
+  DATAPROC_CLUSTER_KEY,
+  DATAPROC_CLUSTER_LABEL,
   HTTP_METHOD,
+  METASTORE_SERVICE_KEY,
+  METASTORE_SERVICE_LABEL,
   NETWORK_KEY,
   NETWORK_LABEL,
+  NETWORK_TAGS_KEY,
+  NETWORK_TAGS_LABEL,
   SERVICE_ACCOUNT_KEY,
   SERVICE_ACCOUNT_LABEL,
+  SPARK_HISTORY_SERVER,
+  SPARK_HISTORY_SERVER_KEY,
   STATUS_ACTIVE,
   STATUS_CREATING,
   STATUS_DELETING,
@@ -44,11 +52,12 @@ import {
 import {
   authenticatedFetch,
   elapsedTime,
-  jobTimeFormat
+  jobTimeFormat,
+  toastifyCustomStyle
 } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
 import PollingTimer from '../utils/pollingTimer';
@@ -95,7 +104,18 @@ function SessionDetails({
     stateHistory: [{ stateStartTime: '' }],
     runtimeConfig: { properties: [] },
     environmentConfig: {
-      executionConfig: []
+      executionConfig: {
+        serviceAccount: '',
+        subnetworkUri: '',
+        networkTags: [],
+        kmsKey: ''
+      },
+      peripheralsConfig: {
+        metastoreService: '',
+        sparkHistoryServerConfig: {
+          dataprocCluster: ''
+        }
+      }
     }
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -138,7 +158,10 @@ function SessionDetails({
     } catch (error) {
       setIsLoading(false);
       console.error('Error loading session details', error);
-      toast.error(`Failed to fetch session details ${sessionSelected}`);
+      toast.error(
+        `Failed to fetch session details ${sessionSelected}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -177,18 +200,20 @@ function SessionDetails({
 
   return (
     <div>
-      <ToastContainer />
       {sessionInfo.name !== '' ? (
         <div className="scroll-comp">
           {detailedSessionView && (
             <div>
-              <div className="cluster-details-header">
+              <div className="cluster-details-header scroll-fix-header">
                 <div
                   role="button"
                   className="back-arrow-icon"
                   onClick={() => handleDetailedView()}
                 >
-                  <iconLeftArrow.react tag="div" />
+                  <iconLeftArrow.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 </div>
                 <div className="cluster-details-title">Session details</div>
                 <div
@@ -205,9 +230,15 @@ function SessionDetails({
                 >
                   <div className="action-cluster-icon">
                     {sessionInfo.state === STATUS_ACTIVE ? (
-                      <iconStopCluster.react tag="div" />
+                      <iconStopCluster.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
                     ) : (
-                      <iconStopClusterDisable.react tag="div" />
+                      <iconStopClusterDisable.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
                     )}
                   </div>
                   <div className="action-cluster-text">TERMINATE</div>
@@ -232,16 +263,28 @@ function SessionDetails({
                   <div className="cluster-details-label">Status</div>
                   <div className="session-detail-status-parent">
                     {sessionInfo.state === STATUS_ACTIVE && (
-                      <iconSucceeded.react tag="div" />
+                      <iconSucceeded.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
                     )}
                     {sessionInfo.state === STATUS_TERMINATED && (
-                      <iconSucceeded.react tag="div" />
+                      <iconSucceeded.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
                     )}
                     {sessionInfo.state === STATUS_ERROR && (
-                      <iconClusterError.react tag="div" />
+                      <iconClusterError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
                     )}
                     {sessionInfo.state === STATUS_FAIL && (
-                      <iconClusterError.react tag="div" />
+                      <iconClusterError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
                     )}
                     {(sessionInfo.state === STATUS_PROVISIONING ||
                       sessionInfo.state === STATUS_CREATING ||
@@ -319,6 +362,8 @@ function SessionDetails({
                     label = NETWORK_LABEL;
                   } else if (key === SUBNETWORK_KEY) {
                     label = SUBNETWORK_LABEL;
+                  } else if (key === NETWORK_TAGS_KEY) {
+                    label = NETWORK_TAGS_LABEL;
                   } else {
                     label = '';
                   }
@@ -333,21 +378,116 @@ function SessionDetails({
                         <div className="session-env-details-value">{value}</div>
                       </div>
                     );
+                  } else if (key === NETWORK_TAGS_KEY) {
+                    return (
+                      <div className="row-details" key={key}>
+                        <div className="batch-details-label-level-two">{label}</div>
+                        <div className="details-value">
+                          {
+                            //@ts-ignore value type issue
+                            value.map((item: string) => {
+                              return <div>{item}</div>;
+                            })
+                          }
+                        </div>
+                      </div>
+                    );
                   }
                 })}
-                <div className="row-details">
-                  <div className="session-env-details-label">Network tags</div>
-                  <div className="session-env-details-value"></div>
+              {(sessionInfo?.environmentConfig?.peripheralsConfig
+              ?.metastoreService ||
+              sessionInfo?.environmentConfig?.peripheralsConfig
+                ?.sparkHistoryServerConfig?.dataprocCluster) && (
+              <div className="row-details">
+                <div className="batch-details-label-level-one">
+                  Peripherals config
                 </div>
+                <div className="details-value"></div>
+              </div>
+            )}
+            {Object.entries(
+              sessionInfo.environmentConfig.peripheralsConfig
+            ).map(([key, value]) => {
+              let label;
+              if (key === METASTORE_SERVICE_KEY) {
+                label = METASTORE_SERVICE_LABEL;
+              } else if (key === SPARK_HISTORY_SERVER_KEY) {
+                label = SPARK_HISTORY_SERVER;
+              } else {
+                label = '';
+              }
+              <div className="row-details">
+                <div className="batch-details-label-level-one">
+                  Peripherals config
+                </div>
+                <div className="details-value"></div>
+              </div>;
+              if (key === METASTORE_SERVICE_KEY) {
+                return (
+                  <div className="row-details" key={key}>
+                    <div className="batch-details-label-level-two">{label}</div>
+                    <div className="details-value">
+                      {
+                        sessionInfo.environmentConfig.peripheralsConfig[
+                          METASTORE_SERVICE_KEY
+                        ]
+                      }
+                    </div>
+                  </div>
+                );
+              } else if (
+                key === SPARK_HISTORY_SERVER_KEY &&
+                sessionInfo?.environmentConfig?.peripheralsConfig
+                  ?.sparkHistoryServerConfig?.dataprocCluster
+              ) {
+                return (
+                  <div>
+                    <div className="row-details" key={key}>
+                      <div className="batch-details-label-level-two">
+                        {label}
+                      </div>
+                    </div>
+                    <div className="row-details" key={DATAPROC_CLUSTER_KEY}>
+                      <div className="batch-details-label-level-three">
+                        {DATAPROC_CLUSTER_LABEL}
+                      </div>
+                      <div className="details-value">
+                        {
+                          sessionInfo.environmentConfig.peripheralsConfig
+                            .sparkHistoryServerConfig[DATAPROC_CLUSTER_KEY]
+                        }
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            })}
+
+            <div className="row-details">
+              <div className="details-label">Encryption type</div>
+              <div className="details-value">
+                {sessionInfo?.environmentConfig?.executionConfig?.kmsKey
+                  ? 'Customer-managed'
+                  : 'Google-managed'}
+              </div>
+            </div>
+            {sessionInfo?.environmentConfig?.executionConfig?.kmsKey && (
+              <div className="row-details">
+                <div className="details-label">Encryption key</div>
+                <div className="details-value">
+                  {sessionInfo.environmentConfig.executionConfig.kmsKey}
+                </div>
+              </div>
+            )}
                 <div className="row-details">
                   <div className="cluster-details-label">Labels</div>
                   <div className="session-label-style-parent">
                     {labelDetail.length > 0
                       ? labelDetail.map(label => {
                           /*
-                            Extracting key, value from label
-                               Example: "{client:dataproc_jupyter_plugin}"
-                         */
+                          Extracting key, value from label
+                             Example: "{client:dataproc_jupyter_plugin}"
+                       */
                           const labelParts = label.split(':');
 
                           return (

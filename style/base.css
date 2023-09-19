@@ -4,6 +4,20 @@
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
+html,
+body,
+html * {
+  font-family: 'Roboto';
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: 'Roboto' !important;
+}
+
 /*Hiding Notebook section cards with name Remote for Remote kernels*/
 .jp-LauncherCard[data-category='Notebook'][title~='(Remote)'] {
   display: none;
@@ -78,6 +92,24 @@ h2 {
 .ui.selection.active.dropdown:focus {
   border: 3px solid #3367d6 !important;
 }
+
+.ui.search.dropdown.active > input.search:focus,
+.ui.search.dropdown.visible > input.search:focus {
+  left: 0px !important;
+  bottom: 0px !important;
+  cursor: auto;
+  border: 2px solid #3367d6 !important;
+  border-radius: 3px !important;
+}
+
 .ui.selection.dropdown {
   min-width: 5em !important;
+}
+.css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper {
+  max-height: 40% !important;
+}
+.scroll-fix-header{
+  position: sticky;
+  top: 0;
+  background-color: white;
 }

@@ -45,6 +45,7 @@
   color: var(--jp-ui-font-color2);
   padding-left: 20px;
 }
+
 .session-label-style-parent {
   display: flex;
   font-style: normal;
@@ -57,12 +58,13 @@
   padding-top: 5px;
   padding-bottom: 5px;
 }
+
 .session-loader {
-  display: flex;
-  align-items: end;
+    display: flex;
+    align-items: end;
 }
 
 .session-list-table-parent {
-  height: 70vh;
-  overflow: auto;
+    max-height: 81vh;
+    overflow: auto;
 }

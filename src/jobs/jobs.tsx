@@ -24,7 +24,8 @@ import {
   elapsedTime,
   statusMessage,
   jobTypeDisplay,
-  ICellProps
+  ICellProps,
+  toastifyCustomStyle
 } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -56,7 +57,7 @@ import SubmitJob from './submitJob';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import { PaginationView } from '../utils/paginationView';
@@ -284,7 +285,7 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
-          toast.error('Failed to fetch jobs');
+          toast.error('Failed to fetch jobs', toastifyCustomStyle);
         });
     }
   };
@@ -307,7 +308,7 @@ function JobComponent({
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
         >
-          <iconClone.react tag="div" />
+          <iconClone.react tag="div" className='logo-alignment-style' />
         </div>
         <div
           role="button"
@@ -325,9 +326,9 @@ function JobComponent({
           }
         >
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconStop.react tag="div" />
+            <iconStop.react tag="div" className='logo-alignment-style' />
           ) : (
-            <iconStopDisable.react tag="div" />
+            <iconStopDisable.react tag="div" className='logo-alignment-style' />
           )}
         </div>
         <div
@@ -346,9 +347,9 @@ function JobComponent({
           }
         >
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconDelete.react tag="div" />
+            <iconDelete.react tag="div" className='logo-alignment-style' />
           ) : (
-            <iconDelete.react tag="div" />
+            <iconDelete.react tag="div" className='logo-alignment-style' />
           )}
         </div>
       </div>
@@ -384,24 +385,24 @@ function JobComponent({
         <td {...cell.getCellProps()} className="clusters-table-data">
           <div key="Status" className="cluster-status-parent">
             {cell.value === ClusterStatus.STATUS_RUNNING && (
-              <iconClusterRunning.react tag="div" />
+              <iconClusterRunning.react tag="div" className='logo-alignment-style' />
             )}
-            {cell.value === STATUS_CANCELLED && <iconStop.react tag="div" />}
-            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" />}
-            {cell.value === STATUS_SUCCESS && <iconSucceeded.react tag="div" />}
+            {cell.value === STATUS_CANCELLED && <iconStop.react tag="div" className='logo-alignment-style' />}
+            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" className='logo-alignment-style' />}
+            {cell.value === STATUS_SUCCESS && <iconSucceeded.react tag="div" className='logo-alignment-style' />}
             {(cell.value === STATUS_PROVISIONING ||
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={15}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            )}
+                <ClipLoader
+                  color="#8A8A8A"
+                  loading={true}
+                  size={15}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
             <div className="cluster-status">{cell.value.toLowerCase()}</div>
           </div>
         </td>
@@ -455,7 +456,6 @@ function JobComponent({
 
   return (
     <div>
-      <ToastContainer />
       {submitJobView && !detailedJobView && (
         <SubmitJob
           setSubmitJobView={setSubmitJobView}
@@ -499,7 +499,7 @@ function JobComponent({
                   }}
                 >
                   <div className="create-cluster-icon">
-                    <iconSubmitJob.react tag="div" />
+                    <iconSubmitJob.react tag="div" className='logo-alignment-style' />
                   </div>
                   <div className="create-cluster-text">SUBMIT JOB</div>
                 </div>
@@ -509,7 +509,7 @@ function JobComponent({
             <div>
               <div className="filter-cluster-overlay">
                 <div className="filter-cluster-icon">
-                  <iconFilter.react tag="div" />
+                  <iconFilter.react tag="div" className='logo-alignment-style' />
                 </div>
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
@@ -523,9 +523,9 @@ function JobComponent({
               </div>
               <div
                 className={
-                  clusterResponse
-                    ? 'jobs-list-table-parent'
-                    : 'jobs-list-table-parent-small'
+                  clusterSelected
+                    ? 'jobs-list-table-parent-small'
+                    : 'jobs-list-table-parent'
                 }
               >
                 <TableData

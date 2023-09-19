@@ -21,6 +21,7 @@
   font-size: 15px;
   font-weight: 600;
 }
+
 .tr-row-even {
   background-color: var(--jp-layout-color2);
 }
@@ -60,6 +61,7 @@
 .schema-td {
   border-bottom: 1px solid var(--jp-layout-color4);
 }
+
 .schema-table {
   width: 50%;
   border-collapse: collapse;
@@ -72,12 +74,14 @@
   line-height: 18px;
   border-bottom: 1px solid var(--jp-layout-color4);
 }
+
 .schema-table th {
   padding-left: 10px;
   text-align: left;
   background-color: #f5f5f5;
   line-height: 30px;
 }
+
 .bold-column {
   font-weight: 700;
 }
