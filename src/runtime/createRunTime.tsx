@@ -732,7 +732,7 @@ function CreateRunTime({
   };
   const handleDuplicateValidation = (
     setDuplicateValidation: (value: boolean) => void,
-    listOfFiles: any
+    listOfFiles: string | string[]
   ) => {
     if (Array.isArray(listOfFiles)) {
       const fileNames = listOfFiles.map((fileName: any) =>
