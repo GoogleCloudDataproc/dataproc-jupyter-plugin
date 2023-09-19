@@ -122,11 +122,24 @@ const GcsBucketComponent = ({
           response
             .text()
             .then(async (responseResult: any) => {
-              // Replace 'path/to/save/file.txt' with the desired path and filename
-              const filePath = `./${editedFileName}`;
-
               // Get the contents manager to save the file
               const contentsManager = app.serviceManager.contents;
+
+              // Define the path to the 'gcsTemp' folder within the local application directory
+              const gcsTempFolderPath = '/gcsTemp';
+
+              try {
+                // Check if the 'gcsTemp' folder exists
+                await contentsManager.get(gcsTempFolderPath);
+              } catch (error) {
+                // The folder does not exist; create it
+                await contentsManager.save(gcsTempFolderPath, {
+                  type: 'directory'
+                });
+              }
+
+              // Replace 'path/to/save/file.txt' with the desired path and filename
+              const filePath = `.${gcsTempFolderPath}/${editedFileName}`;
 
               // Remove any existing event handlers before adding a new one
               contentsManager.fileChanged.disconnect(handleFileChangeConnect);
@@ -363,7 +376,6 @@ const GcsBucketComponent = ({
   };
 
   useEffect(() => {
-    listBucketsAPI();
     pollingGCSlist(listBucketsAPI, pollingDisable);
 
     return () => {
@@ -526,7 +538,10 @@ const GcsBucketComponent = ({
         <div className="gcs-panel-header">
           <div className="gcs-panel-title">Google Cloud Storage</div>
           {gcsFolderPath.length > 0 && (
-            <div onClick={() => createNewItem()}>
+            <div
+              onClick={() => createNewItem()}
+              className="gcs-create-new-icon"
+            >
               <iconGcsFolderNew.react tag="div" className="gcs-title-icons" />
             </div>
           )}
