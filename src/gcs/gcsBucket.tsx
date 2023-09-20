@@ -385,9 +385,9 @@ const GcsBucketComponent = ({
             });
         })
         .catch((err: Error) => {
-          console.error('Failed to get bucket/object list', err);
+          console.error('Failed to get buckets/objects list', err);
           toast.error(
-            `Failed to get bucket/object list`,
+            `Failed to get buckets/objects list`,
             toastifyCustomStyle
           );
         });
