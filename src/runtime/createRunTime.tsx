@@ -45,6 +45,8 @@ import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { IThemeManager } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
+
 
 type Project = {
   projectId: string;
@@ -83,11 +85,13 @@ let value: string[] | (() => string[]) = [];
 function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
-  themeManager
+  themeManager,
+  app
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
   themeManager: IThemeManager;
+  app: JupyterLab;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -657,10 +661,10 @@ function CreateRunTime({
     setVersionSelected(newVersion);
   };
 
-  const handleServiceSelected = (event: any, data: any) => {
+  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setServicesSelected(data.value);
   };
-  const handleIdleSelected = (event: any) => {
+  const handleIdleSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
     const numericRegex = /^[0-9]*$/;
     const inputValueHour = Number(inputValue) * 3600;
@@ -679,7 +683,7 @@ function CreateRunTime({
       setIdleValidation(true);
     }
   };
-  const handletimeSelected = (event: any, data: any) => {
+  const handletimeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setTimeSelected(data.value);
   };
   const handleAutoTimeSelected = (event: ChangeEvent<HTMLInputElement>) => {
@@ -694,10 +698,10 @@ function CreateRunTime({
 
     setAutoTimeSelected(inputValue);
   };
-  const handleAutoSelected = (event: any, data: any) => {
+  const handleAutoSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setAutoSelected(data.value);
   };
-  const handleProjectIdChange = (event: any, data: any) => {
+  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
@@ -705,25 +709,28 @@ function CreateRunTime({
     regionListAPI(data.value);
     setProjectId(data.value);
   };
-  const handleRegionChange = (event: any, data: any) => {
+  const handleRegionChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data.value);
     listMetaStoreAPI(data.value);
   };
-  const handleNetworkChange = (event: any, data: any) => {
+  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setNetworkSelected(data.value);
     setSubNetworkSelected(defaultValue);
     listSubNetworksAPI(data.value);
   };
-  const handleSubNetworkChange = (event: any, data: any) => {
+  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setSubNetworkSelected(data.value);
   };
-  const handleCancelButton = () => {
+  const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
+    if (selectedRuntimeClone === undefined) {
+      app.shell.activeWidget?.close();
+    } 
   };
 
-  const handleClusterSelected = (event: any, data: any) => {
+  const handleClusterSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setClusterSelected(data.value);
   };
   const handleNetworkTags = (
@@ -791,6 +798,9 @@ function CreateRunTime({
               `RuntimeTemplate ${displayNameSelected} successfully submitted`,
               toastifyCustomStyle
             );
+            if (selectedRuntimeClone === undefined) {
+              app.shell.activeWidget?.close();
+            } 
             console.log(responseResult);
           } else {
             const errorResponse = await response.json();
@@ -826,6 +836,9 @@ function CreateRunTime({
               `RuntimeTemplate ${displayNameSelected} successfully updated`,
               toastifyCustomStyle
             );
+            if (selectedRuntimeClone === undefined) {
+              app.shell.activeWidget?.close();
+            } 
             console.log(responseResult);
           } else {
             const errorResponse = await response.json();

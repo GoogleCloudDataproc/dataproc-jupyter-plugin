@@ -22,7 +22,13 @@ import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
 
-const RuntimeTemplateComponent = ({ app, themeManager }: { app: JupyterLab, themeManager: IThemeManager; }): JSX.Element => {
+const RuntimeTemplateComponent = ({
+  app,
+  themeManager
+}: {
+  app: JupyterLab;
+  themeManager: IThemeManager;
+}): JSX.Element => {
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
 
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
@@ -36,10 +42,10 @@ const RuntimeTemplateComponent = ({ app, themeManager }: { app: JupyterLab, them
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
-          themeManager = {themeManager}
-
-        />)}
-
+          themeManager={themeManager}
+          app={app}
+        />
+      )}
     </div>
   );
 };
@@ -53,6 +59,11 @@ export class RuntimeTemplate extends DataprocWidget {
   }
 
   renderInternal(): React.JSX.Element {
-    return <RuntimeTemplateComponent app={this.app} themeManager={this.themeManager} />;
+    return (
+      <RuntimeTemplateComponent
+        app={this.app}
+        themeManager={this.themeManager}
+      />
+    );
   }
 }
