@@ -726,7 +726,10 @@ function CreateRunTime({
   const handleClusterSelected = (event: any, data: any) => {
     setClusterSelected(data.value);
   };
-  const handleNetworkTags = (setDuplicateValidation: (value: boolean) => void, listOfFiles: any) => {
+  const handleNetworkTags = (
+    setDuplicateValidation: (value: boolean) => void,
+    listOfFiles: any
+  ) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
@@ -1275,7 +1278,7 @@ function CreateRunTime({
             </div>
             <div className="create-messagelist">
               Enter the URI for the repository to install Python packages. By
-              default packages are installed to PyPI mirror on GCP.
+              default packages are installed to PyPI pull-through cache on GCP.
             </div>
 
             <div className="submit-job-label-header">

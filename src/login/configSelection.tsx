@@ -58,6 +58,8 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
   const [gcloudRegion, setGcloudRegion] = useState('');
+  const [gcloudProject, setGcloudProject] = useState('');
+  const [projectAccess, setProjectAccess] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({
@@ -149,6 +151,7 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
       if (credentials && credentials.project_id && credentials.region_id) {
         setProjectId(credentials.project_id);
         setRegion(credentials.region_id);
+        setGcloudProject(credentials.project_id);
         setGcloudRegion(credentials.region_id);
         setConfigError(false);
       } else {
@@ -201,13 +204,17 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
                   projectId={projectId}
                   region={region}
                   onRegionChange={region => setRegion(region)}
+                  setProjectAccess={setProjectAccess}
                 />
               </div>
               <div className="save-overlay">
                 <Button
                   variant="contained"
                   disabled={
-                    isSaving || projectId.length == 0 || region.length == 0 || gcloudRegion === region
+                    isSaving ||
+                    projectId.length === 0 ||
+                    region.length === 0 ||
+                    (gcloudRegion === region && gcloudProject === projectId)|| !projectAccess
                   }
                   onClick={handleSave}
                 >
@@ -216,7 +223,6 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
               </div>
             </div>
             <div className="user-info-card">
-              
               <div className="user-overlay">
                 <div className="user-image-overlay">
                   <img
@@ -253,12 +259,14 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
               </div>
               <div className="feedback-version-container">
                 <div className="google-header">
-                <a
-                 className="feedback-container"
-                  href="https://forms.gle/19dngtRAwHZYtNtQ6"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >Provide Feedback</a>
+                  <a
+                    className="feedback-container"
+                    href="https://forms.gle/wnEnH3fL4JRjPwbr7"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Provide Feedback
+                  </a>
                   <span className="privacy-terms"> • </span>
                   <a
                     href="https://github.com/GoogleCloudDataproc/dataproc-jupyter-plugin"
