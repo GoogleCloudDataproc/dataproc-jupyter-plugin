@@ -49,6 +49,7 @@
 
 .gcs-title-icons {
   margin: 0px 5px;
+  cursor: pointer;
 }
 
 .gcs-filter-overlay {
