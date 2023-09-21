@@ -103,7 +103,7 @@ interface IClusterDetailsProps {
   setDetailedJobView?: (value: boolean) => void;
   setSubmitJobView?: (value: boolean) => void;
   submitJobView: boolean;
-  clusterResponse: any;
+  clusterResponse: object;
   selectedJobClone: any;
   setSelectedJobClone?: (value: boolean) => void;
 }

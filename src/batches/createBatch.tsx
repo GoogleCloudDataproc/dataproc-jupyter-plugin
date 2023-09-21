@@ -69,7 +69,7 @@ type Cluster = {
 };
 
 type Network = {
-  selfLink: any;
+  selfLink: string;
   network: string;
   subnetworks: string;
 };
@@ -735,7 +735,7 @@ function CreateBatch({
                 };
               });
               const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: any }) => ({
+                (obj: { name: string}) => ({
                   key: obj.name,
                   value: obj.name,
                   text: obj.name
@@ -777,11 +777,11 @@ function CreateBatch({
 
               transformedKeyList = responseResult.cryptoKeys
                 .filter((data: any) => data.primary && data.primary.state==='ENABLED')
-                .map((data: any) => ({
+                .map((data: {name: string}) => ({
                   name: data.name.split('/')[7]
                 }));
               const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: any }) => ({
+                (obj: { name: string }) => ({
                   key: obj.name,
                   value: obj.name,
                   text: obj.name
@@ -1207,7 +1207,7 @@ function CreateBatch({
     }
   };
 
-  const handleInputChange = (event: any) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setHexNumber(event.target.value);
     event.target.value.length > 0
       ? setBatchIdValidation(false)
@@ -1215,7 +1215,7 @@ function CreateBatch({
     const newBatchId = event.target.value;
     setBatchIdSelected(newBatchId);
   };
-  const handleBatchTypeSelected = (event: any, data: any) => {
+  const handleBatchTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setBatchTypeSelected(data.value);
     setFilesSelected([]);
     setJarFilesSelected([]);
@@ -1228,10 +1228,10 @@ function CreateBatch({
     setMainClassSelected('');
   };
 
-  const handleServiceSelected = (event: any, data: any) => {
+  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setServicesSelected(data.value);
   };
-  const handleProjectIdChange = (event: any, data: any) => {
+  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
@@ -1239,24 +1239,24 @@ function CreateBatch({
     regionListAPI(data.value);
     setProjectId(data.value);
   };
-  const handleRegionChange = (event: any, data: any) => {
+  const handleRegionChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data.value);
     listMetaStoreAPI(data.value);
   };
-  const handleNetworkChange = (event: any, data: any) => {
+  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setNetworkSelected(data.value);
     listSubNetworksAPI(data.value);
   };
-  const handleSubNetworkChange = (event: any, data: any) => {
+  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setSubNetworkSelected(data.value);
   };
-  const handleKeyRingChange = (event: any, data: any) => {
+  const handleKeyRingChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setKeyRingSelected(data.value);
     listKeysAPI(data.value);
   };
-  const handlekeyChange = (event: any, data: any) => {
+  const handlekeyChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setKeySelected(data.value);
   };
   const handleMainClassSelected = (value: string) => {
@@ -1268,7 +1268,7 @@ function CreateBatch({
     handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
   };
 
-  const handleClusterSelected = (event: any, value: any) => {
+  const handleClusterSelected = (event: React.SyntheticEvent<Element, Event>, value: any) => {
     setClusterSelected(value);
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {

@@ -75,7 +75,7 @@ const iconRestartDisable = new LabIcon({
 const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
   const [clustersList, setclustersList] = useState([]);
-  const [clusterResponse, setClusterResponse] = useState([]);
+  const [clusterResponse, setClusterResponse] = useState<Cluster[]>([]);
   const [detailedJobView, setDetailedJobView] = useState(false);
   const [submitJobView, setSubmitJobView] = useState(false);
   const [restartEnabled, setRestartEnabled] = useState(false);
@@ -106,7 +106,32 @@ const ClusterComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
   };
+  interface Root {
+    nextPageToken: string;
+    clusters: Cluster[];
+  }
 
+  interface Cluster {
+    projectId: string;
+    clusterName: string;
+    config: Config;
+  }
+
+  interface Config {
+    status: Status;
+    clusterUuid: string;
+    statusHistory: StatusHistory[];
+  }
+
+  interface Status {
+    state: string;
+    stateStartTime: string;
+  }
+
+  interface StatusHistory {
+    state: string;
+    stateStartTime: string;
+  }
   const listClustersAPI = async (
     nextPageToken?: string,
     previousClustersList?: object
@@ -127,10 +152,20 @@ const ClusterComponent = (): React.JSX.Element => {
         method: HTTP_METHOD.GET,
         queryParams: queryParams
       });
-      const formattedResponse = await response.json();
-      let transformClusterListData = [];
+      const formattedResponse: Root = await response.json();
+      let transformClusterListData: {
+        clusterUuid: string;
+        status: string;
+        clusterName: string;
+        clusterImage: string;
+        region: string;
+        zone: string;
+        totalWorkersNode: number;
+        schedulesDeletion: string;
+        actions: React.JSX.Element;
+      }[] = [];
       if (formattedResponse && formattedResponse.clusters) {
-        setClusterResponse(formattedResponse);
+        setClusterResponse(formattedResponse.clusters);
         transformClusterListData = formattedResponse.clusters.map(
           (data: any) => {
             const statusVal = statusValue(data);
@@ -198,7 +233,10 @@ const ClusterComponent = (): React.JSX.Element => {
       listClustersAPI();
     } catch (error) {
       console.error('Error fetching status', error);
-      toast.error(`Failed to fetch the status ${selectedCluster}`, toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch the status ${selectedCluster}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -224,7 +262,10 @@ const ClusterComponent = (): React.JSX.Element => {
       setRestartEnabled(false);
     } catch (error) {
       console.error('Error restarting cluster', error);
-      toast.error(`Failed to restart the cluster ${selectedCluster}`, toastifyCustomStyle);
+      toast.error(
+        `Failed to restart the cluster ${selectedCluster}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -241,7 +282,7 @@ const ClusterComponent = (): React.JSX.Element => {
         }
         className={
           data.status.state === ClusterStatus.STATUS_STOPPED &&
-            restartEnabled !== true
+          restartEnabled !== true
             ? 'icon-buttons-style'
             : 'icon-buttons-style-disable'
         }
@@ -252,10 +293,11 @@ const ClusterComponent = (): React.JSX.Element => {
             : undefined
         }
       >
-        {data.status.state === ClusterStatus.STATUS_STOPPED && !restartEnabled ? (
-          <iconStart.react tag="div" className='logo-alignment-style' />
+        {data.status.state === ClusterStatus.STATUS_STOPPED &&
+        !restartEnabled ? (
+          <iconStart.react tag="div" className="logo-alignment-style" />
         ) : (
-          <iconStartDisable.react tag="div" className='logo-alignment-style' />
+          <iconStartDisable.react tag="div" className="logo-alignment-style" />
         )}
       </div>
     );
@@ -282,9 +324,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconStop.react tag="div" className='logo-alignment-style' />
+          <iconStop.react tag="div" className="logo-alignment-style" />
         ) : (
-          <iconStopDisable.react tag="div" className='logo-alignment-style' />
+          <iconStopDisable.react tag="div" className="logo-alignment-style" />
         )}
       </div>
     );
@@ -311,9 +353,12 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconRestart.react tag="div" className='logo-alignment-style' />
+          <iconRestart.react tag="div" className="logo-alignment-style" />
         ) : (
-          <iconRestartDisable.react tag="div" className='logo-alignment-style' />
+          <iconRestartDisable.react
+            tag="div"
+            className="logo-alignment-style"
+          />
         )}
       </div>
     );

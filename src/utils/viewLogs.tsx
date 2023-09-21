@@ -33,6 +33,25 @@ const iconViewLogs = new LabIcon({
   name: 'launcher:view-logs-icon',
   svgstr: ViewLogsIcon
 });
+export interface Root {
+  config: Config
+}
+
+export interface Config {
+  endpointConfig: EndpointConfig
+}
+
+export interface EndpointConfig {
+  httpPorts: HttpPorts
+}
+
+export interface HttpPorts {
+  config: Config;
+  error: {
+    code:number;
+  }
+  "Spark History Server": string
+}
 
 function ViewLogs({
   clusterInfo,
@@ -58,7 +77,7 @@ function ViewLogs({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: HttpPorts) => {
               if (responseResult.error && responseResult.error.code === 404) {
                 setErrorView(true);
               } else {

@@ -43,6 +43,7 @@ import {
   SUBNETWORK_LABEL
 } from '../utils/const';
 import {
+  BatchInfoResponse,
   BatchTypeValue,
   authApi,
   batchDetailsOptionalDisplay,
@@ -255,7 +256,7 @@ function BatchDetails({
     handleDetailedBatchView();
     setDeletePopupOpen(false);
   };
-  const handleCloneBatch = async (batchInfoResponse: any) => {
+  const handleCloneBatch = async (batchInfoResponse: BatchInfoResponse) => {
     setCreateBatch(true);
   };
 

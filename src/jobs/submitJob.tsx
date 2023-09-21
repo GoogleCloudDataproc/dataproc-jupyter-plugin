@@ -241,11 +241,11 @@ function SubmitJob(
     setSubmitJobView(false);
   };
 
-  const handleClusterSelected = (event: any, data: any) => {
+  const handleClusterSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setClusterSelected(data.value);
   };
 
-  const handleJobTypeSelected = (event: any, data: any) => {
+  const handleJobTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setJobTypeSelected(data.value);
     setFileSelected([]);
     setJarFileSelected([]);
@@ -258,7 +258,7 @@ function SubmitJob(
     setQueryFileSelected('');
     setMainClassSelected('');
   };
-  const handleQuerySourceTypeSelected = (event: any, data: any) => {
+  const handleQuerySourceTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setQuerySourceSelected(data.value);
   };
 
@@ -451,7 +451,7 @@ function SubmitJob(
   };
 
   const createPySparkPayload = (
-    mainPythonSelected: any,
+    mainPythonSelected: string,
     propertyObject: any,
     jarFileSelected: any,
     fileSelected: any,
@@ -485,7 +485,7 @@ function SubmitJob(
   };
 
   const createSparkPayload = (
-    mainClassSelected: any,
+    mainClassSelected: string,
     propertyObject: any,
     archieveFileSelected: any,
     fileSelected: any,
@@ -515,7 +515,7 @@ function SubmitJob(
   };
 
   const createSparkRPayload = (
-    mainRSelected: any,
+    mainRSelected: string,
     propertyObject: any,
     fileSelected: any,
     argumentSelected: any
@@ -540,8 +540,8 @@ function SubmitJob(
     propertyObject: any,
     jarFileSelected: any,
     querySourceSelected: string,
-    queryFileSelected: any,
-    queryTextSelected: any
+    queryFileSelected: string,
+    queryTextSelected: string
   ) => {
     return {
       sparkSqlJob: {
@@ -643,31 +643,31 @@ function SubmitJob(
           }
         }
       )
-        .then((response: any) => {
+        .then((response: Response) => {
           if (response.status === 200) {
             response
               .json()
-              .then((responseResult: any) => {
+              .then((responseResult: unknown) => {
                 console.log(responseResult);
                 toast.success(
                   `Job ${jobIdSelected} successfully submitted`,
                   toastifyCustomStyle
                 );
               })
-              .catch((e: any) => {
+              .catch((e: Error) => {
                 console.log(e);
               });
           } else {
             throw new Error(`API failed with status: ${response.status}`);
           }
         })
-        .catch((err: any) => {
+        .catch((err: Error) => {
           console.error('Error submitting job', err);
           toast.error('Failed to submit the job', toastifyCustomStyle);
         });
     }
   };
-  const handleJobIdChange = (event: any) => {
+  const handleJobIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.target.value.length > 0
       ? setjobIdValidation(true)
       : setjobIdValidation(false);

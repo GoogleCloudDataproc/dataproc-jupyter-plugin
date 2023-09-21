@@ -17,7 +17,7 @@
 
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
-import { Tree, NodeRendererProps } from 'react-arborist';
+import { Tree, NodeRendererProps, NodeApi} from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
@@ -85,7 +85,7 @@ const iconSearchClear = new LabIcon({
   svgstr: searchClearIcon
 });
 
-const calculateDepth = (node: any): number => {
+const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
   while (currentNode.parent) {
@@ -94,7 +94,6 @@ const calculateDepth = (node: any): number => {
   }
   return depth;
 };
-
 const DpmsComponent = ({
   app,
   themeManager
@@ -112,13 +111,17 @@ const DpmsComponent = ({
   const [cluster, setCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
-  const [columnResponse, setColumnResponse] = useState<string[]>([]);
-  const [databaseDetails, setDatabaseDetails] = useState({});
-  const [tableDescription, setTableDescription] = useState({});
+  // const [columnResponse, setColumnResponse] = useState<string[]>([]);
+  // const [databaseDetails, setDatabaseDetails] = useState({});
+  // const [tableDescription, setTableDescription] = useState({});
   const [apiError, setApiError] = useState(false);
   const [schemaError, setSchemaError] = useState(false);
   const [totalDatabases, setTotalDatabases] = useState<number>(0);
   const [totalTables, setTotalTables] = useState<number>(0);
+  const [columnResponse, setColumnResponse] = useState<Column[]>([]);
+const [databaseDetails, setDatabaseDetails] = useState<Record<string, string>>({});
+const [tableDescription, setTableDescription] = useState<Record<string, string>>({});
+
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -133,8 +136,8 @@ const DpmsComponent = ({
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: unknown) => {
-              setColumnResponse((prevResponse: any) => [
+            .then(async (responseResult: Column) => {
+              setColumnResponse((prevResponse: Column[]) => [
                 ...prevResponse,
                 responseResult
               ]);
@@ -209,44 +212,75 @@ const DpmsComponent = ({
         });
     }
   };
-  const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
-  columnResponse.forEach((res: any) => {
-    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
-fetching database name from fully qualified name structure */
-    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
-    const tableName = res.displayName;
-    const columns = res.schema.columns.map(
-      (column: {
+  interface Column {
+    name: string;
+    schema: {
+      columns: {
+        // map(arg0: (column: { column: string; type: string; mode: string; description: string; }) => { name: string; type: string; mode: string; description: string; }): unknown;
         column: string;
         type: string;
         mode: string;
         description: string;
-      }) => ({
-        name: column.column,
-        type: column.type.toUpperCase(),
-        mode: column.mode,
-        description: column?.description || 'None'
-      })
-    );
+      }[];
+    };
+    fullyQualifiedName: string;
+    displayName: string;
+    column: string;
+    type: string;
+    mode: string;
+    description: string;
+  }
+  
+  interface DataEntry {
+    id: string;
+    name: string;
+    description: string;
+    children: Table[];
+  }
+  
+  //const databases: { [dbName: string]: { [tableName: string]: string[] } } = {};
+  const databases: { [dbName: string]: { [tableName: string]: Column[] } } = {};
 
-    if (!database[dbName]) {
-      database[dbName] = {};
+  columnResponse.forEach((res:Column) => {
+    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
+fetching database name from fully qualified name structure */
+    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
+    const tableName = res.displayName;
+    const columns: Column[] = res.schema.columns.map((column: {
+      column: string;
+      type: string;
+      mode: string;
+      description: string;
+    }) => ({
+      name: column.column,
+      schema: res.schema, // Include the schema object
+      fullyQualifiedName: res.fullyQualifiedName,
+      displayName: res.displayName,
+      column: res.column,
+      type: res.type,
+      mode: res.mode,
+      description: res.description,
+    }));
+
+
+    if (!databases[dbName]) {
+      databases[dbName] = {};
     }
 
-    if (!database[dbName][tableName]) {
-      database[dbName][tableName] = [];
+    if (!databases[dbName][tableName]) {
+      databases[dbName][tableName] = [];
     }
 
-    database[dbName][tableName].push(...columns);
+    databases[dbName][tableName].push(...columns);
   });
-  const data = Object.entries(database).map(([dbName, tables]) => ({
+  const data = Object.entries(databases).map(([dbName, tables]) => ({
     id: uuidv4(),
     name: dbName,
     children: Object.entries(tables).map(([tableName, columns]) => ({
       id: uuidv4(),
       name: tableName,
       desciption: '',
-      children: columns.map((column: any) => ({
+      children: columns.map((column:Column) => ({
         id: uuidv4(),
         name: column.name,
         type: column.type,
@@ -271,7 +305,7 @@ fetching database name from fully qualified name structure */
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
   const openedWidgets: Record<string, boolean> = {};
-  const handleNodeClick = (node: any) => {
+  const handleNodeClick = (node: NodeApi) => {
     const depth = calculateDepth(node);
     const widgetTitle = node.data.name;
     if (!openedWidgets[widgetTitle]) {
@@ -293,7 +327,7 @@ fetching database name from fully qualified name structure */
           const widgetTitle = widget.title.label;
           delete openedWidgets[widgetTitle];
         });
-      } else if (depth === 2) {
+      } else if (depth === 2 && node.parent) {
         const database = node.parent.data.name;
         const column = node.data.children;
         const content = new Table(
@@ -322,8 +356,8 @@ fetching database name from fully qualified name structure */
   const handleSearchClear = () => {
     setSearchTerm('');
   };
-  type NodeProps = NodeRendererProps<any> & {
-    onClick: (node: any) => void;
+  type NodeProps = NodeRendererProps<DataEntry> & {
+    onClick: (node: NodeRendererProps<DataEntry>['node']) => void;
   };
   const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
@@ -638,6 +672,7 @@ fetching database name from fully qualified name structure */
       getColumnDetails(entry);
     });
   }, [entries]);
+
   return (
     <div className="dpms-Wrapper">
       <div>
