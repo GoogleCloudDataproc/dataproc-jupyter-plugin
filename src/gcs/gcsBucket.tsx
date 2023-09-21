@@ -9,7 +9,7 @@ import gcsFolderIcon from '../../style/icons/gcs_folder_icon.svg';
 import gcsFileIcon from '../../style/icons/gcs_file_icon.svg';
 import gcsUploadIcon from '../../style/icons/gcs_upload_icon.svg';
 import gcsSearchIcon from '../../style/icons/gcs_search_icon.svg';
-import { authApi, lastModifiedFormat } from '../utils/utils';
+import { authApi, lastModifiedFormat, toastifyCustomStyle } from '../utils/utils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -21,6 +21,9 @@ import TableData from '../utils/tableData';
 
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import PollingTimer from '../utils/pollingTimer';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import * as path from 'path';
 
 const iconGcsFolderNew = new LabIcon({
   name: 'launcher:gcs-folder-new-icon',
@@ -58,7 +61,7 @@ const GcsBucketComponent = ({
   const [folderName, setFolderName] = useState<string | undefined>(
     'Untitled Folder'
   );
-  const [folderCreateDone, setFolderCreateDone] = useState(true);
+  const [folderCreated, setFolderCreated] = useState(true);
 
   const [folderNameNew, setFolderNameNew] = useState('Untitled Folder');
 
@@ -91,6 +94,11 @@ const GcsBucketComponent = ({
     []
   );
 
+  const handleGCSpath = () => {
+    setGcsFolderPath([])
+    listBucketsAPI();
+  }
+
   const handleFolderPath = (folderName: string) => {
     let folderPath = gcsFolderPath;
     let positionAt = folderPath.indexOf(folderName);
@@ -107,9 +115,10 @@ const GcsBucketComponent = ({
   };
 
   const handleFileClick = async (fileName: string) => {
+    let editedFileName = fileName.replace(/\//g, '%2F');
     const credentials = await authApi();
     if (credentials) {
-      let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${fileName}?alt=media`;
+      let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${editedFileName}?alt=media`;
       fetch(apiURL, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -121,21 +130,39 @@ const GcsBucketComponent = ({
           response
             .text()
             .then(async (responseResult: any) => {
-              // Replace 'path/to/save/file.txt' with the desired path and filename
-              // const filePath = `/Users/jeyaprakashn/.jupyter/lab/workspaces/`;
-              const filePath = `src/gcs/${fileName}`;
-
               // Get the contents manager to save the file
               const contentsManager = app.serviceManager.contents;
 
-              // Listen for the fileChanged event
-              contentsManager.fileChanged.connect(async (_, change: any) => {
+              // Define the path to the 'gcsTemp' folder within the local application directory
+              const gcsTempFolderPath = `${path.sep}gcsTemp`;
+
+              try {
+                // Check if the 'gcsTemp' folder exists
+                await contentsManager.get(gcsTempFolderPath);
+              } catch (error) {
+                // The folder does not exist; create it
+                await contentsManager.save(gcsTempFolderPath, {
+                  type: 'directory'
+                });
+              }
+
+              // Replace 'path/to/save/file.txt' with the desired path and filename
+              const filePath = `.${gcsTempFolderPath}${path.sep}${editedFileName}`;
+
+              // Remove any existing event handlers before adding a new one
+              contentsManager.fileChanged.disconnect(handleFileChangeConnect);
+
+              // Function to handle the fileChanged event
+              async function handleFileChangeConnect(_: any, change: any) {
                 const response = await contentsManager.get(filePath);
                 if (change.type === 'save') {
                   // Call your function when a file is saved
                   handleFileSave(change.newValue, response.content);
                 }
-              });
+              }
+
+              // Listen for the fileChanged event
+              contentsManager.fileChanged.connect(handleFileChangeConnect);
 
               // Save the file to the workspace
               await contentsManager.save(filePath, {
@@ -151,73 +178,72 @@ const GcsBucketComponent = ({
                 path: filePath
               });
 
-              // contentsManager.delete(fileName)
-
               setIsLoading(false);
             })
-            .catch((e: any) => {
+            .catch((e: Error) => {
               console.log(e);
               setIsLoading(false);
             });
         })
-        .catch((err: any) => {
-          console.error('Error listing batches', err);
+        .catch((err: Error) => {
+          console.error('Failed to fetch file information', err);
+          toast.error(
+            `Failed to fetch file information`,
+            toastifyCustomStyle
+          );
         });
     }
   };
 
   const tableDataCondition = (cell: any) => {
-    if (cell.row.original.folderName !== '') {
-      if (cell.column.Header === 'Name') {
-        let nameIndex =
-          gcsFolderPath.length === 0 ? 0 : gcsFolderPath.length - 1;
-        return (
-          <td
-            {...cell.getCellProps()}
-            className="gcs-name-field"
-            onClick={() =>
-              cell.value.split('/')[nameIndex] !== folderNameNew ||
-              folderCreateDone
-                ? (cell.value.includes('/') &&
-                    cell.value.split('/').length - 1 !== nameIndex) ||
-                  gcsFolderPath.length === 0
-                  ? handleAddFolderPath(cell.value.split('/')[nameIndex])
-                  : handleFileClick(cell.value)
-                : undefined
-            }
-          >
-            <div key="Status" className="gcs-object-name">
-              {(cell.value.includes('/') &&
-                cell.value.split('/').length - 1 !== nameIndex) ||
-              gcsFolderPath.length === 0 ? (
-                <iconGcsFolder.react tag="div" />
-              ) : (
-                <iconGcsFile.react tag="div" />
-              )}
-              {cell.value.split('/')[nameIndex] === folderNameNew &&
-              !folderCreateDone ? (
-                <input
-                  value={folderName}
-                  className="input-folder-name-style"
-                  onChange={e => setFolderName(e.target.value)}
-                  onBlur={() => createFolderAPI()}
-                  type="text"
-                />
-              ) : (
-                <div className="gcs-name-file-folder">
-                  {cell.value.split('/')[nameIndex]}
-                </div>
-              )}
-            </div>
-          </td>
-        );
-      } else {
-        return (
-          <td {...cell.getCellProps()} className="gcs-modified-date">
-            {cell.render('Cell')}
-          </td>
-        );
-      }
+    let nameIndex = gcsFolderPath.length === 0 ? 0 : gcsFolderPath.length - 1;
+    if (cell.column.Header === 'Name') {
+      return (
+        <td
+          {...cell.getCellProps()}
+          className="gcs-name-field"
+          onClick={() =>
+            cell.value.split('/')[nameIndex] !== folderNameNew ||
+            folderCreated
+              ? (cell.value.includes('/') &&
+                  cell.value.split('/').length - 1 !== nameIndex) ||
+                gcsFolderPath.length === 0
+                ? handleAddFolderPath(cell.value.split('/')[nameIndex])
+                : handleFileClick(cell.value)
+              : undefined
+          }
+        >
+          <div key="Status" className="gcs-object-name">
+            {(cell.value.includes('/') &&
+              cell.value.split('/').length - 1 !== nameIndex) ||
+            gcsFolderPath.length === 0 ? (
+              <iconGcsFolder.react tag="div" />
+            ) : (
+              <iconGcsFile.react tag="div" />
+            )}
+            {cell.value.split('/')[nameIndex] === folderNameNew &&
+            !folderCreated ? (
+              <input
+                value={folderName}
+                className="input-folder-name-style"
+                onChange={e => setFolderName(e.target.value)}
+                onBlur={() => createFolderAPI()}
+                type="text"
+              />
+            ) : (
+              <div className="gcs-name-file-folder">
+                {cell.value.split('/')[nameIndex]}
+              </div>
+            )}
+          </div>
+        </td>
+      );
+    } else {
+      return (
+        <td {...cell.getCellProps()} className="gcs-modified-date">
+          {cell.render('Cell')}
+        </td>
+      );
     }
   };
 
@@ -232,7 +258,18 @@ const GcsBucketComponent = ({
 
     const credentials = await authApi();
     if (credentials) {
-      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${fileDetail.name}`, {
+      let prefixList = '';
+      gcsFolderPath.length > 1 &&
+        gcsFolderPath.slice(1).forEach((folderName: string) => {
+          if (prefixList === '') {
+            prefixList = prefixList + folderName;
+          } else {
+            prefixList = prefixList + '/' + folderName;
+          }
+        });
+      let newFileName = fileDetail.name;
+
+      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`, {
         method: 'POST',
         body: filePayload,
         headers: {
@@ -251,8 +288,11 @@ const GcsBucketComponent = ({
           }
         })
         .catch((err: Error) => {
-          console.error('Error Creating template', err);
-          // toast.error('Failed to create the template',toastifyCustomStyle);
+          console.error('Failed to upload file information', err);
+          toast.error(
+            `Failed to upload file information`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -290,6 +330,7 @@ const GcsBucketComponent = ({
           : gcsFolderPath.length === 1
           ? `${GCS_URL}/${gcsFolderPath[0]}/o`
           : `${GCS_URL}/${gcsFolderPath[0]}/o?prefix=${prefixList}`;
+      // console.log(apiURL)
       fetch(apiURL, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -317,6 +358,11 @@ const GcsBucketComponent = ({
                       : data.name
                 };
               });
+              transformBucketsData = transformBucketsData.filter(
+                (data: any) => {
+                  return data.folderName !== '';
+                }
+              );
               let finalBucketsData = [];
               finalBucketsData = [
                 ...new Map(
@@ -334,19 +380,22 @@ const GcsBucketComponent = ({
               setBucketsList(finalBucketsData);
               setIsLoading(false);
             })
-            .catch((e: any) => {
+            .catch((e: Error) => {
               console.log(e);
               setIsLoading(false);
             });
         })
-        .catch((err: any) => {
-          console.error('Error listing batches', err);
+        .catch((err: Error) => {
+          console.error('Failed to get buckets/objects list', err);
+          toast.error(
+            `Failed to get buckets/objects list`,
+            toastifyCustomStyle
+          );
         });
     }
   };
 
   useEffect(() => {
-    listBucketsAPI();
     pollingGCSlist(listBucketsAPI, pollingDisable);
 
     return () => {
@@ -355,44 +404,79 @@ const GcsBucketComponent = ({
   }, [pollingDisable, gcsFolderPath]);
 
   const createNewItem = async () => {
-    pollingGCSlist(listBucketsAPI, true);
-    const currentTime = new Date();
-    const lastModified = lastModifiedFormat(currentTime);
-  
-    let datalist: any = [...bucketsList];
-    let existingUntitled = 0;
-    datalist.forEach((data: any) => {
-      if (data.folderName.includes('Untitled Folder')) {
-        existingUntitled = existingUntitled + 1;
+    if (folderCreated) {
+      pollingGCSlist(listBucketsAPI, true);
+      const currentTime = new Date();
+      const lastModified = lastModifiedFormat(currentTime);
+
+      let datalist: any = [...bucketsList];
+      let existingUntitled = 0;
+      datalist.forEach((data: any) => {
+        if (data.folderName.includes('Untitled Folder')) {
+          existingUntitled = existingUntitled + 1;
+        }
+      });
+      let newFolderData;
+      let folderNameConcat;
+
+      let prefixList = '';
+      gcsFolderPath.length > 1 &&
+        gcsFolderPath.slice(1).forEach((folderName: string) => {
+          if (prefixList === '') {
+            prefixList = prefixList + folderName;
+          } else {
+            prefixList = prefixList + '/' + folderName;
+          }
+        });
+
+      if (existingUntitled === 0 || datalist.length === 0) {
+        let nameNewFolder = 'Untitled Folder/';
+        if (prefixList !== '') {
+          nameNewFolder = prefixList + '/' + 'Untitled Folder/';
+        }
+        newFolderData = {
+          name: nameNewFolder,
+          lastModified: lastModified,
+          folderName: 'Untitled Folder'
+        };
+      } else {
+        folderNameConcat = 'Untitled Folder ' + existingUntitled;
+        let nameNewFolder = folderNameConcat + '/';
+        if (prefixList !== '') {
+          nameNewFolder = prefixList + '/' + folderNameConcat + '/';
+        }
+        newFolderData = {
+          name: nameNewFolder,
+          lastModified: lastModified,
+          folderName: folderNameConcat
+        };
       }
-    });
-    let newFolderData;
-    let folderNameConcat;
-    if (existingUntitled === 0) {
-      newFolderData = {
-        name: 'Untitled Folder/',
-        lastModified: lastModified,
-        folderName: 'Untitled Folder'
-      };
-    } else {
-      folderNameConcat = 'Untitled Folder ' + existingUntitled;
-      newFolderData = {
-        name: folderNameConcat + '/',
-        lastModified: lastModified,
-        folderName: folderNameConcat
-      };
+
+      setFolderName(newFolderData.folderName);
+      setFolderNameNew(newFolderData.folderName);
+      datalist.unshift(newFolderData);
+      setFolderCreated(false);
+      setBucketsList(datalist);
     }
-    setFolderName(newFolderData.folderName);
-    setFolderNameNew(newFolderData.folderName);
-    datalist.unshift(newFolderData);
-    setFolderCreateDone(false);
-    setBucketsList(datalist);
   };
 
   const createFolderAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${folderName}/`, {
+      let prefixList = '';
+      gcsFolderPath.length > 1 &&
+        gcsFolderPath.slice(1).forEach((folderName: string) => {
+          if (prefixList === '') {
+            prefixList = prefixList + folderName;
+          } else {
+            prefixList = prefixList + '/' + folderName;
+          }
+        });
+      let newFolderName = folderName;
+      if (prefixList !== '') {
+        newFolderName = prefixList + '/' + folderName;
+      }
+      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFolderName}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'Folder',
@@ -404,6 +488,10 @@ const GcsBucketComponent = ({
             const responseResult = await response.json();
             pollingGCSlist(listBucketsAPI, false);
             console.log(responseResult);
+            toast.success(
+              `Folder ${folderName} successfully created`,
+              toastifyCustomStyle
+            );
             listBucketsAPI();
           } else {
             const errorResponse = await response.json();
@@ -412,11 +500,14 @@ const GcsBucketComponent = ({
           }
         })
         .catch((err: Error) => {
-          console.error('Error Creating template', err);
-          // toast.error('Failed to create the template',toastifyCustomStyle);
+          console.error('Failed to create folder', err);
+          toast.error(
+            `Failed to create folder`,
+            toastifyCustomStyle
+          );
         });
     }
-    setFolderCreateDone(true);
+    setFolderCreated(true);
     listBucketsAPI();
   };
 
@@ -432,20 +523,34 @@ const GcsBucketComponent = ({
   const uploadFileToGCS = async (payload: any) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
-        `${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${inputFile.current?.files?.[0].name}`,
-        {
-          method: 'POST',
-          body: payload,
-          headers: {
-            'Content-Type': payload.type,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+      let prefixList = '';
+      gcsFolderPath.length > 1 &&
+        gcsFolderPath.slice(1).forEach((folderName: string) => {
+          if (prefixList === '') {
+            prefixList = prefixList + folderName;
+          } else {
+            prefixList = prefixList + '/' + folderName;
           }
+        });
+      let newFileName = inputFile.current?.files?.[0].name;
+      if (prefixList !== '') {
+        newFileName = prefixList + '/' + inputFile.current?.files?.[0].name;
+      }
+      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`, {
+        method: 'POST',
+        body: payload,
+        headers: {
+          'Content-Type': payload.type,
+          Authorization: API_HEADER_BEARER + credentials.access_token
         }
-      )
+      })
         .then(async (response: Response) => {
           if (response.ok) {
             const responseResult = await response.json();
+            toast.success(
+              `File ${inputFile.current?.files?.[0].name} successfully uploaded`,
+              toastifyCustomStyle
+            );
             console.log(responseResult);
             listBucketsAPI();
           } else {
@@ -454,8 +559,11 @@ const GcsBucketComponent = ({
           }
         })
         .catch((err: Error) => {
-          console.error('Error Creating template', err);
-          // toast.error('Failed to create the template',toastifyCustomStyle);
+          console.error('Failed to upload file', err);
+          toast.error(
+            `Failed to upload file`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -466,7 +574,10 @@ const GcsBucketComponent = ({
         <div className="gcs-panel-header">
           <div className="gcs-panel-title">Google Cloud Storage</div>
           {gcsFolderPath.length > 0 && (
-            <div onClick={() => createNewItem()}>
+            <div
+              onClick={() => createNewItem()}
+              className="gcs-create-new-icon"
+            >
               <iconGcsFolderNew.react tag="div" className="gcs-title-icons" />
             </div>
           )}
@@ -502,7 +613,7 @@ const GcsBucketComponent = ({
         </div>
         <div className="gcs-folder-path-parent">
           <div style={{ display: 'flex' }}>
-            <div onClick={() => setGcsFolderPath([])}>
+            <div onClick={() => handleGCSpath()}>
               <iconGcsFolder.react tag="div" />
             </div>
             <div className="divider"> / </div>

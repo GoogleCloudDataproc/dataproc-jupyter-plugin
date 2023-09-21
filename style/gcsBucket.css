@@ -49,6 +49,7 @@
 
 .gcs-title-icons {
   margin: 0px 5px;
+  cursor: pointer;
 }
 
 .gcs-filter-overlay {
@@ -88,4 +89,7 @@
   font-size: 12px;
   height: 18px;
   width: 95%;
+}
+.gcs-create-new-icon{
+  margin-left: 25px;
 }
