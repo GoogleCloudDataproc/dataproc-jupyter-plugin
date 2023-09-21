@@ -21,17 +21,13 @@ import {
   API_HEADER_CONTENT_TYPE,
   REGION_URL
 } from '../utils/const';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
-import { toast } from 'react-toastify';
+import { authApi } from '../utils/utils';
 
 interface Regions {
   name: string;
 }
 
-const regionListAPI = async (
-  projectId: string,
-  setProjectAccess: (value: boolean) => void
-) => {
+const regionListAPI = async (projectId: string) => {
   const credentials = await authApi();
   if (!credentials) {
     return [];
@@ -43,26 +39,18 @@ const regionListAPI = async (
       Authorization: API_HEADER_BEARER + credentials.access_token
     }
   });
-  if (resp.status === 403) {
-    toast.error(`403 Permission denied`, toastifyCustomStyle);
-    setProjectAccess(false);
-    return [];
-  } else {
-    setProjectAccess(true);
-  }
   const { items } = (await resp.json()) as { items: Regions[] | undefined };
   return items ?? [];
 };
 
 export function useRegion(
-  projectId: string,
-  setProjectAccess: (value: boolean) => void
+  projectId: string
 ) {
   const [regions, setRegions] = useState<Regions[]>([]);
   const currentRegion = useRef(projectId);
   useEffect(() => {
     currentRegion.current = projectId;
-    regionListAPI(projectId, setProjectAccess).then(items => {
+    regionListAPI(projectId).then(items => {
       if (currentRegion.current != projectId) {
         // The project changed while the network request was pending
         // so we should throw away these results.

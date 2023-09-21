@@ -63,9 +63,6 @@ function ConfigSelection({
 
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
-  const [gcloudRegion, setGcloudRegion] = useState('');
-  const [gcloudProject, setGcloudProject] = useState('');
-  const [projectAccess, setProjectAccess] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({
@@ -157,8 +154,6 @@ function ConfigSelection({
       if (credentials && credentials.project_id && credentials.region_id) {
         setProjectId(credentials.project_id);
         setRegion(credentials.region_id);
-        setGcloudProject(credentials.project_id);
-        setGcloudRegion(credentials.region_id);
         setConfigError(false);
       } else {
         setConfigError(true);
@@ -213,7 +208,6 @@ function ConfigSelection({
                   projectId={projectId}
                   region={region}
                   onRegionChange={region => setRegion(region)}
-                  setProjectAccess={setProjectAccess}
                 />
               </div>
               <div className="save-overlay">
@@ -222,9 +216,7 @@ function ConfigSelection({
                   disabled={
                     isSaving ||
                     projectId.length === 0 ||
-                    region.length === 0 ||
-                    (gcloudRegion === region && gcloudProject === projectId) ||
-                    !projectAccess
+                    region.length === 0 
                   }
                   onClick={handleSave}
                 >

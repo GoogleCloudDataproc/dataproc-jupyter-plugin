@@ -27,15 +27,14 @@ type Props = {
   region: string;
   /** Callback function for when the project ID is changed by the dropdown */
   onRegionChange: (projectId: string) => void;
-  setProjectAccess: (value: boolean) => void;
 };
 
 /**
  * Component to render a region selector dropdown.
  */
 export function RegionDropdown(props: Props) {
-  const { projectId, region, onRegionChange, setProjectAccess } = props;
-  const regions = useRegion(projectId, setProjectAccess);
+  const { projectId, region, onRegionChange} = props;
+  const regions = useRegion(projectId);
 
   const regionStrList = useMemo(
     () => regions.map(region => region.name),
