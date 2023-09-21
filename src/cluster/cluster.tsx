@@ -75,7 +75,7 @@ const iconRestartDisable = new LabIcon({
 const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
   const [clustersList, setclustersList] = useState([]);
-  const [clusterResponse, setClusterResponse] = useState<Cluster[]>([]);
+  const [clusterResponse, setClusterResponse] = useState([]);
   const [detailedJobView, setDetailedJobView] = useState(false);
   const [submitJobView, setSubmitJobView] = useState(false);
   const [restartEnabled, setRestartEnabled] = useState(false);
@@ -106,33 +106,7 @@ const ClusterComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
   };
-  interface IClusterResponse {
-    nextPageToken: string;
-    clusters: Cluster[];
-  }
 
-  interface Cluster {
-    projectId: string;
-    clusterName: string;
-    config: IConfig;
-  }
-
-  interface IConfig {
-    status: IStatus;
-    clusterUuid: string;
-    statusHistory: IStatusHistory[];
-  }
-
-  interface IStatus {
-    state: string;
-    stateStartTime: string;
-  }
-
-  interface IStatusHistory {
-    state: string;
-    stateStartTime: string;
-  }
- 
   const listClustersAPI = async (
     nextPageToken?: string,
     previousClustersList?: object
@@ -153,20 +127,10 @@ const ClusterComponent = (): React.JSX.Element => {
         method: HTTP_METHOD.GET,
         queryParams: queryParams
       });
-      const formattedResponse: IClusterResponse = await response.json();
-      let transformClusterListData: {
-        clusterUuid: string;
-        status: string;
-        clusterName: string;
-        clusterImage: string;
-        region: string;
-        zone: string;
-        totalWorkersNode: number;
-        schedulesDeletion: string;
-        actions: React.JSX.Element;
-      }[] = [];
+      const formattedResponse = await response.json();
+      let transformClusterListData = [];
       if (formattedResponse && formattedResponse.clusters) {
-        setClusterResponse(formattedResponse.clusters);
+        setClusterResponse(formattedResponse);
         transformClusterListData = formattedResponse.clusters.map(
           (data: any) => {
             const statusVal = statusValue(data);

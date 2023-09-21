@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { SessionTemplateDisplay } from './listRuntimeTemplateInterface';
+import { ISessionTemplateDisplay } from './listRuntimeTemplateInterface';
 import { Select } from '../controls/MuiWrappedSelect';
 
 interface IBatch {
@@ -42,7 +42,7 @@ interface IPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
   pageIndex: number;
-  allData: IBatch[] | ICluster[] | SessionTemplateDisplay[];
+  allData: IBatch[] | ICluster[] | ISessionTemplateDisplay[];
   previousPage: () => void;
   nextPage: () => void;
   canPreviousPage: boolean;
