@@ -100,7 +100,6 @@ const GcsBucketComponent = ({
 
   const handleGCSpath = () => {
     setGcsFolderPath([]);
-    listBucketsAPI();
   };
 
   const handleFolderPath = (folderName: string) => {
@@ -108,7 +107,6 @@ const GcsBucketComponent = ({
     let positionAt = folderPath.indexOf(folderName);
     folderPath = folderPath.slice(0, positionAt + 1);
     setGcsFolderPath(folderPath);
-    listBucketsAPI();
   };
 
   const handleAddFolderPath = (folderName: string) => {
@@ -203,7 +201,7 @@ const GcsBucketComponent = ({
         <td
           {...cell.getCellProps()}
           className="gcs-name-field"
-          onClick={() =>
+          onDoubleClick={() =>
             cell.value.split('/')[nameIndex] !== folderNameNew || folderCreated
               ? (cell.value.includes('/') &&
                   cell.value.split('/').length - 1 !== nameIndex) ||
@@ -403,6 +401,7 @@ const GcsBucketComponent = ({
   };
 
   useEffect(() => {
+    listBucketsAPI();
     pollingGCSlist(listBucketsAPI, pollingDisable);
 
     return () => {
