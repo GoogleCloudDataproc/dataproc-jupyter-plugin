@@ -125,7 +125,7 @@ const GcsBucketComponent = ({
           Authorization: API_HEADER_BEARER + credentials.access_token
         }
       })
-        .then((response: any) => {
+        .then((response: Response) => {
           setIsLoading(false);
           response
             .text()

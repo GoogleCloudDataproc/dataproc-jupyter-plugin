@@ -95,7 +95,9 @@ interface IJobDetailsProps {
   setDetailedJobView: (value: boolean) => void;
   stopJobApi: (jobId: string) => Promise<void>;
   deleteJobApi: (jobId: string) => Promise<void>;
-  region: any;
+  region: {
+    region:string
+  };
   setDetailedView: (value: boolean) => void;
   clusterResponse: object;
   clustersList: object;
@@ -345,7 +347,11 @@ function JobDetails({
   );
   const elapsedTimeString = elapsedTime(endTime, jobStartTime);
 
-  const statusStyleSelection = (jobInfo: any) => {
+  const statusStyleSelection = (jobInfo: {
+    status:{
+      state:string
+    }
+  }) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
     } else {
