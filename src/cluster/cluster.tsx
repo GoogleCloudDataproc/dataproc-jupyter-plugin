@@ -106,7 +106,7 @@ const ClusterComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
   };
-  interface Root {
+  interface IClusterResponse {
     nextPageToken: string;
     clusters: Cluster[];
   }
@@ -114,21 +114,21 @@ const ClusterComponent = (): React.JSX.Element => {
   interface Cluster {
     projectId: string;
     clusterName: string;
-    config: Config;
+    config: IConfig;
   }
 
-  interface Config {
-    status: Status;
+  interface IConfig {
+    status: IStatus;
     clusterUuid: string;
-    statusHistory: StatusHistory[];
+    statusHistory: IStatusHistory[];
   }
 
-  interface Status {
+  interface IStatus {
     state: string;
     stateStartTime: string;
   }
 
-  interface StatusHistory {
+  interface IStatusHistory {
     state: string;
     stateStartTime: string;
   }
@@ -153,7 +153,7 @@ const ClusterComponent = (): React.JSX.Element => {
         method: HTTP_METHOD.GET,
         queryParams: queryParams
       });
-      const formattedResponse: Root = await response.json();
+      const formattedResponse: IClusterResponse = await response.json();
       let transformClusterListData: {
         clusterUuid: string;
         status: string;

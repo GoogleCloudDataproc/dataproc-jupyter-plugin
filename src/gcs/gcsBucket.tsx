@@ -244,11 +244,11 @@ const GcsBucketComponent = ({
       );
     }
   };
-  interface FileDetail {
+  interface IFileDetail {
     name: string;
     mimetype: string;
   }
-  const handleFileSave = async (fileDetail: FileDetail, content: string) => {
+  const handleFileSave = async (fileDetail: IFileDetail, content: string) => {
     // Create a Blob object from the content and metadata
     const blob = new Blob([content], { type: fileDetail.mimetype });
 
@@ -310,7 +310,7 @@ const GcsBucketComponent = ({
     // @ts-ignore
     useTable({ columns, data }, useGlobalFilter);
 
-  interface BucketItem {
+  interface IBucketItem {
     updated: string;
     items: any;
     name: string;
@@ -345,9 +345,9 @@ const GcsBucketComponent = ({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: BucketItem) => {
+            .then((responseResult: IBucketItem) => {
               let sortedResponse = responseResult.items.sort(
-                (itemOne: BucketItem, itemTwo: BucketItem) =>
+                (itemOne: IBucketItem, itemTwo: IBucketItem) =>
                   itemOne.updated < itemTwo.updated ? -1 : 1
               );
               let transformBucketsData = [];

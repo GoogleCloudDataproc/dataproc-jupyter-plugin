@@ -24,12 +24,12 @@ import {
   DialogContentText,
   DialogTitle
 } from '@mui/material';
-interface ErrorPopupProps {
+interface IErrorPopupProps {
   onCancel: () => void;
   errorPopupOpen: boolean;
   errorMsg: string;
 }
-function ErrorPopup({ onCancel, errorPopupOpen, errorMsg }: ErrorPopupProps) {
+function ErrorPopup({ onCancel, errorPopupOpen, errorMsg }: IErrorPopupProps) {
   return (
     <Dialog open={errorPopupOpen} onClose={onCancel}>
       <DialogTitle>Error</DialogTitle>

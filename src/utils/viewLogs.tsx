@@ -33,26 +33,26 @@ const iconViewLogs = new LabIcon({
   name: 'launcher:view-logs-icon',
   svgstr: ViewLogsIcon
 });
-export interface Root {
-  config: Config
+export interface IViewLogs {
+  config: IConfig
 }
 
-export interface Config {
-  endpointConfig: EndpointConfig
+export interface IConfig {
+  endpointConfig: IEndpointConfig
 }
 
-export interface EndpointConfig {
-  httpPorts: HttpPorts
+export interface IEndpointConfig {
+  httpPorts: IHttpPorts
 }
 
-export interface HttpPorts {
-  config: Config;
+export interface IHttpPorts {
+  config: IConfig;
   error: {
     code:number;
   }
   "Spark History Server": string
 }
-interface ViewLogsProps {
+interface IViewLogsProps {
   clusterInfo?: {
     clusterUuid: string;
     clusterName: string;
@@ -66,7 +66,7 @@ interface ViewLogsProps {
         [key: string]: string;
       };
     };
-    name?: string; // Include the 'name' property if it's supposed to be present
+    name?: string; 
     createTime?: string; 
   }|undefined;
   sessionInfo?: {
@@ -87,7 +87,7 @@ function ViewLogs({
   setErrorView,
   batchInfoResponse,
   sessionInfo
-}: ViewLogsProps) {
+}: IViewLogsProps) {
   const handleJobDetailsViewLogs = async (clusterName: string) => {
     const credentials = await authApi();
     if (credentials) {
@@ -104,7 +104,7 @@ function ViewLogs({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: HttpPorts) => {
+            .then((responseResult: IHttpPorts) => {
               if (responseResult.error && responseResult.error.code === 404 && setErrorView) {
                 setErrorView(true);
               } else {

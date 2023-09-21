@@ -433,7 +433,7 @@ export const toastifyCustomStyle: ToastOptions<{}> = {
   toastId: uuidv4()
 };
 export function assumeNeverHit(_: never): void {}
-export interface BatchInfoResponse {
+export interface IBatchInfoResponse {
   uuid: string;
   state: string;
   createTime: string;

@@ -453,7 +453,7 @@ function CreateBatch({
     setMainJarSelected('');
     setMainJarValidation(true);
   };
-  interface NetworkResponse {
+  interface INetworkResponse {
     network: string;
     // Add other properties if they exist in the response
   }
@@ -473,7 +473,7 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: NetworkResponse) => {
+            .then((responseResult: INetworkResponse) => {
               let transformedNetworkSelected = '';
   
               transformedNetworkSelected = responseResult.network.split('/')[9];
@@ -757,14 +757,14 @@ function CreateBatch({
         });
     }
   };
-  interface Key {
+  interface IKey {
     primary: {
       state:string
     };
     name: string;
   }
-  interface KeyListResponse {
-    cryptoKeys: Key[];
+  interface IKeyListResponse {
+    cryptoKeys: IKey[];
   }
   
   const listKeysAPI = async (keyRing: string) => {
@@ -782,7 +782,7 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: KeyListResponse) => {
+            .then((responseResult: IKeyListResponse) => {
               let transformedKeyList = [];
               /*
          Extracting network from items
@@ -790,7 +790,7 @@ function CreateBatch({
       */
 
               transformedKeyList = responseResult.cryptoKeys
-                .filter((data: Key) => data.primary && data.primary.state==='ENABLED')
+                .filter((data: IKey) => data.primary && data.primary.state==='ENABLED')
                 .map((data: {name: string}) => ({
                   name: data.name.split('/')[7]
                 }));

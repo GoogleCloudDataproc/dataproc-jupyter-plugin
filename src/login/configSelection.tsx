@@ -38,7 +38,7 @@ import { RegionDropdown } from '../controls/RegionDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import CreateRuntime from '../runtime/createRunTime';
-import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
+import { ISessionTemplate } from '../utils/listRuntimeTemplateInterface';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -73,7 +73,7 @@ function ConfigSelection({
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
 
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
-    useState<SessionTemplate>();
+    useState<ISessionTemplate>();
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -102,7 +102,7 @@ function ConfigSelection({
       setIsSaving(false);
     }
   };
-  interface UserInfoResponse {
+  interface IUserInfoResponse {
     email: string;
     picture: string;
   }
@@ -119,7 +119,7 @@ function ConfigSelection({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: UserInfoResponse) => {
+            .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult);
               setIsLoadingUser(false);
             })

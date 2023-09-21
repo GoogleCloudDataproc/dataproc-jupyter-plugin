@@ -111,14 +111,11 @@ const DpmsComponent = ({
   const [cluster, setCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
-  // const [columnResponse, setColumnResponse] = useState<string[]>([]);
-  // const [databaseDetails, setDatabaseDetails] = useState({});
-  // const [tableDescription, setTableDescription] = useState({});
   const [apiError, setApiError] = useState(false);
   const [schemaError, setSchemaError] = useState(false);
   const [totalDatabases, setTotalDatabases] = useState<number>(0);
   const [totalTables, setTotalTables] = useState<number>(0);
-  const [columnResponse, setColumnResponse] = useState<Column[]>([]);
+  const [columnResponse, setColumnResponse] = useState<IColumn[]>([]);
 const [databaseDetails, setDatabaseDetails] = useState<Record<string, string>>({});
 const [tableDescription, setTableDescription] = useState<Record<string, string>>({});
 
@@ -136,8 +133,8 @@ const [tableDescription, setTableDescription] = useState<Record<string, string>>
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: Column) => {
-              setColumnResponse((prevResponse: Column[]) => [
+            .then(async (responseResult: IColumn) => {
+              setColumnResponse((prevResponse: IColumn[]) => [
                 ...prevResponse,
                 responseResult
               ]);
@@ -155,7 +152,7 @@ const [tableDescription, setTableDescription] = useState<Record<string, string>>
         });
     }
   };
-  interface TableResponse {
+  interface ITableResponse {
     results: Array<{
       displayName: string;
       relativeResourceName: string;
@@ -183,7 +180,7 @@ const [tableDescription, setTableDescription] = useState<Record<string, string>>
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: TableResponse) => {
+            .then((responseResult: ITableResponse) => {
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -219,11 +216,10 @@ const [tableDescription, setTableDescription] = useState<Record<string, string>>
         });
     }
   };
-  interface Column {
+  interface IColumn {
     name: string;
     schema: {
       columns: {
-        // map(arg0: (column: { column: string; type: string; mode: string; description: string; }) => { name: string; type: string; mode: string; description: string; }): unknown;
         column: string;
         type: string;
         mode: string;
@@ -236,24 +232,21 @@ const [tableDescription, setTableDescription] = useState<Record<string, string>>
     type: string;
     mode: string;
     description: string;
-  }
-  
-  interface DataEntry {
+  }  
+  interface IDataEntry {
     id: string;
     name: string;
     description: string;
     children: Table[];
   }
-  
-  //const databases: { [dbName: string]: { [tableName: string]: string[] } } = {};
-  const databases: { [dbName: string]: { [tableName: string]: Column[] } } = {};
+  const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } = {};
 
-  columnResponse.forEach((res:Column) => {
+  columnResponse.forEach((res:IColumn) => {
     /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
 fetching database name from fully qualified name structure */
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
-    const columns: Column[] = res.schema.columns.map((column: {
+    const columns: IColumn[] = res.schema.columns.map((column: {
       column: string;
       type: string;
       mode: string;
@@ -287,7 +280,7 @@ fetching database name from fully qualified name structure */
       id: uuidv4(),
       name: tableName,
       desciption: '',
-      children: columns.map((column:Column) => ({
+      children: columns.map((column:IColumn) => ({
         id: uuidv4(),
         name: column.name,
         type: column.type,
@@ -363,8 +356,8 @@ fetching database name from fully qualified name structure */
   const handleSearchClear = () => {
     setSearchTerm('');
   };
-  type NodeProps = NodeRendererProps<DataEntry> & {
-    onClick: (node: NodeRendererProps<DataEntry>['node']) => void;
+  type NodeProps = NodeRendererProps<IDataEntry> & {
+    onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
   };
   const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
@@ -495,7 +488,7 @@ fetching database name from fully qualified name structure */
       </div>
     );
   };
-  interface DatabaseResponse {
+  interface IDatabaseResponse {
     results?: Array<{
       displayName: string;
       description: string;
@@ -525,7 +518,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: DatabaseResponse) => {
+            .then(async (responseResult: IDatabaseResponse) => {
               if (responseResult?.results) {
                 const filteredEntries = responseResult.results.filter(
                   (entry: { displayName: string }) => entry.displayName
@@ -566,7 +559,7 @@ fetching database name from fully qualified name structure */
         });
     }
   };
-  interface ClusterDetailsResponse {
+  interface IClusterDetailsResponse {
     config?: {
       metastoreConfig?: {
         dataprocMetastoreService?: string;
@@ -589,7 +582,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: ClusterDetailsResponse) => {
+            .then(async (responseResult: IClusterDetailsResponse) => {
               const metastoreServices =
                 responseResult.config?.metastoreConfig
                   ?.dataprocMetastoreService;
@@ -618,7 +611,7 @@ fetching database name from fully qualified name structure */
         });
     }
   };
-  interface SessionDetailsResponse {
+  interface ISessionDetailsResponse {
     environmentConfig?: {
       peripheralsConfig?: {
         metastoreService?: string;
@@ -642,7 +635,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: SessionDetailsResponse) => {
+            .then(async (responseResult: ISessionDetailsResponse) => {
               const metastoreServices =
                 responseResult.environmentConfig?.peripheralsConfig
                   ?.metastoreService;

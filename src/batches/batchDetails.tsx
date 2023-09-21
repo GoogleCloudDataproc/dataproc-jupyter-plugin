@@ -43,8 +43,8 @@ import {
   SUBNETWORK_LABEL
 } from '../utils/const';
 import {
-  BatchInfoResponse,
   BatchTypeValue,
+  IBatchInfoResponse,
   authApi,
   batchDetailsOptionalDisplay,
   convertToDCUHours,
@@ -173,7 +173,7 @@ function BatchDetails({
       pollingBatchDetails(getBatchDetails, true);
     };
   }, []);
-  interface BatchDetailsResponse {
+  interface IBatchDetailsResponse {
     uuid: '',
     state: '',
     createTime: '',
@@ -247,7 +247,7 @@ function BatchDetails({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: BatchDetailsResponse) => {
+            .then((responseResult: IBatchDetailsResponse) => {
               setBatchInfoResponse(responseResult);
               if (responseResult.labels) {
                 const labelValue = Object.entries(responseResult.labels).map(
@@ -311,7 +311,7 @@ function BatchDetails({
     handleDetailedBatchView();
     setDeletePopupOpen(false);
   };
-  const handleCloneBatch = async (batchInfoResponse: BatchInfoResponse) => {
+  const handleCloneBatch = async (batchInfoResponse: IBatchInfoResponse) => {
     setCreateBatch(true);
   };
   

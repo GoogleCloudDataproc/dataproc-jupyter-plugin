@@ -24,13 +24,13 @@ import {
   DialogContentText,
   DialogTitle
 } from '@mui/material';
-interface DeletePopupProps {
+interface IDeletePopupProps {
   onCancel: () => void;
   onDelete: () => void;
   deletePopupOpen: boolean;
   DeleteMsg: string;
 }
-function DeletePopup({ onCancel, onDelete, deletePopupOpen, DeleteMsg }: DeletePopupProps) {
+function DeletePopup({ onCancel, onDelete, deletePopupOpen, DeleteMsg }: IDeletePopupProps) {
   return (
     <Dialog open={deletePopupOpen} onClose={onCancel}>
       <DialogTitle>Confirm deletion</DialogTitle>

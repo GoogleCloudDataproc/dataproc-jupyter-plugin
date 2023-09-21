@@ -192,7 +192,7 @@ function CreateRunTime({
   useEffect(() => {
     listSubNetworksAPI(networkSelected);
   }, [networkSelected]);
-  interface UserInfoResponse {
+  interface IUserInfoResponse {
     email: string;
     picture: string;
   }
@@ -209,7 +209,7 @@ function CreateRunTime({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: UserInfoResponse) => {
+            .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult.email);
             })
             .catch((e: Error) => console.log(e));
@@ -349,7 +349,7 @@ function CreateRunTime({
       setCreateTime(new Date().toISOString());
     }
   };
-  interface NetworkAPI {
+  interface INetworkAPI {
     network : string;
   }
   const listNetworksFromSubNetworkAPI = async (subnetwork: any) => {
@@ -368,7 +368,7 @@ function CreateRunTime({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: NetworkAPI) => {
+            .then((responseResult: INetworkAPI) => {
               let transformedNetworkSelected = '';
               transformedNetworkSelected = responseResult.network.split('/')[9];
 

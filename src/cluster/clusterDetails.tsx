@@ -163,7 +163,7 @@ function ClusterDetails({
     setDeletePopupOpen(false);
     handleDetailedView();
   };
-  interface ClusterDetailsResponse {
+  interface IClusterDetailsResponse {
     error: {
       code: number;
     };
@@ -193,7 +193,7 @@ function ClusterDetails({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: ClusterDetailsResponse) => {
+            .then((responseResult: IClusterDetailsResponse) => {
               if (responseResult.error && responseResult.error.code === 404) {
                 setErrorView(true);
               }

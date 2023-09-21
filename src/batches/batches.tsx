@@ -82,14 +82,14 @@ const BatchesComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: 'Sessions' | 'Batches') => {
     setSelectedMode(mode);
   };
-  interface BatchData {
+  interface IBatchData {
     name: string;
     state: BatchStatus;
     createTime: string;
     stateTime: Date;
   }
-  interface BatchListResponse {
-    batches: BatchData[];
+  interface IBatchListResponse {
+    batches: IBatchData[];
     nextPageToken?: string;
   }
 
@@ -114,7 +114,7 @@ const BatchesComponent = (): React.JSX.Element => {
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: BatchListResponse) => {
+            .then((responseResult: IBatchListResponse) => {
               let transformBatchListData: {
                 batchID: string;
                 status: string;
@@ -126,7 +126,7 @@ const BatchesComponent = (): React.JSX.Element => {
               }[] = [];
               if (responseResult && responseResult.batches) {
                 transformBatchListData = responseResult.batches.map(
-                  (data: BatchData) => {
+                  (data: IBatchData) => {
                     const startTimeDisplay = jobTimeFormat(data.createTime);
                     const startTime = new Date(data.createTime);
                     const elapsedTimeString = elapsedTime(
@@ -189,7 +189,7 @@ const BatchesComponent = (): React.JSX.Element => {
     setBatchSelected(selectedName);
     setDetailedBatchView(true);
   };
-  const handleDeleteBatch = (data: BatchData) => {
+  const handleDeleteBatch = (data: IBatchData) => {
     if (data.state !== BatchStatus.STATUS_PENDING) {
       /*
       Extracting project id  
@@ -210,7 +210,7 @@ const BatchesComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  const renderActions = (data: BatchData) => {
+  const renderActions = (data: IBatchData) => {
     return (
       <div
         className="actions-icon"
