@@ -53,7 +53,8 @@ function ConfigSelection({
   configError,
   setConfigError,
   themeManager,
-  app
+  app,
+  launcher
 }: any) {
   const Iconsettings = new LabIcon({
     name: 'launcher:settings_icon',
@@ -182,7 +183,9 @@ function ConfigSelection({
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
           themeManager={themeManager}
+          launcher={launcher}
           app={app}
+          fromPage="config"
         />
       ) : (
         <div className="settings-component">

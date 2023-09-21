@@ -25,6 +25,8 @@ import { checkConfig } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
+import { ILauncher } from '@jupyterlab/launcher';
+import { JupyterLab } from '@jupyterlab/application';
 
 // Create the LabIcon instance outside of the component
 const IconsigninGoogle = new LabIcon({
@@ -32,7 +34,15 @@ const IconsigninGoogle = new LabIcon({
   svgstr: signinGoogleIcon
 });
 
-const AuthLoginComponent = ({themeManager }: {themeManager: IThemeManager}): React.JSX.Element => {
+const AuthLoginComponent = ({
+  app,
+  launcher,
+  themeManager
+}: {
+  app: JupyterLab;
+  launcher: ILauncher;
+  themeManager: IThemeManager;
+}): React.JSX.Element => {
   const [loginState, setLoginState] = useState(false);
   const [isloginDisabled, setIsloginDisabled] = useState(false);
   const [configError, setConfigError] = useState(false);
@@ -83,7 +93,9 @@ const AuthLoginComponent = ({themeManager }: {themeManager: IThemeManager}): Rea
           loginState={loginState}
           configError={configError}
           setConfigError={setConfigError}
-          themeManager = {themeManager}
+          themeManager={themeManager}
+          app={app}
+          launcher={launcher}
         />
       )}
       {loginError && (
@@ -99,7 +111,10 @@ const AuthLoginComponent = ({themeManager }: {themeManager: IThemeManager}): Rea
               }
               onClick={isloginDisabled ? undefined : login}
             >
-              <IconsigninGoogle.react tag="div" className='logo-alignment-style' />
+              <IconsigninGoogle.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             </div>
           </div>
         </>
@@ -114,12 +129,26 @@ const AuthLoginComponent = ({themeManager }: {themeManager: IThemeManager}): Rea
 };
 
 export class AuthLogin extends DataprocWidget {
+  app: JupyterLab;
+  launcher: ILauncher;
 
-  constructor(themeManager: IThemeManager) {
+  constructor(
+    app: JupyterLab,
+    launcher: ILauncher,
+    themeManager: IThemeManager
+  ) {
     super(themeManager);
+    this.app = app;
+    this.launcher = launcher;
   }
 
   renderInternal(): React.JSX.Element {
-    return <AuthLoginComponent themeManager={this.themeManager}/>;
+    return (
+      <AuthLoginComponent
+        app={this.app}
+        launcher={this.launcher}
+        themeManager={this.themeManager}
+      />
+    );
   }
 }

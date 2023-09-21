@@ -34,7 +34,8 @@ import LabelProperties from '../jobs/labelProperties';
 import {
   authApi,
   toastifyCustomStyle,
-  authenticatedFetch
+  authenticatedFetch,
+  iconDisplay
 } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
@@ -46,6 +47,8 @@ import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
+import { KernelSpecAPI } from '@jupyterlab/services';
+import { ILauncher } from '@jupyterlab/launcher';
 
 
 type Project = {
@@ -86,12 +89,16 @@ function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
   themeManager,
-  app
+  launcher,
+  app,
+  fromPage
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
   themeManager: IThemeManager;
+  launcher: ILauncher;
   app: JupyterLab;
+  fromPage: string;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -725,7 +732,7 @@ function CreateRunTime({
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
-    if (selectedRuntimeClone === undefined) {
+    if (fromPage === 'launcher') {
       app.shell.activeWidget?.close();
     } 
   };
@@ -798,7 +805,98 @@ function CreateRunTime({
               `RuntimeTemplate ${displayNameSelected} successfully submitted`,
               toastifyCustomStyle
             );
-            if (selectedRuntimeClone === undefined) {
+
+            const kernelSpecs = await KernelSpecAPI.getSpecs();
+            const kernels = kernelSpecs.kernelspecs;
+
+            const { commands } = app;
+            
+            if (launcher) {
+              Object.values(kernels).forEach((kernelsData, index) => {
+                const commandNameExist = `notebook:create-${kernelsData?.name}`
+                if (
+                  kernelsData?.resources.endpointParentResource &&
+                  kernelsData?.resources.endpointParentResource.includes('/sessions') &&
+                  // Check if the command is already registered
+                  !commands.hasCommand(commandNameExist)
+                ) {
+                  const commandNotebook = `notebook:create-${kernelsData?.name}`;
+                  commands.addCommand(commandNotebook, {
+                    caption: kernelsData?.display_name,
+                    label: kernelsData?.display_name,
+                    icon: iconDisplay(kernelsData),
+                    execute: async () => {
+                      const model = await app.commands.execute(
+                        'docmanager:new-untitled',
+                        {
+                          type: 'notebook',
+                          path: '',
+                          kernel: { name: kernelsData?.name }
+                        }
+                      );
+                      await app.commands.execute('docmanager:open', {
+                        kernel: { name: kernelsData?.name },
+                        path: model.path,
+                        factory: 'notebook'
+                      });
+                    }
+                  });
+        
+                  launcher.add({
+                    command: commandNotebook,
+                    category: 'Dataproc Serverless Notebooks',
+                    //@ts-ignore jupyter lab Launcher type issue
+                    metadata: kernelsData?.metadata,
+                    rank: index + 1,
+                    //@ts-ignore jupyter lab Launcher type issue
+                    args: kernelsData?.argv
+                  });
+                }
+              });
+              Object.values(kernels).forEach((kernelsData, index) => {
+                const commandNameExist = `notebook:create-${kernelsData?.name}`
+                if (
+                  kernelsData?.resources.endpointParentResource &&
+                  !kernelsData?.resources.endpointParentResource.includes('/sessions') &&
+                  // Check if the command is already registered
+                  !commands.hasCommand(commandNameExist)
+                ) {
+                  const commandNotebook = `notebook:create-${kernelsData?.name}`;
+                  commands.addCommand(commandNotebook, {
+                    caption: kernelsData?.display_name,
+                    label: kernelsData?.display_name,
+                    icon: iconDisplay(kernelsData),
+                    execute: async () => {
+                      const model = await app.commands.execute(
+                        'docmanager:new-untitled',
+                        {
+                          type: 'notebook',
+                          path: '',
+                          kernel: { name: kernelsData?.name }
+                        }
+                      );
+                      await app.commands.execute('docmanager:open', {
+                        kernel: { name: kernelsData?.name },
+                        path: model.path,
+                        factory: 'notebook'
+                      });
+                    }
+                  });
+        
+                  launcher.add({
+                    command: commandNotebook,
+                    category: 'Dataproc Cluster Notebooks',
+                    //@ts-ignore jupyter lab Launcher type issue
+                    metadata: kernelsData?.metadata,
+                    rank: index + 1,
+                    //@ts-ignore jupyter lab Launcher type issue
+                    args: kernelsData?.argv
+                  });
+                }
+              });
+            }
+
+            if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
             } 
             console.log(responseResult);
@@ -836,7 +934,7 @@ function CreateRunTime({
               `RuntimeTemplate ${displayNameSelected} successfully updated`,
               toastifyCustomStyle
             );
-            if (selectedRuntimeClone === undefined) {
+            if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
             } 
             console.log(responseResult);
