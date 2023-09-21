@@ -95,9 +95,7 @@ interface IJobDetailsProps {
   setDetailedJobView: (value: boolean) => void;
   stopJobApi: (jobId: string) => Promise<void>;
   deleteJobApi: (jobId: string) => Promise<void>;
-  region: {
-    region:string
-  };
+  region: any;
   setDetailedView: (value: boolean) => void;
   clusterResponse: object;
   clustersList: object;
