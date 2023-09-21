@@ -332,7 +332,7 @@ export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel) => {
 
 export interface ICellProps {
   getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
-  value: string | any;
+  value: string |any;
   column: {
     Header: string;
   };

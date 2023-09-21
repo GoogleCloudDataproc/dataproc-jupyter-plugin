@@ -97,16 +97,16 @@ interface ICreateBatchProps {
   setCreateBatch?: (value: boolean) => void;
 }
 
-function batchKey(batchSelected: any) {
+function batchKey(batchSelected: string | undefined) {
   const batchKeys: string[] = [];
 
-  for (const key in batchSelected) {
-    if (key.endsWith('Batch')) {
-      batchKeys.push(key);
-    }
+  if (batchSelected && batchSelected.endsWith('Batch')) {
+    batchKeys.push(batchSelected);
   }
+
   return batchKeys;
 }
+
 function batchTypeFunction(batchKey: string) {
   let batchType = 'spark';
   switch (batchKey) {
@@ -453,7 +453,11 @@ function CreateBatch({
     setMainJarSelected('');
     setMainJarValidation(true);
   };
-  const listNetworksFromSubNetworkAPI = async (subNetwork: any) => {
+  interface NetworkResponse {
+    network: string;
+    // Add other properties if they exist in the response
+  }
+  const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
     setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
@@ -462,22 +466,21 @@ function CreateBatch({
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
+            Authorization: API_HEADER_BEARER + credentials.access_token,
+          },
         }
       )
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: NetworkResponse) => {
               let transformedNetworkSelected = '';
-
+  
               transformedNetworkSelected = responseResult.network.split('/')[9];
-
+  
               setNetworkSelected(transformedNetworkSelected);
               setIsloadingNetwork(false);
             })
-
             .catch((e: Error) => {
               console.log(e);
             });
@@ -487,6 +490,7 @@ function CreateBatch({
         });
     }
   };
+  
   function isSubmitDisabled() {
     const commonConditions =
       batchIdSelected === '' || regionName === '' || batchIdValidation;
@@ -573,7 +577,7 @@ function CreateBatch({
       if (listOfFiles.length === 0) {
         setValidationPart(true);
       } else {
-        listOfFiles.forEach((fileName: any) => {
+        listOfFiles.forEach((fileName: string) => {
           if (
             fileName.startsWith('file://') ||
             fileName.startsWith('gs://') ||
@@ -753,7 +757,17 @@ function CreateBatch({
         });
     }
   };
-  const listKeysAPI = async (keyRing: any) => {
+  interface Key {
+    primary: {
+      state:string
+    };
+    name: string;
+  }
+  interface KeyListResponse {
+    cryptoKeys: Key[];
+  }
+  
+  const listKeysAPI = async (keyRing: string) => {
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -768,7 +782,7 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: KeyListResponse) => {
               let transformedKeyList = [];
               /*
          Extracting network from items
@@ -776,7 +790,7 @@ function CreateBatch({
       */
 
               transformedKeyList = responseResult.cryptoKeys
-                .filter((data: any) => data.primary && data.primary.state==='ENABLED')
+                .filter((data: Key) => data.primary && data.primary.state==='ENABLED')
                 .map((data: {name: string}) => ({
                   name: data.name.split('/')[7]
                 }));
@@ -1215,6 +1229,7 @@ function CreateBatch({
     const newBatchId = event.target.value;
     setBatchIdSelected(newBatchId);
   };
+ 
   const handleBatchTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setBatchTypeSelected(data.value);
     setFilesSelected([]);
@@ -1243,7 +1258,9 @@ function CreateBatch({
     setServicesSelected('');
     setServicesList([]);
     setRegion(data.value);
-    listMetaStoreAPI(data.value);
+      listMetaStoreAPI(data.value);
+    
+    
   };
   const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setNetworkSelected(data.value);
