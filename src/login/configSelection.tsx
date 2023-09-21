@@ -79,7 +79,7 @@ function ConfigSelection({
     setIsSaving(true);
     const dataToSend = { projectId, region };
     try {
-      const data = await requestAPI<any>('configuration', {
+      const data = await requestAPI('configuration', {
         body: JSON.stringify(dataToSend),
         method: 'POST'
       });
@@ -102,6 +102,10 @@ function ConfigSelection({
       setIsSaving(false);
     }
   };
+  interface UserInfoResponse {
+    email: string;
+    picture: string;
+  }
 
   const displayUserInfo = async (credentials: IAuthCredentials | undefined) => {
     if (credentials) {
@@ -115,7 +119,7 @@ function ConfigSelection({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: UserInfoResponse) => {
               setUserInfo(responseResult);
               setIsLoadingUser(false);
             })
