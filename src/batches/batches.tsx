@@ -82,6 +82,21 @@ const BatchesComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: 'Sessions' | 'Batches') => {
     setSelectedMode(mode);
   };
+  interface BatchData {
+    name: string;
+    state: BatchStatus;
+    createTime: string;
+    stateTime: Date;
+
+    // Add other properties as needed
+  }
+
+  // Define an interface for the batch list response structure
+  interface BatchListResponse {
+    batches: BatchData[];
+    nextPageToken?: string;
+    // Add other properties as needed
+  }
 
   const listBatchAPI = async (
     nextPageToken?: string,
@@ -104,11 +119,19 @@ const BatchesComponent = (): React.JSX.Element => {
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
-              let transformBatchListData = [];
+            .then((responseResult: BatchListResponse) => {
+              let transformBatchListData: {
+                batchID: string;
+                status: string;
+                location: string;
+                creationTime: string;
+                type: string | undefined;
+                elapsedTime: string;
+                actions: React.JSX.Element;
+              }[] = [];
               if (responseResult && responseResult.batches) {
                 transformBatchListData = responseResult.batches.map(
-                  (data: any) => {
+                  (data: BatchData) => {
                     const startTimeDisplay = jobTimeFormat(data.createTime);
                     const startTime = new Date(data.createTime);
                     const elapsedTimeString = elapsedTime(
@@ -170,8 +193,7 @@ const BatchesComponent = (): React.JSX.Element => {
     setBatchSelected(selectedName);
     setDetailedBatchView(true);
   };
-
-  const handleDeleteBatch = (data: any) => {
+  const handleDeleteBatch = (data: BatchData) => {
     if (data.state !== BatchStatus.STATUS_PENDING) {
       /*
       Extracting project id  
@@ -192,7 +214,7 @@ const BatchesComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  const renderActions = (data: { state: BatchStatus; name: string }) => {
+  const renderActions = (data: BatchData) => {
     return (
       <div
         className="actions-icon"
