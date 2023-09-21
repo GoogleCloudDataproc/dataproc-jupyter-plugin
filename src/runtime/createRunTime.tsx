@@ -370,6 +370,10 @@ function CreateRunTime({
             .json()
             .then((responseResult: INetworkAPI) => {
               let transformedNetworkSelected = '';
+                 /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
+      */
               transformedNetworkSelected = responseResult.network.split('/')[9];
 
               setNetworkSelected(transformedNetworkSelected);
