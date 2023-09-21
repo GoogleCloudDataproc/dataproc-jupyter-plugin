@@ -526,11 +526,15 @@ fetching database name from fully qualified name structure */
                 setDatabaseDetails(updatedDatabaseDetails);
                 setDatabaseNames(databaseNames);
                 setTotalDatabases(databaseNames.length);
+                setApiError(false);
+                setSchemaError(false);
               } else {
                 if (responseResult?.error?.code) {
                   setApiError(true);
+                  setSchemaError(false);
                 } else {
                   setSchemaError(true);
+                  setApiError(false);
                 }
                 setNoDpmsInstance(true);
                 setIsLoading(false);

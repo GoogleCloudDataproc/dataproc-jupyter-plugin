@@ -397,7 +397,7 @@ export const batchDetailsOptionalDisplay = (data: string) => {
   }
 };
 
-export const lastModifiedFormat = (lastModifiedDate: any) => {
+export const lastModifiedFormat = (lastModifiedDate: Date) => {
   const elapsedMilliseconds = new Date().getTime() - lastModifiedDate.getTime();
   let seconds = Math.floor(elapsedMilliseconds / 1000);
 

@@ -742,7 +742,7 @@ function CreateRunTime({
   };
   const handleNetworkTags = (
     setDuplicateValidation: (value: boolean) => void,
-    listOfFiles: any
+    listOfFiles: string[]
   ) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
