@@ -29,7 +29,7 @@ function TableData({
   tableDataCondition,
   fromPage
 }: any) {
-  const displayData = page ? page: rows
+  const displayData = page ? page : rows;
   return (
     <table {...getTableProps()} className="clusters-list-table">
       <thead>
@@ -65,7 +65,14 @@ function TableData({
           displayData.map((row: any) => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps()} className="cluster-list-data-parent">
+              <tr
+                {...row.getRowProps()}
+                className={
+                  fromPage === 'Buckets'
+                    ? 'gcs-row-data-parent'
+                    : 'cluster-list-data-parent'
+                }
+              >
                 {row.cells.map((cell: any) => {
                   return tableDataCondition(cell);
                 })}

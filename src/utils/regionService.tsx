@@ -23,7 +23,7 @@ import {
 } from '../utils/const';
 import { authApi } from '../utils/utils';
 
-interface Regions {
+interface IRegions {
   name: string;
 }
 
@@ -39,12 +39,14 @@ const regionListAPI = async (projectId: string) => {
       Authorization: API_HEADER_BEARER + credentials.access_token
     }
   });
-  const { items } = (await resp.json()) as { items: Regions[] | undefined };
+  const { items } = (await resp.json()) as { items: IRegions[] | undefined };
   return items ?? [];
 };
 
-export function useRegion(projectId: string) {
-  const [regions, setRegions] = useState<Regions[]>([]);
+export function useRegion(
+  projectId: string
+) {
+  const [regions, setRegions] = useState<IRegions[]>([]);
   const currentRegion = useRef(projectId);
   useEffect(() => {
     currentRegion.current = projectId;

@@ -30,6 +30,7 @@ import { Batches } from './batches/batches';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
+import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
@@ -43,13 +44,16 @@ const iconDpms = new LabIcon({
 });
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
+import { GcsBucket } from './gcs/gcsBucket';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
-  optional: [ILauncher, IMainMenu, ILabShell, INotebookTracker, IThemeManager],
+  optional: [IFileBrowserFactory, ILauncher, IMainMenu, ILabShell, INotebookTracker, IThemeManager],
   activate: async (
     app: JupyterFrontEnd,
+    factory: IFileBrowserFactory,
     launcher: ILauncher,
     mainMenu: IMainMenu,
     labShell: ILabShell,
@@ -57,6 +61,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     themeManager: IThemeManager
   ) => {
     const { commands } = app;
+
     const iconAddRuntime = new LabIcon({
       name: 'launcher:add-runtime-icon',
       svgstr: addRuntimeIcon
@@ -69,9 +74,15 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
+    const iconStorage = new LabIcon({
+      name: 'launcher:storage-icon',
+      svgstr: storageIcon
+    });
+
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
+    let lastClusterName = '';
     const panel = new Panel();
     panel.id = 'dpms-tab';
     panel.title.icon = iconDpms;
@@ -86,15 +97,23 @@ const extension: JupyterFrontEndPlugin<void> = {
       panel.addWidget(newWidget);
     };
 
+  
     panel.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-    const localStorageValue = localStorage.getItem('notebookValue');
-    if (localStorageValue) {
-      loadDpmsWidget(localStorageValue);
+    lastClusterName = localStorage.getItem('notebookValue') || '';
+    if (lastClusterName) {
+      loadDpmsWidget(lastClusterName);
     }
     app.shell.add(panel, 'left', { rank: 1000 });
+
+    const panelGcs = new Panel();
+    panelGcs.id = 'GCS-bucket-tab';
+    panelGcs.title.icon = iconStorage; 
+    panelGcs.addWidget(new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory));
+    app.shell.add(panelGcs, 'left', { rank: 1001 });
+
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
-      let localStorageValue = localStorage.getItem('notebookValue');
+      lastClusterName = localStorage.getItem('notebookValue') || '';
       if (widget && widget instanceof NotebookPanel) {
         const kernel = widget.sessionContext.session?.kernel;
         if (kernel) {
@@ -106,28 +125,28 @@ const extension: JupyterFrontEndPlugin<void> = {
             const parts =
               kernelSpec?.resources.endpointParentResource.split('/');
             const clusterValue = parts[parts.length - 1] + '/clusters';
-            if (localStorageValue === null) {
+            if (lastClusterName === null) {
               localStorage.setItem('notebookValue', clusterValue);
-              localStorageValue = localStorage.getItem('notebookValue');
-              loadDpmsWidget(localStorageValue || '');
-            } else if (localStorageValue !== clusterValue) {
+              lastClusterName = localStorage.getItem('notebookValue') || '';
+              loadDpmsWidget(lastClusterName || '');
+            } else if (lastClusterName !== clusterValue) {
               localStorage.setItem('notebookValue', clusterValue);
-              localStorageValue = localStorage.getItem('notebookValue');
-              loadDpmsWidget(localStorageValue || '');
+              lastClusterName = localStorage.getItem('notebookValue') || '';
+              loadDpmsWidget(lastClusterName || '');
             }
           } else if (
             kernelSpec?.resources.endpointParentResource.includes('/sessions')
           ) {
             const parts = kernelSpec?.name.split('-');
             const sessionValue = parts.slice(1).join('-') + '/sessions';
-            if (localStorageValue === null) {
+            if (lastClusterName === null) {
               localStorage.setItem('notebookValue', sessionValue);
-              localStorageValue = localStorage.getItem('notebookValue');
-              loadDpmsWidget(localStorageValue || '');
-            } else if (localStorageValue !== sessionValue) {
+              lastClusterName = localStorage.getItem('notebookValue') || '';
+              loadDpmsWidget(lastClusterName || '');
+            } else if (lastClusterName !== sessionValue) {
               localStorage.setItem('notebookValue', sessionValue);
-              localStorageValue = localStorage.getItem('notebookValue');
-              loadDpmsWidget(localStorageValue || '');
+              lastClusterName = localStorage.getItem('notebookValue') || '';
+              loadDpmsWidget(lastClusterName || '');
             }
           }
         } else {
@@ -154,6 +173,30 @@ const extension: JupyterFrontEndPlugin<void> = {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
+        } else if (
+          (newValue.title.label === 'Launcher' ||
+            newValue.title.label === 'Config Setup' ||
+            newValue.title.label === 'Clusters' ||
+            newValue.title.label === 'Serverless') &&
+          lastClusterName !== ''
+        ) {
+          localStorage.setItem('oldNotebookValue', lastClusterName || '');
+          localStorage.removeItem('notebookValue');
+          lastClusterName = '';
+          loadDpmsWidget('');
+        } else {
+          if (
+            lastClusterName === '' &&
+            newValue.title.label !== 'Launcher' &&
+            newValue.title.label !== 'Config Setup' &&
+            newValue.title.label !== 'Clusters' &&
+            newValue.title.label !== 'Serverless'
+          ) {
+            let oldNotebook = localStorage.getItem('oldNotebookValue');
+            localStorage.setItem('notebookValue', oldNotebook || '');
+            lastClusterName = localStorage.getItem('notebookValue') || '';
+            loadDpmsWidget(oldNotebook || '');
+          }
         }
       }
     });
@@ -169,7 +212,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconAddRuntime),
       execute: () => {
-        const content = new RuntimeTemplate(app as JupyterLab, themeManager);
+        const content = new RuntimeTemplate(app as JupyterLab,launcher as ILauncher, themeManager);
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;
@@ -211,7 +254,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Cloud Dataproc Settings',
       execute: () => {
-        const content = new AuthLogin(themeManager);
+        const content = new AuthLogin(app as JupyterLab,launcher as ILauncher, themeManager);
         const widget = new MainAreaWidget<AuthLogin>({ content });
         widget.title.label = 'Config Setup';
         widget.title.icon = iconCluster;

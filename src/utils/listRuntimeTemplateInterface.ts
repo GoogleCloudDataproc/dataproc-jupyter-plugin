@@ -1,37 +1,37 @@
-export interface SessionTemplateRoot {
-  sessionTemplates: SessionTemplate[];
+export interface ISessionTemplateRoot {
+  sessionTemplates: ISessionTemplate[];
   nextPageToken: string;
 }
 
-export interface SessionTemplate {
+export interface ISessionTemplate {
   name: string;
   createTime: string;
-  jupyterSession: JupyterSession;
+  jupyterSession: IJupyterSession;
   creator: string;
-  labels: Labels;
-  environmentConfig: EnvironmentConfig;
+  labels: ILabels;
+  environmentConfig: IEnvironmentConfig;
   description: string;
   updateTime: string;
 }
 
-export interface JupyterSession {
+export interface IJupyterSession {
   kernel: string;
   displayName: string;
 }
 
-export interface Labels {
+export interface ILabels {
   purpose: string;
 }
 
-export interface EnvironmentConfig {
-  executionConfig: ExecutionConfig;
+export interface IEnvironmentConfig {
+  executionConfig: IExecutionConfig;
 }
 
-export interface ExecutionConfig {
+export interface IExecutionConfig {
   subnetworkUri: string;
 }
 
-export interface SessionTemplateDisplay {
+export interface ISessionTemplateDisplay {
   name: string;
   owner: string;
   description: string;

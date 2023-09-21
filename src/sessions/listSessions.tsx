@@ -19,7 +19,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
 import { useGlobalFilter, usePagination, useTable } from 'react-table';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
@@ -49,7 +49,8 @@ import {
   ICellProps,
   authenticatedFetch,
   elapsedTime,
-  jobTimeFormat
+  jobTimeFormat,
+  toastifyCustomStyle
 } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 
@@ -154,56 +155,59 @@ function ListSessions() {
         queryParams: queryParams
       });
       const formattedResponse = await response.json();
-      let transformSessionListData = [];
+      let transformSessionListData: React.SetStateAction<never[]> = [];
       if (formattedResponse && formattedResponse.sessions) {
         let sessionsListNew = formattedResponse.sessions;
-        sessionsListNew.sort(
-          (a: { createTime: string }, b: { createTime: string }) => {
-            const dateA = new Date(a.createTime);
-            const dateB = new Date(b.createTime);
-            return Number(dateB) - Number(dateA);
-          }
-        );
-        transformSessionListData = sessionsListNew.map((data: any) => {
-          const startTimeDisplay = jobTimeFormat(data.createTime);
-          const startTime = new Date(data.createTime);
-          let elapsedTimeString = '';
-          if (data.state === STATUS_TERMINATED || data.state === STATUS_FAIL) {
-            elapsedTimeString = elapsedTime(data.stateTime, startTime);
-          }
 
-          // Extracting sessionID, location from sessionInfo.name
-          // Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
-
-          return {
-            sessionID: data.name.split('/')[5],
-            status: data.state,
-            location: data.name.split('/')[3],
-            creator: data.creator,
-            creationTime: startTimeDisplay,
-            elapsedTime: elapsedTimeString,
-            actions: renderActions(data)
-          };
-        });
+        const existingSessionsData = previousSessionsList ?? [];
+        // setStateAction never type issue
+        let allSessionsData: any = [
+          ...(existingSessionsData as []),
+          ...sessionsListNew
+        ];
+  
+        if (formattedResponse.nextPageToken) {
+          listSessionsAPI(formattedResponse.nextPageToken, allSessionsData);
+        } else {
+          allSessionsData.sort(
+            (a: { createTime: string }, b: { createTime: string }) => {
+              const dateA = new Date(a.createTime);
+              const dateB = new Date(b.createTime);
+              return Number(dateB) - Number(dateA);
+            }
+          );
+          transformSessionListData = allSessionsData.map((data: any) => {
+            const startTimeDisplay = jobTimeFormat(data.createTime);
+            const startTime = new Date(data.createTime);
+            let elapsedTimeString = '';
+            if (data.state === STATUS_TERMINATED || data.state === STATUS_FAIL) {
+              elapsedTimeString = elapsedTime(data.stateTime, startTime);
+            }
+  
+            // Extracting sessionID, location from sessionInfo.name
+            // Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
+  
+            return {
+              sessionID: data.name.split('/')[5],
+              status: data.state,
+              location: data.name.split('/')[3],
+              creator: data.creator,
+              creationTime: startTimeDisplay,
+              elapsedTime: elapsedTimeString,
+              actions: renderActions(data)
+            };
+          });
+          setSessionsList(transformSessionListData);
+          setIsLoading(false);
+        }
       }
+      
 
-      const existingSessionsData = previousSessionsList ?? [];
-      // setStateAction never type issue
-      let allSessionsData: any = [
-        ...(existingSessionsData as []),
-        ...transformSessionListData
-      ];
 
-      if (formattedResponse.nextPageToken) {
-        listSessionsAPI(formattedResponse.nextPageToken, allSessionsData);
-      } else {
-        setSessionsList(allSessionsData);
-        setIsLoading(false);
-      }
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing Sessions', error);
-      toast.error('Failed to fetch sessions');
+      toast.error('Failed to fetch sessions', toastifyCustomStyle);
     }
   };
 
@@ -277,9 +281,9 @@ function ListSessions() {
           }
         >
           {data.state === ClusterStatus.STATUS_ACTIVE ? (
-            <iconStop.react tag="div" />
+            <iconStop.react tag="div" className='logo-alignment-style' />
           ) : (
-            <iconStopDisable.react tag="div" />
+            <iconStopDisable.react tag="div" className='logo-alignment-style' />
           )}
         </div>
         <div
@@ -288,7 +292,7 @@ function ListSessions() {
           title="Delete Session"
           onClick={() => handleDeleteSession(sessionValue)}
         >
-          <iconDelete.react tag="div" />
+          <iconDelete.react tag="div" className='logo-alignment-style' />
         </div>
       </div>
     );
@@ -316,24 +320,24 @@ function ListSessions() {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           <div key="Status" className="cluster-status-parent">
-            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" />}
+            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" className='logo-alignment-style' />}
             {cell.value === STATUS_TERMINATED && (
-              <iconSucceeded.react tag="div" />
+              <iconSucceeded.react tag="div" className='logo-alignment-style' />
             )}
-            {cell.value === STATUS_ACTIVE && <iconSucceeded.react tag="div" />}
+            {cell.value === STATUS_ACTIVE && <iconSucceeded.react tag="div" className='logo-alignment-style' />}
             {(cell.value === STATUS_PROVISIONING ||
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_TERMINATING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={15}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            )}
+                <ClipLoader
+                  color="#8A8A8A"
+                  loading={true}
+                  size={15}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>
@@ -351,7 +355,6 @@ function ListSessions() {
 
   return (
     <div>
-      <ToastContainer />
       {deletePopupOpen && (
         <DeletePopup
           onCancel={() => handleCancelDelete()}
@@ -375,7 +378,7 @@ function ListSessions() {
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" />
+              <iconFilter.react tag="div" className='logo-alignment-style' />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

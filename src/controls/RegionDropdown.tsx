@@ -33,7 +33,7 @@ type Props = {
  * Component to render a region selector dropdown.
  */
 export function RegionDropdown(props: Props) {
-  const { projectId, region, onRegionChange } = props;
+  const { projectId, region, onRegionChange} = props;
   const regions = useRegion(projectId);
 
   const regionStrList = useMemo(

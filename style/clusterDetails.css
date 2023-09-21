@@ -5,6 +5,7 @@
   display: flex;
   border-bottom: 1px solid var(--jp-layout-color4);
 }
+
 .scrollable-content {
   overflow: auto;
   max-height: calc(100vh - 48px);
@@ -53,10 +54,12 @@
   align-items: center;
   justify-content: center;
 }
+
 .action-disabled {
   opacity: 0.5;
   cursor: context-menu !important;
 }
+
 .action-cluster-section {
   cursor: pointer;
   padding-left: 20px;
@@ -103,6 +106,7 @@
   min-height: 18px;
   margin-bottom: 6px;
 }
+
 .cluster-details-value-job {
   font-style: normal;
   font-weight: 400;

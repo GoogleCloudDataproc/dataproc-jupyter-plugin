@@ -17,12 +17,11 @@
 
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
-import { Tree, NodeRendererProps } from 'react-arborist';
+import { Tree, NodeRendererProps, NodeApi} from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
 import columnsIcon from '../../style/icons/columns_icon.svg';
-import refreshIcon from '../../style/icons/refresh_icon.svg';
 import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
 import datasetsIcon from '../../style/icons/datasets_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
@@ -42,13 +41,13 @@ import {
   QUERY_DATABASE,
   QUERY_TABLE
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
-
+import { IconButton, InputAdornment, TextField } from '@mui/material';
 const iconDatabase = new LabIcon({
   name: 'launcher:database-icon',
   svgstr: databaseIcon
@@ -69,10 +68,6 @@ const iconDatabaseWidget = new LabIcon({
   name: 'launcher:databse-widget-icon',
   svgstr: databaseWidgetIcon
 });
-const iconRefresh = new LabIcon({
-  name: 'launcher:refresh-icon',
-  svgstr: refreshIcon
-});
 const iconSearch = new LabIcon({
   name: 'launcher:search-icon',
   svgstr: searchIcon
@@ -90,7 +85,7 @@ const iconSearchClear = new LabIcon({
   svgstr: searchClearIcon
 });
 
-const calculateDepth = (node: any): number => {
+const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
   while (currentNode.parent) {
@@ -99,7 +94,6 @@ const calculateDepth = (node: any): number => {
   }
   return depth;
 };
-
 const DpmsComponent = ({
   app,
   themeManager
@@ -116,9 +110,15 @@ const DpmsComponent = ({
   const [session, setSession] = useState(false);
   const [cluster, setCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
-  const [columnResponse, setColumnResponse] = useState<string[]>([]);
-  const [databaseDetails, setDatabaseDetails] = useState({});
-  const [tableDescription, setTableDescription] = useState({});
+  const [databaseNames, setDatabaseNames] = useState<string[]>([]);
+  const [apiError, setApiError] = useState(false);
+  const [schemaError, setSchemaError] = useState(false);
+  const [totalDatabases, setTotalDatabases] = useState<number>(0);
+  const [totalTables, setTotalTables] = useState<number>(0);
+  const [columnResponse, setColumnResponse] = useState<IColumn[]>([]);
+const [databaseDetails, setDatabaseDetails] = useState<Record<string, string>>({});
+const [tableDescription, setTableDescription] = useState<Record<string, string>>({});
+
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -133,8 +133,8 @@ const DpmsComponent = ({
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: unknown) => {
-              setColumnResponse((prevResponse: any) => [
+            .then(async (responseResult: IColumn) => {
+              setColumnResponse((prevResponse: IColumn[]) => [
                 ...prevResponse,
                 responseResult
               ]);
@@ -148,10 +148,17 @@ const DpmsComponent = ({
         })
         .catch((err: Error) => {
           console.error('Error getting column details', err);
-          toast.error('Error getting column details');
+          toast.error('Error getting column details', toastifyCustomStyle);
         });
     }
   };
+  interface ITableResponse {
+    results: Array<{
+      displayName: string;
+      relativeResourceName: string;
+      description: string;
+    }>;
+  }
   const getTableDetails = async (database: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -173,7 +180,7 @@ const DpmsComponent = ({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: ITableResponse) => {
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -194,55 +201,86 @@ const DpmsComponent = ({
               );
               setEntries(entryNames);
               setTableDescription(updatedTableDetails);
+              setTotalTables(tableNames.length);
             })
             .catch((e: Error) => {
               console.log(e);
+              if (totalDatabases !== undefined) {
+                setTotalDatabases(totalDatabases - 1 || 0);
+              }
             });
         })
         .catch((err: Error) => {
           console.error('Error getting table details', err);
-          toast.error('Error getting table details');
+          toast.error('Error getting table details', toastifyCustomStyle);
         });
     }
   };
-  const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
-  columnResponse.forEach((res: any) => {
-    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
-fetching database name from fully qualified name structure */
-    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
-    const tableName = res.displayName;
-    const columns = res.schema.columns.map(
-      (column: {
+  interface IColumn {
+    name: string;
+    schema: {
+      columns: {
         column: string;
         type: string;
         mode: string;
         description: string;
-      }) => ({
-        name: column.column,
-        type: column.type.toUpperCase(),
-        mode: column.mode,
-        description: column?.description || 'None'
-      })
-    );
+      }[];
+    };
+    fullyQualifiedName: string;
+    displayName: string;
+    column: string;
+    type: string;
+    mode: string;
+    description: string;
+  }  
+  interface IDataEntry {
+    id: string;
+    name: string;
+    description: string;
+    children: Table[];
+  }
+  const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } = {};
 
-    if (!database[dbName]) {
-      database[dbName] = {};
+  columnResponse.forEach((res:IColumn) => {
+    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
+fetching database name from fully qualified name structure */
+    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
+    const tableName = res.displayName;
+    const columns: IColumn[] = res.schema.columns.map((column: {
+      column: string;
+      type: string;
+      mode: string;
+      description: string;
+    }) => ({
+      name: column.column,
+      schema: res.schema, // Include the schema object
+      fullyQualifiedName: res.fullyQualifiedName,
+      displayName: res.displayName,
+      column: res.column,
+      type: res.type,
+      mode: res.mode,
+      description: res.description,
+    }));
+
+
+    if (!databases[dbName]) {
+      databases[dbName] = {};
     }
 
-    if (!database[dbName][tableName]) {
-      database[dbName][tableName] = [];
+    if (!databases[dbName][tableName]) {
+      databases[dbName][tableName] = [];
     }
 
-    database[dbName][tableName].push(...columns);
+    databases[dbName][tableName].push(...columns);
   });
-  const data = Object.entries(database).map(([dbName, tables]) => ({
+  const data = Object.entries(databases).map(([dbName, tables]) => ({
     id: uuidv4(),
     name: dbName,
     children: Object.entries(tables).map(([tableName, columns]) => ({
       id: uuidv4(),
       name: tableName,
       desciption: '',
-      children: columns.map((column: any) => ({
+      children: columns.map((column:IColumn) => ({
         id: uuidv4(),
         name: column.name,
         type: column.type,
@@ -266,8 +304,8 @@ fetching database name from fully qualified name structure */
   const searchMatch = (node: { data: { name: string } }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
-  const openedWidgets: string[] = [];
-  const handleNodeClick = (node: any) => {
+  const openedWidgets: Record<string, boolean> = {};
+  const handleNodeClick = (node: NodeApi) => {
     const depth = calculateDepth(node);
     const widgetTitle = node.data.name;
     if (!openedWidgets[widgetTitle]) {
@@ -285,7 +323,11 @@ fetching database name from fully qualified name structure */
         widget.title.closable = true;
         widget.title.icon = iconDatabaseWidget;
         app.shell.add(widget, 'main');
-      } else if (depth === 2) {
+        widget.disposed.connect(() => {
+          const widgetTitle = widget.title.label;
+          delete openedWidgets[widgetTitle];
+        });
+      } else if (depth === 2 && node.parent) {
         const database = node.parent.data.name;
         const column = node.data.children;
         const content = new Table(
@@ -303,29 +345,19 @@ fetching database name from fully qualified name structure */
         widget.title.closable = true;
         widget.title.icon = iconDatasets;
         app.shell.add(widget, 'main');
+        widget.disposed.connect(() => {
+          const widgetTitle = widget.title.label;
+          delete openedWidgets[widgetTitle];
+        });
       }
       openedWidgets[widgetTitle] = node.data.name;
     }
   };
-  const clearState = () => {
-    setSearchTerm('');
-    setNotebookValue('');
-    setDataprocMetastoreServices('');
-    setIsLoading(true);
-    setEntries([]);
-    setColumnResponse([]);
-    setDatabaseDetails({});
-  };
-  const handleRefreshClick = () => {
-    clearState();
-    setIsLoading(true);
-    getActiveNotebook();
-  };
   const handleSearchClear = () => {
     setSearchTerm('');
   };
-  type NodeProps = NodeRendererProps<any> & {
-    onClick: (node: any) => void;
+  type NodeProps = NodeRendererProps<IDataEntry> & {
+    onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
   };
   const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
@@ -351,7 +383,7 @@ fetching database name from fully qualified name structure */
               className="caret-icon right"
               onClick={handleIconClick}
             >
-              <iconDownArrow.react tag="div" />
+              <iconDownArrow.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         ) : (
@@ -360,7 +392,7 @@ fetching database name from fully qualified name structure */
             className="caret-icon down"
             onClick={handleIconClick}
           >
-            <iconRightArrow.react tag="div" />
+            <iconRightArrow.react tag="div" className="logo-alignment-style" />
           </div>
         )
       ) : null;
@@ -373,7 +405,10 @@ fetching database name from fully qualified name structure */
                 className="caret-icon right"
                 onClick={handleIconClick}
               >
-                <iconDownArrow.react tag="div" />
+                <iconDownArrow.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
               </div>
             </>
           ) : (
@@ -382,7 +417,10 @@ fetching database name from fully qualified name structure */
               className="caret-icon down"
               onClick={handleIconClick}
             >
-              <iconRightArrow.react tag="div" />
+              <iconRightArrow.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             </div>
           );
         if (depth === 1) {
@@ -390,7 +428,10 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconDatabase.react tag="div" />
+                <iconDatabase.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
               </div>
             </>
           );
@@ -399,7 +440,7 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="table-icon" onClick={handleIconClick}>
-                <iconTable.react tag="div" />
+                <iconTable.react tag="div" className="logo-alignment-style" />
               </div>
             </>
           );
@@ -407,7 +448,7 @@ fetching database name from fully qualified name structure */
 
         return (
           <>
-            <iconColumns.react tag="div" />
+            <iconColumns.react tag="div" className="logo-alignment-style" />
           </>
         );
       }
@@ -416,7 +457,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              <iconDatabase.react tag="div" />
+              <iconDatabase.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         );
@@ -425,7 +466,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="table-icon" onClick={handleIconClick}>
-              <iconTable.react tag="div" />
+              <iconTable.react tag="div" className="logo-alignment-style" />
             </div>
           </>
         );
@@ -433,7 +474,7 @@ fetching database name from fully qualified name structure */
 
       return (
         <>
-          <iconColumns.react tag="div" />
+          <iconColumns.react tag="div" className="logo-alignment-style" />
         </>
       );
     };
@@ -447,6 +488,15 @@ fetching database name from fully qualified name structure */
       </div>
     );
   };
+  interface IDatabaseResponse {
+    results?: Array<{
+      displayName: string;
+      description: string;
+    }>;
+    error?: {
+      code: string;
+    }
+  }
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -468,23 +518,36 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
-              const filteredEntries = responseResult.results.filter(
-                (entry: { displayName: string }) => entry.displayName
-              );
-              const databaseNames: string[] = [];
-              const updatedDatabaseDetails: { [key: string]: string } = {};
-              filteredEntries.forEach(
-                (entry: { description: string; displayName: string }) => {
-                  databaseNames.push(entry.displayName);
-                  const description = entry.description || 'None';
-                  updatedDatabaseDetails[entry.displayName] = description;
+            .then(async (responseResult: IDatabaseResponse) => {
+              if (responseResult?.results) {
+                const filteredEntries = responseResult.results.filter(
+                  (entry: { displayName: string }) => entry.displayName
+                );
+                const databaseNames: string[] = [];
+                const updatedDatabaseDetails: { [key: string]: string } = {};
+                filteredEntries.forEach(
+                  (entry: { description: string; displayName: string }) => {
+                    databaseNames.push(entry.displayName);
+                    const description = entry.description || 'None';
+                    updatedDatabaseDetails[entry.displayName] = description;
+                  }
+                );
+                setDatabaseDetails(updatedDatabaseDetails);
+                setDatabaseNames(databaseNames);
+                setTotalDatabases(databaseNames.length);
+                setApiError(false);
+                setSchemaError(false);
+              } else {
+                if (responseResult?.error?.code) {
+                  setApiError(true);
+                  setSchemaError(false);
+                } else {
+                  setSchemaError(true);
+                  setApiError(false);
                 }
-              );
-              setDatabaseDetails(updatedDatabaseDetails);
-              databaseNames.map(async (db: string) => {
-                await getTableDetails(db);
-              });
+                setNoDpmsInstance(true);
+                setIsLoading(false);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -492,10 +555,17 @@ fetching database name from fully qualified name structure */
         })
         .catch((err: Error) => {
           console.error('Error getting database details', err);
-          toast.error('Error getting database details');
+          toast.error('Error getting database details', toastifyCustomStyle);
         });
     }
   };
+  interface IClusterDetailsResponse {
+    config?: {
+      metastoreConfig?: {
+        dataprocMetastoreService?: string;
+      };
+    };
+  }
   const getClusterDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -512,7 +582,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: IClusterDetailsResponse) => {
               const metastoreServices =
                 responseResult.config?.metastoreConfig
                   ?.dataprocMetastoreService;
@@ -537,10 +607,18 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing session details', err);
-          toast.error('Failed to fetch session details');
+          toast.error('Failed to fetch session details'), toastifyCustomStyle;
         });
     }
   };
+  interface ISessionDetailsResponse {
+    environmentConfig?: {
+      peripheralsConfig?: {
+        metastoreService?: string;
+      };
+    };
+  }
+  
   const getSessionDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -557,7 +635,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: ISessionDetailsResponse) => {
               const metastoreServices =
                 responseResult.environmentConfig?.peripheralsConfig
                   ?.metastoreService;
@@ -582,7 +660,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters details', err);
-          toast.error('Failed to fetch cluster details');
+          toast.error('Failed to fetch cluster details', toastifyCustomStyle);
         });
     }
   };
@@ -613,23 +691,20 @@ fetching database name from fully qualified name structure */
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
   useEffect(() => {
-    entries.forEach(async (entry: string) => {
-      await getColumnDetails(entry);
+    databaseNames.forEach((db: string) => {
+      getTableDetails(db);
+    });
+  }, [databaseNames]);
+  useEffect(() => {
+    entries.forEach((entry: string) => {
+      getColumnDetails(entry);
     });
   }, [entries]);
+
   return (
-    <>
+    <div className="dpms-Wrapper">
       <div>
         <div className="dpms-title">Metadata Explorer</div>
-        <div
-          role="button"
-          aria-label="refresh"
-          className="refresh-icon"
-          data-tip="Refresh"
-          onClick={handleRefreshClick}
-        >
-          <iconRefresh.react tag="div" />
-        </div>
       </div>
       {!noDpmsInstance ? (
         <>
@@ -649,51 +724,61 @@ fetching database name from fully qualified name structure */
               </div>
             ) : (
               <>
-                <div className="ui category search">
-                  <div className="ui icon input">
-                    <input
-                      className="search-field"
-                      type="text"
-                      value={searchTerm}
-                      onChange={handleSearch}
-                      placeholder="Search your DBs and tables"
-                    />
-                    <div className="search-icon">
-                      <iconSearch.react tag="div" />
-                    </div>
-                    {searchTerm && (
-                      <div
-                        role="button"
-                        className="search-clear-icon"
-                        onClick={handleSearchClear}
-                      >
-                        <iconSearchClear.react tag="div" />
-                      </div>
-                    )}
-                  </div>
+                <div className="search-field">
+                  <TextField
+                    placeholder="Search your DBs and tables"
+                    type="text"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    onChange={handleSearch}
+                    value={searchTerm}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <iconSearch.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
+                        </InputAdornment>
+                      ),
+                      endAdornment: searchTerm && (
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleSearchClear}
+                        >
+                          <iconSearchClear.react
+                            tag="div"
+                            className="logo-alignment-style search-clear-icon"
+                          />
+                        </IconButton>
+                      )
+                    }}
+                  />
                 </div>
                 <div className="tree-container">
-                  <Tree
-                    className="Tree"
-                    data={data}
-                    openByDefault={false}
-                    indent={24}
-                    width={auto}
-                    height={500}
-                    rowHeight={36}
-                    overscanCount={1}
-                    paddingTop={30}
-                    paddingBottom={10}
-                    padding={25}
-                    searchTerm={searchTerm}
-                    searchMatch={searchMatch}
-                    idAccessor={node => node.id}
-                  >
-                    {(props: NodeRendererProps<any>) => (
-                      <Node {...props} onClick={handleNodeClick} />
-                    )}
-                  </Tree>
-                  <ToastContainer />
+                  {data[totalDatabases - 1].children.length === totalTables && (
+                    <Tree
+                      className="Tree"
+                      initialData={data}
+                      openByDefault={false}
+                      indent={24}
+                      width={auto}
+                      height={675}
+                      rowHeight={36}
+                      overscanCount={1}
+                      paddingTop={30}
+                      paddingBottom={10}
+                      padding={25}
+                      searchTerm={searchTerm}
+                      searchMatch={searchMatch}
+                      idAccessor={node => node.id}
+                    >
+                      {(props: NodeRendererProps<any>) => (
+                        <Node {...props} onClick={handleNodeClick} />
+                      )}
+                    </Tree>
+                  )}
                 </div>
               </>
             )}
@@ -709,10 +794,14 @@ fetching database name from fully qualified name structure */
           DPMS is not configured for this cluster. Please attach DPMS or
           activate DPMS sync with data catalog
         </div>
+      ) : apiError ? (
+        <div className="dpms-error">Datacatalog API is not enabled</div>
+      ) : schemaError ? (
+        <div className="dpms-error">No schema available</div>
       ) : (
         <div className="dpms-error">DPMS schema explorer not set up</div>
       )}
-    </>
+    </div>
   );
 };
 

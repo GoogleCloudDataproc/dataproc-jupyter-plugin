@@ -41,7 +41,9 @@ import {
   STATUS_STARTING,
   STATUS_SUCCESS
 } from './const';
-
+import { ToastOptions, toast } from 'react-toastify';
+import { v4 as uuidv4 } from 'uuid';
+import { KernelSpecAPI } from '@jupyterlab/services';
 export interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
@@ -233,7 +235,7 @@ export const elapsedTime = (endTime: Date, jobStartTime: Date): string => {
   return elapsedTimeString;
 };
 
-export const statusMessage = (data: any) => {
+export const statusMessage = (data: { status: { state: string } }) => {
   if (data.status.state === STATUS_DONE) {
     return STATUS_SUCCESS;
   } else if (data.status.state === STATUS_ERROR) {
@@ -245,7 +247,7 @@ export const statusMessage = (data: any) => {
   }
 };
 
-export const statusValue = (data: any) => {
+export const statusValue = (data: { status: { state: string } }) => {
   if (data.status.state === STATUS_CREATING) {
     return STATUS_PROVISIONING;
   } else {
@@ -273,7 +275,7 @@ export const checkConfig = async (
     }
   }
 };
-export const statusMessageBatch = (data: any) => {
+export const statusMessageBatch = (data: { state: string }) => {
   if (data.state === STATUS_DONE) {
     return STATUS_SUCCESS;
   } else if (data.state === STATUS_ERROR) {
@@ -310,7 +312,7 @@ const iconScalaLogo = new LabIcon({
   svgstr: scalaLogo
 });
 
-export const iconDisplay = (kernelType: any) => {
+export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel) => {
   if (
     kernelType?.name.includes('spylon') ||
     kernelType?.name.includes('apache')
@@ -330,7 +332,7 @@ export const iconDisplay = (kernelType: any) => {
 
 export interface ICellProps {
   getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
-  value: string | any;
+  value: string |any;
   column: {
     Header: string;
   };
@@ -395,4 +397,90 @@ export const batchDetailsOptionalDisplay = (data: string) => {
   }
 };
 
+export const lastModifiedFormat = (lastModifiedDate: Date) => {
+  const elapsedMilliseconds = new Date().getTime() - lastModifiedDate.getTime();
+  let seconds = Math.floor(elapsedMilliseconds / 1000);
+
+  let interval = seconds / 31536000;
+
+  if (interval > 1) {
+    return Math.floor(interval) + ' years ago';
+  }
+  interval = seconds / 2592000;
+  if (interval > 1) {
+    return Math.floor(interval) + ' months ago';
+  }
+  interval = seconds / 86400;
+  if (interval > 1) {
+    return Math.floor(interval) + ' days ago';
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    return Math.floor(interval) + ' hours ago';
+  }
+  interval = seconds / 60;
+  if (interval > 1) {
+    return Math.floor(interval) + ' minutes ago';
+  }
+  return Math.floor(seconds) + ' seconds ago';
+};
+
+export const toastifyCustomStyle: ToastOptions<{}> = {
+  hideProgressBar: true,
+  autoClose: false,
+  theme: 'dark',
+  position: toast.POSITION.BOTTOM_CENTER,
+  toastId: uuidv4()
+};
 export function assumeNeverHit(_: never): void {}
+export interface IBatchInfoResponse {
+  uuid: string;
+  state: string;
+  createTime: string;
+  runtimeInfo: {
+    endpoints: Record<string, string>;
+    approximateUsage: {
+      milliDcuSeconds: string;
+      shuffleStorageGbSeconds: string;
+    };
+  };
+  creator: string;
+  runtimeConfig: {
+    version: string;
+    containerImage: string;
+    properties: Record<string, string>;
+  };
+  sparkBatch: {
+    mainJarFileUri: string;
+    mainClass: string;
+    jarFileUris: string;
+  };
+  pysparkBatch: {
+    mainPythonFileUri: string;
+  };
+  sparkRBatch: {
+    mainRFileUri: string;
+  };
+  sparkSqlBatch: {
+    queryFileUri: string;
+  };
+  environmentConfig: {
+    executionConfig: {
+      serviceAccount: string;
+      subnetworkUri: string;
+      networkTags: string[];
+      kmsKey: string;
+    };
+    peripheralsConfig: {
+      metastoreService: string;
+      sparkHistoryServerConfig: {
+        dataprocCluster: string;
+      };
+    };
+  };
+  stateHistory: {
+    state: string;
+    stateStartTime: string;
+  }[];
+  stateTime: string;
+}

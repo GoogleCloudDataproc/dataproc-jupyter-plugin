@@ -36,6 +36,7 @@ import {
   JAR_FILE_MESSAGE,
   KEY_MESSAGE,
   METASTORE_MESSAGE,
+  NETWORK_TAG_MESSAGE,
   PROJECT_LIST_URL,
   QUERY_FILE_MESSAGE,
   REGION_URL,
@@ -45,7 +46,7 @@ import {
   STATUS_RUNNING
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi } from '../utils/utils';
+import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
@@ -68,7 +69,7 @@ type Cluster = {
 };
 
 type Network = {
-  selfLink: any;
+  selfLink: string;
   network: string;
   subnetworks: string;
 };
@@ -88,52 +89,173 @@ const iconError = new LabIcon({
 });
 
 interface ICreateBatchProps {
-  setCreateBatchView: (value: boolean) => void;
+  setCreateBatchView?: (value: boolean) => void;
   regionName: string;
   projectName: string;
+  batchInfoResponse?: any;
+  createBatch?: boolean;
+  setCreateBatch?: (value: boolean) => void;
 }
-let jarFileUris: string[] = [];
-let fileUris: string[] = [];
-let archiveFileUris: string[] = [];
-let argumentsUris: string[] = [];
-let networkUris: string[] = [];
-let key: string[] | (() => string[]) = [];
-let value: string[] | (() => string[]) = [];
-let pythonFileUris: string[] = [];
+
+function batchKey(batchSelected: string | undefined) {
+  const batchKeys: string[] = [];
+
+  if (batchSelected && batchSelected.endsWith('Batch')) {
+    batchKeys.push(batchSelected);
+  }
+
+  return batchKeys;
+}
+
+function batchTypeFunction(batchKey: string) {
+  let batchType = 'spark';
+  switch (batchKey) {
+    case 'sparkRBatch':
+      batchType = 'sparkR';
+      return batchType;
+    case 'pysparkBatch':
+      batchType = 'pySpark';
+      return batchType;
+    case 'sparkSqlBatch':
+      batchType = 'sparkSql';
+      return batchType;
+    default:
+      return batchType;
+  }
+}
 
 function CreateBatch({
   setCreateBatchView,
   regionName,
-  projectName
+  projectName,
+  batchInfoResponse,
+  setCreateBatch,
+  createBatch
 }: ICreateBatchProps) {
+  let batchKeys: string[] = [];
+  let batchType = 'spark';
+  let mainClass = '';
+  let mainJarFileUri = '';
+  let mainRFileUri = '';
+  let mainPythonFileUri = '';
+  let queryFileUri = '';
+  let serviceAccount = '';
+  let subNetwork = 'default';
+  let network = 'default';
+  let historyServer = 'None';
+  let historyServerValue = 'None';
+  let metastoreService = '';
+  let metaProject = 'None';
+  let metaRegion = '';
+  let containerImage = '';
+  let jarFileUris: string[] = [];
+  let fileUris: string[] = [];
+  let archiveFileUris: string[] = [];
+  let argumentsUris: string[] = [];
+  let networkUris: string[] = [];
+  let key: string[] | (() => string[]) = [];
+  let value: string[] | (() => string[]) = [];
+  let pythonFileUris: string[] = [];
+  let keyType = '';
+  let keyRing = '';
+  let keys = '';
+  if (batchInfoResponse !== undefined) {
+    if (Object.keys(batchInfoResponse).length !== 0) {
+      batchKeys = batchKey(batchInfoResponse);
+      batchType = batchTypeFunction(batchKeys[0]);
+      const batchTypeKey = batchKeys[0];
+      if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryFileUri')) {
+        queryFileUri = batchInfoResponse[batchKeys[0]].queryFileUri;
+      }
+      mainJarFileUri = batchInfoResponse[batchKeys[0]].mainJarFileUri;
+      mainClass = batchInfoResponse[batchKeys[0]].mainClass;
+      mainRFileUri = batchInfoResponse[batchKeys[0]].mainRFileUri;
+      mainPythonFileUri = batchInfoResponse[batchKeys[0]].mainPythonFileUri;
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('jarFileUris')) {
+        jarFileUris = [batchInfoResponse[batchKeys[0]].jarFileUris];
+      }
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('fileUris')) {
+        fileUris = [batchInfoResponse[batchKeys[0]].fileUris];
+      }
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('archiveUris')) {
+        archiveFileUris = [batchInfoResponse[batchKeys[0]].archiveUris];
+      }
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('args')) {
+        argumentsUris = [batchInfoResponse[batchKeys[0]].args];
+      }
+      if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
+        pythonFileUris = [batchInfoResponse[batchKeys[0]].pythonFileUris];
+      }
+      serviceAccount =
+        batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount ||
+        '';
+      networkUris =
+        batchInfoResponse?.environmentConfig?.executionConfig?.networkTags ||
+        '';
+      subNetwork =
+        batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri ||
+        'default';
+      keyType =
+        batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
+      const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
+      keyRing = keyringValues[5];
+      keys = keyringValues[7];
+      historyServerValue =
+        batchInfoResponse?.environmentConfig?.peripheralsConfig
+          ?.sparkHistoryServerConfig?.dataprocCluster || 'None';
+      if (historyServerValue !== 'None') {
+        const parts = historyServerValue.split('/'); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
+        historyServer = parts[parts.length - 1];
+      }
+      batchInfoResponse?.environmentConfig?.peripheralsConfig
+        ?.sparkHistoryServerConfig?.dataprocCluster;
+      metastoreService =
+        batchInfoResponse?.environmentConfig?.peripheralsConfig
+          ?.metastoreService || 'None';
+      containerImage = batchInfoResponse?.runtimeConfig?.containerImage || '';
+      if (metastoreService != 'None') {
+        const metastoreDetails = metastoreService.split('/');
+        metaProject = metastoreDetails[1];
+        metaRegion = metastoreDetails[3];
+      }
+    }
+  }
+
+  const selectedRadioInitialValue = mainJarFileUri ? 'mainJarURI' : 'mainClass';
+  const selectedKeyType = keyType ? 'customerManaged' : 'googleManaged';
   const [batchTypeList, setBatchTypeList] = useState([{}]);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [hexNumber, setHexNumber] = useState('');
   const [batchIdSelected, setBatchIdSelected] = useState('');
-  const [batchTypeSelected, setBatchTypeSelected] = useState('spark');
+  const [batchTypeSelected, setBatchTypeSelected] = useState(batchType);
   const [versionSelected, setVersionSelected] = useState('2.1');
-  const [selectedRadio, setSelectedRadio] = useState('mainClass');
+  const [selectedRadio, setSelectedRadio] = useState(selectedRadioInitialValue);
+  const [mainClassSelected, setMainClassSelected] = useState(mainClass);
+  const [mainClassUpdated, setMainClassUpdated] = useState(false);
+  const [mainJarSelected, setMainJarSelected] = useState(mainJarFileUri);
+  const [mainJarUpdated, setMainJarUpdated] = useState(false);
+
+  const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [selectedRadioValue, setSelectedRadioValue] = useState('key');
-  const [mainClassSelected, setMainClassSelected] = useState('');
-  const [mainJarSelected, setMainJarSelected] = useState('');
-  const [mainRSelected, setMainRSelected] = useState('');
-  const [containerImageSelected, setContainerImageSelected] = useState('');
+  const [containerImageSelected, setContainerImageSelected] =
+    useState(containerImage);
   const [jarFilesSelected, setJarFilesSelected] = useState([...jarFileUris]);
   const [filesSelected, setFilesSelected] = useState([...fileUris]);
-  const [queryFileSelected, setQueryFileSelected] = useState('');
+  const [queryFileSelected, setQueryFileSelected] = useState(queryFileUri);
   const [ArchiveFilesSelected, setArchiveFileSelected] = useState([
     ...archiveFileUris
   ]);
   const [argumentsSelected, setArgumentsSelected] = useState([
     ...argumentsUris
   ]);
-  const [serviceAccountSelected, setServiceAccountSelected] = useState('');
+  const [serviceAccountSelected, setServiceAccountSelected] =
+    useState(serviceAccount);
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
   ]);
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
-    useState('googleManaged');
+    useState(selectedKeyType);
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
@@ -143,11 +265,11 @@ function CreateBatch({
   const [servicesList, setServicesList] = useState<
     Array<{ key: string; value: string; text: string }>
   >([]);
-  const [servicesSelected, setServicesSelected] = useState('None');
+  const [servicesSelected, setServicesSelected] = useState(metastoreService);
 
-  const [clusterSelected, setClusterSelected] = useState('');
-  const [projectId, setProjectId] = useState('');
-  const [region, setRegion] = useState('');
+  const [clusterSelected, setClusterSelected] = useState(historyServer);
+  const [projectId, setProjectId] = useState(metaProject);
+  const [region, setRegion] = useState(metaRegion);
   const [projectList, setProjectList] = useState([{}]);
   const [regionList, setRegionList] = useState<
     { value: string; key: string; text: string }[]
@@ -158,15 +280,16 @@ function CreateBatch({
     { key: string; value: string; text: string }[]
   >([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
-  const [networkSelected, setNetworkSelected] = useState('default');
-  const [subNetworkSelected, setSubNetworkSelected] = useState('default');
+  const [networkSelected, setNetworkSelected] = useState(network);
+  const [subNetworkSelected, setSubNetworkSelected] = useState(subNetwork);
   const [isLoadingService, setIsLoadingService] = useState(false);
   const [error, setError] = useState({ isOpen: false, message: '' });
   const [parameterDetail, setParameterDetail] = useState(['']);
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
   const [additionalPythonFileSelected, setAdditionalPythonFileSelected] =
     useState([...pythonFileUris]);
-  const [mainPythonSelected, setMainPythonSelected] = useState('');
+  const [mainPythonSelected, setMainPythonSelected] =
+    useState(mainPythonFileUri);
   const [clustersList, setClustersList] = useState<string[]>([]);
   const [additionalPythonFileValidation, setAdditionalPythonFileValidation] =
     useState(true);
@@ -178,29 +301,37 @@ function CreateBatch({
   const [mainRValidation, setMainRValidation] = useState(true);
   const [batchIdValidation, setBatchIdValidation] = useState(false);
   const [mainJarValidation, setMainJarValidation] = useState(true);
-  const [defaultValue, setDefaultValue] = useState('default');
-  const [keyRingSelected, setKeyRingSelected] = useState('');
-  const [keySelected, setKeySelected] = useState('');
+  const [defaultValue, setDefaultValue] = useState(subNetwork);
+  const [keyRingSelected, setKeyRingSelected] = useState(keyRing);
+  const [keySelected, setKeySelected] = useState(keys);
   const [manualKeySelected, setManualKeySelected] = useState('');
   const [manualValidation, setManualValidation] = useState(true);
+  const [
+    additionalPythonFileDuplicateValidation,
+    setAdditionalPythonFileDuplicateValidation
+  ] = useState(false);
+  const [jarFileDuplicateValidation, setJarFileDuplicateValidation] =
+    useState(false);
+  const [fileDuplicateValidation, setFileDuplicateValidation] = useState(false);
+  const [archiveDuplicateValidation, setArchiveDuplicateValidation] =
+    useState(false);
+  const [argumentsDuplicateValidation, setArgumentsDuplicateValidation] =
+    useState(false);
+  const [networkTagsDuplicateValidation, setNetworkTagsDuplicateValidation] =
+    useState(false);
   const [keylist, setKeylist] = useState<
     { key: string; value: string; text: string }[]
   >([]);
-
+  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
   const handleCreateBatchBackView = () => {
-    setCreateBatchView(false);
-  };
-  const handleMainClassRadio = () => {
-    setSelectedRadio('mainClass');
-    setMainJarSelected('');
-    setMainClassSelected('');
+    if (setCreateBatchView) {
+      setCreateBatchView(false);
+    }
+    if (setCreateBatch) {
+      setCreateBatch(false);
+    }
   };
 
-  const handleMainJarRadio = () => {
-    setSelectedRadio('mainJarURI');
-    setMainClassSelected('');
-    setMainJarSelected('');
-  };
   const handlekeyRingRadio = () => {
     setSelectedRadioValue('key');
     setManualKeySelected('');
@@ -210,6 +341,12 @@ function CreateBatch({
     setKeyRingSelected('');
     setKeySelected('');
   };
+  useEffect(() => {
+    listKeysAPI(keyRingSelected);
+  }, [keyRingSelected]);
+  useEffect(() => {
+    listSubNetworksAPI(networkSelected);
+  }, [networkSelected]);
   useEffect(() => {
     const batchTypeData = [
       { key: 'spark', value: 'spark', text: 'Spark' },
@@ -244,9 +381,120 @@ function CreateBatch({
     valueValidation,
     batchIdValidation,
     duplicateKeyError,
-    manualValidation
+    manualValidation,
+    mainJarSelected,
+    jarFilesSelected
   ]);
+  useEffect(() => {
+    let batchKeys: string[] = [];
+    if (batchInfoResponse) {
+      if (Object.keys(batchInfoResponse).length !== 0) {
+        if (batchInfoResponse.hasOwnProperty('labels')) {
+          const updatedLabelDetail = Object.entries(
+            batchInfoResponse.labels
+          ).map(([k, v]) => `${k}:${v}`);
+          setLabelDetail(prevLabelDetail => [
+            ...prevLabelDetail,
+            ...updatedLabelDetail
+          ]);
+          setLabelDetailUpdated(prevLabelDetailUpdated => [
+            ...prevLabelDetailUpdated,
+            ...updatedLabelDetail
+          ]);
+          for (const key in batchInfoResponse) {
+            if (key.endsWith('Batch')) {
+              batchKeys.push(key);
+            }
+          }
+          batchKeys = batchKey(batchInfoResponse);
+          if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
+            const updatedPropertyDetail = Object.entries(
+              batchInfoResponse.runtimeConfig.properties
+            ).map(([k, v]) => `${k.substring(6)}:${v}`); // spark:spark.app.name , spark:spark.driver.cores - every property is appended with 'spark:' therefore getting the porperty key value after 'spark:'
+            setPropertyDetail(prevPropertyDetail => [
+              ...prevPropertyDetail,
+              ...updatedPropertyDetail
+            ]);
+            setPropertyDetailUpdated(prevPropertyDetailUpdated => [
+              ...prevPropertyDetailUpdated,
+              ...updatedPropertyDetail
+            ]);
+          }
+          if (
+            batchInfoResponse[batchKeys[0]].hasOwnProperty('queryVariables')
+          ) {
+            const updatedParamDetail = Object.entries(
+              batchInfoResponse[batchKeys[0]].queryVariables
+            ).map(([k, v]) => `${k}:${v}`);
+            setPropertyDetail(prevParameterDetail => [
+              ...prevParameterDetail,
+              ...updatedParamDetail
+            ]);
+            setPropertyDetailUpdated(prevParameterDetailUpdated => [
+              ...prevParameterDetailUpdated,
+              ...updatedParamDetail
+            ]);
+          }
+        }
+      }
+      listNetworksFromSubNetworkAPI(subNetwork);
+    }
+  }, []);
+  const handleMainClassRadio = () => {
+    setSelectedRadio('mainClass');
+    setMainJarSelected('');
+    setMainClassSelected('');
+    setMainJarValidation(true);
+  };
 
+  const handleMainJarRadio = () => {
+    setSelectedRadio('mainJarURI');
+    setMainClassSelected('');
+    setMainJarSelected('');
+    setMainJarValidation(true);
+  };
+  interface INetworkResponse {
+    network: string;
+    // Add other properties if they exist in the response
+  }
+  const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
+    setIsloadingNetwork(true);
+    const credentials = await authApi();
+    if (credentials) {
+      fetch(
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subNetwork}`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token,
+          },
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: INetworkResponse) => {
+              let transformedNetworkSelected = '';
+                 /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
+      */
+  
+              transformedNetworkSelected = responseResult.network.split('/')[9];
+  
+              setNetworkSelected(transformedNetworkSelected);
+              setIsloadingNetwork(false);
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error selecting Network', err);
+        });
+    }
+  };
+  
   function isSubmitDisabled() {
     const commonConditions =
       batchIdSelected === '' || regionName === '' || batchIdValidation;
@@ -259,7 +507,13 @@ function CreateBatch({
           !mainJarValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation ||
+          !jarFileValidation ||
+          fileDuplicateValidation ||
+          archiveDuplicateValidation ||
+          argumentsDuplicateValidation ||
+          networkTagsDuplicateValidation ||
+          jarFileDuplicateValidation
         );
       case 'sparkR':
         return (
@@ -268,7 +522,11 @@ function CreateBatch({
           !mainRValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation ||
+          fileDuplicateValidation ||
+          archiveDuplicateValidation ||
+          argumentsDuplicateValidation ||
+          networkTagsDuplicateValidation
         );
       case 'pySpark':
         return (
@@ -278,7 +536,14 @@ function CreateBatch({
           !additionalPythonFileValidation ||
           !fileValidation ||
           !archieveFileValidation ||
-          !manualValidation
+          !manualValidation ||
+          !jarFileValidation ||
+          additionalPythonFileDuplicateValidation ||
+          fileDuplicateValidation ||
+          archiveDuplicateValidation ||
+          argumentsDuplicateValidation ||
+          networkTagsDuplicateValidation ||
+          jarFileDuplicateValidation
         );
       case 'sparkSql':
         return (
@@ -286,7 +551,9 @@ function CreateBatch({
           queryFileSelected === '' ||
           !queryFileValidation ||
           !jarFileValidation ||
-          !manualValidation
+          !manualValidation ||
+          networkTagsDuplicateValidation ||
+          jarFileDuplicateValidation
         );
       default:
         return false;
@@ -294,9 +561,10 @@ function CreateBatch({
   }
 
   const handleValidationFiles = (
-    listOfFiles: any,
+    listOfFiles: string | string[],
     setValuesPart: any,
-    setValidationPart: any
+    setValidationPart: (value: boolean) => void,
+    setDuplicateValidation?: (value: boolean) => void
   ) => {
     if (typeof listOfFiles === 'string') {
       if (
@@ -313,7 +581,7 @@ function CreateBatch({
       if (listOfFiles.length === 0) {
         setValidationPart(true);
       } else {
-        listOfFiles.forEach((fileName: any) => {
+        listOfFiles.forEach((fileName: string) => {
           if (
             fileName.startsWith('file://') ||
             fileName.startsWith('gs://') ||
@@ -325,8 +593,38 @@ function CreateBatch({
           }
         });
       }
+      handleDuplicateValidation(setDuplicateValidation, listOfFiles);
       setValuesPart(listOfFiles);
     }
+  };
+  const handleDuplicateValidation = (
+    setDuplicateValidation: any,
+    listOfFiles: string | string[]
+  ) => {
+    if (Array.isArray(listOfFiles)) {
+      const fileNames = listOfFiles.map((fileName: string) =>
+        fileName.toLowerCase()
+      );
+      const uniqueFileNames = new Set<string>();
+      const duplicateFileNames = fileNames.filter((fileName: string) => {
+        const isDuplicate = uniqueFileNames.has(fileName);
+        uniqueFileNames.add(fileName);
+        return isDuplicate;
+      });
+      if (duplicateFileNames.length > 0) {
+        setDuplicateValidation(true);
+      } else {
+        setDuplicateValidation(false);
+      }
+    }
+  };
+  const handleArguments = (setDuplicateValidation:(value: boolean) => void,listOfFiles: string[]) => {
+    setArgumentsSelected(listOfFiles);
+    handleDuplicateValidation(setDuplicateValidation, listOfFiles);
+  };
+  const handleNetworkTags = (setDuplicateValidation:(value: boolean) => void, listOfFiles: string[]) => {
+    setNetworkTagSelected(listOfFiles);
+    handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
 
   const listClustersAPI = async () => {
@@ -445,7 +743,7 @@ function CreateBatch({
                 };
               });
               const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: any }) => ({
+                (obj: { name: string}) => ({
                   key: obj.name,
                   value: obj.name,
                   text: obj.name
@@ -463,7 +761,17 @@ function CreateBatch({
         });
     }
   };
-  const listKeysAPI = async (keyRing: any) => {
+  interface IKey {
+    primary: {
+      state:string
+    };
+    name: string;
+  }
+  interface IKeyListResponse {
+    cryptoKeys: IKey[];
+  }
+  
+  const listKeysAPI = async (keyRing: string) => {
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -478,22 +786,20 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IKeyListResponse) => {
               let transformedKeyList = [];
               /*
          Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
       */
 
-              transformedKeyList = responseResult.cryptoKeys.map(
-                (data: any) => {
-                  return {
-                    name: data.name.split('/')[7]
-                  };
-                }
-              );
+              transformedKeyList = responseResult.cryptoKeys
+                .filter((data: IKey) => data.primary && data.primary.state==='ENABLED')
+                .map((data: {name: string}) => ({
+                  name: data.name.split('/')[7]
+                }));
               const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: any }) => ({
+                (obj: { name: string }) => ({
                   key: obj.name,
                   value: obj.name,
                   text: obj.name
@@ -727,12 +1033,27 @@ function CreateBatch({
     if (batchTypeSelected === 'spark') {
       payload.sparkBatch = {
         ...(mainJarSelected !== '' && { mainJarFileUri: mainJarSelected }),
-        ...(mainClassSelected !== '' && { mainClass: mainClassSelected })
+        ...(mainClassSelected !== '' && { mainClass: mainClassSelected }),
+        ...(ArchiveFilesSelected.length > 0 && {
+          archiveUris: ArchiveFilesSelected
+        }),
+        ...(filesSelected.length > 0 && {
+          fileUris: filesSelected
+        }),
+        ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected }),
+        ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
     if (batchTypeSelected === 'sparkR') {
       payload.sparkRBatch = {
-        ...(mainRSelected !== '' && { mainRFileUri: mainRSelected })
+        ...(mainRSelected !== '' && { mainRFileUri: mainRSelected }),
+        ...(ArchiveFilesSelected.length > 0 && {
+          archiveUris: ArchiveFilesSelected
+        }),
+        ...(filesSelected.length > 0 && {
+          fileUris: filesSelected
+        }),
+        ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
     if (batchTypeSelected === 'pySpark') {
@@ -742,13 +1063,22 @@ function CreateBatch({
         }),
         ...(mainPythonSelected !== '' && {
           mainPythonFileUri: mainPythonSelected
-        })
+        }),
+        ...(ArchiveFilesSelected.length > 0 && {
+          archiveUris: ArchiveFilesSelected
+        }),
+        ...(filesSelected.length > 0 && {
+          fileUris: filesSelected
+        }),
+        ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected }),
+        ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
     if (batchTypeSelected === 'sparkSql') {
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
-        ...(parameterObject && { queryVariables: { query: parameterObject } })
+        ...(parameterObject && { queryVariables: parameterObject }),
+        ...(jarFilesSelected.length > 0 && { jarFileUris: jarFilesSelected })
       };
     }
 
@@ -770,7 +1100,8 @@ function CreateBatch({
           serviceAccount: serviceAccountSelected
         }),
         ...(keySelected !== '' &&
-          selectedRadioValue === 'key' && {
+          selectedRadioValue === 'key' &&
+          keySelected !== undefined && {
             kmsKey: `projects/${projectName}/locations/${regionName}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
           }),
         ...(manualKeySelected !== '' &&
@@ -782,28 +1113,19 @@ function CreateBatch({
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
         })
-      } as ExecutionConfig
-    };
-
-    if (servicesSelected !== 'None' || clusterSelected !== '') {
-      payload.peripheralsConfig = {
+      } as ExecutionConfig,
+      peripheralsConfig: {
         ...(servicesSelected !== 'None' && {
           metastoreService: servicesSelected
         }),
-        ...(clusterSelected !== '' && {
-          sparkHistoryServerConfig: {
-            dataprocCluster: `projects/${projectName}/locations/${regionName}/clusters/${clusterSelected}`
-          } as SparkHistoryServerConfig
-        })
-      };
-    }
-
-    payload.archiveUris =
-      ArchiveFilesSelected.length > 0 ? ArchiveFilesSelected : undefined;
-    payload.fileUris = filesSelected.length > 0 ? filesSelected : undefined;
-    payload.jarFileUris =
-      jarFilesSelected.length > 0 ? jarFilesSelected : undefined;
-    payload.args = argumentsSelected.length > 0 ? argumentsSelected : undefined;
+        ...(clusterSelected !== '' &&
+          clusterSelected !== 'None' && {
+            sparkHistoryServerConfig: {
+              dataprocCluster: `projects/${projectName}/regions/${regionName}/clusters/${clusterSelected}`
+            } as SparkHistoryServerConfig
+          })
+      }
+    };
 
     return payload;
   };
@@ -868,16 +1190,25 @@ function CreateBatch({
           if (response.ok) {
             const responseResult = await response.json();
             console.log(responseResult);
-            setCreateBatchView(false);
+            if (setCreateBatchView) {
+              setCreateBatchView(false);
+            }
+            if (setCreateBatch) {
+              setCreateBatch(false);
+            }
+            toast.success(
+              `Batch ${batchIdSelected} successfully submitted`,
+              toastifyCustomStyle
+            );
           } else {
             const errorResponse = await response.json();
-            console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
+            console.log(error);
           }
         })
         .catch((err: Error) => {
           console.error('Error submitting Batch', err);
-          toast.error('Failed to submit the Batch');
+          toast.error('Failed to submit the Batch', toastifyCustomStyle);
         });
     }
   };
@@ -894,7 +1225,7 @@ function CreateBatch({
     }
   };
 
-  const handleInputChange = (event: any) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setHexNumber(event.target.value);
     event.target.value.length > 0
       ? setBatchIdValidation(false)
@@ -902,7 +1233,8 @@ function CreateBatch({
     const newBatchId = event.target.value;
     setBatchIdSelected(newBatchId);
   };
-  const handleBatchTypeSelected = (event: any, data: any) => {
+ 
+  const handleBatchTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setBatchTypeSelected(data.value);
     setFilesSelected([]);
     setJarFilesSelected([]);
@@ -915,33 +1247,49 @@ function CreateBatch({
     setMainClassSelected('');
   };
 
-  const handleServiceSelected = (event: any, data: any) => {
+  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setServicesSelected(data.value);
   };
-  const handleProjectIdChange = (event: any, data: any) => {
+  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
+    setRegion('');
+    setRegionList([]);
+    setServicesList([]);
+    setServicesSelected('');
     regionListAPI(data.value);
     setProjectId(data.value);
   };
-  const handleRegionChange = (event: any, data: any) => {
+  const handleRegionChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
+    setServicesSelected('');
+    setServicesList([]);
     setRegion(data.value);
-    listMetaStoreAPI(data.value);
+      listMetaStoreAPI(data.value);
+    
+    
   };
-  const handleNetworkChange = (event: any, data: any) => {
+  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setNetworkSelected(data.value);
     listSubNetworksAPI(data.value);
   };
-  const handleSubNetworkChange = (event: any, data: any) => {
+  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setSubNetworkSelected(data.value);
   };
-  const handleKeyRingChange = (event: any, data: any) => {
+  const handleKeyRingChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setKeyRingSelected(data.value);
     listKeysAPI(data.value);
   };
-  const handlekeyChange = (event: any, data: any) => {
+  const handlekeyChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setKeySelected(data.value);
   };
+  const handleMainClassSelected = (value: string) => {
+    setMainClassUpdated(true);
+    setMainClassSelected(value);
+  };
+  const handleMainJarSelected = (value: string) => {
+    setMainJarUpdated(true);
+    handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
+  };
 
-  const handleClusterSelected = (event: any, value: any) => {
+  const handleClusterSelected = (event: React.SyntheticEvent<Element, Event>, value: any) => {
     setClusterSelected(value);
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
@@ -966,54 +1314,69 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react tag="div" />
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
         <div className="submit-job-container">
           <form onSubmit={handleSubmit}>
             <div className="submit-job-label-header">Batch info</div>
-            <div className="create-batches-message">Batch ID*</div>
-            <Input
-              className="create-batch-style "
-              value={hexNumber}
-              onChange={e => handleInputChange(e)}
-              type="text"
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="batch-id">
+                Batch ID*
+              </label>
+              <Input
+                className="create-batch-style"
+                value={hexNumber}
+                onChange={e => handleInputChange(e)}
+                type="text"
+              />
+            </div>
             {batchIdValidation && (
               <div className="error-key-parent">
-                <iconError.react tag="div" />
+                <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">ID is required</div>
               </div>
             )}
-            <div className="create-batches-message">Region*</div>
-            <Select
-              search
-              className="select-job-style"
-              value={regionName}
-              type="text"
-              disabled={true}
-              options={[]}
-              placeholder={regionName}
-            />
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text region-disable"
+                htmlFor="region"
+              >
+                Region*
+              </label>
+              <Input
+                className="create-batch-style"
+                value={regionName}
+                type="text"
+                disabled={true}
+              />
+            </div>
             <div className="submit-job-label-header">Container</div>
-            <div className="create-batches-message">Batch type*</div>
-            <Select
-              search
-              className="select-job-style"
-              value={batchTypeSelected}
-              type="text"
-              options={batchTypeList}
-              onChange={handleBatchTypeSelected}
-            />
-            <div className="create-batches-message">Runtime version*</div>
-
-            <Input
-              className="create-batch-style "
-              value={versionSelected}
-              onChange={e => setVersionSelected(e.target.value)}
-              type="text"
-            />
+            <div className="select-text-overlay">
+              <label className="select-dropdown-text" htmlFor="batch-type">
+                Batch type*
+              </label>
+              <Select
+                search
+                className="project-region-select"
+                value={batchTypeSelected}
+                type="text"
+                options={batchTypeList}
+                onChange={handleBatchTypeSelected}
+              />
+            </div>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="runtime-version">
+                Runtime version*
+              </label>
+              <Input
+                className="create-batch-style "
+                value={versionSelected}
+                onChange={e => setVersionSelected(e.target.value)}
+                type="text"
+              />
+            </div>
             {batchTypeSelected === 'spark' && (
               <div>
                 <div>
@@ -1034,18 +1397,26 @@ function CreateBatch({
                 </div>
                 {selectedRadio === 'mainClass' && (
                   <div className="create-batch-input">
-                    <span className="create-batch-message">Main class*</span>
-                    <br />
-                    <Input
-                      className="create-batch-style "
-                      value={mainClassSelected}
-                      onChange={e => setMainClassSelected(e.target.value)}
-                      type="text"
-                    />
+                    <div className="select-text-overlay">
+                      <label className="select-title-text" htmlFor="main-class">
+                        Main class*
+                      </label>
+                      <Input
+                        className="create-batch-style-mini"
+                        value={mainClassSelected}
+                        onChange={e => handleMainClassSelected(e.target.value)}
+                        type="text"
+                      />
+                    </div>
+
                     {selectedRadio === 'mainClass' &&
-                      mainClassSelected === '' && (
+                      mainClassSelected === '' &&
+                      mainClassUpdated && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             Main class is required
                           </div>
@@ -1074,32 +1445,38 @@ function CreateBatch({
                 </div>
                 {selectedRadio === 'mainJarURI' && (
                   <div className="create-batch-input">
-                    <span className="create-batch-message">Main jar*</span>
-                    <br />
-                    <Input
-                      className="create-batch-style "
-                      value={mainJarSelected}
-                      onChange={e =>
-                        handleValidationFiles(
-                          e.target.value,
-                          setMainJarSelected,
-                          setMainJarValidation
-                        )
-                      }
-                      type="text"
-                    />
+                    <div className="select-text-overlay">
+                      <label className="select-title-text" htmlFor="main-jar">
+                        Main jar*
+                      </label>
+                      <Input
+                        className="create-batch-style-mini"
+                        value={mainJarSelected}
+                        onChange={e => handleMainJarSelected(e.target.value)}
+                        type="text"
+                      />
+                    </div>
+
                     {selectedRadio === 'mainJarURI' &&
-                      mainJarSelected === '' && (
+                      mainJarSelected === '' &&
+                      mainJarUpdated &&
+                      mainJarValidation && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             Main jar is required
                           </div>
                         </div>
                       )}
-                    {!mainJarValidation && (
+                    {!mainJarValidation && mainJarSelected !== '' && (
                       <div className="error-key-parent">
-                        <iconError.react tag="div" />
+                        <iconError.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
                         <div className="error-key-missing">
                           File must include a valid scheme prefix: 'file://',
                           'gs://', or 'hdfs://'
@@ -1113,22 +1490,30 @@ function CreateBatch({
 
             {batchTypeSelected === 'sparkR' && (
               <>
-                <div className="create-batch-message">Main R file*</div>
-                <Input
-                  className="create-batch-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setMainRSelected,
-                      setMainRValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={mainRSelected}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="main-r-file">
+                    Main R file*
+                  </label>
+                  <Input
+                    className="create-batch-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e.target.value,
+                        setMainRSelected,
+                        setMainRValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={mainRSelected}
+                  />
+                </div>
+
                 {!mainRValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1136,29 +1521,39 @@ function CreateBatch({
                   </div>
                 )}
                 {mainRValidation && (
-                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
             {batchTypeSelected === 'pySpark' && (
               <>
-                <div className="create-batch-message">Main python file*</div>
-                <Input
-                  //placeholder="Main R file*"
-                  className="create-batch-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setMainPythonSelected,
-                      setMainPythonValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={mainPythonSelected}
-                />
+                <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="main-python-file"
+                  >
+                    Main python file*
+                  </label>
+                  <Input
+                    //placeholder="Main R file*"
+                    className="create-batch-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e.target.value,
+                        setMainPythonSelected,
+                        setMainPythonValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={mainPythonSelected}
+                  />
+                </div>
                 {!mainPythonValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1166,34 +1561,54 @@ function CreateBatch({
                   </div>
                 )}
                 {mainPythonValidation && (
-                  <div className="submit-job-message">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
             {batchTypeSelected === 'pySpark' && (
               <>
-                <div className="create-batches-message">
-                  Additional python files
+                <div className="select-text-overlay">
+                  <label
+                    className="select-title-text"
+                    htmlFor="additional-python-files"
+                  >
+                    Additional python files
+                  </label>
+                  <TagsInput
+                    className="select-job-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e,
+                        setAdditionalPythonFileSelected,
+                        setAdditionalPythonFileValidation,
+                        setAdditionalPythonFileDuplicateValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={additionalPythonFileSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
                 </div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setAdditionalPythonFileSelected,
-                      setAdditionalPythonFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={additionalPythonFileSelected}
-                  inputProps={{ placeholder: '' }}
-                />
                 {!additionalPythonFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
+                    </div>
+                  </div>
+                )}
+                {additionalPythonFileDuplicateValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                    <div className="error-key-missing">
+                      Duplicate paths are not allowed
                     </div>
                   </div>
                 )}
@@ -1201,23 +1616,31 @@ function CreateBatch({
             )}
             {batchTypeSelected === 'sparkSql' && (
               <>
-                <div className="create-batch-message">Query file*</div>
-                <Input
-                  //placeholder="Main R file*"
-                  className="create-batch-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setQueryFileSelected,
-                      setQueryFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={queryFileSelected}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="query-file">
+                    Query file*
+                  </label>
+                  <Input
+                    //placeholder="Main R file*"
+                    className="create-batch-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e.target.value,
+                        setQueryFileSelected,
+                        setQueryFileValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={queryFileSelected}
+                  />
+                </div>
+
                 {!queryFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       File must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
@@ -1229,28 +1652,35 @@ function CreateBatch({
                 )}
               </>
             )}
-            <div className="create-batches-message">Custom container image</div>
-            <Input
-              className="create-batch-style "
-              value={containerImageSelected}
-              onChange={e => setContainerImageSelected(e.target.value)}
-              type="text"
-              placeholder=""
-            />
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text"
+                htmlFor="custom-container-image"
+              >
+                Custom container image
+              </label>
+              <Input
+                className="create-batch-style "
+                value={containerImageSelected}
+                onChange={e => setContainerImageSelected(e.target.value)}
+                type="text"
+                placeholder=""
+              />
+            </div>
             <div className="create-custom-messagelist">
               {CUSTOM_CONTAINER_MESSAGE}
               <div className="create-container-message">
                 <div
-                  className="create-batch-learn-more"
+                  className="submit-job-learn-more"
                   onClick={() => {
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
                 >
                   Container Registry
                 </div>
-                {' or '}
+                &nbsp;{'  or '}
                 <div
-                  className="create-batch-learn-more"
+                  className="submit-job-learn-more"
                   onClick={() => {
                     window.open(`${ARTIFACT_REGISTERY}`, '_blank');
                   }}
@@ -1268,93 +1698,153 @@ function CreateBatch({
                 </div>
               </div>
             </div>
-            {batchTypeSelected === 'spark' ||
-              (batchTypeSelected === 'sparkSql' && (
+            {
+              batchTypeSelected !== 'sparkR' && (
                 <>
-                  <div className="create-batches-message">Jar files</div>
-                  <TagsInput
-                    className="select-job-style"
-                    onChange={e =>
-                      handleValidationFiles(
-                        e,
-                        setJarFilesSelected,
-                        setJarFileValidation
-                      )
-                    }
-                    addOnBlur={true}
-                    value={jarFilesSelected}
-                    inputProps={{ placeholder: '' }}
-                  />
+                  <div className="select-text-overlay">
+                    <label className="select-title-text" htmlFor="jar-files">
+                      Jar files
+                    </label>
+                    <TagsInput
+                      className="select-job-style"
+                      onChange={e =>
+                        handleValidationFiles(
+                          e,
+                          setJarFilesSelected,
+                          setJarFileValidation,
+                          setJarFileDuplicateValidation
+                        )
+                      }
+                      addOnBlur={true}
+                      value={jarFilesSelected}
+                      inputProps={{ placeholder: '' }}
+                    />
+                  </div>
+
                   {!jarFileValidation && (
                     <div className="error-key-parent">
-                      <iconError.react tag="div" />
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
                       <div className="error-key-missing">
                         All files must include a valid scheme prefix: 'file://',
                         'gs://', or 'hdfs://'
                       </div>
                     </div>
                   )}
-                  {jarFileValidation && (
+                  {jarFileDuplicateValidation && (
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        Duplicate paths are not allowed
+                      </div>
+                    </div>
+                  )}
+                  {jarFileValidation && !jarFileDuplicateValidation && (
                     <div className="create-messagelist">{JAR_FILE_MESSAGE}</div>
                   )}
                 </>
-              ))}
+              )
+              //) )
+            }
             {batchTypeSelected !== 'sparkSql' && (
               <>
-                <div className="create-batches-message">Files</div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setFilesSelected,
-                      setFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={filesSelected}
-                  inputProps={{ placeholder: '' }}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="files">
+                    Files
+                  </label>
+                  <TagsInput
+                    className="select-job-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e,
+                        setFilesSelected,
+                        setFileValidation,
+                        setFileDuplicateValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={filesSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
+                </div>
                 {!fileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
                     </div>
                   </div>
                 )}
-                {fileValidation && (
+                {fileDuplicateValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                    <div className="error-key-missing">
+                      Duplicate paths are not allowed
+                    </div>
+                  </div>
+                )}
+                {fileValidation && !fileDuplicateValidation && (
                   <div className="create-messagelist">{FILES_MESSAGE}</div>
                 )}
               </>
             )}
             {batchTypeSelected !== 'sparkSql' && (
               <>
-                <div className="create-batches-message">Archive files</div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setArchiveFileSelected,
-                      setArchieveFileValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={ArchiveFilesSelected}
-                  inputProps={{ placeholder: '' }}
-                />
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="archive-files">
+                    Archive files
+                  </label>
+                  <TagsInput
+                    className="select-job-style"
+                    onChange={e =>
+                      handleValidationFiles(
+                        e,
+                        setArchiveFileSelected,
+                        setArchieveFileValidation,
+                        setArchiveDuplicateValidation
+                      )
+                    }
+                    addOnBlur={true}
+                    value={ArchiveFilesSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
+                </div>
                 {!archieveFileValidation && (
                   <div className="error-key-parent">
-                    <iconError.react tag="div" />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="error-key-missing">
                       All files must include a valid scheme prefix: 'file://',
                       'gs://', or 'hdfs://'
                     </div>
                   </div>
                 )}
-                {archieveFileValidation && (
+                {archiveDuplicateValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                    <div className="error-key-missing">
+                      Duplicate paths are not allowed
+                    </div>
+                  </div>
+                )}
+                {archieveFileValidation && !archiveDuplicateValidation && (
                   <div className="create-messagelist">
                     {ARCHIVE_FILES_MESSAGE}
                   </div>
@@ -1363,15 +1853,34 @@ function CreateBatch({
             )}
             {batchTypeSelected !== 'sparkSql' && (
               <>
-                <div className="create-batches-message">Arguments</div>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e => setArgumentsSelected(e)}
-                  addOnBlur={true}
-                  value={argumentsSelected}
-                  inputProps={{ placeholder: '' }}
-                />
-                <div className="create-messagelist">{ARGUMENTS_MESSAGE}</div>
+                <div className="select-text-overlay">
+                  <label className="select-title-text" htmlFor="arguments">
+                    Arguments
+                  </label>
+                  <TagsInput
+                    className="select-job-style"
+                    onChange={e =>
+                      handleArguments(setArgumentsDuplicateValidation, e)
+                    }
+                    addOnBlur={true}
+                    value={argumentsSelected}
+                    inputProps={{ placeholder: '' }}
+                  />
+                </div>
+                {argumentsDuplicateValidation && (
+                  <div className="error-key-parent">
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                    <div className="error-key-missing">
+                      Duplicate paths are not allowed
+                    </div>
+                  </div>
+                )}
+                {!argumentsDuplicateValidation && (
+                  <div className="create-messagelist">{ARGUMENTS_MESSAGE}</div>
+                )}
               </>
             )}
             {batchTypeSelected === 'sparkSql' && (
@@ -1395,18 +1904,22 @@ function CreateBatch({
             <div className="submit-job-label-header">
               Execution Configuration
             </div>
-            <div className="create-batches-message">Service account</div>
-            <Input
-              className="create-batch-style "
-              value={serviceAccountSelected}
-              onChange={e => setServiceAccountSelected(e.target.value)}
-              type="text"
-              placeholder=""
-            />
-            <div className="create-messagelist">
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="service-account">
+                Service account
+              </label>
+              <Input
+                className="create-batch-style "
+                value={serviceAccountSelected}
+                onChange={e => setServiceAccountSelected(e.target.value)}
+                type="text"
+                placeholder=""
+              />
+            </div>
+            <div className="create-custom-messagelist">
               If not provided, the default GCE service account will be used.
               <div
-                className="create-batch-learn-more"
+                className="submit-job-learn-more"
                 onClick={() => {
                   window.open(`${SERVICE_ACCOUNT}`, '_blank');
                 }}
@@ -1415,48 +1928,80 @@ function CreateBatch({
               </div>
             </div>
             <div className="submit-job-label-header">Network Configuration</div>
-            <div className="create-batches-message">
+            <div className="runtime-message ">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="create-batches-message">
-              Networks in this project
-            </div>
-            <div className="create-batch-network">
-              <div className="create-batch-network-message">
-                Primary network*
-              </div>
-              <div className="create-batch-network-message">Subnetwork</div>
-            </div>
+            <div className="runtime-message ">Networks in this project</div>
             <div>
-              <div className="create-batch-network">
-                <Select
-                  search
-                  className="select-primary-network-style"
-                  value={networkSelected}
-                  onChange={handleNetworkChange}
-                  type="text"
-                  options={networkList}
-                />
+              {isloadingNetwork ? (
+                <div className="metastore-loader">
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
+                <div className="create-batch-network">
+                  <div className="select-text-overlay">
+                    <label
+                      className="select-title-text"
+                      htmlFor="primary-network"
+                    >
+                      Primary network*
+                    </label>
+                    <Select
+                      search
+                      className="project-region-select"
+                      value={networkSelected}
+                      onChange={handleNetworkChange}
+                      type="text"
+                      options={networkList}
+                    />
+                  </div>
+                  <div className="select-text-overlay subnetwork-style">
+                    <label className="select-title-text" htmlFor="subnetwork">
+                      subnetwork
+                    </label>
 
-                <Select
-                  search
-                  className="select-sub-network-style"
-                  value={subNetworkSelected}
-                  onChange={handleSubNetworkChange}
-                  type="text"
-                  options={subNetworkList}
-                  placeholder={defaultValue}
-                />
-              </div>
+                    <Select
+                      search
+                      className="project-region-select"
+                      value={subNetworkSelected}
+                      onChange={handleSubNetworkChange}
+                      type="text"
+                      options={subNetworkList}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="create-batches-message">Network tags*</div>
-            <TagsInput
-              className="select-job-style"
-              onChange={e => setNetworkTagSelected(e)}
-              addOnBlur={true}
-              value={networkTagSelected}
-              inputProps={{ placeholder: '' }}
-            />
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="network-tags">
+                Network tags
+              </label>
+              <TagsInput
+                className="select-job-style"
+                onChange={e =>
+                  handleNetworkTags(setNetworkTagsDuplicateValidation, e)
+                }
+                addOnBlur={true}
+                value={networkTagSelected}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
+            {networkTagsDuplicateValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Duplicate paths are not allowed
+                </div>
+              </div>
+            )}
+            {!networkTagsDuplicateValidation && (
+              <div className="create-messagelist">{NETWORK_TAG_MESSAGE}</div>
+            )}
             <div>
               <div className="submit-job-label-header">Encryption</div>
               <div>
@@ -1494,7 +2039,7 @@ function CreateBatch({
                 <div className="create-batch-sub-message">
                   Manage via{' '}
                   <div
-                    className="create-batch-learn-more"
+                    className="submit-job-learn-more"
                     onClick={() => {
                       window.open(`${SECURITY_KEY}`, '_blank');
                     }}
@@ -1504,12 +2049,6 @@ function CreateBatch({
                 </div>
                 {selectedEncryptionRadio === 'customerManaged' && (
                   <>
-                    <div className="create-batch-encrypt">
-                      <div className="create-batch-encrypt-message">
-                        keyRings
-                      </div>
-                      <div className="create-batch-encrypt-message">keys</div>
-                    </div>
                     <div>
                       <div className="create-batch-encrypt">
                         <Radio
@@ -1519,32 +2058,53 @@ function CreateBatch({
                           checked={selectedRadioValue === 'key'}
                           onChange={handlekeyRingRadio}
                         />
+                        <div className="select-text-overlay">
+                          <label
+                            className={
+                              selectedRadioValue === 'manually'
+                                ? 'select-title-text disable-text'
+                                : 'select-title-text'
+                            }
+                            htmlFor="key-rings"
+                          >
+                            Key rings
+                          </label>
 
-                        <Select
-                          search
-                          className="select-primary-network-style"
-                          value={keyRingSelected}
-                          type="text"
-                          disabled={selectedRadioValue === 'manually'}
-                          onChange={handleKeyRingChange}
-                          options={keyRinglist}
-                        />
+                          <Select
+                            search
+                            className="project-region-select"
+                            value={keyRingSelected}
+                            type="text"
+                            disabled={selectedRadioValue === 'manually'}
+                            onChange={handleKeyRingChange}
+                            options={keyRinglist}
+                          />
+                        </div>
+                        <div className="select-text-overlay subnetwork-style">
+                          <label
+                            className={
+                              selectedRadioValue === 'manually'
+                                ? 'select-title-text disable-text'
+                                : 'select-title-text'
+                            }
+                            htmlFor="keys"
+                          >
+                            Keys
+                          </label>
 
-                        <Select
-                          search
-                          className="select-sub-network-style"
-                          value={keySelected}
-                          disabled={selectedRadioValue === 'manually'}
-                          onChange={handlekeyChange}
-                          type="text"
-                          options={keylist}
-                        />
+                          <Select
+                            search
+                            className="project-region-select"
+                            value={keySelected}
+                            disabled={selectedRadioValue === 'manually'}
+                            onChange={handlekeyChange}
+                            type="text"
+                            options={keylist}
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="manual-input">
-                      <div className="create-batch-encrypt-message">
-                        Enter key Manually
-                      </div>
                       <div className="encrypt">
                         <Radio
                           size="small"
@@ -1553,17 +2113,32 @@ function CreateBatch({
                           checked={selectedRadioValue === 'manually'}
                           onChange={handlekeyManuallyRadio}
                         />
-                        <Input
-                          className="create-batch-style "
-                          value={manualKeySelected}
-                          type="text"
-                          disabled={selectedRadioValue === 'key'}
-                          onChange={handleManualKeySelected}
-                        />
+                        <div className="select-text-overlay">
+                          <label
+                            className={
+                              selectedRadioValue === 'key'
+                                ? 'select-title-text disable-text'
+                                : 'select-title-text'
+                            }
+                            htmlFor="enter-key-manually"
+                          >
+                            Enter key manually
+                          </label>
+                          <Input
+                            className="create-batch-style manual-key"
+                            value={manualKeySelected}
+                            type="text"
+                            disabled={selectedRadioValue === 'key'}
+                            onChange={handleManualKeySelected}
+                          />
+                        </div>
                       </div>
                       {!manualValidation && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">{KEY_MESSAGE}</div>
                         </div>
                       )}
@@ -1580,7 +2155,7 @@ function CreateBatch({
               Configure Dataproc to use Dataproc Metastore as its Hive
               metastore.
               <div
-                className="create-batch-learn-more"
+                className="submit-job-learn-more"
                 onClick={() => {
                   window.open(`${SELF_MANAGED_CLUSTER}`, '_blank');
                 }}
@@ -1589,68 +2164,90 @@ function CreateBatch({
               </div>
             </div>
             <div className="create-messagelist">{METASTORE_MESSAGE}</div>
-            <div className="create-batches-message">Metastore project</div>
-            <Select
-              search
-              placeholder={projectId}
-              className="select-job-style"
-              value={projectId}
-              onChange={handleProjectIdChange}
-              options={projectList}
-            />
-            <div className="create-batches-message">Metastore region</div>
-            {isLoadingRegion ? (
-              <ClipLoader
-                loading={true}
-                size={25}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            ) : (
+            <div className="select-text-overlay">
+              <label className="select-dropdown-text" htmlFor="meta-project">
+                Metastore project
+              </label>
               <Select
                 search
-                placeholder={region}
-                className="select-job-style"
-                value={region}
-                onChange={handleRegionChange}
-                options={regionList}
+                placeholder={projectId}
+                className="project-region-select"
+                value={projectId}
+                onChange={handleProjectIdChange}
+                options={projectList}
               />
-            )}
+            </div>
+            <div className="select-text-overlay">
+              <label className="select-dropdown-text" htmlFor="meta-region">
+                Metastore region
+              </label>
 
-            <div className="create-batches-message">Metastore service</div>
-            {isLoadingService ? (
-              <ClipLoader
-                loading={true}
-                size={25}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            ) : (
-              <Select
-                search
-                className="select-job-style"
-                value={servicesSelected}
-                type="text"
-                options={servicesList}
-                onChange={handleServiceSelected}
-                placeholder="None"
-              />
-            )}
-
+              {isLoadingRegion ? (
+                <div className="metastore-loader">
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
+                <Select
+                  search
+                  placeholder={region}
+                  className="project-region-select"
+                  value={region}
+                  onChange={handleRegionChange}
+                  options={regionList}
+                />
+              )}
+            </div>
+            <div className="select-text-overlay">
+              <label className="select-dropdown-text" htmlFor="meta-service">
+                Metastore service
+              </label>
+              {isLoadingService ? (
+                <div className="metastore-loader">
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
+                <Select
+                  search
+                  className="project-region-select"
+                  value={servicesSelected}
+                  type="text"
+                  options={servicesList}
+                  onChange={handleServiceSelected}
+                  placeholder={servicesSelected}
+                />
+              )}
+            </div>
             <div className="submit-job-label-header">
               History server cluster
             </div>
             <div className="create-batches-message">
               Choose a history server cluster to store logs in.{' '}
             </div>
-            <div className="create-batches-message">History server cluster</div>
+            <div className="select-text-overlay">
+              <label
+                className="select-dropdown-text"
+                htmlFor="history-server-cluster"
+              >
+                History server cluster
+              </label>
+              <Dropdown
+                className="history-server"
+                value={clusterSelected}
+                onChange={handleClusterSelected}
+                options={clustersList}
+              />
+            </div>
 
-            <Dropdown
-              className="select-job-style"
-              value={clusterSelected}
-              onChange={handleClusterSelected}
-              options={clustersList}
-            />
             <div className="submit-job-label-header">Properties</div>
             <LabelProperties
               labelDetail={propertyDetail}
@@ -1678,8 +2275,10 @@ function CreateBatch({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              batchInfoResponse={batchInfoResponse}
+              createBatch={createBatch}
             />
-            <div className="job-button-style-parent">
+            <div className="job-button-style-parent button-alignment">
               <div
                 className={
                   isSubmitDisabled()
@@ -1708,7 +2307,7 @@ function CreateBatch({
                 <ErrorPopup
                   onCancel={() => setError({ isOpen: false, message: '' })}
                   errorPopupOpen={error.isOpen}
-                  DeleteMsg={error.message}
+                  errorMsg={error.message}
                 />
               )}
             </div>

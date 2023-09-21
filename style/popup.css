@@ -1,18 +1,21 @@
-.popup-main{
+.popup-main {
     padding: 25px 25px;
 }
-.popup-header{
+
+.popup-header {
     font-weight: bold;
     font-size: 18px;
     line-height: 30px;
     padding-bottom: 15px;
 }
-.popup-text{
+
+.popup-text {
     font-weight: 500;
     font-size: 14px;
     line-height: 30px;
     padding-bottom: 15px;
 }
+
 .popup-button-style {
     margin-right: 10px;
     color: #3367d6;
@@ -25,10 +28,11 @@
     align-items: center;
     border-radius: 4px;
     font-weight: 600;
-  }
-  .popup-buttons{
+}
+
+.popup-buttons {
     display: flex;
-    margin-left:auto;
+    margin-left: auto;
     margin-right: 0;
     justify-content: right;
-  }
+}

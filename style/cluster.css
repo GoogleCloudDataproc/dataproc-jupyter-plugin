@@ -52,6 +52,7 @@
   display: flex;
   align-items: center;
 }
+
 .create-cluster-sub-overlay {
   width: 20%;
   display: flex;
@@ -67,6 +68,7 @@
 .actions-icon {
   display: flex;
 }
+
 .cluster-status-parent {
   display: flex;
   align-items: center;
@@ -86,6 +88,18 @@
   padding-right: 5px;
 }
 
+.icon-buttons-style-delete-batch {
+  cursor: pointer;
+  padding-right: 5px;
+  padding-left: 15px;
+}
+.icon-buttons-style-delete-batch-disable {
+  cursor: context-menu;
+  padding-right: 5px;
+  padding-left: 15px;
+
+}
+
 .icon-buttons-style-disable {
   /* cursor: not-allowed; */
   padding-right: 5px;
@@ -98,6 +112,7 @@
   margin-top: 10px;
   margin-left: 10px;
 }
+
 .spin-loaderMain {
   display: flex;
   margin-top: 20%;
@@ -117,7 +132,12 @@
   width: 100%;
 }
 
-.create-cluster-text {
+.gcs-filter-section-part {
+  border: 0px;
+  width: 95%;
+}
+
+.create-text {
   font-style: normal;
   font-weight: 500;
   font-size: 13px;
@@ -142,11 +162,12 @@
   text-align: center;
 }
 
-.create-cluster-icon {
+.create-icon {
   display: flex;
   height: 18px;
   width: 18px;
-  color: #3367d6;
+  color: #3367D6;
+  margin-top: -1px;
 }
 
 .filter-cluster-icon {
@@ -167,7 +188,7 @@
 }
 
 .clusters-list-table-parent {
-  height: 62vh;
+  height: 75.8vh;
   overflow: auto;
 }
 
@@ -245,11 +266,18 @@
 
 .component-level {
   max-height: 85vh;
+  font-family: 'Roboto';
 }
 .scroll-comp {
   overflow-y: auto;
-  max-height: 79vh;
+  max-height: 92vh;
+  font-family: 'Roboto';
 }
+.scroll-comp-cluster{
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
 .login-error {
   align-items: center;
   justify-content: center;
@@ -258,6 +286,7 @@
   font-weight: 600;
   padding: 50px;
 }
+
 .no-data-style {
   margin: 10px 15px;
 }

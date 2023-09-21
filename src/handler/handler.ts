@@ -36,8 +36,8 @@ export async function requestAPI<T>(
   let response: Response;
   try {
     response = await ServerConnection.makeRequest(requestUrl, init, settings);
-  } catch (error: any) {
-    throw new ServerConnection.NetworkError(error);
+  } catch (error) {
+    throw new ServerConnection.NetworkError(error as Error);
   }
 
   let data: any = await response.text();

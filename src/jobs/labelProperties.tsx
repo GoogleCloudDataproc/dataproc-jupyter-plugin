@@ -55,22 +55,26 @@ function LabelProperties({
   duplicateKeyError,
   setDuplicateKeyError,
   labelEditMode,
-  selectedRuntimeClone
+  selectedRuntimeClone,
+  batchInfoResponse,
+  createBatch
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
-  useEffect(() => {
+   useEffect(() => {
     if (!labelEditMode) {
       if (
+
         buttonText === 'ADD LABEL' &&
         !selectedJobClone &&
-        selectedRuntimeClone === undefined
+        selectedRuntimeClone === undefined && !createBatch
       ) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
       } else {
+        setLabelDetailUpdated([]);
         setLabelDetail([]);
       }
     }
@@ -100,8 +104,8 @@ function LabelProperties({
   };
   const handleEditLabel = (value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
-
-    labelEdit.forEach((data, dataNumber: any) => {
+    
+    labelEdit.forEach((data, dataNumber: number) => {
       if (index === dataNumber) {
         /*
           allowed aplhanumeric and spaces and underscores
@@ -109,8 +113,9 @@ function LabelProperties({
         const regexp = /^[a-z0-9-_]+$/;
         if (keyValue === 'key') {
           if (
-            value.search(regexp) === -1 ||
-            value.charAt(0) !== value.charAt(0).toLowerCase()
+            (value.search(regexp) === -1 ||
+              value.charAt(0) !== value.charAt(0).toLowerCase()) &&
+            buttonText === 'ADD LABEL'
           ) {
             setKeyValidation(index);
           } else {
@@ -130,7 +135,7 @@ function LabelProperties({
 
           data = data.replace(data.split(':')[0], value);
         } else {
-          if (value.search(regexp) === -1) {
+          if (value.search(regexp) === -1 &&(buttonText === 'ADD LABEL')) {
             setValueValidation(index);
           } else {
             setValueValidation(-1);
@@ -148,11 +153,10 @@ function LabelProperties({
       }
       labelEdit[dataNumber] = data;
     });
-
     setLabelDetailUpdated(labelEdit);
   };
 
-  const styleAddLabelButton = (buttonText: string, labelDetail: any) => {
+  const styleAddLabelButton = (buttonText: string, labelDetail: string) => {
     if (
       buttonText === 'ADD LABEL' &&
       (labelDetail.length === 0 ||
@@ -182,7 +186,7 @@ function LabelProperties({
     <div>
       <div className="job-label-edit-parent">
         {labelDetail.length > 0 &&
-          labelDetail.map((label: any, index: number) => {
+          labelDetail.map((label: string, index: number) => {
             /*
                      Extracting key, value from label
                       Example: "{client:dataProc_plugin}"
@@ -193,9 +197,16 @@ function LabelProperties({
               <div key={label}>
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
+                  <div className="select-text-overlay-label">
+                  <label
+                      className="select-dropdown-text"
+                      htmlFor="metastore-project"
+                    >
+                     {`Key ${index + 1}*`}
+                    </label>
+                 
                     <Input
                       sx={{ margin: 0 }}
-                      placeholder={`Key ${index + 1}*`}
                       className="edit-input-style"
                       disabled={
                         labelSplit[0] === '' ||
@@ -210,17 +221,25 @@ function LabelProperties({
                       }
                       defaultValue={labelSplit[0]}
                     />
+                    </div>
 
-                    {labelDetailUpdated[index].split(':')[0] === '' ? (
+                    {labelDetailUpdated[index].split(':')[0] === '' &&
+                    labelDetailUpdated[index] !== '' ? (
                       <div role="alert" className="error-key-parent">
-                        <iconError.react tag="div" />
+                        <iconError.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
                         <div className="error-key-missing">key is required</div>
                       </div>
                     ) : (
                       keyValidation === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             Only hyphens (-), underscores (_), lowercase
                             characters, and numbers are allowed. Keys must start
@@ -233,7 +252,10 @@ function LabelProperties({
                     {duplicateKeyError === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             The key is already present
                           </div>
@@ -241,9 +263,15 @@ function LabelProperties({
                       )}
                   </div>
                   <div className="key-message-wrapper">
+                  <div className="select-text-overlay-label">
+                  <label
+                      className="select-dropdown-text"
+                      htmlFor="metastore-project"
+                    >
+                    {`Value ${index + 1}`}
+                    </label>
                     <Input
                       sx={{ margin: 0 }}
-                      placeholder={`Value ${index + 1}`}
                       className="edit-input-style"
                       onBlur={() => handleEditLabelSwitch()}
                       onChange={e =>
@@ -255,10 +283,14 @@ function LabelProperties({
                       }
                       defaultValue={labelSplit[1]}
                     />
+                    </div>
                     {valueValidation === index &&
                       buttonText === 'ADD LABEL' && (
                         <div className="error-key-parent">
-                          <iconError.react tag="div" />
+                          <iconError.react
+                            tag="div"
+                            className="logo-alignment-style"
+                          />
                           <div className="error-key-missing">
                             Only hyphens (-), underscores (_), lowercase
                             characters, and numbers are allowed. International
@@ -287,7 +319,10 @@ function LabelProperties({
                       }
                     }}
                   >
-                    <iconDelete.react tag="div" />
+                    <iconDelete.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                   </div>
                   <></>
                 </div>
@@ -305,9 +340,9 @@ function LabelProperties({
         >
           {labelDetail.length === 0 ||
           labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
-            <iconPlus.react tag="div" />
+            <iconPlus.react tag="div" className="logo-alignment-style" />
           ) : (
-            <iconPlusDisable.react tag="div" />
+            <iconPlusDisable.react tag="div" className="logo-alignment-style" />
           )}
           <div
             className={

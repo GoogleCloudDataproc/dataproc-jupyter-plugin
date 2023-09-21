@@ -21,13 +21,15 @@ import {
   checkConfig,
   elapsedTime,
   jobTimeFormat,
-  jobTypeDisplay
+  jobTypeDisplay,
+  toastifyCustomStyle
 } from '../utils/utils';
 import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   API_HEADER_BEARER,
-  LOGIN_STATE
+  LOGIN_STATE,
+  BatchStatus
 } from '../utils/const';
 import ListBatches from './listBatches';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -36,7 +38,7 @@ import BatchDetails from './batchDetails';
 import ListSessions from '../sessions/listSessions';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
@@ -64,10 +66,8 @@ const BatchesComponent = (): React.JSX.Element => {
   const [selectedBatch, setSelectedBatch] = useState('');
   const [regionName, setRegionName] = useState('');
   const [projectName, setProjectName] = useState('');
-
   const [createBatchView, setCreateBatchView] = useState(false);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-
   const pollingBatches = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -82,6 +82,16 @@ const BatchesComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: 'Sessions' | 'Batches') => {
     setSelectedMode(mode);
   };
+  interface IBatchData {
+    name: string;
+    state: BatchStatus;
+    createTime: string;
+    stateTime: Date;
+  }
+  interface IBatchListResponse {
+    batches: IBatchData[];
+    nextPageToken?: string;
+  }
 
   const listBatchAPI = async (
     nextPageToken?: string,
@@ -104,11 +114,19 @@ const BatchesComponent = (): React.JSX.Element => {
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
-              let transformBatchListData = [];
+            .then((responseResult: IBatchListResponse) => {
+              let transformBatchListData: {
+                batchID: string;
+                status: string;
+                location: string;
+                creationTime: string;
+                type: string | undefined;
+                elapsedTime: string;
+                actions: React.JSX.Element;
+              }[] = [];
               if (responseResult && responseResult.batches) {
                 transformBatchListData = responseResult.batches.map(
-                  (data: any) => {
+                  (data: IBatchData) => {
                     const startTimeDisplay = jobTimeFormat(data.createTime);
                     const startTime = new Date(data.createTime);
                     const elapsedTimeString = elapsedTime(
@@ -139,7 +157,8 @@ const BatchesComponent = (): React.JSX.Element => {
               }
 
               const existingBatchData = previousBatchesList ?? [];
-              //setStateAction never type issue
+             
+              
               let allBatchesData: any = [
                 ...(existingBatchData as []),
                 ...transformBatchListData
@@ -161,7 +180,7 @@ const BatchesComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing batches', err);
-          toast.error('Failed to fetch batches');
+          toast.error('Failed to fetch batches', toastifyCustomStyle);
         });
     }
   };
@@ -170,10 +189,15 @@ const BatchesComponent = (): React.JSX.Element => {
     setBatchSelected(selectedName);
     setDetailedBatchView(true);
   };
-
-  const handleDeleteBatch = (batch: string) => {
-    setSelectedBatch(batch);
-    setDeletePopupOpen(true);
+  const handleDeleteBatch = (data: IBatchData) => {
+    if (data.state !== BatchStatus.STATUS_PENDING) {
+      /*
+      Extracting project id  
+      Example: "projects/{project}/locations/{location}/batches/{batch_id}"
+      */
+      setSelectedBatch(data.name.split('/')[5]);
+      setDeletePopupOpen(true);
+    }
   };
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
@@ -186,15 +210,31 @@ const BatchesComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  const renderActions = (data: { name: string }) => {
+  const renderActions = (data: IBatchData) => {
     return (
-      <div className="actions-icon" role="button" aria-label="Delete Job">
+      <div
+        className="actions-icon"
+        role="button"
+        aria-label="Delete Job"
+        aria-disabled={data.state === BatchStatus.STATUS_PENDING}
+      >
         <div
-          className="icon-buttons-style"
+          className={
+            data.state === BatchStatus.STATUS_PENDING
+              ? 'icon-buttons-style-delete-batch-disable'
+              : 'icon-buttons-style-delete-batch'
+          }
           title="Delete Batch"
-          onClick={() => handleDeleteBatch(data.name.split('/')[5])}
+          onClick={() => handleDeleteBatch(data)}
         >
-          <iconDelete.react tag="div" />
+          {data.state === BatchStatus.STATUS_PENDING ? (
+            <iconDelete.react
+              tag="div"
+              className="logo-alignment-style icon-delete"
+            />
+          ) : (
+            <iconDelete.react tag="div" className="logo-alignment-style" />
+          )}
         </div>
       </div>
     );
@@ -255,6 +295,7 @@ const BatchesComponent = (): React.JSX.Element => {
             <BatchDetails
               batchSelected={batchSelected}
               setDetailedBatchView={setDetailedBatchView}
+              setCreateBatchView={setCreateBatchView}
             />
           )}
           {createBatchView && (
@@ -300,7 +341,6 @@ const BatchesComponent = (): React.JSX.Element => {
                   />
                 )}
               </div>
-              <ToastContainer />
             </div>
           )}
         </>

@@ -1,10 +1,12 @@
 .page-move-button.disabled {
   opacity: 0.5;
+  cursor: default;
 }
 
 .page-move-button {
   padding: 0px 15px;
   font-size: 25px;
+  cursor: pointer;
   color: var(--jp-ui-font-color0);
 }
 
@@ -17,6 +19,7 @@
   display: flex;
   justify-content: flex-end;
   margin: 10px;
+  align-items: center;
 }
 
 .page-display-part {

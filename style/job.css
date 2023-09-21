@@ -1,4 +1,5 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto);
+
 .cluster-details-value-job {
   font-style: normal;
   font-weight: 400;
@@ -29,6 +30,7 @@
 .edit-input-style {
   margin-right: 20px;
   width: 90%;
+  height: 36px;
 }
 
 .key-message-wrapper {
@@ -40,14 +42,13 @@
   font-weight: 400;
   font-size: 13px;
   line-height: 18px;
-  width: 50%;
+  width: 512px;
   color: var(--jp-ui-font-color2);
-  padding: 10px;
 }
 
 .job-label-edit-row {
   display: flex;
-  margin: 5px 0px;
+  margin: 15px 0px;
   padding-bottom: 18px;
 }
 
@@ -106,6 +107,7 @@
   border-radius: 4px;
   font-weight: 600;
 }
+
 .job-cancel-button-style:hover {
   background-color: #d3d3d3;
 }
@@ -234,14 +236,18 @@
 }
 
 .jobs-list-table-parent {
-  height: 63vh;
+  height: 75.8vh;
+  overflow: auto;
+}
+.scroll-comp-jobdetails{
+  overflow-y: auto;
+  max-height: 90vh;
+}
+.jobs-list-table-parent-small {
+  height: 55vh;
   overflow: auto;
 }
 
-.jobs-list-table-parent-small {
-  height: 49vh;
-  overflow: auto;
-}
 .job-details-label-row {
   border-bottom: 1px solid var(--jp-layout-color4);
   display: flex;
@@ -260,4 +266,8 @@
   padding-left: 15px;
   color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
+}
+
+.button-alignment{
+  padding-left: 10px;
 }

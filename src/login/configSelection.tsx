@@ -21,12 +21,13 @@ import settingsIcon from '../../style/icons/settings_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  USER_INFO_URL
+  USER_INFO_URL,
+  VERSION_DETAIL
 } from '../utils/const';
-import { IAuthCredentials, authApi } from '../utils/utils';
+import { IAuthCredentials, authApi, toastifyCustomStyle } from '../utils/utils';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
-import { ToastContainer, ToastOptions, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
@@ -37,7 +38,7 @@ import { RegionDropdown } from '../controls/RegionDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import CreateRuntime from '../runtime/createRunTime';
-import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
+import { ISessionTemplate } from '../utils/listRuntimeTemplateInterface';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -48,7 +49,13 @@ const iconExpandMore = new LabIcon({
   svgstr: expandMoreIcon
 });
 
-function ConfigSelection({ configError, setConfigError }: any) {
+function ConfigSelection({
+  configError,
+  setConfigError,
+  themeManager,
+  app,
+  launcher
+}: any) {
   const Iconsettings = new LabIcon({
     name: 'launcher:settings_icon',
     svgstr: settingsIcon
@@ -66,26 +73,19 @@ function ConfigSelection({ configError, setConfigError }: any) {
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
 
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
-    useState<SessionTemplate>();
+    useState<ISessionTemplate>();
 
   const handleSave = async () => {
     setIsSaving(true);
     const dataToSend = { projectId, region };
     try {
-      const data = await requestAPI<any>('configuration', {
+      const data = await requestAPI('configuration', {
         body: JSON.stringify(dataToSend),
         method: 'POST'
       });
       if (typeof data === 'object' && data !== null) {
         const configStatus = (data as { config: string }).config;
         if (configStatus && !toast.isActive('custom-toast')) {
-          const toastifyCustomStyle: ToastOptions<{}> = {
-            hideProgressBar: true,
-            autoClose: false,
-            theme: 'dark',
-            position: toast.POSITION.BOTTOM_CENTER,
-            toastId: 'custom-toast'
-          };
           if (configStatus.includes('Failed')) {
             toast.error(configStatus, toastifyCustomStyle);
           } else {
@@ -102,6 +102,10 @@ function ConfigSelection({ configError, setConfigError }: any) {
       setIsSaving(false);
     }
   };
+  interface IUserInfoResponse {
+    email: string;
+    picture: string;
+  }
 
   const displayUserInfo = async (credentials: IAuthCredentials | undefined) => {
     if (credentials) {
@@ -112,19 +116,19 @@ function ConfigSelection({ configError, setConfigError }: any) {
           Authorization: API_HEADER_BEARER + credentials.access_token
         }
       })
-        .then((response: any) => {
+        .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult);
               setIsLoadingUser(false);
             })
-            .catch((e: any) => console.log(e));
+            .catch((e: Error) => console.log(e));
         })
-        .catch((err: any) => {
+        .catch((err: Error) => {
           setIsLoadingUser(false);
           console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information');
+          toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
   };
@@ -162,7 +166,6 @@ function ConfigSelection({ configError, setConfigError }: any) {
   }, []);
   return (
     <div>
-      <ToastContainer />
       {isLoadingUser && !configError ? (
         <div className="spin-loaderMain">
           <ClipLoader
@@ -178,16 +181,21 @@ function ConfigSelection({ configError, setConfigError }: any) {
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
+          themeManager={themeManager}
+          launcher={launcher}
+          app={app}
+          fromPage="config"
         />
       ) : (
         <div className="settings-component">
           <div className="settings-overlay">
             <div>
-              <Iconsettings.react tag="div" />
+              <Iconsettings.react tag="div" className="logo-alignment-style" />
             </div>
             <div className="settings-text">Settings</div>
           </div>
           <div className="settings-seperator"></div>
+          <div className="project-header">Project Info </div>
           <div className="config-overlay">
             <div className="config-form">
               <div className="project-overlay">
@@ -210,7 +218,9 @@ function ConfigSelection({ configError, setConfigError }: any) {
                 <Button
                   variant="contained"
                   disabled={
-                    isSaving || projectId.length == 0 || region.length == 0
+                    isSaving ||
+                    projectId.length === 0 ||
+                    region.length === 0 
                   }
                   onClick={handleSave}
                 >
@@ -219,10 +229,6 @@ function ConfigSelection({ configError, setConfigError }: any) {
               </div>
             </div>
             <div className="user-info-card">
-              <div className="google-header">
-                This account is managed by google.com
-              </div>
-              <div className="seperator"></div>
               <div className="user-overlay">
                 <div className="user-image-overlay">
                   <img
@@ -257,6 +263,26 @@ function ConfigSelection({ configError, setConfigError }: any) {
                   Licenses
                 </a>
               </div>
+              <div className="feedback-version-container">
+                <div className="google-header">
+                  <a
+                    className="feedback-container"
+                    href="https://forms.gle/wnEnH3fL4JRjPwbr7"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Provide Feedback
+                  </a>
+                  <span className="privacy-terms"> • </span>
+                  <a
+                    href="https://github.com/GoogleCloudDataproc/dataproc-jupyter-plugin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Version {VERSION_DETAIL}
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
           <div>
@@ -269,9 +295,15 @@ function ConfigSelection({ configError, setConfigError }: any) {
                 onClick={() => handleRuntimeExpand()}
               >
                 {expandRuntimeTemplate ? (
-                  <iconExpandLess.react tag="div" />
+                  <iconExpandLess.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 ) : (
-                  <iconExpandMore.react tag="div" />
+                  <iconExpandMore.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 )}
               </div>
             </div>

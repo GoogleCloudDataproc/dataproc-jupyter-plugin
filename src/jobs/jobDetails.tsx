@@ -41,7 +41,8 @@ import {
   jobTypeDisplay,
   jobTypeValue,
   jobTypeValueArguments,
-  statusMessage
+  statusMessage,
+  toastifyCustomStyle
 } from '../utils/utils';
 
 import ClusterDetails from '../cluster/clusterDetails';
@@ -49,7 +50,7 @@ import { ClipLoader } from 'react-spinners';
 import LabelProperties from './labelProperties';
 import SubmitJob from './submitJob';
 import ViewLogs from '../utils/viewLogs';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
@@ -90,13 +91,13 @@ const iconError = new LabIcon({
   svgstr: errorIcon
 });
 interface IJobDetailsProps {
-  jobSelected: any;
+  jobSelected: string;
   setDetailedJobView: (value: boolean) => void;
   stopJobApi: (jobId: string) => Promise<void>;
   deleteJobApi: (jobId: string) => Promise<void>;
   region: any;
   setDetailedView: (value: boolean) => void;
-  clusterResponse: any;
+  clusterResponse: object;
   clustersList: object;
 }
 function JobDetails({
@@ -155,8 +156,8 @@ function JobDetails({
   const [jobInfoResponse, setjobInfoResponse] = useState<IJobDetails>({
     ...initialJobDetails
   });
-  const key: any[] | (() => any[]) = [];
-  const value: any[] | (() => any[]) = [];
+  const key: string[] | (() => string[]) = [];
+  const value: string[] | (() => string[]) = [];
   const [labelEditMode, setLabelEditMode] = useState(false);
   const [labelDetail, setLabelDetail] = useState(key); //Final label value is stored
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value); //temporary storage to validate the label data being typed
@@ -250,14 +251,14 @@ function JobDetails({
           response
             .json()
             .then((responseResultJob: Response) => {
-              toast.success(`Request to update job ${jobSelected} submitted`);
+              toast.success(`Request to update job ${jobSelected} submitted`, toastifyCustomStyle);
               console.log(responseResultJob);
             })
             .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
           console.error('Error in updating job', err);
-          toast.error(`Failed to update the job ${jobSelected}`);
+          toast.error(`Failed to update the job ${jobSelected}`, toastifyCustomStyle);
         });
     }
   };
@@ -325,7 +326,7 @@ function JobDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting job details', err);
-          toast.error(`Failed to fetch job details ${jobSelected}`);
+          toast.error(`Failed to fetch job details ${jobSelected}`, toastifyCustomStyle);
         });
     }
   };
@@ -381,10 +382,10 @@ function JobDetails({
             className="back-arrow-icon"
             onClick={() => setErrorView(false)}
           >
-            <iconLeftArrow.react tag="div" />
+            <iconLeftArrow.react tag="div" className='logo-alignment-style' />
           </div>
           <div className="error-view-message-parent">
-            <iconError.react tag="div" />
+            <iconError.react tag="div" className='logo-alignment-style' />
             <div className="error-view-message">
               Unable to find the resource you requested
             </div>
@@ -422,17 +423,17 @@ function JobDetails({
         />
       )}
       {!submitJobView && !detailedClusterView && !errorView && (
-        <div className="scroll-comp">
+        <div className="scroll-comp-jobdetails">
           {jobInfo.jobUuid !== '' && (
             <div>
-              <div className="cluster-details-header">
+              <div className="cluster-details-header scroll-fix-header">
                 <div
                   className="back-arrow-icon"
                   role="button"
                   aria-label="Delete Job"
                   onClick={() => handleDetailedJobView()}
                 >
-                  <iconLeftArrow.react tag="div" />
+                  <iconLeftArrow.react tag="div" className='logo-alignment-style' />
                 </div>
                 <div className="cluster-details-title">Job details</div>
                 <div
@@ -441,7 +442,7 @@ function JobDetails({
                   onClick={() => handleCloneJob()}
                 >
                   <div className="action-cluster-icon">
-                    <iconCloneJob.react tag="div" />
+                    <iconCloneJob.react tag="div" className='logo-alignment-style' />
                   </div>
                   <div className="action-cluster-text">CLONE</div>
                 </div>
@@ -456,9 +457,9 @@ function JobDetails({
                 >
                   <div className="action-cluster-icon">
                     {jobInfo.status.state === STATUS_RUNNING ? (
-                      <iconStopCluster.react tag="div" />
+                      <iconStopCluster.react tag="div" className='logo-alignment-style' />
                     ) : (
-                      <iconStopClusterDisable.react tag="div" />
+                      <iconStopClusterDisable.react tag="div" className='logo-alignment-style' />
                     )}
                   </div>
                   <div className="action-cluster-text">STOP</div>
@@ -469,7 +470,7 @@ function JobDetails({
                   onClick={() => handleDeleteJob(jobInfo.reference.jobId)}
                 >
                   <div className="action-cluster-icon">
-                    <iconDeleteCluster.react tag="div" />
+                    <iconDeleteCluster.react tag="div" className='logo-alignment-style' />
                   </div>
                   <div className="action-cluster-text">DELETE</div>
                 </div>
@@ -499,7 +500,6 @@ function JobDetails({
                   <div className="cluster-details-label">Status</div>
                   {statusDisplay(statusMsg)}
                 </div>
-                <ToastContainer />
               </div>
               <div className="cluster-details-header">
                 <div className="cluster-details-title">Configuration</div>
@@ -638,22 +638,22 @@ function JobDetails({
                 {
                   //@ts-ignore string used as index
                   jobInfo[jobTypeConcat].properties &&
-                    //@ts-ignore string used as index
-                    Object.keys(jobInfo[jobTypeConcat].properties).map(
-                      (titleData: string) => (
-                        <div className="row-details" key={titleData}>
-                          <div className="job-details-label-level-one">
-                            {titleData}
-                          </div>
-                          <div className="details-value">
-                            {
-                              //@ts-ignore string used as index
-                              jobInfo[jobTypeConcat].properties[titleData]
-                            }
-                          </div>
+                  //@ts-ignore string used as index
+                  Object.keys(jobInfo[jobTypeConcat].properties).map(
+                    (titleData: string) => (
+                      <div className="row-details" key={titleData}>
+                        <div className="job-details-label-level-one">
+                          {titleData}
                         </div>
-                      )
+                        <div className="details-value">
+                          {
+                            //@ts-ignore string used as index
+                            jobInfo[jobTypeConcat].properties[titleData]
+                          }
+                        </div>
+                      </div>
                     )
+                  )
                 }
                 {argumentsList && (
                   <div className="row-details">
@@ -661,15 +661,15 @@ function JobDetails({
                     <div className="cluster-details-value">
                       {argumentsList.length > 0
                         ? argumentsList.map((argument: string) => {
-                            return (
-                              <div
-                                key={argument}
-                                className="job-argument-style"
-                              >
-                                {argument}
-                              </div>
-                            );
-                          })
+                          return (
+                            <div
+                              key={argument}
+                              className="job-argument-style"
+                            >
+                              {argument}
+                            </div>
+                          );
+                        })
                         : ''}
                     </div>
                   </div>
@@ -680,18 +680,18 @@ function JobDetails({
                     <div className="job-label-style-parent">
                       {labelDetail.length > 0
                         ? labelDetail.map(label => {
-                            /*
-                            Extracting key, value from label
-                               Example: "{client:dataproc_jupyter_plugin}"
-                         */
-                            const labelParts = label.split(':');
+                          /*
+                          Extracting key, value from label
+                             Example: "{client:dataproc_jupyter_plugin}"
+                       */
+                          const labelParts = label.split(':');
 
-                            return (
-                              <div key={label} className="job-label-style">
-                                {labelParts[0]} : {labelParts[1]}
-                              </div>
-                            );
-                          })
+                          return (
+                            <div key={label} className="job-label-style">
+                              {labelParts[0]} : {labelParts[1]}
+                            </div>
+                          );
+                        })
                         : 'None'}
                     </div>
                   ) : (
@@ -737,7 +737,6 @@ function JobDetails({
                   </div>
                 )}
               </div>
-              <ToastContainer />
             </div>
           )}
 
