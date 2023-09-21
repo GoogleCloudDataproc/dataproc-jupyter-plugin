@@ -162,7 +162,8 @@ const BatchesComponent = (): React.JSX.Element => {
               }
 
               const existingBatchData = previousBatchesList ?? [];
-              //setStateAction never type issue
+             
+              
               let allBatchesData: any = [
                 ...(existingBatchData as []),
                 ...transformBatchListData
