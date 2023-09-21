@@ -23,6 +23,7 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import PollingTimer from '../utils/pollingTimer';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import * as path from 'path';
 
 const iconGcsFolderNew = new LabIcon({
   name: 'launcher:gcs-folder-new-icon',
@@ -60,7 +61,7 @@ const GcsBucketComponent = ({
   const [folderName, setFolderName] = useState<string | undefined>(
     'Untitled Folder'
   );
-  const [folderCreateDone, setFolderCreateDone] = useState(true);
+  const [folderCreated, setFolderCreated] = useState(true);
 
   const [folderNameNew, setFolderNameNew] = useState('Untitled Folder');
 
@@ -133,7 +134,7 @@ const GcsBucketComponent = ({
               const contentsManager = app.serviceManager.contents;
 
               // Define the path to the 'gcsTemp' folder within the local application directory
-              const gcsTempFolderPath = '/gcsTemp';
+              const gcsTempFolderPath = `${path.sep}gcsTemp`;
 
               try {
                 // Check if the 'gcsTemp' folder exists
@@ -146,7 +147,7 @@ const GcsBucketComponent = ({
               }
 
               // Replace 'path/to/save/file.txt' with the desired path and filename
-              const filePath = `.${gcsTempFolderPath}/${editedFileName}`;
+              const filePath = `.${gcsTempFolderPath}${path.sep}${editedFileName}`;
 
               // Remove any existing event handlers before adding a new one
               contentsManager.fileChanged.disconnect(handleFileChangeConnect);
@@ -203,7 +204,7 @@ const GcsBucketComponent = ({
           className="gcs-name-field"
           onClick={() =>
             cell.value.split('/')[nameIndex] !== folderNameNew ||
-            folderCreateDone
+            folderCreated
               ? (cell.value.includes('/') &&
                   cell.value.split('/').length - 1 !== nameIndex) ||
                 gcsFolderPath.length === 0
@@ -221,7 +222,7 @@ const GcsBucketComponent = ({
               <iconGcsFile.react tag="div" />
             )}
             {cell.value.split('/')[nameIndex] === folderNameNew &&
-            !folderCreateDone ? (
+            !folderCreated ? (
               <input
                 value={folderName}
                 className="input-folder-name-style"
@@ -403,7 +404,7 @@ const GcsBucketComponent = ({
   }, [pollingDisable, gcsFolderPath]);
 
   const createNewItem = async () => {
-    if (folderCreateDone) {
+    if (folderCreated) {
       pollingGCSlist(listBucketsAPI, true);
       const currentTime = new Date();
       const lastModified = lastModifiedFormat(currentTime);
@@ -454,7 +455,7 @@ const GcsBucketComponent = ({
       setFolderName(newFolderData.folderName);
       setFolderNameNew(newFolderData.folderName);
       datalist.unshift(newFolderData);
-      setFolderCreateDone(false);
+      setFolderCreated(false);
       setBucketsList(datalist);
     }
   };
@@ -506,7 +507,7 @@ const GcsBucketComponent = ({
           );
         });
     }
-    setFolderCreateDone(true);
+    setFolderCreated(true);
     listBucketsAPI();
   };
 
