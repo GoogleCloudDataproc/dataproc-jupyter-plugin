@@ -49,7 +49,13 @@ const iconExpandMore = new LabIcon({
   svgstr: expandMoreIcon
 });
 
-function ConfigSelection({ configError, setConfigError, themeManager }: any) {
+function ConfigSelection({
+  configError,
+  setConfigError,
+  themeManager,
+  app,
+  launcher
+}: any) {
   const Iconsettings = new LabIcon({
     name: 'launcher:settings_icon',
     svgstr: settingsIcon
@@ -109,16 +115,16 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
           Authorization: API_HEADER_BEARER + credentials.access_token
         }
       })
-        .then((response: any) => {
+        .then((response: Response) => {
           response
             .json()
             .then((responseResult: any) => {
               setUserInfo(responseResult);
               setIsLoadingUser(false);
             })
-            .catch((e: any) => console.log(e));
+            .catch((e: Error) => console.log(e));
         })
-        .catch((err: any) => {
+        .catch((err: Error) => {
           setIsLoadingUser(false);
           console.error('Error displaying user info', err);
           toast.error('Failed to fetch user information', toastifyCustomStyle);
@@ -177,6 +183,9 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
           themeManager={themeManager}
+          launcher={launcher}
+          app={app}
+          fromPage="config"
         />
       ) : (
         <div className="settings-component">
@@ -214,7 +223,8 @@ function ConfigSelection({ configError, setConfigError, themeManager }: any) {
                     isSaving ||
                     projectId.length === 0 ||
                     region.length === 0 ||
-                    (gcloudRegion === region && gcloudProject === projectId)|| !projectAccess
+                    (gcloudRegion === region && gcloudProject === projectId) ||
+                    !projectAccess
                   }
                   onClick={handleSave}
                 >

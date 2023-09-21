@@ -212,7 +212,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconAddRuntime),
       execute: () => {
-        const content = new RuntimeTemplate(app as JupyterLab, themeManager);
+        const content = new RuntimeTemplate(app as JupyterLab,launcher as ILauncher, themeManager);
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;
@@ -254,7 +254,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Cloud Dataproc Settings',
       execute: () => {
-        const content = new AuthLogin(themeManager);
+        const content = new AuthLogin(app as JupyterLab,launcher as ILauncher, themeManager);
         const widget = new MainAreaWidget<AuthLogin>({ content });
         widget.title.label = 'Config Setup';
         widget.title.icon = iconCluster;
