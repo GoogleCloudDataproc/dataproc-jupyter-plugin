@@ -173,7 +173,62 @@ function BatchDetails({
       pollingBatchDetails(getBatchDetails, true);
     };
   }, []);
-
+  interface BatchDetailsResponse {
+    uuid: '',
+    state: '',
+    createTime: '',
+    runtimeInfo: {
+      endpoints: {},
+      approximateUsage: { milliDcuSeconds: '', shuffleStorageGbSeconds: '' }
+    },
+    creator: '',
+    runtimeConfig: {
+      version: '',
+      containerImage: '',
+      properties: {
+        'spark:spark.executor.instances': '',
+        'spark:spark.driver.cores': '',
+        'spark:spark.driver.memory': '',
+        'spark:spark.executor.cores': '',
+        'spark:spark.executor.memory': '',
+        'spark:spark.dynamicAllocation.executorAllocationRatio': '',
+        'spark:spark.app.name': ''
+      }
+    },
+    sparkBatch: {
+      mainJarFileUri: '',
+      mainClass: '',
+      jarFileUris: ''
+    },
+    pysparkBatch: {
+      mainPythonFileUri: ''
+    },
+    sparkRBatch: {
+      mainRFileUri: ''
+    },
+    sparkSqlBatch: {
+      queryFileUri: ''
+    },
+    environmentConfig: {
+      executionConfig: {
+        serviceAccount: '',
+        subnetworkUri: '',
+        networkTags: [],
+        kmsKey: ''
+      },
+      peripheralsConfig: {
+        metastoreService: '',
+        sparkHistoryServerConfig: {
+          dataprocCluster: ''
+        }
+      }
+    },
+    stateHistory: [{ state: '', stateStartTime: '' }],
+    stateTime: '',
+    labels:{}
+    }
+    
+  
   const getBatchDetails = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -192,7 +247,7 @@ function BatchDetails({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: BatchDetailsResponse) => {
               setBatchInfoResponse(responseResult);
               if (responseResult.labels) {
                 const labelValue = Object.entries(responseResult.labels).map(
@@ -259,7 +314,7 @@ function BatchDetails({
   const handleCloneBatch = async (batchInfoResponse: BatchInfoResponse) => {
     setCreateBatch(true);
   };
-
+  
   return (
     <div>
       {batchInfoResponse.uuid === '' && (

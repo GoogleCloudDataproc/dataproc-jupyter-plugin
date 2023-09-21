@@ -132,6 +132,7 @@ const ClusterComponent = (): React.JSX.Element => {
     state: string;
     stateStartTime: string;
   }
+ 
   const listClustersAPI = async (
     nextPageToken?: string,
     previousClustersList?: object
