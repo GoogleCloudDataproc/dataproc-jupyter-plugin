@@ -192,6 +192,10 @@ function CreateRunTime({
   useEffect(() => {
     listSubNetworksAPI(networkSelected);
   }, [networkSelected]);
+  interface IUserInfoResponse {
+    email: string;
+    picture: string;
+  }
   const displayUserInfo = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -205,7 +209,7 @@ function CreateRunTime({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult.email);
             })
             .catch((e: Error) => console.log(e));
@@ -345,6 +349,9 @@ function CreateRunTime({
       setCreateTime(new Date().toISOString());
     }
   };
+  interface INetworkAPI {
+    network : string;
+  }
   const listNetworksFromSubNetworkAPI = async (subnetwork: any) => {
     setIsloadingNetwork(true);
     const credentials = await authApi();
@@ -361,8 +368,12 @@ function CreateRunTime({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: INetworkAPI) => {
               let transformedNetworkSelected = '';
+                 /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
+      */
               transformedNetworkSelected = responseResult.network.split('/')[9];
 
               setNetworkSelected(transformedNetworkSelected);
@@ -742,7 +753,7 @@ function CreateRunTime({
   };
   const handleNetworkTags = (
     setDuplicateValidation: (value: boolean) => void,
-    listOfFiles: any
+    listOfFiles: string[]
   ) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);

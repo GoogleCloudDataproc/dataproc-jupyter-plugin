@@ -91,13 +91,13 @@ const iconError = new LabIcon({
   svgstr: errorIcon
 });
 interface IJobDetailsProps {
-  jobSelected: any;
+  jobSelected: string;
   setDetailedJobView: (value: boolean) => void;
   stopJobApi: (jobId: string) => Promise<void>;
   deleteJobApi: (jobId: string) => Promise<void>;
   region: any;
   setDetailedView: (value: boolean) => void;
-  clusterResponse: any;
+  clusterResponse: object;
   clustersList: object;
 }
 function JobDetails({
@@ -156,8 +156,8 @@ function JobDetails({
   const [jobInfoResponse, setjobInfoResponse] = useState<IJobDetails>({
     ...initialJobDetails
   });
-  const key: any[] | (() => any[]) = [];
-  const value: any[] | (() => any[]) = [];
+  const key: string[] | (() => string[]) = [];
+  const value: string[] | (() => string[]) = [];
   const [labelEditMode, setLabelEditMode] = useState(false);
   const [labelDetail, setLabelDetail] = useState(key); //Final label value is stored
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value); //temporary storage to validate the label data being typed

@@ -17,7 +17,7 @@
 
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
-import { Tree, NodeRendererProps } from 'react-arborist';
+import { Tree, NodeRendererProps, NodeApi} from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
@@ -85,7 +85,7 @@ const iconSearchClear = new LabIcon({
   svgstr: searchClearIcon
 });
 
-const calculateDepth = (node: any): number => {
+const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
   while (currentNode.parent) {
@@ -94,7 +94,6 @@ const calculateDepth = (node: any): number => {
   }
   return depth;
 };
-
 const DpmsComponent = ({
   app,
   themeManager
@@ -112,13 +111,14 @@ const DpmsComponent = ({
   const [cluster, setCluster] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
-  const [columnResponse, setColumnResponse] = useState<string[]>([]);
-  const [databaseDetails, setDatabaseDetails] = useState({});
-  const [tableDescription, setTableDescription] = useState({});
   const [apiError, setApiError] = useState(false);
   const [schemaError, setSchemaError] = useState(false);
   const [totalDatabases, setTotalDatabases] = useState<number>(0);
   const [totalTables, setTotalTables] = useState<number>(0);
+  const [columnResponse, setColumnResponse] = useState<IColumn[]>([]);
+const [databaseDetails, setDatabaseDetails] = useState<Record<string, string>>({});
+const [tableDescription, setTableDescription] = useState<Record<string, string>>({});
+
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -133,8 +133,8 @@ const DpmsComponent = ({
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: unknown) => {
-              setColumnResponse((prevResponse: any) => [
+            .then(async (responseResult: IColumn) => {
+              setColumnResponse((prevResponse: IColumn[]) => [
                 ...prevResponse,
                 responseResult
               ]);
@@ -152,6 +152,13 @@ const DpmsComponent = ({
         });
     }
   };
+  interface ITableResponse {
+    results: Array<{
+      displayName: string;
+      relativeResourceName: string;
+      description: string;
+    }>;
+  }
   const getTableDetails = async (database: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -173,7 +180,7 @@ const DpmsComponent = ({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: ITableResponse) => {
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -209,44 +216,71 @@ const DpmsComponent = ({
         });
     }
   };
-  const database: { [dbName: string]: { [tableName: string]: string[] } } = {};
-  columnResponse.forEach((res: any) => {
-    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
-fetching database name from fully qualified name structure */
-    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
-    const tableName = res.displayName;
-    const columns = res.schema.columns.map(
-      (column: {
+  interface IColumn {
+    name: string;
+    schema: {
+      columns: {
         column: string;
         type: string;
         mode: string;
         description: string;
-      }) => ({
-        name: column.column,
-        type: column.type.toUpperCase(),
-        mode: column.mode,
-        description: column?.description || 'None'
-      })
-    );
+      }[];
+    };
+    fullyQualifiedName: string;
+    displayName: string;
+    column: string;
+    type: string;
+    mode: string;
+    description: string;
+  }  
+  interface IDataEntry {
+    id: string;
+    name: string;
+    description: string;
+    children: Table[];
+  }
+  const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } = {};
 
-    if (!database[dbName]) {
-      database[dbName] = {};
+  columnResponse.forEach((res:IColumn) => {
+    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
+fetching database name from fully qualified name structure */
+    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
+    const tableName = res.displayName;
+    const columns: IColumn[] = res.schema.columns.map((column: {
+      column: string;
+      type: string;
+      mode: string;
+      description: string;
+    }) => ({
+      name: column.column,
+      schema: res.schema, // Include the schema object
+      fullyQualifiedName: res.fullyQualifiedName,
+      displayName: res.displayName,
+      column: res.column,
+      type: res.type,
+      mode: res.mode,
+      description: res.description,
+    }));
+
+
+    if (!databases[dbName]) {
+      databases[dbName] = {};
     }
 
-    if (!database[dbName][tableName]) {
-      database[dbName][tableName] = [];
+    if (!databases[dbName][tableName]) {
+      databases[dbName][tableName] = [];
     }
 
-    database[dbName][tableName].push(...columns);
+    databases[dbName][tableName].push(...columns);
   });
-  const data = Object.entries(database).map(([dbName, tables]) => ({
+  const data = Object.entries(databases).map(([dbName, tables]) => ({
     id: uuidv4(),
     name: dbName,
     children: Object.entries(tables).map(([tableName, columns]) => ({
       id: uuidv4(),
       name: tableName,
       desciption: '',
-      children: columns.map((column: any) => ({
+      children: columns.map((column:IColumn) => ({
         id: uuidv4(),
         name: column.name,
         type: column.type,
@@ -271,7 +305,7 @@ fetching database name from fully qualified name structure */
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
   const openedWidgets: Record<string, boolean> = {};
-  const handleNodeClick = (node: any) => {
+  const handleNodeClick = (node: NodeApi) => {
     const depth = calculateDepth(node);
     const widgetTitle = node.data.name;
     if (!openedWidgets[widgetTitle]) {
@@ -293,7 +327,7 @@ fetching database name from fully qualified name structure */
           const widgetTitle = widget.title.label;
           delete openedWidgets[widgetTitle];
         });
-      } else if (depth === 2) {
+      } else if (depth === 2 && node.parent) {
         const database = node.parent.data.name;
         const column = node.data.children;
         const content = new Table(
@@ -322,8 +356,8 @@ fetching database name from fully qualified name structure */
   const handleSearchClear = () => {
     setSearchTerm('');
   };
-  type NodeProps = NodeRendererProps<any> & {
-    onClick: (node: any) => void;
+  type NodeProps = NodeRendererProps<IDataEntry> & {
+    onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
   };
   const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
@@ -454,6 +488,15 @@ fetching database name from fully qualified name structure */
       </div>
     );
   };
+  interface IDatabaseResponse {
+    results?: Array<{
+      displayName: string;
+      description: string;
+    }>;
+    error?: {
+      code: string;
+    }
+  }
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -475,7 +518,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: IDatabaseResponse) => {
               if (responseResult?.results) {
                 const filteredEntries = responseResult.results.filter(
                   (entry: { displayName: string }) => entry.displayName
@@ -492,11 +535,15 @@ fetching database name from fully qualified name structure */
                 setDatabaseDetails(updatedDatabaseDetails);
                 setDatabaseNames(databaseNames);
                 setTotalDatabases(databaseNames.length);
+                setApiError(false);
+                setSchemaError(false);
               } else {
                 if (responseResult?.error?.code) {
                   setApiError(true);
+                  setSchemaError(false);
                 } else {
                   setSchemaError(true);
+                  setApiError(false);
                 }
                 setNoDpmsInstance(true);
                 setIsLoading(false);
@@ -512,6 +559,13 @@ fetching database name from fully qualified name structure */
         });
     }
   };
+  interface IClusterDetailsResponse {
+    config?: {
+      metastoreConfig?: {
+        dataprocMetastoreService?: string;
+      };
+    };
+  }
   const getClusterDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -528,7 +582,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: IClusterDetailsResponse) => {
               const metastoreServices =
                 responseResult.config?.metastoreConfig
                   ?.dataprocMetastoreService;
@@ -557,6 +611,14 @@ fetching database name from fully qualified name structure */
         });
     }
   };
+  interface ISessionDetailsResponse {
+    environmentConfig?: {
+      peripheralsConfig?: {
+        metastoreService?: string;
+      };
+    };
+  }
+  
   const getSessionDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -573,7 +635,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: ISessionDetailsResponse) => {
               const metastoreServices =
                 responseResult.environmentConfig?.peripheralsConfig
                   ?.metastoreService;
@@ -638,6 +700,7 @@ fetching database name from fully qualified name structure */
       getColumnDetails(entry);
     });
   }, [entries]);
+
   return (
     <div className="dpms-Wrapper">
       <div>

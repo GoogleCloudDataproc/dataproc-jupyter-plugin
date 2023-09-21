@@ -82,6 +82,16 @@ const BatchesComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: 'Sessions' | 'Batches') => {
     setSelectedMode(mode);
   };
+  interface IBatchData {
+    name: string;
+    state: BatchStatus;
+    createTime: string;
+    stateTime: Date;
+  }
+  interface IBatchListResponse {
+    batches: IBatchData[];
+    nextPageToken?: string;
+  }
 
   const listBatchAPI = async (
     nextPageToken?: string,
@@ -104,11 +114,19 @@ const BatchesComponent = (): React.JSX.Element => {
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
-              let transformBatchListData = [];
+            .then((responseResult: IBatchListResponse) => {
+              let transformBatchListData: {
+                batchID: string;
+                status: string;
+                location: string;
+                creationTime: string;
+                type: string | undefined;
+                elapsedTime: string;
+                actions: React.JSX.Element;
+              }[] = [];
               if (responseResult && responseResult.batches) {
                 transformBatchListData = responseResult.batches.map(
-                  (data: any) => {
+                  (data: IBatchData) => {
                     const startTimeDisplay = jobTimeFormat(data.createTime);
                     const startTime = new Date(data.createTime);
                     const elapsedTimeString = elapsedTime(
@@ -139,7 +157,8 @@ const BatchesComponent = (): React.JSX.Element => {
               }
 
               const existingBatchData = previousBatchesList ?? [];
-              //setStateAction never type issue
+             
+              
               let allBatchesData: any = [
                 ...(existingBatchData as []),
                 ...transformBatchListData
@@ -170,8 +189,7 @@ const BatchesComponent = (): React.JSX.Element => {
     setBatchSelected(selectedName);
     setDetailedBatchView(true);
   };
-
-  const handleDeleteBatch = (data: any) => {
+  const handleDeleteBatch = (data: IBatchData) => {
     if (data.state !== BatchStatus.STATUS_PENDING) {
       /*
       Extracting project id  
@@ -192,13 +210,13 @@ const BatchesComponent = (): React.JSX.Element => {
     setDeletePopupOpen(false);
   };
 
-  const renderActions = (data: { state: BatchStatus; name: string }) => {
+  const renderActions = (data: IBatchData) => {
     return (
       <div
         className="actions-icon"
         role="button"
         aria-label="Delete Job"
-        aria-disabled={false}
+        aria-disabled={data.state === BatchStatus.STATUS_PENDING}
       >
         <div
           className={

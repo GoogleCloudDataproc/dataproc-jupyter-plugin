@@ -198,7 +198,10 @@ const ClusterComponent = (): React.JSX.Element => {
       listClustersAPI();
     } catch (error) {
       console.error('Error fetching status', error);
-      toast.error(`Failed to fetch the status ${selectedCluster}`, toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch the status ${selectedCluster}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -224,7 +227,10 @@ const ClusterComponent = (): React.JSX.Element => {
       setRestartEnabled(false);
     } catch (error) {
       console.error('Error restarting cluster', error);
-      toast.error(`Failed to restart the cluster ${selectedCluster}`, toastifyCustomStyle);
+      toast.error(
+        `Failed to restart the cluster ${selectedCluster}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -241,7 +247,7 @@ const ClusterComponent = (): React.JSX.Element => {
         }
         className={
           data.status.state === ClusterStatus.STATUS_STOPPED &&
-            restartEnabled !== true
+          restartEnabled !== true
             ? 'icon-buttons-style'
             : 'icon-buttons-style-disable'
         }
@@ -252,10 +258,11 @@ const ClusterComponent = (): React.JSX.Element => {
             : undefined
         }
       >
-        {data.status.state === ClusterStatus.STATUS_STOPPED && !restartEnabled ? (
-          <iconStart.react tag="div" className='logo-alignment-style' />
+        {data.status.state === ClusterStatus.STATUS_STOPPED &&
+        !restartEnabled ? (
+          <iconStart.react tag="div" className="logo-alignment-style" />
         ) : (
-          <iconStartDisable.react tag="div" className='logo-alignment-style' />
+          <iconStartDisable.react tag="div" className="logo-alignment-style" />
         )}
       </div>
     );
@@ -282,9 +289,9 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconStop.react tag="div" className='logo-alignment-style' />
+          <iconStop.react tag="div" className="logo-alignment-style" />
         ) : (
-          <iconStopDisable.react tag="div" className='logo-alignment-style' />
+          <iconStopDisable.react tag="div" className="logo-alignment-style" />
         )}
       </div>
     );
@@ -311,9 +318,12 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconRestart.react tag="div" className='logo-alignment-style' />
+          <iconRestart.react tag="div" className="logo-alignment-style" />
         ) : (
-          <iconRestartDisable.react tag="div" className='logo-alignment-style' />
+          <iconRestartDisable.react
+            tag="div"
+            className="logo-alignment-style"
+          />
         )}
       </div>
     );

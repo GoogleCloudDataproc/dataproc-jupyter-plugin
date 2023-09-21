@@ -9,7 +9,11 @@ import gcsFolderIcon from '../../style/icons/gcs_folder_icon.svg';
 import gcsFileIcon from '../../style/icons/gcs_file_icon.svg';
 import gcsUploadIcon from '../../style/icons/gcs_upload_icon.svg';
 import gcsSearchIcon from '../../style/icons/gcs_search_icon.svg';
-import { authApi, lastModifiedFormat, toastifyCustomStyle } from '../utils/utils';
+import {
+  authApi,
+  lastModifiedFormat,
+  toastifyCustomStyle
+} from '../utils/utils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -95,16 +99,14 @@ const GcsBucketComponent = ({
   );
 
   const handleGCSpath = () => {
-    setGcsFolderPath([])
-    listBucketsAPI();
-  }
+    setGcsFolderPath([]);
+  };
 
   const handleFolderPath = (folderName: string) => {
     let folderPath = gcsFolderPath;
     let positionAt = folderPath.indexOf(folderName);
     folderPath = folderPath.slice(0, positionAt + 1);
     setGcsFolderPath(folderPath);
-    listBucketsAPI();
   };
 
   const handleAddFolderPath = (folderName: string) => {
@@ -125,11 +127,11 @@ const GcsBucketComponent = ({
           Authorization: API_HEADER_BEARER + credentials.access_token
         }
       })
-        .then((response: any) => {
+        .then((response: Response) => {
           setIsLoading(false);
           response
             .text()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: unknown) => {
               // Get the contents manager to save the file
               const contentsManager = app.serviceManager.contents;
 
@@ -187,10 +189,7 @@ const GcsBucketComponent = ({
         })
         .catch((err: Error) => {
           console.error('Failed to fetch file information', err);
-          toast.error(
-            `Failed to fetch file information`,
-            toastifyCustomStyle
-          );
+          toast.error(`Failed to fetch file information`, toastifyCustomStyle);
         });
     }
   };
@@ -202,9 +201,8 @@ const GcsBucketComponent = ({
         <td
           {...cell.getCellProps()}
           className="gcs-name-field"
-          onClick={() =>
-            cell.value.split('/')[nameIndex] !== folderNameNew ||
-            folderCreated
+          onDoubleClick={() =>
+            cell.value.split('/')[nameIndex] !== folderNameNew || folderCreated
               ? (cell.value.includes('/') &&
                   cell.value.split('/').length - 1 !== nameIndex) ||
                 gcsFolderPath.length === 0
@@ -246,8 +244,11 @@ const GcsBucketComponent = ({
       );
     }
   };
-
-  const handleFileSave = async (fileDetail: any, content: any) => {
+  interface IFileDetail {
+    name: string;
+    mimetype: string;
+  }
+  const handleFileSave = async (fileDetail: IFileDetail, content: string) => {
     // Create a Blob object from the content and metadata
     const blob = new Blob([content], { type: fileDetail.mimetype });
 
@@ -289,10 +290,7 @@ const GcsBucketComponent = ({
         })
         .catch((err: Error) => {
           console.error('Failed to upload file information', err);
-          toast.error(
-            `Failed to upload file information`,
-            toastifyCustomStyle
-          );
+          toast.error(`Failed to upload file information`, toastifyCustomStyle);
         });
     }
   };
@@ -312,6 +310,13 @@ const GcsBucketComponent = ({
     // @ts-ignore
     useTable({ columns, data }, useGlobalFilter);
 
+  interface IBucketItem {
+    updated: string;
+    items: any;
+    name: string;
+    lastModified: string;
+    folderName: string;
+  }
   const listBucketsAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -329,7 +334,7 @@ const GcsBucketComponent = ({
           ? `${GCS_URL}?project=${credentials.project_id}`
           : gcsFolderPath.length === 1
           ? `${GCS_URL}/${gcsFolderPath[0]}/o`
-          : `${GCS_URL}/${gcsFolderPath[0]}/o?prefix=${prefixList}`;
+          : `${GCS_URL}/${gcsFolderPath[0]}/o?prefix=${prefixList}/`;
       // console.log(apiURL)
       fetch(apiURL, {
         headers: {
@@ -337,12 +342,12 @@ const GcsBucketComponent = ({
           Authorization: API_HEADER_BEARER + credentials.access_token
         }
       })
-        .then((response: any) => {
+        .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IBucketItem) => {
               let sortedResponse = responseResult.items.sort(
-                (itemOne: any, itemTwo: any) =>
+                (itemOne: IBucketItem, itemTwo: IBucketItem) =>
                   itemOne.updated < itemTwo.updated ? -1 : 1
               );
               let transformBucketsData = [];
@@ -396,6 +401,7 @@ const GcsBucketComponent = ({
   };
 
   useEffect(() => {
+    listBucketsAPI();
     pollingGCSlist(listBucketsAPI, pollingDisable);
 
     return () => {
@@ -501,10 +507,7 @@ const GcsBucketComponent = ({
         })
         .catch((err: Error) => {
           console.error('Failed to create folder', err);
-          toast.error(
-            `Failed to create folder`,
-            toastifyCustomStyle
-          );
+          toast.error(`Failed to create folder`, toastifyCustomStyle);
         });
     }
     setFolderCreated(true);
@@ -560,10 +563,7 @@ const GcsBucketComponent = ({
         })
         .catch((err: Error) => {
           console.error('Failed to upload file', err);
-          toast.error(
-            `Failed to upload file`,
-            toastifyCustomStyle
-          );
+          toast.error(`Failed to upload file`, toastifyCustomStyle);
         });
     }
   };

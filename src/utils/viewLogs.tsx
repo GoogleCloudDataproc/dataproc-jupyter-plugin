@@ -33,6 +33,52 @@ const iconViewLogs = new LabIcon({
   name: 'launcher:view-logs-icon',
   svgstr: ViewLogsIcon
 });
+export interface IViewLogs {
+  config: IConfig
+}
+
+export interface IConfig {
+  endpointConfig: IEndpointConfig
+}
+
+export interface IEndpointConfig {
+  httpPorts: IHttpPorts
+}
+
+export interface IHttpPorts {
+  config: IConfig;
+  error: {
+    code:number;
+  }
+  "Spark History Server": string
+}
+interface IViewLogsProps {
+  clusterInfo?: {
+    clusterUuid: string;
+    clusterName: string;
+  };
+  projectName?: string;
+  clusterName?: string;
+  setErrorView?: (value: boolean) => void;
+  batchInfoResponse?: {
+    runtimeInfo?: {
+      endpoints?: {
+        [key: string]: string;
+      };
+    };
+    name?: string; 
+    createTime?: string; 
+  }|undefined;
+  sessionInfo?: {
+    runtimeInfo?: {
+      endpoints?: {
+        [key: string]: string;
+      };
+    };
+    name: string;
+    createTime: string;
+  };
+}
 
 function ViewLogs({
   clusterInfo,
@@ -41,7 +87,7 @@ function ViewLogs({
   setErrorView,
   batchInfoResponse,
   sessionInfo
-}: any) {
+}: IViewLogsProps) {
   const handleJobDetailsViewLogs = async (clusterName: string) => {
     const credentials = await authApi();
     if (credentials) {
@@ -58,8 +104,8 @@ function ViewLogs({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
-              if (responseResult.error && responseResult.error.code === 404) {
+            .then((responseResult: IHttpPorts) => {
+              if (responseResult.error && responseResult.error.code === 404 && setErrorView) {
                 setErrorView(true);
               } else {
                 window.open(
@@ -151,12 +197,18 @@ function ViewLogs({
             Extracting project, location, batch_id from batchInfoResponse.name 
             Example: "projects/{project}/locations/{location}/batches/{batch_id}"
             */
-            const batchValueUri = batchInfoResponse.name.split('/');
+            const batchValueUri: string[] | undefined = batchInfoResponse?.name?.split('/');
 
-            window.open(
-              `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${batchValueUri[1]}" resource.labels.location="${batchValueUri[3]}" resource.labels.batch_id="${batchValueUri[5]}";cursorTimestamp=${batchInfoResponse.createTime};?project=${batchValueUri[1]}`,
-              '_blank'
-            );
+            if (batchValueUri && batchValueUri.length >= 6 && batchInfoResponse?.createTime) {
+              const project_id = batchValueUri[1];
+              const location = batchValueUri[3];
+              const batch_id = batchValueUri[5];
+              const cursorTimestamp = batchInfoResponse.createTime;
+            
+              const url = `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${project_id}" resource.labels.location="${location}" resource.labels.batch_id="${batch_id}";cursorTimestamp=${cursorTimestamp};?project=${project_id}`;
+            
+              window.open(url, '_blank');
+            } 
           }
         }}
       >

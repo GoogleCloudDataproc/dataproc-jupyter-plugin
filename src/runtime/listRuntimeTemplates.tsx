@@ -38,9 +38,9 @@ import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 import {
-  SessionTemplate,
-  SessionTemplateDisplay,
-  SessionTemplateRoot
+  ISessionTemplate,
+  ISessionTemplateDisplay,
+  ISessionTemplateRoot
 } from '../utils/listRuntimeTemplateInterface';
 
 const iconFilter = new LabIcon({
@@ -59,7 +59,7 @@ const iconSubmitJob = new LabIcon({
 interface IListRuntimeTemplate {
   openCreateTemplate: boolean;
   setOpenCreateTemplate: (value: boolean) => void;
-  setSelectedRuntimeClone: (value: SessionTemplate | undefined) => void;
+  setSelectedRuntimeClone: (value: ISessionTemplate | undefined) => void;
 }
 
 function ListRuntimeTemplates({
@@ -68,7 +68,7 @@ function ListRuntimeTemplates({
   setSelectedRuntimeClone
 }: IListRuntimeTemplate) {
   const [runtimeTemplateslist, setRuntimeTemplateslist] = useState<
-    SessionTemplateDisplay[]
+    ISessionTemplateDisplay[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
@@ -81,7 +81,7 @@ function ListRuntimeTemplates({
     setSelectedRuntimeTemplateDisplayName
   ] = useState('');
   const [runTimeTemplateAllList, setRunTimeTemplateAllList] = useState<
-    SessionTemplate[]
+    ISessionTemplate[]
   >([
     {
       name: '',
@@ -162,8 +162,8 @@ function ListRuntimeTemplates({
         regionIdentifier: 'locations',
         queryParams: queryParams
       });
-      const formattedResponse: SessionTemplateRoot = await response.json();
-      let transformRuntimeTemplatesListData: SessionTemplateDisplay[] = [];
+      const formattedResponse: ISessionTemplateRoot = await response.json();
+      let transformRuntimeTemplatesListData: ISessionTemplateDisplay[] = [];
       if (formattedResponse && formattedResponse.sessionTemplates) {
         setRunTimeTemplateAllList(formattedResponse.sessionTemplates);
         let runtimeTemplatesListNew = formattedResponse.sessionTemplates;
@@ -175,7 +175,7 @@ function ListRuntimeTemplates({
           }
         );
         transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
-          (data: SessionTemplate) => {
+          (data: ISessionTemplate) => {
             const startTimeDisplay = data.updateTime
               ? jobTimeFormat(data.updateTime)
               : '';
@@ -203,7 +203,7 @@ function ListRuntimeTemplates({
 
       const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
       //setStateAction never type issue
-      let allRuntimeTemplatesData: SessionTemplateDisplay[] = [
+      let allRuntimeTemplatesData: ISessionTemplateDisplay[] = [
         ...(existingRuntimeTemplatesData as []),
         ...transformRuntimeTemplatesListData
       ];
@@ -277,7 +277,7 @@ function ListRuntimeTemplates({
     };
   }, [pollingDisable, openCreateTemplate]);
 
-  const renderActions = (data: SessionTemplate) => {
+  const renderActions = (data: ISessionTemplate) => {
     let runtimeTemplateName = data.name;
     let runtimeTemplateDisplayName = data.jupyterSession.displayName;
     return (
@@ -300,12 +300,12 @@ function ListRuntimeTemplates({
   };
 
   const handleRuntimeTemplatesName = (selectedValue: any) => {
-    let selectedRunTimeAll: SessionTemplate[] = [];
+    let selectedRunTimeAll: ISessionTemplate[] = [];
     /*
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
-    runTimeTemplateAllList.forEach((data: SessionTemplate) => {
+    runTimeTemplateAllList.forEach((data: ISessionTemplate) => {
       if (data.name.split('/')[5] === selectedValue.row.original.id) {
         selectedRunTimeAll.push(data);
       }

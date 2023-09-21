@@ -103,7 +103,7 @@ interface IClusterDetailsProps {
   setDetailedJobView?: (value: boolean) => void;
   setSubmitJobView?: (value: boolean) => void;
   submitJobView: boolean;
-  clusterResponse: any;
+  clusterResponse: object;
   selectedJobClone: any;
   setSelectedJobClone?: (value: boolean) => void;
 }
@@ -163,7 +163,19 @@ function ClusterDetails({
     setDeletePopupOpen(false);
     handleDetailedView();
   };
-
+  interface IClusterDetailsResponse {
+    error: {
+      code: number;
+    };
+    status: {
+      state: string;
+    };
+    clusterName: string;
+    clusterUuid: string;
+    projectId?: string;
+    regionId?: string;
+  }
+  
   const getClusterDetails = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -181,7 +193,7 @@ function ClusterDetails({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IClusterDetailsResponse) => {
               if (responseResult.error && responseResult.error.code === 404) {
                 setErrorView(true);
               }

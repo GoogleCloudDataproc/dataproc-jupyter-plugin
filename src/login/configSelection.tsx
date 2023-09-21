@@ -38,7 +38,7 @@ import { RegionDropdown } from '../controls/RegionDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import CreateRuntime from '../runtime/createRunTime';
-import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
+import { ISessionTemplate } from '../utils/listRuntimeTemplateInterface';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -63,9 +63,6 @@ function ConfigSelection({
 
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
-  const [gcloudRegion, setGcloudRegion] = useState('');
-  const [gcloudProject, setGcloudProject] = useState('');
-  const [projectAccess, setProjectAccess] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({
@@ -76,13 +73,13 @@ function ConfigSelection({
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
 
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
-    useState<SessionTemplate>();
+    useState<ISessionTemplate>();
 
   const handleSave = async () => {
     setIsSaving(true);
     const dataToSend = { projectId, region };
     try {
-      const data = await requestAPI<any>('configuration', {
+      const data = await requestAPI('configuration', {
         body: JSON.stringify(dataToSend),
         method: 'POST'
       });
@@ -105,6 +102,10 @@ function ConfigSelection({
       setIsSaving(false);
     }
   };
+  interface IUserInfoResponse {
+    email: string;
+    picture: string;
+  }
 
   const displayUserInfo = async (credentials: IAuthCredentials | undefined) => {
     if (credentials) {
@@ -118,7 +119,7 @@ function ConfigSelection({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult);
               setIsLoadingUser(false);
             })
@@ -157,8 +158,6 @@ function ConfigSelection({
       if (credentials && credentials.project_id && credentials.region_id) {
         setProjectId(credentials.project_id);
         setRegion(credentials.region_id);
-        setGcloudProject(credentials.project_id);
-        setGcloudRegion(credentials.region_id);
         setConfigError(false);
       } else {
         setConfigError(true);
@@ -213,7 +212,6 @@ function ConfigSelection({
                   projectId={projectId}
                   region={region}
                   onRegionChange={region => setRegion(region)}
-                  setProjectAccess={setProjectAccess}
                 />
               </div>
               <div className="save-overlay">
@@ -222,9 +220,7 @@ function ConfigSelection({
                   disabled={
                     isSaving ||
                     projectId.length === 0 ||
-                    region.length === 0 ||
-                    (gcloudRegion === region && gcloudProject === projectId) ||
-                    !projectAccess
+                    region.length === 0 
                   }
                   onClick={handleSave}
                 >

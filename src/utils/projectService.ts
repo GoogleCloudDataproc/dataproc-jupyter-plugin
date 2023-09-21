@@ -22,7 +22,7 @@ import {
 } from '../utils/const';
 import { authApi } from '../utils/utils';
 
-interface Project {
+interface IProject {
   projectId: string;
   name: string;
 }
@@ -45,7 +45,7 @@ export const projectListAPI = async (prefix: string): Promise<string[]> => {
     }
   });
   const { projects } = (await resp.json()) as {
-    projects: Project[] | undefined;
+    projects: IProject[] | undefined;
   };
   return (projects ?? []).map(project => project.projectId);
 };

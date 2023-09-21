@@ -69,7 +69,7 @@ type Cluster = {
 };
 
 type Network = {
-  selfLink: any;
+  selfLink: string;
   network: string;
   subnetworks: string;
 };
@@ -97,16 +97,16 @@ interface ICreateBatchProps {
   setCreateBatch?: (value: boolean) => void;
 }
 
-function batchKey(batchSelected: any) {
+function batchKey(batchSelected: string | undefined) {
   const batchKeys: string[] = [];
 
-  for (const key in batchSelected) {
-    if (key.endsWith('Batch')) {
-      batchKeys.push(key);
-    }
+  if (batchSelected && batchSelected.endsWith('Batch')) {
+    batchKeys.push(batchSelected);
   }
+
   return batchKeys;
 }
+
 function batchTypeFunction(batchKey: string) {
   let batchType = 'spark';
   switch (batchKey) {
@@ -453,7 +453,11 @@ function CreateBatch({
     setMainJarSelected('');
     setMainJarValidation(true);
   };
-  const listNetworksFromSubNetworkAPI = async (subNetwork: any) => {
+  interface INetworkResponse {
+    network: string;
+    // Add other properties if they exist in the response
+  }
+  const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
     setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
@@ -462,22 +466,25 @@ function CreateBatch({
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
+            Authorization: API_HEADER_BEARER + credentials.access_token,
+          },
         }
       )
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: INetworkResponse) => {
               let transformedNetworkSelected = '';
-
+                 /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
+      */
+  
               transformedNetworkSelected = responseResult.network.split('/')[9];
-
+  
               setNetworkSelected(transformedNetworkSelected);
               setIsloadingNetwork(false);
             })
-
             .catch((e: Error) => {
               console.log(e);
             });
@@ -487,6 +494,7 @@ function CreateBatch({
         });
     }
   };
+  
   function isSubmitDisabled() {
     const commonConditions =
       batchIdSelected === '' || regionName === '' || batchIdValidation;
@@ -573,7 +581,7 @@ function CreateBatch({
       if (listOfFiles.length === 0) {
         setValidationPart(true);
       } else {
-        listOfFiles.forEach((fileName: any) => {
+        listOfFiles.forEach((fileName: string) => {
           if (
             fileName.startsWith('file://') ||
             fileName.startsWith('gs://') ||
@@ -610,11 +618,11 @@ function CreateBatch({
       }
     }
   };
-  const handleArguments = (setDuplicateValidation:(value: boolean) => void,listOfFiles: any) => {
+  const handleArguments = (setDuplicateValidation:(value: boolean) => void,listOfFiles: string[]) => {
     setArgumentsSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
-  const handleNetworkTags = (setDuplicateValidation:(value: boolean) => void, listOfFiles: any) => {
+  const handleNetworkTags = (setDuplicateValidation:(value: boolean) => void, listOfFiles: string[]) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
@@ -735,7 +743,7 @@ function CreateBatch({
                 };
               });
               const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: any }) => ({
+                (obj: { name: string}) => ({
                   key: obj.name,
                   value: obj.name,
                   text: obj.name
@@ -753,7 +761,17 @@ function CreateBatch({
         });
     }
   };
-  const listKeysAPI = async (keyRing: any) => {
+  interface IKey {
+    primary: {
+      state:string
+    };
+    name: string;
+  }
+  interface IKeyListResponse {
+    cryptoKeys: IKey[];
+  }
+  
+  const listKeysAPI = async (keyRing: string) => {
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -768,7 +786,7 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IKeyListResponse) => {
               let transformedKeyList = [];
               /*
          Extracting network from items
@@ -776,12 +794,12 @@ function CreateBatch({
       */
 
               transformedKeyList = responseResult.cryptoKeys
-                .filter((data: any) => data.primary && data.primary.state==='ENABLED')
-                .map((data: any) => ({
+                .filter((data: IKey) => data.primary && data.primary.state==='ENABLED')
+                .map((data: {name: string}) => ({
                   name: data.name.split('/')[7]
                 }));
               const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: any }) => ({
+                (obj: { name: string }) => ({
                   key: obj.name,
                   value: obj.name,
                   text: obj.name
@@ -1207,7 +1225,7 @@ function CreateBatch({
     }
   };
 
-  const handleInputChange = (event: any) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setHexNumber(event.target.value);
     event.target.value.length > 0
       ? setBatchIdValidation(false)
@@ -1215,7 +1233,8 @@ function CreateBatch({
     const newBatchId = event.target.value;
     setBatchIdSelected(newBatchId);
   };
-  const handleBatchTypeSelected = (event: any, data: any) => {
+ 
+  const handleBatchTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setBatchTypeSelected(data.value);
     setFilesSelected([]);
     setJarFilesSelected([]);
@@ -1228,10 +1247,10 @@ function CreateBatch({
     setMainClassSelected('');
   };
 
-  const handleServiceSelected = (event: any, data: any) => {
+  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setServicesSelected(data.value);
   };
-  const handleProjectIdChange = (event: any, data: any) => {
+  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
@@ -1239,24 +1258,26 @@ function CreateBatch({
     regionListAPI(data.value);
     setProjectId(data.value);
   };
-  const handleRegionChange = (event: any, data: any) => {
+  const handleRegionChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data.value);
-    listMetaStoreAPI(data.value);
+      listMetaStoreAPI(data.value);
+    
+    
   };
-  const handleNetworkChange = (event: any, data: any) => {
+  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setNetworkSelected(data.value);
     listSubNetworksAPI(data.value);
   };
-  const handleSubNetworkChange = (event: any, data: any) => {
+  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setSubNetworkSelected(data.value);
   };
-  const handleKeyRingChange = (event: any, data: any) => {
+  const handleKeyRingChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setKeyRingSelected(data.value);
     listKeysAPI(data.value);
   };
-  const handlekeyChange = (event: any, data: any) => {
+  const handlekeyChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setKeySelected(data.value);
   };
   const handleMainClassSelected = (value: string) => {
@@ -1268,7 +1289,7 @@ function CreateBatch({
     handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
   };
 
-  const handleClusterSelected = (event: any, value: any) => {
+  const handleClusterSelected = (event: React.SyntheticEvent<Element, Event>, value: any) => {
     setClusterSelected(value);
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {

@@ -18,7 +18,7 @@
 import React, { useEffect, useState } from 'react';
 import CreateRuntime from './createRunTime';
 import { JupyterLab } from '@jupyterlab/application';
-import { SessionTemplate } from '../utils/listRuntimeTemplateInterface';
+import { ISessionTemplate } from '../utils/listRuntimeTemplateInterface';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -35,7 +35,7 @@ const RuntimeTemplateComponent = ({
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
 
   const [selectedRuntimeClone, setSelectedRuntimeClone] =
-    useState<SessionTemplate>();
+    useState<ISessionTemplate>();
   useEffect(() => {
     setSelectedRuntimeClone(undefined);
   });

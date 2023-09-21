@@ -105,7 +105,7 @@ function LabelProperties({
   const handleEditLabel = (value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
     
-    labelEdit.forEach((data, dataNumber: any) => {
+    labelEdit.forEach((data, dataNumber: number) => {
       if (index === dataNumber) {
         /*
           allowed aplhanumeric and spaces and underscores
@@ -156,7 +156,7 @@ function LabelProperties({
     setLabelDetailUpdated(labelEdit);
   };
 
-  const styleAddLabelButton = (buttonText: string, labelDetail: any) => {
+  const styleAddLabelButton = (buttonText: string, labelDetail: string) => {
     if (
       buttonText === 'ADD LABEL' &&
       (labelDetail.length === 0 ||
@@ -186,7 +186,7 @@ function LabelProperties({
     <div>
       <div className="job-label-edit-parent">
         {labelDetail.length > 0 &&
-          labelDetail.map((label: any, index: number) => {
+          labelDetail.map((label: string, index: number) => {
             /*
                      Extracting key, value from label
                       Example: "{client:dataProc_plugin}"

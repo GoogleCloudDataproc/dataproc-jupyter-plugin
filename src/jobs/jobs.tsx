@@ -113,7 +113,7 @@ function JobComponent({
   clustersList
 }: any) {
   const [jobsList, setjobsList] = useState([]);
-  const [jobSelected, setjobSelected] = useState({});
+  const [jobSelected, setjobSelected] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
   const [region, setRegion] = useState('');

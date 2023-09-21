@@ -44,6 +44,7 @@ import {
 } from '../utils/const';
 import {
   BatchTypeValue,
+  IBatchInfoResponse,
   authApi,
   batchDetailsOptionalDisplay,
   convertToDCUHours,
@@ -172,7 +173,62 @@ function BatchDetails({
       pollingBatchDetails(getBatchDetails, true);
     };
   }, []);
-
+  interface IBatchDetailsResponse {
+    uuid: '',
+    state: '',
+    createTime: '',
+    runtimeInfo: {
+      endpoints: {},
+      approximateUsage: { milliDcuSeconds: '', shuffleStorageGbSeconds: '' }
+    },
+    creator: '',
+    runtimeConfig: {
+      version: '',
+      containerImage: '',
+      properties: {
+        'spark:spark.executor.instances': '',
+        'spark:spark.driver.cores': '',
+        'spark:spark.driver.memory': '',
+        'spark:spark.executor.cores': '',
+        'spark:spark.executor.memory': '',
+        'spark:spark.dynamicAllocation.executorAllocationRatio': '',
+        'spark:spark.app.name': ''
+      }
+    },
+    sparkBatch: {
+      mainJarFileUri: '',
+      mainClass: '',
+      jarFileUris: ''
+    },
+    pysparkBatch: {
+      mainPythonFileUri: ''
+    },
+    sparkRBatch: {
+      mainRFileUri: ''
+    },
+    sparkSqlBatch: {
+      queryFileUri: ''
+    },
+    environmentConfig: {
+      executionConfig: {
+        serviceAccount: '',
+        subnetworkUri: '',
+        networkTags: [],
+        kmsKey: ''
+      },
+      peripheralsConfig: {
+        metastoreService: '',
+        sparkHistoryServerConfig: {
+          dataprocCluster: ''
+        }
+      }
+    },
+    stateHistory: [{ state: '', stateStartTime: '' }],
+    stateTime: '',
+    labels:{}
+    }
+    
+  
   const getBatchDetails = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -191,7 +247,7 @@ function BatchDetails({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IBatchDetailsResponse) => {
               setBatchInfoResponse(responseResult);
               if (responseResult.labels) {
                 const labelValue = Object.entries(responseResult.labels).map(
@@ -255,10 +311,10 @@ function BatchDetails({
     handleDetailedBatchView();
     setDeletePopupOpen(false);
   };
-  const handleCloneBatch = async (batchInfoResponse: any) => {
+  const handleCloneBatch = async (batchInfoResponse: IBatchInfoResponse) => {
     setCreateBatch(true);
   };
-
+  
   return (
     <div>
       {batchInfoResponse.uuid === '' && (

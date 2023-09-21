@@ -1,7 +1,7 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto);
 
 .gcs-panel-title {
-  color: #000;
+  color: var(--jp-ui-font-color0);
   font-family: Roboto;
   font-size: 15px;
   font-style: normal;
@@ -14,19 +14,18 @@
   min-height: 24px;
   padding: 0px 10px;
   border-top: 1px solid #e9eaed;
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--jp-ui-font-color1);
   cursor: pointer;
 }
 
 .gcs-row-data-parent {
-  background: #ffffff;
+  background: var(--jp-layout-color0);
   height: 29px;
   font-style: normal;
   font-weight: 400;
   font-size: 13px;
   line-height: 18px;
-
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--jp-ui-font-color1);
   cursor: pointer;
 }
 
@@ -39,7 +38,7 @@
   display: flex;
   align-items: center;
   height: 20px;
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--jp-ui-font-color1);
 }
 
 .gcs-panel-header {
@@ -54,7 +53,7 @@
 
 .gcs-filter-overlay {
   border-radius: 4px;
-  border: 1px solid #80868b;
+  border: 1px solid var(--jp-layout-color4);
   height: 38px;
   padding-left: 15px;
   margin: 10px;
@@ -90,6 +89,6 @@
   height: 18px;
   width: 95%;
 }
-.gcs-create-new-icon{
+.gcs-create-new-icon {
   margin-left: 25px;
 }
