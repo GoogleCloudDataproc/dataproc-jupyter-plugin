@@ -345,11 +345,7 @@ function JobDetails({
   );
   const elapsedTimeString = elapsedTime(endTime, jobStartTime);
 
-  const statusStyleSelection = (jobInfo: {
-    status:{
-      state:string
-    }
-  }) => {
+  const statusStyleSelection = (jobInfo: any) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
     } else {

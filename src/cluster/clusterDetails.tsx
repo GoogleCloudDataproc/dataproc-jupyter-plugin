@@ -163,7 +163,19 @@ function ClusterDetails({
     setDeletePopupOpen(false);
     handleDetailedView();
   };
-
+  interface ClusterDetailsResponse {
+    error: {
+      code: number;
+    };
+    status: {
+      state: string;
+    };
+    clusterName: string;
+    clusterUuid: string;
+    projectId?: string;
+    regionId?: string;
+  }
+  
   const getClusterDetails = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -181,7 +193,7 @@ function ClusterDetails({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: ClusterDetailsResponse) => {
               if (responseResult.error && responseResult.error.code === 404) {
                 setErrorView(true);
               }

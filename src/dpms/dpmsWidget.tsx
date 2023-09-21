@@ -155,6 +155,13 @@ const [tableDescription, setTableDescription] = useState<Record<string, string>>
         });
     }
   };
+  interface TableResponse {
+    results: Array<{
+      displayName: string;
+      relativeResourceName: string;
+      description: string;
+    }>;
+  }
   const getTableDetails = async (database: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -176,7 +183,7 @@ const [tableDescription, setTableDescription] = useState<Record<string, string>>
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: TableResponse) => {
               const filteredEntries = responseResult.results.filter(
                 (entry: { displayName: string }) => entry.displayName
               );
@@ -488,6 +495,15 @@ fetching database name from fully qualified name structure */
       </div>
     );
   };
+  interface DatabaseResponse {
+    results?: Array<{
+      displayName: string;
+      description: string;
+    }>;
+    error?: {
+      code: string;
+    }
+  }
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -509,7 +525,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: DatabaseResponse) => {
               if (responseResult?.results) {
                 const filteredEntries = responseResult.results.filter(
                   (entry: { displayName: string }) => entry.displayName
@@ -550,6 +566,13 @@ fetching database name from fully qualified name structure */
         });
     }
   };
+  interface ClusterDetailsResponse {
+    config?: {
+      metastoreConfig?: {
+        dataprocMetastoreService?: string;
+      };
+    };
+  }
   const getClusterDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -566,7 +589,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: ClusterDetailsResponse) => {
               const metastoreServices =
                 responseResult.config?.metastoreConfig
                   ?.dataprocMetastoreService;
@@ -595,6 +618,14 @@ fetching database name from fully qualified name structure */
         });
     }
   };
+  interface SessionDetailsResponse {
+    environmentConfig?: {
+      peripheralsConfig?: {
+        metastoreService?: string;
+      };
+    };
+  }
+  
   const getSessionDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -611,7 +642,7 @@ fetching database name from fully qualified name structure */
         .then((response: Response) => {
           response
             .json()
-            .then(async (responseResult: any) => {
+            .then(async (responseResult: SessionDetailsResponse) => {
               const metastoreServices =
                 responseResult.environmentConfig?.peripheralsConfig
                   ?.metastoreService;

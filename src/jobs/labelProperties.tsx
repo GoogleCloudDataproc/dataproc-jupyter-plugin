@@ -156,7 +156,7 @@ function LabelProperties({
     setLabelDetailUpdated(labelEdit);
   };
 
-  const styleAddLabelButton = (buttonText: string, labelDetail: any) => {
+  const styleAddLabelButton = (buttonText: string, labelDetail: string) => {
     if (
       buttonText === 'ADD LABEL' &&
       (labelDetail.length === 0 ||
