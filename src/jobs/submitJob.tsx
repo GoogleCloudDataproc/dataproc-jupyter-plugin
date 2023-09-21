@@ -241,11 +241,17 @@ function SubmitJob(
     setSubmitJobView(false);
   };
 
-  const handleClusterSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
+  const handleClusterSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: any
+  ) => {
     setClusterSelected(data.value);
   };
 
-  const handleJobTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
+  const handleJobTypeSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: any
+  ) => {
     setJobTypeSelected(data.value);
     setFileSelected([]);
     setJarFileSelected([]);
@@ -258,7 +264,10 @@ function SubmitJob(
     setQueryFileSelected('');
     setMainClassSelected('');
   };
-  const handleQuerySourceTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
+  const handleQuerySourceTypeSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: any
+  ) => {
     setQuerySourceSelected(data.value);
   };
 
@@ -739,7 +748,10 @@ function SubmitJob(
       }
     }
   };
-  const handleArgumentsSelection = (setDuplicateValidation:(value: boolean) => void, listOfFiles: any) => {
+  const handleArgumentsSelection = (
+    setDuplicateValidation: (value: boolean) => void,
+    listOfFiles: string[]
+  ) => {
     setArgumentSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
@@ -1093,7 +1105,7 @@ function SubmitJob(
                   </div>
                 </div>
               )}
-              {jarFileValidation && !jarFileDuplicateValidation&& (
+              {jarFileValidation && !jarFileDuplicateValidation && (
                 <div className="submit-job-message">{JAR_FILE_MESSAGE}</div>
               )}
             </>
@@ -1136,7 +1148,7 @@ function SubmitJob(
                   </div>
                 </div>
               )}
-              {fileValidation && !fileDuplicateValidation&& (
+              {fileValidation && !fileDuplicateValidation && (
                 <div className="submit-job-message">{FILES_MESSAGE}</div>
               )}
             </>

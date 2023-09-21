@@ -198,7 +198,7 @@ const BatchesComponent = (): React.JSX.Element => {
         className="actions-icon"
         role="button"
         aria-label="Delete Job"
-        aria-disabled={false}
+        aria-disabled={data.state === BatchStatus.STATUS_PENDING}
       >
         <div
           className={

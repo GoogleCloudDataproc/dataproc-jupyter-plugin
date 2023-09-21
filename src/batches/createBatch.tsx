@@ -610,11 +610,11 @@ function CreateBatch({
       }
     }
   };
-  const handleArguments = (setDuplicateValidation:(value: boolean) => void,listOfFiles: any) => {
+  const handleArguments = (setDuplicateValidation:(value: boolean) => void,listOfFiles: string[]) => {
     setArgumentsSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
-  const handleNetworkTags = (setDuplicateValidation:(value: boolean) => void, listOfFiles: any) => {
+  const handleNetworkTags = (setDuplicateValidation:(value: boolean) => void, listOfFiles: string[]) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
