@@ -87,15 +87,10 @@ const BatchesComponent = (): React.JSX.Element => {
     state: BatchStatus;
     createTime: string;
     stateTime: Date;
-
-    // Add other properties as needed
   }
-
-  // Define an interface for the batch list response structure
   interface BatchListResponse {
     batches: BatchData[];
     nextPageToken?: string;
-    // Add other properties as needed
   }
 
   const listBatchAPI = async (
