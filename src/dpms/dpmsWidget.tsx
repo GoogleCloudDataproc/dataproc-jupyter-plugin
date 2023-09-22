@@ -690,11 +690,6 @@ fetching database name from fully qualified name structure */
   useEffect(() => {
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
-  // useEffect(() => {
-  //   databaseNames.forEach((db: string) => {
-  //     getTableDetails(db);
-  //   });
-  // }, [databaseNames]);
 
   useEffect(() => {
     Promise.all(databaseNames.map(db => getTableDetails(db)))
