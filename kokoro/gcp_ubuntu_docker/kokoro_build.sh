@@ -47,4 +47,9 @@ python -m build
 cd ./ui-tests
 jlpm install
 jlpm playwright install
-PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/sponge_log.xml jlpm playwright test --reporter=junit
+PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-head/sponge_log.xml jlpm playwright test --reporter=junit
+
+# Rerun Playwright Tests, but on jupyterlab 3.6.3
+pip install jupyterlab=3.6.3
+PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-3.6.3/sponge_log.xml jlpm playwright test --reporter=junit
+
