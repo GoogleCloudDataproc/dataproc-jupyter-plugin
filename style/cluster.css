@@ -6,7 +6,7 @@
   flex-direction: row;
   align-items: center;
   padding: 0px;
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
 }
 
 .selected-header {
@@ -47,7 +47,7 @@
 .create-cluster-overlay {
   height: 48px;
   padding-left: 15px;
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
 
   display: flex;
   align-items: center;
@@ -97,7 +97,6 @@
   cursor: context-menu;
   padding-right: 5px;
   padding-left: 15px;
-
 }
 
 .icon-buttons-style-disable {
@@ -124,7 +123,7 @@
   padding-left: 15px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
 }
 
 .filter-section-part {
@@ -166,7 +165,7 @@
   display: flex;
   height: 18px;
   width: 18px;
-  color: #3367D6;
+  color: #3367d6;
   margin-top: -1px;
 }
 
@@ -221,7 +220,7 @@
 .clusters-table-header {
   text-align: left;
   padding-left: 15px;
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
 }
 
 .clusters-table-body {
@@ -231,7 +230,7 @@
 
 .clusters-table-data {
   padding-left: 15px;
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
 }
 
 .clusters-table-data:nth-child(1) {
@@ -246,7 +245,7 @@
   cursor: pointer;
   height: 29px;
   padding-left: 15px;
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
   align-items: center;
 }
 
@@ -273,7 +272,7 @@
   max-height: 92vh;
   font-family: 'Roboto';
 }
-.scroll-comp-cluster{
+.scroll-comp-cluster {
   overflow-y: auto;
   max-height: 90vh;
 }

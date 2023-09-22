@@ -58,9 +58,9 @@
   height: 32px;
 
   background: var(--jp-layout-color0);
-  box-shadow: 0px 1px 5px var(--jp-inverse-layout-color3),
-    0px 2px 2px var(--jp-inverse-layout-color3),
-    0px 1px 1px var(--jp-inverse-layout-color3);
+  box-shadow: 0px 1px 5px var(--jp-shadow-umbra-color),
+    0px 2px 2px var(--jp-shadow-umbra-color),
+    0px 1px 1px var(--jp-shadow-umbra-color);
   border-radius: 4px;
 }
 
@@ -95,10 +95,10 @@
   left: 7px;
   z-index: 3;
 }
-.disable-text{
-  color:#80868b;
+.disable-text {
+  color: #80868b;
 }
-.select-text-overlay-label{
+.select-text-overlay-label {
   position: relative;
 }
 
@@ -204,7 +204,7 @@ a:hover {
   overflow: hidden;
   display: flex;
   word-wrap: break-word;
-  margin-top:5px
+  margin-top: 5px;
 }
 
 .jobType-select {
@@ -282,19 +282,19 @@ a:hover {
   opacity: 0;
 }
 
-.select-dropdown-text{
+.select-dropdown-text {
   height: 13px;
-    font-style: normal;
-    font-weight: 1000;
-    font-size: 12px;
-    line-height: 13px;
-    display: flex;
-    align-items: center;
-    color: #000000;
-    position: absolute;
-    background-color: #fff;
-    top: -7px;
-    padding: 0px 3px;
-    left: 7px;
-    z-index: 3;
+  font-style: normal;
+  font-weight: 1000;
+  font-size: 12px;
+  line-height: 13px;
+  display: flex;
+  align-items: center;
+  color: #000000;
+  position: absolute;
+  background-color: #fff;
+  top: -7px;
+  padding: 0px 3px;
+  left: 7px;
+  z-index: 3;
 }

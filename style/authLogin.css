@@ -133,31 +133,6 @@
   height: 64px;
 }
 
-.save-button {
-  height: 32px;
-  background: #3367d6;
-  box-shadow: 0px 1px 5px var(--jp-layout-color4),
-    0px 2px 2px rgba(0, 0, 0, 0.2), 0px 1px 1px var(--jp-layout-color4);
-  border-radius: 4px;
-  flex: none;
-  width: 65px;
-  font-style: normal;
-  font-weight: 500;
-  font-size: 13px;
-  line-height: 32px;
-  align-items: center;
-  text-align: center;
-  text-transform: uppercase;
-  color: var(--jp-layout-color0);
-  border: none;
-  cursor: pointer;
-}
-
-.save-button:disabled {
-  background: lightgrey;
-  color: var(--jp-ui-font-color0);
-}
-
 .save-loader {
   margin-top: 5px;
 }
@@ -311,7 +286,7 @@
 }
 
 .feedback-container {
-  color: #3367D6 !important;
+  color: #3367d6 !important;
   font-weight: bold;
 }
 
