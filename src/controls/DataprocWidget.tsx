@@ -1,30 +1,79 @@
 import React from 'react';
 import { ReactWidget, IThemeManager } from '@jupyterlab/apputils';
-import { ThemeProvider, createTheme } from '@mui/material';
+import { ThemeOptions, ThemeProvider, createTheme } from '@mui/material';
+import { deepmerge } from '@mui/utils';
+
+const baseStyles: ThemeOptions = {
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          minWidth: 48
+        }
+      },
+      defaultProps: {
+        size: 'small'
+      }
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          fontSize: 13
+        },
+        input: {
+          fontSize: 13
+        }
+      },
+      defaultProps: {
+        size: 'small'
+      }
+    }
+  }
+};
 
 /**
  * Theme to use when the current Jupyter Theme is light.
  */
-export const lightTheme = createTheme({
-  palette: {
-    mode: 'light'
-  }
-});
+export const lightTheme = createTheme(
+  deepmerge(baseStyles, {
+    palette: {
+      mode: 'light'
+    },
+    components: {
+      MuiOutlinedInput: {
+        styleOverrides: {
+          notchedOutline: {
+            borderColor: 'rgba(0,0,0,0.38)'
+          }
+        }
+      },
+      MuiFormLabel: {
+        styleOverrides: {
+          root: {
+            color: '#000'
+          }
+        }
+      }
+    }
+  })
+);
 
 /**
  * Theme to use when the current Jupyter Theme is dark.
  */
-export const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#FF0064'
-    },
-    secondary: {
-      main: '#7000F2'
+export const darkTheme = createTheme(
+  deepmerge(baseStyles, {
+    palette: {
+      mode: 'dark',
+      primary: {
+        main: '#FF0064'
+      },
+      secondary: {
+        main: '#7000F2'
+      }
     }
-  }
-});
+  })
+);
 
 /**
  * Base Widget class that injects MUI themeprovider context so
