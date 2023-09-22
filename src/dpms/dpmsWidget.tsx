@@ -690,16 +690,32 @@ fetching database name from fully qualified name structure */
   useEffect(() => {
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
+  // useEffect(() => {
+  //   databaseNames.forEach((db: string) => {
+  //     getTableDetails(db);
+  //   });
+  // }, [databaseNames]);
+
   useEffect(() => {
-    databaseNames.forEach((db: string) => {
-      getTableDetails(db);
-    });
+    Promise.all(databaseNames.map(db => getTableDetails(db)))
+      .then(results => {
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }, [databaseNames]);
+
   useEffect(() => {
-    entries.forEach((entry: string) => {
-      getColumnDetails(entry);
-    });
+    Promise.all(entries.map(entry => getColumnDetails(entry)))
+      .then(results => {
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }, [entries]);
+ 
+  
+  
 
   return (
     <div className="dpms-Wrapper">

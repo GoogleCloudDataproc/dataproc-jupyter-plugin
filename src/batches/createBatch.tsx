@@ -97,15 +97,6 @@ interface ICreateBatchProps {
   setCreateBatch?: (value: boolean) => void;
 }
 
-function batchKey(batchSelected: string | undefined) {
-  const batchKeys: string[] = [];
-
-  if (batchSelected && batchSelected.endsWith('Batch')) {
-    batchKeys.push(batchSelected);
-  }
-
-  return batchKeys;
-}
 
 function batchTypeFunction(batchKey: string) {
   let batchType = 'spark';
@@ -152,7 +143,7 @@ function CreateBatch({
   let fileUris: string[] = [];
   let archiveFileUris: string[] = [];
   let argumentsUris: string[] = [];
-  let networkUris: string[] = [];
+  let networkUris: string[] | "" = [];
   let key: string[] | (() => string[]) = [];
   let value: string[] | (() => string[]) = [];
   let pythonFileUris: string[] = [];
@@ -161,7 +152,11 @@ function CreateBatch({
   let keys = '';
   if (batchInfoResponse !== undefined) {
     if (Object.keys(batchInfoResponse).length !== 0) {
-      batchKeys = batchKey(batchInfoResponse);
+      for (const key in batchInfoResponse) {
+        if (batchInfoResponse.hasOwnProperty(key) && key.endsWith('Batch')) {
+          batchKeys.push(key);
+        }
+      }    
       batchType = batchTypeFunction(batchKeys[0]);
       const batchTypeKey = batchKeys[0];
       if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryFileUri')) {
@@ -406,7 +401,13 @@ function CreateBatch({
               batchKeys.push(key);
             }
           }
-          batchKeys = batchKey(batchInfoResponse);
+          // batchKeys = batchKey(batchInfoResponse);
+          for (const key in batchInfoResponse) {
+            if (batchInfoResponse.hasOwnProperty(key) && key.endsWith('Batch')) {
+              batchKeys.push(key);
+            }
+          }
+    
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
@@ -715,6 +716,12 @@ function CreateBatch({
         });
     }
   };
+  type IKeyRings = {
+    keyRings: Array<{
+      name: string; 
+    }>;
+  };
+  
   const listKeyRingsAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -730,14 +737,14 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IKeyRings) => {
               let transformedKeyList = [];
               /*
          Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
       */
 
-              transformedKeyList = responseResult.keyRings.map((data: any) => {
+              transformedKeyList = responseResult.keyRings.map((data: {name: string}) => {
                 return {
                   name: data.name.split('/')[5]
                 };
@@ -988,7 +995,7 @@ function CreateBatch({
   };
 
   type Payload = {
-    [key: string]: any;
+    [key: string]: unknown;
   };
 
   type RuntimeConfig = {
