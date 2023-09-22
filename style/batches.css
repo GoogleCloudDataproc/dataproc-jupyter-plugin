@@ -1,6 +1,6 @@
 .batch-header-part {
   display: flex;
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
 }
 
 .create-batch-overlay {
@@ -32,7 +32,7 @@
   color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
-.scroll-comp-batchdetails{
+.scroll-comp-batchdetails {
   overflow-y: auto;
   max-height: 90.1vh;
 }
@@ -43,7 +43,6 @@
   display: flex;
   align-items: center;
 }
-
 
 .batch-details-container {
   width: 80%;
@@ -85,7 +84,7 @@
 }
 
 .batch-details-row-label {
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;

@@ -3,7 +3,7 @@
 .cluster-details-header {
   height: 48px;
   display: flex;
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
 }
 
 .scrollable-content {
@@ -99,7 +99,7 @@
 }
 
 .row-details {
-  border-bottom: 1px solid var(--jp-layout-color4);
+  border-bottom: 1px solid var(--jp-layout-color2);
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
