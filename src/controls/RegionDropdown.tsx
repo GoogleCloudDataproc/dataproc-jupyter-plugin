@@ -19,6 +19,7 @@ import React, { useMemo } from 'react';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import { useRegion } from '../utils/regionService';
+import { Paper, PaperProps } from '@mui/material';
 
 type Props = {
   /** The currently selected project ID */
@@ -33,7 +34,7 @@ type Props = {
  * Component to render a region selector dropdown.
  */
 export function RegionDropdown(props: Props) {
-  const { projectId, region, onRegionChange} = props;
+  const { projectId, region, onRegionChange } = props;
   const regions = useRegion(projectId);
 
   const regionStrList = useMemo(
@@ -46,6 +47,7 @@ export function RegionDropdown(props: Props) {
       value={region}
       options={regionStrList}
       onChange={(_, value) => onRegionChange(value ?? '')}
+      PaperComponent={(props: PaperProps) => <Paper elevation={8} {...props} />}
       renderInput={params => <TextField {...params} label="Region" />}
     />
   );
