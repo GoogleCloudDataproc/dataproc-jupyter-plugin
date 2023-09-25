@@ -56,6 +56,7 @@ import { Input } from '../controls/MuiWrappedInput';
 import { Radio } from '@mui/material';
 import { Dropdown } from '../controls/MuiWrappedDropdown';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
+import { DropdownProps } from 'semantic-ui-react';
 
 type Project = {
   projectId: string;
@@ -97,15 +98,6 @@ interface ICreateBatchProps {
   setCreateBatch?: (value: boolean) => void;
 }
 
-function batchKey(batchSelected: string | undefined) {
-  const batchKeys: string[] = [];
-
-  if (batchSelected && batchSelected.endsWith('Batch')) {
-    batchKeys.push(batchSelected);
-  }
-
-  return batchKeys;
-}
 
 function batchTypeFunction(batchKey: string) {
   let batchType = 'spark';
@@ -152,7 +144,7 @@ function CreateBatch({
   let fileUris: string[] = [];
   let archiveFileUris: string[] = [];
   let argumentsUris: string[] = [];
-  let networkUris: string[] = [];
+  let networkUris: string[] | "" = [];
   let key: string[] | (() => string[]) = [];
   let value: string[] | (() => string[]) = [];
   let pythonFileUris: string[] = [];
@@ -161,7 +153,11 @@ function CreateBatch({
   let keys = '';
   if (batchInfoResponse !== undefined) {
     if (Object.keys(batchInfoResponse).length !== 0) {
-      batchKeys = batchKey(batchInfoResponse);
+      for (const key in batchInfoResponse) {
+        if (batchInfoResponse.hasOwnProperty(key) && key.endsWith('Batch')) {
+          batchKeys.push(key);
+        }
+      }    
       batchType = batchTypeFunction(batchKeys[0]);
       const batchTypeKey = batchKeys[0];
       if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryFileUri')) {
@@ -406,7 +402,12 @@ function CreateBatch({
               batchKeys.push(key);
             }
           }
-          batchKeys = batchKey(batchInfoResponse);
+          for (const key in batchInfoResponse) {
+            if (batchInfoResponse.hasOwnProperty(key) && key.endsWith('Batch')) {
+              batchKeys.push(key);
+            }
+          }
+    
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
@@ -598,7 +599,7 @@ function CreateBatch({
     }
   };
   const handleDuplicateValidation = (
-    setDuplicateValidation: any,
+    setDuplicateValidation: ((value: boolean) => void) | undefined,
     listOfFiles: string | string[]
   ) => {
     if (Array.isArray(listOfFiles)) {
@@ -612,9 +613,9 @@ function CreateBatch({
         return isDuplicate;
       });
       if (duplicateFileNames.length > 0) {
-        setDuplicateValidation(true);
+        setDuplicateValidation!(true);
       } else {
-        setDuplicateValidation(false);
+        setDuplicateValidation!(false);
       }
     }
   };
@@ -715,6 +716,12 @@ function CreateBatch({
         });
     }
   };
+  type IKeyRings = {
+    keyRings: Array<{
+      name: string; 
+    }>;
+  };
+  
   const listKeyRingsAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -730,14 +737,14 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
+            .then((responseResult: IKeyRings) => {
               let transformedKeyList = [];
               /*
          Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
       */
 
-              transformedKeyList = responseResult.keyRings.map((data: any) => {
+              transformedKeyList = responseResult.keyRings.map((data: {name: string}) => {
                 return {
                   name: data.name.split('/')[5]
                 };
@@ -988,7 +995,7 @@ function CreateBatch({
   };
 
   type Payload = {
-    [key: string]: any;
+    [key: string]: unknown;
   };
 
   type RuntimeConfig = {
@@ -1233,9 +1240,9 @@ function CreateBatch({
     const newBatchId = event.target.value;
     setBatchIdSelected(newBatchId);
   };
- 
-  const handleBatchTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
-    setBatchTypeSelected(data.value);
+
+  const handleBatchTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    setBatchTypeSelected(data.value!.toString());
     setFilesSelected([]);
     setJarFilesSelected([]);
     setAdditionalPythonFileSelected([]);
@@ -1247,38 +1254,38 @@ function CreateBatch({
     setMainClassSelected('');
   };
 
-  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
-    setServicesSelected(data.value);
+  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+      setServicesSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
+  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
     setServicesSelected('');
-    regionListAPI(data.value);
-    setProjectId(data.value);
+    regionListAPI(data.value!.toString());
+    setProjectId(data.value!.toString());
   };
   const handleRegionChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data.value);
-      listMetaStoreAPI(data.value);
+    listMetaStoreAPI(data.value);
     
     
   };
-  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
-    setNetworkSelected(data.value);
-    listSubNetworksAPI(data.value);
+  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+    setNetworkSelected(data.value!.toString());
+    listSubNetworksAPI(data.value!.toString());
   };
-  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
-    setSubNetworkSelected(data.value);
+  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+    setSubNetworkSelected(data.value!.toString());
   };
-  const handleKeyRingChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
-    setKeyRingSelected(data.value);
-    listKeysAPI(data.value);
+  const handleKeyRingChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+    setKeyRingSelected(data.value!.toString());
+    listKeysAPI(data.value!.toString());
   };
-  const handlekeyChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
-    setKeySelected(data.value);
+  const handlekeyChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+    setKeySelected(data.value!.toString());
   };
   const handleMainClassSelected = (value: string) => {
     setMainClassUpdated(true);
@@ -1289,8 +1296,8 @@ function CreateBatch({
     handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
   };
 
-  const handleClusterSelected = (event: React.SyntheticEvent<Element, Event>, value: any) => {
-    setClusterSelected(value);
+  const handleClusterSelected = (event: React.SyntheticEvent<Element, Event>, value: string|null) => {
+    setClusterSelected(value!);
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;

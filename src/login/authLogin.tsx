@@ -90,7 +90,6 @@ const AuthLoginComponent = ({
       )}
       {!loginError && loginState && (
         <ConfigSelection
-          loginState={loginState}
           configError={configError}
           setConfigError={setConfigError}
           themeManager={themeManager}
