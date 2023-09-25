@@ -68,7 +68,7 @@
   height: 48px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .job-save-button-style {
@@ -86,7 +86,7 @@
 }
 
 .job-button-style-parent {
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -251,7 +251,7 @@
 }
 
 .job-details-label-row {
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;

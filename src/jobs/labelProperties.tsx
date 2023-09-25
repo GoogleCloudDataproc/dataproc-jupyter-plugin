@@ -63,13 +63,13 @@ function LabelProperties({
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
-   useEffect(() => {
+  useEffect(() => {
     if (!labelEditMode) {
       if (
-
         buttonText === 'ADD LABEL' &&
         !selectedJobClone &&
-        selectedRuntimeClone === undefined && !createBatch
+        selectedRuntimeClone === undefined &&
+        !createBatch
       ) {
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
@@ -104,7 +104,7 @@ function LabelProperties({
   };
   const handleEditLabel = (value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
-    
+
     labelEdit.forEach((data, dataNumber: number) => {
       if (index === dataNumber) {
         /*
@@ -135,7 +135,7 @@ function LabelProperties({
 
           data = data.replace(data.split(':')[0], value);
         } else {
-          if (value.search(regexp) === -1 &&(buttonText === 'ADD LABEL')) {
+          if (value.search(regexp) === -1 && buttonText === 'ADD LABEL') {
             setValueValidation(index);
           } else {
             setValueValidation(-1);
@@ -197,30 +197,30 @@ function LabelProperties({
               <div key={label}>
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
-                  <div className="select-text-overlay-label">
-                  <label
-                      className="select-dropdown-text"
-                      htmlFor="metastore-project"
-                    >
-                     {`Key ${index + 1}*`}
-                    </label>
-                 
-                    <Input
-                      sx={{ margin: 0 }}
-                      className="edit-input-style"
-                      disabled={
-                        labelSplit[0] === '' ||
-                        buttonText !== 'ADD LABEL' ||
-                        duplicateKeyError !== -1
-                          ? false
-                          : true
-                      }
-                      onBlur={() => handleEditLabelSwitch()}
-                      onChange={e =>
-                        handleEditLabel(e.target.value, index, 'key')
-                      }
-                      defaultValue={labelSplit[0]}
-                    />
+                    <div className="select-text-overlay-label">
+                      <label
+                        className="select-dropdown-text"
+                        htmlFor="metastore-project"
+                      >
+                        {`Key ${index + 1}*`}
+                      </label>
+
+                      <Input
+                        sx={{ margin: 0 }}
+                        className="edit-input-style"
+                        disabled={
+                          labelSplit[0] === '' ||
+                          buttonText !== 'ADD LABEL' ||
+                          duplicateKeyError !== -1
+                            ? false
+                            : true
+                        }
+                        onBlur={() => handleEditLabelSwitch()}
+                        onChange={e =>
+                          handleEditLabel(e.target.value, index, 'key')
+                        }
+                        defaultValue={labelSplit[0]}
+                      />
                     </div>
 
                     {labelDetailUpdated[index].split(':')[0] === '' &&
@@ -263,26 +263,26 @@ function LabelProperties({
                       )}
                   </div>
                   <div className="key-message-wrapper">
-                  <div className="select-text-overlay-label">
-                  <label
-                      className="select-dropdown-text"
-                      htmlFor="metastore-project"
-                    >
-                    {`Value ${index + 1}`}
-                    </label>
-                    <Input
-                      sx={{ margin: 0 }}
-                      className="edit-input-style"
-                      onBlur={() => handleEditLabelSwitch()}
-                      onChange={e =>
-                        handleEditLabel(e.target.value, index, 'value')
-                      }
-                      disabled={
-                        label === DEFAULT_LABEL_DETAIL &&
-                        buttonText === 'ADD LABEL'
-                      }
-                      defaultValue={labelSplit[1]}
-                    />
+                    <div className="select-text-overlay-label">
+                      <label
+                        className="select-dropdown-text"
+                        htmlFor="metastore-project"
+                      >
+                        {`Value ${index + 1}`}
+                      </label>
+                      <Input
+                        sx={{ margin: 0 }}
+                        className="edit-input-style"
+                        onBlur={() => handleEditLabelSwitch()}
+                        onChange={e =>
+                          handleEditLabel(e.target.value, index, 'value')
+                        }
+                        disabled={
+                          label === DEFAULT_LABEL_DETAIL &&
+                          buttonText === 'ADD LABEL'
+                        }
+                        defaultValue={labelSplit[1]}
+                      />
                     </div>
                     {valueValidation === index &&
                       buttonText === 'ADD LABEL' && (
@@ -329,8 +329,7 @@ function LabelProperties({
               </div>
             );
           })}
-        <div
-          role="button"
+        <button
           className={styleAddLabelButton(buttonText, labelDetail)}
           onClick={() => {
             (labelDetail.length === 0 ||
@@ -344,7 +343,7 @@ function LabelProperties({
           ) : (
             <iconPlusDisable.react tag="div" className="logo-alignment-style" />
           )}
-          <div
+          <span
             className={
               labelDetail.length === 0 ||
               labelDetail[labelDetail.length - 1].split(':')[0].length > 0
@@ -353,8 +352,8 @@ function LabelProperties({
             }
           >
             {buttonText}
-          </div>
-        </div>
+          </span>
+        </button>
       </div>
     </div>
   );
