@@ -204,6 +204,23 @@ function JobComponent({
     await deleteJobApi(selectedJobId);
     setDeletePopupOpen(false);
   };
+  interface IJobList {
+    jobs: Array<{
+      reference: {
+        jobId: string;
+      };
+      statusHistory: Array<{
+        stateStartTime: string; 
+      }>;
+      status: {
+        stateStartTime: string; 
+      };
+      labels?: {
+        [key: string]: string;
+      };
+    }>;
+    nextPageToken?: string;
+  }
 
   const listJobsAPI = async (
     nextPageToken?: string,
@@ -225,8 +242,17 @@ function JobComponent({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: any) => {
-              let transformJobListData = [];
+            .then((responseResult: IJobList) => {
+              let transformJobListData: {
+                jobid: number;
+                status: string;
+                region: string | undefined;
+                type: string | undefined;
+                starttime: string;
+                elapsedtime: string;
+                labels: string[];
+                actions: React.JSX.Element;
+              }[] = [];
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
                   const startTime = jobTimeFormat(
@@ -308,7 +334,7 @@ function JobComponent({
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
         >
-          <iconClone.react tag="div" className='logo-alignment-style' />
+          <iconClone.react tag="div" className="logo-alignment-style" />
         </div>
         <div
           role="button"
@@ -326,9 +352,9 @@ function JobComponent({
           }
         >
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconStop.react tag="div" className='logo-alignment-style' />
+            <iconStop.react tag="div" className="logo-alignment-style" />
           ) : (
-            <iconStopDisable.react tag="div" className='logo-alignment-style' />
+            <iconStopDisable.react tag="div" className="logo-alignment-style" />
           )}
         </div>
         <div
@@ -347,9 +373,9 @@ function JobComponent({
           }
         >
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconDelete.react tag="div" className='logo-alignment-style' />
+            <iconDelete.react tag="div" className="logo-alignment-style" />
           ) : (
-            <iconDelete.react tag="div" className='logo-alignment-style' />
+            <iconDelete.react tag="div" className="logo-alignment-style" />
           )}
         </div>
       </div>
@@ -385,24 +411,36 @@ function JobComponent({
         <td {...cell.getCellProps()} className="clusters-table-data">
           <div key="Status" className="cluster-status-parent">
             {cell.value === ClusterStatus.STATUS_RUNNING && (
-              <iconClusterRunning.react tag="div" className='logo-alignment-style' />
+              <iconClusterRunning.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             )}
-            {cell.value === STATUS_CANCELLED && <iconStop.react tag="div" className='logo-alignment-style' />}
-            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" className='logo-alignment-style' />}
-            {cell.value === STATUS_SUCCESS && <iconSucceeded.react tag="div" className='logo-alignment-style' />}
+            {cell.value === STATUS_CANCELLED && (
+              <iconStop.react tag="div" className="logo-alignment-style" />
+            )}
+            {cell.value === STATUS_FAIL && (
+              <iconClusterError.react
+                tag="div"
+                className="logo-alignment-style"
+              />
+            )}
+            {cell.value === STATUS_SUCCESS && (
+              <iconSucceeded.react tag="div" className="logo-alignment-style" />
+            )}
             {(cell.value === STATUS_PROVISIONING ||
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-                <ClipLoader
-                  color="#8A8A8A"
-                  loading={true}
-                  size={15}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-              )}
+              <ClipLoader
+                color="#8A8A8A"
+                loading={true}
+                size={15}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            )}
             <div className="cluster-status">{cell.value.toLowerCase()}</div>
           </div>
         </td>
@@ -499,7 +537,10 @@ function JobComponent({
                   }}
                 >
                   <div className="create-icon">
-                    <iconSubmitJob.react tag="div" className='logo-alignment-style' />
+                    <iconSubmitJob.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                   </div>
                   <div className="create-text">SUBMIT JOB</div>
                 </div>
@@ -509,7 +550,10 @@ function JobComponent({
             <div>
               <div className="filter-cluster-overlay">
                 <div className="filter-cluster-icon">
-                  <iconFilter.react tag="div" className='logo-alignment-style' />
+                  <iconFilter.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 </div>
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">

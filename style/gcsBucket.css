@@ -84,6 +84,7 @@
 }
 .gcs-panel-parent {
   font-family: 'Roboto';
+  background: var(--jp-layout-color1);
   font-size: 13px;
   font-style: normal;
   font-weight: 400;

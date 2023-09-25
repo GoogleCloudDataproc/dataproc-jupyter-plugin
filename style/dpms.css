@@ -2,6 +2,7 @@
 
 .dpms-Wrapper{
   font-family: 'Roboto' !important;
+  background: var(--jp-layout-color1);
 }
 .dpms-title {
   line-height: 20px;

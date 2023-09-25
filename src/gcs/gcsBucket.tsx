@@ -19,7 +19,7 @@ import { ReactWidget } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useState, useEffect, useRef } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import { useTable, useGlobalFilter } from 'react-table';
+import { useTable, useGlobalFilter, Cell } from 'react-table';
 import gcsFolderNewIcon from '../../style/icons/gcs_folder_new_icon.svg';
 import gcsFolderIcon from '../../style/icons/gcs_folder_icon.svg';
 import gcsFileIcon from '../../style/icons/gcs_file_icon.svg';
@@ -220,7 +220,7 @@ const GcsBucketComponent = ({
     }
   };
 
-  const tableDataCondition = (cell: any) => {
+  const tableDataCondition = (cell: Cell) => {
     let nameIndex = gcsFolderPath.length === 0 ? 0 : gcsFolderPath.length - 1;
     if (cell.column.Header === 'Name') {
       return (
@@ -343,7 +343,7 @@ const GcsBucketComponent = ({
     useTable({ columns, data }, useGlobalFilter);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    let updatedList = bucketsList.filter((item: any) => {
+    let updatedList = bucketsList.filter((item: IBucketItem) => {
       return item.folderName.includes(event.target.value);
     });
     if (event.target.value === '') {
@@ -402,7 +402,7 @@ const GcsBucketComponent = ({
                   itemOne.updated < itemTwo.updated ? -1 : 1
               );
               let transformBucketsData = [];
-              transformBucketsData = sortedResponse.map((data: any) => {
+              transformBucketsData = sortedResponse.map((data: {updated : Date, name: string}) => {
                 const updatedDate = new Date(data.updated);
                 const lastModified = lastModifiedFormat(updatedDate);
                 return {
@@ -415,14 +415,14 @@ const GcsBucketComponent = ({
                 };
               });
               transformBucketsData = transformBucketsData.filter(
-                (data: any) => {
+                (data: {folderName : string}) => {
                   return data.folderName !== '';
                 }
               );
               let finalBucketsData = [];
               finalBucketsData = [
                 ...new Map(
-                  transformBucketsData.map((item: any) => [
+                  transformBucketsData.map((item: {folderName: string}) => [
                     item['folderName'],
                     item
                   ])
@@ -473,7 +473,7 @@ const GcsBucketComponent = ({
 
       let datalist: any = [...bucketsList];
       let existingUntitled = 0;
-      datalist.forEach((data: any) => {
+      datalist.forEach((data: {folderName: string}) => {
         if (data.folderName.includes('Untitled Folder')) {
           existingUntitled = existingUntitled + 1;
         }

@@ -49,6 +49,8 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { ILauncher } from '@jupyterlab/launcher';
+import { DropdownProps } from 'semantic-ui-react';
+
 
 
 type Project = {
@@ -352,7 +354,7 @@ function CreateRunTime({
   interface INetworkAPI {
     network : string;
   }
-  const listNetworksFromSubNetworkAPI = async (subnetwork: any) => {
+  const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
     setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
@@ -679,8 +681,8 @@ function CreateRunTime({
     setVersionSelected(newVersion);
   };
 
-  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
-    setServicesSelected(data.value);
+  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    setServicesSelected(data.value!.toString());
   };
   const handleIdleSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -701,8 +703,8 @@ function CreateRunTime({
       setIdleValidation(true);
     }
   };
-  const handletimeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
-    setTimeSelected(data.value);
+  const handletimeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    setTimeSelected(data.value!.toString());
   };
   const handleAutoTimeSelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -716,16 +718,16 @@ function CreateRunTime({
 
     setAutoTimeSelected(inputValue);
   };
-  const handleAutoSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
-    setAutoSelected(data.value);
+  const handleAutoSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    setAutoSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
+  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
     setServicesSelected('');
-    regionListAPI(data.value);
-    setProjectId(data.value);
+    regionListAPI(data.value!.toString());
+    setProjectId(data.value!.toString());
   };
   const handleRegionChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
     setServicesSelected('');
@@ -733,13 +735,13 @@ function CreateRunTime({
     setRegion(data.value);
     listMetaStoreAPI(data.value);
   };
-  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
-    setNetworkSelected(data.value);
+  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    setNetworkSelected(data.value!.toString());
     setSubNetworkSelected(defaultValue);
-    listSubNetworksAPI(data.value);
+    listSubNetworksAPI(data.value!.toString());
   };
-  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
-    setSubNetworkSelected(data.value);
+  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    setSubNetworkSelected(data.value!.toString());
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
@@ -748,8 +750,8 @@ function CreateRunTime({
     } 
   };
 
-  const handleClusterSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
-    setClusterSelected(data.value);
+  const handleClusterSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+    setClusterSelected(data.value!.toString());
   };
   const handleNetworkTags = (
     setDuplicateValidation: (value: boolean) => void,
