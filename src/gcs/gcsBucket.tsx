@@ -1,14 +1,29 @@
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { ReactWidget } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useState, useEffect, useRef } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { useTable, useGlobalFilter } from 'react-table';
-// import gcsRefreshIcon from '../../style/icons/gcs_refresh_icon.svg';
 import gcsFolderNewIcon from '../../style/icons/gcs_folder_new_icon.svg';
 import gcsFolderIcon from '../../style/icons/gcs_folder_icon.svg';
 import gcsFileIcon from '../../style/icons/gcs_file_icon.svg';
 import gcsUploadIcon from '../../style/icons/gcs_upload_icon.svg';
-import gcsSearchIcon from '../../style/icons/gcs_search_icon.svg';
 import {
   authApi,
   lastModifiedFormat,
@@ -20,7 +35,6 @@ import {
   GCS_UPLOAD_URL,
   GCS_URL
 } from '../utils/const';
-import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
@@ -28,6 +42,10 @@ import PollingTimer from '../utils/pollingTimer';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import * as path from 'path';
+import { IconButton, InputAdornment, TextField } from '@mui/material';
+
+import searchIcon from '../../style/icons/search_icon.svg';
+import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 
 const iconGcsFolderNew = new LabIcon({
   name: 'launcher:gcs-folder-new-icon',
@@ -45,9 +63,14 @@ const iconGcsFile = new LabIcon({
   name: 'launcher:gcs-file-icon',
   svgstr: gcsFileIcon
 });
-const iconGcsSearch = new LabIcon({
-  name: 'launcher:gcs-search-icon',
-  svgstr: gcsSearchIcon
+
+const iconSearch = new LabIcon({
+  name: 'launcher:search-icon',
+  svgstr: searchIcon
+});
+const iconSearchClear = new LabIcon({
+  name: 'launcher:search-clear-icon',
+  svgstr: searchClearIcon
 });
 
 const GcsBucketComponent = ({
@@ -57,8 +80,11 @@ const GcsBucketComponent = ({
   app: JupyterLab;
   factory: IFileBrowserFactory;
 }): JSX.Element => {
+  const [searchTerm, setSearchTerm] = useState('');
+
   const inputFile = useRef<HTMLInputElement | null>(null);
   const [bucketsList, setBucketsList] = useState([]);
+  const [bucketsListUpdate, setBucketsListUpdate] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [gcsFolderPath, setGcsFolderPath] = useState<string[]>([]);
 
@@ -83,7 +109,7 @@ const GcsBucketComponent = ({
     );
   };
 
-  const data = React.useMemo(() => bucketsList, [bucketsList]);
+  const data = React.useMemo(() => bucketsListUpdate, [bucketsListUpdate]);
   const columns = React.useMemo(
     () => [
       {
@@ -215,16 +241,23 @@ const GcsBucketComponent = ({
             {(cell.value.includes('/') &&
               cell.value.split('/').length - 1 !== nameIndex) ||
             gcsFolderPath.length === 0 ? (
-              <iconGcsFolder.react tag="div" />
+              <iconGcsFolder.react tag="div" className="logo-alignment-style" />
             ) : (
-              <iconGcsFile.react tag="div" />
+              <iconGcsFile.react tag="div" className="logo-alignment-style" />
             )}
             {cell.value.split('/')[nameIndex] === folderNameNew &&
             !folderCreated ? (
               <input
                 value={folderName}
+                onFocus={e => e.target.select()}
                 className="input-folder-name-style"
                 onChange={e => setFolderName(e.target.value)}
+                autoFocus={true}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    createFolderAPI();
+                  }
+                }}
                 onBlur={() => createFolderAPI()}
                 type="text"
               />
@@ -301,7 +334,6 @@ const GcsBucketComponent = ({
     headerGroups,
     rows,
     prepareRow,
-    state,
     //@ts-ignore
     preGlobalFilteredRows,
     //@ts-ignore
@@ -309,6 +341,26 @@ const GcsBucketComponent = ({
   } =
     // @ts-ignore
     useTable({ columns, data }, useGlobalFilter);
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    let updatedList = bucketsList.filter((item: any) => {
+      return item.folderName.includes(event.target.value);
+    });
+    if (event.target.value === '') {
+      setPollingDisable(false);
+    } else {
+      setPollingDisable(true);
+    }
+    setBucketsListUpdate(updatedList);
+    setSearchTerm(event.target.value);
+    listBucketsAPI();
+  };
+
+  const handleSearchClear = () => {
+    setSearchTerm('');
+    setBucketsListUpdate(bucketsList);
+    setPollingDisable(false);
+  };
 
   interface IBucketItem {
     updated: string;
@@ -335,7 +387,6 @@ const GcsBucketComponent = ({
           : gcsFolderPath.length === 1
           ? `${GCS_URL}/${gcsFolderPath[0]}/o`
           : `${GCS_URL}/${gcsFolderPath[0]}/o?prefix=${prefixList}/`;
-      // console.log(apiURL)
       fetch(apiURL, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -381,8 +432,13 @@ const GcsBucketComponent = ({
                 (itemOne: any, itemTwo: any) =>
                   itemOne.folderName < itemTwo.folderName ? -1 : 1
               );
+              finalBucketsData = finalBucketsData.filter((item: any) => {
+                return item.folderName.includes(searchTerm);
+              });
               //@ts-ignore
               setBucketsList(finalBucketsData);
+              //@ts-ignore
+              setBucketsListUpdate(finalBucketsData);
               setIsLoading(false);
             })
             .catch((e: Error) => {
@@ -463,6 +519,7 @@ const GcsBucketComponent = ({
       datalist.unshift(newFolderData);
       setFolderCreated(false);
       setBucketsList(datalist);
+      setBucketsListUpdate(datalist);
     }
   };
 
@@ -596,25 +653,45 @@ const GcsBucketComponent = ({
             </>
           )}
         </div>
-        <div className="gcs-filter-overlay">
-          <div className="filter-cluster-icon">
-            <iconGcsSearch.react tag="div" />
-          </div>
-          <div className="filter-cluster-text"></div>
-          <div className="filter-cluster-section">
-            <GlobalFilter
-              preGlobalFilteredRows={preGlobalFilteredRows}
-              globalFilter={state.globalFilter}
-              setGlobalFilter={setGlobalFilter}
-              setPollingDisable={setPollingDisable}
-              gcsBucket={true}
-            />
-          </div>
+        <div className="gcs-search-field">
+          <TextField
+            placeholder="Filter files by name"
+            type="text"
+            variant="outlined"
+            fullWidth
+            size="small"
+            onChange={handleSearch}
+            value={searchTerm}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <iconSearch.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
+                </InputAdornment>
+              ),
+              endAdornment: searchTerm && (
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleSearchClear}
+                >
+                  <iconSearchClear.react
+                    tag="div"
+                    className="logo-alignment-style search-clear-icon"
+                  />
+                </IconButton>
+              )
+            }}
+          />
         </div>
         <div className="gcs-folder-path-parent">
           <div style={{ display: 'flex' }}>
-            <div onClick={() => handleGCSpath()}>
-              <iconGcsFolder.react tag="div" />
+            <div
+              onClick={() => handleGCSpath()}
+              className="logo-alignment-style"
+            >
+              <iconGcsFolder.react tag="div" className="logo-alignment-style" />
             </div>
             <div className="divider"> / </div>
           </div>

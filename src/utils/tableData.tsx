@@ -32,7 +32,7 @@ function TableData({
   const displayData = page ? page : rows;
   return (
     <table {...getTableProps()} className="clusters-list-table">
-      <thead>
+      <thead className="scroll-fix-header">
         {headerGroups.map((headerGroup: any) => (
           <tr
             {...headerGroup.getHeaderGroupProps()}
@@ -49,7 +49,12 @@ function TableData({
           </tr>
         ))}
       </thead>
-      <tbody {...getTableBodyProps()} className="clusters-table-body">
+      <tbody
+        {...getTableBodyProps()}
+        className={
+          fromPage === 'Buckets' ? 'gcs-table-body' : 'clusters-table-body'
+        }
+      >
         {isLoading ? (
           <div className="spin-loader">
             <ClipLoader

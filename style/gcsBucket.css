@@ -11,6 +11,7 @@
 
 .gcs-folder-path-parent {
   display: flex;
+  align-items: center;
   min-height: 24px;
   padding: 0px 10px;
   border-top: 1px solid #e9eaed;
@@ -30,8 +31,13 @@
 }
 
 .gcs-file-list-data {
-  height: 75vh;
+  height: 80vh;
   overflow: auto;
+}
+
+.gcs-table-body {
+  overflow-y: auto;
+  max-height: 78vh;
 }
 
 .gcs-object-name {
@@ -83,6 +89,12 @@
   font-weight: 400;
   line-height: 20px;
   padding: 15px 0px;
+}
+.gcs-search-field{
+  padding-right: 13px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding-left: 13px;
 }
 .input-folder-name-style {
   font-size: 12px;
