@@ -402,7 +402,6 @@ function CreateBatch({
               batchKeys.push(key);
             }
           }
-          // batchKeys = batchKey(batchInfoResponse);
           for (const key in batchInfoResponse) {
             if (batchInfoResponse.hasOwnProperty(key) && key.endsWith('Batch')) {
               batchKeys.push(key);

@@ -54,9 +54,9 @@ const iconExpandMore = new LabIcon({
 interface IConfigSelectionProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
-  themeManager: IThemeManager; // Replace with the actual type if possible
-  app: JupyterLab; // Replace with the actual type if possible
-  launcher: ILauncher; // Replace with the actual type if possible
+  themeManager: IThemeManager;
+  app: JupyterLab;
+  launcher: ILauncher; 
 }
 
 function ConfigSelection({
