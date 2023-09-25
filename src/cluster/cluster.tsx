@@ -192,7 +192,7 @@ const ClusterComponent = (): React.JSX.Element => {
       const formattedResponse = await response.json();
 
       if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
-        startClusterApi(formattedResponse);
+        startClusterApi(selectedCluster);
         clearInterval(timer.current);
       }
       listClustersAPI();

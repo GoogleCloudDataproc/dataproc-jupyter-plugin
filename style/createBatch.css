@@ -225,9 +225,27 @@
   opacity: 0.5;
 }
 .css-1gjd5ff-MuiFormControl-root-MuiTextField-root .MuiInputBase-root input {
-  height: 7px;
+  height: 3px;
+}
+.css-pjtntf-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root {
+  height: 36px;
+}
+.css-x2abiu-MuiInputBase-input-MuiOutlinedInput-input {
+  height: 17px !important;
 }
 .history-server{
   border: 1px solid lightgray !important;
   border-radius: 4px;
+}
+.batch-container-msg{
+  color: #3367d6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.error-key-parent-manual{
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  width: 90%;
+  padding-left: 35px;
 }
