@@ -204,7 +204,7 @@ function ConfigSelection({
             </div>
             <div className="settings-text">Settings</div>
           </div>
-          <div className="settings-seperator"></div>
+          <div className="settings-separator"></div>
           <div className="project-header">Project Info </div>
           <div className="config-overlay">
             <div className="config-form">
@@ -214,6 +214,14 @@ function ConfigSelection({
                   onChange={(_, projectId) => setProjectId(projectId ?? '')}
                   fetchFunc={projectListAPI}
                   label="Project ID"
+                  // Always show the clear indicator and hide the dropdown arrow
+                  // make it very clear that this is an autocomplete.
+                  sx={{
+                    '& .MuiAutocomplete-clearIndicator': {
+                      visibility: 'visible'
+                    }
+                  }}
+                  popupIcon={null}
                 />
               </div>
 
@@ -228,9 +236,7 @@ function ConfigSelection({
                 <Button
                   variant="contained"
                   disabled={
-                    isSaving ||
-                    projectId.length === 0 ||
-                    region.length === 0 
+                    isSaving || projectId.length === 0 || region.length === 0
                   }
                   onClick={handleSave}
                 >
@@ -251,7 +257,7 @@ function ConfigSelection({
                   <div className="user-email">{userInfo.email}</div>
                 </div>
               </div>
-              <div className="seperator"></div>
+              <div className="separator"></div>
               <div className="google-header">
                 <a
                   href="https://policies.google.com/privacy?hl=en"
