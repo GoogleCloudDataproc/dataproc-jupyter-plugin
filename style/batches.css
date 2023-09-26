@@ -1,6 +1,6 @@
 .batch-header-part {
   display: flex;
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .create-batch-overlay {
@@ -84,7 +84,7 @@
 }
 
 .batch-details-row-label {
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;

@@ -27,6 +27,25 @@ const baseStyles: ThemeOptions = {
       defaultProps: {
         size: 'small'
       }
+    },
+    MuiAutocomplete: {
+      styleOverrides: {
+        option: {
+          fontSize: 13
+        }
+      }
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          fontSize: 13,
+          transform: 'translate(14px, 9px) scale(1)'
+        },
+        shrink: {
+          fontSize: 14,
+          transform: 'translate(12px, -7px) scale(0.75)'
+        }
+      }
     }
   }
 };
