@@ -41,6 +41,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
+import { DropdownProps } from 'semantic-ui-react';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -77,7 +78,7 @@ function jobTypeFunction(jobKey: string) {
       return jobType;
   }
 }
-const handleOptionalFields = (selectedJobClone: any, jobTypeKey: any) => {
+const handleOptionalFields = (selectedJobClone: any, jobTypeKey: string) => {
   let args: string[] = [];
   let jarFileUris: string[] = [];
   let archiveUris: string[] = [];
@@ -117,7 +118,6 @@ const handleOptionalFields = (selectedJobClone: any, jobTypeKey: any) => {
   };
 };
 function SubmitJob(
-  this: any,
   { setSubmitJobView, selectedJobClone, clusterResponse }: any
 ) {
   const [clusterList, setClusterList] = useState([{}]);
@@ -243,16 +243,16 @@ function SubmitJob(
 
   const handleClusterSelected = (
     event: React.SyntheticEvent<HTMLElement, Event>,
-    data: any
+    data: DropdownProps
   ) => {
-    setClusterSelected(data.value);
+    setClusterSelected(data.value!.toString());
   };
 
   const handleJobTypeSelected = (
     event: React.SyntheticEvent<HTMLElement, Event>,
-    data: any
+    data: DropdownProps
   ) => {
-    setJobTypeSelected(data.value);
+    setJobTypeSelected(data.value!.toString());
     setFileSelected([]);
     setJarFileSelected([]);
     setAdditionalPythonFileSelected([]);
@@ -264,24 +264,31 @@ function SubmitJob(
     setQueryFileSelected('');
     setMainClassSelected('');
   };
+
   const handleQuerySourceTypeSelected = (
     event: React.SyntheticEvent<HTMLElement, Event>,
-    data: any
+    data: DropdownProps
   ) => {
-    setQuerySourceSelected(data.value);
+    setQuerySourceSelected(data.value!.toString());
   };
+  interface IClusterData {
+    clusterName: string;
+    status: { state: string };
+  }
 
   useEffect(() => {
     let transformClusterListData = [];
-    transformClusterListData = clusterResponse.clusters.filter((data: any) => {
-      if (data.status.state === STATUS_RUNNING) {
-        return {
-          clusterName: data.clusterName
-        };
+    transformClusterListData = clusterResponse.clusters.filter(
+      (data: IClusterData) => {
+        if (data.status.state === STATUS_RUNNING) {
+          return {
+            clusterName: data.clusterName
+          };
+        }
       }
-    });
+    );
 
-    const keyLabelStructure = transformClusterListData.map((obj: any) => ({
+    const keyLabelStructure = transformClusterListData.map((obj: {clusterName : string}) => ({
       key: obj.clusterName,
       value: obj.clusterName,
       text: obj.clusterName
@@ -461,12 +468,12 @@ function SubmitJob(
 
   const createPySparkPayload = (
     mainPythonSelected: string,
-    propertyObject: any,
-    jarFileSelected: any,
-    fileSelected: any,
-    archieveFileSelected: any,
-    argumentSelected: any,
-    additionalPythonFileSelected: any
+    propertyObject: { [key: string]: string },
+    jarFileSelected: string[] | string,
+    fileSelected: string[] | string,
+    archieveFileSelected: string[] | string,
+    argumentSelected: string[] | string,
+    additionalPythonFileSelected: string[] | string
   ) => {
     return {
       pysparkJob: {
@@ -495,11 +502,11 @@ function SubmitJob(
 
   const createSparkPayload = (
     mainClassSelected: string,
-    propertyObject: any,
-    archieveFileSelected: any,
-    fileSelected: any,
-    jarFileSelected: any,
-    argumentSelected: any
+    propertyObject: { [key: string]: string },
+    archieveFileSelected: string[] | string,
+    fileSelected: string[] | string,
+    jarFileSelected: string[] | string,
+    argumentSelected: string[] | string
   ) => {
     return {
       sparkJob: {
@@ -525,9 +532,9 @@ function SubmitJob(
 
   const createSparkRPayload = (
     mainRSelected: string,
-    propertyObject: any,
-    fileSelected: any,
-    argumentSelected: any
+    propertyObject: { [key: string]: string },
+    fileSelected: string[] | string,
+    argumentSelected: string[] | string
   ) => {
     return {
       sparkRJob: {
@@ -546,8 +553,8 @@ function SubmitJob(
   };
 
   const createSparkSqlPayload = (
-    propertyObject: any,
-    jarFileSelected: any,
+    propertyObject: { [key: string]: string },
+    jarFileSelected: string[] | string,
     querySourceSelected: string,
     queryFileSelected: string,
     queryTextSelected: string
@@ -711,7 +718,7 @@ function SubmitJob(
       if (listOfFiles.length === 0) {
         setValidationPart(true);
       } else {
-        listOfFiles.forEach((fileName: any) => {
+        listOfFiles.forEach((fileName: string) => {
           if (
             fileName.startsWith('file://') ||
             fileName.startsWith('gs://') ||
@@ -728,7 +735,7 @@ function SubmitJob(
     }
   };
   const handleDuplicateValidation = (
-    setDuplicateValidation: any,
+    setDuplicateValidation: ((value: boolean) => void) | undefined,
     listOfFiles: string | string[]
   ) => {
     if (Array.isArray(listOfFiles)) {
@@ -742,9 +749,9 @@ function SubmitJob(
         return isDuplicate;
       });
       if (duplicateFileNames.length > 0) {
-        setDuplicateValidation(true);
+        setDuplicateValidation!(true);
       } else {
-        setDuplicateValidation(false);
+        setDuplicateValidation!(false);
       }
     }
   };

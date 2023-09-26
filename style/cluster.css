@@ -130,10 +130,16 @@
   border: 0px;
   width: 100%;
 }
+.filter-section-part:focus{
+outline: none;
+}
 
 .gcs-filter-section-part {
   border: 0px;
   width: 95%;
+}
+.gcs-filter-section-part:focus {
+  outline: none;
 }
 
 .create-text {

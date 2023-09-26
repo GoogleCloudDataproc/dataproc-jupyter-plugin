@@ -17,7 +17,7 @@
 
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
-import { Tree, NodeRendererProps, NodeApi} from 'react-arborist';
+import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
@@ -116,8 +116,12 @@ const DpmsComponent = ({
   const [totalDatabases, setTotalDatabases] = useState<number>(0);
   const [totalTables, setTotalTables] = useState<number>(0);
   const [columnResponse, setColumnResponse] = useState<IColumn[]>([]);
-const [databaseDetails, setDatabaseDetails] = useState<Record<string, string>>({});
-const [tableDescription, setTableDescription] = useState<Record<string, string>>({});
+  const [databaseDetails, setDatabaseDetails] = useState<
+    Record<string, string>
+  >({});
+  const [tableDescription, setTableDescription] = useState<
+    Record<string, string>
+  >({});
 
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
@@ -232,36 +236,38 @@ const [tableDescription, setTableDescription] = useState<Record<string, string>>
     type: string;
     mode: string;
     description: string;
-  }  
+  }
   interface IDataEntry {
     id: string;
     name: string;
     description: string;
     children: Table[];
   }
-  const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } = {};
+  const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } =
+    {};
 
-  columnResponse.forEach((res:IColumn) => {
+  columnResponse.forEach((res: IColumn) => {
     /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
 fetching database name from fully qualified name structure */
     const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
     const tableName = res.displayName;
-    const columns: IColumn[] = res.schema.columns.map((column: {
-      column: string;
-      type: string;
-      mode: string;
-      description: string;
-    }) => ({
-      name: column.column,
-      schema: res.schema, // Include the schema object
-      fullyQualifiedName: res.fullyQualifiedName,
-      displayName: res.displayName,
-      column: res.column,
-      type: res.type,
-      mode: res.mode,
-      description: res.description,
-    }));
-
+    const columns: IColumn[] = res.schema.columns.map(
+      (column: {
+        column: string;
+        type: string;
+        mode: string;
+        description: string;
+      }) => ({
+        name: column.column,
+        schema: res.schema, // Include the schema object
+        fullyQualifiedName: res.fullyQualifiedName,
+        displayName: res.displayName,
+        column: res.column,
+        type: res.type,
+        mode: res.mode,
+        description: res.description
+      })
+    );
 
     if (!databases[dbName]) {
       databases[dbName] = {};
@@ -280,7 +286,7 @@ fetching database name from fully qualified name structure */
       id: uuidv4(),
       name: tableName,
       desciption: '',
-      children: columns.map((column:IColumn) => ({
+      children: columns.map((column: IColumn) => ({
         id: uuidv4(),
         name: column.name,
         type: column.type,
@@ -495,7 +501,7 @@ fetching database name from fully qualified name structure */
     }>;
     error?: {
       code: string;
-    }
+    };
   }
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
@@ -618,7 +624,7 @@ fetching database name from fully qualified name structure */
       };
     };
   }
-  
+
   const getSessionDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
@@ -690,15 +696,21 @@ fetching database name from fully qualified name structure */
   useEffect(() => {
     getDatabaseDetails();
   }, [dataprocMetastoreServices]);
+
   useEffect(() => {
-    databaseNames.forEach((db: string) => {
-      getTableDetails(db);
-    });
+    Promise.all(databaseNames.map(db => getTableDetails(db)))
+      .then(results => {})
+      .catch(error => {
+        console.log(error);
+      });
   }, [databaseNames]);
+
   useEffect(() => {
-    entries.forEach((entry: string) => {
-      getColumnDetails(entry);
-    });
+    Promise.all(entries.map(entry => getColumnDetails(entry)))
+      .then(results => {})
+      .catch(error => {
+        console.log(error);
+      });
   }, [entries]);
 
   return (

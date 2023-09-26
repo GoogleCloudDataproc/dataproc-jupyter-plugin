@@ -17,6 +17,7 @@
 
 import React from 'react';
 import { ClipLoader } from 'react-spinners';
+import { Cell, Row } from 'react-table';
 
 function TableData({
   getTableProps,
@@ -32,7 +33,7 @@ function TableData({
   const displayData = page ? page : rows;
   return (
     <table {...getTableProps()} className="clusters-list-table">
-      <thead>
+      <thead className="scroll-fix-header">
         {headerGroups.map((headerGroup: any) => (
           <tr
             {...headerGroup.getHeaderGroupProps()}
@@ -49,7 +50,12 @@ function TableData({
           </tr>
         ))}
       </thead>
-      <tbody {...getTableBodyProps()} className="clusters-table-body">
+      <tbody
+        {...getTableBodyProps()}
+        className={
+          fromPage === 'Buckets' ? 'gcs-table-body' : 'clusters-table-body'
+        }
+      >
         {isLoading ? (
           <div className="spin-loader">
             <ClipLoader
@@ -62,7 +68,7 @@ function TableData({
             Loading {fromPage}
           </div>
         ) : (
-          displayData.map((row: any) => {
+          displayData.map((row: Row) => {
             prepareRow(row);
             return (
               <tr
@@ -73,7 +79,7 @@ function TableData({
                     : 'cluster-list-data-parent'
                 }
               >
-                {row.cells.map((cell: any) => {
+                {row.cells.map((cell: Cell) => {
                   return tableDataCondition(cell);
                 })}
               </tr>
