@@ -660,6 +660,7 @@ function CreateBatch({
       setClustersList(keyLabelStructure);
     } catch (error) {
       console.error('Error listing clusters', error);
+      toast.error('Failed to list the clusters', toastifyCustomStyle);
     }
   };
   const listNetworksAPI = async () => {
