@@ -18,7 +18,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Autocomplete, { AutocompleteProps } from '@mui/material/Autocomplete';
-import { ChipTypeMap } from '@mui/material';
+import { ChipTypeMap, Paper, PaperProps } from '@mui/material';
 
 type Props = {
   fetchFunc: (search: string) => Promise<string[]>;
@@ -84,6 +84,7 @@ export function DynamicDropdown(
       onOpen={() => setHoistedValue(value)}
       onInputChange={(_, val) => setSearch(val)}
       filterOptions={options => options}
+      PaperComponent={(props: PaperProps) => <Paper elevation={8} {...props} />}
       renderInput={params => <TextField {...params} label={label} />}
       {...remainderProps}
     />
