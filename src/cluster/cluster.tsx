@@ -106,7 +106,6 @@ const ClusterComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
   };
-
   const listClustersAPI = async (
     nextPageToken?: string,
     previousClustersList?: object

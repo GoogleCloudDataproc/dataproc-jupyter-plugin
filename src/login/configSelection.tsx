@@ -39,6 +39,9 @@ import { projectListAPI } from '../utils/projectService';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import CreateRuntime from '../runtime/createRunTime';
 import { ISessionTemplate } from '../utils/listRuntimeTemplateInterface';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
+import { ILauncher } from '@jupyterlab/launcher';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -48,6 +51,13 @@ const iconExpandMore = new LabIcon({
   name: 'launcher:expand-more-icon',
   svgstr: expandMoreIcon
 });
+interface IConfigSelectionProps {
+  configError: boolean;
+  setConfigError: (error: boolean) => void;
+  themeManager: IThemeManager;
+  app: JupyterLab;
+  launcher: ILauncher; 
+}
 
 function ConfigSelection({
   configError,
@@ -55,7 +65,7 @@ function ConfigSelection({
   themeManager,
   app,
   launcher
-}: any) {
+}: IConfigSelectionProps) {
   const Iconsettings = new LabIcon({
     name: 'launcher:settings_icon',
     svgstr: settingsIcon
