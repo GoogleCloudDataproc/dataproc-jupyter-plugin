@@ -53,7 +53,7 @@ import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
-import { Autocomplete, Radio, TextField } from '@mui/material';
+import { Radio } from '@mui/material';
 import { Dropdown } from '../controls/MuiWrappedDropdown';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
@@ -467,8 +467,8 @@ function CreateBatch({
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
+            Authorization: API_HEADER_BEARER + credentials.access_token,
+          },
         }
       )
         .then((response: Response) => {
@@ -476,13 +476,13 @@ function CreateBatch({
             .json()
             .then((responseResult: INetworkResponse) => {
               let transformedNetworkSelected = '';
-              /*
+                 /*
          Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
       */
-
+  
               transformedNetworkSelected = responseResult.network.split('/')[9];
-
+  
               setNetworkSelected(transformedNetworkSelected);
               setIsloadingNetwork(false);
             })
@@ -495,7 +495,7 @@ function CreateBatch({
         });
     }
   };
-
+  
   function isSubmitDisabled() {
     const commonConditions =
       batchIdSelected === '' || regionName === '' || batchIdValidation;
@@ -619,17 +619,11 @@ function CreateBatch({
       }
     }
   };
-  const handleArguments = (
-    setDuplicateValidation: (value: boolean) => void,
-    listOfFiles: string[]
-  ) => {
+  const handleArguments = (setDuplicateValidation:(value: boolean) => void,listOfFiles: string[]) => {
     setArgumentsSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
-  const handleNetworkTags = (
-    setDuplicateValidation: (value: boolean) => void,
-    listOfFiles: string[]
-  ) => {
+  const handleNetworkTags = (setDuplicateValidation:(value: boolean) => void, listOfFiles: string[]) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
@@ -756,7 +750,7 @@ function CreateBatch({
                 };
               });
               const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: string }) => ({
+                (obj: { name: string}) => ({
                   key: obj.name,
                   value: obj.name,
                   text: obj.name
@@ -776,14 +770,14 @@ function CreateBatch({
   };
   interface IKey {
     primary: {
-      state: string;
+      state:string
     };
     name: string;
   }
   interface IKeyListResponse {
     cryptoKeys: IKey[];
   }
-
+  
   const listKeysAPI = async (keyRing: string) => {
     const credentials = await authApi();
     if (credentials) {
@@ -807,11 +801,8 @@ function CreateBatch({
       */
 
               transformedKeyList = responseResult.cryptoKeys
-                .filter(
-                  (data: IKey) =>
-                    data.primary && data.primary.state === 'ENABLED'
-                )
-                .map((data: { name: string }) => ({
+                .filter((data: IKey) => data.primary && data.primary.state==='ENABLED')
+                .map((data: {name: string}) => ({
                   name: data.name.split('/')[7]
                 }));
               const keyLabelStructureKeyRing = transformedKeyList.map(
@@ -944,12 +935,11 @@ function CreateBatch({
             .then((responseResult: { projects: Project[] }) => {
               let transformedProjectList = responseResult.projects.map(
                 (data: Project) => {
-                  // return {
-                  //   value: data.projectId,
-                  //   key: data.projectId,
-                  //   text: data.projectId
-                  // };
-                  return data.projectId
+                  return {
+                    value: data.projectId,
+                    key: data.projectId,
+                    text: data.projectId
+                  };
                 }
               );
               setProjectList(transformedProjectList);
@@ -967,7 +957,6 @@ function CreateBatch({
   };
 
   const regionListAPI = async (projectId: string) => {
-    console.log('API call region',projectId);
     setIsLoadingRegion(true);
     const credentials = await authApi();
     if (credentials) {
@@ -1268,18 +1257,15 @@ function CreateBatch({
   const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
       setServicesSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (data: DropdownProps | null) => {
+  const handleProjectIdChange = (data: DropdownProps) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
     setServicesSelected('');
-    regionListAPI(data!.toString());
-    setProjectId(data!.toString());
+    regionListAPI(data.value!.toString());
+    setProjectId(data.value!.toString());
   };
-  const handleRegionChange = (
-    event: React.SyntheticEvent<HTMLElement>,
-    data: any
-  ) => {
+  const handleRegionChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data.value);
@@ -1542,9 +1528,7 @@ function CreateBatch({
                   </div>
                 )}
                 {mainRValidation && (
-                  <div className="submit-job-message-input">
-                    {QUERY_FILE_MESSAGE}
-                  </div>
+                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -1584,9 +1568,7 @@ function CreateBatch({
                   </div>
                 )}
                 {mainPythonValidation && (
-                  <div className="submit-job-message-input">
-                    {QUERY_FILE_MESSAGE}
-                  </div>
+                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
                 )}
               </>
             )}
@@ -2190,23 +2172,16 @@ function CreateBatch({
             </div>
             <div className="create-messagelist">{METASTORE_MESSAGE}</div>
             <div className="select-text-overlay">
-              {/* <label className="select-dropdown-text" htmlFor="meta-project">
+              <label className="select-dropdown-text" htmlFor="meta-project">
                 Metastore project
-              </label> */}
-              {/* <Select
+              </label>
+              <Select
                 search
                 placeholder={projectId}
                 className="project-region-select"
                 value={projectId}
                 onChange={handleProjectIdChange}
                 options={projectList}
-              /> */}
-              <Autocomplete
-                options={projectList}
-                value={projectId}
-                onChange={(_event, val) => handleProjectIdChange(val)}
-                renderInput={params => <TextField {...params} key="Metastore project" label="Metastore project" InputLabelProps = {{shrink: true}}
-/>}
               />
             </div>
             <div className="select-text-overlay">
