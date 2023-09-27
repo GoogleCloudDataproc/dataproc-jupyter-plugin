@@ -150,6 +150,22 @@ function ListRuntimeTemplates({
     previousRuntimeTemplatesList?: object
   ) => {
     try {
+      const queryParams = new URLSearchParams({
+      });
+      const response = await authenticatedFetch({
+        uri: 'sessionTemplates',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'locations',
+        queryParams: queryParams,
+      });
+      const formattedResponse: ISessionTemplateRoot = await response.json();
+      if (formattedResponse && formattedResponse.sessionTemplates) {
+        setRunTimeTemplateAllList(formattedResponse.sessionTemplates);
+      }
+    }
+    catch (error) {
+    }
+    try {
       const pageToken = nextPageToken ?? '';
       const queryParams = new URLSearchParams({
         pageSize: '50',
@@ -165,7 +181,6 @@ function ListRuntimeTemplates({
       const formattedResponse: ISessionTemplateRoot = await response.json();
       let transformRuntimeTemplatesListData: ISessionTemplateDisplay[] = [];
       if (formattedResponse && formattedResponse.sessionTemplates) {
-        setRunTimeTemplateAllList(formattedResponse.sessionTemplates);
         let runtimeTemplatesListNew = formattedResponse.sessionTemplates;
         runtimeTemplatesListNew.sort(
           (a: { updateTime: string }, b: { updateTime: string }) => {
@@ -223,6 +238,8 @@ function ListRuntimeTemplates({
       toast.error('Failed to fetch runtime templates',toastifyCustomStyle);
     }
   };
+ 
+  
 
   const handleDeleteRuntimeTemplate = (
     runtimeTemplateName: string,

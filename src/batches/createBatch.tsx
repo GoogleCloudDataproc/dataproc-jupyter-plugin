@@ -1669,12 +1669,14 @@ function CreateBatch({
                 value={containerImageSelected}
                 onChange={e => setContainerImageSelected(e.target.value)}
                 type="text"
-                placeholder=""
+                placeholder="Enter URI,for example,gcr.io/my-project-id/my-image:1.0.1"
               />
             </div>
             <div className="create-custom-messagelist">
-              {CUSTOM_CONTAINER_MESSAGE}
-              <div className="create-container-message">
+              {CUSTOM_CONTAINER_MESSAGE} </div> <div className="create-container-message">
+                <div className="create-container-image-message">
+                image. You must host your custom container on
+                </div>
                 <div
                   className="submit-job-learn-more"
                   onClick={() => {
@@ -1702,7 +1704,6 @@ function CreateBatch({
                   Learn more
                 </div>
               </div>
-            </div>
             {
               batchTypeSelected !== 'sparkR' && (
                 <>
