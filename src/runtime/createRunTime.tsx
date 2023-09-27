@@ -160,7 +160,6 @@ function CreateRunTime({
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
-  // const [isloadingNetwork, setIsloadingNetwork] = useState(false);
   const [duplicateValidation, setDuplicateValidation] = useState(false);
   const [selectedNetworkRadio, setSelectedNetworkRadio] =
   useState('projectNetwork');
@@ -1291,16 +1290,7 @@ function CreateRunTime({
 
             <div>
             {selectedNetworkRadio==='projectNetwork'&&(
-              // {isloadingNetwork ? (
-              //   <div className="metastore-loader">
-              //     <ClipLoader
-              //       loading={true}
-              //       size={25}
-              //       aria-label="Loading Spinner"
-              //       data-testid="loader"
-              //     />
-              //   </div>
-              // ) : (
+             
               
                 <div className="create-batch-network">
                   <div className="select-text-overlay">
@@ -1356,7 +1346,7 @@ function CreateRunTime({
                 options={[]}
               />
             </div>)}
-              {/* )} */}
+             
               
             </div>
             <div className="select-text-overlay">
@@ -1466,9 +1456,7 @@ function CreateRunTime({
               )}
             </div>
 
-            {/* <div className="single-line">
-              <div className="create-batches-subMessage"></div>
-            </div> */}
+            
             <div className="single-line">
               <div className="select-text-overlay">
                 <label className="select-title-text" htmlFor="max-idle-time">
