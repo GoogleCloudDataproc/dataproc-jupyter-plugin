@@ -122,7 +122,7 @@ export const SERVICE_ACCOUNT =
   'https://cloud.google.com/compute/docs/access/service-accounts';
 export const CUSTOM_CONTAINERS =
   'https://cloud.google.com/dataproc-serverless/docs/guides/custom-containers';
-export const SHARED_VPC='https://cloud.google.com/vpc/docs/shared-vpc?_ga=2.264165068.-1336642357.1691127072&_gac=1.245508656.1694666846.EAIaIQobChMI3-vG8aWpgQMVMhuDAx1xjg1OEAAYASAAEgKdfPD_BwE';
+export const SHARED_VPC='https://cloud.google.com/vpc/docs/shared-vpc';
 
 export const CONTAINER_REGISTERY = 'https://console.cloud.google.com/gcr';
 export const ARTIFACT_REGISTERY = 'https://console.cloud.google.com/artifacts';
