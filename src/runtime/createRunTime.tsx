@@ -21,9 +21,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
+  ARTIFACT_REGISTERY,
   BASE_URL,
   BASE_URL_META,
   BASE_URL_NETWORKS,
+  CONTAINER_REGISTERY,
+  CUSTOM_CONTAINERS,
+  CUSTOM_CONTAINER_MESSAGE,
   HTTP_METHOD,
   PROJECT_LIST_URL,
   REGION_URL,
@@ -50,8 +54,6 @@ import { JupyterLab } from '@jupyterlab/application';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { ILauncher } from '@jupyterlab/launcher';
 import { DropdownProps } from 'semantic-ui-react';
-
-
 
 type Project = {
   projectId: string;
@@ -129,6 +131,7 @@ function CreateRunTime({
   const [regionList, setRegionList] = useState<
     { value: string; key: string; text: string }[]
   >([]);
+  const [containerImageSelected, setContainerImageSelected] = useState('');
   const [networkList, setNetworklist] = useState([{}]);
   const [subNetworkList, setSubNetworklist] = useState<
     { key: string; value: string; text: string }[]
@@ -242,6 +245,9 @@ function CreateRunTime({
       const versionDetail = runtimeConfig?.version
         ? runtimeConfig.version
         : '2.1';
+      const containerImage = runtimeConfig?.containerImage
+        ? runtimeConfig.containerImage
+        : '';
 
       setDisplayNameSelected(displayName);
       /*
@@ -251,6 +257,7 @@ function CreateRunTime({
       setRunTimeSelected(runTimeID);
       setDescriptionSelected(descriptionDetail);
       setVersionSelected(versionDetail);
+      setContainerImageSelected(containerImage);
       setUserInfo(creator);
       setCreateTime(createTime);
 
@@ -352,7 +359,7 @@ function CreateRunTime({
     }
   };
   interface INetworkAPI {
-    network : string;
+    network: string;
   }
   const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
     setIsloadingNetwork(true);
@@ -372,7 +379,7 @@ function CreateRunTime({
             .json()
             .then((responseResult: INetworkAPI) => {
               let transformedNetworkSelected = '';
-                 /*
+              /*
          Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
       */
@@ -423,6 +430,7 @@ function CreateRunTime({
       setClustersList(keyLabelStructure);
     } catch (error) {
       console.error('Error listing clusters', error);
+      toast.error('Failed to list the clusters', toastifyCustomStyle);
     }
   };
 
@@ -681,29 +689,27 @@ function CreateRunTime({
     setVersionSelected(newVersion);
   };
 
-  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  const handleServiceSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
     setServicesSelected(data.value!.toString());
   };
   const handleIdleSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
     const numericRegex = /^[0-9]*$/;
-    const inputValueHour = Number(inputValue) * 3600;
-    const inputValueMin = Number(inputValue) * 60;
-    if (timeSelected === 'h') {
-      setIdleTimeSelected(inputValueHour.toString());
-    } else if (timeSelected === 'm') {
-      setIdleTimeSelected(inputValueMin.toString());
-    } else {
-      setIdleTimeSelected(inputValue);
-    }
 
     if (numericRegex.test(inputValue) || inputValue === '') {
       setIdleValidation(false);
     } else {
       setIdleValidation(true);
     }
+    setIdleTimeSelected(inputValue);
   };
-  const handletimeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  const handletimeSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
     setTimeSelected(data.value!.toString());
   };
   const handleAutoTimeSelected = (event: ChangeEvent<HTMLInputElement>) => {
@@ -718,10 +724,16 @@ function CreateRunTime({
 
     setAutoTimeSelected(inputValue);
   };
-  const handleAutoSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  const handleAutoSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
     setAutoSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  const handleProjectIdChange = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
@@ -729,28 +741,40 @@ function CreateRunTime({
     regionListAPI(data.value!.toString());
     setProjectId(data.value!.toString());
   };
-  const handleRegionChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: any) => {
+  const handleRegionChange = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: any
+  ) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data.value);
     listMetaStoreAPI(data.value);
   };
-  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  const handleNetworkChange = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
     setNetworkSelected(data.value!.toString());
     setSubNetworkSelected(defaultValue);
     listSubNetworksAPI(data.value!.toString());
   };
-  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  const handleSubNetworkChange = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
     setSubNetworkSelected(data.value!.toString());
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
     if (fromPage === 'launcher') {
       app.shell.activeWidget?.close();
-    } 
+    }
   };
 
-  const handleClusterSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  const handleClusterSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
     setClusterSelected(data.value!.toString());
   };
   const handleNetworkTags = (
@@ -823,13 +847,15 @@ function CreateRunTime({
             const kernels = kernelSpecs.kernelspecs;
 
             const { commands } = app;
-            
+
             if (launcher) {
               Object.values(kernels).forEach((kernelsData, index) => {
-                const commandNameExist = `notebook:create-${kernelsData?.name}`
+                const commandNameExist = `notebook:create-${kernelsData?.name}`;
                 if (
                   kernelsData?.resources.endpointParentResource &&
-                  kernelsData?.resources.endpointParentResource.includes('/sessions') &&
+                  kernelsData?.resources.endpointParentResource.includes(
+                    '/sessions'
+                  ) &&
                   // Check if the command is already registered
                   !commands.hasCommand(commandNameExist)
                 ) {
@@ -854,7 +880,7 @@ function CreateRunTime({
                       });
                     }
                   });
-        
+
                   launcher.add({
                     command: commandNotebook,
                     category: 'Dataproc Serverless Notebooks',
@@ -867,10 +893,12 @@ function CreateRunTime({
                 }
               });
               Object.values(kernels).forEach((kernelsData, index) => {
-                const commandNameExist = `notebook:create-${kernelsData?.name}`
+                const commandNameExist = `notebook:create-${kernelsData?.name}`;
                 if (
                   kernelsData?.resources.endpointParentResource &&
-                  !kernelsData?.resources.endpointParentResource.includes('/sessions') &&
+                  !kernelsData?.resources.endpointParentResource.includes(
+                    '/sessions'
+                  ) &&
                   // Check if the command is already registered
                   !commands.hasCommand(commandNameExist)
                 ) {
@@ -895,7 +923,7 @@ function CreateRunTime({
                       });
                     }
                   });
-        
+
                   launcher.add({
                     command: commandNotebook,
                     category: 'Dataproc Cluster Notebooks',
@@ -911,7 +939,7 @@ function CreateRunTime({
 
             if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
-            } 
+            }
             console.log(responseResult);
           } else {
             const errorResponse = await response.json();
@@ -949,7 +977,7 @@ function CreateRunTime({
             );
             if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
-            } 
+            }
             console.log(responseResult);
           } else {
             const errorResponse = await response.json();
@@ -998,6 +1026,9 @@ function CreateRunTime({
         labels: labelObject,
         runtimeConfig: {
           ...(versionSelected && { version: versionSelected }),
+          ...(containerImageSelected !== '' && {
+            containerImage: containerImageSelected
+          }),
           ...(propertyObject && { properties: propertyObject }),
 
           ...(pythonRepositorySelected && {
@@ -1156,6 +1187,52 @@ function CreateRunTime({
                 <div className="error-key-missing">Version is required</div>
               </div>
             )}
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text"
+                htmlFor="custom-container-image"
+              >
+                Custom container image
+              </label>
+              <Input
+                className="create-batch-style "
+                value={containerImageSelected}
+                onChange={e => setContainerImageSelected(e.target.value)}
+                type="text"
+                placeholder=""
+              />
+            </div>
+            <div className="create-custom-messagelist">
+              {CUSTOM_CONTAINER_MESSAGE}
+              <div className="create-container-message">
+                <div
+                  className="submit-job-learn-more"
+                  onClick={() => {
+                    window.open(`${CONTAINER_REGISTERY}`, '_blank');
+                  }}
+                >
+                  Container Registry
+                </div>
+                &nbsp;{'  or '}
+                <div
+                  className="submit-job-learn-more"
+                  onClick={() => {
+                    window.open(`${ARTIFACT_REGISTERY}`, '_blank');
+                  }}
+                >
+                  Artifact Registry
+                </div>
+                {' . '}
+                <div
+                  className="submit-job-learn-more"
+                  onClick={() => {
+                    window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+                  }}
+                >
+                  Learn more
+                </div>
+              </div>
+            </div>
             <div className="submit-job-label-header">Network Configuration</div>
             <div className="runtime-message">
               Establishes connectivity for the VM instances in this cluster.

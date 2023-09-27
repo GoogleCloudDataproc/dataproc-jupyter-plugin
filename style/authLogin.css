@@ -32,8 +32,8 @@
   padding-bottom: 5px;
 }
 
-.settings-seperator {
-  border: 1px solid #e0e0e0;
+.settings-separator {
+  border-bottom: 1px solid var(--jp-layout-color3);
   width: 100%;
   height: 0px;
   margin-left: 5px;
@@ -44,6 +44,7 @@
   flex-direction: column;
   padding-top: 30px;
   padding-left: 5px;
+  padding-right: 20px;
   width: 100%;
   width: 630px;
 }
@@ -177,12 +178,10 @@
   font-size: 12px;
 }
 
-.seperator {
-  width: 340px;
-  height: 0px;
-  left: 1316.5px;
-  top: 217px;
-  border: 1px solid #e1e3e1;
+.separator {
+  width: 100%;
+  height: 0;
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .user-overlay {
@@ -263,7 +262,7 @@
   font-weight: 500;
   margin-right: 20px;
   line-height: 28px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .settings-component {

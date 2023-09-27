@@ -6,7 +6,7 @@
   flex-direction: row;
   align-items: center;
   padding: 0px;
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .selected-header {
@@ -46,7 +46,7 @@
 .create-cluster-overlay {
   height: 48px;
   padding-left: 15px;
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
 
   display: flex;
   align-items: center;
@@ -122,17 +122,23 @@
   padding-left: 15px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .filter-section-part {
   border: 0px;
   width: 100%;
 }
+.filter-section-part:focus{
+outline: none;
+}
 
 .gcs-filter-section-part {
   border: 0px;
   width: 95%;
+}
+.gcs-filter-section-part:focus {
+  outline: none;
 }
 
 .create-text {
@@ -219,7 +225,7 @@
 .clusters-table-header {
   text-align: left;
   padding-left: 15px;
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .clusters-table-body {
@@ -229,7 +235,7 @@
 
 .clusters-table-data {
   padding-left: 15px;
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .clusters-table-data:nth-child(1) {
@@ -244,7 +250,7 @@
   cursor: pointer;
   height: 29px;
   padding-left: 15px;
-  border-bottom: 1px solid var(--jp-layout-color2);
+  border-bottom: 1px solid var(--jp-layout-color3);
   align-items: center;
 }
 

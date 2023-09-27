@@ -33,6 +33,7 @@ import {
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   FILES_MESSAGE,
+  HTTP_METHOD,
   JAR_FILE_MESSAGE,
   KEY_MESSAGE,
   METASTORE_MESSAGE,
@@ -46,7 +47,7 @@ import {
   STATUS_RUNNING
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
+import { authApi, authenticatedFetch, toastifyCustomStyle } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
@@ -54,7 +55,6 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
 import { Radio } from '@mui/material';
-import { Dropdown } from '../controls/MuiWrappedDropdown';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 
@@ -286,7 +286,9 @@ function CreateBatch({
     useState([...pythonFileUris]);
   const [mainPythonSelected, setMainPythonSelected] =
     useState(mainPythonFileUri);
-  const [clustersList, setClustersList] = useState<string[]>([]);
+    const [clustersList, setClustersList] = useState<
+    Array<{ key: string; value: string; text: string }>
+  >([]);
   const [additionalPythonFileValidation, setAdditionalPythonFileValidation] =
     useState(true);
   const [jarFileValidation, setJarFileValidation] = useState(true);
@@ -629,43 +631,36 @@ function CreateBatch({
   };
 
   const listClustersAPI = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      fetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters?pageSize=100`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+    try {
+      const queryParams = new URLSearchParams({ pageSize: '100' });
+      const response = await authenticatedFetch({
+        uri: 'clusters',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'regions',
+        queryParams: queryParams
+      });
+      const formattedResponse: { clusters: Cluster[] } = await response.json();
+      let transformClusterListData = [];
+
+      transformClusterListData = formattedResponse.clusters.filter(
+        (data: Cluster) => {
+          if (data.status.state === STATUS_RUNNING) {
+            return {
+              clusterName: data.clusterName
+            };
           }
         }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: { clusters: Cluster[] }) => {
-              let transformClusterListData = responseResult.clusters.filter(
-                (data: Cluster) => {
-                  if (data.status.state === STATUS_RUNNING) {
-                    return {
-                      clusterName: data.clusterName
-                    };
-                  }
-                }
-              );
+      );
 
-              const keyLabelStructure = transformClusterListData.map(
-                obj => obj.clusterName
-              );
-              setClustersList(keyLabelStructure);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing clusters', err);
-        });
+      const keyLabelStructure = transformClusterListData.map(obj => ({
+        key: obj.clusterName,
+        value: obj.clusterName,
+        text: obj.clusterName
+      }));
+      setClustersList(keyLabelStructure);
+    } catch (error) {
+      console.error('Error listing clusters', error);
+      toast.error('Failed to list the clusters', toastifyCustomStyle);
     }
   };
   const listNetworksAPI = async () => {
@@ -1296,8 +1291,11 @@ function CreateBatch({
     handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
   };
 
-  const handleClusterSelected = (event: React.SyntheticEvent<Element, Event>, value: string|null) => {
-    setClusterSelected(value!);
+  const handleClusterSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
+    setClusterSelected(data.value!.toString());
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -2064,6 +2062,7 @@ function CreateBatch({
                           value="mainClass"
                           checked={selectedRadioValue === 'key'}
                           onChange={handlekeyRingRadio}
+                          disabled={manualKeySelected!==''}
                         />
                         <div className="select-text-overlay">
                           <label
@@ -2247,11 +2246,14 @@ function CreateBatch({
               >
                 History server cluster
               </label>
-              <Dropdown
-                className="history-server"
+              <Select
+                className="project-region-select"
+                search
+                clearable
                 value={clusterSelected}
                 onChange={handleClusterSelected}
                 options={clustersList}
+                placeholder=""
               />
             </div>
 

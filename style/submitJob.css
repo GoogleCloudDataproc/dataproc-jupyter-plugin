@@ -58,6 +58,7 @@
     0px 2px 2px var(--jp-shadow-umbra-color),
     0px 1px 1px var(--jp-shadow-umbra-color);
   border-radius: 4px;
+  border-style: none;
 }
 
 .select-job-style {
