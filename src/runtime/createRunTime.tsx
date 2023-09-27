@@ -390,7 +390,7 @@ function CreateRunTime({
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
-              // setIsloadingNetwork(false);
+             
             })
 
             .catch((e: Error) => {
@@ -1207,7 +1207,8 @@ function CreateRunTime({
               />
             </div>
             <div className="create-custom-messagelist">
-              {CUSTOM_CONTAINER_MESSAGE} </div> <div className="create-container-message">
+              {CUSTOM_CONTAINER_MESSAGE} </div>
+               <div className="create-container-message">
                 <div className="create-container-image-message">
                 image. You must host your custom container on
                 </div>
