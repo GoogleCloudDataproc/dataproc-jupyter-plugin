@@ -31,6 +31,7 @@ import {
   HTTP_METHOD,
   PROJECT_LIST_URL,
   REGION_URL,
+  SHARED_VPC,
   STATUS_RUNNING,
   USER_INFO_URL
 } from '../utils/const';
@@ -54,6 +55,7 @@ import { JupyterLab } from '@jupyterlab/application';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { ILauncher } from '@jupyterlab/launcher';
 import { DropdownProps } from 'semantic-ui-react';
+import { Radio } from '@mui/material';
 
 type Project = {
   projectId: string;
@@ -158,8 +160,10 @@ function CreateRunTime({
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
-  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
+  // const [isloadingNetwork, setIsloadingNetwork] = useState(false);
   const [duplicateValidation, setDuplicateValidation] = useState(false);
+  const [selectedNetworkRadio, setSelectedNetworkRadio] =
+  useState('projectNetwork');
 
   useEffect(() => {
     const timeData = [
@@ -362,7 +366,7 @@ function CreateRunTime({
     network: string;
   }
   const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
-    setIsloadingNetwork(true);
+    // setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -388,7 +392,7 @@ function CreateRunTime({
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
-              setIsloadingNetwork(false);
+              // setIsloadingNetwork(false);
             })
 
             .catch((e: Error) => {
@@ -1095,6 +1099,8 @@ function CreateRunTime({
     }
   };
 
+
+
   return (
     <div>
       <div className="scroll-comp">
@@ -1199,12 +1205,14 @@ function CreateRunTime({
                 value={containerImageSelected}
                 onChange={e => setContainerImageSelected(e.target.value)}
                 type="text"
-                placeholder=""
+                placeholder="Enter URI,for example,gcr.io/my-project-id/my-image:1.0.1"
               />
             </div>
             <div className="create-custom-messagelist">
-              {CUSTOM_CONTAINER_MESSAGE}
-              <div className="create-container-message">
+              {CUSTOM_CONTAINER_MESSAGE} </div> <div className="create-container-message">
+                <div className="create-container-image-message">
+                image. You must host your custom container on
+                </div>
                 <div
                   className="submit-job-learn-more"
                   onClick={() => {
@@ -1232,24 +1240,68 @@ function CreateRunTime({
                   Learn more
                 </div>
               </div>
-            </div>
+              
+             
+           
             <div className="submit-job-label-header">Network Configuration</div>
             <div className="runtime-message">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="runtime-message">Networks in this project</div>
+            <div>
+                <div className="create-runtime-radio">
+                  <Radio
+                    size="small"
+                    className="select-batch-radio-style"
+                    value="projectNetwork"
+                    checked={selectedNetworkRadio === 'projectNetwork'}
+                    onChange={() => setSelectedNetworkRadio('projectNetwork')}
+                  />
+                  <div className="create-batch-message">
+                  Networks in this project
+                  </div>
+                </div>
+              </div>
+              <div>
+              <div className="create-runtime-radio">
+                  <Radio
+                    size="small"
+                    className="select-batch-radio-style"
+                    value="sharedVpc"
+                    checked={selectedNetworkRadio === 'sharedVpc'}
+                    onChange={() =>
+                      setSelectedNetworkRadio('sharedVpc')
+                    }
+                  />
+                  <div className="create-batch-message">
+                  Networks shared from host project: ""
+                  </div>
+                  
+                </div>
+                <div className="create-runtime-sub-message-network">
+                  Choose a shared VPC network from project that is different from this cluster's project.  <div
+                  className="submit-job-learn-more"
+                  onClick={() => {
+                    window.open(`${SHARED_VPC}`, '_blank');
+                  }}
+                >
+                  Learn more
+                </div> 
+                </div>
+                </div>
 
             <div>
-              {isloadingNetwork ? (
-                <div className="metastore-loader">
-                  <ClipLoader
-                    loading={true}
-                    size={25}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                </div>
-              ) : (
+            {selectedNetworkRadio==='projectNetwork'&&(
+              // {isloadingNetwork ? (
+              //   <div className="metastore-loader">
+              //     <ClipLoader
+              //       loading={true}
+              //       size={25}
+              //       aria-label="Loading Spinner"
+              //       data-testid="loader"
+              //     />
+              //   </div>
+              // ) : (
+              
                 <div className="create-batch-network">
                   <div className="select-text-overlay">
                     <label
@@ -1286,6 +1338,26 @@ function CreateRunTime({
                   </div>
                 </div>
               )}
+            {selectedNetworkRadio==='sharedVpc'&&(
+                <div className="select-text-overlay">
+              <label
+                className="select-dropdown-text"
+                htmlFor="shared-subnetwork"
+              >
+                Shared subnetwork
+              </label>
+              <Select
+                className="project-region-select"
+                search
+                selection
+                placeholder={''}
+                value={''}
+                //onChange={}
+                options={[]}
+              />
+            </div>)}
+              {/* )} */}
+              
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
