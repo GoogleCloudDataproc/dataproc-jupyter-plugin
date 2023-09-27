@@ -124,8 +124,6 @@ export const CUSTOM_CONTAINERS =
   'https://cloud.google.com/dataproc-serverless/docs/guides/custom-containers';
 export const SHARED_VPC='https://cloud.google.com/vpc/docs/shared-vpc?_ga=2.264165068.-1336642357.1691127072&_gac=1.245508656.1694666846.EAIaIQobChMI3-vG8aWpgQMVMhuDAx1xjg1OEAAYASAAEgKdfPD_BwE';
 
-export const CUSTOM_CONTAINERS_MESSAGE =
-  'Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on Container Registry or Artifact Registry .';
 export const CONTAINER_REGISTERY = 'https://console.cloud.google.com/gcr';
 export const ARTIFACT_REGISTERY = 'https://console.cloud.google.com/artifacts';
 export const METASTORE_MESSAGE =

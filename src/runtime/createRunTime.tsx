@@ -365,7 +365,6 @@ function CreateRunTime({
     network: string;
   }
   const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
-    // setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -1239,9 +1238,6 @@ function CreateRunTime({
                   Learn more
                 </div>
               </div>
-              
-             
-           
             <div className="submit-job-label-header">Network Configuration</div>
             <div className="runtime-message">
               Establishes connectivity for the VM instances in this cluster.
