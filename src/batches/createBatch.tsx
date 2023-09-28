@@ -1252,7 +1252,7 @@ function CreateBatch({
   const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
       setServicesSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+  const handleProjectIdChange = (data: DropdownProps) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
@@ -1678,14 +1678,14 @@ function CreateBatch({
                 image. You must host your custom container on
                 </div>
                 <div
-                  className="submit-job-learn-more"
+                  className="batch-container-msg"
                   onClick={() => {
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
                 >
                   Container Registry
                 </div>
-                &nbsp;{'  or '}
+                &nbsp;{'  or '}&nbsp;
                 <div
                   className="submit-job-learn-more"
                   onClick={() => {
@@ -2141,7 +2141,7 @@ function CreateBatch({
                         </div>
                       </div>
                       {!manualValidation && (
-                        <div className="error-key-parent">
+                        <div className="error-key-parent-manual">
                           <iconError.react
                             tag="div"
                             className="logo-alignment-style"
@@ -2288,7 +2288,7 @@ function CreateBatch({
               batchInfoResponse={batchInfoResponse}
               createBatch={createBatch}
             />
-            <div className="job-button-style-parent button-alignment">
+            <div className="job-button-style-parent">
               <div
                 className={
                   isSubmitDisabled()
