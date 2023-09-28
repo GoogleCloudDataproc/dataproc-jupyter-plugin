@@ -47,36 +47,28 @@ import {
   STATUS_RUNNING
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi, authenticatedFetch, toastifyCustomStyle } from '../utils/utils';
+import {
+  authApi,
+  authenticatedFetch,
+  toastifyCustomStyle
+} from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
-import { Radio } from '@mui/material';
+import { Autocomplete, Radio, TextField } from '@mui/material';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 
 
-
-type Cluster = {
-  clusterName: string;
-  status: {
-    state: string;
-  };
-};
-
 type Network = {
   selfLink: string;
   network: string;
   subnetworks: string;
-};
-
-type Service = {
-  name: string;
 };
 
 const iconLeftArrow = new LabIcon({
@@ -97,7 +89,6 @@ interface ICreateBatchProps {
   createBatch?: boolean;
   setCreateBatch?: (value: boolean) => void;
 }
-
 
 function batchTypeFunction(batchKey: string) {
   let batchType = 'spark';
@@ -144,7 +135,7 @@ function CreateBatch({
   let fileUris: string[] = [];
   let archiveFileUris: string[] = [];
   let argumentsUris: string[] = [];
-  let networkUris: string[] | "" = [];
+  let networkUris: string[] | '' = [];
   let key: string[] | (() => string[]) = [];
   let value: string[] | (() => string[]) = [];
   let pythonFileUris: string[] = [];
@@ -157,7 +148,7 @@ function CreateBatch({
         if (batchInfoResponse.hasOwnProperty(key) && key.endsWith('Batch')) {
           batchKeys.push(key);
         }
-      }    
+      }
       batchType = batchTypeFunction(batchKeys[0]);
       const batchTypeKey = batchKeys[0];
       if (batchInfoResponse[batchKeys[0]].hasOwnProperty('queryFileUri')) {
@@ -258,23 +249,16 @@ function CreateBatch({
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
-  const [servicesList, setServicesList] = useState<
-    Array<{ key: string; value: string; text: string }>
-  >([]);
+  const [servicesList, setServicesList] = useState<string[]>([]);
   const [servicesSelected, setServicesSelected] = useState(metastoreService);
 
   const [clusterSelected, setClusterSelected] = useState(historyServer);
   const [projectId, setProjectId] = useState(metaProject);
   const [region, setRegion] = useState(metaRegion);
-  
-  const [regionList, setRegionList] = useState<
-    { value: string; key: string; text: string }[]
-  >([]);
+  const [regionList, setRegionList] = useState<string[]>([]);
   const [networkList, setNetworklist] = useState([{}]);
   const [keyRinglist, setKeyRinglist] = useState([{}]);
-  const [subNetworkList, setSubNetworklist] = useState<
-    { key: string; value: string; text: string }[]
-  >([]);
+  const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState(network);
   const [subNetworkSelected, setSubNetworkSelected] = useState(subNetwork);
@@ -286,9 +270,7 @@ function CreateBatch({
     useState([...pythonFileUris]);
   const [mainPythonSelected, setMainPythonSelected] =
     useState(mainPythonFileUri);
-    const [clustersList, setClustersList] = useState<
-    Array<{ key: string; value: string; text: string }>
-  >([]);
+  const [clustersList, setClustersList] = useState<string[]>([]);
   const [additionalPythonFileValidation, setAdditionalPythonFileValidation] =
     useState(true);
   const [jarFileValidation, setJarFileValidation] = useState(true);
@@ -299,7 +281,6 @@ function CreateBatch({
   const [mainRValidation, setMainRValidation] = useState(true);
   const [batchIdValidation, setBatchIdValidation] = useState(false);
   const [mainJarValidation, setMainJarValidation] = useState(true);
-  const [defaultValue, setDefaultValue] = useState(subNetwork);
   const [keyRingSelected, setKeyRingSelected] = useState(keyRing);
   const [keySelected, setKeySelected] = useState(keys);
   const [manualKeySelected, setManualKeySelected] = useState('');
@@ -317,9 +298,7 @@ function CreateBatch({
     useState(false);
   const [networkTagsDuplicateValidation, setNetworkTagsDuplicateValidation] =
     useState(false);
-  const [keylist, setKeylist] = useState<
-    { key: string; value: string; text: string }[]
-  >([]);
+  const [keylist, setKeylist] = useState<string[]>([]);
   const [isloadingNetwork, setIsloadingNetwork] = useState(false);
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
@@ -358,7 +337,7 @@ function CreateBatch({
     listClustersAPI();
     listNetworksAPI();
     listKeyRingsAPI();
-  }, [clusterSelected, defaultValue]);
+  }, [clusterSelected]);
 
   useEffect(() => {
     generateRandomHex();
@@ -405,11 +384,14 @@ function CreateBatch({
             }
           }
           for (const key in batchInfoResponse) {
-            if (batchInfoResponse.hasOwnProperty(key) && key.endsWith('Batch')) {
+            if (
+              batchInfoResponse.hasOwnProperty(key) &&
+              key.endsWith('Batch')
+            ) {
               batchKeys.push(key);
             }
           }
-    
+
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
@@ -458,7 +440,6 @@ function CreateBatch({
   };
   interface INetworkResponse {
     network: string;
-    // Add other properties if they exist in the response
   }
   const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
     setIsloadingNetwork(true);
@@ -469,8 +450,8 @@ function CreateBatch({
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token,
-          },
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
         }
       )
         .then((response: Response) => {
@@ -478,13 +459,13 @@ function CreateBatch({
             .json()
             .then((responseResult: INetworkResponse) => {
               let transformedNetworkSelected = '';
-                 /*
+              /*
          Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
       */
-  
+
               transformedNetworkSelected = responseResult.network.split('/')[9];
-  
+
               setNetworkSelected(transformedNetworkSelected);
               setIsloadingNetwork(false);
             })
@@ -497,7 +478,7 @@ function CreateBatch({
         });
     }
   };
-  
+
   function isSubmitDisabled() {
     const commonConditions =
       batchIdSelected === '' || regionName === '' || batchIdValidation;
@@ -621,11 +602,17 @@ function CreateBatch({
       }
     }
   };
-  const handleArguments = (setDuplicateValidation:(value: boolean) => void,listOfFiles: string[]) => {
+  const handleArguments = (
+    setDuplicateValidation: (value: boolean) => void,
+    listOfFiles: string[]
+  ) => {
     setArgumentsSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
-  const handleNetworkTags = (setDuplicateValidation:(value: boolean) => void, listOfFiles: string[]) => {
+  const handleNetworkTags = (
+    setDuplicateValidation: (value: boolean) => void,
+    listOfFiles: string[]
+  ) => {
     setNetworkTagSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
@@ -639,25 +626,14 @@ function CreateBatch({
         regionIdentifier: 'regions',
         queryParams: queryParams
       });
-      const formattedResponse: { clusters: Cluster[] } = await response.json();
-      let transformClusterListData = [];
-
-      transformClusterListData = formattedResponse.clusters.filter(
-        (data: Cluster) => {
-          if (data.status.state === STATUS_RUNNING) {
-            return {
-              clusterName: data.clusterName
-            };
-          }
-        }
-      );
-
-      const keyLabelStructure = transformClusterListData.map(obj => ({
-        key: obj.clusterName,
-        value: obj.clusterName,
-        text: obj.clusterName
-      }));
-      setClustersList(keyLabelStructure);
+      const formattedResponse = await response.json();
+      let transformClusterListData: string[] = [];
+      transformClusterListData = formattedResponse.clusters
+        .filter((data: { clusterName: string; status: { state: string } }) => {
+          return data.status.state === STATUS_RUNNING;
+        })
+        .map((data: { clusterName: string }) => data.clusterName);
+      setClustersList(transformClusterListData);
     } catch (error) {
       console.error('Error listing clusters', error);
       toast.error('Failed to list the clusters', toastifyCustomStyle);
@@ -687,19 +663,10 @@ function CreateBatch({
 
               transformedNetworkList = responseResult.items.map(
                 (data: Network) => {
-                  return {
-                    network: data.selfLink.split('/')[9]
-                  };
+                  return data.selfLink.split('/')[9];
                 }
               );
-              const keyLabelStructureNetwork = transformedNetworkList.map(
-                obj => ({
-                  key: obj.network,
-                  value: obj.network,
-                  text: obj.network
-                })
-              );
-              setNetworklist(keyLabelStructureNetwork);
+              setNetworklist(transformedNetworkList);
             })
 
             .catch((e: Error) => {
@@ -713,10 +680,10 @@ function CreateBatch({
   };
   type IKeyRings = {
     keyRings: Array<{
-      name: string; 
+      name: string;
     }>;
   };
-  
+
   const listKeyRingsAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -739,19 +706,12 @@ function CreateBatch({
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
       */
 
-              transformedKeyList = responseResult.keyRings.map((data: {name: string}) => {
-                return {
-                  name: data.name.split('/')[5]
-                };
-              });
-              const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: string}) => ({
-                  key: obj.name,
-                  value: obj.name,
-                  text: obj.name
-                })
+              transformedKeyList = responseResult.keyRings.map(
+                (data: { name: string }) => {
+                  return data.name.split('/')[5];
+                }
               );
-              setKeyRinglist(keyLabelStructureKeyRing);
+              setKeyRinglist(transformedKeyList);
             })
 
             .catch((e: Error) => {
@@ -765,14 +725,14 @@ function CreateBatch({
   };
   interface IKey {
     primary: {
-      state:string
+      state: string;
     };
     name: string;
   }
   interface IKeyListResponse {
     cryptoKeys: IKey[];
   }
-  
+
   const listKeysAPI = async (keyRing: string) => {
     const credentials = await authApi();
     if (credentials) {
@@ -796,19 +756,13 @@ function CreateBatch({
       */
 
               transformedKeyList = responseResult.cryptoKeys
-                .filter((data: IKey) => data.primary && data.primary.state==='ENABLED')
-                .map((data: {name: string}) => ({
-                  name: data.name.split('/')[7]
-                }));
-              const keyLabelStructureKeyRing = transformedKeyList.map(
-                (obj: { name: string }) => ({
-                  key: obj.name,
-                  value: obj.name,
-                  text: obj.name
-                })
-              );
-              setKeylist(keyLabelStructureKeyRing);
-              setKeySelected(keyLabelStructureKeyRing[0].value);
+                .filter(
+                  (data: IKey) =>
+                    data.primary && data.primary.state === 'ENABLED'
+                )
+                .map((data: { name: string }) => data.name.split('/')[7]);
+              setKeylist(transformedKeyList);
+              setKeySelected(transformedKeyList[0]);
             })
 
             .catch((e: Error) => {
@@ -850,16 +804,12 @@ function CreateBatch({
               );
               const keyLabelStructureSubNetwork = transformedSubNetworkList
                 .filter((obj: SubnetworkData) => obj.subnetworks !== undefined)
-                .map((obj: SubnetworkData) => ({
-                  key: obj.subnetworks,
-                  value: obj.subnetworks,
-                  text: obj.subnetworks
-                }));
+                .map((obj: SubnetworkData) => 
+                   obj.subnetworks
+               );
               setSubNetworklist(keyLabelStructureSubNetwork);
-              setDefaultValue(keyLabelStructureSubNetwork[0].value);
-              setSubNetworkSelected(keyLabelStructureSubNetwork[0].value);
+              setSubNetworkSelected(keyLabelStructureSubNetwork[0]);
             })
-
             .catch((e: Error) => {
               console.log(e);
             });
@@ -885,24 +835,19 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { services: Service[] }) => {
-              let transformClusterListData = responseResult.services.filter(
-                (data: Service) => {
-                  return {
-                    name: data.name
-                  };
-                }
-              );
-
-              const keyLabelStructure = transformClusterListData.map(obj => ({
-                key: obj.name,
-                value: obj.name,
-                text: obj.name
-              }));
-              const noneOption = { key: 'None', value: 'None', text: 'None' };
-              setServicesList([noneOption, ...keyLabelStructure]);
-              setIsLoadingService(false);
-            })
+            .then(
+              (responseResult: {
+                services: {
+                  name: string;
+                }[];
+              }) => {
+                const transformedServiceList = responseResult.services.map(
+                  (data: { name: string }) => data.name
+                );
+                setServicesList(transformedServiceList);
+                setIsLoadingService(false);
+              }
+            )
             .catch((e: Error) => {
               console.log(e);
               setIsLoadingService(false);
@@ -914,7 +859,6 @@ function CreateBatch({
         });
     }
   };
-
 
   type Region = {
     name: string;
@@ -936,11 +880,7 @@ function CreateBatch({
             .then((responseResult: { items: Region[] }) => {
               let transformedRegionList = responseResult.items.map(
                 (data: Region) => {
-                  return {
-                    value: data.name,
-                    key: data.name,
-                    text: data.name
-                  };
+                  return data.name;
                 }
               );
               setRegionList(transformedRegionList);
@@ -1205,7 +1145,10 @@ function CreateBatch({
     setBatchIdSelected(newBatchId);
   };
 
-  const handleBatchTypeSelected = (event: React.SyntheticEvent<HTMLElement, Event>, data: DropdownProps) => {
+  const handleBatchTypeSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
     setBatchTypeSelected(data.value!.toString());
     setFilesSelected([]);
     setJarFilesSelected([]);
@@ -1218,8 +1161,8 @@ function CreateBatch({
     setMainClassSelected('');
   };
 
-  const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
-      setServicesSelected(data.value!.toString());
+  const handleServiceSelected = (data: string | null) => {
+    setServicesSelected(data!.toString());
   };
  
   const handleProjectIdChange = (data: string | null) => {
@@ -1230,27 +1173,27 @@ function CreateBatch({
     setServicesSelected('');
     regionListAPI(data!.toString());
   };
-  const handleRegionChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
+  const handleRegionChange = (data: any) => {
     setServicesSelected('');
     setServicesList([]);
-    setRegion(data.value);
-    listMetaStoreAPI(data.value);
-    
-    
+    setRegion(data);
+    listMetaStoreAPI(data);
   };
-  const handleNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
-    setNetworkSelected(data.value!.toString());
-    listSubNetworksAPI(data.value!.toString());
+  const handleNetworkChange = (data: DropdownProps | null) => {
+    setNetworkSelected(data!.toString());
+    listSubNetworksAPI(data!.toString());
   };
-  const handleSubNetworkChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
-    setSubNetworkSelected(data.value!.toString());
+  const handleSubNetworkChange = (
+    data: string|null
+  ) => {
+    setSubNetworkSelected(data!.toString());
   };
-  const handleKeyRingChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
-    setKeyRingSelected(data.value!.toString());
-    listKeysAPI(data.value!.toString());
+  const handleKeyRingChange = (data: DropdownProps | null) => {
+    setKeyRingSelected(data!.toString());
+    listKeysAPI(data!.toString());
   };
-  const handlekeyChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
-    setKeySelected(data.value!.toString());
+  const handlekeyChange = (data: string | null) => {
+    setKeySelected(data!.toString());
   };
   const handleMainClassSelected = (value: string) => {
     setMainClassUpdated(true);
@@ -1261,11 +1204,8 @@ function CreateBatch({
     handleValidationFiles(value, setMainJarSelected, setMainJarValidation);
   };
 
-  const handleClusterSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setClusterSelected(data.value!.toString());
+  const handleClusterSelected = (data: string | null) => {
+    setClusterSelected(data!.toString());
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -1280,7 +1220,6 @@ function CreateBatch({
 
     setManualKeySelected(inputValue);
   };
-
   return (
     <div>
       <div className="scroll-comp">
@@ -1496,7 +1435,9 @@ function CreateBatch({
                   </div>
                 )}
                 {mainRValidation && (
-                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">
+                    {QUERY_FILE_MESSAGE}
+                  </div>
                 )}
               </>
             )}
@@ -1536,7 +1477,9 @@ function CreateBatch({
                   </div>
                 )}
                 {mainPythonValidation && (
-                  <div className="submit-job-message-input">{QUERY_FILE_MESSAGE}</div>
+                  <div className="submit-job-message-input">
+                    {QUERY_FILE_MESSAGE}
+                  </div>
                 )}
               </>
             )}
@@ -1923,33 +1866,23 @@ function CreateBatch({
               ) : (
                 <div className="create-batch-network">
                   <div className="select-text-overlay">
-                    <label
-                      className="select-title-text"
-                      htmlFor="primary-network"
-                    >
-                      Primary network*
-                    </label>
-                    <Select
-                      search
-                      className="project-region-select"
-                      value={networkSelected}
-                      onChange={handleNetworkChange}
-                      type="text"
+                    <Autocomplete
                       options={networkList}
+                      value={networkSelected}
+                      onChange={(_event, val) => handleNetworkChange(val)}
+                      renderInput={params => (
+                        <TextField {...params} label="Primary network*" />
+                      )}
                     />
                   </div>
                   <div className="select-text-overlay subnetwork-style">
-                    <label className="select-title-text" htmlFor="subnetwork">
-                      subnetwork
-                    </label>
-
-                    <Select
-                      search
-                      className="project-region-select"
-                      value={subNetworkSelected}
-                      onChange={handleSubNetworkChange}
-                      type="text"
+                    <Autocomplete
                       options={subNetworkList}
+                      value={subNetworkSelected}
+                      onChange={(_event, val) => handleSubNetworkChange(val)}
+                      renderInput={params => (
+                        <TextField {...params} label="subnetwork*" />
+                      )}
                     />
                   </div>
                 </div>
@@ -2035,50 +1968,32 @@ function CreateBatch({
                           value="mainClass"
                           checked={selectedRadioValue === 'key'}
                           onChange={handlekeyRingRadio}
-                          disabled={manualKeySelected!==''}
+                          disabled={manualKeySelected !== ''}
                         />
                         <div className="select-text-overlay">
-                          <label
-                            className={
-                              selectedRadioValue === 'manually'
-                                ? 'select-title-text disable-text'
-                                : 'select-title-text'
+                          <Autocomplete
+                            disabled={
+                              selectedRadioValue === 'manually' ? true : false
                             }
-                            htmlFor="key-rings"
-                          >
-                            Key rings
-                          </label>
-
-                          <Select
-                            search
-                            className="project-region-select"
-                            value={keyRingSelected}
-                            type="text"
-                            disabled={selectedRadioValue === 'manually'}
-                            onChange={handleKeyRingChange}
                             options={keyRinglist}
+                            value={keyRingSelected}
+                            onChange={(_event, val) => handleKeyRingChange(val)}
+                            renderInput={params => (
+                              <TextField {...params} label="Key rings" />
+                            )}
                           />
                         </div>
                         <div className="select-text-overlay subnetwork-style">
-                          <label
-                            className={
-                              selectedRadioValue === 'manually'
-                                ? 'select-title-text disable-text'
-                                : 'select-title-text'
+                          <Autocomplete
+                            disabled={
+                              selectedRadioValue === 'manually' ? true : false
                             }
-                            htmlFor="keys"
-                          >
-                            Keys
-                          </label>
-
-                          <Select
-                            search
-                            className="project-region-select"
-                            value={keySelected}
-                            disabled={selectedRadioValue === 'manually'}
-                            onChange={handlekeyChange}
-                            type="text"
                             options={keylist}
+                            value={keySelected}
+                            onChange={(_event, val) => handlekeyChange(val)}
+                            renderInput={params => (
+                              <TextField {...params} label="Key rings" />
+                            )}
                           />
                         </div>
                       </div>
@@ -2160,10 +2075,6 @@ function CreateBatch({
                 />
             </div>
             <div className="select-text-overlay">
-              <label className="select-dropdown-text" htmlFor="meta-region">
-                Metastore region
-              </label>
-
               {isLoadingRegion ? (
                 <div className="metastore-loader">
                   <ClipLoader
@@ -2174,20 +2085,17 @@ function CreateBatch({
                   />
                 </div>
               ) : (
-                <Select
-                  search
-                  placeholder={region}
-                  className="project-region-select"
-                  value={region}
-                  onChange={handleRegionChange}
+                <Autocomplete
                   options={regionList}
+                  value={region}
+                  onChange={(_event, val) => handleRegionChange(val)}
+                  renderInput={params => (
+                    <TextField {...params} label="Metastore region" />
+                  )}
                 />
               )}
             </div>
             <div className="select-text-overlay">
-              <label className="select-dropdown-text" htmlFor="meta-service">
-                Metastore service
-              </label>
               {isLoadingService ? (
                 <div className="metastore-loader">
                   <ClipLoader
@@ -2198,14 +2106,13 @@ function CreateBatch({
                   />
                 </div>
               ) : (
-                <Select
-                  search
-                  className="project-region-select"
-                  value={servicesSelected}
-                  type="text"
+                <Autocomplete
                   options={servicesList}
-                  onChange={handleServiceSelected}
-                  placeholder={servicesSelected}
+                  value={servicesSelected}
+                  onChange={(_event, val) => handleServiceSelected(val)}
+                  renderInput={params => (
+                    <TextField {...params} label="Metastore services" />
+                  )}
                 />
               )}
             </div>
@@ -2216,20 +2123,13 @@ function CreateBatch({
               Choose a history server cluster to store logs in.{' '}
             </div>
             <div className="select-text-overlay">
-              <label
-                className="select-dropdown-text"
-                htmlFor="history-server-cluster"
-              >
-                History server cluster
-              </label>
-              <Select
-                className="project-region-select"
-                search
-                clearable
-                value={clusterSelected}
-                onChange={handleClusterSelected}
+              <Autocomplete
                 options={clustersList}
-                placeholder=""
+                value={clusterSelected}
+                onChange={(_event, val) => handleClusterSelected(val)}
+                renderInput={params => (
+                  <TextField {...params} label="History server cluster" />
+                )}
               />
             </div>
 
