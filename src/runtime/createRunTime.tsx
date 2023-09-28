@@ -30,7 +30,6 @@ import {
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
   HTTP_METHOD,
-  PROJECT_LIST_URL,
   REGION_URL,
   //SHARED_VPC,
   STATUS_RUNNING,
@@ -56,11 +55,11 @@ import { JupyterLab } from '@jupyterlab/application';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { ILauncher } from '@jupyterlab/launcher';
 import { DropdownProps } from 'semantic-ui-react';
-import { Autocomplete, TextField } from '@mui/material';
 
-type Project = {
-  projectId: string;
-};
+import { DynamicDropdown } from '../controls/DynamicDropdown';
+import { projectListAPI } from '../utils/projectService';
+
+
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
@@ -128,9 +127,9 @@ function CreateRunTime({
   >([]);
   const [servicesSelected, setServicesSelected] = useState('');
   const [clusterSelected, setClusterSelected] = useState('');
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState<string|null>('');
   const [region, setRegion] = useState('');
-  const [projectList, setProjectList] = useState([{}]);
+
   const [regionList, setRegionList] = useState<
     { value: string; key: string; text: string }[]
   >([]);
@@ -175,7 +174,6 @@ function CreateRunTime({
 
     setTimeList(timeData);
     updateLogic();
-    projectListAPI();
     listClustersAPI();
     listNetworksAPI();
   }, []);
@@ -575,43 +573,7 @@ function CreateRunTime({
     }
   };
 
-  const projectListAPI = async () => {
-    const credentials = await authApi();
-
-    if (credentials) {
-      fetch(PROJECT_LIST_URL, {
-        method: 'GET',
-
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: Response) => {
-          response
-
-            .json()
-
-            .then((responseResult: { projects: Project[] }) => {
-              let transformedProjectList = responseResult.projects.map(
-                (data: Project) => {
-                  return data.projectId;
-                }
-              );
-
-              setProjectList(transformedProjectList);
-            })
-
-            .catch((e: Error) => console.log(e));
-        })
-
-        .catch((err: Error) => {
-          console.error('Error fetching project list', err);
-        });
-    }
-  };
-
+ 
   type Region = {
     name: string;
   };
@@ -737,13 +699,13 @@ function CreateRunTime({
   ) => {
     setAutoSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (data: DropdownProps | null) => {
+  const handleProjectIdChange = (data: string | null) => {
+    setProjectId(data??'');
     setRegion('');
     setRegionList([]);
     setServicesList([]);
     setServicesSelected('');
     regionListAPI(data!.toString());
-    setProjectId(data!.toString());
   };
   const handleRegionChange = (
     event: React.SyntheticEvent<HTMLElement, Event>,
@@ -1423,14 +1385,21 @@ function CreateRunTime({
             <div className="submit-job-label-header">Metastore</div>
 
             <div className="select-text-overlay">
-              <Autocomplete
-                options={projectList}
-                value={projectId}
-                onChange={(_event, val) => handleProjectIdChange(val)}
-                renderInput={params => (
-                  <TextField {...params} label="Metastore project" />
-                )}
-              />
+             
+              <DynamicDropdown
+                  value={projectId}
+                  onChange={(_, projectId) => handleProjectIdChange(projectId)}
+                  fetchFunc={projectListAPI}
+                  label="Project ID"
+                  // Always show the clear indicator and hide the dropdown arrow
+                  // make it very clear that this is an autocomplete.
+                  sx={{
+                    '& .MuiAutocomplete-clearIndicator': {
+                      visibility: 'hidden'
+                    }
+                  }}
+                  popupIcon={null}
+                />
             </div>
 
             <div className="select-text-overlay">
