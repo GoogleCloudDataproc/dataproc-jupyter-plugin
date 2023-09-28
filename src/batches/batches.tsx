@@ -256,15 +256,16 @@ const BatchesComponent = (): React.JSX.Element => {
       setConfigLoading(false);
     }
     listBatchAPI();
-    if (!detailedBatchView && selectedMode === 'Batches') {
-      pollingBatches(listBatchAPI, pollingDisable);
-    }
 
     return () => {
       pollingBatches(listBatchAPI, true);
     };
   }, [pollingDisable, detailedBatchView, selectedMode]);
-
+  useEffect(() => {
+    if (!detailedBatchView && selectedMode === 'Batches' && !isLoading) {
+      pollingBatches(listBatchAPI, pollingDisable);
+    }
+  }, [isLoading]);
   return (
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (
