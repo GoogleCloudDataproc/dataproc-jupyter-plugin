@@ -28,6 +28,7 @@ import {
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
+  CUSTOM_CONTAINER_MESSAGE_PART,
   HTTP_METHOD,
   PROJECT_LIST_URL,
   REGION_URL,
@@ -1210,7 +1211,7 @@ function CreateRunTime({
             </div>
             <div className="create-container-message">
               <div className="create-container-image-message">
-                image. You must host your custom container on
+                {CUSTOM_CONTAINER_MESSAGE_PART}
               </div>
               <div
                 className="learn-more-url"

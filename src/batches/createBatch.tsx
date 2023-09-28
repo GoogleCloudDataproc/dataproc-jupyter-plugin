@@ -32,6 +32,7 @@ import {
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
+  CUSTOM_CONTAINER_MESSAGE_PART,
   FILES_MESSAGE,
   HTTP_METHOD,
   JAR_FILE_MESSAGE,
@@ -1675,7 +1676,7 @@ function CreateBatch({
             <div className="create-custom-messagelist">
               {CUSTOM_CONTAINER_MESSAGE} </div> <div className="create-container-message">
                 <div className="create-container-image-message">
-                image. You must host your custom container on
+                {CUSTOM_CONTAINER_MESSAGE_PART}
                 </div>
                 <div
                   className="learn-more-url"
