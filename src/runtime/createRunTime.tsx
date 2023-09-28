@@ -31,7 +31,7 @@ import {
   HTTP_METHOD,
   PROJECT_LIST_URL,
   REGION_URL,
-  SHARED_VPC,
+  //SHARED_VPC,
   STATUS_RUNNING,
   USER_INFO_URL
 } from '../utils/const';
@@ -55,7 +55,7 @@ import { JupyterLab } from '@jupyterlab/application';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { ILauncher } from '@jupyterlab/launcher';
 import { DropdownProps } from 'semantic-ui-react';
-import { Autocomplete, Radio, TextField } from '@mui/material';
+import { Autocomplete, TextField } from '@mui/material';
 
 type Project = {
   projectId: string;
@@ -161,8 +161,9 @@ function CreateRunTime({
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
   const [duplicateValidation, setDuplicateValidation] = useState(false);
-  const [selectedNetworkRadio, setSelectedNetworkRadio] =
-    useState('projectNetwork');
+  // const [selectedNetworkRadio, setSelectedNetworkRadio] =
+  //   useState('projectNetwork');
+  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
 
   useEffect(() => {
     const timeData = [
@@ -365,6 +366,7 @@ function CreateRunTime({
     network: string;
   }
   const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
+    setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
       fetch(
@@ -390,6 +392,7 @@ function CreateRunTime({
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
+              setIsloadingNetwork(false);
             })
 
             .catch((e: Error) => {
@@ -572,69 +575,40 @@ function CreateRunTime({
   };
 
   const projectListAPI = async () => {
-
     const credentials = await authApi();
 
     if (credentials) {
-
       fetch(PROJECT_LIST_URL, {
-
         method: 'GET',
 
         headers: {
-
           'Content-Type': API_HEADER_CONTENT_TYPE,
 
           Authorization: API_HEADER_BEARER + credentials.access_token
-
         }
-
       })
-
         .then((response: Response) => {
-
           response
 
             .json()
 
             .then((responseResult: { projects: Project[] }) => {
-
               let transformedProjectList = responseResult.projects.map(
-
                 (data: Project) => {
-
-                  // return {
-
-                  //   value: data.projectId,
-
-                  //   key: data.projectId,
-
-                  //   text: data.projectId
-
-                  // };
-
                   return data.projectId;
-
                 }
-
               );
 
               setProjectList(transformedProjectList);
-
             })
 
             .catch((e: Error) => console.log(e));
-
         })
 
         .catch((err: Error) => {
-
           console.error('Error fetching project list', err);
-
         });
-
     }
-
   };
 
   type Region = {
@@ -762,10 +736,7 @@ function CreateRunTime({
   ) => {
     setAutoSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (
-   
-    data: DropdownProps | null
-  ) => {
+  const handleProjectIdChange = (data: DropdownProps | null) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
@@ -1273,7 +1244,11 @@ function CreateRunTime({
               Establishes connectivity for the VM instances in this cluster.
             </div>
             <div>
-              <div className="create-runtime-radio">
+              <div className="create-batch-message">
+                Networks in this project
+              </div>
+              {/* UI FOR SHARED VPC NETWORK */}
+              {/* <div className="create-runtime-radio">
                 <Radio
                   size="small"
                   className="select-batch-radio-style"
@@ -1284,9 +1259,9 @@ function CreateRunTime({
                 <div className="create-batch-message">
                   Networks in this project
                 </div>
-              </div>
+              </div> */}
             </div>
-            <div>
+            {/* <div>
               <div className="create-runtime-radio">
                 <Radio
                   size="small"
@@ -1311,9 +1286,9 @@ function CreateRunTime({
                   Learn more
                 </div>
               </div>
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               {selectedNetworkRadio === 'projectNetwork' && (
                 <div className="create-batch-network">
                   <div className="select-text-overlay">
@@ -1351,7 +1326,7 @@ function CreateRunTime({
                   </div>
                 </div>
               )}
-              {selectedNetworkRadio === 'sharedVpc' && (
+              {/* {selectedNetworkRadio === 'sharedVpc' && (
                 <div className="select-text-overlay">
                   <label
                     className="select-dropdown-text"
@@ -1368,6 +1343,51 @@ function CreateRunTime({
                     //onChange={}
                     options={[]}
                   />
+                </div>
+              )} 
+            </div> */}
+            <div>
+              {isloadingNetwork ? (
+                <div className="metastore-loader">
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
+                <div className="create-batch-network">
+                  <div className="select-text-overlay">
+                    <label
+                      className="select-title-text"
+                      htmlFor="primary-network"
+                    >
+                      Primary network*
+                    </label>
+                    <Select
+                      search
+                      className="project-region-select"
+                      value={networkSelected}
+                      onChange={handleNetworkChange}
+                      type="text"
+                      options={networkList}
+                    />
+                  </div>
+                  <div className="select-text-overlay subnetwork-style">
+                    <label className="select-title-text" htmlFor="subnetwork">
+                      subnetwork
+                    </label>
+
+                    <Select
+                      search
+                      className="project-region-select"
+                      value={subNetworkSelected}
+                      onChange={handleSubNetworkChange}
+                      type="text"
+                      options={subNetworkList}
+                    />
+                  </div>
                 </div>
               )}
             </div>
