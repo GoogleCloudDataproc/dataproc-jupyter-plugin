@@ -56,15 +56,22 @@ import { GcsBucket } from './gcs/gcsBucket';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDisposable, DisposableDelegate } from '@lumino/disposable';
-import SessionDetails from './sessions/sessionDetails';
-interface ISessionDetailsProps {
-  sessionSelected: string;
-  setDetailedSessionView: (value: boolean) => void;
-  detailedSessionView: boolean;
-}
+import { SessionTemplate } from './sessions/sessionTemplate';
+
 export class ButtonExtension
   implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
 {
+  private app: JupyterFrontEnd; // Store the app object
+  private launcher: ILauncher;
+  private themeManager: IThemeManager;
+
+  constructor(app: JupyterFrontEnd,launcher: ILauncher,
+    themeManager: IThemeManager) {
+    this.app = app;
+    this.launcher = launcher;
+    this.themeManager = themeManager;
+  }
+
   createNew(
     panel: NotebookPanel,
 
@@ -75,21 +82,22 @@ export class ButtonExtension
     const sessionName = notebookVal?.split('/');
     const sessionSelected = sessionName?.slice(0, -1).join('/');
     console.log(sessionSelected);
-    const sessionDetailsProps: ISessionDetailsProps = {
-      sessionSelected: sessionSelected!,
-      setDetailedSessionView: (value: boolean) => {
-        true
-      },
-      detailedSessionView: true, // Set the initial value as needed
-    };
-    SessionDetails(sessionDetailsProps);
+    const content = new SessionTemplate(
+      this.app as JupyterLab,
+      this.launcher as ILauncher,
+      this.themeManager
+    );
+    const widget = new MainAreaWidget<SessionTemplate>({ content });
+    widget.title.label = 'Serverless';
+    this.app.shell.add(widget, 'main');
+
     };
 
     const button = new ToolbarButton({
       className: 'clear-output-button',
-      label: 'Clear All Outputs',
+      label: 'Logs and metrics',
       onClick: clearOutput,
-      tooltip: 'Clear All Outputs'
+      tooltip: 'Logs and metrics'
     });
 
     panel.toolbar.insertItem(10, 'clearOutputs', button);
@@ -372,7 +380,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             //@ts-ignore jupyter lab Launcher type issue
             args: kernelsData?.argv
           });
-        app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension());
+        app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension(app as JupyterLab,launcher as ILauncher, themeManager as IThemeManager));
         }
       });
       Object.values(kernels).forEach((kernelsData, index) => {
