@@ -21,7 +21,11 @@ import {
   JupyterLab,
   ILabShell
 } from '@jupyterlab/application';
-import { MainAreaWidget, IThemeManager } from '@jupyterlab/apputils';
+import {
+  MainAreaWidget,
+  IThemeManager,
+  ToolbarButton
+} from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
@@ -37,7 +41,11 @@ import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
-import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
+import {
+  INotebookTracker,
+  NotebookPanel,
+  INotebookModel
+} from '@jupyterlab/notebook';
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
@@ -46,11 +54,62 @@ import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import { GcsBucket } from './gcs/gcsBucket';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { IDisposable, DisposableDelegate } from '@lumino/disposable';
+import SessionDetails from './sessions/sessionDetails';
+interface ISessionDetailsProps {
+  sessionSelected: string;
+  setDetailedSessionView: (value: boolean) => void;
+  detailedSessionView: boolean;
+}
+export class ButtonExtension
+  implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
+{
+  createNew(
+    panel: NotebookPanel,
 
+    context: DocumentRegistry.IContext<INotebookModel>
+  ): IDisposable {
+    const clearOutput = () => {
+    const notebookVal = localStorage.getItem('notebookValue'||'');
+    const sessionName = notebookVal?.split('/');
+    const sessionSelected = sessionName?.slice(0, -1).join('/');
+    console.log(sessionSelected);
+    const sessionDetailsProps: ISessionDetailsProps = {
+      sessionSelected: sessionSelected!,
+      setDetailedSessionView: (value: boolean) => {
+        true
+      },
+      detailedSessionView: true, // Set the initial value as needed
+    };
+    SessionDetails(sessionDetailsProps);
+    };
+
+    const button = new ToolbarButton({
+      className: 'clear-output-button',
+      label: 'Clear All Outputs',
+      onClick: clearOutput,
+      tooltip: 'Clear All Outputs'
+    });
+
+    panel.toolbar.insertItem(10, 'clearOutputs', button);
+
+    return new DisposableDelegate(() => {
+      button.dispose();
+    });
+  }
+}
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
-  optional: [IFileBrowserFactory, ILauncher, IMainMenu, ILabShell, INotebookTracker, IThemeManager],
+  optional: [
+    IFileBrowserFactory,
+    ILauncher,
+    IMainMenu,
+    ILabShell,
+    INotebookTracker,
+    IThemeManager
+  ],
   activate: async (
     app: JupyterFrontEnd,
     factory: IFileBrowserFactory,
@@ -97,7 +156,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       panel.addWidget(newWidget);
     };
 
-  
     panel.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
     lastClusterName = localStorage.getItem('notebookValue') || '';
     if (lastClusterName) {
@@ -107,8 +165,10 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const panelGcs = new Panel();
     panelGcs.id = 'GCS-bucket-tab';
-    panelGcs.title.icon = iconStorage; 
-    panelGcs.addWidget(new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory));
+    panelGcs.title.icon = iconStorage;
+    panelGcs.addWidget(
+      new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory)
+    );
     app.shell.add(panelGcs, 'left', { rank: 1001 });
 
     const onTitleChanged = async (title: Title<Widget>) => {
@@ -212,7 +272,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconAddRuntime),
       execute: () => {
-        const content = new RuntimeTemplate(app as JupyterLab,launcher as ILauncher, themeManager);
+        const content = new RuntimeTemplate(
+          app as JupyterLab,
+          launcher as ILauncher,
+          themeManager
+        );
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
         widget.title.icon = iconServerless;
@@ -254,13 +318,18 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Cloud Dataproc Settings',
       execute: () => {
-        const content = new AuthLogin(app as JupyterLab,launcher as ILauncher, themeManager);
+        const content = new AuthLogin(
+          app as JupyterLab,
+          launcher as ILauncher,
+          themeManager
+        );
         const widget = new MainAreaWidget<AuthLogin>({ content });
         widget.title.label = 'Config Setup';
         widget.title.icon = iconCluster;
         app.shell.add(widget, 'main');
       }
     });
+
 
     let serverlessIndex = -1;
 
@@ -303,6 +372,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             //@ts-ignore jupyter lab Launcher type issue
             args: kernelsData?.argv
           });
+        app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension());
         }
       });
       Object.values(kernels).forEach((kernelsData, index) => {
@@ -330,6 +400,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 factory: 'notebook'
               });
             }
+            
           });
 
           launcher.add({
