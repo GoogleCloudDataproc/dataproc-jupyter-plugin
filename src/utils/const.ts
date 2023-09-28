@@ -130,7 +130,7 @@ export const METASTORE_MESSAGE =
   'We recommend this option to persist table metadata when the batch finishes processing. A metastore can be shared across many serverless batches in different projects and GCP regions.';
 export const CUSTOM_CONTAINER_MESSAGE =
   'Specify a custom container image to add Java or Python dependencies not provided by the default container';
-
+export const CUSTOM_CONTAINER_MESSAGE_PART='image. You must host your custom container on';
 export const SPARK = 'Spark';
 export const SPARKSQL = 'SparkSQL';
 export const SPARKR = 'SparkR';
