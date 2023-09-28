@@ -356,15 +356,16 @@ const ClusterComponent = (): React.JSX.Element => {
       setConfigLoading(false);
     }
     listClustersAPI();
-    if (!detailedView && selectedMode === 'Clusters') {
-      pollingClusters(listClustersAPI, pollingDisable);
-    }
 
     return () => {
       pollingClusters(listClustersAPI, true);
     };
   }, [pollingDisable, detailedView, selectedMode]);
-
+  useEffect(() => {
+    if (!detailedView && selectedMode === 'Clusters' && !isLoading) {
+      pollingClusters(listClustersAPI, pollingDisable);
+    }
+  }, [isLoading]);
   return (
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (

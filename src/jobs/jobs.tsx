@@ -210,10 +210,10 @@ function JobComponent({
         jobId: string;
       };
       statusHistory: Array<{
-        stateStartTime: string; 
+        stateStartTime: string;
       }>;
       status: {
-        stateStartTime: string; 
+        stateStartTime: string;
       };
       labels?: {
         [key: string]: string;
@@ -384,15 +384,15 @@ function JobComponent({
 
   useEffect(() => {
     listJobsAPI();
-    if (!detailedJobView) {
-      pollingJobs(listJobsAPI, pollingDisable);
-    }
-
     return () => {
       pollingJobs(listJobsAPI, true);
     };
   }, [pollingDisable, detailedJobView]);
-
+  useEffect(() => {
+    if (!detailedJobView && !isLoading) {
+      pollingJobs(listJobsAPI, pollingDisable);
+    }
+  }, [isLoading]);
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Job ID') {
       return (
