@@ -21,6 +21,14 @@
   color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
+.learn-more-url {
+  color:var(--jp-brand-color1);
+  text-decoration: underline;
+  cursor: pointer;
+  padding-left: 3px;
+  font-size: 10px;
+  margin-top: 2px;
+}
 
 .batch-details-label-level-three {
   font-style: normal;

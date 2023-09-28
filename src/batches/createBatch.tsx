@@ -32,13 +32,13 @@ import {
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
+  CUSTOM_CONTAINER_MESSAGE_PART,
   FILES_MESSAGE,
   HTTP_METHOD,
   JAR_FILE_MESSAGE,
   KEY_MESSAGE,
   METASTORE_MESSAGE,
   NETWORK_TAG_MESSAGE,
-  PROJECT_LIST_URL,
   QUERY_FILE_MESSAGE,
   REGION_URL,
   SECURITY_KEY,
@@ -57,10 +57,10 @@ import { Input } from '../controls/MuiWrappedInput';
 import { Radio } from '@mui/material';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
+import { DynamicDropdown } from '../controls/DynamicDropdown';
+import { projectListAPI } from '../utils/projectService';
 
-type Project = {
-  projectId: string;
-};
+
 
 type Cluster = {
   clusterName: string;
@@ -137,7 +137,7 @@ function CreateBatch({
   let historyServer = 'None';
   let historyServerValue = 'None';
   let metastoreService = '';
-  let metaProject = 'None';
+  let metaProject = '';
   let metaRegion = '';
   let containerImage = '';
   let jarFileUris: string[] = [];
@@ -266,7 +266,7 @@ function CreateBatch({
   const [clusterSelected, setClusterSelected] = useState(historyServer);
   const [projectId, setProjectId] = useState(metaProject);
   const [region, setRegion] = useState(metaRegion);
-  const [projectList, setProjectList] = useState([{}]);
+  
   const [regionList, setRegionList] = useState<
     { value: string; key: string; text: string }[]
   >([]);
@@ -354,7 +354,7 @@ function CreateBatch({
     ];
 
     setBatchTypeList(batchTypeData);
-    projectListAPI();
+    
     listClustersAPI();
     listNetworksAPI();
     listKeyRingsAPI();
@@ -914,38 +914,7 @@ function CreateBatch({
         });
     }
   };
-  const projectListAPI = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      fetch(PROJECT_LIST_URL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: { projects: Project[] }) => {
-              let transformedProjectList = responseResult.projects.map(
-                (data: Project) => {
-                  return {
-                    value: data.projectId,
-                    key: data.projectId,
-                    text: data.projectId
-                  };
-                }
-              );
-              setProjectList(transformedProjectList);
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          console.error('Error fetching project list', err);
-        });
-    }
-  };
+
 
   type Region = {
     name: string;
@@ -1252,13 +1221,14 @@ function CreateBatch({
   const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
       setServicesSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+ 
+  const handleProjectIdChange = (data: string | null) => {
+    setProjectId(data??'');
     setRegion('');
     setRegionList([]);
     setServicesList([]);
     setServicesSelected('');
-    regionListAPI(data.value!.toString());
-    setProjectId(data.value!.toString());
+    regionListAPI(data!.toString());
   };
   const handleRegionChange = (event: React.SyntheticEvent<HTMLElement>, data: any) => {
     setServicesSelected('');
@@ -1669,23 +1639,27 @@ function CreateBatch({
                 value={containerImageSelected}
                 onChange={e => setContainerImageSelected(e.target.value)}
                 type="text"
-                placeholder=""
+                placeholder="Enter URI, for example,gcr.io/my-project-id/my-image:1.0.1"
               />
             </div>
             <div className="create-custom-messagelist">
-              {CUSTOM_CONTAINER_MESSAGE}
-              <div className="create-container-message">
+              {CUSTOM_CONTAINER_MESSAGE} </div> <div className="create-container-message">
+                <div className="create-container-image-message">
+                {CUSTOM_CONTAINER_MESSAGE_PART}
+                </div>
                 <div
-                  className="submit-job-learn-more"
+                  className="learn-more-url"
                   onClick={() => {
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
                 >
                   Container Registry
                 </div>
-                &nbsp;{'  or '}
+                &nbsp; <div className="create-container-image-message">
+                or 
+              </div>&nbsp;
                 <div
-                  className="submit-job-learn-more"
+                  className="learn-more-url"
                   onClick={() => {
                     window.open(`${ARTIFACT_REGISTERY}`, '_blank');
                   }}
@@ -1694,7 +1668,7 @@ function CreateBatch({
                 </div>
                 {' . '}
                 <div
-                  className="submit-job-learn-more"
+                  className="learn-more-url"
                   onClick={() => {
                     window.open(`${CUSTOM_CONTAINERS}`, '_blank');
                   }}
@@ -1702,7 +1676,6 @@ function CreateBatch({
                   Learn more
                 </div>
               </div>
-            </div>
             {
               batchTypeSelected !== 'sparkR' && (
                 <>
@@ -2140,7 +2113,7 @@ function CreateBatch({
                         </div>
                       </div>
                       {!manualValidation && (
-                        <div className="error-key-parent">
+                        <div className="error-key-parent-manual">
                           <iconError.react
                             tag="div"
                             className="logo-alignment-style"
@@ -2171,17 +2144,20 @@ function CreateBatch({
             </div>
             <div className="create-messagelist">{METASTORE_MESSAGE}</div>
             <div className="select-text-overlay">
-              <label className="select-dropdown-text" htmlFor="meta-project">
-                Metastore project
-              </label>
-              <Select
-                search
-                placeholder={projectId}
-                className="project-region-select"
-                value={projectId}
-                onChange={handleProjectIdChange}
-                options={projectList}
-              />
+            <DynamicDropdown
+                  value={projectId}
+                  onChange={(_, projectId) => handleProjectIdChange(projectId)}
+                  fetchFunc={projectListAPI}
+                  label="Project ID"
+                  // Always show the clear indicator and hide the dropdown arrow
+                  // make it very clear that this is an autocomplete.
+                  sx={{
+                    '& .MuiAutocomplete-clearIndicator': {
+                      visibility: 'hidden'
+                    }
+                  }}
+                  popupIcon={null}
+                />
             </div>
             <div className="select-text-overlay">
               <label className="select-dropdown-text" htmlFor="meta-region">
@@ -2287,7 +2263,7 @@ function CreateBatch({
               batchInfoResponse={batchInfoResponse}
               createBatch={createBatch}
             />
-            <div className="job-button-style-parent button-alignment">
+            <div className="job-button-style-parent">
               <div
                 className={
                   isSubmitDisabled()
