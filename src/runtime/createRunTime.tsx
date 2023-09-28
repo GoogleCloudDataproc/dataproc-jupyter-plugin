@@ -1244,7 +1244,7 @@ function CreateRunTime({
               Establishes connectivity for the VM instances in this cluster.
             </div>
             <div>
-              <div className="create-batch-message">
+              <div className="runtime-message">
                 Networks in this project
               </div>
               {/* UI FOR SHARED VPC NETWORK */}
