@@ -268,9 +268,10 @@ function SubmitJob({
   };
 
   const handleQuerySourceTypeSelected = (
-    data: DropdownProps|null
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
   ) => {
-    setQuerySourceSelected(data!.toString());
+    setQuerySourceSelected(data.value!.toString());
   };
   interface IClusterData {
     clusterName: string;
