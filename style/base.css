@@ -94,7 +94,7 @@ h2 {
 .css-3dzjca-MuiPaper-root-MuiPopover-paper-MuiMenu-paper {
   max-height: 40% !important;
 }
-.scroll-fix-header{
+.scroll-fix-header {
   position: sticky;
   top: 0;
   background-color: white;
