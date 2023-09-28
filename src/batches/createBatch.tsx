@@ -1669,7 +1669,7 @@ function CreateBatch({
                 value={containerImageSelected}
                 onChange={e => setContainerImageSelected(e.target.value)}
                 type="text"
-                placeholder="Enter URI,for example,gcr.io/my-project-id/my-image:1.0.1"
+                placeholder="Enter URI, for example,gcr.io/my-project-id/my-image:1.0.1"
               />
             </div>
             <div className="create-custom-messagelist">
@@ -1678,7 +1678,7 @@ function CreateBatch({
                 image. You must host your custom container on
                 </div>
                 <div
-                  className="submit-job-learn-more"
+                  className="learn-more-url"
                   onClick={() => {
                     window.open(`${CONTAINER_REGISTERY}`, '_blank');
                   }}
@@ -1687,7 +1687,7 @@ function CreateBatch({
                 </div>
                 &nbsp;{'  or '}
                 <div
-                  className="submit-job-learn-more"
+                  className="learn-more-url"
                   onClick={() => {
                     window.open(`${ARTIFACT_REGISTERY}`, '_blank');
                   }}
@@ -1696,7 +1696,7 @@ function CreateBatch({
                 </div>
                 {' . '}
                 <div
-                  className="submit-job-learn-more"
+                  className="learn-more-url"
                   onClick={() => {
                     window.open(`${CUSTOM_CONTAINERS}`, '_blank');
                   }}
