@@ -1183,7 +1183,9 @@ function CreateRunTime({
               >
                 Container Registry
               </div>
-              &nbsp;{'  or '}
+              &nbsp; <div className="create-container-image-message">
+                or 
+              </div>
               <div
                 className="learn-more-url"
                 onClick={() => {
@@ -1210,7 +1212,7 @@ function CreateRunTime({
               <div className="runtime-message">
                 Networks in this project
               </div>
-              {/* UI FOR SHARED VPC NETWORK */}
+              {/* Placeholder FOR SHARED VPC NETWORK */}
               {/* <div className="create-runtime-radio">
                 <Radio
                   size="small"
