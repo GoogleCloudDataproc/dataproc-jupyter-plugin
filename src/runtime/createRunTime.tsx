@@ -1631,7 +1631,7 @@ function CreateRunTime({
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
             />
-            <div className="job-button-style-parent button-alignment">
+            <div className="job-button-style-parent">
               <div
                 className={
                   isSaveDisabled()

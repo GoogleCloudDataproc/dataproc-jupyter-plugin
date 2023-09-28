@@ -247,15 +247,16 @@ function ListSessions() {
 
   useEffect(() => {
     listSessionsAPI();
-    if (!detailedSessionView) {
-      pollingSessions(listSessionsAPI, pollingDisable);
-    }
-
     return () => {
       pollingSessions(listSessionsAPI, true);
     };
   }, [pollingDisable, detailedSessionView]);
+  useEffect(() => {
+    if (!detailedSessionView && !isLoading) {
+      pollingSessions(listSessionsAPI, pollingDisable);
+    }
 
+  }, [isLoading]);
   const renderActions = (data: { state: ClusterStatus; name: string }) => {
     /*
       Extracting sessionId from sessionInfo

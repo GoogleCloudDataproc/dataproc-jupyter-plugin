@@ -1252,7 +1252,7 @@ function CreateBatch({
   const handleServiceSelected = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
       setServicesSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (event: React.SyntheticEvent<HTMLElement>, data: DropdownProps) => {
+  const handleProjectIdChange = (data: DropdownProps) => {
     setRegion('');
     setRegionList([]);
     setServicesList([]);
@@ -1685,7 +1685,7 @@ function CreateBatch({
                 >
                   Container Registry
                 </div>
-                &nbsp;{'  or '}
+                &nbsp;{'  or '}&nbsp;
                 <div
                   className="learn-more-url"
                   onClick={() => {
@@ -2141,7 +2141,7 @@ function CreateBatch({
                         </div>
                       </div>
                       {!manualValidation && (
-                        <div className="error-key-parent">
+                        <div className="error-key-parent-manual">
                           <iconError.react
                             tag="div"
                             className="logo-alignment-style"
@@ -2288,7 +2288,7 @@ function CreateBatch({
               batchInfoResponse={batchInfoResponse}
               createBatch={createBatch}
             />
-            <div className="job-button-style-parent button-alignment">
+            <div className="job-button-style-parent">
               <div
                 className={
                   isSubmitDisabled()
