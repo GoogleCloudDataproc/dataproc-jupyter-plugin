@@ -402,7 +402,6 @@ const GcsBucketComponent = ({
   }
   const listBucketsAPI = async () => {
     const credentials = await authApi();
-
     if (credentials) {
       let prefixList = '';
       gcsFolderPath.length > 1 &&
@@ -413,14 +412,12 @@ const GcsBucketComponent = ({
             prefixList = prefixList + '/' + folderName;
           }
         });
-
       let apiURL =
         gcsFolderPath.length === 0
           ? `${GCS_URL}?project=${credentials.project_id}`
           : gcsFolderPath.length === 1
           ? `${GCS_URL}/${gcsFolderPath[0]}/o`
           : `${GCS_URL}/${gcsFolderPath[0]}/o?prefix=${prefixList}/`;
-
       fetch(apiURL, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -431,12 +428,13 @@ const GcsBucketComponent = ({
           response
             .json()
             .then((responseResult: IBucketItem) => {
-              let transformBucketsData = responseResult.items.map(
-                (data: {
-                  updated: Date;
-                  name: string;
-                  contentType: string;
-                }) => {
+              let sortedResponse = responseResult.items.sort(
+                (itemOne: IBucketItem, itemTwo: IBucketItem) =>
+                  itemOne.updated < itemTwo.updated ? -1 : 1
+              );
+              let transformBucketsData = [];
+              transformBucketsData = sortedResponse.map(
+                (data: { updated: Date; name: string }) => {
                   const updatedDate = new Date(data.updated);
                   const lastModified = lastModifiedFormat(updatedDate);
                   return {
@@ -445,51 +443,35 @@ const GcsBucketComponent = ({
                     folderName:
                       gcsFolderPath.length > 0
                         ? data.name.split('/')[gcsFolderPath.length - 1]
-                        : data.name,
-                    contentType: data.contentType
+                        : data.name
                   };
                 }
               );
-
-              // Filter out items with an empty folderName
               transformBucketsData = transformBucketsData.filter(
                 (data: { folderName: string }) => {
                   return data.folderName !== '';
                 }
               );
-
-              // Sort the items so that folders come first, then files, based on content type
-              transformBucketsData.sort(
-                (
-                  itemOne: { folderName: string; contentType: string },
-                  itemTwo: { folderName: string; contentType: string }
-                ) => {
-                  const isFolderOne = itemOne.contentType === 'Folder';
-                  const isFolderTwo = itemTwo.contentType === 'Folder';
-
-                  // Sort folders first, then files
-                  if (isFolderOne && !isFolderTwo) {
-                    return -1;
-                  } else if (!isFolderOne && isFolderTwo) {
-                    return 1;
-                  } else {
-                    // If both are folders or both are files, sort alphabetically
-                    return itemOne.folderName.localeCompare(itemTwo.folderName);
-                  }
-                }
+              let finalBucketsData = [];
+              finalBucketsData = [
+                ...new Map(
+                  transformBucketsData.map((item: { folderName: string }) => [
+                    item['folderName'],
+                    item
+                  ])
+                ).values()
+              ];
+              finalBucketsData = finalBucketsData.sort(
+                (itemOne: any, itemTwo: any) =>
+                  itemOne.folderName < itemTwo.folderName ? -1 : 1
               );
-
-              // Filter items that include the searchTerm
-              transformBucketsData = transformBucketsData.filter(
-                (item: { folderName: string }) => {
-                  return item.folderName.includes(searchTerm);
-                }
-              );
-
+              finalBucketsData = finalBucketsData.filter((item: any) => {
+                return item.folderName.includes(searchTerm);
+              });
               //@ts-ignore
-              setBucketsList(transformBucketsData);
+              setBucketsList(finalBucketsData);
               //@ts-ignore
-              setBucketsListUpdate(transformBucketsData);
+              setBucketsListUpdate(finalBucketsData);
               setIsLoading(false);
             })
             .catch((e: Error) => {
@@ -506,7 +488,6 @@ const GcsBucketComponent = ({
         });
     }
   };
-
   useEffect(() => {
     listBucketsAPI();
     pollingGCSlist(listBucketsAPI, pollingDisable);
