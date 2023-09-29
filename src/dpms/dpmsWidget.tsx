@@ -48,18 +48,12 @@ import { toast } from 'react-toastify';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
-const iconDatabase = new LabIcon({
-  name: 'launcher:database-icon',
-  svgstr: databaseIcon
-});
-const iconTable = new LabIcon({
-  name: 'launcher:table-icon',
-  svgstr: tableIcon
-});
-const iconColumns = new LabIcon({
-  name: 'launcher:columns-icon',
-  svgstr: columnsIcon
-});
+import darkSearchClearIcon from '../../style/icons/dark_search_clear_icon.svg';
+import darkDatabaseIcon from '../../style/icons/database_icon_dark.svg';
+import darkTableIcon from '../../style/icons/table_icon_dark.svg';
+import darkColumnsIcon from '../../style/icons/dpms_icon_dark.svg';
+import darkSearchIcon from '../../style/icons/search_icon_dark.svg';
+
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -67,10 +61,6 @@ const iconDatasets = new LabIcon({
 const iconDatabaseWidget = new LabIcon({
   name: 'launcher:databse-widget-icon',
   svgstr: databaseWidgetIcon
-});
-const iconSearch = new LabIcon({
-  name: 'launcher:search-icon',
-  svgstr: searchIcon
 });
 const iconRightArrow = new LabIcon({
   name: 'launcher:right-arrow-icon',
@@ -80,11 +70,28 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
-const iconSearchClear = new LabIcon({
-  name: 'launcher:search-clear-icon',
-  svgstr: searchClearIcon
+const darkIconSearchClear = new LabIcon({
+  name: 'launcher:dark-search-clear-icon',
+  svgstr: darkSearchClearIcon
+});
+const darkIconDatabase = new LabIcon({
+  name: 'launcher:dark-database-icon',
+  svgstr: darkDatabaseIcon
 });
 
+const darkIconTable = new LabIcon({
+  name: 'launcher:dark-table-icon',
+  svgstr: darkTableIcon
+});
+
+const darkIconColumns = new LabIcon({
+  name: 'launcher:dark-columns-icon',
+  svgstr: darkColumnsIcon
+});
+const darkIconSearch = new LabIcon({
+  name: 'launcher:dark-search-icon',
+  svgstr: darkSearchIcon
+});
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
@@ -101,6 +108,30 @@ const DpmsComponent = ({
   app: JupyterLab;
   themeManager: IThemeManager;
 }): JSX.Element => {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
+  const iconSearchClear = isDarkTheme ? darkIconSearchClear : new LabIcon({
+    name: 'launcher:search-clear-icon',
+    svgstr: searchClearIcon
+  });
+  const iconDatabase = isDarkTheme ? darkIconDatabase : new LabIcon({
+    name: 'launcher:database-icon',
+    svgstr: databaseIcon
+  });
+
+  const iconTable = isDarkTheme ? darkIconTable : new LabIcon({
+    name: 'launcher:table-icon',
+    svgstr: tableIcon
+  });
+
+  const iconColumns = isDarkTheme ? darkIconColumns : new LabIcon({
+    name: 'launcher:columns-icon',
+    svgstr: columnsIcon
+  });
+  const iconSearch = isDarkTheme ? darkIconSearch : new LabIcon({
+    name: 'launcher:search-icon',
+    svgstr: searchIcon
+  });
+
   const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
