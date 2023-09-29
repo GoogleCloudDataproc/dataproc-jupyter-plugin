@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-export const VERSION_DETAIL = "0.1.24"
+export const VERSION_DETAIL = "0.1.29"
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
@@ -122,15 +122,15 @@ export const SERVICE_ACCOUNT =
   'https://cloud.google.com/compute/docs/access/service-accounts';
 export const CUSTOM_CONTAINERS =
   'https://cloud.google.com/dataproc-serverless/docs/guides/custom-containers';
+export const SHARED_VPC='https://cloud.google.com/vpc/docs/shared-vpc';
 
-export const CUSTOM_CONTAINERS_MESSAGE =
-  'Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on Container Registry or Artifact Registry .';
 export const CONTAINER_REGISTERY = 'https://console.cloud.google.com/gcr';
 export const ARTIFACT_REGISTERY = 'https://console.cloud.google.com/artifacts';
 export const METASTORE_MESSAGE =
   'We recommend this option to persist table metadata when the batch finishes processing. A metastore can be shared across many serverless batches in different projects and GCP regions.';
 export const CUSTOM_CONTAINER_MESSAGE =
-  'Specify a custom container image to add Java or Python dependencies not provided by the default container image. You must host your custom container on';
+  'Specify a custom container image to add Java or Python dependencies not provided by the default container';
+export const CUSTOM_CONTAINER_MESSAGE_PART='image. You must host your custom container on';
 export const SPARK = 'Spark';
 export const SPARKSQL = 'SparkSQL';
 export const SPARKR = 'SparkR';

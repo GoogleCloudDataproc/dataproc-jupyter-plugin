@@ -96,6 +96,7 @@ const GcsBucketComponent = ({
   const [folderNameNew, setFolderNameNew] = useState('Untitled Folder');
 
   const [pollingDisable, setPollingDisable] = useState(false);
+
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingGCSlist = async (
@@ -402,27 +403,29 @@ const GcsBucketComponent = ({
                   itemOne.updated < itemTwo.updated ? -1 : 1
               );
               let transformBucketsData = [];
-              transformBucketsData = sortedResponse.map((data: {updated : Date, name: string}) => {
-                const updatedDate = new Date(data.updated);
-                const lastModified = lastModifiedFormat(updatedDate);
-                return {
-                  name: data.name,
-                  lastModified: lastModified,
-                  folderName:
-                    gcsFolderPath.length > 0
-                      ? data.name.split('/')[gcsFolderPath.length - 1]
-                      : data.name
-                };
-              });
+              transformBucketsData = sortedResponse.map(
+                (data: { updated: Date; name: string }) => {
+                  const updatedDate = new Date(data.updated);
+                  const lastModified = lastModifiedFormat(updatedDate);
+                  return {
+                    name: data.name,
+                    lastModified: lastModified,
+                    folderName:
+                      gcsFolderPath.length > 0
+                        ? data.name.split('/')[gcsFolderPath.length - 1]
+                        : data.name
+                  };
+                }
+              );
               transformBucketsData = transformBucketsData.filter(
-                (data: {folderName : string}) => {
+                (data: { folderName: string }) => {
                   return data.folderName !== '';
                 }
               );
               let finalBucketsData = [];
               finalBucketsData = [
                 ...new Map(
-                  transformBucketsData.map((item: {folderName: string}) => [
+                  transformBucketsData.map((item: { folderName: string }) => [
                     item['folderName'],
                     item
                   ])
@@ -473,7 +476,7 @@ const GcsBucketComponent = ({
 
       let datalist: any = [...bucketsList];
       let existingUntitled = 0;
-      datalist.forEach((data: {folderName: string}) => {
+      datalist.forEach((data: { folderName: string }) => {
         if (data.folderName.includes('Untitled Folder')) {
           existingUntitled = existingUntitled + 1;
         }
@@ -577,53 +580,64 @@ const GcsBucketComponent = ({
   };
 
   const fileUploadAction = () => {
-    uploadFileToGCS(inputFile.current?.files?.[0]);
+    const files = Array.from(inputFile.current?.files || []);
+
+    if (files.length > 0) {
+      files.forEach(file => {
+        uploadFilesToGCS(files);
+      });
+    }
   };
 
-  const uploadFileToGCS = async (payload: any) => {
+  const uploadFilesToGCS = async (files:File[]) => {
     const credentials = await authApi();
+    
     if (credentials) {
-      let prefixList = '';
-      gcsFolderPath.length > 1 &&
-        gcsFolderPath.slice(1).forEach((folderName: string) => {
-          if (prefixList === '') {
-            prefixList = prefixList + folderName;
-          } else {
-            prefixList = prefixList + '/' + folderName;
-          }
-        });
-      let newFileName = inputFile.current?.files?.[0].name;
-      if (prefixList !== '') {
-        newFileName = prefixList + '/' + inputFile.current?.files?.[0].name;
-      }
-      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`, {
-        method: 'POST',
-        body: payload,
-        headers: {
-          'Content-Type': payload.type,
-          Authorization: API_HEADER_BEARER + credentials.access_token
+      const promises = files.map(async (file:File) => {
+        let prefixList = '';
+        gcsFolderPath.length > 1 &&
+          gcsFolderPath.slice(1).forEach((folderName: string) => {
+            if (prefixList === '') {
+              prefixList = prefixList + folderName;
+            } else {
+              prefixList = prefixList + '/' + folderName;
+            }
+          });
+        let newFileName = file.name;
+        if (prefixList !== '') {
+          newFileName = prefixList + '/' + file.name;
         }
-      })
-        .then(async (response: Response) => {
+        
+        try {
+          const response = await fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`, {
+            method: 'POST',
+            body: file,
+            headers: {
+              'Content-Type': file.type,
+              Authorization: API_HEADER_BEARER + credentials.access_token,
+            },
+          });
+          
           if (response.ok) {
             const responseResult = await response.json();
-            toast.success(
-              `File ${inputFile.current?.files?.[0].name} successfully uploaded`,
-              toastifyCustomStyle
-            );
+            toast.success(`File ${file.name} successfully uploaded`, toastifyCustomStyle);
             console.log(responseResult);
             listBucketsAPI();
           } else {
             const errorResponse = await response.json();
             console.log(errorResponse);
           }
-        })
-        .catch((err: Error) => {
+        } catch (err) {
           console.error('Failed to upload file', err);
           toast.error(`Failed to upload file`, toastifyCustomStyle);
-        });
+        }
+      });
+  
+      await Promise.all(promises);
     }
   };
+  
+
 
   return (
     <>
@@ -646,6 +660,7 @@ const GcsBucketComponent = ({
                 ref={inputFile}
                 style={{ display: 'none' }}
                 onChange={fileUploadAction}
+                multiple 
               />
               <div onClick={handleFileChange}>
                 <iconGcsUpload.react tag="div" className="gcs-title-icons" />

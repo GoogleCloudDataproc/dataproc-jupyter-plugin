@@ -28,9 +28,10 @@ import {
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
+  CUSTOM_CONTAINER_MESSAGE_PART,
   HTTP_METHOD,
-  PROJECT_LIST_URL,
   REGION_URL,
+  //SHARED_VPC,
   STATUS_RUNNING,
   USER_INFO_URL
 } from '../utils/const';
@@ -55,29 +56,19 @@ import { KernelSpecAPI } from '@jupyterlab/services';
 import { ILauncher } from '@jupyterlab/launcher';
 import { DropdownProps } from 'semantic-ui-react';
 
-type Project = {
-  projectId: string;
-};
+import { DynamicDropdown } from '../controls/DynamicDropdown';
+import { projectListAPI } from '../utils/projectService';
+import { Autocomplete, TextField } from '@mui/material';
+
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
 });
 
-type Cluster = {
-  clusterName: string;
-  status: {
-    state: string;
-  };
-};
-
 type Network = {
   selfLink: string;
   network: string;
   subnetworks: string;
-};
-
-type Service = {
-  name: string;
 };
 
 const iconError = new LabIcon({
@@ -120,30 +111,22 @@ function CreateRunTime({
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
-  const [servicesList, setServicesList] = useState<
-    Array<{ key: string; value: string; text: string }>
-  >([]);
+  const [servicesList, setServicesList] = useState<string[]>([]);
   const [servicesSelected, setServicesSelected] = useState('');
   const [clusterSelected, setClusterSelected] = useState('');
-  const [projectId, setProjectId] = useState('None');
+  const [projectId, setProjectId] = useState<string | null>('');
   const [region, setRegion] = useState('');
-  const [projectList, setProjectList] = useState([{}]);
-  const [regionList, setRegionList] = useState<
-    { value: string; key: string; text: string }[]
-  >([]);
+
+  const [regionList, setRegionList] = useState<string[]>([]);
   const [containerImageSelected, setContainerImageSelected] = useState('');
   const [networkList, setNetworklist] = useState([{}]);
-  const [subNetworkList, setSubNetworklist] = useState<
-    { key: string; value: string; text: string }[]
-  >([]);
+  const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState('default');
   const [subNetworkSelected, setSubNetworkSelected] = useState('default');
   const [isLoadingService, setIsLoadingService] = useState(false);
   const [error, setError] = useState({ isOpen: false, message: '' });
-  const [clustersList, setClustersList] = useState<
-    Array<{ key: string; value: string; text: string }>
-  >([]);
+  const [clustersList, setClustersList] = useState<string[]>([]);
   const [runTimeValidation, setRuntimeValidation] = useState(false);
   const [descriptionValidation, setDescriptionValidation] = useState(false);
   const [displayNameValidation, setDisplayNameValidation] = useState(false);
@@ -158,8 +141,8 @@ function CreateRunTime({
   const [timeList, setTimeList] = useState([{}]);
   const [createTime, setCreateTime] = useState('');
   const [userInfo, setUserInfo] = useState('');
-  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
   const [duplicateValidation, setDuplicateValidation] = useState(false);
+  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
 
   useEffect(() => {
     const timeData = [
@@ -170,7 +153,6 @@ function CreateRunTime({
 
     setTimeList(timeData);
     updateLogic();
-    projectListAPI();
     listClustersAPI();
     listNetworksAPI();
   }, []);
@@ -409,25 +391,14 @@ function CreateRunTime({
         regionIdentifier: 'regions',
         queryParams: queryParams
       });
-      const formattedResponse: { clusters: Cluster[] } = await response.json();
-      let transformClusterListData = [];
-
-      transformClusterListData = formattedResponse.clusters.filter(
-        (data: Cluster) => {
-          if (data.status.state === STATUS_RUNNING) {
-            return {
-              clusterName: data.clusterName
-            };
-          }
-        }
-      );
-
-      const keyLabelStructure = transformClusterListData.map(obj => ({
-        key: obj.clusterName,
-        value: obj.clusterName,
-        text: obj.clusterName
-      }));
-      setClustersList(keyLabelStructure);
+      const formattedResponse = await response.json();
+      let transformClusterListData: string[] = [];
+      transformClusterListData = formattedResponse.clusters
+        .filter((data: { clusterName: string; status: { state: string } }) => {
+          return data.status.state === STATUS_RUNNING;
+        })
+        .map((data: { clusterName: string }) => data.clusterName);
+      setClustersList(transformClusterListData);
     } catch (error) {
       console.error('Error listing clusters', error);
       toast.error('Failed to list the clusters', toastifyCustomStyle);
@@ -450,16 +421,10 @@ function CreateRunTime({
 */
 
       transformedNetworkList = formattedResponse.items.map((data: Network) => {
-        return {
-          network: data.selfLink.split('/')[9]
-        };
+        return data.selfLink.split('/')[9];
       });
-      const keyLabelStructureNetwork = transformedNetworkList.map(obj => ({
-        key: obj.network,
-        value: obj.network,
-        text: obj.network
-      }));
-      setNetworklist(keyLabelStructureNetwork);
+
+      setNetworklist(transformedNetworkList);
     } catch (error) {
       console.error('Error listing Networks', error);
     }
@@ -485,13 +450,12 @@ function CreateRunTime({
           response
             .json()
             .then((responseResult: { subnetworks: string[] }) => {
-              let transformedSubNetworkList = [];
               /*
          Extracting  subnetworks from Network
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/subnetwork",
       */
 
-              transformedSubNetworkList = responseResult.subnetworks.map(
+              let transformedSubNetworkList = responseResult.subnetworks.map(
                 (data: string) => {
                   return {
                     subnetworks: data.split(
@@ -502,14 +466,9 @@ function CreateRunTime({
               );
               const keyLabelStructureSubNetwork = transformedSubNetworkList
                 .filter((obj: SubnetworkData) => obj.subnetworks !== undefined)
-                .map((obj: SubnetworkData) => ({
-                  key: obj.subnetworks,
-                  value: obj.subnetworks,
-                  text: obj.subnetworks
-                }));
+                .map((obj: SubnetworkData) => obj.subnetworks);
               setSubNetworklist(keyLabelStructureSubNetwork);
-              setDefaultValue(keyLabelStructureSubNetwork[0].value);
-              setSubNetworkSelected(keyLabelStructureSubNetwork[0].value);
+              setSubNetworkSelected(keyLabelStructureSubNetwork[0]);
             })
 
             .catch((e: Error) => {
@@ -538,26 +497,19 @@ function CreateRunTime({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { services: Service[] }) => {
-              let transformClusterListData = [];
-
-              transformClusterListData = responseResult.services.filter(
-                (data: Service) => {
-                  return {
-                    name: data.name
-                  };
-                }
-              );
-
-              const keyLabelStructure = transformClusterListData.map(obj => ({
-                key: obj.name,
-                value: obj.name,
-                text: obj.name
-              }));
-              const noneOption = { key: 'None', value: 'None', text: 'None' };
-              setServicesList([noneOption, ...keyLabelStructure]);
-              setIsLoadingService(false);
-            })
+            .then(
+              (responseResult: {
+                services: {
+                  name: string;
+                }[];
+              }) => {
+                const transformedServiceList = responseResult.services.map(
+                  (data: { name: string }) => data.name
+                );
+                setServicesList(transformedServiceList);
+                setIsLoadingService(false);
+              }
+            )
             .catch((e: Error) => {
               console.log(e);
               setIsLoadingService(false);
@@ -567,41 +519,6 @@ function CreateRunTime({
           console.error('Error listing services', err);
           setIsLoadingService(false);
         });
-    }
-  };
-
-  const projectListAPI = async () => {
-    try {
-      const credentials = await authApi();
-      if (!credentials) {
-        return;
-      }
-      const response = await fetch(PROJECT_LIST_URL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      });
-      const formattedResponse: { projects: Project[] } = await response.json();
-
-      let transformedProjectList = [];
-      transformedProjectList = formattedResponse.projects.map(
-        (data: Project) => {
-          return {
-            projectId: data.projectId
-          };
-        }
-      );
-      const keyLabelStructure = transformedProjectList.map(obj => ({
-        key: obj.projectId,
-        value: obj.projectId,
-        text: obj.projectId
-      }));
-      const noneOption = { key: 'None', value: 'None', text: 'None' };
-      setProjectList([noneOption, ...keyLabelStructure]);
-    } catch (error) {
-      console.error('Error fetching project list', error);
     }
   };
 
@@ -626,11 +543,7 @@ function CreateRunTime({
               let transformedRegionList = [];
               transformedRegionList = responseResult.items.map(
                 (data: Region) => {
-                  return {
-                    value: data.name,
-                    key: data.name,
-                    text: data.name
-                  };
+                  return data.name;
                 }
               );
               setRegionList(transformedRegionList);
@@ -689,11 +602,8 @@ function CreateRunTime({
     setVersionSelected(newVersion);
   };
 
-  const handleServiceSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setServicesSelected(data.value!.toString());
+  const handleServiceSelected = (data: string | null) => {
+    setServicesSelected(data!.toString());
   };
   const handleIdleSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -730,39 +640,27 @@ function CreateRunTime({
   ) => {
     setAutoSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
+  const handleProjectIdChange = (data: string | null) => {
+    setProjectId(data ?? '');
     setRegion('');
     setRegionList([]);
     setServicesList([]);
     setServicesSelected('');
-    regionListAPI(data.value!.toString());
-    setProjectId(data.value!.toString());
+    regionListAPI(data!.toString());
   };
-  const handleRegionChange = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: any
-  ) => {
+  const handleRegionChange = (data: any) => {
     setServicesSelected('');
     setServicesList([]);
-    setRegion(data.value);
-    listMetaStoreAPI(data.value);
+    setRegion(data);
+    listMetaStoreAPI(data);
   };
-  const handleNetworkChange = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setNetworkSelected(data.value!.toString());
+  const handleNetworkChange = (data: DropdownProps | null) => {
+    setNetworkSelected(data!.toString());
     setSubNetworkSelected(defaultValue);
-    listSubNetworksAPI(data.value!.toString());
+    listSubNetworksAPI(data!.toString());
   };
-  const handleSubNetworkChange = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setSubNetworkSelected(data.value!.toString());
+  const handleSubNetworkChange = (data: string | null) => {
+    setSubNetworkSelected(data!.toString());
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
@@ -771,11 +669,8 @@ function CreateRunTime({
     }
   };
 
-  const handleClusterSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setClusterSelected(data.value!.toString());
+  const handleClusterSelected = (data: string | null) => {
+    setClusterSelected(data!.toString());
   };
   const handleNetworkTags = (
     setDuplicateValidation: (value: boolean) => void,
@@ -1079,7 +974,7 @@ function CreateRunTime({
             }),
             ...(clusterSelected !== '' && {
               sparkHistoryServerConfig: {
-                dataprocCluster: `projects/${credentials.project_id}/locations/${credentials.region_id}/clusters/${clusterSelected}`
+                dataprocCluster: `projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`
               }
             })
           }
@@ -1199,57 +1094,92 @@ function CreateRunTime({
                 value={containerImageSelected}
                 onChange={e => setContainerImageSelected(e.target.value)}
                 type="text"
-                placeholder=""
+                placeholder="Enter URI, for example,gcr.io/my-project-id/my-image:1.0.1"
               />
             </div>
             <div className="create-custom-messagelist">
-              {CUSTOM_CONTAINER_MESSAGE}
-              <div className="create-container-message">
-                <div
-                  className="submit-job-learn-more"
-                  onClick={() => {
-                    window.open(`${CONTAINER_REGISTERY}`, '_blank');
-                  }}
-                >
-                  Container Registry
-                </div>
-                &nbsp;{'  or '}
-                <div
-                  className="submit-job-learn-more"
-                  onClick={() => {
-                    window.open(`${ARTIFACT_REGISTERY}`, '_blank');
-                  }}
-                >
-                  Artifact Registry
-                </div>
-                {' . '}
-                <div
-                  className="submit-job-learn-more"
-                  onClick={() => {
-                    window.open(`${CUSTOM_CONTAINERS}`, '_blank');
-                  }}
-                >
-                  Learn more
-                </div>
+              {CUSTOM_CONTAINER_MESSAGE}{' '}
+            </div>
+            <div className="create-container-message">
+              <div className="create-container-image-message">
+                {CUSTOM_CONTAINER_MESSAGE_PART}
+              </div>
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${CONTAINER_REGISTERY}`, '_blank');
+                }}
+              >
+                Container Registry
+              </div>
+              &nbsp; <div className="create-container-image-message">or</div>
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${ARTIFACT_REGISTERY}`, '_blank');
+                }}
+              >
+                Artifact Registry
+              </div>
+              {' . '}
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+                }}
+              >
+                Learn more
               </div>
             </div>
             <div className="submit-job-label-header">Network Configuration</div>
             <div className="runtime-message">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="runtime-message">Networks in this project</div>
-
             <div>
-              {isloadingNetwork ? (
-                <div className="metastore-loader">
-                  <ClipLoader
-                    loading={true}
-                    size={25}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
+              <div className="runtime-message">Networks in this project</div>
+              {/* Placeholder FOR SHARED VPC NETWORK */}
+              {/* <div className="create-runtime-radio">
+                <Radio
+                  size="small"
+                  className="select-batch-radio-style"
+                  value="projectNetwork"
+                  checked={selectedNetworkRadio === 'projectNetwork'}
+                  onChange={() => setSelectedNetworkRadio('projectNetwork')}
+                />
+                <div className="create-batch-message">
+                  Networks in this project
                 </div>
-              ) : (
+              </div> */}
+            </div>
+            {/* <div>
+              <div className="create-runtime-radio">
+                <Radio
+                  size="small"
+                  className="select-batch-radio-style"
+                  value="sharedVpc"
+                  checked={selectedNetworkRadio === 'sharedVpc'}
+                  onChange={() => setSelectedNetworkRadio('sharedVpc')}
+                />
+                <div className="create-batch-message">
+                  Networks shared from host project: ""
+                </div>
+              </div>
+              <div className="create-runtime-sub-message-network">
+                Choose a shared VPC network from project that is different from
+                this cluster's project.{' '}
+                <div
+                  className="submit-job-learn-more"
+                  onClick={() => {
+                    window.open(`${SHARED_VPC}`, '_blank');
+                  }}
+                >
+                  Learn more
+                </div>
+              </div>
+            </div> */}
+
+            {/* <div>
+              {selectedNetworkRadio === 'projectNetwork' && (
                 <div className="create-batch-network">
                   <div className="select-text-overlay">
                     <label
@@ -1286,6 +1216,60 @@ function CreateRunTime({
                   </div>
                 </div>
               )}
+              {/* {selectedNetworkRadio === 'sharedVpc' && (
+                <div className="select-text-overlay">
+                  <label
+                    className="select-dropdown-text"
+                    htmlFor="shared-subnetwork"
+                  >
+                    Shared subnetwork
+                  </label>
+                  <Select
+                    className="project-region-select"
+                    search
+                    selection
+                    placeholder={''}
+                    value={''}
+                    //onChange={}
+                    options={[]}
+                  />
+                </div>
+              )} 
+            </div> */}
+            <div>
+              {isloadingNetwork ? (
+                <div className="metastore-loader">
+                  <ClipLoader
+                    loading={true}
+                    size={25}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                </div>
+              ) : (
+                <div className="create-batch-network">
+                  <div className="select-text-overlay">
+                    <Autocomplete
+                      options={networkList}
+                      value={networkSelected}
+                      onChange={(_event, val) => handleNetworkChange(val)}
+                      renderInput={params => (
+                        <TextField {...params} label="Primary network*" />
+                      )}
+                    />
+                  </div>
+                  <div className="select-text-overlay subnetwork-style">
+                    <Autocomplete
+                      options={subNetworkList}
+                      value={subNetworkSelected}
+                      onChange={(_event, val) => handleSubNetworkChange(val)}
+                      renderInput={params => (
+                        <TextField {...params} label="subnetwork" />
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
@@ -1318,30 +1302,23 @@ function CreateRunTime({
             <div className="submit-job-label-header">Metastore</div>
 
             <div className="select-text-overlay">
-              <label
-                className="select-dropdown-text"
-                htmlFor="metastore-project"
-              >
-                Metastore project
-              </label>
-              <Select
-                className="project-region-select"
-                search
-                selection
-                placeholder={projectId}
+              <DynamicDropdown
                 value={projectId}
-                onChange={handleProjectIdChange}
-                options={projectList}
+                onChange={(_, projectId) => handleProjectIdChange(projectId)}
+                fetchFunc={projectListAPI}
+                label="Project ID"
+                // Always show the clear indicator and hide the dropdown arrow
+                // make it very clear that this is an autocomplete.
+                sx={{
+                  '& .MuiAutocomplete-clearIndicator': {
+                    visibility: 'hidden'
+                  }
+                }}
+                popupIcon={null}
               />
             </div>
 
             <div className="select-text-overlay">
-              <label
-                className="select-dropdown-text"
-                htmlFor="metastore-region"
-              >
-                Metastore region
-              </label>
               {isLoadingRegion ? (
                 <div className="metastore-loader">
                   <ClipLoader
@@ -1352,25 +1329,18 @@ function CreateRunTime({
                   />
                 </div>
               ) : (
-                <Select
-                  className="project-region-select"
-                  search
-                  selection
-                  placeholder={region}
-                  value={region}
-                  onChange={handleRegionChange}
+                <Autocomplete
                   options={regionList}
+                  value={region}
+                  onChange={(_event, val) => handleRegionChange(val)}
+                  renderInput={params => (
+                    <TextField {...params} label="Metastore region" />
+                  )}
                 />
               )}
             </div>
 
             <div className="select-text-overlay">
-              <label
-                className="select-dropdown-text"
-                htmlFor="metastore-service"
-              >
-                Metastore service
-              </label>
               {isLoadingService ? (
                 <div className="metastore-loader">
                   <ClipLoader
@@ -1381,22 +1351,17 @@ function CreateRunTime({
                   />
                 </div>
               ) : (
-                <Select
-                  className="project-region-select"
-                  search
-                  selection
-                  value={servicesSelected}
-                  type="text"
+                <Autocomplete
                   options={servicesList}
-                  onChange={handleServiceSelected}
-                  placeholder={servicesSelected}
+                  value={servicesSelected}
+                  onChange={(_event, val) => handleServiceSelected(val)}
+                  renderInput={params => (
+                    <TextField {...params} label="Metastore services" />
+                  )}
                 />
               )}
             </div>
 
-            {/* <div className="single-line">
-              <div className="create-batches-subMessage"></div>
-            </div> */}
             <div className="single-line">
               <div className="select-text-overlay">
                 <label className="select-title-text" htmlFor="max-idle-time">
@@ -1490,21 +1455,13 @@ function CreateRunTime({
               Choose a history server cluster to store logs in.{' '}
             </div>
             <div className="select-text-overlay">
-              <label
-                className="select-dropdown-text"
-                htmlFor="history-server-cluster"
-              >
-                History server cluster
-              </label>
-
-              <Select
-                className="project-region-select"
-                search
-                clearable
-                value={clusterSelected}
-                onChange={handleClusterSelected}
+              <Autocomplete
                 options={clustersList}
-                placeholder=""
+                value={clusterSelected}
+                onChange={(_event, val) => handleClusterSelected(val)}
+                renderInput={params => (
+                  <TextField {...params} label="History server cluster" />
+                )}
               />
             </div>
             <div className="submit-job-label-header">Spark Properties</div>
@@ -1537,7 +1494,7 @@ function CreateRunTime({
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
             />
-            <div className="job-button-style-parent button-alignment">
+            <div className="job-button-style-parent">
               <div
                 className={
                   isSaveDisabled()

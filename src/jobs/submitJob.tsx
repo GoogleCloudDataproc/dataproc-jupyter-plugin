@@ -42,6 +42,7 @@ import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
+import { Autocomplete, TextField } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -117,9 +118,11 @@ const handleOptionalFields = (selectedJobClone: any, jobTypeKey: string) => {
     maxFailuresPerHour
   };
 };
-function SubmitJob(
-  { setSubmitJobView, selectedJobClone, clusterResponse }: any
-) {
+function SubmitJob({
+  setSubmitJobView,
+  selectedJobClone,
+  clusterResponse
+}: any) {
   const [clusterList, setClusterList] = useState([{}]);
   const [jobTypeList, setJobTypeList] = useState([{}]);
   const [querySourceTypeList, setQuerySourceTypeList] = useState([{}]);
@@ -242,10 +245,9 @@ function SubmitJob(
   };
 
   const handleClusterSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
+    data: DropdownProps|null
   ) => {
-    setClusterSelected(data.value!.toString());
+    setClusterSelected(data!.toString());
   };
 
   const handleJobTypeSelected = (
@@ -281,18 +283,15 @@ function SubmitJob(
     transformClusterListData = clusterResponse.clusters.filter(
       (data: IClusterData) => {
         if (data.status.state === STATUS_RUNNING) {
-          return {
-            clusterName: data.clusterName
-          };
+            return data.clusterName
         }
       }
     );
 
-    const keyLabelStructure = transformClusterListData.map((obj: {clusterName : string}) => ({
-      key: obj.clusterName,
-      value: obj.clusterName,
-      text: obj.clusterName
-    }));
+    const keyLabelStructure = transformClusterListData.map(
+      (obj: { clusterName: string }) => 
+         obj.clusterName
+    );
 
     setClusterList(keyLabelStructure);
     const jobTypeData = [
@@ -788,16 +787,13 @@ function SubmitJob(
             />
           ) : (
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-project">
-                Cluster*
-              </label>
-              <Select
-                className="project-region-select"
-                search
-                placeholder=""
-                onChange={handleClusterSelected}
+              <Autocomplete
                 options={clusterList}
                 value={clusterSelected}
+                onChange={(_event, val) => handleClusterSelected(val)}
+                renderInput={params => (
+                  <TextField {...params} label="Cluster*" />
+                )}
               />
             </div>
           )}
@@ -1309,7 +1305,7 @@ function SubmitJob(
             duplicateKeyError={duplicateKeyError}
             setDuplicateKeyError={setDuplicateKeyError}
           />
-          <div className="job-button-style-parent button-alignment">
+          <div className="job-button-style-parent">
             <div
               className={
                 submitDisabled
