@@ -80,7 +80,8 @@ function LabelProperties({
     }
   }, []);
 
-  const handleAddLabel = () => {
+  const handleAddLabel = (event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
     const labelAdd = [...labelDetail];
     labelAdd.push(':');
     setLabelDetailUpdated(labelAdd);
@@ -331,10 +332,10 @@ function LabelProperties({
           })}
         <button
           className={styleAddLabelButton(buttonText, labelDetail)}
-          onClick={() => {
+          onClick={(e : React.MouseEvent<HTMLElement>) => {
             (labelDetail.length === 0 ||
               labelDetail[labelDetail.length - 1].split(':')[0].length > 0) &&
-              handleAddLabel();
+              handleAddLabel(e);
           }}
         >
           {labelDetail.length === 0 ||

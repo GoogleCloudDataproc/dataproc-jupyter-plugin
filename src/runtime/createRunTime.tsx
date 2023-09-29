@@ -670,7 +670,7 @@ function CreateRunTime({
   };
 
   const handleClusterSelected = (data: string | null) => {
-    setClusterSelected(data!.toString());
+    setClusterSelected(data ?? '');
   };
   const handleNetworkTags = (
     setDuplicateValidation: (value: boolean) => void,
@@ -1477,7 +1477,7 @@ function CreateRunTime({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
-              selectedRuntimeClone={selectedRuntimeClone}
+              selectedRuntimeClone={selectedRuntimeClone ? true : false}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
