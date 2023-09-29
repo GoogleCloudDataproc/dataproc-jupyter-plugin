@@ -332,10 +332,24 @@ function LabelProperties({
           })}
         <button
           className={styleAddLabelButton(buttonText, labelDetail)}
-          onClick={(e : React.MouseEvent<HTMLElement>) => {
-            (labelDetail.length === 0 ||
-              labelDetail[labelDetail.length - 1].split(':')[0].length > 0) &&
-              handleAddLabel(e);
+          onClick={e => {
+            const buttonClasses = e.currentTarget.className;
+            const isDisabled =
+              buttonClasses.includes('job-add-label-button-disabled') ||
+              buttonClasses.includes('job-add-property-button-disabled');
+
+            if (!isDisabled) {
+              if (
+                labelDetail.length === 0 ||
+                labelDetail[labelDetail.length - 1].split(':')[0].length > 0
+              ) {
+                console.log('handleaddlabel');
+                handleAddLabel(e);
+              }
+            }
+            else{
+              e.preventDefault();
+            }
           }}
         >
           {labelDetail.length === 0 ||
