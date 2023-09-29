@@ -620,7 +620,6 @@ const GcsBucketComponent = ({
 
   const uploadFilesToGCS = async (files: File[]) => {
     const credentials = await authApi();
-    let successfullyUploadedCount = 0;
 
     if (credentials) {
       const promises = files.map(async (file: File) => {
@@ -653,28 +652,17 @@ const GcsBucketComponent = ({
 
           if (response.ok) {
             const responseResult = await response.json();
-            successfullyUploadedCount++;
+            toast.success(`Upload successful`, toastifyCustomStyle);
             console.log(responseResult);
+            listBucketsAPI();
           } else {
             const errorResponse = await response.json();
             console.log(errorResponse);
           }
-          if (successfullyUploadedCount > 1) {
-            toast.success(
-              `Multiple files uploaded successfully`,
-              toastifyCustomStyle
-            );
-            listBucketsAPI();
-          } else {
-            toast.success(
-              `File ${file.name} successfully uploaded `,
-              toastifyCustomStyle
-            );
-            listBucketsAPI();
-          }
+        
         } catch (err) {
-          console.error('Failed to upload file', err);
-          toast.error(`Failed to upload file`, toastifyCustomStyle);
+          console.error('Upload failed', err);
+          toast.error(`Upload failed`, toastifyCustomStyle);
         }
       });
 
