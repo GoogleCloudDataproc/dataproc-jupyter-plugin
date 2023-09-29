@@ -29,6 +29,7 @@
   height: 32px;
   background: var(--jp-layout-color0);
   color: var(--jp-ui-font-color2);
+  border: none;
 }
 .submit-job-message-input {
   font-style: normal;
@@ -108,7 +109,7 @@
 }
 
 .submit-job-input-style {
-  background: #ffffff;
+  background: var(--jp-layout-color0);
   width: 512px;
   height: 36px;
   outline: none;

@@ -125,8 +125,8 @@ function CreateBatch({
   let serviceAccount = '';
   let subNetwork = 'default';
   let network = 'default';
-  let historyServer = 'None';
-  let historyServerValue = 'None';
+  let historyServer = '';
+  let historyServerValue = '';
   let metastoreService = '';
   let metaProject = '';
   let metaRegion = '';
@@ -190,7 +190,7 @@ function CreateBatch({
       historyServerValue =
         batchInfoResponse?.environmentConfig?.peripheralsConfig
           ?.sparkHistoryServerConfig?.dataprocCluster || 'None';
-      if (historyServerValue !== 'None') {
+      if (historyServerValue !== '') {
         const parts = historyServerValue.split('/'); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
         historyServer = parts[parts.length - 1];
       }
@@ -1030,7 +1030,7 @@ function CreateBatch({
           metastoreService: servicesSelected
         }),
         ...(clusterSelected !== '' &&
-          clusterSelected !== 'None' && {
+          clusterSelected !== '' && {
             sparkHistoryServerConfig: {
               dataprocCluster: `projects/${projectName}/regions/${regionName}/clusters/${clusterSelected}`
             } as SparkHistoryServerConfig
@@ -1205,7 +1205,7 @@ function CreateBatch({
   };
 
   const handleClusterSelected = (data: string | null) => {
-    setClusterSelected(data!.toString());
+    setClusterSelected(data??'');
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;

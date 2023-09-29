@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { ReactWidget } from '@jupyterlab/apputils';
+
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useState, useEffect, useRef } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -43,9 +43,14 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import * as path from 'path';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
-
+import { IThemeManager } from '@jupyterlab/apputils';
 import searchIcon from '../../style/icons/search_icon.svg';
 import searchClearIcon from '../../style/icons/search_clear_icon.svg';
+import { DataprocWidget } from '../controls/DataprocWidget';
+import darkSearchIcon from '../../style/icons/search_icon_dark.svg';
+import darkSearchClearIcon from '../../style/icons/dark_search_clear_icon.svg';
+import darkGcsFileIcon from '../../style/icons/gcs_file_icon_dark.svg';
+import darkGcsFolderIcon from '../../style/icons/gcs_folder_icon_dark.svg';
 
 const iconGcsFolderNew = new LabIcon({
   name: 'launcher:gcs-folder-new-icon',
@@ -55,33 +60,52 @@ const iconGcsUpload = new LabIcon({
   name: 'launcher:gcs-upload-icon',
   svgstr: gcsUploadIcon
 });
-const iconGcsFolder = new LabIcon({
-  name: 'launcher:gcs-folder-icon',
-  svgstr: gcsFolderIcon
+
+const darkIconSearchClear = new LabIcon({
+  name: 'launcher:dark-search-clear-icon',
+  svgstr: darkSearchClearIcon
 });
-const iconGcsFile = new LabIcon({
-  name: 'launcher:gcs-file-icon',
-  svgstr: gcsFileIcon
+const darkIconSearch = new LabIcon({
+  name: 'launcher:dark-search-icon',
+  svgstr: darkSearchIcon
+});
+const darkIconGcsFile = new LabIcon({
+  name: 'launcher:dark-gcs-file-icon',
+  svgstr: darkGcsFileIcon
+});
+const darkIconGcsFolder = new LabIcon({
+  name: 'launcher:dark-gcs-folder-icon',
+  svgstr: darkGcsFolderIcon
 });
 
-const iconSearch = new LabIcon({
-  name: 'launcher:search-icon',
-  svgstr: searchIcon
-});
-const iconSearchClear = new LabIcon({
-  name: 'launcher:search-clear-icon',
-  svgstr: searchClearIcon
-});
 
 const GcsBucketComponent = ({
   app,
-  factory
+  factory,
+  themeManager
 }: {
   app: JupyterLab;
   factory: IFileBrowserFactory;
+  themeManager: IThemeManager;
 }): JSX.Element => {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
+  const iconSearch = isDarkTheme ? darkIconSearch : new LabIcon({
+    name: 'launcher:search-icon',
+    svgstr: searchIcon
+  });
+  const iconSearchClear = isDarkTheme ? darkIconSearchClear  : new LabIcon({
+    name: 'launcher:search-clear-icon',
+    svgstr: searchClearIcon
+  });
+  const iconGcsFile = isDarkTheme ? darkIconGcsFile : new LabIcon({
+    name: 'launcher:gcs-file-icon',
+    svgstr: gcsFileIcon
+  });
+  const iconGcsFolder = isDarkTheme ? darkIconGcsFolder : new LabIcon({
+    name: 'launcher:gcs-folder-icon',
+    svgstr: gcsFolderIcon
+  });
   const [searchTerm, setSearchTerm] = useState('');
-
   const inputFile = useRef<HTMLInputElement | null>(null);
   const [bucketsList, setBucketsList] = useState([]);
   const [bucketsListUpdate, setBucketsListUpdate] = useState([]);
@@ -737,17 +761,18 @@ const GcsBucketComponent = ({
   );
 };
 
-export class GcsBucket extends ReactWidget {
+export class GcsBucket extends DataprocWidget {
   app: JupyterLab;
   factory: IFileBrowserFactory;
+  themeManager!: IThemeManager;
 
-  constructor(app: JupyterLab, factory: IFileBrowserFactory) {
-    super();
+  constructor(app: JupyterLab, factory: IFileBrowserFactory,themeManager: IThemeManager) {
+    super(themeManager);
     this.app = app;
     this.factory = factory;
   }
 
-  render(): JSX.Element {
-    return <GcsBucketComponent app={this.app} factory={this.factory} />;
+  renderInternal(): JSX.Element {
+    return <GcsBucketComponent app={this.app} factory={this.factory} themeManager={this.themeManager} />;
   }
 }

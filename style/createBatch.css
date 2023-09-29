@@ -100,7 +100,7 @@
 }
 
 .create-batch-style-mini {
-  background: #ffffff;
+  background: var(--jp-layout-color0);
   width: 473px;
   height: 36px;
   outline: none;
