@@ -396,6 +396,7 @@ const GcsBucketComponent = ({
   }
   const listBucketsAPI = async () => {
     const credentials = await authApi();
+  
     if (credentials) {
       let prefixList = '';
       gcsFolderPath.length > 1 &&
@@ -406,29 +407,26 @@ const GcsBucketComponent = ({
             prefixList = prefixList + '/' + folderName;
           }
         });
+  
       let apiURL =
         gcsFolderPath.length === 0
           ? `${GCS_URL}?project=${credentials.project_id}`
           : gcsFolderPath.length === 1
           ? `${GCS_URL}/${gcsFolderPath[0]}/o`
           : `${GCS_URL}/${gcsFolderPath[0]}/o?prefix=${prefixList}/`;
+  
       fetch(apiURL, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
+          Authorization: API_HEADER_BEARER + credentials.access_token,
+        },
       })
         .then((response: Response) => {
           response
             .json()
             .then((responseResult: IBucketItem) => {
-              let sortedResponse = responseResult.items.sort(
-                (itemOne: IBucketItem, itemTwo: IBucketItem) =>
-                  itemOne.updated < itemTwo.updated ? -1 : 1
-              );
-              let transformBucketsData = [];
-              transformBucketsData = sortedResponse.map(
-                (data: { updated: Date; name: string }) => {
+              let transformBucketsData = responseResult.items.map(
+                (data: { updated: Date; name: string; contentType: string }) => {
                   const updatedDate = new Date(data.updated);
                   const lastModified = lastModifiedFormat(updatedDate);
                   return {
@@ -437,35 +435,48 @@ const GcsBucketComponent = ({
                     folderName:
                       gcsFolderPath.length > 0
                         ? data.name.split('/')[gcsFolderPath.length - 1]
-                        : data.name
+                        : data.name,
+                    contentType: data.contentType,
                   };
                 }
               );
+  
+              // Filter out items with an empty folderName
               transformBucketsData = transformBucketsData.filter(
                 (data: { folderName: string }) => {
                   return data.folderName !== '';
                 }
               );
-              let finalBucketsData = [];
-              finalBucketsData = [
-                ...new Map(
-                  transformBucketsData.map((item: { folderName: string }) => [
-                    item['folderName'],
-                    item
-                  ])
-                ).values()
-              ];
-              finalBucketsData = finalBucketsData.sort(
-                (itemOne: any, itemTwo: any) =>
-                  itemOne.folderName < itemTwo.folderName ? -1 : 1
+  
+              // Sort the items so that folders come first, then files, based on content type
+              transformBucketsData.sort(
+                (itemOne: { folderName: string; contentType: string }, itemTwo: { folderName: string; contentType: string }) => {
+                  const isFolderOne = itemOne.contentType === 'Folder';
+                  const isFolderTwo = itemTwo.contentType === 'Folder';
+  
+                  // Sort folders first, then files
+                  if (isFolderOne && !isFolderTwo) {
+                    return -1;
+                  } else if (!isFolderOne && isFolderTwo) {
+                    return 1;
+                  } else {
+                    // If both are folders or both are files, sort alphabetically
+                    return itemOne.folderName.localeCompare(itemTwo.folderName);
+                  }
+                }
               );
-              finalBucketsData = finalBucketsData.filter((item: any) => {
-                return item.folderName.includes(searchTerm);
-              });
+  
+              // Filter items that include the searchTerm
+              transformBucketsData = transformBucketsData.filter(
+                (item: { folderName: string }) => {
+                  return item.folderName.includes(searchTerm);
+                }
+              );
+  
               //@ts-ignore
-              setBucketsList(finalBucketsData);
+              setBucketsList(transformBucketsData);
               //@ts-ignore
-              setBucketsListUpdate(finalBucketsData);
+              setBucketsListUpdate(transformBucketsData);
               setIsLoading(false);
             })
             .catch((e: Error) => {
@@ -482,7 +493,9 @@ const GcsBucketComponent = ({
         });
     }
   };
-
+  
+  
+  
   useEffect(() => {
     listBucketsAPI();
     pollingGCSlist(listBucketsAPI, pollingDisable);
@@ -613,11 +626,12 @@ const GcsBucketComponent = ({
     }
   };
 
-  const uploadFilesToGCS = async (files:File[]) => {
+  const uploadFilesToGCS = async (files: File[]) => {
     const credentials = await authApi();
-    
+    let successfullyUploadedCount = 0;
+  
     if (credentials) {
-      const promises = files.map(async (file:File) => {
+      const promises = files.map(async (file: File) => {
         let prefixList = '';
         gcsFolderPath.length > 1 &&
           gcsFolderPath.slice(1).forEach((folderName: string) => {
@@ -631,7 +645,7 @@ const GcsBucketComponent = ({
         if (prefixList !== '') {
           newFileName = prefixList + '/' + file.name;
         }
-        
+  
         try {
           const response = await fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`, {
             method: 'POST',
@@ -641,16 +655,22 @@ const GcsBucketComponent = ({
               Authorization: API_HEADER_BEARER + credentials.access_token,
             },
           });
-          
+  
           if (response.ok) {
             const responseResult = await response.json();
-            toast.success(`File ${file.name} successfully uploaded`, toastifyCustomStyle);
+            successfullyUploadedCount++; 
             console.log(responseResult);
-            listBucketsAPI();
           } else {
             const errorResponse = await response.json();
             console.log(errorResponse);
           }
+           if (successfullyUploadedCount === files.length) {
+      
+        toast.success(`Files uploaded successfully`, toastifyCustomStyle);
+        listBucketsAPI();
+      } else {
+        toast.success(`File uploaded successfully`, toastifyCustomStyle);
+      }
         } catch (err) {
           console.error('Failed to upload file', err);
           toast.error(`Failed to upload file`, toastifyCustomStyle);
@@ -658,6 +678,8 @@ const GcsBucketComponent = ({
       });
   
       await Promise.all(promises);
+  
+     
     }
   };
   
