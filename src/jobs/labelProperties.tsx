@@ -343,7 +343,6 @@ function LabelProperties({
                 labelDetail.length === 0 ||
                 labelDetail[labelDetail.length - 1].split(':')[0].length > 0
               ) {
-                console.log('handleaddlabel');
                 handleAddLabel(e);
               }
             }
