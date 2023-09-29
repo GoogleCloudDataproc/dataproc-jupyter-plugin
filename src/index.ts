@@ -97,11 +97,9 @@ const extension: JupyterFrontEndPlugin<void> = {
     themeManager.themeChanged.connect((sender, args) => {
       const isLightTheme = themeManager.isLight(args.newValue);
       if (isLightTheme) {
-     console.log("light");
          panel.title.icon = iconDpms;
          panelGcs.title.icon = iconStorage; 
       } else {
-        console.log("dark");
         panel.title.icon = iconDpmsDark
         panelGcs.title.icon = iconStorageDark; 
       }
@@ -127,7 +125,6 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const panelGcs = new Panel();
     panelGcs.id = 'GCS-bucket-tab';
-    // panelGcs.title.icon = iconStorage; 
     panelGcs.addWidget(new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory, themeManager));
     app.shell.add(panelGcs, 'left', { rank: 1001 });
 
