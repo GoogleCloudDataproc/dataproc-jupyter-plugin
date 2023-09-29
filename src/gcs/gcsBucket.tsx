@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useState, useEffect, useRef } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -78,7 +77,6 @@ const darkIconGcsFolder = new LabIcon({
   svgstr: darkGcsFolderIcon
 });
 
-
 const GcsBucketComponent = ({
   app,
   factory,
@@ -89,22 +87,30 @@ const GcsBucketComponent = ({
   themeManager: IThemeManager;
 }): JSX.Element => {
   const isDarkTheme = !themeManager.isLight(themeManager.theme!);
-  const iconSearch = isDarkTheme ? darkIconSearch : new LabIcon({
-    name: 'launcher:search-icon',
-    svgstr: searchIcon
-  });
-  const iconSearchClear = isDarkTheme ? darkIconSearchClear  : new LabIcon({
-    name: 'launcher:search-clear-icon',
-    svgstr: searchClearIcon
-  });
-  const iconGcsFile = isDarkTheme ? darkIconGcsFile : new LabIcon({
-    name: 'launcher:gcs-file-icon',
-    svgstr: gcsFileIcon
-  });
-  const iconGcsFolder = isDarkTheme ? darkIconGcsFolder : new LabIcon({
-    name: 'launcher:gcs-folder-icon',
-    svgstr: gcsFolderIcon
-  });
+  const iconSearch = isDarkTheme
+    ? darkIconSearch
+    : new LabIcon({
+        name: 'launcher:search-icon',
+        svgstr: searchIcon
+      });
+  const iconSearchClear = isDarkTheme
+    ? darkIconSearchClear
+    : new LabIcon({
+        name: 'launcher:search-clear-icon',
+        svgstr: searchClearIcon
+      });
+  const iconGcsFile = isDarkTheme
+    ? darkIconGcsFile
+    : new LabIcon({
+        name: 'launcher:gcs-file-icon',
+        svgstr: gcsFileIcon
+      });
+  const iconGcsFolder = isDarkTheme
+    ? darkIconGcsFolder
+    : new LabIcon({
+        name: 'launcher:gcs-folder-icon',
+        svgstr: gcsFolderIcon
+      });
   const [searchTerm, setSearchTerm] = useState('');
   const inputFile = useRef<HTMLInputElement | null>(null);
   const [bucketsList, setBucketsList] = useState([]);
@@ -482,7 +488,6 @@ const GcsBucketComponent = ({
         });
     }
   };
-
   useEffect(() => {
     listBucketsAPI();
     pollingGCSlist(listBucketsAPI, pollingDisable);
@@ -613,11 +618,12 @@ const GcsBucketComponent = ({
     }
   };
 
-  const uploadFilesToGCS = async (files:File[]) => {
+  const uploadFilesToGCS = async (files: File[]) => {
     const credentials = await authApi();
-    
+    let successfullyUploadedCount = 0;
+
     if (credentials) {
-      const promises = files.map(async (file:File) => {
+      const promises = files.map(async (file: File) => {
         let prefixList = '';
         gcsFolderPath.length > 1 &&
           gcsFolderPath.slice(1).forEach((folderName: string) => {
@@ -631,37 +637,50 @@ const GcsBucketComponent = ({
         if (prefixList !== '') {
           newFileName = prefixList + '/' + file.name;
         }
-        
+
         try {
-          const response = await fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`, {
-            method: 'POST',
-            body: file,
-            headers: {
-              'Content-Type': file.type,
-              Authorization: API_HEADER_BEARER + credentials.access_token,
-            },
-          });
-          
+          const response = await fetch(
+            `${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`,
+            {
+              method: 'POST',
+              body: file,
+              headers: {
+                'Content-Type': file.type,
+                Authorization: API_HEADER_BEARER + credentials.access_token
+              }
+            }
+          );
+
           if (response.ok) {
             const responseResult = await response.json();
-            toast.success(`File ${file.name} successfully uploaded`, toastifyCustomStyle);
+            successfullyUploadedCount++;
             console.log(responseResult);
-            listBucketsAPI();
           } else {
             const errorResponse = await response.json();
             console.log(errorResponse);
+          }
+          if (successfullyUploadedCount > 1) {
+            toast.success(
+              `Multiple files uploaded successfully`,
+              toastifyCustomStyle
+            );
+            listBucketsAPI();
+          } else {
+            toast.success(
+              `File ${file.name} successfully uploaded `,
+              toastifyCustomStyle
+            );
+            listBucketsAPI();
           }
         } catch (err) {
           console.error('Failed to upload file', err);
           toast.error(`Failed to upload file`, toastifyCustomStyle);
         }
       });
-  
+
       await Promise.all(promises);
     }
   };
-  
-
 
   return (
     <>
@@ -684,7 +703,7 @@ const GcsBucketComponent = ({
                 ref={inputFile}
                 style={{ display: 'none' }}
                 onChange={fileUploadAction}
-                multiple 
+                multiple
               />
               <div onClick={handleFileChange}>
                 <iconGcsUpload.react tag="div" className="gcs-title-icons" />
@@ -766,13 +785,23 @@ export class GcsBucket extends DataprocWidget {
   factory: IFileBrowserFactory;
   themeManager!: IThemeManager;
 
-  constructor(app: JupyterLab, factory: IFileBrowserFactory,themeManager: IThemeManager) {
+  constructor(
+    app: JupyterLab,
+    factory: IFileBrowserFactory,
+    themeManager: IThemeManager
+  ) {
     super(themeManager);
     this.app = app;
     this.factory = factory;
   }
 
   renderInternal(): JSX.Element {
-    return <GcsBucketComponent app={this.app} factory={this.factory} themeManager={this.themeManager} />;
+    return (
+      <GcsBucketComponent
+        app={this.app}
+        factory={this.factory}
+        themeManager={this.themeManager}
+      />
+    );
   }
 }
