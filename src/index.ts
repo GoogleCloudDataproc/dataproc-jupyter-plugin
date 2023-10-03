@@ -37,8 +37,8 @@ import serverlessIcon from '../style/icons/serverless_icon.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
-import { Kernel, KernelSpecAPI } from '@jupyterlab/services';
-import { iconDisplay } from './utils/utils';
+import { Kernel, KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
+import { authenticatedFetch, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import {
@@ -46,11 +46,7 @@ import {
   NotebookPanel,
   INotebookModel
 } from '@jupyterlab/notebook';
-const iconDpms = new LabIcon({
-  name: 'launcher:dpms-icon',
-  svgstr: dpmsIcon
-});
-import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
+import { HTTP_METHOD, SPARK_HISTORY_SERVER, TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import { GcsBucket } from './gcs/gcsBucket';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
@@ -59,16 +55,28 @@ import { IDisposable, DisposableDelegate } from '@lumino/disposable';
 import { SessionTemplate } from './sessions/sessionTemplate';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
-
+import logsIcon from '../style/icons/logs_icon.svg';
+import sessionLogsIcon from '../style/icons/session_logs_icon.svg'
+const iconLogs = new LabIcon({
+  name: 'launcher:logs-icon',
+  svgstr: logsIcon
+});
+const iconDpms = new LabIcon({
+  name: 'launcher:dpms-icon',
+  svgstr: dpmsIcon
+});
+const iconSessionLogs = new LabIcon({
+  name: 'launcher:session-logs-icon',
+  svgstr: sessionLogsIcon
+});
 export class ButtonExtension
   implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
 {
-  private app: JupyterFrontEnd; // Store the app object
+  private app: JupyterFrontEnd;
   private launcher: ILauncher;
   private themeManager: IThemeManager;
 
-  constructor(app: JupyterFrontEnd,launcher: ILauncher,
-    themeManager: IThemeManager) {
+  constructor(app: JupyterFrontEnd, launcher: ILauncher, themeManager: IThemeManager) {
     this.app = app;
     this.launcher = launcher;
     this.themeManager = themeManager;
@@ -76,39 +84,90 @@ export class ButtonExtension
 
   createNew(
     panel: NotebookPanel,
-
     context: DocumentRegistry.IContext<INotebookModel>
   ): IDisposable {
-    const clearOutput = () => {
-    const notebookVal = localStorage.getItem('notebookValue'||'');
-    const sessionName = notebookVal?.split('/');
-    const sessionSelected = sessionName?.slice(0, -1).join('/');
-    console.log(sessionSelected);
-    const content = new SessionTemplate(
-      this.app as JupyterLab,
-      this.launcher as ILauncher,
-      this.themeManager
-    );
-    const widget = new MainAreaWidget<SessionTemplate>({ content });
-    widget.title.label = 'Serverless';
-    this.app.shell.add(widget, 'main');
+    KernelAPI.listRunning().then((runningKernels: any) => {
+      const lastRunningKernel = runningKernels[runningKernels.length - 1];
+      const metadata = lastRunningKernel?.metadata?.endpointParentResource;
+      const parts = metadata.split('/');
+      const sessionId = parts.pop();
+      let formattedResponse: any
+      const sessionLogsCheck = async (sessionId?: string) => {
 
-    };
+        const response = await authenticatedFetch({
+          uri: `sessions/${sessionId}`,
+          method: HTTP_METHOD.GET,
+          regionIdentifier: 'locations'
+        });
+  
+        formattedResponse = await response.json();
+       
+        if (
+          formattedResponse &&
+          formattedResponse?.runtimeInfo?.endpoints &&
+          formattedResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER] 
+        ) {
+          sparkLogsButton.enabled = true;
+        }
+          else {
+            sparkLogsButton.enabled = false;
+          }
+      };
+      if (sessionId) {
+        const logs = () => {
+          const content = new SessionTemplate(
+            this.app as JupyterLab,
+            this.launcher as ILauncher,
+            this.themeManager,
+            sessionId
+          );
+          const widget = new MainAreaWidget<SessionTemplate>({ content });
+          widget.title.label = 'Serverless';
+          this.app.shell.add(widget, 'main');
+        };
+        
+        const logsButton = new ToolbarButton({
+          className: 'logs-button',
+          onClick: logs,
+          icon: iconLogs,
+          tooltip: 'Saprk Logs'
+        });
+  
+        panel.toolbar.insertItem(10, 'logs', logsButton);
+        sessionLogsCheck(sessionId);
+        
+      }
+    
+      const sessionLogs = async () => {
+        if (
+          formattedResponse &&
+          formattedResponse?.runtimeInfo?.endpoints &&
+          formattedResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]
+        ) {
+          window.open(
+            formattedResponse.runtimeInfo.endpoints[SPARK_HISTORY_SERVER],
+            '_blank'
+          )
+        }
+          else {
+            sparkLogsButton.enabled = false;
+          }
+      };
 
-    const button = new ToolbarButton({
-      className: 'clear-output-button',
-      label: 'Logs and metrics',
-      onClick: clearOutput,
-      tooltip: 'Logs and metrics'
+      const sparkLogsButton = new ToolbarButton({
+        className: 'session-logs',
+        onClick: sessionLogs,
+        icon: iconSessionLogs, 
+        tooltip: 'Session Details'
+      });
+
+      panel.toolbar.insertItem(11, 'session-logs', sparkLogsButton);
     });
 
-    panel.toolbar.insertItem(10, 'clearOutputs', button);
-
-    return new DisposableDelegate(() => {
-      button.dispose();
-    });
+    return new DisposableDelegate(() => {});
   }
 }
+
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'dataproc_jupyter_plugin:plugin',
   autoStart: true,
@@ -243,6 +302,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       console.log(Kernel);
     };
     labShell.currentChanged.connect(async (_, change) => {
+      await KernelAPI.listRunning();
       const { oldValue, newValue } = change;
       // Clean up after the old value if it exists,
       // listen for changes to the title of the activity
@@ -250,12 +310,16 @@ const extension: JupyterFrontEndPlugin<void> = {
         // Check if the old value is an instance of NotebookPanel
         if (oldValue instanceof NotebookPanel) {
           oldValue.title.changed.disconnect(onTitleChanged);
+         await  KernelAPI.listRunning();
+         app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension(app as JupyterLab,launcher as ILauncher, themeManager as IThemeManager));
         }
       }
       if (newValue) {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
+          newValue.toolbar.update();
+            app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension(app as JupyterLab,launcher as ILauncher, themeManager as IThemeManager));
         } else if (
           (newValue.title.label === 'Launcher' ||
             newValue.title.label === 'Config Setup' ||
@@ -283,7 +347,21 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       }
     });
-
+    notebookTracker.widgetAdded.connect(async (sender, widget) => {
+      const buttonExtension = new ButtonExtension(
+        app as JupyterLab,
+        launcher as ILauncher,
+        themeManager as IThemeManager
+      );
+      await buttonExtension.createNew(widget, widget.context);
+      app.docRegistry.addWidgetExtension('Notebook', buttonExtension);
+      if (widget instanceof NotebookPanel) {
+        app.docRegistry.addWidgetExtension(
+          'Notebook',
+          new ButtonExtension(app as JupyterLab, launcher as ILauncher, themeManager as IThemeManager)
+        );
+      }
+    });
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
@@ -395,7 +473,6 @@ const extension: JupyterFrontEndPlugin<void> = {
             //@ts-ignore jupyter lab Launcher type issue
             args: kernelsData?.argv
           });
-        app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension(app as JupyterLab,launcher as ILauncher, themeManager as IThemeManager));
         }
       });
       Object.values(kernels).forEach((kernelsData, index) => {

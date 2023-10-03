@@ -61,6 +61,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
 import PollingTimer from '../utils/pollingTimer';
+import { JupyterLab } from '@jupyterlab/application';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -88,11 +89,15 @@ interface ISessionDetailsProps {
   sessionSelected: string;
   setDetailedSessionView: (value: boolean) => void;
   detailedSessionView: boolean;
+  fromPage?: string;
+  app?: JupyterLab;
 }
 function SessionDetails({
   sessionSelected,
   setDetailedSessionView,
-  detailedSessionView
+  detailedSessionView,
+  fromPage,
+  app
 }: ISessionDetailsProps) {
   const [sessionInfo, setSessionInfo] = useState({
     state: '',
@@ -103,6 +108,7 @@ function SessionDetails({
     stateTime: '',
     stateHistory: [{ stateStartTime: '' }],
     runtimeConfig: { properties: [] },
+    stateMessage: '',
     environmentConfig: {
       executionConfig: {
         serviceAccount: '',
@@ -134,8 +140,13 @@ function SessionDetails({
   };
 
   const handleDetailedView = () => {
+    if (fromPage === 'Launcher') {
+      app?.shell.activeWidget?.close();
+    }
+    else{
     pollingSessionDetails(getSessionDetails, true);
     setDetailedSessionView(false);
+    }
   };
   const getSessionDetails = async () => {
     try {
@@ -197,6 +208,7 @@ function SessionDetails({
     const sessionInfoStateTime = new Date(sessionInfo.stateTime);
     runTimeString = elapsedTime(sessionInfoStateTime, sessionActiveTime);
   }
+ 
 
   return (
     <div>

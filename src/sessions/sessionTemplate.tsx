@@ -25,11 +25,13 @@ import SessionDetails from './sessionDetails';
 const SessionTemplateComponent = ({
   app,
   launcher,
-  themeManager
+  themeManager,
+  sessionId
 }: {
   app: JupyterLab;
   launcher: ILauncher;
   themeManager: IThemeManager;
+  sessionId: string;
 }): JSX.Element => {
 //   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
 
@@ -43,9 +45,11 @@ const [detailedSessionView,setDetailedSessionView] = useState(true);
     <div>
      {detailedSessionView && (
         <SessionDetails
-          sessionSelected='9f1c6f73-1cb4-4856-ad8d-1baf50e4c43c'
+          sessionSelected={sessionId}
           setDetailedSessionView={setDetailedSessionView}
           detailedSessionView={detailedSessionView}
+          fromPage = 'Launcher'
+          app ={app}
         />
       )}
     </div>
@@ -55,11 +59,13 @@ const [detailedSessionView,setDetailedSessionView] = useState(true);
 export class SessionTemplate extends DataprocWidget {
   app: JupyterLab;
   launcher: ILauncher;
+  sessionId: string;
 
-  constructor(app: JupyterLab, launcher: ILauncher, themeManager: IThemeManager) {
+  constructor(app: JupyterLab, launcher: ILauncher, themeManager: IThemeManager, sessionId: string) {
     super(themeManager);
     this.app = app;
     this.launcher = launcher;
+    this.sessionId = sessionId;
   }
 
   renderInternal(): React.JSX.Element {
@@ -68,6 +74,7 @@ export class SessionTemplate extends DataprocWidget {
         app={this.app}
         launcher={this.launcher}
         themeManager={this.themeManager}
+        sessionId = {this.sessionId}
       />
     );
   }
