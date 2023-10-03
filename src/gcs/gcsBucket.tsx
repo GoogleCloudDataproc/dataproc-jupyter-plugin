@@ -452,7 +452,8 @@ const GcsBucketComponent = ({
                   return data.folderName !== '';
                 }
               );
-              let finalBucketsData = [];
+              let finalBucketsData: any[] | ((prevState: never[]) => never[]) =
+                [];
               finalBucketsData = [
                 ...new Map(
                   transformBucketsData.map((item: { folderName: string }) => [
@@ -468,6 +469,37 @@ const GcsBucketComponent = ({
               finalBucketsData = finalBucketsData.filter((item: any) => {
                 return item.folderName.includes(searchTerm);
               });
+              finalBucketsData = finalBucketsData.sort(
+                (itemOne: { name: string }, itemTwo: { name: string }) => {
+                  const nameOne = itemOne.name.toLowerCase();
+                  const nameTwo = itemTwo.name.toLowerCase();
+
+                  // Define your condition here
+                  const condition = '/';
+
+                  const endsWithConditionOne = nameOne.endsWith(condition);
+                  const endsWithConditionTwo = nameTwo.endsWith(condition);
+
+                  if (endsWithConditionOne && !endsWithConditionTwo) {
+                    return -1; // itemOne should come first
+                  } else if (!endsWithConditionOne && endsWithConditionTwo) {
+                    return 1; // itemTwo should come first
+                  } else if (
+                    nameOne.includes(condition) &&
+                    !nameTwo.includes(condition)
+                  ) {
+                    return -1; // itemOne should come first if it contains "/"
+                  } else if (
+                    !nameOne.includes(condition) &&
+                    nameTwo.includes(condition)
+                  ) {
+                    return 1; // itemTwo should come first if it contains "/"
+                  } else {
+                    return nameOne.localeCompare(nameTwo);
+                  }
+                }
+              );
+
               //@ts-ignore
               setBucketsList(finalBucketsData);
               //@ts-ignore
@@ -659,7 +691,6 @@ const GcsBucketComponent = ({
             const errorResponse = await response.json();
             console.log(errorResponse);
           }
-        
         } catch (err) {
           console.error('Upload failed', err);
           toast.error(`Upload failed`, toastifyCustomStyle);
