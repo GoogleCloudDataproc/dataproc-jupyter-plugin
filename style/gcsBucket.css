@@ -19,6 +19,24 @@
   cursor: pointer;
 }
 
+.gcs-row-data-parent:hover {
+  background: var(--jp-layout-color2);
+}
+
+.gcs-row-data-parent-selected {
+  background: var(--jp-brand-color1);
+  color: var(--jp-layout-color1);
+}
+
+.gcs-row-data-parent-selected .gcs-name-file-folder {
+  color: var(--jp-layout-color1);
+}
+
+.gcs-row-data-parent-selected .logo-alignment-style path {
+  fill: #fff;
+  fill-opacity: 1;
+}
+
 .gcs-row-data-parent {
   background: var(--jp-layout-color0);
   height: 29px;

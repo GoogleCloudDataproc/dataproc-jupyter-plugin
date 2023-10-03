@@ -44,7 +44,7 @@
   line-height: 18px;
   width: 512px;
   color: var(--jp-ui-font-color2);
-  padding-bottom: 10px;
+  padding-bottom: 20px;
 }
 
 .job-label-edit-row {
@@ -208,6 +208,7 @@
   font-weight: 500;
   font-size: 13px;
   line-height: 32px;
+  font-family: Roboto;
   /* identical to box height, or 246% */
 
   display: flex;

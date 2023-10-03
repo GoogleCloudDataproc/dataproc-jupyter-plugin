@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ClipLoader } from 'react-spinners';
 import { Cell, Row } from 'react-table';
 
@@ -30,7 +30,17 @@ function TableData({
   tableDataCondition,
   fromPage
 }: any) {
+  
+  const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
+
   const displayData = page ? page : rows;
+
+  const handleRowClicked = (row: Row, index: number) => {
+      if (parseInt(row.id) === index) {
+        setSelectedRowIndex(index);
+      }
+    };
+
   return (
     <table {...getTableProps()} className="clusters-list-table">
       <thead className="scroll-fix-header">
@@ -68,16 +78,17 @@ function TableData({
             Loading {fromPage}
           </div>
         ) : (
-          displayData.map((row: Row) => {
+          displayData.map((row: Row, index: number) => {
             prepareRow(row);
             return (
               <tr
                 {...row.getRowProps()}
                 className={
-                  fromPage === 'Buckets'
-                    ? 'gcs-row-data-parent'
+                  fromPage === 'Buckets' ?
+                    (selectedRowIndex === index ? 'gcs-row-data-parent-selected': 'gcs-row-data-parent')
                     : 'cluster-list-data-parent'
                 }
+                onClick={()=>handleRowClicked(row, index)}
               >
                 {row.cells.map((cell: Cell) => {
                   return tableDataCondition(cell);

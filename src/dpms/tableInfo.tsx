@@ -84,64 +84,68 @@ const TableInfo = ({
       useTable({ columns, data });
 
     return (
-      <div className="table-container">
-        <table className="schema-table" {...getTableProps()}>
-          <thead>
-            {headerGroups.map(headerGroup => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map(column => (
-                  <th {...column.getHeaderProps()}>
-                    {column.render('Header')}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
-              prepareRow(row);
-              return (
-                <tr {...row.getRowProps()}>
-                  {row.cells.map((cell, index) => {
-                    return (
-                      <td
-                        className={index === 0 ? 'bold-column' : ''}
-                        {...cell.getCellProps()}
-                      >
-                        {cell.render('Cell')}
-                      </td>
-                    );
-                  })}
+      <div className="dpms-Wrapper">
+        <div className="table-container">
+          <table className="schema-table" {...getTableProps()}>
+            <thead>
+              {headerGroups.map(headerGroup => (
+                <tr {...headerGroup.getHeaderGroupProps()}>
+                  {headerGroup.headers.map(column => (
+                    <th {...column.getHeaderProps()}>
+                      {column.render('Header')}
+                    </th>
+                  ))}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ))}
+            </thead>
+            <tbody {...getTableBodyProps()}>
+              {rows.map(row => {
+                prepareRow(row);
+                return (
+                  <tr {...row.getRowProps()}>
+                    {row.cells.map((cell, index) => {
+                      return (
+                        <td
+                          className={index === 0 ? 'bold-column' : ''}
+                          {...cell.getCellProps()}
+                        >
+                          {cell.render('Cell')}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="table-info-overlay">
-      <div className="title-overlay">{title}</div>
-      <div className="db-title">Table info</div>
-      <div className="table-container">
-        <table className="db-table">
-          <tbody>
-            {Object.entries(table).map(([key, value], index) => (
-              <tr
-                key={key}
-                className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
-              >
-                <td className="bold-column">{key}</td>
-                <td>{value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="dpms-Wrapper">
+      <div className="table-info-overlay">
+        <div className="title-overlay">{title}</div>
+        <div className="db-title">Table info</div>
+        <div className="table-container">
+          <table className="db-table">
+            <tbody>
+              {Object.entries(table).map(([key, value], index) => (
+                <tr
+                  key={key}
+                  className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
+                >
+                  <td className="bold-column">{key}</td>
+                  <td>{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="db-title">Schema</div>
+        {renderColumnTable()}
       </div>
-      <div className="db-title">Schema</div>
-      {renderColumnTable()}
     </div>
   );
 };

@@ -26,45 +26,6 @@
   margin-top: 10px;
   outline: none;
 }
-.create-runtime-radio {
-  display: flex;
-  align-items: center;
-}
-.css-vqmohf-MuiButtonBase-root-MuiRadio-root {
-  display: -webkit-inline-box;
-  display: -webkit-inline-flex;
-  display: -ms-inline-flexbox;
-  display: inline-flex;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  -webkit-justify-content: center;
-  justify-content: center;
-  position: relative;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-  background-color: transparent;
-  outline: 0;
-  border: 0;
-  margin: 0;
-  border-radius: 0;
-  padding: 0;
-  cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  vertical-align: middle;
-  -webkit-text-decoration: none;
-  text-decoration: none;
-  color: inherit;
-  padding:9px 9px 9px 0px !important;
-  border-radius: 50%;
-  color: rgba(0, 0, 0, 0.6);
-}
 .create-container-image-message{
   font-style: normal;
     font-weight: 400;
@@ -121,7 +82,7 @@
 }
 
 .select-runtime-style {
-  background: #ffffff;
+  background: var(--jp-layout-color0);
   border-radius: 4px;
   width: 512px;
   margin-top: 10px;
@@ -130,7 +91,7 @@
 }
 
 .create-runtime-style {
-  background: #ffffff;
+  background: var(--jp-layout-color0);
   width: 512px;
   height: 40px;
   outline: none;

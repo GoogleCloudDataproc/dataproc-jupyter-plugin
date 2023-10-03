@@ -57,6 +57,8 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDisposable, DisposableDelegate } from '@lumino/disposable';
 import { SessionTemplate } from './sessions/sessionTemplate';
+import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
+import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 
 export class ButtonExtension
   implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
@@ -145,14 +147,30 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:storage-icon',
       svgstr: storageIcon
     });
-
+    const iconDpmsDark = new LabIcon({
+      name: 'launcher:dpms-icon-dark',
+      svgstr: dpmsIconDark
+    });
+    const iconStorageDark = new LabIcon({
+      name: 'launcher:storage-icon-dark',
+      svgstr: storageIconDark
+    });
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
     let lastClusterName = '';
     const panel = new Panel();
     panel.id = 'dpms-tab';
-    panel.title.icon = iconDpms;
+    themeManager.themeChanged.connect((sender, args) => {
+      const isLightTheme = themeManager.isLight(args.newValue);
+      if (isLightTheme) {
+         panel.title.icon = iconDpms;
+         panelGcs.title.icon = iconStorage; 
+      } else {
+        panel.title.icon = iconDpmsDark
+        panelGcs.title.icon = iconStorageDark; 
+      }
+    });
     const loadDpmsWidget = (value: string) => {
       const existingWidgets = panel.widgets;
       existingWidgets.forEach(widget => {
@@ -173,10 +191,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const panelGcs = new Panel();
     panelGcs.id = 'GCS-bucket-tab';
-    panelGcs.title.icon = iconStorage;
-    panelGcs.addWidget(
-      new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory)
-    );
+    panelGcs.addWidget(new GcsBucket(app as JupyterLab, factory as IFileBrowserFactory, themeManager));
     app.shell.add(panelGcs, 'left', { rank: 1001 });
 
     const onTitleChanged = async (title: Title<Widget>) => {
