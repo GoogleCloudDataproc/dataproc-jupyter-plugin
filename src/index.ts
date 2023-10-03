@@ -130,7 +130,7 @@ export class ButtonExtension
           className: 'logs-button',
           onClick: logs,
           icon: iconLogs,
-          tooltip: 'Saprk Logs'
+          tooltip: 'Spark Logs'
         });
   
         panel.toolbar.insertItem(10, 'logs', logsButton);

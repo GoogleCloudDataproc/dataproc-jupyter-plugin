@@ -108,7 +108,6 @@ function SessionDetails({
     stateTime: '',
     stateHistory: [{ stateStartTime: '' }],
     runtimeConfig: { properties: [] },
-    stateMessage: '',
     environmentConfig: {
       executionConfig: {
         serviceAccount: '',
