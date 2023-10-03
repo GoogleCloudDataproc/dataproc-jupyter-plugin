@@ -33,13 +33,8 @@ const SessionTemplateComponent = ({
   themeManager: IThemeManager;
   sessionId: string;
 }): JSX.Element => {
-//   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
-
-//   const [selectedRuntimeClone, setSelectedRuntimeClone] =
-//     useState<ISessionTemplate>();
 const [detailedSessionView,setDetailedSessionView] = useState(true);
   useEffect(() => {
-    // setSelectedRuntimeClone(undefined);
   });
   return (
     <div>
