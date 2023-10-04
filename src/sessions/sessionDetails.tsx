@@ -108,6 +108,7 @@ function SessionDetails({
     stateTime: '',
     stateHistory: [{ stateStartTime: '' }],
     runtimeConfig: { properties: [] },
+    stateMessage:'',
     environmentConfig: {
       executionConfig: {
         serviceAccount: '',
@@ -320,6 +321,14 @@ function SessionDetails({
                     </div>
                   </div>
                 </div>
+                {sessionInfo.state === STATUS_FAIL && (
+                <div className="row-details">
+                  <div className="cluster-details-label">Status Message</div>
+                  <div className="session-details-value">
+                    {sessionInfo.stateMessage}
+                  </div>
+                </div>
+                )}
                 <div className="row-details">
                   <div className="cluster-details-label">Create time</div>
                   <div className="session-details-value">
