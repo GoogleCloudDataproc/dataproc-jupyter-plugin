@@ -438,7 +438,7 @@ const GcsBucketComponent = ({
                   const updatedDate = new Date(data.updated);
                   const lastModified = lastModifiedFormat(updatedDate);
                   return {
-                    name: data.name,
+                    name: data.name.trim(),
                     lastModified: lastModified,
                     folderName:
                       gcsFolderPath.length > 0
@@ -587,22 +587,27 @@ const GcsBucketComponent = ({
     }
   };
 
-  const createFolderAPI = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      let prefixList = '';
-      gcsFolderPath.length > 1 &&
-        gcsFolderPath.slice(1).forEach((folderName: string) => {
-          if (prefixList === '') {
-            prefixList = prefixList + folderName;
-          } else {
-            prefixList = prefixList + '/' + folderName;
-          }
-        });
-      let newFolderName = folderName;
-      if (prefixList !== '') {
-        newFolderName = prefixList + '/' + folderName;
-      }
+const createFolderAPI = async () => {
+  const credentials = await authApi();
+  if (credentials) {
+    let prefixList = '';
+    gcsFolderPath.length > 1 &&
+      gcsFolderPath.slice(1).forEach((folderName: string) => {
+        if (prefixList === '') {
+          prefixList = prefixList + folderName;
+        } else {
+          prefixList = prefixList + '/' + folderName;
+        }
+      });
+    let newFolderName = folderName;
+    if (prefixList !== '') {
+      newFolderName = prefixList + '/' + folderName;
+    }
+    
+    // Check if a folder with the same name already exists
+    const folderExists = bucketsList.some((item: IBucketItem) => item.folderName === folderName);
+    
+    if (!folderExists) {
       fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFolderName}/`, {
         method: 'POST',
         headers: {
@@ -630,10 +635,15 @@ const GcsBucketComponent = ({
           console.error('Failed to create folder', err);
           toast.error(`Failed to create folder`, toastifyCustomStyle);
         });
+      setFolderCreated(true);
+      listBucketsAPI();
+    } else {
+      // Display a toast message indicating that the folder already exists
+      toast.error(`Folder ${folderName} already exists`, toastifyCustomStyle);
     }
-    setFolderCreated(true);
-    listBucketsAPI();
-  };
+  }
+};
+
 
   const handleFileChange = () => {
     //@ts-ignore
@@ -652,9 +662,11 @@ const GcsBucketComponent = ({
 
   const uploadFilesToGCS = async (files: File[]) => {
     const credentials = await authApi();
-
+    let uploadedCount = 0;
+    let failedCount = 0;
+  
     if (credentials) {
-      const promises = files.map(async (file: File) => {
+      for (const file of files) {
         let prefixList = '';
         gcsFolderPath.length > 1 &&
           gcsFolderPath.slice(1).forEach((folderName: string) => {
@@ -668,7 +680,7 @@ const GcsBucketComponent = ({
         if (prefixList !== '') {
           newFileName = prefixList + '/' + file.name;
         }
-
+  
         try {
           const response = await fetch(
             `${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFileName}`,
@@ -681,25 +693,33 @@ const GcsBucketComponent = ({
               }
             }
           );
-
+  
           if (response.ok) {
-            const responseResult = await response.json();
-            toast.success(`Upload successful`, toastifyCustomStyle);
-            console.log(responseResult);
-            listBucketsAPI();
+            uploadedCount++;
           } else {
-            const errorResponse = await response.json();
-            console.log(errorResponse);
+            failedCount++;
           }
         } catch (err) {
           console.error('Upload failed', err);
-          toast.error(`Upload failed`, toastifyCustomStyle);
+          failedCount++;
         }
-      });
-
-      await Promise.all(promises);
+      }
+  
+      // Display toast messages after all files have been processed
+      if (uploadedCount > 0) {
+        
+        toast.success(`Uploaded ${uploadedCount} files Successfully`, toastifyCustomStyle);
+      }
+      if (failedCount > 0) {
+        toast.error(`Failed to upload ${failedCount} files`, toastifyCustomStyle);
+      }
+  
+      // Refresh the file list
+      listBucketsAPI();
     }
   };
+  
+  
 
   return (
     <>
