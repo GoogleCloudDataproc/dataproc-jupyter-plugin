@@ -86,7 +86,8 @@ export class ButtonExtension
     panel: NotebookPanel,
     context: DocumentRegistry.IContext<INotebookModel>
   ): IDisposable {
-    KernelAPI.listRunning().then((runningKernels: any) => {
+    setTimeout(() => {
+    KernelAPI.listRunning().then(async (runningKernels: any) => {
       const lastRunningKernel = runningKernels[runningKernels.length - 1];
       const metadata = lastRunningKernel?.metadata?.endpointParentResource;
       const parts = metadata.split('/');
@@ -113,31 +114,6 @@ export class ButtonExtension
             sparkLogsButton.enabled = false;
           }
       };
-      if (sessionId) {
-        const logs = () => {
-          const content = new SessionTemplate(
-            this.app as JupyterLab,
-            this.launcher as ILauncher,
-            this.themeManager,
-            sessionId
-          );
-          const widget = new MainAreaWidget<SessionTemplate>({ content });
-          widget.title.label = 'Serverless';
-          this.app.shell.add(widget, 'main');
-        };
-        
-        const logsButton = new ToolbarButton({
-          className: 'logs-button',
-          onClick: logs,
-          icon: iconLogs,
-          tooltip: 'Spark Logs'
-        });
-  
-        panel.toolbar.insertItem(10, 'logs', logsButton);
-        sessionLogsCheck(sessionId);
-        
-      }
-    
       const sessionLogs = async () => {
         if (
           formattedResponse &&
@@ -155,15 +131,40 @@ export class ButtonExtension
       };
 
       const sparkLogsButton = new ToolbarButton({
-        className: 'session-logs',
+        className: 'logs-button',
         onClick: sessionLogs,
-        icon: iconSessionLogs, 
-        tooltip: 'Session Details'
+        icon: iconLogs,
+        tooltip: 'Spark Logs'
       });
 
-      panel.toolbar.insertItem(11, 'session-logs', sparkLogsButton);
+      panel.toolbar.insertItem(10, 'session-logs', sparkLogsButton);
+      if (sessionId) {
+        const logs = () => {
+          const content = new SessionTemplate(
+            this.app as JupyterLab,
+            this.launcher as ILauncher,
+            this.themeManager,
+            sessionId
+          );
+          const widget = new MainAreaWidget<SessionTemplate>({ content });
+          widget.title.label = 'Serverless';
+          this.app.shell.add(widget, 'main');
+        };
+        
+        const logsButton = new ToolbarButton({
+          className: 'session-logs',
+          onClick: logs,
+          icon: iconSessionLogs, 
+          tooltip: 'Session Details'
+        });
+  
+        panel.toolbar.insertItem(11, 'logs', logsButton);
+        sessionLogsCheck(sessionId);
+        
+      }
+    
     });
-
+  },3000);
     return new DisposableDelegate(() => {});
   }
 }
@@ -316,6 +317,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
       if (newValue) {
         // Check if the new value is an instance of NotebookPanel
+       
         if (newValue instanceof NotebookPanel) {
           newValue.title.changed.connect(onTitleChanged);
           newValue.toolbar.update();
@@ -347,21 +349,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       }
     });
-    notebookTracker.widgetAdded.connect(async (sender, widget) => {
-      const buttonExtension = new ButtonExtension(
-        app as JupyterLab,
-        launcher as ILauncher,
-        themeManager as IThemeManager
-      );
-      await buttonExtension.createNew(widget, widget.context);
-      app.docRegistry.addWidgetExtension('Notebook', buttonExtension);
-      if (widget instanceof NotebookPanel) {
-        app.docRegistry.addWidgetExtension(
-          'Notebook',
-          new ButtonExtension(app as JupyterLab, launcher as ILauncher, themeManager as IThemeManager)
-        );
-      }
-    });
+
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
@@ -474,6 +462,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             args: kernelsData?.argv
           });
         }
+        app.docRegistry.addWidgetExtension('Notebook', new ButtonExtension(app as JupyterLab,launcher as ILauncher, themeManager as IThemeManager));
       });
       Object.values(kernels).forEach((kernelsData, index) => {
         if (
