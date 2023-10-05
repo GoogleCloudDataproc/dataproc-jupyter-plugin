@@ -715,12 +715,7 @@ const GcsBucketComponent = ({
       }
       toast.dismiss(toastInfo);
       // Display toast messages after all files have been processed
-      if (uploadedCount ===1) {
-        toast.success(
-          `${uploadedCount} File/s uploaded successfully`,
-          toastifyCustomStyle
-        );
-      }
+     
       setTimeout(() => {
         // Display success toast if any files were uploaded
         if (uploadedCount > 0) {
@@ -736,7 +731,7 @@ const GcsBucketComponent = ({
             toastifyCustomStyle
           );
         }
-      }, 1000);
+      }, 2000);
       // Refresh the file list
       listBucketsAPI();
     }
