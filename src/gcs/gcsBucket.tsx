@@ -310,12 +310,14 @@ const GcsBucketComponent = ({
     }
   };
   interface IFileDetail {
+    type: string;
     name: string;
     mimetype: string;
   }
   const handleFileSave = async (fileDetail: IFileDetail, content: string) => {
     // Create a Blob object from the content and metadata
-    const blob = new Blob([JSON.stringify(content)], { type: fileDetail.mimetype });
+    let fileContent=fileDetail.type==='notebook'? JSON.stringify(content):content;
+    const blob = new Blob([fileContent], { type: fileDetail.mimetype });
 
     // Create a File object
     const filePayload = new File([blob], fileDetail.name, {
