@@ -267,6 +267,7 @@ const GcsBucketComponent = ({
                 : handleFileClick(cell.value)
               : undefined
           }
+          
         >
           <div key="Status" className="gcs-object-name">
             {(cell.value.includes('/') &&
@@ -644,7 +645,13 @@ const GcsBucketComponent = ({
         listBucketsAPI();
       } else {
         // Display a toast message indicating that the folder already exists
+    
         toast.error(`Folder ${folderName} already exists`, toastifyCustomStyle);
+         bucketsList.shift();
+       setBucketsList(bucketsList);
+       setBucketsListUpdate(bucketsList);
+       listBucketsAPI();
+       setFolderCreated(true);
       }
     }
   };

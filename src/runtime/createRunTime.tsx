@@ -734,7 +734,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully submitted`,
+              `Runtime Template ${displayNameSelected} successfully submitted`,
               toastifyCustomStyle
             );
 
@@ -867,7 +867,7 @@ function CreateRunTime({
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
             toast.success(
-              `RuntimeTemplate ${displayNameSelected} successfully updated`,
+              `Runtime Template ${displayNameSelected} successfully updated`,
               toastifyCustomStyle
             );
             if (fromPage === 'launcher') {
@@ -1094,7 +1094,7 @@ function CreateRunTime({
                 value={containerImageSelected}
                 onChange={e => setContainerImageSelected(e.target.value)}
                 type="text"
-                placeholder="Enter URI, for example,gcr.io/my-project-id/my-image:1.0.1"
+                placeholder="Enter URI, for example, gcr.io/my-project-id/my-image:1.0.1"
               />
             </div>
             <div className="create-custom-messagelist">
