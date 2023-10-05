@@ -309,12 +309,15 @@ const GcsBucketComponent = ({
     }
   };
   interface IFileDetail {
+    type: string;
     name: string;
     mimetype: string;
   }
   const handleFileSave = async (fileDetail: IFileDetail, content: string) => {
     // Create a Blob object from the content and metadata
-    const blob = new Blob([content], { type: fileDetail.mimetype });
+    let fileContent =
+      fileDetail.type === 'notebook' ? JSON.stringify(content) : content;
+    const blob = new Blob([fileContent], { type: fileDetail.mimetype });
 
     // Create a File object
     const filePayload = new File([blob], fileDetail.name, {
@@ -438,7 +441,7 @@ const GcsBucketComponent = ({
                   const updatedDate = new Date(data.updated);
                   const lastModified = lastModifiedFormat(updatedDate);
                   return {
-                    name: data.name,
+                    name: data.name.trim(),
                     lastModified: lastModified,
                     folderName:
                       gcsFolderPath.length > 0
@@ -603,36 +606,56 @@ const GcsBucketComponent = ({
       if (prefixList !== '') {
         newFolderName = prefixList + '/' + folderName;
       }
-      fetch(`${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFolderName}/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'Folder',
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then(async (response: Response) => {
-          if (response.ok) {
-            const responseResult = await response.json();
-            pollingGCSlist(listBucketsAPI, false);
-            console.log(responseResult);
-            toast.success(
-              `Folder ${folderName} successfully created`,
-              toastifyCustomStyle
-            );
-            listBucketsAPI();
-          } else {
-            const errorResponse = await response.json();
-            pollingGCSlist(listBucketsAPI, false);
-            console.log(errorResponse);
+
+      // Check if a folder with the same name already exists
+      const folderExists = bucketsList.some(
+        (item: IBucketItem) => item.folderName === folderName
+      );
+
+      if (!folderExists) {
+        fetch(
+          `${GCS_UPLOAD_URL}/${gcsFolderPath[0]}/o?name=${newFolderName}/`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'Folder',
+              Authorization: API_HEADER_BEARER + credentials.access_token
+            }
           }
-        })
-        .catch((err: Error) => {
-          console.error('Failed to create folder', err);
-          toast.error(`Failed to create folder`, toastifyCustomStyle);
-        });
+        )
+          .then(async (response: Response) => {
+            if (response.ok) {
+              const responseResult = await response.json();
+              pollingGCSlist(listBucketsAPI, false);
+              console.log(responseResult);
+              toast.success(
+                `Folder ${folderName} successfully created`,
+                toastifyCustomStyle
+              );
+              listBucketsAPI();
+            } else {
+              const errorResponse = await response.json();
+              pollingGCSlist(listBucketsAPI, false);
+              console.log(errorResponse);
+            }
+          })
+          .catch((err: Error) => {
+            console.error('Failed to create folder', err);
+            toast.error(`Failed to create folder`, toastifyCustomStyle);
+          });
+        setFolderCreated(true);
+        listBucketsAPI();
+      } else {
+        // Display a toast message indicating that the folder already exists
+
+        toast.error(`Folder ${folderName} already exists`, toastifyCustomStyle);
+        bucketsList.shift();
+        setBucketsList(bucketsList);
+        setBucketsListUpdate(bucketsList);
+        listBucketsAPI();
+        setFolderCreated(true);
+      }
     }
-    setFolderCreated(true);
-    listBucketsAPI();
   };
 
   const handleFileChange = () => {
@@ -652,9 +675,16 @@ const GcsBucketComponent = ({
 
   const uploadFilesToGCS = async (files: File[]) => {
     const credentials = await authApi();
+    let uploadedCount = 0;
+    let failedCount = 0;
 
     if (credentials) {
-      const promises = files.map(async (file: File) => {
+      const toastInfo = toast.info(
+        `Uploading ${files.length} file${files.length > 1 ? 's' : ''}`,
+        toastifyCustomStyle
+      );
+
+      for (const file of files) {
         let prefixList = '';
         gcsFolderPath.length > 1 &&
           gcsFolderPath.slice(1).forEach((folderName: string) => {
@@ -683,21 +713,38 @@ const GcsBucketComponent = ({
           );
 
           if (response.ok) {
-            const responseResult = await response.json();
-            toast.success(`Upload successful`, toastifyCustomStyle);
-            console.log(responseResult);
-            listBucketsAPI();
+            uploadedCount++;
           } else {
-            const errorResponse = await response.json();
-            console.log(errorResponse);
+            failedCount++;
           }
         } catch (err) {
           console.error('Upload failed', err);
-          toast.error(`Upload failed`, toastifyCustomStyle);
+          failedCount++;
         }
-      });
+      }
+      toast.dismiss(toastInfo);
+      // Display toast messages after all files have been processed
 
-      await Promise.all(promises);
+      setTimeout(() => {
+        // Display success toast if any files were uploaded
+        if (uploadedCount > 0) {
+          toast.success(
+            `${uploadedCount} file${
+              uploadedCount > 1 ? 's' : ''
+            } uploaded successfully`,
+            toastifyCustomStyle
+          );
+        }
+
+        if (failedCount > 0) {
+          toast.error(
+            `Failed to upload ${failedCount} file${failedCount > 1 ? 's' : ''}`,
+            toastifyCustomStyle
+          );
+        }
+      }, 2000);
+      // Refresh the file list
+      listBucketsAPI();
     }
   };
 

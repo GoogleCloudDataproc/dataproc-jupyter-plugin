@@ -99,3 +99,6 @@ h2 {
   top: 0;
   background-color: white;
 }
+.logs-button{
+  cursor: context-menu !important;
+}
