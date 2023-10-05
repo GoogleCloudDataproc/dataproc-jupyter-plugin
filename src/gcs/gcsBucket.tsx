@@ -267,7 +267,6 @@ const GcsBucketComponent = ({
                 : handleFileClick(cell.value)
               : undefined
           }
-          
         >
           <div key="Status" className="gcs-object-name">
             {(cell.value.includes('/') &&
@@ -316,7 +315,8 @@ const GcsBucketComponent = ({
   }
   const handleFileSave = async (fileDetail: IFileDetail, content: string) => {
     // Create a Blob object from the content and metadata
-    let fileContent=fileDetail.type==='notebook'? JSON.stringify(content):content;
+    let fileContent =
+      fileDetail.type === 'notebook' ? JSON.stringify(content) : content;
     const blob = new Blob([fileContent], { type: fileDetail.mimetype });
 
     // Create a File object
@@ -647,13 +647,13 @@ const GcsBucketComponent = ({
         listBucketsAPI();
       } else {
         // Display a toast message indicating that the folder already exists
-    
+
         toast.error(`Folder ${folderName} already exists`, toastifyCustomStyle);
-         bucketsList.shift();
-       setBucketsList(bucketsList);
-       setBucketsListUpdate(bucketsList);
-       listBucketsAPI();
-       setFolderCreated(true);
+        bucketsList.shift();
+        setBucketsList(bucketsList);
+        setBucketsListUpdate(bucketsList);
+        listBucketsAPI();
+        setFolderCreated(true);
       }
     }
   };
@@ -680,7 +680,7 @@ const GcsBucketComponent = ({
 
     if (credentials) {
       const toastInfo = toast.info(
-        `Uploading ${files.length} file/s`,
+        `Uploading ${files.length} file${files.length > 1 ? 's' : ''}`,
         toastifyCustomStyle
       );
 
@@ -724,19 +724,21 @@ const GcsBucketComponent = ({
       }
       toast.dismiss(toastInfo);
       // Display toast messages after all files have been processed
-     
+
       setTimeout(() => {
         // Display success toast if any files were uploaded
         if (uploadedCount > 0) {
           toast.success(
-            `${uploadedCount} File/s uploaded successfully`,
+            `${uploadedCount} File${
+              uploadedCount > 1 ? 's' : ''
+            } uploaded successfully`,
             toastifyCustomStyle
           );
         }
-        // Display error toast if any files failed to upload
+
         if (failedCount > 0) {
           toast.error(
-            `Failed to upload ${failedCount} files`,
+            `Failed to upload ${failedCount} File${failedCount > 1 ? 's' : ''}`,
             toastifyCustomStyle
           );
         }
