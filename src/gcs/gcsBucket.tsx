@@ -729,7 +729,7 @@ const GcsBucketComponent = ({
         // Display success toast if any files were uploaded
         if (uploadedCount > 0) {
           toast.success(
-            `${uploadedCount} File${
+            `${uploadedCount} file${
               uploadedCount > 1 ? 's' : ''
             } uploaded successfully`,
             toastifyCustomStyle
@@ -738,7 +738,7 @@ const GcsBucketComponent = ({
 
         if (failedCount > 0) {
           toast.error(
-            `Failed to upload ${failedCount} File${failedCount > 1 ? 's' : ''}`,
+            `Failed to upload ${failedCount} file${failedCount > 1 ? 's' : ''}`,
             toastifyCustomStyle
           );
         }
