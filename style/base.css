@@ -99,7 +99,6 @@ h2 {
   top: 0;
   background-color: white;
 }
-
-.jp-Button:disabled {
-  cursor: context-menu;
+.logs-button{
+  cursor: context-menu !important;
 }
