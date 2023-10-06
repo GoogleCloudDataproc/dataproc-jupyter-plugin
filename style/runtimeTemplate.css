@@ -51,9 +51,10 @@
   line-height: 15px;
   padding-left: 25px;
   color: var(--jp-ui-font-color2);
-  width: 30%;
+  width: 35%;
   overflow: hidden;
   word-wrap: break-word;
+  display: flex;
 }
 
 .select-runtime-radio-style {
@@ -132,7 +133,7 @@
   background: var(--jp-layout-color2);;
   font-size: 13px;
   border-radius: 4px;
-  width: 27%;
+  width: 485px;
   padding: 15px;
   display: flex;
   margin-top: 5px;

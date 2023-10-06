@@ -804,7 +804,8 @@ function CreateRunTime({
       idleValidation ||
       runTimeValidation ||
       autoValidation ||
-      duplicateValidation
+      duplicateValidation||
+      (selectedNetworkRadio === 'sharedVpc' && sharedSubNetworkList.length===0)
     );
   }
   const createRuntimeApi = async (payload: any) => {
