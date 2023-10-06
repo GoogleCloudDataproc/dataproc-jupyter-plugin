@@ -805,7 +805,8 @@ function CreateRunTime({
       runTimeValidation ||
       autoValidation ||
       duplicateValidation||
-      (selectedNetworkRadio === 'sharedVpc' && sharedSubNetworkList.length===0)
+      (selectedNetworkRadio === 'sharedVpc' && sharedSubNetworkList.length===0)||
+      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected ==='')
     );
   }
   const createRuntimeApi = async (payload: any) => {
