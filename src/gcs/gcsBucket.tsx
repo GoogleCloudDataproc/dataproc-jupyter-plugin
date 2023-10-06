@@ -372,7 +372,6 @@ const GcsBucketComponent = ({
     });
     setBucketsListUpdate(updatedList);
     setSearchTerm(event.target.value);
-    listBucketsAPI();
   };
 
   const handleSearchClear = () => {
@@ -510,7 +509,7 @@ const GcsBucketComponent = ({
   };
   useEffect(() => {
     listBucketsAPI();
-  }, [gcsFolderPath, searchTerm]);
+  }, [gcsFolderPath]);
 
   const createNewItem = async () => {
     if (folderCreated) {
@@ -614,7 +613,7 @@ const GcsBucketComponent = ({
                 `Folder ${folderName} successfully created`,
                 toastifyCustomStyle
               );
-              listBucketsAPI();
+            
             } else {
               const errorResponse = await response.json();
               console.log(errorResponse);
