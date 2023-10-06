@@ -31,7 +31,7 @@ import {
   CUSTOM_CONTAINER_MESSAGE_PART,
   HTTP_METHOD,
   REGION_URL,
-  //SHARED_VPC,
+  SHARED_VPC,
   STATUS_RUNNING,
   USER_INFO_URL
 } from '../utils/const';
@@ -58,7 +58,7 @@ import { DropdownProps } from 'semantic-ui-react';
 
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
-import { Autocomplete, TextField } from '@mui/material';
+import { Autocomplete, Radio, TextField } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -143,7 +143,13 @@ function CreateRunTime({
   const [userInfo, setUserInfo] = useState('');
   const [duplicateValidation, setDuplicateValidation] = useState(false);
   const [isloadingNetwork, setIsloadingNetwork] = useState(false);
-
+  const [selectedNetworkRadio, setSelectedNetworkRadio] =
+    useState('projectNetwork');
+  const [projectInfo, setProjectInfo] = useState('');
+  const [sharedSubNetworkList, setSharedSubNetworkList] = useState<string[]>(
+    []
+  );
+  const [sharedvpcSelected, setSharedvpcSelected] = useState('');
   useEffect(() => {
     const timeData = [
       { key: 'h', value: 'h', text: 'hour' },
@@ -155,6 +161,7 @@ function CreateRunTime({
     updateLogic();
     listClustersAPI();
     listNetworksAPI();
+    runtimeSharedProject();
   }, []);
 
   useEffect(() => {
@@ -207,7 +214,78 @@ function CreateRunTime({
         });
     }
   };
+  interface IApiResponse {
+    name: string;
+  }
 
+  const runtimeSharedProject = async () => {
+    const credentials = await authApi();
+    if (credentials) {
+      let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
+      fetch(apiURL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      })
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: IApiResponse) => {
+              setProjectInfo(responseResult.name);
+              listSharedVPC(responseResult.name);
+            })
+            .catch((e: Error) => console.log(e));
+        })
+        .catch((err: Error) => {
+          console.error('Error displaying user info', err);
+          toast.error('Failed to fetch user information', toastifyCustomStyle);
+        });
+    }
+  };
+
+  interface IlistShared {
+    items: {
+      subnetwork: string;
+    }[];
+  }
+  const listSharedVPC = async (projectName: string) => {
+    const credentials = await authApi();
+    if (credentials) {
+      let apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
+      fetch(apiURL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      }).then((response: Response) => {
+        response
+          .json()
+          .then((responseResult: IlistShared) => {
+            /*
+              Extracting subNetwork from items
+              Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/aggregated/subnetworks/listUsable",
+            */
+
+            const transformedSharedvpcSubNetworkList: string[] =
+              responseResult.items.map(data => {
+                return data.subnetwork.split('/')[10];
+              });
+
+            setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
+          })
+          .catch((err: Error) => {
+            console.error('Error displaying sharedVPC subNetwork', err);
+            toast.error(
+              'Failed to fetch  sharedVPC subNetwork',
+              toastifyCustomStyle
+            );
+          });
+      });
+    }
+  };
   const updateLogic = () => {
     if (selectedRuntimeClone !== undefined) {
       const {
@@ -282,9 +360,11 @@ function CreateRunTime({
         const peripheralsConfig = environmentConfig.peripheralsConfig;
 
         if (executionConfig) {
-          setSubNetworkSelected(executionConfig.subnetworkUri);
+          
+         selectedNetworkRadio==='sharedVpc'?
+          setSharedvpcSelected(executionConfig.subnetworkUri.split('/')[10]):setSubNetworkSelected(executionConfig.subnetworkUri);
           if (executionConfig.hasOwnProperty('idleTtl')) {
-            const idleTtlUnit = executionConfig.idleTtl.slice(-1); // Extracting the last character 's'
+            const idleTtlUnit = executionConfig.idleTtl.slice(-1); 
 
             setTimeSelected(idleTtlUnit);
 
@@ -659,8 +739,20 @@ function CreateRunTime({
     setSubNetworkSelected(defaultValue);
     listSubNetworksAPI(data!.toString());
   };
+  const handleNetworkSharedVpcRadioChange = () => {
+    setSelectedNetworkRadio('sharedVpc');
+    setSubNetworkSelected('default');
+    setNetworkSelected('default');
+  };
+  const handleSubNetworkRadioChange = () => {
+    setSelectedNetworkRadio('projectNetwork');
+    setSharedvpcSelected('');
+  };
   const handleSubNetworkChange = (data: string | null) => {
     setSubNetworkSelected(data!.toString());
+  };
+  const handleSharedSubNetwork = (data: string | null) => {
+    setSharedvpcSelected(data!.toString());
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
@@ -940,7 +1032,14 @@ function CreateRunTime({
               networkTags: networkTagSelected
             }),
 
-            ...(subNetworkSelected && { subnetworkUri: subNetworkSelected }),
+            ...(subNetworkSelected &&
+              selectedNetworkRadio === 'projectNetwork' && {
+                subnetworkUri: subNetworkSelected
+              }),
+            ...(sharedvpcSelected &&
+              selectedNetworkRadio === 'sharedVpc' && {
+                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
+              }),
             ...(timeSelected === 'h' &&
               idleTimeSelected && {
                 idleTtl: inputValueHour.toString() + 's'
@@ -1136,32 +1235,31 @@ function CreateRunTime({
               Establishes connectivity for the VM instances in this cluster.
             </div>
             <div>
-              <div className="runtime-message">Networks in this project</div>
-              {/* Placeholder FOR SHARED VPC NETWORK */}
-              {/* <div className="create-runtime-radio">
+              <div className="create-runtime-radio">
                 <Radio
                   size="small"
-                  className="select-batch-radio-style"
+                  className="select-runtime-radio-style"
                   value="projectNetwork"
                   checked={selectedNetworkRadio === 'projectNetwork'}
-                  onChange={() => setSelectedNetworkRadio('projectNetwork')}
+                  onChange={() => handleSubNetworkRadioChange()}
                 />
                 <div className="create-batch-message">
                   Networks in this project
                 </div>
-              </div> */}
+              </div>
             </div>
-            {/* <div>
+            <div>
               <div className="create-runtime-radio">
                 <Radio
                   size="small"
-                  className="select-batch-radio-style"
+                  className="select-runtime-radio-style"
                   value="sharedVpc"
                   checked={selectedNetworkRadio === 'sharedVpc'}
-                  onChange={() => setSelectedNetworkRadio('sharedVpc')}
+                  onChange={() => handleNetworkSharedVpcRadioChange()
+                   }
                 />
                 <div className="create-batch-message">
-                  Networks shared from host project: ""
+                  Networks shared from host project: "{projectInfo}"
                 </div>
               </div>
               <div className="create-runtime-sub-message-network">
@@ -1176,101 +1274,72 @@ function CreateRunTime({
                   Learn more
                 </div>
               </div>
-            </div> */}
+            </div>
 
-            {/* <div>
+            <div>
               {selectedNetworkRadio === 'projectNetwork' && (
                 <div className="create-batch-network">
-                  <div className="select-text-overlay">
-                    <label
-                      className="select-title-text"
-                      htmlFor="metastore-project"
-                    >
-                      Primary network
-                    </label>
-                    <Select
-                      className="project-region-select"
-                      search
-                      value={networkSelected}
-                      onChange={handleNetworkChange}
-                      type="text"
-                      options={networkList}
-                    />
-                  </div>
-
-                  <div className="select-text-overlay subnetwork-style">
-                    <label
-                      className="select-title-text"
-                      htmlFor="metastore-project"
-                    >
-                      Subnetwork
-                    </label>
-                    <Select
-                      className="project-region-select"
-                      search
-                      value={subNetworkSelected}
-                      onChange={handleSubNetworkChange}
-                      type="text"
-                      options={subNetworkList}
-                    />
-                  </div>
+                  {isloadingNetwork ? (
+                    <div className="metastore-loader">
+                      <ClipLoader
+                        loading={true}
+                        size={25}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="select-text-overlay">
+                        <Autocomplete
+                          options={networkList}
+                          value={networkSelected}
+                          onChange={(_event, val) => handleNetworkChange(val)}
+                          renderInput={params => (
+                            <TextField {...params} label="Primary network*" />
+                          )}
+                        />
+                      </div>
+                      <div className="select-text-overlay subnetwork-style">
+                        <Autocomplete
+                          options={subNetworkList}
+                          value={subNetworkSelected}
+                          onChange={(_event, val) =>
+                            handleSubNetworkChange(val)
+                          }
+                          renderInput={params => (
+                            <TextField {...params} label="subnetwork" />
+                          )}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
-              {/* {selectedNetworkRadio === 'sharedVpc' && (
+               {selectedNetworkRadio === 'projectNetwork' && networkList.length===0 &&
+              <div className='create-no-list-message'>
+                No local networks are available.
+                </div>
+                }
+              {selectedNetworkRadio === 'sharedVpc' && (
                 <div className="select-text-overlay">
-                  <label
-                    className="select-dropdown-text"
-                    htmlFor="shared-subnetwork"
-                  >
-                    Shared subnetwork
-                  </label>
-                  <Select
-                    className="project-region-select"
-                    search
-                    selection
-                    placeholder={''}
-                    value={''}
-                    //onChange={}
-                    options={[]}
+                  <Autocomplete
+                    options={sharedSubNetworkList}
+                    value={sharedvpcSelected}
+                    onChange={(_event, val) => handleSharedSubNetwork(val)}
+                    renderInput={params => (
+                      <TextField {...params} label="Shared subnetwork" />
+                    )}
                   />
-                </div>
-              )} 
-            </div> */}
-            <div>
-              {isloadingNetwork ? (
-                <div className="metastore-loader">
-                  <ClipLoader
-                    loading={true}
-                    size={25}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                </div>
-              ) : (
-                <div className="create-batch-network">
-                  <div className="select-text-overlay">
-                    <Autocomplete
-                      options={networkList}
-                      value={networkSelected}
-                      onChange={(_event, val) => handleNetworkChange(val)}
-                      renderInput={params => (
-                        <TextField {...params} label="Primary network*" />
-                      )}
-                    />
-                  </div>
-                  <div className="select-text-overlay subnetwork-style">
-                    <Autocomplete
-                      options={subNetworkList}
-                      value={subNetworkSelected}
-                      onChange={(_event, val) => handleSubNetworkChange(val)}
-                      renderInput={params => (
-                        <TextField {...params} label="subnetwork" />
-                      )}
-                    />
-                  </div>
                 </div>
               )}
+              {selectedNetworkRadio === 'sharedVpc' && sharedSubNetworkList.length===0 &&
+              <div className='create-no-list-message'>
+                No shared subnetworks are available in this region.
+                </div>
+                }
             </div>
+           
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
                 Network tags
