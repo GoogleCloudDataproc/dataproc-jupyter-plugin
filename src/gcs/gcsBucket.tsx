@@ -121,6 +121,7 @@ const GcsBucketComponent = ({
   const [bucketsListUpdate, setBucketsListUpdate] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [gcsFolderPath, setGcsFolderPath] = useState<string[]>([]);
+  const [bucketsObjectsList, setBucketsObjectsList] = useState([]);
 
   const [folderName, setFolderName] = useState<string | undefined>(
     'Untitled Folder'
@@ -518,6 +519,7 @@ const GcsBucketComponent = ({
 
       let datalist: any = [...bucketsList];
       let existingUntitled = 0;
+      setBucketsObjectsList(bucketsList);
       datalist.forEach((data: { folderName: string }) => {
         if (data.folderName.includes('Untitled Folder')) {
           existingUntitled = existingUntitled + 1;
@@ -558,6 +560,7 @@ const GcsBucketComponent = ({
           folderName: folderNameConcat
         };
       }
+     
 
       setFolderName(newFolderData.folderName);
       setFolderNameNew(newFolderData.folderName);
@@ -586,9 +589,11 @@ const GcsBucketComponent = ({
       }
 
       // Check if a folder with the same name already exists
-      const folderExists = bucketsList.some(
-        (item: IBucketItem) => item.folderName === folderName
-      );
+      const folderExists = bucketsObjectsList.some((item: IBucketItem) => {
+        console.log(folderName, item.folderName);
+        return item.folderName === folderName;
+      });
+      console.log(folderExists, bucketsObjectsList);
 
       if (!folderExists) {
         fetch(
