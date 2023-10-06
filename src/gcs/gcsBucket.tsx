@@ -728,13 +728,14 @@ const GcsBucketComponent = ({
       <div className="gcs-panel-parent">
         <div className="gcs-panel-header">
           <div className="gcs-panel-title">Google Cloud Storage</div>
-          <div onClick={() => listBucketsAPI()}>
+          <div onClick={() => listBucketsAPI()} role="button">
             <iconGcsRefresh.react tag="div" className="gcs-title-icons" />
           </div>
           {gcsFolderPath.length > 0 && (
             <div
               onClick={() => createNewItem()}
               className="gcs-create-new-icon"
+              role="button"
             >
               <iconGcsFolderNew.react tag="div" className="gcs-title-icons" />
             </div>
@@ -749,7 +750,7 @@ const GcsBucketComponent = ({
                 onChange={fileUploadAction}
                 multiple
               />
-              <div onClick={handleFileChange}>
+              <div onClick={handleFileChange} role="button">
                 <iconGcsUpload.react tag="div" className="gcs-title-icons" />
               </div>
             </>
