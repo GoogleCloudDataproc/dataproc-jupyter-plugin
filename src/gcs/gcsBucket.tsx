@@ -387,6 +387,7 @@ const GcsBucketComponent = ({
     folderName: string;
   }
   const listBucketsAPI = async () => {
+    setIsLoading(true);
     const credentials = await authApi();
     if (credentials) {
       let prefixList = '';
@@ -817,7 +818,7 @@ const GcsBucketComponent = ({
             rows={rows}
             prepareRow={prepareRow}
             tableDataCondition={tableDataCondition}
-            fromPage="Buckets"
+            fromPage=""
           />
         </div>
       </div>
