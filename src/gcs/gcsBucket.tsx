@@ -23,6 +23,7 @@ import gcsFolderNewIcon from '../../style/icons/gcs_folder_new_icon.svg';
 import gcsFolderIcon from '../../style/icons/gcs_folder_icon.svg';
 import gcsFileIcon from '../../style/icons/gcs_file_icon.svg';
 import gcsUploadIcon from '../../style/icons/gcs_upload_icon.svg';
+import gcsRefreshIcon from '../../style/icons/gcs_refresh_icon.svg';
 import {
   authApi,
   lastModifiedFormat,
@@ -37,7 +38,6 @@ import {
 import TableData from '../utils/tableData';
 
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
-import PollingTimer from '../utils/pollingTimer';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import * as path from 'path';
@@ -51,6 +51,10 @@ import darkSearchClearIcon from '../../style/icons/dark_search_clear_icon.svg';
 import darkGcsFileIcon from '../../style/icons/gcs_file_icon_dark.svg';
 import darkGcsFolderIcon from '../../style/icons/gcs_folder_icon_dark.svg';
 
+const iconGcsRefresh = new LabIcon({
+  name: 'launcher:gcs-refresh-icon',
+  svgstr: gcsRefreshIcon
+});
 const iconGcsFolderNew = new LabIcon({
   name: 'launcher:gcs-folder-new-icon',
   svgstr: gcsFolderNewIcon
@@ -117,6 +121,7 @@ const GcsBucketComponent = ({
   const [bucketsListUpdate, setBucketsListUpdate] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [gcsFolderPath, setGcsFolderPath] = useState<string[]>([]);
+  const [bucketsObjectsList, setBucketsObjectsList] = useState([]);
 
   const [folderName, setFolderName] = useState<string | undefined>(
     'Untitled Folder'
@@ -124,21 +129,6 @@ const GcsBucketComponent = ({
   const [folderCreated, setFolderCreated] = useState(true);
 
   const [folderNameNew, setFolderNameNew] = useState('Untitled Folder');
-
-  const [pollingDisable, setPollingDisable] = useState(false);
-
-  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-
-  const pollingGCSlist = async (
-    pollingFunction: () => void,
-    pollingDisable: boolean
-  ) => {
-    timer.current = PollingTimer(
-      pollingFunction,
-      pollingDisable,
-      timer.current
-    );
-  };
 
   const data = React.useMemo(() => bucketsListUpdate, [bucketsListUpdate]);
   const columns = React.useMemo(
@@ -380,20 +370,13 @@ const GcsBucketComponent = ({
     let updatedList = bucketsList.filter((item: IBucketItem) => {
       return item.folderName.includes(event.target.value);
     });
-    if (event.target.value === '') {
-      setPollingDisable(false);
-    } else {
-      setPollingDisable(true);
-    }
     setBucketsListUpdate(updatedList);
     setSearchTerm(event.target.value);
-    listBucketsAPI();
   };
 
   const handleSearchClear = () => {
     setSearchTerm('');
     setBucketsListUpdate(bucketsList);
-    setPollingDisable(false);
   };
 
   interface IBucketItem {
@@ -404,6 +387,7 @@ const GcsBucketComponent = ({
     folderName: string;
   }
   const listBucketsAPI = async () => {
+    setIsLoading(true);
     const credentials = await authApi();
     if (credentials) {
       let prefixList = '';
@@ -525,21 +509,16 @@ const GcsBucketComponent = ({
   };
   useEffect(() => {
     listBucketsAPI();
-    pollingGCSlist(listBucketsAPI, pollingDisable);
-
-    return () => {
-      pollingGCSlist(listBucketsAPI, true);
-    };
-  }, [pollingDisable, gcsFolderPath]);
+  }, [gcsFolderPath]);
 
   const createNewItem = async () => {
     if (folderCreated) {
-      pollingGCSlist(listBucketsAPI, true);
       const currentTime = new Date();
       const lastModified = lastModifiedFormat(currentTime);
 
       let datalist: any = [...bucketsList];
       let existingUntitled = 0;
+      setBucketsObjectsList(bucketsList);
       datalist.forEach((data: { folderName: string }) => {
         if (data.folderName.includes('Untitled Folder')) {
           existingUntitled = existingUntitled + 1;
@@ -580,6 +559,7 @@ const GcsBucketComponent = ({
           folderName: folderNameConcat
         };
       }
+     
 
       setFolderName(newFolderData.folderName);
       setFolderNameNew(newFolderData.folderName);
@@ -608,9 +588,11 @@ const GcsBucketComponent = ({
       }
 
       // Check if a folder with the same name already exists
-      const folderExists = bucketsList.some(
-        (item: IBucketItem) => item.folderName === folderName
-      );
+      const folderExists = bucketsObjectsList.some((item: IBucketItem) => {
+        console.log(folderName, item.folderName);
+        return item.folderName === folderName;
+      });
+      console.log(folderExists, bucketsObjectsList);
 
       if (!folderExists) {
         fetch(
@@ -626,16 +608,14 @@ const GcsBucketComponent = ({
           .then(async (response: Response) => {
             if (response.ok) {
               const responseResult = await response.json();
-              pollingGCSlist(listBucketsAPI, false);
               console.log(responseResult);
               toast.success(
                 `Folder ${folderName} successfully created`,
                 toastifyCustomStyle
               );
-              listBucketsAPI();
+            
             } else {
               const errorResponse = await response.json();
-              pollingGCSlist(listBucketsAPI, false);
               console.log(errorResponse);
             }
           })
@@ -753,10 +733,14 @@ const GcsBucketComponent = ({
       <div className="gcs-panel-parent">
         <div className="gcs-panel-header">
           <div className="gcs-panel-title">Google Cloud Storage</div>
+          <div onClick={() => listBucketsAPI()} role="button">
+            <iconGcsRefresh.react tag="div" className="gcs-title-icons" />
+          </div>
           {gcsFolderPath.length > 0 && (
             <div
               onClick={() => createNewItem()}
               className="gcs-create-new-icon"
+              role="button"
             >
               <iconGcsFolderNew.react tag="div" className="gcs-title-icons" />
             </div>
@@ -771,7 +755,7 @@ const GcsBucketComponent = ({
                 onChange={fileUploadAction}
                 multiple
               />
-              <div onClick={handleFileChange}>
+              <div onClick={handleFileChange} role="button">
                 <iconGcsUpload.react tag="div" className="gcs-title-icons" />
               </div>
             </>
@@ -838,7 +822,7 @@ const GcsBucketComponent = ({
             rows={rows}
             prepareRow={prepareRow}
             tableDataCondition={tableDataCondition}
-            fromPage="Buckets"
+            fromPage=""
           />
         </div>
       </div>
