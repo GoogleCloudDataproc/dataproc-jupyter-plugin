@@ -63,7 +63,7 @@ function TableData({
       <tbody
         {...getTableBodyProps()}
         className={
-          fromPage === 'Buckets' ? 'gcs-table-body' : 'clusters-table-body'
+          fromPage === '' ? 'gcs-table-body' : 'clusters-table-body'
         }
       >
         {isLoading ? (
@@ -84,7 +84,7 @@ function TableData({
               <tr
                 {...row.getRowProps()}
                 className={
-                  fromPage === 'Buckets' ?
+                  fromPage === '' ?
                     (selectedRowIndex === index ? 'gcs-row-data-parent-selected': 'gcs-row-data-parent')
                     : 'cluster-list-data-parent'
                 }
