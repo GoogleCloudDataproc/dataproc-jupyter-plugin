@@ -45,6 +45,8 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
+import { injectToastContainer } from './utils/injectToastContainer';
+
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
@@ -99,6 +101,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
+
+    injectToastContainer();
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
