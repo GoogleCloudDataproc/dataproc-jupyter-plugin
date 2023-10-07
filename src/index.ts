@@ -46,14 +46,17 @@ import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
 import { injectToastContainer } from './utils/injectToastContainer';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
 });
 
+const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
+
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'dataproc_jupyter_plugin:plugin',
+  id: PLUGIN_ID,
   autoStart: true,
   optional: [
     IFileBrowserFactory,
@@ -61,7 +64,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     IMainMenu,
     ILabShell,
     INotebookTracker,
-    IThemeManager
+    IThemeManager,
+    ISettingRegistry
   ],
   activate: async (
     app: JupyterFrontEnd,
@@ -70,7 +74,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     mainMenu: IMainMenu,
     labShell: ILabShell,
     notebookTracker: INotebookTracker,
-    themeManager: IThemeManager
+    themeManager: IThemeManager,
+    settingRegistry: ISettingRegistry
   ) => {
     const { commands } = app;
 
@@ -102,54 +107,97 @@ const extension: JupyterFrontEndPlugin<void> = {
       localStorage.removeItem('notebookValue');
     });
 
+    // React-Toastify needs a ToastContainer to render toasts, since we don't
+    // have a global React Root, lets just inject one in the body.
     injectToastContainer();
+
+    // START -- Enable Preview Features.
+    const settings = await settingRegistry.load(PLUGIN_ID);
+
+    // The current value of whether or not preview features are enabled.
+    let previewEnabled = settings.get('previewEnabled').composite as boolean;
+    let panelDpms: Panel | undefined, panelGcs: Panel | undefined;
+    settings.changed.connect(() => {
+      previewEnabled = settings.get('previewEnabled').composite as boolean;
+      onPreviewEnabledChanged();
+    });
+
+    /**
+     * Helper method for when the preview flag gets updated.  This reads the
+     * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
+     * as necessary.
+     */
+    const onPreviewEnabledChanged = () => {
+      if (!previewEnabled) {
+        // Preview was disabled, tear everything down.
+        panelDpms?.dispose();
+        panelGcs?.dispose();
+        panelDpms = undefined;
+        panelGcs = undefined;
+      } else {
+        // Preview was enabled, (re)create DPMS and GCS.
+        panelDpms = new Panel();
+        panelDpms.id = 'dpms-tab';
+        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+        panelGcs = new Panel();
+        panelGcs.id = 'GCS-bucket-tab';
+        panelGcs.addWidget(
+          new GcsBucket(
+            app as JupyterLab,
+            factory as IFileBrowserFactory,
+            themeManager
+          )
+        );
+        // Update the icons.
+        onThemeChanged();
+        app.shell.add(panelGcs, 'left', { rank: 1001 });
+        app.shell.add(panelDpms, 'left', { rank: 1000 });
+      }
+    };
+
+    onPreviewEnabledChanged();
+    // END -- Enable Preview Features.
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
       new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
     );
 
-    let lastClusterName = '';
-    const panel = new Panel();
-    panel.id = 'dpms-tab';
-    themeManager.themeChanged.connect((sender, args) => {
-      const isLightTheme = themeManager.isLight(args.newValue);
+    /**
+     * Handler for when the Jupyter Lab theme changes.
+     */
+    const onThemeChanged = () => {
+      if (!panelDpms || !panelGcs) return;
+      const isLightTheme = themeManager.theme
+        ? themeManager.isLight(themeManager.theme)
+        : true;
       if (isLightTheme) {
-        panel.title.icon = iconDpms;
+        panelDpms.title.icon = iconDpms;
         panelGcs.title.icon = iconStorage;
       } else {
-        panel.title.icon = iconDpmsDark;
+        panelDpms.title.icon = iconDpmsDark;
         panelGcs.title.icon = iconStorageDark;
       }
-    });
+    };
+    themeManager.themeChanged.connect(onThemeChanged);
+
     const loadDpmsWidget = (value: string) => {
-      const existingWidgets = panel.widgets;
+      // If DPMS is not enabled, no-op.
+      if (!panelDpms) return;
+      const existingWidgets = panelDpms.widgets;
       existingWidgets.forEach(widget => {
         if (widget instanceof dpmsWidget) {
           widget.dispose();
         }
       });
       const newWidget = new dpmsWidget(app as JupyterLab, themeManager);
-      panel.addWidget(newWidget);
+      panelDpms.addWidget(newWidget);
     };
 
-    panel.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-    lastClusterName = localStorage.getItem('notebookValue') || '';
+    let lastClusterName = localStorage.getItem('notebookValue') || '';
     if (lastClusterName) {
       loadDpmsWidget(lastClusterName);
     }
-    app.shell.add(panel, 'left', { rank: 1000 });
-
-    const panelGcs = new Panel();
-    panelGcs.id = 'GCS-bucket-tab';
-    panelGcs.addWidget(
-      new GcsBucket(
-        app as JupyterLab,
-        factory as IFileBrowserFactory,
-        themeManager
-      )
-    );
-    app.shell.add(panelGcs, 'left', { rank: 1001 });
 
     const onTitleChanged = async (title: Title<Widget>) => {
       const widget = title.owner as NotebookPanel;
