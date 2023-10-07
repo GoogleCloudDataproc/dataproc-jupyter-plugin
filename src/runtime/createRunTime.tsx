@@ -360,11 +360,11 @@ function CreateRunTime({
         const peripheralsConfig = environmentConfig.peripheralsConfig;
 
         if (executionConfig) {
-          
-         selectedNetworkRadio==='sharedVpc'?
-          setSharedvpcSelected(executionConfig.subnetworkUri.split('/')[10]):setSubNetworkSelected(executionConfig.subnetworkUri);
+          selectedNetworkRadio === 'sharedVpc'
+            ? setSharedvpcSelected(executionConfig.subnetworkUri.split('/')[10])
+            : setSubNetworkSelected(executionConfig.subnetworkUri);
           if (executionConfig.hasOwnProperty('idleTtl')) {
-            const idleTtlUnit = executionConfig.idleTtl.slice(-1); 
+            const idleTtlUnit = executionConfig.idleTtl.slice(-1);
 
             setTimeSelected(idleTtlUnit);
 
@@ -804,9 +804,10 @@ function CreateRunTime({
       idleValidation ||
       runTimeValidation ||
       autoValidation ||
-      duplicateValidation||
-      (selectedNetworkRadio === 'sharedVpc' && sharedSubNetworkList.length===0)||
-      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected ==='')
+      duplicateValidation ||
+      (selectedNetworkRadio === 'sharedVpc' &&
+        sharedSubNetworkList.length === 0) ||
+      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '')
     );
   }
   const createRuntimeApi = async (payload: any) => {
@@ -1257,8 +1258,7 @@ function CreateRunTime({
                   className="select-runtime-radio-style"
                   value="sharedVpc"
                   checked={selectedNetworkRadio === 'sharedVpc'}
-                  onChange={() => handleNetworkSharedVpcRadioChange()
-                   }
+                  onChange={() => handleNetworkSharedVpcRadioChange()}
                 />
                 <div className="create-batch-message">
                   Networks shared from host project: "{projectInfo}"
@@ -1318,11 +1318,12 @@ function CreateRunTime({
                   )}
                 </div>
               )}
-               {selectedNetworkRadio === 'projectNetwork' && networkList.length===0 &&
-              <div className='create-no-list-message'>
-                No local networks are available.
-                </div>
-                }
+              {selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length === 0 && (
+                  <div className="create-no-list-message">
+                    No local networks are available.
+                  </div>
+                )}
               {selectedNetworkRadio === 'sharedVpc' && (
                 <div className="select-text-overlay">
                   <Autocomplete
@@ -1335,13 +1336,14 @@ function CreateRunTime({
                   />
                 </div>
               )}
-              {selectedNetworkRadio === 'sharedVpc' && sharedSubNetworkList.length===0 &&
-              <div className='create-no-list-message'>
-                No shared subnetworks are available in this region.
-                </div>
-                }
+              {selectedNetworkRadio === 'sharedVpc' &&
+                sharedSubNetworkList.length === 0 && (
+                  <div className="create-no-list-message">
+                    No shared subnetworks are available in this region.
+                  </div>
+                )}
             </div>
-           
+
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
                 Network tags
@@ -1567,6 +1569,11 @@ function CreateRunTime({
             />
             <div className="job-button-style-parent">
               <div
+                onClick={() => {
+                  if (!isSaveDisabled()) {
+                    handleSave();
+                  }
+                }}
                 className={
                   isSaveDisabled()
                     ? 'submit-button-disable-style'
@@ -1574,21 +1581,14 @@ function CreateRunTime({
                 }
                 aria-label="submit Batch"
               >
-                <div
-                  onClick={() => {
-                    if (!isSaveDisabled()) {
-                      handleSave();
-                    }
-                  }}
-                >
-                  SAVE
-                </div>
+                <div>SAVE</div>
               </div>
               <div
                 className="job-cancel-button-style"
                 aria-label="cancel Batch"
+                onClick={handleCancelButton}
               >
-                <div onClick={handleCancelButton}>CANCEL</div>
+                <div>CANCEL</div>
               </div>
               {error.isOpen && (
                 <ErrorPopup
