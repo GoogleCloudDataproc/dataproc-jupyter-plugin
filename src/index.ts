@@ -122,6 +122,24 @@ const extension: JupyterFrontEndPlugin<void> = {
       onPreviewEnabledChanged();
     });
 
+     /**
+     * Handler for when the Jupyter Lab theme changes.
+     */
+     const onThemeChanged = () => {
+      if (!panelDpms || !panelGcs) return;
+      const isLightTheme = themeManager.theme
+        ? themeManager.isLight(themeManager.theme)
+        : true;
+      if (isLightTheme) {
+        panelDpms.title.icon = iconDpms;
+        panelGcs.title.icon = iconStorage;
+      } else {
+        panelDpms.title.icon = iconDpmsDark;
+        panelGcs.title.icon = iconStorageDark;
+      }
+    };
+    themeManager.themeChanged.connect(onThemeChanged);
+
     /**
      * Helper method for when the preview flag gets updated.  This reads the
      * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
@@ -163,23 +181,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
     );
 
-    /**
-     * Handler for when the Jupyter Lab theme changes.
-     */
-    const onThemeChanged = () => {
-      if (!panelDpms || !panelGcs) return;
-      const isLightTheme = themeManager.theme
-        ? themeManager.isLight(themeManager.theme)
-        : true;
-      if (isLightTheme) {
-        panelDpms.title.icon = iconDpms;
-        panelGcs.title.icon = iconStorage;
-      } else {
-        panelDpms.title.icon = iconDpmsDark;
-        panelGcs.title.icon = iconStorageDark;
-      }
-    };
-    themeManager.themeChanged.connect(onThemeChanged);
+   
 
     const loadDpmsWidget = (value: string) => {
       // If DPMS is not enabled, no-op.
