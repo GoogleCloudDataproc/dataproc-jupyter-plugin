@@ -165,6 +165,7 @@ const GcsBucketComponent = ({
 
   const handleFileClick = async (fileName: string) => {
     let editedFileName = fileName.replace(/\//g, '%2F');
+    let localFileName = fileName.replace(/\//g, '_');
     const credentials = await authApi();
     if (credentials) {
       let apiURL = `${GCS_URL}/${gcsFolderPath[0]}/o/${editedFileName}?alt=media`;
@@ -196,22 +197,22 @@ const GcsBucketComponent = ({
               }
 
               // Replace 'path/to/save/file.txt' with the desired path and filename
-              const filePath = `.${gcsTempFolderPath}${path.sep}${editedFileName}`;
+              const filePath = `.${gcsTempFolderPath}${path.sep}${localFileName}`;
 
-              // Remove any existing event handlers before adding a new one
-              contentsManager.fileChanged.disconnect(handleFileChangeConnect);
+              // // Remove any existing event handlers before adding a new one
+              // contentsManager.fileChanged.disconnect(handleFileChangeConnect);
 
-              // Function to handle the fileChanged event
-              async function handleFileChangeConnect(_: any, change: any) {
-                const response = await contentsManager.get(filePath);
-                if (change.type === 'save') {
-                  // Call your function when a file is saved
-                  handleFileSave(change.newValue, response.content);
-                }
-              }
+              // // Function to handle the fileChanged event
+              // async function handleFileChangeConnect(_: any, change: any) {
+              //   const response = await contentsManager.get(filePath);
+              //   if (change.type === 'save') {
+              //     // Call your function when a file is saved
+              //     handleFileSave(change.newValue, response.content);
+              //   }
+              // }
 
-              // Listen for the fileChanged event
-              contentsManager.fileChanged.connect(handleFileChangeConnect);
+              // // Listen for the fileChanged event
+              // contentsManager.fileChanged.connect(handleFileChangeConnect);
 
               // Save the file to the workspace
               await contentsManager.save(filePath, {
@@ -220,8 +221,8 @@ const GcsBucketComponent = ({
                 content: responseResult
               });
 
-              // Refresh the file browser to reflect the new file
-              app.shell.currentWidget?.update();
+              // // Refresh the file browser to reflect the new file
+              // app.shell.currentWidget?.update();
 
               app.commands.execute('docmanager:open', {
                 path: filePath
@@ -298,6 +299,7 @@ const GcsBucketComponent = ({
       );
     }
   };
+
   interface IFileDetail {
     type: string;
     name: string;
@@ -351,6 +353,8 @@ const GcsBucketComponent = ({
         });
     }
   };
+
+  console.debug(handleFileSave)
 
   const {
     getTableProps,
@@ -417,7 +421,7 @@ const GcsBucketComponent = ({
             .then((responseResult: IBucketItem) => {
               let sortedResponse = responseResult.items.sort(
                 (itemOne: IBucketItem, itemTwo: IBucketItem) =>
-                  itemOne.updated < itemTwo.updated ? -1 : 1
+                  itemOne.name < itemTwo.name ? -1 : 1
               );
               let transformBucketsData = [];
               transformBucketsData = sortedResponse.map(
