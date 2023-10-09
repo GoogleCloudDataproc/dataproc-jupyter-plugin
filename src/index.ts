@@ -40,7 +40,7 @@ import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
-import { GcsBucket } from './gcs/gcsBucket';
+// import { GcsBucket } from './gcs/gcsBucket';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
@@ -123,47 +123,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     /**
-     * Helper method for when the preview flag gets updated.  This reads the
-     * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
-     * as necessary.
-     */
-    const onPreviewEnabledChanged = () => {
-      if (!previewEnabled) {
-        // Preview was disabled, tear everything down.
-        panelDpms?.dispose();
-        panelGcs?.dispose();
-        panelDpms = undefined;
-        panelGcs = undefined;
-      } else {
-        // Preview was enabled, (re)create DPMS and GCS.
-        panelDpms = new Panel();
-        panelDpms.id = 'dpms-tab';
-        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-        panelGcs = new Panel();
-        panelGcs.id = 'GCS-bucket-tab';
-        panelGcs.addWidget(
-          new GcsBucket(
-            app as JupyterLab,
-            factory as IFileBrowserFactory,
-            themeManager
-          )
-        );
-        // Update the icons.
-        onThemeChanged();
-        app.shell.add(panelGcs, 'left', { rank: 1001 });
-        app.shell.add(panelDpms, 'left', { rank: 1000 });
-      }
-    };
-
-    onPreviewEnabledChanged();
-    // END -- Enable Preview Features.
-
-    app.docRegistry.addWidgetExtension(
-      'Notebook',
-      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
-    );
-
-    /**
      * Handler for when the Jupyter Lab theme changes.
      */
     const onThemeChanged = () => {
@@ -180,6 +139,47 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     };
     themeManager.themeChanged.connect(onThemeChanged);
+
+    /**
+     * Helper method for when the preview flag gets updated.  This reads the
+     * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
+     * as necessary.
+     */
+    const onPreviewEnabledChanged = () => {
+      if (!previewEnabled) {
+        // Preview was disabled, tear everything down.
+        // panelDpms?.dispose();
+        // panelGcs?.dispose();
+        // panelDpms = undefined;
+        // panelGcs = undefined;
+      } else {
+        // Preview was enabled, (re)create DPMS and GCS.
+        // panelDpms = new Panel();
+        // panelDpms.id = 'dpms-tab';
+        // panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+        // panelGcs = new Panel();
+        // panelGcs.id = 'GCS-bucket-tab';
+        // panelGcs.addWidget(
+        //   new GcsBucket(
+        //     app as JupyterLab,
+        //     factory as IFileBrowserFactory,
+        //     themeManager
+        //   )
+        // );
+        // // Update the icons.
+        // onThemeChanged();
+        // app.shell.add(panelGcs, 'left', { rank: 1001 });
+        // app.shell.add(panelDpms, 'left', { rank: 1000 });
+      }
+    };
+
+    onPreviewEnabledChanged();
+    // END -- Enable Preview Features.
+
+    app.docRegistry.addWidgetExtension(
+      'Notebook',
+      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
+    );
 
     const loadDpmsWidget = (value: string) => {
       // If DPMS is not enabled, no-op.
@@ -273,7 +273,8 @@ const extension: JupyterFrontEndPlugin<void> = {
           (newValue.title.label === 'Launcher' ||
             newValue.title.label === 'Config Setup' ||
             newValue.title.label === 'Clusters' ||
-            newValue.title.label === 'Serverless') &&
+            newValue.title.label === 'Serverless' ||
+            newValue.title.label === 'Settings') &&
           lastClusterName !== ''
         ) {
           localStorage.setItem('oldNotebookValue', lastClusterName || '');
@@ -287,7 +288,8 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label !== 'Config Setup' &&
             newValue.title.label !== 'Clusters' &&
             newValue.title.label !== 'Serverless' &&
-            newValue.title.label !== 'Runtime template'
+            newValue.title.label !== 'Runtime template' &&
+            newValue.title.label !== 'Settings'
           ) {
             let oldNotebook = localStorage.getItem('oldNotebookValue');
             localStorage.setItem('notebookValue', oldNotebook || '');
