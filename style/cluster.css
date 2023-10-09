@@ -128,9 +128,10 @@
 .filter-section-part {
   border: 0px;
   width: 100%;
+  background-color: var(--jp-layout-color0);
 }
-.filter-section-part:focus{
-outline: none;
+.filter-section-part:focus {
+  outline: none;
 }
 
 .gcs-filter-section-part {
