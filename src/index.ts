@@ -40,13 +40,13 @@ import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
-// import { GcsBucket } from './gcs/gcsBucket';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
 import { injectToastContainer } from './utils/injectToastContainer';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { GcsBucket } from './gcs/gcsBucket';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -148,28 +148,28 @@ const extension: JupyterFrontEndPlugin<void> = {
     const onPreviewEnabledChanged = () => {
       if (!previewEnabled) {
         // Preview was disabled, tear everything down.
-        // panelDpms?.dispose();
-        // panelGcs?.dispose();
-        // panelDpms = undefined;
-        // panelGcs = undefined;
+        panelDpms?.dispose();
+        panelGcs?.dispose();
+        panelDpms = undefined;
+        panelGcs = undefined;
       } else {
         // Preview was enabled, (re)create DPMS and GCS.
-        // panelDpms = new Panel();
-        // panelDpms.id = 'dpms-tab';
-        // panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-        // panelGcs = new Panel();
-        // panelGcs.id = 'GCS-bucket-tab';
-        // panelGcs.addWidget(
-        //   new GcsBucket(
-        //     app as JupyterLab,
-        //     factory as IFileBrowserFactory,
-        //     themeManager
-        //   )
-        // );
-        // // Update the icons.
-        // onThemeChanged();
-        // app.shell.add(panelGcs, 'left', { rank: 1001 });
-        // app.shell.add(panelDpms, 'left', { rank: 1000 });
+        panelDpms = new Panel();
+        panelDpms.id = 'dpms-tab';
+        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+        panelGcs = new Panel();
+        panelGcs.id = 'GCS-bucket-tab';
+        panelGcs.addWidget(
+          new GcsBucket(
+            app as JupyterLab,
+            factory as IFileBrowserFactory,
+            themeManager
+          )
+        );
+        // Update the icons.
+        onThemeChanged();
+        app.shell.add(panelGcs, 'left', { rank: 1001 });
+        app.shell.add(panelDpms, 'left', { rank: 1000 });
       }
     };
 
