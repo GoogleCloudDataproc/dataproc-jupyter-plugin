@@ -143,8 +143,9 @@ function CreateRunTime({
   const [userInfo, setUserInfo] = useState('');
   const [duplicateValidation, setDuplicateValidation] = useState(false);
   const [isloadingNetwork, setIsloadingNetwork] = useState(false);
-  const [selectedNetworkRadio, setSelectedNetworkRadio] =
-    useState('projectNetwork');
+  const [selectedNetworkRadio, setSelectedNetworkRadio] = useState<
+    'sharedVpc' | 'projectNetwork'
+  >('projectNetwork');
   const [projectInfo, setProjectInfo] = useState('');
   const [sharedSubNetworkList, setSharedSubNetworkList] = useState<string[]>(
     []
@@ -245,47 +246,50 @@ function CreateRunTime({
     }
   };
 
-  interface IlistShared {
-    items: {
-      subnetwork: string;
-    }[];
-  }
   const listSharedVPC = async (projectName: string) => {
-    const credentials = await authApi();
-    if (credentials) {
-      let apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
-      fetch(apiURL, {
+    try {
+      const credentials = await authApi();
+      if (!credentials) {
+        return false;
+      }
+      const apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
+      const response = await fetch(apiURL, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
           Authorization: API_HEADER_BEARER + credentials.access_token
         }
-      }).then((response: Response) => {
-        response
-          .json()
-          .then((responseResult: IlistShared) => {
-            /*
+      });
+      const responseResult = await response.json();
+      /*
               Extracting subNetwork from items
               Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/aggregated/subnetworks/listUsable",
             */
 
-            const transformedSharedvpcSubNetworkList: string[] =
-              responseResult.items.map(data => {
-                return data.subnetwork.split('/')[10];
-              });
+      const transformedSharedvpcSubNetworkList: string[] = responseResult.items
+        .map((data: { subnetwork: string }) => {
+          // Extract region and subnet from the subnet URI.
+          const matches =
+            /\/compute\/v1\/projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
+              data.subnetwork
+            )?.groups;
+          if (matches?.['region'] != credentials.region_id) {
+            // If region doesn't match the current region, set it to undefined and let
+            // it be filtered out below.
+            return undefined;
+          }
+          return matches?.['subnetwork'];
+        })
+        // Filter out empty values
+        .filter((subNetwork: string) => subNetwork);
 
-            setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
-          })
-          .catch((err: Error) => {
-            console.error('Error displaying sharedVPC subNetwork', err);
-            toast.error(
-              'Failed to fetch  sharedVPC subNetwork',
-              toastifyCustomStyle
-            );
-          });
-      });
+      setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
+    } catch (err) {
+      console.error('Error displaying sharedVPC subNetwork', err);
+      toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
     }
   };
+
   const updateLogic = () => {
     if (selectedRuntimeClone !== undefined) {
       const {
@@ -360,9 +364,19 @@ function CreateRunTime({
         const peripheralsConfig = environmentConfig.peripheralsConfig;
 
         if (executionConfig) {
-          selectedNetworkRadio === 'sharedVpc'
-            ? setSharedvpcSelected(executionConfig.subnetworkUri.split('/')[10])
-            : setSubNetworkSelected(executionConfig.subnetworkUri);
+          const sharedVpcMatches =
+            /projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
+              executionConfig.subnetworkUri
+            );
+          // Is this a shared VPC?
+          if (sharedVpcMatches?.groups?.['subnetwork']) {
+            setSharedvpcSelected(sharedVpcMatches?.groups?.['subnetwork']);
+            setSelectedNetworkRadio('sharedVpc');
+          } else {
+            setSubNetworkSelected(executionConfig.subnetworkUri);
+            setSelectedNetworkRadio('projectNetwork');
+          }
+
           if (executionConfig.hasOwnProperty('idleTtl')) {
             const idleTtlUnit = executionConfig.idleTtl.slice(-1);
 
