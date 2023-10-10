@@ -44,13 +44,14 @@ import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
 import { DataprocWidget } from '../controls/DataprocWidget';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
   svgstr: deleteIcon
 });
 
-const BatchesComponent = (): React.JSX.Element => {
+const BatchesComponent = ({themeManager}:{themeManager: IThemeManager}): React.JSX.Element => {
   const [batchesList, setBatchesList] = useState([]);
   const [selectedMode, setSelectedMode] = useState('Batches');
   const [isLoading, setIsLoading] = useState(true);
@@ -297,6 +298,7 @@ const BatchesComponent = (): React.JSX.Element => {
               batchSelected={batchSelected}
               setDetailedBatchView={setDetailedBatchView}
               setCreateBatchView={setCreateBatchView}
+              themeManager={themeManager}
             />
           )}
           {createBatchView && (
@@ -304,6 +306,7 @@ const BatchesComponent = (): React.JSX.Element => {
               setCreateBatchView={setCreateBatchView}
               regionName={regionName}
               projectName={projectName}
+              themeManager={themeManager}
             />
           )}
 
@@ -329,7 +332,8 @@ const BatchesComponent = (): React.JSX.Element => {
               }
               <div>
                 {selectedMode === 'Sessions' ? (
-                  <ListSessions />
+                  <ListSessions
+                  themeManager = {themeManager} />
                 ) : (
                   <ListBatches
                     batchesList={batchesList}
@@ -339,6 +343,7 @@ const BatchesComponent = (): React.JSX.Element => {
                     handleBatchDetails={handleBatchDetails}
                     setCreateBatchView={setCreateBatchView}
                     createBatchView={createBatchView}
+                    themeManager = {themeManager}
                   />
                 )}
               </div>
@@ -363,6 +368,6 @@ const BatchesComponent = (): React.JSX.Element => {
 
 export class Batches extends DataprocWidget {
   renderInternal(): React.JSX.Element {
-    return <BatchesComponent />;
+    return <BatchesComponent themeManager={this.themeManager}/>;
   }
 }

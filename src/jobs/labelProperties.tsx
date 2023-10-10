@@ -57,12 +57,14 @@ function LabelProperties({
   labelEditMode,
   selectedRuntimeClone,
   batchInfoResponse,
-  createBatch
+  createBatch,
+  themeManager
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   useEffect(() => {
     if (!labelEditMode) {
       if (
@@ -200,7 +202,11 @@ function LabelProperties({
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
                       <label
-                        className="select-dropdown-text"
+                        className={
+                          isDarkTheme
+                            ? 'select-dropdown-text dark-theme'
+                            : 'select-dropdown-text'
+                        }
                         htmlFor="metastore-project"
                       >
                         {`Key ${index + 1}*`}
@@ -266,7 +272,11 @@ function LabelProperties({
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
                       <label
-                        className="select-dropdown-text"
+                        className={
+                          isDarkTheme
+                            ? 'select-dropdown-text dark-theme'
+                            : 'select-dropdown-text'
+                        }
                         htmlFor="metastore-project"
                       >
                         {`Value ${index + 1}`}
@@ -345,8 +355,7 @@ function LabelProperties({
               ) {
                 handleAddLabel(e);
               }
-            }
-            else{
+            } else {
               e.preventDefault();
             }
           }}

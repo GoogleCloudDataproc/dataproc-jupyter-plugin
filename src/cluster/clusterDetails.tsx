@@ -54,6 +54,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SubmitJob from '../jobs/submitJob';
 import PollingTimer from '../utils/pollingTimer';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -106,6 +107,7 @@ interface IClusterDetailsProps {
   clusterResponse: object;
   selectedJobClone: any;
   setSelectedJobClone?: (value: boolean) => void;
+  themeManager: IThemeManager;
 }
 function ClusterDetails({
   clusterSelected,
@@ -117,7 +119,8 @@ function ClusterDetails({
   submitJobView,
   clusterResponse,
   selectedJobClone,
-  setSelectedJobClone
+  setSelectedJobClone,
+  themeManager
 }: IClusterDetailsProps) {
   const [clusterInfo, setClusterInfo] = useState({
     status: { state: '' },
@@ -312,6 +315,7 @@ function ClusterDetails({
           setSubmitJobView={setSubmitJobView}
           selectedJobClone={selectedJobClone}
           clusterResponse={clusterResponse}
+          themeManager = {themeManager}
         />
       )}
       {deletePopupOpen && (
@@ -418,6 +422,7 @@ function ClusterDetails({
                 setSubmitJobView={setSubmitJobView}
                 setSelectedJobClone={setSelectedJobClone}
                 clusterResponse={clusterResponse}
+                themeManager = {themeManager}
               />
             </div>
           ) : (

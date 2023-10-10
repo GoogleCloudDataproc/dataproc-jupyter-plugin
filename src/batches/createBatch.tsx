@@ -63,7 +63,7 @@ import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
-
+import { IThemeManager } from '@jupyterlab/apputils';
 
 type Network = {
   selfLink: string;
@@ -88,6 +88,7 @@ interface ICreateBatchProps {
   batchInfoResponse?: any;
   createBatch?: boolean;
   setCreateBatch?: (value: boolean) => void;
+  themeManager: IThemeManager;
 }
 
 function batchTypeFunction(batchKey: string) {
@@ -113,8 +114,10 @@ function CreateBatch({
   projectName,
   batchInfoResponse,
   setCreateBatch,
-  createBatch
+  createBatch,
+  themeManager
 }: ICreateBatchProps) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   let batchKeys: string[] = [];
   let batchType = 'spark';
   let mainClass = '';
@@ -333,7 +336,7 @@ function CreateBatch({
     ];
 
     setBatchTypeList(batchTypeData);
-    
+
     listClustersAPI();
     listNetworksAPI();
     listKeyRingsAPI();
@@ -804,9 +807,7 @@ function CreateBatch({
               );
               const keyLabelStructureSubNetwork = transformedSubNetworkList
                 .filter((obj: SubnetworkData) => obj.subnetworks !== undefined)
-                .map((obj: SubnetworkData) => 
-                   obj.subnetworks
-               );
+                .map((obj: SubnetworkData) => obj.subnetworks);
               setSubNetworklist(keyLabelStructureSubNetwork);
               setSubNetworkSelected(keyLabelStructureSubNetwork[0]);
             })
@@ -1164,9 +1165,9 @@ function CreateBatch({
   const handleServiceSelected = (data: string | null) => {
     setServicesSelected(data!.toString());
   };
- 
+
   const handleProjectIdChange = (data: string | null) => {
-    setProjectId(data??'');
+    setProjectId(data ?? '');
     setRegion('');
     setRegionList([]);
     setServicesList([]);
@@ -1183,9 +1184,7 @@ function CreateBatch({
     setNetworkSelected(data!.toString());
     listSubNetworksAPI(data!.toString());
   };
-  const handleSubNetworkChange = (
-    data: string|null
-  ) => {
+  const handleSubNetworkChange = (data: string | null) => {
     setSubNetworkSelected(data!.toString());
   };
   const handleKeyRingChange = (data: DropdownProps | null) => {
@@ -1205,7 +1204,7 @@ function CreateBatch({
   };
 
   const handleClusterSelected = (data: string | null) => {
-    setClusterSelected(data??'');
+    setClusterSelected(data ?? '');
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -1236,7 +1235,14 @@ function CreateBatch({
           <form onSubmit={handleSubmit}>
             <div className="submit-job-label-header">Batch info</div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="batch-id">
+              <label
+                className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                }
+                htmlFor="batch-id"
+              >
                 Batch ID*
               </label>
               <Input
@@ -1254,7 +1260,11 @@ function CreateBatch({
             )}
             <div className="select-text-overlay">
               <label
-                className="select-title-text region-disable"
+                className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme region-disable'
+                    : 'select-title-text region-disable'
+                }
                 htmlFor="region"
               >
                 Region*
@@ -1268,7 +1278,14 @@ function CreateBatch({
             </div>
             <div className="submit-job-label-header">Container</div>
             <div className="select-text-overlay">
-              <label className="select-dropdown-text" htmlFor="batch-type">
+              <label
+                className={
+                  isDarkTheme
+                    ? 'select-dropdown-text dark-theme'
+                    : 'select-dropdown-text'
+                }
+                htmlFor="batch-type"
+              >
                 Batch type*
               </label>
               <Select
@@ -1281,7 +1298,14 @@ function CreateBatch({
               />
             </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="runtime-version">
+              <label
+                className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                }
+                htmlFor="runtime-version"
+              >
                 Runtime version*
               </label>
               <Input
@@ -1312,7 +1336,14 @@ function CreateBatch({
                 {selectedRadio === 'mainClass' && (
                   <div className="create-batch-input">
                     <div className="select-text-overlay">
-                      <label className="select-title-text" htmlFor="main-class">
+                      <label
+                        className={
+                          isDarkTheme
+                            ? 'select-title-text dark-theme'
+                            : 'select-title-text'
+                        }
+                        htmlFor="main-class"
+                      >
                         Main class*
                       </label>
                       <Input
@@ -1360,7 +1391,14 @@ function CreateBatch({
                 {selectedRadio === 'mainJarURI' && (
                   <div className="create-batch-input">
                     <div className="select-text-overlay">
-                      <label className="select-title-text" htmlFor="main-jar">
+                      <label
+                        className={
+                          isDarkTheme
+                            ? 'select-title-text dark-theme'
+                            : 'select-title-text'
+                        }
+                        htmlFor="main-jar"
+                      >
                         Main jar*
                       </label>
                       <Input
@@ -1401,11 +1439,17 @@ function CreateBatch({
                 )}
               </div>
             )}
-
             {batchTypeSelected === 'sparkR' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="main-r-file">
+                  <label
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
+                    htmlFor="main-r-file"
+                  >
                     Main R file*
                   </label>
                   <Input
@@ -1445,7 +1489,11 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className="select-title-text"
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
                     htmlFor="main-python-file"
                   >
                     Main python file*
@@ -1487,7 +1535,11 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className="select-title-text"
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
                     htmlFor="additional-python-files"
                   >
                     Additional python files
@@ -1535,7 +1587,14 @@ function CreateBatch({
             {batchTypeSelected === 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="query-file">
+                  <label
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
+                    htmlFor="query-file"
+                  >
                     Query file*
                   </label>
                   <Input
@@ -1572,7 +1631,11 @@ function CreateBatch({
             )}
             <div className="select-text-overlay">
               <label
-                className="select-title-text"
+                className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                }
                 htmlFor="custom-container-image"
               >
                 Custom container image
@@ -1586,44 +1649,52 @@ function CreateBatch({
               />
             </div>
             <div className="create-custom-messagelist">
-              {CUSTOM_CONTAINER_MESSAGE} </div> <div className="create-container-message">
-                <div className="create-container-image-message">
+              {CUSTOM_CONTAINER_MESSAGE}{' '}
+            </div>{' '}
+            <div className="create-container-message">
+              <div className="create-container-image-message">
                 {CUSTOM_CONTAINER_MESSAGE_PART}
-                </div>
-                <div
-                  className="learn-more-url"
-                  onClick={() => {
-                    window.open(`${CONTAINER_REGISTERY}`, '_blank');
-                  }}
-                >
-                  Container Registry
-                </div>
-                &nbsp; <div className="create-container-image-message">
-                or 
-              </div>&nbsp;
-                <div
-                  className="learn-more-url"
-                  onClick={() => {
-                    window.open(`${ARTIFACT_REGISTERY}`, '_blank');
-                  }}
-                >
-                  Artifact Registry
-                </div>
-                {' . '}
-                <div
-                  className="learn-more-url"
-                  onClick={() => {
-                    window.open(`${CUSTOM_CONTAINERS}`, '_blank');
-                  }}
-                >
-                  Learn more
-                </div>
               </div>
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${CONTAINER_REGISTERY}`, '_blank');
+                }}
+              >
+                Container Registry
+              </div>
+              &nbsp; <div className="create-container-image-message">or</div>
+              &nbsp;
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${ARTIFACT_REGISTERY}`, '_blank');
+                }}
+              >
+                Artifact Registry
+              </div>
+              {' . '}
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+                }}
+              >
+                Learn more
+              </div>
+            </div>
             {
               batchTypeSelected !== 'sparkR' && (
                 <>
                   <div className="select-text-overlay">
-                    <label className="select-title-text" htmlFor="jar-files">
+                    <label
+                      className={
+                        isDarkTheme
+                          ? 'select-title-text dark-theme'
+                          : 'select-title-text'
+                      }
+                      htmlFor="jar-files"
+                    >
                       Jar files
                     </label>
                     <TagsInput
@@ -1675,7 +1746,14 @@ function CreateBatch({
             {batchTypeSelected !== 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="files">
+                  <label
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
+                    htmlFor="files"
+                  >
                     Files
                   </label>
                   <TagsInput
@@ -1724,7 +1802,14 @@ function CreateBatch({
             {batchTypeSelected !== 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="archive-files">
+                  <label
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
+                    htmlFor="archive-files"
+                  >
                     Archive files
                   </label>
                   <TagsInput
@@ -1775,7 +1860,14 @@ function CreateBatch({
             {batchTypeSelected !== 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="arguments">
+                  <label
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
+                    htmlFor="arguments"
+                  >
                     Arguments
                   </label>
                   <TagsInput
@@ -1819,6 +1911,7 @@ function CreateBatch({
                   setValueValidation={setValueValidation}
                   duplicateKeyError={duplicateKeyError}
                   setDuplicateKeyError={setDuplicateKeyError}
+                  themeManager={themeManager}
                 />
               </>
             )}
@@ -1826,7 +1919,14 @@ function CreateBatch({
               Execution Configuration
             </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="service-account">
+              <label
+                className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                }
+                htmlFor="service-account"
+              >
                 Service account
               </label>
               <Input
@@ -1889,7 +1989,14 @@ function CreateBatch({
               )}
             </div>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="network-tags">
+              <label
+                className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                }
+                htmlFor="network-tags"
+              >
                 Network tags
               </label>
               <TagsInput
@@ -2041,7 +2148,6 @@ function CreateBatch({
                 )}
               </div>
             </div>
-
             <div className="submit-job-label-header">
               Peripheral Configuration
             </div>
@@ -2059,20 +2165,20 @@ function CreateBatch({
             </div>
             <div className="create-messagelist">{METASTORE_MESSAGE}</div>
             <div className="select-text-overlay">
-            <DynamicDropdown
-                  value={projectId}
-                  onChange={(_, projectId) => handleProjectIdChange(projectId)}
-                  fetchFunc={projectListAPI}
-                  label="Project ID"
-                  // Always show the clear indicator and hide the dropdown arrow
-                  // make it very clear that this is an autocomplete.
-                  sx={{
-                    '& .MuiAutocomplete-clearIndicator': {
-                      visibility: 'hidden'
-                    }
-                  }}
-                  popupIcon={null}
-                />
+              <DynamicDropdown
+                value={projectId}
+                onChange={(_, projectId) => handleProjectIdChange(projectId)}
+                fetchFunc={projectListAPI}
+                label="Project ID"
+                // Always show the clear indicator and hide the dropdown arrow
+                // make it very clear that this is an autocomplete.
+                sx={{
+                  '& .MuiAutocomplete-clearIndicator': {
+                    visibility: 'hidden'
+                  }
+                }}
+                popupIcon={null}
+              />
             </div>
             <div className="select-text-overlay">
               {isLoadingRegion ? (
@@ -2132,7 +2238,6 @@ function CreateBatch({
                 )}
               />
             </div>
-
             <div className="submit-job-label-header">Properties</div>
             <LabelProperties
               labelDetail={propertyDetail}
@@ -2146,6 +2251,7 @@ function CreateBatch({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              themeManager={themeManager}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
@@ -2162,6 +2268,7 @@ function CreateBatch({
               setDuplicateKeyError={setDuplicateKeyError}
               batchInfoResponse={batchInfoResponse}
               createBatch={createBatch}
+              themeManager={themeManager}
             />
             <div className="job-button-style-parent">
               <div

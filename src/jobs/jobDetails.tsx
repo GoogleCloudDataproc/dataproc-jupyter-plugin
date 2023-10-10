@@ -57,6 +57,7 @@ import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { IJobDetails } from '../utils/jobDetailsInterface';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -99,6 +100,7 @@ interface IJobDetailsProps {
   setDetailedView: (value: boolean) => void;
   clusterResponse: object;
   clustersList: object;
+  themeManager: IThemeManager;
 }
 function JobDetails({
   jobSelected,
@@ -106,7 +108,8 @@ function JobDetails({
   region,
   setDetailedView,
   clusterResponse,
-  clustersList
+  clustersList,
+  themeManager
 }: IJobDetailsProps) {
   const initialJobDetails: IJobDetails = {
     status: { state: '', stateStartTime: '' },
@@ -397,6 +400,7 @@ function JobDetails({
           setSubmitJobView={setSubmitJobView}
           selectedJobClone={selectedJobClone}
           clusterResponse={clusterResponse}
+          themeManager = {themeManager}
         />
       )}
       {deletePopupOpen && (
@@ -420,6 +424,7 @@ function JobDetails({
           setSubmitJobView={setSubmitJobView}
           setDetailedJobView={setDetailedJobView}
           setSelectedJobClone={setSelectedJobClone}
+          themeManager={themeManager}
         />
       )}
       {!submitJobView && !detailedClusterView && !errorView && (

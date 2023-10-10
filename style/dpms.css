@@ -118,3 +118,7 @@ margin-right: -7px;
 .css-1ua80n0-MuiInputBase-input-MuiOutlinedInput-input{
   font-size: 13px !important;
 }
+
+.dark-theme.logo-alignment-style path{
+ fill: white !important;
+}

@@ -110,8 +110,10 @@ function JobComponent({
   clusterResponse,
   selectedJobClone,
   setSelectedJobClone,
-  clustersList
+  clustersList,
+  themeManager
 }: any) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -499,6 +501,7 @@ function JobComponent({
           setSubmitJobView={setSubmitJobView}
           selectedJobClone={selectedJobClone}
           clusterResponse={clusterResponse}
+          themeManager = {themeManager}
         />
       )}
       {deletePopupOpen && (
@@ -521,6 +524,7 @@ function JobComponent({
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
           clustersList={clustersList}
+          themeManager={themeManager}
         />
       )}
       {!submitJobView && !detailedJobView && (
@@ -550,10 +554,17 @@ function JobComponent({
             <div>
               <div className="filter-cluster-overlay">
                 <div className="filter-cluster-icon">
-                  <iconFilter.react
-                    tag="div"
-                    className="logo-alignment-style"
-                  />
+                  {!isDarkTheme ? (
+                    <iconFilter.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  ) : (
+                    <iconFilter.react
+                      tag="div"
+                      className="dark-theme logo-alignment-style"
+                    />
+                  )}
                 </div>
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
@@ -562,6 +573,7 @@ function JobComponent({
                     globalFilter={state.globalFilter}
                     setGlobalFilter={setGlobalFilter}
                     setPollingDisable={setPollingDisable}
+                    themeManager = {themeManager}
                   />
                 </div>
               </div>
@@ -582,6 +594,7 @@ function JobComponent({
                   prepareRow={prepareRow}
                   tableDataCondition={tableDataCondition}
                   fromPage="Jobs"
+                  themeManager={themeManager}
                 />
                 {jobsList.length > 50 && (
                   <PaginationView

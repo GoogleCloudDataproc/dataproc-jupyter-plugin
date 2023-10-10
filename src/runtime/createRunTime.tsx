@@ -95,6 +95,7 @@ function CreateRunTime({
   app: JupyterLab;
   fromPage: string;
 }) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
   const [desciptionSelected, setDescriptionSelected] = useState('');
@@ -1124,7 +1125,11 @@ function CreateRunTime({
         <div className="submit-job-container">
           <form>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="display-name">
+              <label className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                } htmlFor="display-name">
                 Display name*
               </label>
               <Input
@@ -1142,7 +1147,11 @@ function CreateRunTime({
             )}
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="runtime-id">
+              <label className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                } htmlFor="runtime-id">
                 Runtime ID*
               </label>
               <Input
@@ -1162,7 +1171,11 @@ function CreateRunTime({
             )}
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="description">
+              <label className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                } htmlFor="description">
                 Description*
               </label>
               <Input
@@ -1181,7 +1194,11 @@ function CreateRunTime({
             )}
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="runtime-version">
+              <label className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                } htmlFor="runtime-version">
                 Runtime version*
               </label>
               <Input
@@ -1200,7 +1217,11 @@ function CreateRunTime({
             )}
             <div className="select-text-overlay">
               <label
-                className="select-title-text"
+                className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                }
                 htmlFor="custom-container-image"
               >
                 Custom container image
@@ -1359,7 +1380,11 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="network-tags">
+              <label className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                } htmlFor="network-tags">
                 Network tags
               </label>
               <TagsInput
@@ -1451,7 +1476,11 @@ function CreateRunTime({
 
             <div className="single-line">
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="max-idle-time">
+                <label className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                } htmlFor="max-idle-time">
                   Max idle time
                 </label>
                 <Input
@@ -1484,7 +1513,11 @@ function CreateRunTime({
 
             <div className="single-line">
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="max-session-time">
+                <label className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                } htmlFor="max-session-time">
                   Max session time
                 </label>
                 <Input
@@ -1517,7 +1550,11 @@ function CreateRunTime({
 
             <div className="select-text-overlay">
               <label
-                className="select-title-text"
+                className={
+                  isDarkTheme
+                    ? 'select-title-text dark-theme'
+                    : 'select-title-text'
+                }
                 htmlFor="python-packages-repository"
               >
                 Python packages repository
@@ -1565,6 +1602,7 @@ function CreateRunTime({
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
               selectedRuntimeClone={selectedRuntimeClone ? true : false}
+              themeManager={themeManager}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
@@ -1580,6 +1618,7 @@ function CreateRunTime({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
+              themeManager={themeManager}
             />
             <div className="job-button-style-parent">
               <div

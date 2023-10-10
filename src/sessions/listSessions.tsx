@@ -53,6 +53,7 @@ import {
   toastifyCustomStyle
 } from '../utils/utils';
 import SessionDetails from './sessionDetails';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -79,8 +80,11 @@ const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
   svgstr: deleteIcon
 });
-
-function ListSessions() {
+interface IListSession {
+  themeManager: IThemeManager;
+}
+function ListSessions({ themeManager }: IListSession) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [sessionsList, setSessionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
@@ -165,7 +169,7 @@ function ListSessions() {
           ...(existingSessionsData as []),
           ...sessionsListNew
         ];
-  
+
         if (formattedResponse.nextPageToken) {
           listSessionsAPI(formattedResponse.nextPageToken, allSessionsData);
         } else {
@@ -180,13 +184,16 @@ function ListSessions() {
             const startTimeDisplay = jobTimeFormat(data.createTime);
             const startTime = new Date(data.createTime);
             let elapsedTimeString = '';
-            if (data.state === STATUS_TERMINATED || data.state === STATUS_FAIL) {
+            if (
+              data.state === STATUS_TERMINATED ||
+              data.state === STATUS_FAIL
+            ) {
               elapsedTimeString = elapsedTime(data.stateTime, startTime);
             }
-  
+
             // Extracting sessionID, location from sessionInfo.name
             // Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
-  
+
             return {
               sessionID: data.name.split('/')[5],
               status: data.state,
@@ -201,9 +208,6 @@ function ListSessions() {
           setIsLoading(false);
         }
       }
-      
-
-
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing Sessions', error);
@@ -255,7 +259,6 @@ function ListSessions() {
     if (!detailedSessionView && !isLoading) {
       pollingSessions(listSessionsAPI, pollingDisable);
     }
-
   }, [isLoading]);
   const renderActions = (data: { state: ClusterStatus; name: string }) => {
     /*
@@ -282,9 +285,9 @@ function ListSessions() {
           }
         >
           {data.state === ClusterStatus.STATUS_ACTIVE ? (
-            <iconStop.react tag="div" className='logo-alignment-style' />
+            <iconStop.react tag="div" className="logo-alignment-style" />
           ) : (
-            <iconStopDisable.react tag="div" className='logo-alignment-style' />
+            <iconStopDisable.react tag="div" className="logo-alignment-style" />
           )}
         </div>
         <div
@@ -293,7 +296,7 @@ function ListSessions() {
           title="Delete Session"
           onClick={() => handleDeleteSession(sessionValue)}
         >
-          <iconDelete.react tag="div" className='logo-alignment-style' />
+          <iconDelete.react tag="div" className="logo-alignment-style" />
         </div>
       </div>
     );
@@ -321,24 +324,31 @@ function ListSessions() {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           <div key="Status" className="cluster-status-parent">
-            {cell.value === STATUS_FAIL && <iconClusterError.react tag="div" className='logo-alignment-style' />}
-            {cell.value === STATUS_TERMINATED && (
-              <iconSucceeded.react tag="div" className='logo-alignment-style' />
+            {cell.value === STATUS_FAIL && (
+              <iconClusterError.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             )}
-            {cell.value === STATUS_ACTIVE && <iconSucceeded.react tag="div" className='logo-alignment-style' />}
+            {cell.value === STATUS_TERMINATED && (
+              <iconSucceeded.react tag="div" className="logo-alignment-style" />
+            )}
+            {cell.value === STATUS_ACTIVE && (
+              <iconSucceeded.react tag="div" className="logo-alignment-style" />
+            )}
             {(cell.value === STATUS_PROVISIONING ||
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_TERMINATING ||
               cell.value === STATUS_DELETING) && (
-                <ClipLoader
-                  color="#8A8A8A"
-                  loading={true}
-                  size={15}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-              )}
+              <ClipLoader
+                color="#8A8A8A"
+                loading={true}
+                size={15}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>
@@ -379,7 +389,14 @@ function ListSessions() {
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" className='logo-alignment-style' />
+              {!isDarkTheme ? (
+                <iconFilter.react tag="div" className="logo-alignment-style" />
+              ) : (
+                <iconFilter.react
+                  tag="div"
+                  className="dark-theme logo-alignment-style"
+                />
+              )}
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
@@ -388,6 +405,7 @@ function ListSessions() {
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
+                themeManager = {themeManager}
               />
             </div>
           </div>
@@ -402,6 +420,7 @@ function ListSessions() {
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Sessions"
+              themeManager={themeManager}
             />
             {sessionsList.length > 50 && (
               <PaginationView

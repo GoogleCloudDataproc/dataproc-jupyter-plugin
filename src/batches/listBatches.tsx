@@ -38,6 +38,7 @@ import {
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconSubmitJob = new LabIcon({
   name: 'launcher:submit-job-icon',
@@ -81,6 +82,7 @@ interface IListBatchesProps {
   handleBatchDetails: (batchID: string) => void;
   setCreateBatchView: (value: boolean) => void;
   createBatchView: boolean;
+  themeManager : IThemeManager
 }
 
 function ListBatches({
@@ -90,8 +92,10 @@ function ListBatches({
   listBatchAPI,
   handleBatchDetails,
   setCreateBatchView,
-  createBatchView
+  createBatchView,
+  themeManager
 }: IListBatchesProps) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const data = batchesList;
   const columns = React.useMemo(
     () => [
@@ -231,7 +235,10 @@ function ListBatches({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" className="logo-alignment-style" />
+            {!isDarkTheme ? (
+              <iconFilter.react tag="div" className='logo-alignment-style' />
+              ):
+              (<iconFilter.react tag="div" className='dark-theme logo-alignment-style' />)}
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
@@ -240,6 +247,7 @@ function ListBatches({
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
+                themeManager = {themeManager}
               />
             </div>
           </div>
@@ -254,6 +262,7 @@ function ListBatches({
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Batches"
+              themeManager = {themeManager}
             />
             {batchesList.length > 50 && (
               <PaginationView
