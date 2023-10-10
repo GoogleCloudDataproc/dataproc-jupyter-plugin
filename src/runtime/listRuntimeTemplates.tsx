@@ -42,7 +42,7 @@ import {
   ISessionTemplateDisplay,
   ISessionTemplateRoot
 } from '../utils/listRuntimeTemplateInterface';
-
+import { IThemeManager } from '@jupyterlab/apputils';
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
   svgstr: filterIcon
@@ -60,12 +60,14 @@ interface IListRuntimeTemplate {
   openCreateTemplate: boolean;
   setOpenCreateTemplate: (value: boolean) => void;
   setSelectedRuntimeClone: (value: ISessionTemplate | undefined) => void;
+  themeManager: IThemeManager
 }
 
 function ListRuntimeTemplates({
   openCreateTemplate,
   setOpenCreateTemplate,
-  setSelectedRuntimeClone
+  setSelectedRuntimeClone,
+  themeManager
 }: IListRuntimeTemplate) {
   const [runtimeTemplateslist, setRuntimeTemplateslist] = useState<
     ISessionTemplateDisplay[]
@@ -398,6 +400,7 @@ function ListRuntimeTemplates({
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
+                themeManager = {themeManager}
               />
             </div>
           </div>
@@ -412,6 +415,7 @@ function ListRuntimeTemplates({
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Runtime Templates"
+              themeManager = {themeManager}
             />
             {runtimeTemplateslist.length > 50 && (
               <PaginationView

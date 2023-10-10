@@ -328,6 +328,7 @@ function ConfigSelection({
                 openCreateTemplate={openCreateTemplate}
                 setOpenCreateTemplate={setOpenCreateTemplate}
                 setSelectedRuntimeClone={setSelectedRuntimeClone}
+                themeManager={themeManager}
               />
             )}
           </div>

@@ -120,5 +120,5 @@ margin-right: -7px;
 }
 
 .dark-theme.logo-alignment-style path{
- fill: white !important;
+ fill: var(--jp-ui-font-color0) !important;
 }

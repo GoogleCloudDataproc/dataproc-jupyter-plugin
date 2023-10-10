@@ -89,6 +89,7 @@ function BatchDetails({
   setCreateBatchView,
   themeManager
 }: BatchDetailsProps) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [batchInfoResponse, setBatchInfoResponse] = useState({
     uuid: '',
     state: '',
@@ -359,7 +360,11 @@ function BatchDetails({
 
       {!createBatch && batchInfoResponse.uuid !== '' && (
         <div className="scroll-comp-batchdetails">
-          <div className="cluster-details-header scroll-fix-header">
+          <div className={
+                  isDarkTheme
+                    ? 'dark-theme scroll-fix-header cluster-details-header'
+                    : 'scroll-fix-header cluster-details-header'
+                }>
             <div
               role="button"
               className="back-arrow-icon"

@@ -97,7 +97,7 @@ h2 {
 .scroll-fix-header {
   position: sticky;
   top: 0;
-  background-color: white;
+  background-color: var(--jp-ui-font-color0);;
 }
 .logs-button{
   cursor: context-menu !important;
@@ -109,9 +109,9 @@ h2 {
 }
 .select-title-text.dark-theme{
   background-color: var(--jp-layout-color0);
-  color: #fff;
+  color: var(--jp-ui-font-color0);;
 }
 .select-dropdown-text.dark-theme{
   background-color: var(--jp-layout-color0);
-  color: #fff;
+  color: var(--jp-ui-font-color0);;
 }

@@ -383,6 +383,7 @@ function ListSessions({ themeManager }: IListSession) {
           sessionSelected={sessionSelected}
           setDetailedSessionView={setDetailedSessionView}
           detailedSessionView={detailedSessionView}
+          themeManager={themeManager}
         />
       )}
       {sessionsList.length > 0 && !detailedSessionView ? (

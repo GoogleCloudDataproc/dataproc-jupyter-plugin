@@ -122,11 +122,11 @@
 }
 
 .gcs-filter-section-part.dark-theme{
-  color: #fff;
+  color:var(--jp-ui-font-color0);;
 }
 .filter-section-part.dark-theme{
-  color: #fff;
+  color: var(--jp-ui-font-color0);;
 }
 .gcs-title-icons.dark-theme path {
-  fill: #fff;
+  fill: var(--jp-ui-font-color0);;
 }

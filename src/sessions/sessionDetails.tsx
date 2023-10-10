@@ -62,6 +62,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
 import PollingTimer from '../utils/pollingTimer';
 import { JupyterLab } from '@jupyterlab/application';
+import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -91,14 +92,17 @@ interface ISessionDetailsProps {
   detailedSessionView: boolean;
   fromPage?: string;
   app?: JupyterLab;
+  themeManager : IThemeManager;
 }
 function SessionDetails({
   sessionSelected,
   setDetailedSessionView,
   detailedSessionView,
   fromPage,
-  app
+  app,
+  themeManager
 }: ISessionDetailsProps) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [sessionInfo, setSessionInfo] = useState({
     state: '',
     name: '',
@@ -108,7 +112,7 @@ function SessionDetails({
     stateTime: '',
     stateHistory: [{ stateStartTime: '' }],
     runtimeConfig: { properties: [] },
-    stateMessage:'',
+    stateMessage: '',
     environmentConfig: {
       executionConfig: {
         serviceAccount: '',
@@ -142,10 +146,9 @@ function SessionDetails({
   const handleDetailedView = () => {
     if (fromPage === 'Launcher') {
       app?.shell.activeWidget?.close();
-    }
-    else{
-    pollingSessionDetails(getSessionDetails, true);
-    setDetailedSessionView(false);
+    } else {
+      pollingSessionDetails(getSessionDetails, true);
+      setDetailedSessionView(false);
     }
   };
   const getSessionDetails = async () => {
@@ -208,7 +211,6 @@ function SessionDetails({
     const sessionInfoStateTime = new Date(sessionInfo.stateTime);
     runTimeString = elapsedTime(sessionInfoStateTime, sessionActiveTime);
   }
- 
 
   return (
     <div>
@@ -216,7 +218,13 @@ function SessionDetails({
         <div className="scroll-comp">
           {detailedSessionView && (
             <div>
-              <div className="cluster-details-header scroll-fix-header">
+              <div
+                className={
+                  isDarkTheme
+                    ? 'dark-theme scroll-fix-header cluster-details-header'
+                    : 'scroll-fix-header cluster-details-header'
+                }
+              >
                 <div
                   role="button"
                   className="back-arrow-icon"
@@ -322,12 +330,12 @@ function SessionDetails({
                   </div>
                 </div>
                 {sessionInfo.state === STATUS_FAIL && (
-                <div className="row-details">
-                  <div className="cluster-details-label">Status Message</div>
-                  <div className="session-details-value">
-                    {sessionInfo.stateMessage}
+                  <div className="row-details">
+                    <div className="cluster-details-label">Status Message</div>
+                    <div className="session-details-value">
+                      {sessionInfo.stateMessage}
+                    </div>
                   </div>
-                </div>
                 )}
                 <div className="row-details">
                   <div className="cluster-details-label">Create time</div>
@@ -401,7 +409,9 @@ function SessionDetails({
                   } else if (key === NETWORK_TAGS_KEY) {
                     return (
                       <div className="row-details" key={key}>
-                        <div className="batch-details-label-level-two">{label}</div>
+                        <div className="batch-details-label-level-two">
+                          {label}
+                        </div>
                         <div className="details-value">
                           {
                             //@ts-ignore value type issue
@@ -414,91 +424,93 @@ function SessionDetails({
                     );
                   }
                 })}
-              {(sessionInfo?.environmentConfig?.peripheralsConfig
-              ?.metastoreService ||
-              sessionInfo?.environmentConfig?.peripheralsConfig
-                ?.sparkHistoryServerConfig?.dataprocCluster) && (
-              <div className="row-details">
-                <div className="batch-details-label-level-one">
-                  Peripherals config
-                </div>
-                <div className="details-value"></div>
-              </div>
-            )}
-            {Object.entries(
-              sessionInfo.environmentConfig.peripheralsConfig
-            ).map(([key, value]) => {
-              let label;
-              if (key === METASTORE_SERVICE_KEY) {
-                label = METASTORE_SERVICE_LABEL;
-              } else if (key === SPARK_HISTORY_SERVER_KEY) {
-                label = SPARK_HISTORY_SERVER;
-              } else {
-                label = '';
-              }
-              <div className="row-details">
-                <div className="batch-details-label-level-one">
-                  Peripherals config
-                </div>
-                <div className="details-value"></div>
-              </div>;
-              if (key === METASTORE_SERVICE_KEY) {
-                return (
-                  <div className="row-details" key={key}>
-                    <div className="batch-details-label-level-two">{label}</div>
-                    <div className="details-value">
-                      {
-                        sessionInfo.environmentConfig.peripheralsConfig[
-                          METASTORE_SERVICE_KEY
-                        ]
-                      }
+                {(sessionInfo?.environmentConfig?.peripheralsConfig
+                  ?.metastoreService ||
+                  sessionInfo?.environmentConfig?.peripheralsConfig
+                    ?.sparkHistoryServerConfig?.dataprocCluster) && (
+                  <div className="row-details">
+                    <div className="batch-details-label-level-one">
+                      Peripherals config
                     </div>
+                    <div className="details-value"></div>
                   </div>
-                );
-              } else if (
-                key === SPARK_HISTORY_SERVER_KEY &&
-                sessionInfo?.environmentConfig?.peripheralsConfig
-                  ?.sparkHistoryServerConfig?.dataprocCluster
-              ) {
-                return (
-                  <div>
-                    <div className="row-details" key={key}>
-                      <div className="batch-details-label-level-two">
-                        {label}
-                      </div>
+                )}
+                {Object.entries(
+                  sessionInfo.environmentConfig.peripheralsConfig
+                ).map(([key, value]) => {
+                  let label;
+                  if (key === METASTORE_SERVICE_KEY) {
+                    label = METASTORE_SERVICE_LABEL;
+                  } else if (key === SPARK_HISTORY_SERVER_KEY) {
+                    label = SPARK_HISTORY_SERVER;
+                  } else {
+                    label = '';
+                  }
+                  <div className="row-details">
+                    <div className="batch-details-label-level-one">
+                      Peripherals config
                     </div>
-                    <div className="row-details" key={DATAPROC_CLUSTER_KEY}>
-                      <div className="batch-details-label-level-three">
-                        {DATAPROC_CLUSTER_LABEL}
+                    <div className="details-value"></div>
+                  </div>;
+                  if (key === METASTORE_SERVICE_KEY) {
+                    return (
+                      <div className="row-details" key={key}>
+                        <div className="batch-details-label-level-two">
+                          {label}
+                        </div>
+                        <div className="details-value">
+                          {
+                            sessionInfo.environmentConfig.peripheralsConfig[
+                              METASTORE_SERVICE_KEY
+                            ]
+                          }
+                        </div>
                       </div>
-                      <div className="details-value">
-                        {
-                          sessionInfo.environmentConfig.peripheralsConfig
-                            .sparkHistoryServerConfig[DATAPROC_CLUSTER_KEY]
-                        }
+                    );
+                  } else if (
+                    key === SPARK_HISTORY_SERVER_KEY &&
+                    sessionInfo?.environmentConfig?.peripheralsConfig
+                      ?.sparkHistoryServerConfig?.dataprocCluster
+                  ) {
+                    return (
+                      <div>
+                        <div className="row-details" key={key}>
+                          <div className="batch-details-label-level-two">
+                            {label}
+                          </div>
+                        </div>
+                        <div className="row-details" key={DATAPROC_CLUSTER_KEY}>
+                          <div className="batch-details-label-level-three">
+                            {DATAPROC_CLUSTER_LABEL}
+                          </div>
+                          <div className="details-value">
+                            {
+                              sessionInfo.environmentConfig.peripheralsConfig
+                                .sparkHistoryServerConfig[DATAPROC_CLUSTER_KEY]
+                            }
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              }
-            })}
+                    );
+                  }
+                })}
 
-            <div className="row-details">
-              <div className="details-label">Encryption type</div>
-              <div className="details-value">
-                {sessionInfo?.environmentConfig?.executionConfig?.kmsKey
-                  ? 'Customer-managed'
-                  : 'Google-managed'}
-              </div>
-            </div>
-            {sessionInfo?.environmentConfig?.executionConfig?.kmsKey && (
-              <div className="row-details">
-                <div className="details-label">Encryption key</div>
-                <div className="details-value">
-                  {sessionInfo.environmentConfig.executionConfig.kmsKey}
+                <div className="row-details">
+                  <div className="details-label">Encryption type</div>
+                  <div className="details-value">
+                    {sessionInfo?.environmentConfig?.executionConfig?.kmsKey
+                      ? 'Customer-managed'
+                      : 'Google-managed'}
+                  </div>
                 </div>
-              </div>
-            )}
+                {sessionInfo?.environmentConfig?.executionConfig?.kmsKey && (
+                  <div className="row-details">
+                    <div className="details-label">Encryption key</div>
+                    <div className="details-value">
+                      {sessionInfo.environmentConfig.executionConfig.kmsKey}
+                    </div>
+                  </div>
+                )}
                 <div className="row-details">
                   <div className="cluster-details-label">Labels</div>
                   <div className="session-label-style-parent">
