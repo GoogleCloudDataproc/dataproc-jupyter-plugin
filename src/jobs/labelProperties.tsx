@@ -23,7 +23,6 @@ import deleteIcon from '../../style/icons/delete_icon.svg';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { DEFAULT_LABEL_DETAIL } from '../utils/const';
 import { Input } from '../controls/MuiWrappedInput';
-import { darkTheme } from '../controls/DataprocWidget';
 
 const iconPlus = new LabIcon({
   name: 'launcher:plus-icon',
@@ -167,7 +166,7 @@ function LabelProperties({
         labelDetail[labelDetail.length - 1].split(':')[0].length > 0) &&
       duplicateKeyError === -1
     ) {
-      return darkTheme
+      return isDarkTheme
         ? 'dark-theme job-add-label-button'
         : 'job-add-label-button';
     } else if (
@@ -176,7 +175,7 @@ function LabelProperties({
         labelDetail[labelDetail.length - 1].split(':')[0].length === 0) &&
       duplicateKeyError !== -1
     ) {
-      return darkTheme
+      return isDarkTheme
         ? 'dark-theme job-add-label-button-disabled'
         : 'job-add-label-button-disabled';
     } else if (
@@ -184,11 +183,11 @@ function LabelProperties({
       (labelDetail.length === 0 ||
         labelDetail[labelDetail.length - 1].split(':')[0].length > 0)
     ) {
-      return darkTheme
+      return isDarkTheme
         ? 'dark-theme job-add-property-button'
         : 'job-add-property-button';
     } else {
-      return darkTheme
+      return isDarkTheme
         ? 'dark-theme job-add-property-button-disabled'
         : 'job-add-property-button-disabled';
     }
@@ -374,7 +373,7 @@ function LabelProperties({
             <iconPlus.react
               tag="div"
               className={
-                darkTheme
+                isDarkTheme
                   ? 'dark-theme-properties logo-alignment-style'
                   : 'logo-alignment-style'
               }
@@ -383,7 +382,7 @@ function LabelProperties({
             <iconPlusDisable.react
               tag="div"
               className={
-                darkTheme
+                isDarkTheme
                   ? 'dark-theme-properties-disable logo-alignment-style'
                   : 'logo-alignment-style'
               }
@@ -393,10 +392,10 @@ function LabelProperties({
             className={
               labelDetail.length === 0 ||
               labelDetail[labelDetail.length - 1].split(':')[0].length > 0
-                ? darkTheme
+                ? isDarkTheme
                   ? 'dark-theme job-edit-text'
                   : 'job-edit-text'
-                : darkTheme
+                : isDarkTheme
                 ? 'dark-theme job-edit-text-disabled'
                 : 'job-edit-text-disabled'
             }

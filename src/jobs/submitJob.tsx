@@ -770,7 +770,14 @@ function SubmitJob({
             className="back-arrow-icon"
             onClick={() => handleSubmitJobBackView()}
           >
-            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+            <iconLeftArrow.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           </div>
           <div className="cluster-details-title">Submit a job</div>
         </div>
@@ -1396,7 +1403,11 @@ function SubmitJob({
             <div
               className={
                 submitDisabled
-                  ? 'submit-button-disable-style'
+                  ? isDarkTheme
+                    ? 'dark-theme submit-button-disable-style'
+                    : 'submit-button-disable-style'
+                  : isDarkTheme
+                  ? 'dark-theme submit-button-style'
                   : 'submit-button-style'
               }
             >

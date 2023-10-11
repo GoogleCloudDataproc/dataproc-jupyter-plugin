@@ -178,61 +178,60 @@ function BatchDetails({
     };
   }, []);
   interface IBatchDetailsResponse {
-    uuid: '',
-    state: '',
-    createTime: '',
+    uuid: '';
+    state: '';
+    createTime: '';
     runtimeInfo: {
-      endpoints: {},
-      approximateUsage: { milliDcuSeconds: '', shuffleStorageGbSeconds: '' }
-    },
-    creator: '',
+      endpoints: {};
+      approximateUsage: { milliDcuSeconds: ''; shuffleStorageGbSeconds: '' };
+    };
+    creator: '';
     runtimeConfig: {
-      version: '',
-      containerImage: '',
+      version: '';
+      containerImage: '';
       properties: {
-        'spark:spark.executor.instances': '',
-        'spark:spark.driver.cores': '',
-        'spark:spark.driver.memory': '',
-        'spark:spark.executor.cores': '',
-        'spark:spark.executor.memory': '',
-        'spark:spark.dynamicAllocation.executorAllocationRatio': '',
-        'spark:spark.app.name': ''
-      }
-    },
+        'spark:spark.executor.instances': '';
+        'spark:spark.driver.cores': '';
+        'spark:spark.driver.memory': '';
+        'spark:spark.executor.cores': '';
+        'spark:spark.executor.memory': '';
+        'spark:spark.dynamicAllocation.executorAllocationRatio': '';
+        'spark:spark.app.name': '';
+      };
+    };
     sparkBatch: {
-      mainJarFileUri: '',
-      mainClass: '',
-      jarFileUris: ''
-    },
+      mainJarFileUri: '';
+      mainClass: '';
+      jarFileUris: '';
+    };
     pysparkBatch: {
-      mainPythonFileUri: ''
-    },
+      mainPythonFileUri: '';
+    };
     sparkRBatch: {
-      mainRFileUri: ''
-    },
+      mainRFileUri: '';
+    };
     sparkSqlBatch: {
-      queryFileUri: ''
-    },
+      queryFileUri: '';
+    };
     environmentConfig: {
       executionConfig: {
-        serviceAccount: '',
-        subnetworkUri: '',
-        networkTags: [],
-        kmsKey: ''
-      },
+        serviceAccount: '';
+        subnetworkUri: '';
+        networkTags: [];
+        kmsKey: '';
+      };
       peripheralsConfig: {
-        metastoreService: '',
+        metastoreService: '';
         sparkHistoryServerConfig: {
-          dataprocCluster: ''
-        }
-      }
-    },
-    stateHistory: [{ state: '', stateStartTime: '' }],
-    stateTime: '',
-    labels:{}
-    }
-    
-  
+          dataprocCluster: '';
+        };
+      };
+    };
+    stateHistory: [{ state: ''; stateStartTime: '' }];
+    stateTime: '';
+    labels: {};
+  }
+
   const getBatchDetails = async () => {
     const credentials = await authApi();
     if (credentials) {
@@ -318,7 +317,7 @@ function BatchDetails({
   const handleCloneBatch = async (batchInfoResponse: IBatchInfoResponse) => {
     setCreateBatch(true);
   };
-  
+
   return (
     <div>
       {batchInfoResponse.uuid === '' && (
@@ -360,17 +359,26 @@ function BatchDetails({
 
       {!createBatch && batchInfoResponse.uuid !== '' && (
         <div className="scroll-comp-batchdetails">
-          <div className={
-                  isDarkTheme
-                    ? 'dark-theme scroll-fix-header cluster-details-header'
-                    : 'scroll-fix-header cluster-details-header'
-                }>
+          <div
+            className={
+              isDarkTheme
+                ? 'dark-theme scroll-fix-header cluster-details-header'
+                : 'scroll-fix-header cluster-details-header'
+            }
+          >
             <div
               role="button"
               className="back-arrow-icon"
               onClick={() => handleDetailedBatchView()}
             >
-              <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+              <iconLeftArrow.react
+                tag="div"
+                className={
+                  isDarkTheme
+                    ? 'dark-theme logo-alignment-style'
+                    : 'logo-alignment-style'
+                }
+              />
             </div>
             <div className="cluster-details-title">{batchSelected}</div>
             <div

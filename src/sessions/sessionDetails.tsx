@@ -92,7 +92,7 @@ interface ISessionDetailsProps {
   detailedSessionView: boolean;
   fromPage?: string;
   app?: JupyterLab;
-  themeManager : IThemeManager;
+  themeManager: IThemeManager;
 }
 function SessionDetails({
   sessionSelected,
@@ -232,7 +232,11 @@ function SessionDetails({
                 >
                   <iconLeftArrow.react
                     tag="div"
-                    className="logo-alignment-style"
+                    className={
+                      isDarkTheme
+                        ? 'dark-theme logo-alignment-style'
+                        : 'logo-alignment-style'
+                    }
                   />
                 </div>
                 <div className="cluster-details-title">Session details</div>

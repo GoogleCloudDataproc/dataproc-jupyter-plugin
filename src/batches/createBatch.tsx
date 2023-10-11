@@ -1227,7 +1227,11 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+            <iconLeftArrow.react tag="div"  className={
+              isDarkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            } />
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
@@ -2118,7 +2122,11 @@ function CreateBatch({
                           <label
                             className={
                               selectedRadioValue === 'key'
-                                ? 'select-title-text disable-text'
+                                ? isDarkTheme
+                                  ? 'dark-theme select-title-text disable-text'
+                                  : 'select-title-text disable-text'
+                                : isDarkTheme
+                                ? 'dark-theme select-title-text'
                                 : 'select-title-text'
                             }
                             htmlFor="enter-key-manually"
@@ -2274,7 +2282,11 @@ function CreateBatch({
               <div
                 className={
                   isSubmitDisabled()
-                    ? 'submit-button-disable-style'
+                    ? isDarkTheme
+                      ? 'dark-theme submit-button-disable-style'
+                      : 'submit-button-disable-style'
+                    : isDarkTheme
+                    ? 'dark-theme submit-button-style'
                     : 'submit-button-style'
                 }
                 aria-label="submit Batch"

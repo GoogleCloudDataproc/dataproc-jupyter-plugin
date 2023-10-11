@@ -1116,7 +1116,14 @@ function CreateRunTime({
             className="back-arrow-icon"
             onClick={handleCancelButton}
           >
-            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+            <iconLeftArrow.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           </div>
           <div className="cluster-details-title">
             Serverless Runtime Template
@@ -1125,11 +1132,14 @@ function CreateRunTime({
         <div className="submit-job-container">
           <form>
             <div className="select-text-overlay">
-              <label className={
+              <label
+                className={
                   isDarkTheme
                     ? 'select-title-text dark-theme'
                     : 'select-title-text'
-                } htmlFor="display-name">
+                }
+                htmlFor="display-name"
+              >
                 Display name*
               </label>
               <Input
@@ -1147,11 +1157,14 @@ function CreateRunTime({
             )}
 
             <div className="select-text-overlay">
-              <label className={
+              <label
+                className={
                   isDarkTheme
                     ? 'select-title-text dark-theme'
                     : 'select-title-text'
-                } htmlFor="runtime-id">
+                }
+                htmlFor="runtime-id"
+              >
                 Runtime ID*
               </label>
               <Input
@@ -1171,11 +1184,14 @@ function CreateRunTime({
             )}
 
             <div className="select-text-overlay">
-              <label className={
+              <label
+                className={
                   isDarkTheme
                     ? 'select-title-text dark-theme'
                     : 'select-title-text'
-                } htmlFor="description">
+                }
+                htmlFor="description"
+              >
                 Description*
               </label>
               <Input
@@ -1194,11 +1210,14 @@ function CreateRunTime({
             )}
 
             <div className="select-text-overlay">
-              <label className={
+              <label
+                className={
                   isDarkTheme
                     ? 'select-title-text dark-theme'
                     : 'select-title-text'
-                } htmlFor="runtime-version">
+                }
+                htmlFor="runtime-version"
+              >
                 Runtime version*
               </label>
               <Input
@@ -1380,11 +1399,14 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label className={
+              <label
+                className={
                   isDarkTheme
                     ? 'select-title-text dark-theme'
                     : 'select-title-text'
-                } htmlFor="network-tags">
+                }
+                htmlFor="network-tags"
+              >
                 Network tags
               </label>
               <TagsInput
@@ -1476,11 +1498,14 @@ function CreateRunTime({
 
             <div className="single-line">
               <div className="select-text-overlay">
-                <label className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                } htmlFor="max-idle-time">
+                <label
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
+                  htmlFor="max-idle-time"
+                >
                   Max idle time
                 </label>
                 <Input
@@ -1513,11 +1538,14 @@ function CreateRunTime({
 
             <div className="single-line">
               <div className="select-text-overlay">
-                <label className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                } htmlFor="max-session-time">
+                <label
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
+                  htmlFor="max-session-time"
+                >
                   Max session time
                 </label>
                 <Input
@@ -1629,7 +1657,11 @@ function CreateRunTime({
                 }}
                 className={
                   isSaveDisabled()
-                    ? 'submit-button-disable-style'
+                    ? isDarkTheme
+                      ? 'dark-theme submit-button-disable-style'
+                      : 'submit-button-disable-style'
+                    : isDarkTheme
+                    ? 'dark-theme submit-button-style'
                     : 'submit-button-style'
                 }
                 aria-label="submit Batch"

@@ -397,7 +397,14 @@ function JobDetails({
             className="back-arrow-icon"
             onClick={() => setErrorView(false)}
           >
-            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+            <iconLeftArrow.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           </div>
           <div className="error-view-message-parent">
             <iconError.react tag="div" className="logo-alignment-style" />
@@ -458,7 +465,11 @@ function JobDetails({
                 >
                   <iconLeftArrow.react
                     tag="div"
-                    className="logo-alignment-style"
+                    className={
+                      isDarkTheme
+                        ? 'dark-theme logo-alignment-style'
+                        : 'logo-alignment-style'
+                    }
                   />
                 </div>
                 <div className="cluster-details-title">Job details</div>
@@ -568,15 +579,15 @@ function JobDetails({
                     />
                   )}
                   <div
-                   className={`${
-                    labelEditMode
-                      ? isDarkTheme
-                        ? 'dark-theme job-edit-text-disabled'
-                        : 'job-edit-text-disabled'
-                      : isDarkTheme
-                      ? 'dark-theme job-edit-text'
-                      : 'job-edit-text'
-                  }`}
+                    className={`${
+                      labelEditMode
+                        ? isDarkTheme
+                          ? 'dark-theme job-edit-text-disabled'
+                          : 'job-edit-text-disabled'
+                        : isDarkTheme
+                        ? 'dark-theme job-edit-text'
+                        : 'job-edit-text'
+                    }`}
                   >
                     EDIT
                   </div>
