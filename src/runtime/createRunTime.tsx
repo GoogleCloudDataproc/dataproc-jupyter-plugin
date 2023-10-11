@@ -185,9 +185,7 @@ function CreateRunTime({
     servicesSelected
   ]);
   useEffect(() => {
-    if (selectedRuntimeClone === undefined) {
     listSubNetworksAPI(networkSelected);
-    }
   }, [networkSelected]);
   interface IUserInfoResponse {
     email: string;
@@ -474,6 +472,7 @@ function CreateRunTime({
             });
         })
         .catch((err: Error) => {
+          setIsloadingNetwork(false);
           console.error('Error selecting Network', err);
         });
     }

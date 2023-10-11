@@ -332,8 +332,7 @@ function CreateBatch({
     listKeysAPI(keyRingSelected);
   }, [keyRingSelected]);
   useEffect(() => {
-    if (batchInfoResponse === undefined) {
-    listSubNetworksAPI(networkSelected);}
+    listSubNetworksAPI(networkSelected);
   }, [networkSelected]);
   useEffect(() => {
     const batchTypeData = [
@@ -583,6 +582,7 @@ function CreateBatch({
             });
         })
         .catch((err: Error) => {
+          setIsloadingNetwork(false);
           console.error('Error selecting Network', err);
         });
     }
