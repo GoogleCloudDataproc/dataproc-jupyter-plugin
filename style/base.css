@@ -109,3 +109,6 @@
   background-color: var(--jp-layout-color0);
   color: var(--jp-layout-color4);
 }
+.dark-theme-logs path{
+  fill: var(--jp-ui-font-color1);
+}
