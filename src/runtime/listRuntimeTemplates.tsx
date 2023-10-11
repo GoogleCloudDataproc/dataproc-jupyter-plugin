@@ -42,7 +42,7 @@ import {
   ISessionTemplateDisplay,
   ISessionTemplateRoot
 } from '../utils/listRuntimeTemplateInterface';
-
+import { IThemeManager } from '@jupyterlab/apputils';
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
   svgstr: filterIcon
@@ -60,13 +60,16 @@ interface IListRuntimeTemplate {
   openCreateTemplate: boolean;
   setOpenCreateTemplate: (value: boolean) => void;
   setSelectedRuntimeClone: (value: ISessionTemplate | undefined) => void;
+  themeManager: IThemeManager;
 }
 
 function ListRuntimeTemplates({
   openCreateTemplate,
   setOpenCreateTemplate,
-  setSelectedRuntimeClone
+  setSelectedRuntimeClone,
+  themeManager
 }: IListRuntimeTemplate) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [runtimeTemplateslist, setRuntimeTemplateslist] = useState<
     ISessionTemplateDisplay[]
   >([]);
@@ -150,21 +153,18 @@ function ListRuntimeTemplates({
     previousRuntimeTemplatesList?: object
   ) => {
     try {
-      const queryParams = new URLSearchParams({
-      });
+      const queryParams = new URLSearchParams({});
       const response = await authenticatedFetch({
         uri: 'sessionTemplates',
         method: HTTP_METHOD.GET,
         regionIdentifier: 'locations',
-        queryParams: queryParams,
+        queryParams: queryParams
       });
       const formattedResponse: ISessionTemplateRoot = await response.json();
       if (formattedResponse && formattedResponse.sessionTemplates) {
         setRunTimeTemplateAllList(formattedResponse.sessionTemplates);
       }
-    }
-    catch (error) {
-    }
+    } catch (error) {}
     try {
       const pageToken = nextPageToken ?? '';
       const queryParams = new URLSearchParams({
@@ -235,11 +235,9 @@ function ListRuntimeTemplates({
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing runtime templates', error);
-      toast.error('Failed to fetch runtime templates',toastifyCustomStyle);
+      toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
     }
   };
- 
-  
 
   const handleDeleteRuntimeTemplate = (
     runtimeTemplateName: string,
@@ -310,7 +308,14 @@ function ListRuntimeTemplates({
             )
           }
         >
-          <iconDelete.react tag="div" className="logo-alignment-style" />
+          <iconDelete.react
+            tag="div"
+            className={
+              isDarkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
+          />
         </div>
       </div>
     );
@@ -389,7 +394,14 @@ function ListRuntimeTemplates({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" className="logo-alignment-style" />
+              <iconFilter.react
+                tag="div"
+                className={
+                  isDarkTheme
+                    ? 'dark-theme logo-alignment-style'
+                    : 'logo-alignment-style'
+                }
+              />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
@@ -398,6 +410,7 @@ function ListRuntimeTemplates({
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
+                themeManager={themeManager}
               />
             </div>
           </div>
@@ -412,6 +425,7 @@ function ListRuntimeTemplates({
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Runtime Templates"
+              themeManager={themeManager}
             />
             {runtimeTemplateslist.length > 50 && (
               <PaginationView

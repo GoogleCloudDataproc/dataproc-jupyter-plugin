@@ -1,5 +1,12 @@
 {
   "jupyter.lab.shortcuts": [],
+  "jupyter.lab.toolbars": {
+    "Notebook": [ 
+      {
+        "name": "sparkLogsButton", 
+        "rank": 30
+      }]
+  },
   "title": "Dataproc Jupyter Plugin",
   "description": "Dataproc Jupyter Plugin Settings.",
   "jupyter.lab.menus": {

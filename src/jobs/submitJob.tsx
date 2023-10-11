@@ -121,8 +121,10 @@ const handleOptionalFields = (selectedJobClone: any, jobTypeKey: string) => {
 function SubmitJob({
   setSubmitJobView,
   selectedJobClone,
-  clusterResponse
+  clusterResponse,
+  themeManager
 }: any) {
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [clusterList, setClusterList] = useState([{}]);
   const [jobTypeList, setJobTypeList] = useState([{}]);
   const [querySourceTypeList, setQuerySourceTypeList] = useState([{}]);
@@ -244,9 +246,7 @@ function SubmitJob({
     setSubmitJobView(false);
   };
 
-  const handleClusterSelected = (
-    data: DropdownProps|null
-  ) => {
+  const handleClusterSelected = (data: DropdownProps | null) => {
     setClusterSelected(data!.toString());
   };
 
@@ -283,14 +283,13 @@ function SubmitJob({
     transformClusterListData = clusterResponse.clusters.filter(
       (data: IClusterData) => {
         if (data.status.state === STATUS_RUNNING) {
-            return data.clusterName
+          return data.clusterName;
         }
       }
     );
 
     const keyLabelStructure = transformClusterListData.map(
-      (obj: { clusterName: string }) => 
-         obj.clusterName
+      (obj: { clusterName: string }) => obj.clusterName
     );
 
     setClusterList(keyLabelStructure);
@@ -771,7 +770,14 @@ function SubmitJob({
             className="back-arrow-icon"
             onClick={() => handleSubmitJobBackView()}
           >
-            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+            <iconLeftArrow.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           </div>
           <div className="cluster-details-title">Submit a job</div>
         </div>
@@ -799,7 +805,14 @@ function SubmitJob({
           )}
           <div className="submit-job-label-header">Job</div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="job-id">
+            <label
+              className={
+                isDarkTheme
+                  ? 'select-title-text dark-theme'
+                  : 'select-title-text'
+              }
+              htmlFor="job-id"
+            >
               Job ID*
             </label>
             <Input
@@ -826,7 +839,14 @@ function SubmitJob({
           )}
 
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="metastore-project">
+            <label
+              className={
+                isDarkTheme
+                  ? 'select-title-text dark-theme'
+                  : 'select-title-text'
+              }
+              htmlFor="metastore-project"
+            >
               Job type*
             </label>
             <Select
@@ -842,7 +862,11 @@ function SubmitJob({
             <>
               <div className="select-text-overlay">
                 <label
-                  className="select-title-text"
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
                   htmlFor="metastore-project"
                 >
                   Query source type*
@@ -861,7 +885,14 @@ function SubmitJob({
             jobTypeSelected === 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="query-file">
+                  <label
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
+                    htmlFor="query-file"
+                  >
                     Query file*
                   </label>
                   <Input
@@ -901,7 +932,14 @@ function SubmitJob({
             jobTypeSelected === 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="query-text">
+                  <label
+                    className={
+                      isDarkTheme
+                        ? 'select-title-text dark-theme'
+                        : 'select-title-text'
+                    }
+                    htmlFor="query-text"
+                  >
                     Query text*
                   </label>
                   <Input
@@ -920,7 +958,11 @@ function SubmitJob({
             <>
               <div className="select-text-overlay">
                 <label
-                  className="select-title-text"
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
                   htmlFor="main-class-or-jar"
                 >
                   Main class or jar*
@@ -958,7 +1000,14 @@ function SubmitJob({
           {jobTypeSelected === 'sparkR' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="main-r-file">
+                <label
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
+                  htmlFor="main-r-file"
+                >
                   Main R file*
                 </label>
                 <Input
@@ -994,7 +1043,14 @@ function SubmitJob({
           {jobTypeSelected === 'pySpark' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="main-python-file">
+                <label
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
+                  htmlFor="main-python-file"
+                >
                   Main Python file*
                 </label>
                 <Input
@@ -1031,7 +1087,11 @@ function SubmitJob({
             <>
               <div className="select-text-overlay">
                 <label
-                  className="select-title-text"
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
                   htmlFor="additional-python-files"
                 >
                   Additional python files
@@ -1073,7 +1133,14 @@ function SubmitJob({
           {jobTypeSelected !== 'sparkR' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="jar-files">
+                <label
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
+                  htmlFor="jar-files"
+                >
                   Jar files
                 </label>
                 <TagsInput
@@ -1116,7 +1183,14 @@ function SubmitJob({
           {jobTypeSelected !== 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="files">
+                <label
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
+                  htmlFor="files"
+                >
                   Files
                 </label>
                 <TagsInput
@@ -1159,7 +1233,14 @@ function SubmitJob({
           {(jobTypeSelected === 'spark' || jobTypeSelected === 'pySpark') && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="archive-files">
+                <label
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
+                  htmlFor="archive-files"
+                >
                   Archive files
                 </label>
                 <TagsInput
@@ -1204,7 +1285,14 @@ function SubmitJob({
           {jobTypeSelected !== 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="arguments">
+                <label
+                  className={
+                    isDarkTheme
+                      ? 'select-title-text dark-theme'
+                      : 'select-title-text'
+                  }
+                  htmlFor="arguments"
+                >
                   Arguments
                 </label>
                 <TagsInput
@@ -1251,7 +1339,11 @@ function SubmitJob({
             )}
           <div className="select-text-overlay">
             <label
-              className="select-title-text"
+              className={
+                isDarkTheme
+                  ? 'select-title-text dark-theme'
+                  : 'select-title-text'
+              }
               htmlFor="max-restarts-per-hour"
             >
               Max restarts per hour
@@ -1289,6 +1381,7 @@ function SubmitJob({
             setValueValidation={setValueValidation}
             duplicateKeyError={duplicateKeyError}
             setDuplicateKeyError={setDuplicateKeyError}
+            themeManager={themeManager}
           />
           <div className="submit-job-label-header">Labels</div>
           <LabelProperties
@@ -1304,12 +1397,17 @@ function SubmitJob({
             setValueValidation={setValueValidation}
             duplicateKeyError={duplicateKeyError}
             setDuplicateKeyError={setDuplicateKeyError}
+            themeManager={themeManager}
           />
           <div className="job-button-style-parent">
             <div
               className={
                 submitDisabled
-                  ? 'submit-button-disable-style'
+                  ? isDarkTheme
+                    ? 'dark-theme submit-button-disable-style'
+                    : 'submit-button-disable-style'
+                  : isDarkTheme
+                  ? 'dark-theme submit-button-style'
                   : 'submit-button-style'
               }
             >

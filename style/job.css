@@ -16,7 +16,6 @@
   background-color: rgba(0, 0, 0, 0.08);
   padding: 0px 10px;
   border-radius: 10px;
-  color: var(--jp-ui-font-color0);
   font-weight: 400;
   line-height: 20px;
   margin: 3px 0px;
@@ -150,10 +149,7 @@
   align-items: center;
   padding: 0px 12px;
   gap: 4px;
-
-  width: 75px;
   height: 32px;
-
   background: var(--jp-layout-color0);
   box-shadow: 0px 1px 5px var(--jp-shadow-umbra-color),
     0px 2px 2px var(--jp-shadow-umbra-color),
@@ -168,10 +164,7 @@
   padding: 0px 12px;
   gap: 4px;
   color: var(--jp-ui-font-color2);
-
-  width: 75px;
   height: 32px;
-
   background: var(--jp-layout-color0);
   opacity: 0.5;
 }
@@ -231,7 +224,6 @@
   padding: 0px 10px;
   width: fit-content;
   border-radius: 10px;
-  color: var(--jp-ui-font-color0);
   font-weight: 400;
   line-height: 20px;
   margin: 3px 0px;
@@ -270,3 +262,50 @@
   overflow-wrap: anywhere;
 }
 
+.dark-theme.job-edit-button-disabled{
+  background-color: var(--jp-layout-color4);
+  color: var(--jp-ui-font-color1);
+}
+.dark-theme.job-edit-button{
+  background-color:  var(--jp-console-icon-color);
+}
+.dark-theme.job-edit-text{
+  color: black;
+}
+.dark-theme.job-save-button-style 
+{
+  background: var(--jp-console-icon-color);
+  color: black;
+}
+.dark-theme.color-icon-disabled path{
+  fill: var(--jp-ui-font-color2);
+}
+.dark-theme.color-icon path{
+ fill: black
+}
+.dark-theme.job-add-label-button{
+  background-color:  var(--jp-console-icon-color);
+}
+.dark-theme.job-add-label-button-disabled{
+  background-color: var(--jp-layout-color4);
+  color: var(--jp-ui-font-color1);
+}
+.dark-theme.job-add-property-button{
+  background-color:  var(--jp-console-icon-color);
+}
+.dark-theme.job-add-property-button-disabled{
+  background-color: var(--jp-layout-color4);
+  color: var(--jp-ui-font-color1);
+}
+.dark-theme.logo-alignment-style.icon-delete{
+  fill: var(--jp-ui-font-color1);
+}
+.dark-theme-properties.logo-alignment-style path{
+  fill: var(--jp-layout-color1) 
+}
+.dark-theme-properties-disable.logo-alignment-style{
+  fill: var(--jp-ui-font-color2) 
+}
+.dark-theme.submit-button-style {
+  background-color:  var(--jp-console-icon-color);
+}

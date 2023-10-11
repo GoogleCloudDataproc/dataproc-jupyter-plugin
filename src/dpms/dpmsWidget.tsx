@@ -419,8 +419,9 @@ fetching database name from fully qualified name structure */
               role="treeitem"
               className="caret-icon right"
               onClick={handleIconClick}
-            >
+            >{!isDarkTheme ? (
               <iconDownArrow.react tag="div" className="logo-alignment-style" />
+            ):(<iconDownArrow.react tag="div" className="dark-theme logo-alignment-style" />)}
             </div>
           </>
         ) : (
@@ -428,8 +429,13 @@ fetching database name from fully qualified name structure */
             role="treeitem"
             className="caret-icon down"
             onClick={handleIconClick}
-          >
+          > 
+          {!isDarkTheme ? (
             <iconRightArrow.react tag="div" className="logo-alignment-style" />
+          ):(
+            <iconRightArrow.react tag="div" className="dark-theme logo-alignment-style" />
+          )}
+
           </div>
         )
       ) : null;

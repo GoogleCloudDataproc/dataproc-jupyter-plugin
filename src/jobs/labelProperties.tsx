@@ -57,12 +57,14 @@ function LabelProperties({
   labelEditMode,
   selectedRuntimeClone,
   batchInfoResponse,
-  createBatch
+  createBatch,
+  themeManager
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
+  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   useEffect(() => {
     if (!labelEditMode) {
       if (
@@ -164,22 +166,30 @@ function LabelProperties({
         labelDetail[labelDetail.length - 1].split(':')[0].length > 0) &&
       duplicateKeyError === -1
     ) {
-      return 'job-add-label-button';
+      return isDarkTheme
+        ? 'dark-theme job-add-label-button'
+        : 'job-add-label-button';
     } else if (
       buttonText === 'ADD LABEL' &&
       (labelDetail.length === 0 ||
         labelDetail[labelDetail.length - 1].split(':')[0].length === 0) &&
       duplicateKeyError !== -1
     ) {
-      return 'job-add-label-button-disabled';
+      return isDarkTheme
+        ? 'dark-theme job-add-label-button-disabled'
+        : 'job-add-label-button-disabled';
     } else if (
       buttonText !== 'ADD LABEL' &&
       (labelDetail.length === 0 ||
         labelDetail[labelDetail.length - 1].split(':')[0].length > 0)
     ) {
-      return 'job-add-property-button';
+      return isDarkTheme
+        ? 'dark-theme job-add-property-button'
+        : 'job-add-property-button';
     } else {
-      return 'job-add-property-button-disabled';
+      return isDarkTheme
+        ? 'dark-theme job-add-property-button-disabled'
+        : 'job-add-property-button-disabled';
     }
   };
 
@@ -200,7 +210,11 @@ function LabelProperties({
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
                       <label
-                        className="select-dropdown-text"
+                        className={
+                          isDarkTheme
+                            ? 'select-dropdown-text dark-theme'
+                            : 'select-dropdown-text'
+                        }
                         htmlFor="metastore-project"
                       >
                         {`Key ${index + 1}*`}
@@ -266,7 +280,11 @@ function LabelProperties({
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
                       <label
-                        className="select-dropdown-text"
+                        className={
+                          isDarkTheme
+                            ? 'select-dropdown-text dark-theme'
+                            : 'select-dropdown-text'
+                        }
                         htmlFor="metastore-project"
                       >
                         {`Value ${index + 1}`}
@@ -345,23 +363,40 @@ function LabelProperties({
               ) {
                 handleAddLabel(e);
               }
-            }
-            else{
+            } else {
               e.preventDefault();
             }
           }}
         >
           {labelDetail.length === 0 ||
           labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
-            <iconPlus.react tag="div" className="logo-alignment-style" />
+            <iconPlus.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme-properties logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           ) : (
-            <iconPlusDisable.react tag="div" className="logo-alignment-style" />
+            <iconPlusDisable.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme-properties-disable logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           )}
           <span
             className={
               labelDetail.length === 0 ||
               labelDetail[labelDetail.length - 1].split(':')[0].length > 0
-                ? 'job-edit-text'
+                ? isDarkTheme
+                  ? 'dark-theme job-edit-text'
+                  : 'job-edit-text'
+                : isDarkTheme
+                ? 'dark-theme job-edit-text-disabled'
                 : 'job-edit-text-disabled'
             }
           >
