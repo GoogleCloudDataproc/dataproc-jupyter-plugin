@@ -336,7 +336,14 @@ function JobComponent({
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
         >
-          <iconClone.react tag="div" className="logo-alignment-style" />
+          <iconClone.react
+            tag="div"
+            className={
+              isDarkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
+          />
         </div>
         <div
           role="button"
@@ -354,9 +361,23 @@ function JobComponent({
           }
         >
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconStop.react tag="div" className="logo-alignment-style" />
+            <iconStop.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           ) : (
-            <iconStopDisable.react tag="div" className="logo-alignment-style" />
+            <iconStopDisable.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           )}
         </div>
         <div
@@ -375,9 +396,23 @@ function JobComponent({
           }
         >
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconDelete.react tag="div" className="logo-alignment-style" />
+            <iconDelete.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           ) : (
-            <iconDelete.react tag="div" className="logo-alignment-style" />
+            <iconDelete.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           )}
         </div>
       </div>
@@ -501,7 +536,7 @@ function JobComponent({
           setSubmitJobView={setSubmitJobView}
           selectedJobClone={selectedJobClone}
           clusterResponse={clusterResponse}
-          themeManager = {themeManager}
+          themeManager={themeManager}
         />
       )}
       {deletePopupOpen && (
@@ -573,7 +608,7 @@ function JobComponent({
                     globalFilter={state.globalFilter}
                     setGlobalFilter={setGlobalFilter}
                     setPollingDisable={setPollingDisable}
-                    themeManager = {themeManager}
+                    themeManager={themeManager}
                   />
                 </div>
               </div>

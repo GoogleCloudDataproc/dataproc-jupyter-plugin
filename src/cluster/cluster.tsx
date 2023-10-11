@@ -44,9 +44,8 @@ import {
 } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
-import { DataprocWidget } from '../controls/DataprocWidget';
+import { DataprocWidget, darkTheme } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
-
 
 const iconStart = new LabIcon({
   name: 'launcher:start-icon',
@@ -74,7 +73,11 @@ const iconRestartDisable = new LabIcon({
   svgstr: restartDisableIcon
 });
 
-const ClusterComponent = ({themeManager}:{themeManager: IThemeManager}): React.JSX.Element => {
+const ClusterComponent = ({
+  themeManager
+}: {
+  themeManager: IThemeManager;
+}): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
   const [clustersList, setclustersList] = useState([]);
   const [clusterResponse, setClusterResponse] = useState([]);
@@ -260,9 +263,23 @@ const ClusterComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
       >
         {data.status.state === ClusterStatus.STATUS_STOPPED &&
         !restartEnabled ? (
-          <iconStart.react tag="div" className="logo-alignment-style" />
+          <iconStart.react
+            tag="div"
+            className={
+              darkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
+          />
         ) : (
-          <iconStartDisable.react tag="div" className="logo-alignment-style" />
+          <iconStartDisable.react
+            tag="div"
+            className={
+              darkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
+          />
         )}
       </div>
     );
@@ -289,9 +306,23 @@ const ClusterComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconStop.react tag="div" className="logo-alignment-style" />
+          <iconStop.react
+            tag="div"
+            className={
+              darkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
+          />
         ) : (
-          <iconStopDisable.react tag="div" className="logo-alignment-style" />
+          <iconStopDisable.react
+            tag="div"
+            className={
+              darkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
+          />
         )}
       </div>
     );
@@ -318,11 +349,22 @@ const ClusterComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconRestart.react tag="div" className="logo-alignment-style" />
+          <iconRestart.react
+            tag="div"
+            className={
+              darkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
+          />
         ) : (
           <iconRestartDisable.react
             tag="div"
-            className="logo-alignment-style"
+            className={
+              darkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
           />
         )}
       </div>
@@ -433,12 +475,13 @@ const ClusterComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
                   />
                 ) : (
                   <ListCluster
-                      clustersList={clustersList}
-                      isLoading={isLoading}
-                      setPollingDisable={setPollingDisable}
-                      handleClusterDetails={handleClusterDetails}
-                      project_id={projectId} 
-                      themeManager={themeManager}                  />
+                    clustersList={clustersList}
+                    isLoading={isLoading}
+                    setPollingDisable={setPollingDisable}
+                    handleClusterDetails={handleClusterDetails}
+                    project_id={projectId}
+                    themeManager={themeManager}
+                  />
                 )}
               </div>
             </div>
@@ -460,6 +503,6 @@ const ClusterComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
 
 export class Cluster extends DataprocWidget {
   renderInternal(): React.JSX.Element {
-    return <ClusterComponent themeManager={this.themeManager}/>;
+    return <ClusterComponent themeManager={this.themeManager} />;
   }
 }

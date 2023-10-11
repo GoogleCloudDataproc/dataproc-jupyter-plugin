@@ -75,7 +75,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     labShell: ILabShell,
     notebookTracker: INotebookTracker,
     themeManager: IThemeManager,
-    settingRegistry: ISettingRegistry
+    settingRegistry: ISettingRegistry,
+    
   ) => {
     const { commands } = app;
 

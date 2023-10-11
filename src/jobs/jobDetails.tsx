@@ -372,9 +372,11 @@ function JobDetails({
 
   const styleJobEdit = (labelEditMode: boolean) => {
     if (labelEditMode) {
-      return 'job-edit-button-disabled';
+      return isDarkTheme
+        ? 'dark-theme job-edit-button-disabled'
+        : 'job-edit-button-disabled';
     } else {
-      return 'job-edit-button';
+      return isDarkTheme ? 'dark-theme job-edit-button' : 'job-edit-button';
     }
   };
 
@@ -549,18 +551,32 @@ function JobDetails({
                   {labelEditMode ? (
                     <iconEditDisable.react
                       tag="div"
-                      className={styleIconColor(labelEditMode)}
+                      className={
+                        isDarkTheme
+                          ? `dark-theme ${styleIconColor(labelEditMode)}`
+                          : styleIconColor(labelEditMode)
+                      }
                     />
                   ) : (
                     <iconEdit.react
                       tag="div"
-                      className={styleIconColor(labelEditMode)}
+                      className={
+                        isDarkTheme
+                          ? `dark-theme ${styleIconColor(labelEditMode)}`
+                          : styleIconColor(labelEditMode)
+                      }
                     />
                   )}
                   <div
-                    className={
-                      labelEditMode ? 'job-edit-text-disabled' : 'job-edit-text'
-                    }
+                   className={`${
+                    labelEditMode
+                      ? isDarkTheme
+                        ? 'dark-theme job-edit-text-disabled'
+                        : 'job-edit-text-disabled'
+                      : isDarkTheme
+                      ? 'dark-theme job-edit-text'
+                      : 'job-edit-text'
+                  }`}
                   >
                     EDIT
                   </div>
@@ -745,12 +761,19 @@ function JobDetails({
                       labelEditMode={labelEditMode}
                       duplicateKeyError={duplicateKeyError}
                       setDuplicateKeyError={setDuplicateKeyError}
+                      themeManager={themeManager}
                     />
                   )}
                 </div>
                 {labelEditMode && (
                   <div className="job-button-style-parent">
-                    <div className="job-save-button-style">
+                    <div
+                      className={
+                        isDarkTheme
+                          ? 'dark-theme job-save-button-style'
+                          : 'job-save-button-style'
+                      }
+                    >
                       <div
                         role="button"
                         onClick={() => {

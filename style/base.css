@@ -64,12 +64,6 @@
   background-image: url('./icons/dataproc_icon.svg');
 }
 
-h2 {
-  display: flex;
-  align-items: center;
-  margin: 15px 0px !important;
-}
-
 .ui.dropdown:not(.button) > .default.text {
   color: var(--jp-ui-font-color2) !important;
 }
@@ -97,7 +91,7 @@ h2 {
 .scroll-fix-header {
   position: sticky;
   top: 0;
-  background-color: var(--jp-ui-font-color0);;
+  background-color: var(--jp-layout-color1);;
 }
 .logs-button{
   cursor: context-menu !important;
@@ -109,9 +103,9 @@ h2 {
 }
 .select-title-text.dark-theme{
   background-color: var(--jp-layout-color0);
-  color: var(--jp-ui-font-color0);;
+  color: var(--jp-layout-color4);
 }
 .select-dropdown-text.dark-theme{
   background-color: var(--jp-layout-color0);
-  color: var(--jp-ui-font-color0);;
+  color: var(--jp-layout-color4);
 }

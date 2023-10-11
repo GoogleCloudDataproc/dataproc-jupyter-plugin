@@ -275,6 +275,7 @@ a:hover {
 
 .labels-delete-icon {
   padding-top: 7px;
+  cursor: pointer;
 }
 
 .labels-delete-icon-hide {

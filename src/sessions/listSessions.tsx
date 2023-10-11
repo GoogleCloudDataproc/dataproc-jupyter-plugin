@@ -285,9 +285,23 @@ function ListSessions({ themeManager }: IListSession) {
           }
         >
           {data.state === ClusterStatus.STATUS_ACTIVE ? (
-            <iconStop.react tag="div" className="logo-alignment-style" />
+            <iconStop.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           ) : (
-            <iconStopDisable.react tag="div" className="logo-alignment-style" />
+            <iconStopDisable.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           )}
         </div>
         <div
@@ -296,7 +310,14 @@ function ListSessions({ themeManager }: IListSession) {
           title="Delete Session"
           onClick={() => handleDeleteSession(sessionValue)}
         >
-          <iconDelete.react tag="div" className="logo-alignment-style" />
+          <iconDelete.react
+            tag="div"
+            className={
+              isDarkTheme
+                ? 'dark-theme logo-alignment-style'
+                : 'logo-alignment-style'
+            }
+          />
         </div>
       </div>
     );
@@ -406,7 +427,7 @@ function ListSessions({ themeManager }: IListSession) {
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
-                themeManager = {themeManager}
+                themeManager={themeManager}
               />
             </div>
           </div>

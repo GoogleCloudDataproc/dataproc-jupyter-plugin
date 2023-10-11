@@ -23,6 +23,7 @@ import deleteIcon from '../../style/icons/delete_icon.svg';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { DEFAULT_LABEL_DETAIL } from '../utils/const';
 import { Input } from '../controls/MuiWrappedInput';
+import { darkTheme } from '../controls/DataprocWidget';
 
 const iconPlus = new LabIcon({
   name: 'launcher:plus-icon',
@@ -166,22 +167,30 @@ function LabelProperties({
         labelDetail[labelDetail.length - 1].split(':')[0].length > 0) &&
       duplicateKeyError === -1
     ) {
-      return 'job-add-label-button';
+      return darkTheme
+        ? 'dark-theme job-add-label-button'
+        : 'job-add-label-button';
     } else if (
       buttonText === 'ADD LABEL' &&
       (labelDetail.length === 0 ||
         labelDetail[labelDetail.length - 1].split(':')[0].length === 0) &&
       duplicateKeyError !== -1
     ) {
-      return 'job-add-label-button-disabled';
+      return darkTheme
+        ? 'dark-theme job-add-label-button-disabled'
+        : 'job-add-label-button-disabled';
     } else if (
       buttonText !== 'ADD LABEL' &&
       (labelDetail.length === 0 ||
         labelDetail[labelDetail.length - 1].split(':')[0].length > 0)
     ) {
-      return 'job-add-property-button';
+      return darkTheme
+        ? 'dark-theme job-add-property-button'
+        : 'job-add-property-button';
     } else {
-      return 'job-add-property-button-disabled';
+      return darkTheme
+        ? 'dark-theme job-add-property-button-disabled'
+        : 'job-add-property-button-disabled';
     }
   };
 
@@ -362,15 +371,33 @@ function LabelProperties({
         >
           {labelDetail.length === 0 ||
           labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
-            <iconPlus.react tag="div" className="logo-alignment-style" />
+            <iconPlus.react
+              tag="div"
+              className={
+                darkTheme
+                  ? 'dark-theme-properties logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           ) : (
-            <iconPlusDisable.react tag="div" className="logo-alignment-style" />
+            <iconPlusDisable.react
+              tag="div"
+              className={
+                darkTheme
+                  ? 'dark-theme-properties-disable logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           )}
           <span
             className={
               labelDetail.length === 0 ||
               labelDetail[labelDetail.length - 1].split(':')[0].length > 0
-                ? 'job-edit-text'
+                ? darkTheme
+                  ? 'dark-theme job-edit-text'
+                  : 'job-edit-text'
+                : darkTheme
+                ? 'dark-theme job-edit-text-disabled'
                 : 'job-edit-text-disabled'
             }
           >
