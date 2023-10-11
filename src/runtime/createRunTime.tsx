@@ -122,8 +122,8 @@ function CreateRunTime({
   const [networkList, setNetworklist] = useState([{}]);
   const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
-  const [networkSelected, setNetworkSelected] = useState('default');
-  const [subNetworkSelected, setSubNetworkSelected] = useState('default');
+  const [networkSelected, setNetworkSelected] = useState('');
+  const [subNetworkSelected, setSubNetworkSelected] = useState('');
   const [isLoadingService, setIsLoadingService] = useState(false);
   const [error, setError] = useState({ isOpen: false, message: '' });
   const [clustersList, setClustersList] = useState<string[]>([]);
@@ -133,7 +133,7 @@ function CreateRunTime({
   const [versionValidation, setVersionValidation] = useState(false);
   const [idleValidation, setIdleValidation] = useState(false);
   const [autoValidation, setAutoValidation] = useState(false);
-  const [defaultValue, setDefaultValue] = useState('default');
+  const [defaultValue, setDefaultValue] = useState('');
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
   const [autoTimeSelected, setAutoTimeSelected] = useState('');
@@ -472,6 +472,7 @@ function CreateRunTime({
             });
         })
         .catch((err: Error) => {
+          setIsloadingNetwork(false);
           console.error('Error selecting Network', err);
         });
     }
@@ -519,6 +520,7 @@ function CreateRunTime({
       });
 
       setNetworklist(transformedNetworkList);
+      setNetworkSelected(transformedNetworkList[0]);
     } catch (error) {
       console.error('Error listing Networks', error);
     }
@@ -755,8 +757,8 @@ function CreateRunTime({
   };
   const handleNetworkSharedVpcRadioChange = () => {
     setSelectedNetworkRadio('sharedVpc');
-    setSubNetworkSelected('default');
-    setNetworkSelected('default');
+    setSubNetworkSelected(subNetworkList[0]!.toString());
+    setNetworkSelected(networkList[0]!.toString());
   };
   const handleSubNetworkRadioChange = () => {
     setSelectedNetworkRadio('projectNetwork');

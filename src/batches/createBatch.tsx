@@ -124,8 +124,8 @@ function CreateBatch({
   let mainPythonFileUri = '';
   let queryFileUri = '';
   let serviceAccount = '';
-  let subNetwork = 'default';
-  let network = 'default';
+  let subNetwork = '';
+  let network = '';
   let historyServer = '';
   let historyServerValue = '';
   let metastoreService = '';
@@ -182,7 +182,7 @@ function CreateBatch({
         '';
       subNetwork =
         batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri ||
-        'default';
+        '';
       
       keyType =
         batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
@@ -582,6 +582,7 @@ function CreateBatch({
             });
         })
         .catch((err: Error) => {
+          setIsloadingNetwork(false);
           console.error('Error selecting Network', err);
         });
     }
@@ -778,6 +779,7 @@ function CreateBatch({
                 }
               );
               setNetworklist(transformedNetworkList);
+              setNetworkSelected(transformedNetworkList[0])
             })
 
             .catch((e: Error) => {
@@ -1271,8 +1273,8 @@ function CreateBatch({
   };
   const handleNetworkSharedVpcRadioChange = () => {
     setSelectedNetworkRadio('sharedVpc');
-    setSubNetworkSelected('default');
-    setNetworkSelected('default');
+     setSubNetworkSelected(subNetworkList[0]!.toString());
+     setNetworkSelected(networkList[0]!.toString());
   };
   const handleSubNetworkRadioChange = () => {
     setSelectedNetworkRadio('projectNetwork');
