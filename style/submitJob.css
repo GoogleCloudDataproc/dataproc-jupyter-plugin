@@ -95,7 +95,7 @@
   z-index: 3;
 }
 .disable-text {
-  color: #80868b;
+  color: var(--jp-layout-color3) !important;
 }
 .select-text-overlay-label {
   position: relative;

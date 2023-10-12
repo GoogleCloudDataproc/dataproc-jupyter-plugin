@@ -65,6 +65,7 @@
   border-radius: 4px;
   margin-left: 15px;
   margin-top: 30px !important;
+  min-width: 7em !important;
 }
 
 .runtimetemplate-max-idle-select.ui.active.selection.dropdown,
