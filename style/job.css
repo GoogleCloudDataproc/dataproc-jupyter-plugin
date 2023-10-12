@@ -111,9 +111,7 @@
 .job-cancel-button-style:hover {
   background-color: #d3d3d3;
 }
-.dark-theme.job-cancel-button-style:hover {
-  background-color: var(--jp-layout-color3);
-}
+
 .job-add-label-button-disabled {
   display: flex;
   flex-direction: row;
