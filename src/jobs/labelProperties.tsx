@@ -213,7 +213,10 @@ function LabelProperties({
                         className={
                           isDarkTheme
                             ? 'select-dropdown-text dark-theme'
-                            : 'select-dropdown-text'
+                            : `select-dropdown-text ${labelSplit[0] === '' ||
+                            buttonText !== 'ADD LABEL' ||
+                            duplicateKeyError !== -1?''
+                            : ' disable-text'}`
                         }
                         htmlFor="metastore-project"
                       >
@@ -283,7 +286,8 @@ function LabelProperties({
                         className={
                           isDarkTheme
                             ? 'select-dropdown-text dark-theme'
-                            : 'select-dropdown-text'
+                            : `select-dropdown-text ${label === DEFAULT_LABEL_DETAIL &&
+                              buttonText === 'ADD LABEL' ?' disable-text':''}`
                         }
                         htmlFor="metastore-project"
                       >

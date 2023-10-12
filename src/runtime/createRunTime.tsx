@@ -314,6 +314,23 @@ function CreateRunTime({
         ? runtimeConfig.containerImage
         : '';
 
+      let pythonRepositorySelected = '';
+
+      if (
+        runtimeConfig?.repositoryConfig?.pypiRepositoryConfig?.pypiRepository
+          
+      ) {
+        console.log(
+          runtimeConfig.repositoryConfig
+            .pypiRepositoryConfig.pypiRepository
+        );
+        pythonRepositorySelected =
+          runtimeConfig.repositoryConfig
+            .pypiRepositoryConfig.pypiRepository;
+        setPythonRepositorySelected(pythonRepositorySelected);
+        console.log(pythonRepositorySelected);
+      }
+
       setDisplayNameSelected(displayName);
       /*
          Extracting runtimeId from name
@@ -411,7 +428,13 @@ function CreateRunTime({
           peripheralsConfig.metastoreService !== undefined
         ) {
           setServicesSelected(peripheralsConfig.metastoreService);
+          const metastoreDetails = peripheralsConfig?.metastoreService?.split('/');
+          const metaProject =peripheralsConfig?.metastoreService?.split('/')? metastoreDetails[1]:'';
+          const  metaRegion = peripheralsConfig?.metastoreService?.split('/')?metastoreDetails[3]:'';
+          setProjectId(metaProject);
+          setRegion(metaRegion);
         }
+       
 
         if (
           peripheralsConfig &&
@@ -1163,7 +1186,11 @@ function CreateRunTime({
                 className={
                   isDarkTheme
                     ? 'select-title-text dark-theme'
-                    : 'select-title-text'
+                    : `select-title-text${
+                        selectedRuntimeClone !== undefined
+                          ? ' disable-text'
+                          : ''
+                      }`
                 }
                 htmlFor="runtime-id"
               >
