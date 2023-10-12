@@ -1420,7 +1420,13 @@ function SubmitJob({
                 SUBMIT
               </div>
             </div>
-            <div className="job-cancel-button-style">
+            <div
+              className={
+                isDarkTheme
+                  ? 'dark-theme job-cancel-button-style'
+                  : 'job-cancel-button-style'
+              }
+            >
               <div
                 role="button"
                 onClick={() => {
