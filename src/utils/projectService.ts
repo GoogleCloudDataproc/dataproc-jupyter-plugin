@@ -20,7 +20,7 @@ import {
   API_HEADER_CONTENT_TYPE,
   PROJECT_LIST_URL
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, loggedFetch } from '../utils/utils';
 
 interface IProject {
   projectId: string;
@@ -37,7 +37,7 @@ export const projectListAPI = async (prefix: string): Promise<string[]> => {
     requestUrl.searchParams.append('filter', `name:${prefix}*`);
   }
   requestUrl.searchParams.append('pageSize', '200');
-  const resp = await fetch(requestUrl.toString(), {
+  const resp = await loggedFetch(requestUrl.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': API_HEADER_CONTENT_TYPE,

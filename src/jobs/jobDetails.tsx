@@ -42,7 +42,8 @@ import {
   jobTypeValue,
   jobTypeValueArguments,
   statusMessage,
-  toastifyCustomStyle
+  toastifyCustomStyle,
+  loggedFetch
 } from '../utils/utils';
 
 import ClusterDetails from '../cluster/clusterDetails';
@@ -236,7 +237,7 @@ function JobDetails({
   const updateJobDetails = async (payloadJob: object) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}?updateMask=${LABEL_TEXT}`,
         {
           method: 'PATCH',
@@ -296,7 +297,7 @@ function JobDetails({
   const getJobDetails = async () => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}`,
         {
           method: 'GET',
@@ -370,7 +371,7 @@ function JobDetails({
     if (labelEditMode) {
       return 'job-edit-button-disabled';
     } else {
-      return  'job-edit-button';
+      return 'job-edit-button';
     }
   };
 
@@ -393,7 +394,7 @@ function JobDetails({
           >
             <iconLeftArrow.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           </div>
           <div className="error-view-message-parent">
@@ -438,9 +439,7 @@ function JobDetails({
         <div className="scroll-comp-jobdetails">
           {jobInfo.jobUuid !== '' && (
             <div>
-              <div
-                className= 'scroll-fix-header cluster-details-header'
-              >
+              <div className="scroll-fix-header cluster-details-header">
                 <div
                   className="back-arrow-icon"
                   role="button"
@@ -449,7 +448,7 @@ function JobDetails({
                 >
                   <iconLeftArrow.react
                     tag="div"
-                    className='icon-white logo-alignment-style'
+                    className="icon-white logo-alignment-style"
                   />
                 </div>
                 <div className="cluster-details-title">Job details</div>
@@ -542,19 +541,18 @@ function JobDetails({
                   {labelEditMode ? (
                     <iconEditDisable.react
                       tag="div"
-                      className= {styleIconColor(labelEditMode)}
+                      className={styleIconColor(labelEditMode)}
                     />
                   ) : (
                     <iconEdit.react
                       tag="div"
-                      className={styleIconColor(labelEditMode)
-                      }
+                      className={styleIconColor(labelEditMode)}
                     />
                   )}
                   <div
-                    className={labelEditMode
-                      ? 'job-edit-text-disabled'
-                      : 'job-edit-text'}
+                    className={
+                      labelEditMode ? 'job-edit-text-disabled' : 'job-edit-text'
+                    }
                   >
                     EDIT
                   </div>
@@ -744,9 +742,7 @@ function JobDetails({
                 </div>
                 {labelEditMode && (
                   <div className="job-button-style-parent">
-                    <div
-                      className='job-save-button-style'
-                    >
+                    <div className="job-save-button-style">
                       <div
                         role="button"
                         onClick={() => {

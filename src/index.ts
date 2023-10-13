@@ -54,6 +54,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { GCSDrive } from './gcs/gcsDrive';
 import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
+import { DataprocLoggingService } from './utils/loggingService';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -86,6 +87,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     settingRegistry: ISettingRegistry,
     documentManager: IDocumentManager
   ) => {
+    DataprocLoggingService.attach();
     const { commands } = app;
 
     const iconAddRuntime = new LabIcon({

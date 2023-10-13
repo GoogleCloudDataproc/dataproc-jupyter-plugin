@@ -46,7 +46,7 @@ import {
   STATUS_STOPPED,
   STATUS_STOPPING
 } from '../utils/const';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
+import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import DeletePopup from '../utils/deletePopup';
@@ -180,7 +180,7 @@ function ClusterDetails({
     const credentials = await authApi();
     if (credentials) {
       setProjectName(credentials.project_id || '');
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
         {
           method: 'GET',
@@ -357,7 +357,7 @@ function ClusterDetails({
                     >
                       <iconLeftArrow.react
                         tag="div"
-                        className= 'icon-white logo-alignment-style'
+                        className="icon-white logo-alignment-style"
                       />
                     </div>
                     <div className="cluster-details-title">Cluster details</div>

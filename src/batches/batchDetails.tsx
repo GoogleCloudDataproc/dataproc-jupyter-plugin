@@ -52,7 +52,8 @@ import {
   elapsedTime,
   jobTimeFormat,
   statusMessageBatch,
-  toastifyCustomStyle
+  toastifyCustomStyle,
+  loggedFetch
 } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
 import { toast } from 'react-toastify';
@@ -233,7 +234,7 @@ function BatchDetails({
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${batchSelected}`,
         {
           method: 'GET',

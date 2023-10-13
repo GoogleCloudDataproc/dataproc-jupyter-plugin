@@ -16,7 +16,7 @@
  */
 
 import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, loggedFetch } from '../utils/utils';
 import type { storage_v1 } from '@googleapis/storage';
 
 export class GcsService {
@@ -67,7 +67,7 @@ export class GcsService {
 
     requestUrl.searchParams.append('prefix', prefix);
     requestUrl.searchParams.append('delimiter', '/');
-    const response = await fetch(requestUrl.toString(), {
+    const response = await loggedFetch(requestUrl.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -89,7 +89,7 @@ export class GcsService {
     }
     const requestUrl = new URL(`${this.STORAGE_DOMAIN_URL}/storage/v1/b`);
     requestUrl.searchParams.append('project', credentials.project_id ?? '');
-    const response = await fetch(requestUrl.toString(), {
+    const response = await loggedFetch(requestUrl.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -123,7 +123,7 @@ export class GcsService {
       )}`
     );
     requestUrl.searchParams.append('alt', 'media');
-    const response = await fetch(requestUrl.toString(), {
+    const response = await loggedFetch(requestUrl.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -175,7 +175,7 @@ export class GcsService {
     );
     requestUrl.searchParams.append('name', path);
     requestUrl.searchParams.append('uploadType', 'media');
-    const response = await fetch(requestUrl.toString(), {
+    const response = await loggedFetch(requestUrl.toString(), {
       method: 'POST',
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,

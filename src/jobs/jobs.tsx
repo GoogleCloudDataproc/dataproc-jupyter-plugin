@@ -25,7 +25,8 @@ import {
   statusMessage,
   jobTypeDisplay,
   ICellProps,
-  toastifyCustomStyle
+  toastifyCustomStyle,
+  loggedFetch
 } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -230,7 +231,7 @@ function JobComponent({
     const clusterName = clusterSelected ?? '';
     const pageToken = nextPageToken ?? '';
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {

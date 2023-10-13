@@ -17,12 +17,12 @@
 
 import { toast } from 'react-toastify';
 import { BASE_URL, API_HEADER_CONTENT_TYPE, API_HEADER_BEARER } from './const';
-import { authApi, toastifyCustomStyle } from './utils';
+import { authApi, toastifyCustomStyle, loggedFetch } from './utils';
 
 export const stopJobApi = async (jobId: string) => {
   const credentials = await authApi();
   if (credentials) {
-    fetch(
+    loggedFetch(
       `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}:cancel`,
       {
         method: 'POST',
@@ -49,7 +49,7 @@ export const stopJobApi = async (jobId: string) => {
 export const deleteJobApi = async (jobId: string) => {
   const credentials = await authApi();
   if (credentials) {
-    fetch(
+    loggedFetch(
       `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}`,
       {
         method: 'DELETE',
@@ -64,7 +64,10 @@ export const deleteJobApi = async (jobId: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
-            toast.success(`Job ${jobId} deleted successfully`, toastifyCustomStyle);
+            toast.success(
+              `Job ${jobId} deleted successfully`,
+              toastifyCustomStyle
+            );
           })
           .catch((e: Error) => console.log(e));
       })

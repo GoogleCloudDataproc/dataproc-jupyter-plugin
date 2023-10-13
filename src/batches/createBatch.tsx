@@ -51,7 +51,8 @@ import LabelProperties from '../jobs/labelProperties';
 import {
   authApi,
   authenticatedFetch,
-  toastifyCustomStyle
+  toastifyCustomStyle,
+  loggedFetch
 } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
@@ -474,7 +475,7 @@ function CreateBatch({
     const credentials = await authApi();
     if (credentials) {
       let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
-      fetch(apiURL, {
+      loggedFetch(apiURL, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -560,7 +561,7 @@ function CreateBatch({
     setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subNetwork}`,
         {
           headers: {
@@ -610,8 +611,9 @@ function CreateBatch({
       (selectedEncryptionRadio === 'customerManaged' &&
         selectedRadioValue === 'manually' &&
         manualKeySelected === '') ||
-        (selectedNetworkRadio === 'projectNetwork' &&
-                networkList.length !== 0 && subNetworkList.length===0);
+      (selectedNetworkRadio === 'projectNetwork' &&
+        networkList.length !== 0 &&
+        subNetworkList.length === 0);
     switch (batchTypeSelected) {
       case 'spark':
         return (
@@ -772,7 +774,7 @@ function CreateBatch({
   const listNetworksAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks`,
         {
           headers: {
@@ -818,7 +820,7 @@ function CreateBatch({
   const listKeyRingsAPI = async () => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings`,
         {
           headers: {
@@ -867,7 +869,7 @@ function CreateBatch({
   const listKeysAPI = async (keyRing: string) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRing}/cryptoKeys`,
         {
           headers: {
@@ -909,7 +911,7 @@ function CreateBatch({
   const listSubNetworksAPI = async (subnetwork: string) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
@@ -958,7 +960,7 @@ function CreateBatch({
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_META}/projects/${projectId}/locations/${data}/services`,
         {
           headers: {
@@ -1008,7 +1010,7 @@ function CreateBatch({
     setIsLoadingRegion(true);
     const credentials = await authApi();
     if (credentials) {
-      fetch(`${REGION_URL}/${projectId}/regions`, {
+      loggedFetch(`${REGION_URL}/${projectId}/regions`, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
           Authorization: API_HEADER_BEARER + credentials.access_token
@@ -1241,7 +1243,7 @@ function CreateBatch({
         mainPythonSelected,
         queryFileSelected
       );
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
         {
           method: 'POST',
@@ -2104,13 +2106,14 @@ function CreateBatch({
                     No local networks are available.
                   </div>
                 )}
-               {selectedNetworkRadio === 'projectNetwork' &&
-                networkList.length !== 0 && subNetworkList.length===0 &&(
+              {selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length !== 0 &&
+                subNetworkList.length === 0 && (
                   <div className="create-no-list-message">
-                     Please select a valid network and subnetwork.
+                    Please select a valid network and subnetwork.
                   </div>
                 )}
-             
+
               {selectedNetworkRadio === 'sharedVpc' && (
                 <div className="select-text-overlay">
                   <Autocomplete
