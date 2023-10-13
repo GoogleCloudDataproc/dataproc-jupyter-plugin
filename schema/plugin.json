@@ -20,6 +20,13 @@
     ]
   },
   "type": "object",
-  "properties": {},
+  "properties": {
+    "previewEnabled": {
+      "type": "boolean",
+      "title": "Enable Preview Features",
+      "description": "Whether or not preview features such as the DPMS explorer and GCS browser are enabled.",
+      "default": false
+    }
+  },
   "additionalProperties": false
 }
