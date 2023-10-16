@@ -153,6 +153,7 @@ const DpmsComponent = ({
   const [tableDescription, setTableDescription] = useState<
     Record<string, string>
   >({});
+  const [apiMessage, setApiMessage] = useState('');
 
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
@@ -173,7 +174,7 @@ const DpmsComponent = ({
                 ...prevResponse,
                 responseResult
               ]);
-              if (data) {
+              if(data){
                 setIsLoading(false);
               }
             })
@@ -537,6 +538,7 @@ fetching database name from fully qualified name structure */
       description: string;
     }>;
     error?: {
+      message: string;
       code: string;
     };
   }
@@ -583,6 +585,7 @@ fetching database name from fully qualified name structure */
               } else {
                 if (responseResult?.error?.code) {
                   setApiError(true);
+                  setApiMessage(responseResult?.error?.message)
                   setSchemaError(false);
                 } else {
                   setSchemaError(true);
@@ -806,7 +809,7 @@ fetching database name from fully qualified name structure */
                   />
                 </div>
                 <div className="tree-container">
-                  {data[totalDatabases - 1].children.length === totalTables && (
+                  {data.length === totalDatabases ? (data[totalDatabases - 1].children.length === totalTables) &&(
                     <Tree
                       className="Tree"
                       initialData={data}
@@ -827,7 +830,7 @@ fetching database name from fully qualified name structure */
                         <Node {...props} onClick={handleNodeClick} />
                       )}
                     </Tree>
-                  )}
+                  ): ('')} 
                 </div>
               </>
             )}
@@ -844,7 +847,7 @@ fetching database name from fully qualified name structure */
           activate DPMS sync with data catalog
         </div>
       ) : apiError ? (
-        <div className="dpms-error">Datacatalog API is not enabled</div>
+        <div className="dpms-error">{apiMessage}</div>
       ) : schemaError ? (
         <div className="dpms-error">No schema available</div>
       ) : (
