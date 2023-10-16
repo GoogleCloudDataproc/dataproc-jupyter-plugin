@@ -601,7 +601,7 @@ function CreateRunTime({
     }
   };
 
-  const listMetaStoreAPI = async (data: undefined) => {
+  const listMetaStoreAPI = async (data: undefined,network:any) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
@@ -621,9 +621,15 @@ function CreateRunTime({
               (responseResult: {
                 services: {
                   name: string;
+                  network: string;
                 }[];
               }) => {
-                const transformedServiceList = responseResult.services.map(
+                const filteredServices = responseResult.services.filter(
+                  (service) => service.network.split('/')[4] === network
+                );
+                console.log(filteredServices);
+  
+                const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name
                 );
                 setServicesList(transformedServiceList);
@@ -641,6 +647,7 @@ function CreateRunTime({
         });
     }
   };
+
 
   type Region = {
     name: string;
@@ -768,17 +775,20 @@ function CreateRunTime({
     setServicesSelected('');
     regionListAPI(data!.toString());
   };
-  const handleRegionChange = (data: any) => {
+
+  const handleRegionChange = (data: any,network: string | undefined) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data);
-    listMetaStoreAPI(data);
+   listMetaStoreAPI(data,network);
   };
-  const handleNetworkChange = (data: DropdownProps | null) => {
+  const handleNetworkChange = async(data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
     setSubNetworkSelected(defaultValue);
-    listSubNetworksAPI(data!.toString());
+   await listSubNetworksAPI(data!.toString());
+  await handleRegionChange(region,data!.toString());
   };
+
   const handleNetworkSharedVpcRadioChange = () => {
     setSelectedNetworkRadio('sharedVpc');
     setSubNetworkSelected(subNetworkList[0]!.toString());
@@ -1495,7 +1505,7 @@ function CreateRunTime({
                 <Autocomplete
                   options={regionList}
                   value={region}
-                  onChange={(_event, val) => handleRegionChange(val)}
+                  onChange={(_event, val) => handleRegionChange(val,networkSelected)}
                   renderInput={params => (
                     <TextField {...params} label="Metastore region" />
                   )}
