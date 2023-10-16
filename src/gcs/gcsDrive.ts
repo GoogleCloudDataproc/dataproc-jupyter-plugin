@@ -219,7 +219,12 @@ export class GCSDrive implements Contents.IDrive {
   }
 
   async delete(localPath: string): Promise<void> {
-    throw 'Not Implemented';
+    const path = GcsService.pathParser(localPath);
+    const resp = await GcsService.deleteFile({
+      bucket: path.bucket,
+      path: path.path
+    });
+    console.log(resp);
   }
 
   async rename(

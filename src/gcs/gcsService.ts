@@ -189,4 +189,39 @@ export class GcsService {
     }
     return (await response.json()) as storage_v1.Schema$Object;
   }
+
+  /**
+   * Thin wrapper around object delete
+   * @see https://cloud.google.com/storage/docs/deleting-objects
+   */
+  static async deleteFile({
+    bucket,
+    path
+  }: {
+    bucket: string;
+    path: string;
+  }) {
+    const credentials = await authApi();
+    if (!credentials) {
+      throw 'not logged in';
+    }
+    const requestUrl = new URL(
+      `${this.STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o/${encodeURIComponent(
+        path
+      )}`
+    );
+
+    console.log(bucket, path)
+    const response = await fetch(requestUrl.toString(), {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token,
+        'X-Goog-User-Project': credentials.project_id || ''
+      },
+    });
+    if (response.status !== 204) {
+      throw response.statusText;
+    }
+  }
 }
