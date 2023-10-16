@@ -33,7 +33,12 @@ import serverlessIcon from '../style/icons/serverless_icon.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
-import { Kernel, KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
+import {
+  Contents,
+  Kernel,
+  KernelAPI,
+  KernelSpecAPI
+} from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
@@ -46,7 +51,9 @@ import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
 import { injectToastContainer } from './utils/injectToastContainer';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { GcsBucket } from './gcs/gcsBucket';
+import { IDocumentManager } from '@jupyterlab/docmanager';
+import { GCSDrive } from './gcs/gcsDrive';
+import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -65,7 +72,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     ILabShell,
     INotebookTracker,
     IThemeManager,
-    ISettingRegistry
+    ISettingRegistry,
+    IDocumentManager
   ],
   activate: async (
     app: JupyterFrontEnd,
@@ -76,7 +84,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     notebookTracker: INotebookTracker,
     themeManager: IThemeManager,
     settingRegistry: ISettingRegistry,
-    
+    documentManager: IDocumentManager
   ) => {
     const { commands } = app;
 
@@ -118,8 +126,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     // The current value of whether or not preview features are enabled.
     let previewEnabled = settings.get('previewEnabled').composite as boolean;
     let panelDpms: Panel | undefined, panelGcs: Panel | undefined;
+    let gcsDrive: Contents.IDrive | undefined;
     settings.changed.connect(() => {
-      previewEnabled = settings.get('previewEnabled').composite as boolean;
       onPreviewEnabledChanged();
     });
 
@@ -147,12 +155,15 @@ const extension: JupyterFrontEndPlugin<void> = {
      * as necessary.
      */
     const onPreviewEnabledChanged = () => {
+      previewEnabled = settings.get('previewEnabled').composite as boolean;
       if (!previewEnabled) {
         // Preview was disabled, tear everything down.
         panelDpms?.dispose();
         panelGcs?.dispose();
+        gcsDrive?.dispose();
         panelDpms = undefined;
         panelGcs = undefined;
+        gcsDrive = undefined;
       } else {
         // Preview was enabled, (re)create DPMS and GCS.
         panelDpms = new Panel();
@@ -160,12 +171,10 @@ const extension: JupyterFrontEndPlugin<void> = {
         panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
         panelGcs = new Panel();
         panelGcs.id = 'GCS-bucket-tab';
+        gcsDrive = new GCSDrive();
+        documentManager.services.contents.addDrive(gcsDrive);
         panelGcs.addWidget(
-          new GcsBucket(
-            app as JupyterLab,
-            factory as IFileBrowserFactory,
-            themeManager
-          )
+          new GcsBrowserWidget(gcsDrive.name, factory as IFileBrowserFactory)
         );
         // Update the icons.
         onThemeChanged();
