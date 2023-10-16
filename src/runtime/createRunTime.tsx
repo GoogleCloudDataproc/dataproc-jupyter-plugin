@@ -320,15 +320,12 @@ function CreateRunTime({
         runtimeConfig?.repositoryConfig?.pypiRepositoryConfig?.pypiRepository
           
       ) {
-        console.log(
-          runtimeConfig.repositoryConfig
-            .pypiRepositoryConfig.pypiRepository
-        );
+        
         pythonRepositorySelected =
           runtimeConfig.repositoryConfig
             .pypiRepositoryConfig.pypiRepository;
         setPythonRepositorySelected(pythonRepositorySelected);
-        console.log(pythonRepositorySelected);
+       
       }
 
       setDisplayNameSelected(displayName);
@@ -601,7 +598,7 @@ function CreateRunTime({
     }
   };
 
-  const listMetaStoreAPI = async (data: undefined,network:any) => {
+  const listMetaStoreAPI = async (data: undefined,network:string |undefined) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
@@ -627,7 +624,6 @@ function CreateRunTime({
                 const filteredServices = responseResult.services.filter(
                   (service) => service.network.split('/')[4] === network
                 );
-                console.log(filteredServices);
   
                 const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name

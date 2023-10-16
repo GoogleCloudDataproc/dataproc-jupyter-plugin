@@ -933,7 +933,7 @@ function CreateBatch({
         });
     }
   };
-  const listMetaStoreAPI = async (data: undefined,network:any) => {
+  const listMetaStoreAPI = async (data: undefined,network:string | undefined) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
@@ -959,7 +959,6 @@ function CreateBatch({
                 const filteredServices = responseResult.services.filter(
                   (service) => service.network.split('/')[4] === network
                 );
-                console.log(filteredServices);
   
                 const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name
