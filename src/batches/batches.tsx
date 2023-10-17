@@ -43,7 +43,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
-import { DataprocWidget, darkTheme } from '../controls/DataprocWidget';
+import { DataprocWidget} from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconDelete = new LabIcon({
@@ -231,18 +231,11 @@ const BatchesComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
           {data.state === BatchStatus.STATUS_PENDING ? (
             <iconDelete.react
               tag="div"
-              className={
-                darkTheme
-                  ? 'dark-theme logo-alignment-style icon-delete'
-                  : 'logo-alignment-style icon-delete'
-              }
+              className='icon-white logo-alignment-style icon-delete'
             />
           ) : (
-            <iconDelete.react tag="div" className={
-              darkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            } />
+            <iconDelete.react tag="div" className='icon-white logo-alignment-style'
+ />
           )}
         </div>
       </div>

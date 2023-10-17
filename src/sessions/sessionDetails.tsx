@@ -102,7 +102,6 @@ function SessionDetails({
   app,
   themeManager
 }: ISessionDetailsProps) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [sessionInfo, setSessionInfo] = useState({
     state: '',
     name: '',
@@ -219,11 +218,7 @@ function SessionDetails({
           {detailedSessionView && (
             <div>
               <div
-                className={
-                  isDarkTheme
-                    ? 'dark-theme scroll-fix-header cluster-details-header'
-                    : 'scroll-fix-header cluster-details-header'
-                }
+                className='scroll-fix-header cluster-details-header'
               >
                 <div
                   role="button"
@@ -232,11 +227,7 @@ function SessionDetails({
                 >
                   <iconLeftArrow.react
                     tag="div"
-                    className={
-                      isDarkTheme
-                        ? 'dark-theme logo-alignment-style'
-                        : 'logo-alignment-style'
-                    }
+                    className='icon-white logo-alignment-style'
                   />
                 </div>
                 <div className="cluster-details-title">Session details</div>
@@ -413,10 +404,10 @@ function SessionDetails({
                   } else if (key === NETWORK_TAGS_KEY) {
                     return (
                       <div className="row-details" key={key}>
-                        <div className="batch-details-label-level-two">
+                        <div className="session-env-details-label">
                           {label}
                         </div>
-                        <div className="details-value">
+                        <div className="session-env-details-value">
                           {
                             //@ts-ignore value type issue
                             value.map((item: string) => {
@@ -433,10 +424,10 @@ function SessionDetails({
                   sessionInfo?.environmentConfig?.peripheralsConfig
                     ?.sparkHistoryServerConfig?.dataprocCluster) && (
                   <div className="row-details">
-                    <div className="batch-details-label-level-one">
+                    <div className="session-env-details-label">
                       Peripherals config
                     </div>
-                    <div className="details-value"></div>
+                    <div className="session-env-details-value"></div>
                   </div>
                 )}
                 {Object.entries(
@@ -451,18 +442,18 @@ function SessionDetails({
                     label = '';
                   }
                   <div className="row-details">
-                    <div className="batch-details-label-level-one">
+                    <div className="session-env-details-label">
                       Peripherals config
                     </div>
-                    <div className="details-value"></div>
+                    <div className="session-env-details-value"></div>
                   </div>;
                   if (key === METASTORE_SERVICE_KEY) {
                     return (
                       <div className="row-details" key={key}>
-                        <div className="batch-details-label-level-two">
+                        <div className="session-env-details-label">
                           {label}
                         </div>
-                        <div className="details-value">
+                        <div className="session-env-details-value">
                           {
                             sessionInfo.environmentConfig.peripheralsConfig[
                               METASTORE_SERVICE_KEY
@@ -487,7 +478,7 @@ function SessionDetails({
                           <div className="batch-details-label-level-three">
                             {DATAPROC_CLUSTER_LABEL}
                           </div>
-                          <div className="details-value">
+                          <div className="session-env-details-value">
                             {
                               sessionInfo.environmentConfig.peripheralsConfig
                                 .sparkHistoryServerConfig[DATAPROC_CLUSTER_KEY]
@@ -500,8 +491,8 @@ function SessionDetails({
                 })}
 
                 <div className="row-details">
-                  <div className="details-label">Encryption type</div>
-                  <div className="details-value">
+                  <div className="session-env-details-label">Encryption type</div>
+                  <div className="session-env-details-value">
                     {sessionInfo?.environmentConfig?.executionConfig?.kmsKey
                       ? 'Customer-managed'
                       : 'Google-managed'}
@@ -509,8 +500,8 @@ function SessionDetails({
                 </div>
                 {sessionInfo?.environmentConfig?.executionConfig?.kmsKey && (
                   <div className="row-details">
-                    <div className="details-label">Encryption key</div>
-                    <div className="details-value">
+                    <div className="session-env-details-label">Encryption key</div>
+                    <div className="session-env-details-value">
                       {sessionInfo.environmentConfig.executionConfig.kmsKey}
                     </div>
                   </div>

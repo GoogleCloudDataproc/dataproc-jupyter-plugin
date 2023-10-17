@@ -118,7 +118,6 @@ function CreateBatch({
   createBatch,
   themeManager
 }: ICreateBatchProps) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   let batchKeys: string[] = [];
   let batchType = 'spark';
   let mainClass = '';
@@ -1383,14 +1382,7 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react
-              tag="div"
-              className={
-                isDarkTheme
-                  ? 'dark-theme logo-alignment-style'
-                  : 'logo-alignment-style'
-              }
-            />
+            <iconLeftArrow.react tag="div"  className= 'icon-white logo-alignment-style'/>
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
@@ -1399,11 +1391,7 @@ function CreateBatch({
             <div className="submit-job-label-header">Batch info</div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="batch-id"
               >
                 Batch ID*
@@ -1423,11 +1411,7 @@ function CreateBatch({
             )}
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme region-disable'
-                    : 'select-title-text region-disable'
-                }
+                className='select-title-text region-disable'
                 htmlFor="region"
               >
                 Region*
@@ -1442,11 +1426,7 @@ function CreateBatch({
             <div className="submit-job-label-header">Container</div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-dropdown-text dark-theme'
-                    : 'select-dropdown-text'
-                }
+                className= 'select-dropdown-text'
                 htmlFor="batch-type"
               >
                 Batch type*
@@ -1462,11 +1442,7 @@ function CreateBatch({
             </div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="runtime-version"
               >
                 Runtime version*
@@ -1500,11 +1476,7 @@ function CreateBatch({
                   <div className="create-batch-input">
                     <div className="select-text-overlay">
                       <label
-                        className={
-                          isDarkTheme
-                            ? 'select-title-text dark-theme'
-                            : 'select-title-text'
-                        }
+                        className= 'select-title-text'
                         htmlFor="main-class"
                       >
                         Main class*
@@ -1555,11 +1527,7 @@ function CreateBatch({
                   <div className="create-batch-input">
                     <div className="select-text-overlay">
                       <label
-                        className={
-                          isDarkTheme
-                            ? 'select-title-text dark-theme'
-                            : 'select-title-text'
-                        }
+                        className= 'select-title-text'
                         htmlFor="main-jar"
                       >
                         Main jar*
@@ -1606,11 +1574,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className= 'select-title-text'
                     htmlFor="main-r-file"
                   >
                     Main R file*
@@ -1652,11 +1616,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className= 'select-title-text'
                     htmlFor="main-python-file"
                   >
                     Main python file*
@@ -1698,11 +1658,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className= 'select-title-text'
                     htmlFor="additional-python-files"
                   >
                     Additional python files
@@ -1751,11 +1707,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className='select-title-text'
                     htmlFor="query-file"
                   >
                     Query file*
@@ -1794,11 +1746,7 @@ function CreateBatch({
             )}
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="custom-container-image"
               >
                 Custom container image
@@ -1851,11 +1799,7 @@ function CreateBatch({
                 <>
                   <div className="select-text-overlay">
                     <label
-                      className={
-                        isDarkTheme
-                          ? 'select-title-text dark-theme'
-                          : 'select-title-text'
-                      }
+                      className= 'select-title-text'
                       htmlFor="jar-files"
                     >
                       Jar files
@@ -1910,11 +1854,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className='select-title-text'
                     htmlFor="files"
                   >
                     Files
@@ -1966,11 +1906,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className='select-title-text'
                     htmlFor="archive-files"
                   >
                     Archive files
@@ -2024,11 +1960,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className= 'select-title-text'
                     htmlFor="arguments"
                   >
                     Arguments
@@ -2083,11 +2015,7 @@ function CreateBatch({
             </div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="service-account"
               >
                 Service account
@@ -2222,11 +2150,7 @@ function CreateBatch({
             </div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="network-tags"
               >
                 Network tags
@@ -2349,11 +2273,7 @@ function CreateBatch({
                           <label
                             className={
                               selectedRadioValue === 'key'
-                                ? isDarkTheme
-                                  ? 'dark-theme select-title-text disable-text'
-                                  : 'select-title-text disable-text'
-                                : isDarkTheme
-                                ? 'dark-theme select-title-text'
+                                ?  'select-title-text disable-text'
                                 : 'select-title-text'
                             }
                             htmlFor="enter-key-manually"
@@ -2511,11 +2431,7 @@ function CreateBatch({
               <div
                 className={
                   isSubmitDisabled()
-                    ? isDarkTheme
-                      ? 'dark-theme submit-button-disable-style'
-                      : 'submit-button-disable-style'
-                    : isDarkTheme
-                    ? 'dark-theme submit-button-style'
+                      ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }
                 aria-label="submit Batch"
