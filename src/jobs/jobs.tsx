@@ -571,7 +571,7 @@ function JobComponent({
 
                     <iconFilter.react
                       tag="div"
-                      className="icon-whitelogo-alignment-style"
+                      className="icon-white logo-alignment-style"
                     />
 
                 </div>
