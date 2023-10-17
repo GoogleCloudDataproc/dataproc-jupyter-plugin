@@ -91,24 +91,88 @@
 .scroll-fix-header {
   position: sticky;
   top: 0;
-  background-color: var(--jp-layout-color1);;
+  background-color: var(--jp-layout-color1);
 }
-.logs-button{
+.logs-button {
   cursor: context-menu !important;
 }
-.dark-theme.scroll-fix-header{
+body[data-jp-theme-name='JupyterLab Dark'].scroll-fix-header {
   position: sticky;
   top: 0;
   background-color: var(--jp-layout-color0);
 }
-.select-title-text.dark-theme{
-  background-color: var(--jp-layout-color0);
-  color: var(--jp-layout-color4);
-}
-.select-dropdown-text.dark-theme{
-  background-color: var(--jp-layout-color0);
-  color: var(--jp-layout-color4);
-}
-.dark-theme-logs path{
+body[data-jp-theme-name='JupyterLab Dark'] .dark-theme-logs path {
   fill: var(--jp-ui-font-color1);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .icon-white path {
+  fill: var(--jp-ui-font-color1);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .icon-black path {
+  fill: var(--jp-layout-color1);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .select-title-text {
+  background-color: var(--jp-layout-color0);
+  color: var(--jp-layout-color4);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .select-dropdown-text {
+  background-color: var(--jp-layout-color0);
+  color: var(--jp-layout-color4);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-add-property-button {
+  background-color: var(--jp-console-icon-color);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-add-property-button-disabled {
+  background-color: var(--jp-layout-color4);
+  color: var(--jp-ui-font-color1);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-edit-text {
+  color: var(--jp-layout-color0);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-add-label-button {
+  background-color: var(--jp-console-icon-color);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-add-label-button-disabled {
+  background-color: var(--jp-layout-color4);
+  color: var(--jp-ui-font-color1);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .submit-button-style {
+  background-color: var(--jp-console-icon-color);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-save-button-style {
+  background: var(--jp-console-icon-color);
+  color: var(--jp-layout-color0);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-edit-button-disabled {
+  background-color: var(--jp-layout-color4);
+  color: var(--jp-ui-font-color1);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-edit-button {
+  background-color: var(--jp-console-icon-color);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .color-icon-disabled path {
+  fill: var(--jp-ui-font-color2);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .color-icon path {
+  fill: var(--jp-layout-color0);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .filter-section-part {
+  color: var(--jp-ui-font-color0);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .schema-table th {
+  background-color: var(--jp-layout-color2);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .job-label-style {
+  background-color: var(--jp-layout-color1);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-label-style-list {
+  background-color: var(--jp-layout-color1);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .metastore-loader span {
+  border-color: var(--jp-console-icon-color) var(--jp-console-icon-color)
+    transparent !important;
+}
+body[data-jp-theme-name='JupyterLab Dark'] .job-cancel-button-style:hover {
+  background-color: var(--jp-layout-color3);
 }

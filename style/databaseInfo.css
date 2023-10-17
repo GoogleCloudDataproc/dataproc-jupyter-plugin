@@ -89,6 +89,3 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
-.dark-theme.schema-table th{
-background-color: var(--jp-layout-color2);
-}

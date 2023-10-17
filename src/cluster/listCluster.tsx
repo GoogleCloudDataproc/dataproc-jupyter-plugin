@@ -90,7 +90,6 @@ function ListCluster({
   project_id,
   themeManager
 }: IListClusterProps) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const data = clustersList;
   const columns = React.useMemo(
     () => [
@@ -247,14 +246,10 @@ function ListCluster({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              {!isDarkTheme ? (
-                <iconFilter.react tag="div" className="logo-alignment-style" />
-              ) : (
                 <iconFilter.react
                   tag="div"
-                  className="dark-theme logo-alignment-style"
+                  className="icon-white logo-alignment-style"
                 />
-              )}
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

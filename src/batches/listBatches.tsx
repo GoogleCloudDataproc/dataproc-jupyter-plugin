@@ -95,7 +95,6 @@ function ListBatches({
   createBatchView,
   themeManager
 }: IListBatchesProps) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const data = batchesList;
   const columns = React.useMemo(
     () => [
@@ -235,10 +234,7 @@ function ListBatches({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-            {!isDarkTheme ? (
-              <iconFilter.react tag="div" className='logo-alignment-style' />
-              ):
-              (<iconFilter.react tag="div" className='dark-theme logo-alignment-style' />)}
+              <iconFilter.react tag="div" className='icon-white logo-alignment-style' />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
