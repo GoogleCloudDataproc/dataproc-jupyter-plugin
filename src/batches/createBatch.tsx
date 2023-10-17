@@ -186,7 +186,7 @@ function CreateBatch({
       subNetwork =
         batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri ||
         '';
-      
+
       keyType =
         batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
       const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
@@ -262,7 +262,7 @@ function CreateBatch({
   const [region, setRegion] = useState(metaRegion);
   const [regionList, setRegionList] = useState<string[]>([]);
   const [networkList, setNetworklist] = useState([{}]);
-  const [keyRinglist, setKeyRinglist] = useState([{}]);
+  const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState(network);
@@ -378,11 +378,9 @@ function CreateBatch({
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
-    
+
     if (batchInfoResponse) {
-      const {
-        environmentConfig
-      } = batchInfoResponse;
+      const { environmentConfig } = batchInfoResponse;
       if (environmentConfig) {
         const executionConfig = environmentConfig.executionConfig;
 
@@ -399,7 +397,6 @@ function CreateBatch({
             setSubNetworkSelected(executionConfig.subnetworkUri);
             setSelectedNetworkRadio('projectNetwork');
           }
-
         }
       }
 
@@ -593,7 +590,9 @@ function CreateBatch({
 
   function isSubmitDisabled() {
     const commonConditions =
-      batchIdSelected === '' || regionName === '' || batchIdValidation ||
+      batchIdSelected === '' ||
+      regionName === '' ||
+      batchIdValidation ||
       (selectedNetworkRadio === 'sharedVpc' &&
         sharedSubNetworkList.length === 0) ||
       (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '');
@@ -782,7 +781,7 @@ function CreateBatch({
                 }
               );
               setNetworklist(transformedNetworkList);
-              setNetworkSelected(transformedNetworkList[0])
+              setNetworkSelected(transformedNetworkList[0]);
             })
 
             .catch((e: Error) => {
@@ -933,7 +932,10 @@ function CreateBatch({
         });
     }
   };
-  const listMetaStoreAPI = async (data: undefined,network:string | undefined) => {
+  const listMetaStoreAPI = async (
+    data: undefined,
+    network: string | undefined
+  ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
@@ -957,9 +959,9 @@ function CreateBatch({
                 }[];
               }) => {
                 const filteredServices = responseResult.services.filter(
-                  (service) => service.network.split('/')[4] === network
+                  service => service.network.split('/')[4] === network
                 );
-  
+
                 const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name
                 );
@@ -1016,9 +1018,9 @@ function CreateBatch({
         });
     }
   };
-  const handleSharedSubNetwork = async(data: string | null) => {
+  const handleSharedSubNetwork = async (data: string | null) => {
     setSharedvpcSelected(data!.toString());
-    await handleRegionChange(region,data!.toString());
+    await handleRegionChange(region, data!.toString());
   };
 
   type Payload = {
@@ -1146,14 +1148,14 @@ function CreateBatch({
           selectedRadioValue === 'manually' && {
             kmsKey: manualKeySelected
           }),
-          ...(subNetworkSelected &&
-            selectedNetworkRadio === 'projectNetwork' && {
-              subnetworkUri: subNetworkSelected
-            }),
-          ...(sharedvpcSelected &&
-            selectedNetworkRadio === 'sharedVpc' && {
-              subnetworkUri: `projects/${projectInfo}/regions/${regionName}/subnetworks/${sharedvpcSelected}`
-            }),
+        ...(subNetworkSelected &&
+          selectedNetworkRadio === 'projectNetwork' && {
+            subnetworkUri: subNetworkSelected
+          }),
+        ...(sharedvpcSelected &&
+          selectedNetworkRadio === 'sharedVpc' && {
+            subnetworkUri: `projects/${projectInfo}/regions/${regionName}/subnetworks/${sharedvpcSelected}`
+          }),
         // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
@@ -1280,9 +1282,8 @@ function CreateBatch({
   };
   const handleNetworkSharedVpcRadioChange = () => {
     setSelectedNetworkRadio('sharedVpc');
-     setSubNetworkSelected(subNetworkList[0]!.toString());
-     setNetworkSelected(networkList[0]!.toString());
-     
+    setSubNetworkSelected(subNetworkList[0]!.toString());
+    setNetworkSelected(networkList[0]!.toString());
   };
   const handleSubNetworkRadioChange = () => {
     setSelectedNetworkRadio('projectNetwork');
@@ -1317,21 +1318,21 @@ function CreateBatch({
     setServicesSelected('');
     regionListAPI(data!.toString());
   };
-  const handleRegionChange = (data: any,network: string | undefined) => {
+  const handleRegionChange = (data: any, network: string | undefined) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data);
-   listMetaStoreAPI(data,network);
+    listMetaStoreAPI(data, network);
   };
-  const handleNetworkChange = async(data: DropdownProps | null) => {
+  const handleNetworkChange = async (data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
-   await listSubNetworksAPI(data!.toString());
-  await handleRegionChange(region,data!.toString());
+    await listSubNetworksAPI(data!.toString());
+    await handleRegionChange(region, data!.toString());
   };
   const handleSubNetworkChange = (data: string | null) => {
     setSubNetworkSelected(data!.toString());
   };
-  const handleKeyRingChange = (data: DropdownProps | null) => {
+  const handleKeyRingChange = (data: string | null) => {
     setKeyRingSelected(data!.toString());
     listKeysAPI(data!.toString());
   };
@@ -1371,11 +1372,14 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react tag="div"  className={
-              isDarkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            } />
+            <iconLeftArrow.react
+              tag="div"
+              className={
+                isDarkTheme
+                  ? 'dark-theme logo-alignment-style'
+                  : 'logo-alignment-style'
+              }
+            />
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
@@ -2140,7 +2144,6 @@ function CreateBatch({
                 </div>
               </div>
             </div>
-
             <div>
               {selectedNetworkRadio === 'projectNetwork' && (
                 <div className="create-batch-network">
@@ -2206,7 +2209,6 @@ function CreateBatch({
                   </div>
                 )}
             </div>
-
             <div className="select-text-overlay">
               <label
                 className={
@@ -2305,7 +2307,7 @@ function CreateBatch({
                             value={keyRingSelected}
                             onChange={(_event, val) => handleKeyRingChange(val)}
                             renderInput={params => (
-                              <TextField {...params} label="Key rings" />
+                              <TextField {...params} label="Keys" />
                             )}
                           />
                         </div>
@@ -2417,7 +2419,9 @@ function CreateBatch({
                 <Autocomplete
                   options={regionList}
                   value={region}
-                  onChange={(_event, val) => handleRegionChange(val,networkSelected)}
+                  onChange={(_event, val) =>
+                    handleRegionChange(val, networkSelected)
+                  }
                   renderInput={params => (
                     <TextField {...params} label="Metastore region" />
                   )}
