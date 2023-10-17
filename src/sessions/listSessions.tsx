@@ -84,7 +84,6 @@ interface IListSession {
   themeManager: IThemeManager;
 }
 function ListSessions({ themeManager }: IListSession) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [sessionsList, setSessionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
@@ -287,20 +286,12 @@ function ListSessions({ themeManager }: IListSession) {
           {data.state === ClusterStatus.STATUS_ACTIVE ? (
             <iconStop.react
               tag="div"
-              className={
-                isDarkTheme
-                  ? 'dark-theme logo-alignment-style'
-                  : 'logo-alignment-style'
-              }
+              className= 'icon-white logo-alignment-style'
             />
           ) : (
             <iconStopDisable.react
               tag="div"
-              className={
-                isDarkTheme
-                  ? 'dark-theme logo-alignment-style'
-                  : 'logo-alignment-style'
-              }
+              className= 'icon-white logo-alignment-style'
             />
           )}
         </div>
@@ -312,11 +303,7 @@ function ListSessions({ themeManager }: IListSession) {
         >
           <iconDelete.react
             tag="div"
-            className={
-              isDarkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className='icon-white logo-alignment-style'
           />
         </div>
       </div>
@@ -411,14 +398,10 @@ function ListSessions({ themeManager }: IListSession) {
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              {!isDarkTheme ? (
-                <iconFilter.react tag="div" className="logo-alignment-style" />
-              ) : (
                 <iconFilter.react
                   tag="div"
-                  className="dark-theme logo-alignment-style"
+                  className="icon-white logo-alignment-style"
                 />
-              )}
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

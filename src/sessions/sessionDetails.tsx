@@ -102,7 +102,6 @@ function SessionDetails({
   app,
   themeManager
 }: ISessionDetailsProps) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [sessionInfo, setSessionInfo] = useState({
     state: '',
     name: '',
@@ -219,11 +218,7 @@ function SessionDetails({
           {detailedSessionView && (
             <div>
               <div
-                className={
-                  isDarkTheme
-                    ? 'dark-theme scroll-fix-header cluster-details-header'
-                    : 'scroll-fix-header cluster-details-header'
-                }
+                className='scroll-fix-header cluster-details-header'
               >
                 <div
                   role="button"
@@ -232,11 +227,7 @@ function SessionDetails({
                 >
                   <iconLeftArrow.react
                     tag="div"
-                    className={
-                      isDarkTheme
-                        ? 'dark-theme logo-alignment-style'
-                        : 'logo-alignment-style'
-                    }
+                    className='icon-white logo-alignment-style'
                   />
                 </div>
                 <div className="cluster-details-title">Session details</div>

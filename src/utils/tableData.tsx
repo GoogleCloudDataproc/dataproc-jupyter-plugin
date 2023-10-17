@@ -31,7 +31,6 @@ function TableData({
   fromPage,
   themeManager
 }: any) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
 
   const displayData = page ? page : rows;
@@ -44,7 +43,7 @@ function TableData({
 
   return (
     <table {...getTableProps()} className="clusters-list-table">
-      <thead  className={isDarkTheme ? "dark-theme scroll-fix-header" : "scroll-fix-header"}>
+      <thead  className="scroll-fix-header">
         {headerGroups.map((headerGroup: any) => (
           <tr
             {...headerGroup.getHeaderGroupProps()}

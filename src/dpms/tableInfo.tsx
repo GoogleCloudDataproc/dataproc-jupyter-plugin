@@ -18,7 +18,7 @@
 import React from 'react';
 import { useTable } from 'react-table';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { DataprocWidget, darkTheme } from '../controls/DataprocWidget';
+import { DataprocWidget} from '../controls/DataprocWidget';
 interface IColumn {
   name: string;
   type: string;
@@ -87,7 +87,7 @@ const TableInfo = ({
       <div className="dpms-Wrapper">
         <div className="table-container">
           <table
-            className={darkTheme ? 'dark-theme schema-table' : 'schema-table'}
+            className= 'schema-table'
             {...getTableProps()}
           >
             <thead>

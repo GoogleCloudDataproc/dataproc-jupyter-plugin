@@ -101,7 +101,7 @@ body[data-jp-theme-name="JupyterLab Dark"].scroll-fix-header{
   top: 0;
   background-color: var(--jp-layout-color0);
 }
-.dark-theme-logs path{
+body[data-jp-theme-name="JupyterLab Dark"] .dark-theme-logs path{
   fill: var(--jp-ui-font-color1);
 }
 
@@ -160,3 +160,16 @@ body[data-jp-theme-name="JupyterLab Dark"].color-icon path{
 body[data-jp-theme-name="JupyterLab Dark"] .filter-section-part{
   color: var(--jp-ui-font-color0);;
 }
+body[data-jp-theme-name="JupyterLab Dark"] .schema-table th{
+  background-color: var(--jp-layout-color2);
+  }
+
+body[data-jp-theme-name="JupyterLab Dark"].job-label-style{
+    background-color: var(--jp-layout-color3);
+  }
+body[data-jp-theme-name="JupyterLab Dark"].job-label-style-list{
+    background-color: var(--jp-layout-color3);
+  }
+  body[data-jp-theme-name="JupyterLab Dark"] .metastore-loader span {
+ border-color:  var(--jp-console-icon-color) var(--jp-console-icon-color) transparent !important;
+  }
