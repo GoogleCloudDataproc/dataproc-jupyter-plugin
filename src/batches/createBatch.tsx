@@ -933,7 +933,7 @@ function CreateBatch({
         });
     }
   };
-  const listMetaStoreAPI = async (data: undefined) => {
+  const listMetaStoreAPI = async (data: undefined,network:string | undefined) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
@@ -953,9 +953,14 @@ function CreateBatch({
               (responseResult: {
                 services: {
                   name: string;
+                  network: string;
                 }[];
               }) => {
-                const transformedServiceList = responseResult.services.map(
+                const filteredServices = responseResult.services.filter(
+                  (service) => service.network.split('/')[4] === network
+                );
+  
+                const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name
                 );
                 setServicesList(transformedServiceList);
@@ -1011,8 +1016,9 @@ function CreateBatch({
         });
     }
   };
-  const handleSharedSubNetwork = (data: string | null) => {
+  const handleSharedSubNetwork = async(data: string | null) => {
     setSharedvpcSelected(data!.toString());
+    await handleRegionChange(region,data!.toString());
   };
 
   type Payload = {
@@ -1276,6 +1282,7 @@ function CreateBatch({
     setSelectedNetworkRadio('sharedVpc');
      setSubNetworkSelected(subNetworkList[0]!.toString());
      setNetworkSelected(networkList[0]!.toString());
+     
   };
   const handleSubNetworkRadioChange = () => {
     setSelectedNetworkRadio('projectNetwork');
@@ -1310,15 +1317,16 @@ function CreateBatch({
     setServicesSelected('');
     regionListAPI(data!.toString());
   };
-  const handleRegionChange = (data: any) => {
+  const handleRegionChange = (data: any,network: string | undefined) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data);
-    listMetaStoreAPI(data);
+   listMetaStoreAPI(data,network);
   };
-  const handleNetworkChange = (data: DropdownProps | null) => {
+  const handleNetworkChange = async(data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
-    listSubNetworksAPI(data!.toString());
+   await listSubNetworksAPI(data!.toString());
+  await handleRegionChange(region,data!.toString());
   };
   const handleSubNetworkChange = (data: string | null) => {
     setSubNetworkSelected(data!.toString());
@@ -2409,7 +2417,7 @@ function CreateBatch({
                 <Autocomplete
                   options={regionList}
                   value={region}
-                  onChange={(_event, val) => handleRegionChange(val)}
+                  onChange={(_event, val) => handleRegionChange(val,networkSelected)}
                   renderInput={params => (
                     <TextField {...params} label="Metastore region" />
                   )}
