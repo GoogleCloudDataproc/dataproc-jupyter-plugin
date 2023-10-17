@@ -149,6 +149,26 @@ export class GCSDrive implements Contents.IDrive {
     };
   }
 
+  /**
+   * @returns IModel file for the given local path.
+   */
+  private async getFileContent(
+    localPath: string,
+    options?: Contents.IFetchOptions
+  ): Promise<string> {
+    const path = GcsService.pathParser(localPath);
+    const content = await GcsService.getFileDownload({
+      path: path.path,
+      bucket: path.bucket,
+      name: path.name ? path.name: '',
+      format: options?.format ?? 'text'
+    });
+    if (!content) {
+      throw 'Error Listing Objects';
+    }
+    return content;
+  }
+
   async get(
     localPath: string,
     options?: Contents.IFetchOptions
@@ -208,8 +228,9 @@ export class GCSDrive implements Contents.IDrive {
     };
   }
 
-  async getDownloadUrl(localPath: string): Promise<string> {
-    throw 'Not Implemented';
+  async getDownloadUrl(localPath: string, options?: Contents.IFetchOptions): Promise<string> {
+    this.getFileContent(localPath, options)
+    return 'Download successfully'
   }
 
   async newUntitled(
