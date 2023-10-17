@@ -262,42 +262,42 @@
   overflow-wrap: anywhere;
 }
 
-.dark-theme.job-edit-button-disabled{
+/* .dark-theme.job-edit-button-disabled{
   background-color: var(--jp-layout-color4);
   color: var(--jp-ui-font-color1);
 }
 .dark-theme.job-edit-button{
   background-color:  var(--jp-console-icon-color);
-}
-.dark-theme.job-edit-text{
+} */
+/* .dark-theme.job-edit-text{
   color: black;
-}
-.dark-theme.job-save-button-style 
+} */
+/* .dark-theme.job-save-button-style 
 {
   background: var(--jp-console-icon-color);
   color: black;
-}
-.dark-theme.color-icon-disabled path{
+} */
+/* .dark-theme.color-icon-disabled path{
   fill: var(--jp-ui-font-color2);
 }
 .dark-theme.color-icon path{
  fill: black
-}
-.dark-theme.job-add-label-button{
+} */
+/* .dark-theme.job-add-label-button{
   background-color:  var(--jp-console-icon-color);
 }
 .dark-theme.job-add-label-button-disabled{
   background-color: var(--jp-layout-color4);
   color: var(--jp-ui-font-color1);
-}
-.dark-theme.job-add-property-button{
+} */
+/* .dark-theme.job-add-property-button{
   background-color:  var(--jp-console-icon-color);
 }
 .dark-theme.job-add-property-button-disabled{
   background-color: var(--jp-layout-color4);
   color: var(--jp-ui-font-color1);
-}
-.dark-theme.logo-alignment-style.icon-delete{
+} */
+/* .dark-theme.logo-alignment-style.icon-delete{
   fill: var(--jp-ui-font-color1);
 }
 .dark-theme-properties.logo-alignment-style path{
@@ -305,7 +305,7 @@
 }
 .dark-theme-properties-disable.logo-alignment-style{
   fill: var(--jp-ui-font-color2) 
-}
-.dark-theme.submit-button-style {
+} */
+/* .dark-theme.submit-button-style {
   background-color:  var(--jp-console-icon-color);
-}
+} */

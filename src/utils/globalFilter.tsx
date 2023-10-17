@@ -24,7 +24,6 @@ function GlobalFilter({
   gcsBucket,
   themeManager
 }: any) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [value, setValue] = React.useState(globalFilter);
   const onChange = (value: string) => {
     setGlobalFilter(value || undefined);
@@ -47,13 +46,9 @@ function GlobalFilter({
         }}
         placeholder={gcsBucket ? 'Filter files by name' : 'Filter Table'}
         aria-label="filterd value"
-        className = {isDarkTheme
-        ? gcsBucket
-          ? 'gcs-filter-section-part dark-theme'
-          : 'filter-section-part dark-theme'
-        : gcsBucket
-        ? 'gcs-filter-section-part'
-        : 'filter-section-part'}
+        className={
+          gcsBucket ? 'gcs-filter-section-part' : 'filter-section-part'
+        }
       />
     </span>
   );

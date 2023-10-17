@@ -111,7 +111,6 @@ function JobDetails({
   clustersList,
   themeManager
 }: IJobDetailsProps) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const initialJobDetails: IJobDetails = {
     status: { state: '', stateStartTime: '' },
     statusHistory: [{ stateStartTime: '' }],
@@ -372,11 +371,9 @@ function JobDetails({
 
   const styleJobEdit = (labelEditMode: boolean) => {
     if (labelEditMode) {
-      return isDarkTheme
-        ? 'dark-theme job-edit-button-disabled'
-        : 'job-edit-button-disabled';
+      return 'job-edit-button-disabled';
     } else {
-      return isDarkTheme ? 'dark-theme job-edit-button' : 'job-edit-button';
+      return  'job-edit-button';
     }
   };
 
@@ -399,11 +396,7 @@ function JobDetails({
           >
             <iconLeftArrow.react
               tag="div"
-              className={
-                isDarkTheme
-                  ? 'dark-theme logo-alignment-style'
-                  : 'logo-alignment-style'
-              }
+              className='icon-white logo-alignment-style'
             />
           </div>
           <div className="error-view-message-parent">
@@ -451,11 +444,7 @@ function JobDetails({
           {jobInfo.jobUuid !== '' && (
             <div>
               <div
-                className={
-                  isDarkTheme
-                    ? 'dark-theme scroll-fix-header cluster-details-header'
-                    : 'scroll-fix-header cluster-details-header'
-                }
+                className= 'scroll-fix-header cluster-details-header'
               >
                 <div
                   className="back-arrow-icon"
@@ -465,11 +454,7 @@ function JobDetails({
                 >
                   <iconLeftArrow.react
                     tag="div"
-                    className={
-                      isDarkTheme
-                        ? 'dark-theme logo-alignment-style'
-                        : 'logo-alignment-style'
-                    }
+                    className='icon-white logo-alignment-style'
                   />
                 </div>
                 <div className="cluster-details-title">Job details</div>
@@ -562,32 +547,19 @@ function JobDetails({
                   {labelEditMode ? (
                     <iconEditDisable.react
                       tag="div"
-                      className={
-                        isDarkTheme
-                          ? `dark-theme ${styleIconColor(labelEditMode)}`
-                          : styleIconColor(labelEditMode)
-                      }
+                      className= {styleIconColor(labelEditMode)}
                     />
                   ) : (
                     <iconEdit.react
                       tag="div"
-                      className={
-                        isDarkTheme
-                          ? `dark-theme ${styleIconColor(labelEditMode)}`
-                          : styleIconColor(labelEditMode)
+                      className={styleIconColor(labelEditMode)
                       }
                     />
                   )}
                   <div
-                    className={`${
-                      labelEditMode
-                        ? isDarkTheme
-                          ? 'dark-theme job-edit-text-disabled'
-                          : 'job-edit-text-disabled'
-                        : isDarkTheme
-                        ? 'dark-theme job-edit-text'
-                        : 'job-edit-text'
-                    }`}
+                    className={labelEditMode
+                      ? 'job-edit-text-disabled'
+                      : 'job-edit-text'}
                   >
                     EDIT
                   </div>
@@ -779,11 +751,7 @@ function JobDetails({
                 {labelEditMode && (
                   <div className="job-button-style-parent">
                     <div
-                      className={
-                        isDarkTheme
-                          ? 'dark-theme job-save-button-style'
-                          : 'job-save-button-style'
-                      }
+                      className='job-save-button-style'
                     >
                       <div
                         role="button"

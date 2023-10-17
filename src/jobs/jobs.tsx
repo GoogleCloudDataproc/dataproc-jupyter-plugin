@@ -113,7 +113,6 @@ function JobComponent({
   clustersList,
   themeManager
 }: any) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -338,11 +337,7 @@ function JobComponent({
         >
           <iconClone.react
             tag="div"
-            className={
-              isDarkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className='icon-white logo-alignment-style'
           />
         </div>
         <div
@@ -363,20 +358,12 @@ function JobComponent({
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
             <iconStop.react
               tag="div"
-              className={
-                isDarkTheme
-                  ? 'dark-theme logo-alignment-style'
-                  : 'logo-alignment-style'
-              }
+              className='icon-white logo-alignment-style'
             />
           ) : (
             <iconStopDisable.react
               tag="div"
-              className={
-                isDarkTheme
-                  ? 'dark-theme logo-alignment-style'
-                  : 'logo-alignment-style'
-              }
+              className='icon-white logo-alignment-style'
             />
           )}
         </div>
@@ -398,20 +385,12 @@ function JobComponent({
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
             <iconDelete.react
               tag="div"
-              className={
-                isDarkTheme
-                  ? 'dark-theme logo-alignment-style'
-                  : 'logo-alignment-style'
-              }
+              className='icon-white logo-alignment-style'
             />
           ) : (
             <iconDelete.react
               tag="div"
-              className={
-                isDarkTheme
-                  ? 'dark-theme logo-alignment-style'
-                  : 'logo-alignment-style'
-              }
+              className= 'icon-white logo-alignment-style'
             />
           )}
         </div>
@@ -589,17 +568,12 @@ function JobComponent({
             <div>
               <div className="filter-cluster-overlay">
                 <div className="filter-cluster-icon">
-                  {!isDarkTheme ? (
+
                     <iconFilter.react
                       tag="div"
-                      className="logo-alignment-style"
+                      className="icon-whitelogo-alignment-style"
                     />
-                  ) : (
-                    <iconFilter.react
-                      tag="div"
-                      className="dark-theme logo-alignment-style"
-                    />
-                  )}
+
                 </div>
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
