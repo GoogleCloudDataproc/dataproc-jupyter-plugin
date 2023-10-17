@@ -799,6 +799,7 @@ function CreateRunTime({
   };
   const handleSharedSubNetwork = (data: string | null) => {
     setSharedvpcSelected(data!.toString());
+    await handleRegionChange(region,data!.toString());
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);

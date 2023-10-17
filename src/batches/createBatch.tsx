@@ -1016,8 +1016,9 @@ function CreateBatch({
         });
     }
   };
-  const handleSharedSubNetwork = (data: string | null) => {
+  const handleSharedSubNetwork = async(data: string | null) => {
     setSharedvpcSelected(data!.toString());
+    await handleRegionChange(region,data!.toString());
   };
 
   type Payload = {
@@ -1281,6 +1282,7 @@ function CreateBatch({
     setSelectedNetworkRadio('sharedVpc');
      setSubNetworkSelected(subNetworkList[0]!.toString());
      setNetworkSelected(networkList[0]!.toString());
+     
   };
   const handleSubNetworkRadioChange = () => {
     setSelectedNetworkRadio('projectNetwork');
