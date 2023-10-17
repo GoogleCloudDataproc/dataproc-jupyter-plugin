@@ -797,7 +797,7 @@ function CreateRunTime({
   const handleSubNetworkChange = (data: string | null) => {
     setSubNetworkSelected(data!.toString());
   };
-  const handleSharedSubNetwork = (data: string | null) => {
+  const handleSharedSubNetwork = async(data: string | null) => {
     setSharedvpcSelected(data!.toString());
     await handleRegionChange(region,data!.toString());
   };
