@@ -325,6 +325,7 @@ function CreateBatch({
   const handlekeyRingRadio = () => {
     setSelectedRadioValue('key');
     setManualKeySelected('');
+    setManualValidation(true);
   };
   const handlekeyManuallyRadio = () => {
     setSelectedRadioValue('manually');
@@ -374,7 +375,10 @@ function CreateBatch({
     duplicateKeyError,
     manualValidation,
     mainJarSelected,
-    jarFilesSelected
+    jarFilesSelected,
+    keyRingSelected,
+    keySelected,
+    manualKeySelected,
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
@@ -595,7 +599,14 @@ function CreateBatch({
       batchIdValidation ||
       (selectedNetworkRadio === 'sharedVpc' &&
         sharedSubNetworkList.length === 0) ||
-      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '');
+      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
+      (selectedEncryptionRadio === 'customerManaged' &&
+        selectedRadioValue === 'key' &&
+        keyRingSelected === '' &&
+        keySelected === '') ||
+      (selectedEncryptionRadio === 'customerManaged' &&
+        selectedRadioValue === 'manually' &&
+        manualKeySelected === '');
     switch (batchTypeSelected) {
       case 'spark':
         return (
@@ -2296,7 +2307,6 @@ function CreateBatch({
                           value="mainClass"
                           checked={selectedRadioValue === 'key'}
                           onChange={handlekeyRingRadio}
-                          disabled={manualKeySelected !== ''}
                         />
                         <div className="select-text-overlay">
                           <Autocomplete
@@ -2307,7 +2317,7 @@ function CreateBatch({
                             value={keyRingSelected}
                             onChange={(_event, val) => handleKeyRingChange(val)}
                             renderInput={params => (
-                              <TextField {...params} label="Keys" />
+                              <TextField {...params} label="Key rings" />
                             )}
                           />
                         </div>
@@ -2320,7 +2330,7 @@ function CreateBatch({
                             value={keySelected}
                             onChange={(_event, val) => handlekeyChange(val)}
                             renderInput={params => (
-                              <TextField {...params} label="Key rings" />
+                              <TextField {...params} label="Keys" />
                             )}
                           />
                         </div>
