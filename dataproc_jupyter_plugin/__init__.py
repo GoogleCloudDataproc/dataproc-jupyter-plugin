@@ -52,6 +52,15 @@ def _link_jupyter_server_extension(server_app):
     c.CommandTokenRenewer.token_command = (
         'gcloud config config-helper --format="value(credential.access_token)"')
 
+    # Version 2.8.0 of the `jupyter_server` package requires the `auth_token`
+    # value to be set to a non-empty value or else it will never invoke the
+    # token renewer. To accommodate this, we set it to an invalid initial
+    # value that will be immediately replaced by the token renewer.
+    #
+    # See https://github.com/jupyter-server/jupyter_server/issues/1339 for more
+    # details and discussion.
+    c.GatewayClient.auth_token = 'Initial, invalid value'
+
     update_gateway_client_url(c, server_app.log)
 
 
