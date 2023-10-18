@@ -157,7 +157,7 @@ export class GcsService {
    * Thin wrapper around object download
    * @see https://cloud.google.com/storage/docs/downloading-objects#rest-download-object
    */
-  static async getFileDownload({
+  static async downloadFile({
     bucket,
     path,
     name,
@@ -167,7 +167,7 @@ export class GcsService {
     path: string;
     name: string;
     format: 'text' | 'json' | 'base64';
-  }): Promise<string> {
+  }): Promise<void> {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
@@ -207,8 +207,6 @@ export class GcsService {
 
     // Start download
     link.click();
-
-    return "Download Successfully"
   }
 
 
@@ -284,5 +282,53 @@ export class GcsService {
       }
       throw response.statusText;
     } 
+  }
+
+  /**
+   * Thin wrapper around object delete
+   * @see https://cloud.google.com/storage/docs/copying-renaming-moving-objects
+   */
+  static async renameFile({
+    oldBucket,
+    oldPath,
+    newBucket,
+    newPath
+  }: {
+    oldBucket: string;
+    oldPath: string;
+    newBucket: string;
+    newPath: string;
+  }) {
+    const credentials = await authApi();
+    if (!credentials) {
+      throw 'not logged in';
+    }
+
+    const requestUrl = new URL(
+      `${this.STORAGE_DOMAIN_URL}/storage/v1/b/${oldBucket}/o/${encodeURIComponent(
+        oldPath
+      )}/rewriteTo/b/${newBucket}/o/${encodeURIComponent(
+        newPath
+      )}`
+    );
+
+    const response = await fetch(requestUrl.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token,
+        'X-Goog-User-Project': credentials.project_id || ''
+      },
+    });
+    console.log(response, response.status)
+    if (response.status !== 200) {
+      console.log(response.statusText)
+      throw response.statusText;
+    } 
+    this.deleteFile({
+      bucket: oldBucket,
+      path: oldPath
+    });
+    return 'Copy Successfully'
   }
 }

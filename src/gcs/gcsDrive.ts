@@ -155,18 +155,15 @@ export class GCSDrive implements Contents.IDrive {
   private async getFileContent(
     localPath: string,
     options?: Contents.IFetchOptions
-  ): Promise<string> {
+  ): Promise<void> {
     const path = GcsService.pathParser(localPath);
-    const content = await GcsService.getFileDownload({
+    await GcsService.downloadFile({
       path: path.path,
       bucket: path.bucket,
       name: path.name ? path.name: '',
       format: options?.format ?? 'text'
     });
-    if (!content) {
-      throw 'Error Listing Objects';
-    }
-    return content;
+    // return content;
   }
 
   async get(
@@ -229,8 +226,8 @@ export class GCSDrive implements Contents.IDrive {
   }
 
   async getDownloadUrl(localPath: string, options?: Contents.IFetchOptions): Promise<string> {
-    this.getFileContent(localPath, options)
-    return 'Download successfully'
+    this.getFileContent(localPath, options);
+    throw ''
   }
 
   async newUntitled(
@@ -239,20 +236,50 @@ export class GCSDrive implements Contents.IDrive {
     throw 'Not Implemented';
   }
 
-  async delete(localPath: string): Promise<void> {
-    const path = GcsService.pathParser(localPath);
+  async delete(path: string): Promise<void> {
+    const localPath = GcsService.pathParser(path);
     const resp = await GcsService.deleteFile({
-      bucket: path.bucket,
-      path: path.path
+      bucket: localPath.bucket,
+      path: localPath.path
     });
     console.log(resp);
+    this._fileChanged.emit({
+      type: 'delete',
+      oldValue: { path },
+      newValue: null
+    });
   }
 
   async rename(
-    oldLocalPath: string,
+    path: string,
     newLocalPath: string
   ): Promise<Contents.IModel> {
-    throw 'Not Implemented';
+    const oldPath = GcsService.pathParser(path);
+    const newPath = GcsService.pathParser(newLocalPath);
+    await GcsService.renameFile({
+      oldBucket: oldPath.bucket,
+      oldPath: oldPath.path,
+      newBucket: newPath.bucket,
+      newPath: newPath.path
+    });
+
+    this._fileChanged.emit({
+      type: 'rename',
+      oldValue: { path },
+      newValue: null
+    });
+
+    return {
+      type: 'file',
+      path: newLocalPath,
+      name: newLocalPath.split('\\').at(-1) ?? '',
+      format: 'text',
+      content: '',
+      created: '',
+      writable: true,
+      last_modified: '',
+      mimetype: ''
+    };
   }
 
   async copy(localPath: string, toLocalDir: string): Promise<Contents.IModel> {
