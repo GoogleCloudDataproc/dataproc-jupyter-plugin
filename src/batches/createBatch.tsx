@@ -323,6 +323,13 @@ function CreateBatch({
     setManualKeySelected('');
     setManualValidation(true);
   };
+
+  const handleGoogleManagedRadio = () => {
+    setSelectedEncryptionRadio('googleManaged');
+    setKeyRingSelected('');
+    setKeySelected('');
+    setManualKeySelected('');
+  };
   const handlekeyManuallyRadio = () => {
     setSelectedRadioValue('manually');
     setKeyRingSelected('');
@@ -374,7 +381,7 @@ function CreateBatch({
     jarFilesSelected,
     keyRingSelected,
     keySelected,
-    manualKeySelected,
+    manualKeySelected
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
@@ -602,7 +609,9 @@ function CreateBatch({
         keySelected === '') ||
       (selectedEncryptionRadio === 'customerManaged' &&
         selectedRadioValue === 'manually' &&
-        manualKeySelected === '');
+        manualKeySelected === '') ||
+        (selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length !== 0 && subNetworkList.length===0);
     switch (batchTypeSelected) {
       case 'spark':
         return (
@@ -896,14 +905,12 @@ function CreateBatch({
         });
     }
   };
-  type SubnetworkData = {
-    subnetworks: string;
-  };
+
   const listSubNetworksAPI = async (subnetwork: string) => {
     const credentials = await authApi();
     if (credentials) {
       fetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks/${subnetwork}`,
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -914,31 +921,36 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { subnetworks: string[] }) => {
-              let transformedSubNetworkList = responseResult.subnetworks.map(
-                (data: string) => {
-                  return {
-                    subnetworks: data.split(
-                      `${credentials.region_id}/subnetworks/`
-                    )[1]
-                  };
-                }
-              );
-              const keyLabelStructureSubNetwork = transformedSubNetworkList
-                .filter((obj: SubnetworkData) => obj.subnetworks !== undefined)
-                .map((obj: SubnetworkData) => obj.subnetworks);
-              setSubNetworklist(keyLabelStructureSubNetwork);
-              setSubNetworkSelected(keyLabelStructureSubNetwork[0]);
-            })
+            .then(
+              (responseResult: {
+                items: {
+                  name: string;
+                  network: string;
+                  privateIpGoogleAccess: boolean;
+                }[];
+              }) => {
+                const filteredServices = responseResult.items.filter(
+                  (item: { network: string; privateIpGoogleAccess: boolean }) =>
+                    item.network.split('/')[9] === subnetwork &&
+                    item.privateIpGoogleAccess === true
+                );
+                const transformedServiceList = filteredServices.map(
+                  (data: { name: string }) => data.name
+                );
+                setSubNetworklist(transformedServiceList);
+                setSubNetworkSelected(transformedServiceList[0]);
+              }
+            )
             .catch((e: Error) => {
               console.log(e);
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
+          console.error('Error listing subNetworks', err);
         });
     }
   };
+
   const listMetaStoreAPI = async (
     data: undefined,
     network: string | undefined
@@ -1379,7 +1391,10 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react tag="div"  className= 'icon-white logo-alignment-style'/>
+            <iconLeftArrow.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
@@ -1387,10 +1402,7 @@ function CreateBatch({
           <form onSubmit={handleSubmit}>
             <div className="submit-job-label-header">Batch info</div>
             <div className="select-text-overlay">
-              <label
-                className= 'select-title-text'
-                htmlFor="batch-id"
-              >
+              <label className="select-title-text" htmlFor="batch-id">
                 Batch ID*
               </label>
               <Input
@@ -1408,7 +1420,7 @@ function CreateBatch({
             )}
             <div className="select-text-overlay">
               <label
-                className='select-title-text region-disable'
+                className="select-title-text region-disable"
                 htmlFor="region"
               >
                 Region*
@@ -1422,10 +1434,7 @@ function CreateBatch({
             </div>
             <div className="submit-job-label-header">Container</div>
             <div className="select-text-overlay">
-              <label
-                className= 'select-dropdown-text'
-                htmlFor="batch-type"
-              >
+              <label className="select-dropdown-text" htmlFor="batch-type">
                 Batch type*
               </label>
               <Select
@@ -1438,10 +1447,7 @@ function CreateBatch({
               />
             </div>
             <div className="select-text-overlay">
-              <label
-                className= 'select-title-text'
-                htmlFor="runtime-version"
-              >
+              <label className="select-title-text" htmlFor="runtime-version">
                 Runtime version*
               </label>
               <Input
@@ -1472,10 +1478,7 @@ function CreateBatch({
                 {selectedRadio === 'mainClass' && (
                   <div className="create-batch-input">
                     <div className="select-text-overlay">
-                      <label
-                        className= 'select-title-text'
-                        htmlFor="main-class"
-                      >
+                      <label className="select-title-text" htmlFor="main-class">
                         Main class*
                       </label>
                       <Input
@@ -1523,10 +1526,7 @@ function CreateBatch({
                 {selectedRadio === 'mainJarURI' && (
                   <div className="create-batch-input">
                     <div className="select-text-overlay">
-                      <label
-                        className= 'select-title-text'
-                        htmlFor="main-jar"
-                      >
+                      <label className="select-title-text" htmlFor="main-jar">
                         Main jar*
                       </label>
                       <Input
@@ -1570,10 +1570,7 @@ function CreateBatch({
             {batchTypeSelected === 'sparkR' && (
               <>
                 <div className="select-text-overlay">
-                  <label
-                    className= 'select-title-text'
-                    htmlFor="main-r-file"
-                  >
+                  <label className="select-title-text" htmlFor="main-r-file">
                     Main R file*
                   </label>
                   <Input
@@ -1613,7 +1610,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className= 'select-title-text'
+                    className="select-title-text"
                     htmlFor="main-python-file"
                   >
                     Main python file*
@@ -1655,7 +1652,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className= 'select-title-text'
+                    className="select-title-text"
                     htmlFor="additional-python-files"
                   >
                     Additional python files
@@ -1703,10 +1700,7 @@ function CreateBatch({
             {batchTypeSelected === 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label
-                    className='select-title-text'
-                    htmlFor="query-file"
-                  >
+                  <label className="select-title-text" htmlFor="query-file">
                     Query file*
                   </label>
                   <Input
@@ -1743,7 +1737,7 @@ function CreateBatch({
             )}
             <div className="select-text-overlay">
               <label
-                className= 'select-title-text'
+                className="select-title-text"
                 htmlFor="custom-container-image"
               >
                 Custom container image
@@ -1795,10 +1789,7 @@ function CreateBatch({
               batchTypeSelected !== 'sparkR' && (
                 <>
                   <div className="select-text-overlay">
-                    <label
-                      className= 'select-title-text'
-                      htmlFor="jar-files"
-                    >
+                    <label className="select-title-text" htmlFor="jar-files">
                       Jar files
                     </label>
                     <TagsInput
@@ -1850,10 +1841,7 @@ function CreateBatch({
             {batchTypeSelected !== 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label
-                    className='select-title-text'
-                    htmlFor="files"
-                  >
+                  <label className="select-title-text" htmlFor="files">
                     Files
                   </label>
                   <TagsInput
@@ -1902,10 +1890,7 @@ function CreateBatch({
             {batchTypeSelected !== 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label
-                    className='select-title-text'
-                    htmlFor="archive-files"
-                  >
+                  <label className="select-title-text" htmlFor="archive-files">
                     Archive files
                   </label>
                   <TagsInput
@@ -1956,10 +1941,7 @@ function CreateBatch({
             {batchTypeSelected !== 'sparkSql' && (
               <>
                 <div className="select-text-overlay">
-                  <label
-                    className= 'select-title-text'
-                    htmlFor="arguments"
-                  >
+                  <label className="select-title-text" htmlFor="arguments">
                     Arguments
                   </label>
                   <TagsInput
@@ -2010,10 +1992,7 @@ function CreateBatch({
               Execution Configuration
             </div>
             <div className="select-text-overlay">
-              <label
-                className= 'select-title-text'
-                htmlFor="service-account"
-              >
+              <label className="select-title-text" htmlFor="service-account">
                 Service account
               </label>
               <Input
@@ -2125,6 +2104,13 @@ function CreateBatch({
                     No local networks are available.
                   </div>
                 )}
+               {selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length !== 0 && subNetworkList.length===0 &&(
+                  <div className="create-no-list-message">
+                     Please select a valid network and subnetwork.
+                  </div>
+                )}
+             
               {selectedNetworkRadio === 'sharedVpc' && (
                 <div className="select-text-overlay">
                   <Autocomplete
@@ -2145,10 +2131,7 @@ function CreateBatch({
                 )}
             </div>
             <div className="select-text-overlay">
-              <label
-                className= 'select-title-text'
-                htmlFor="network-tags"
-              >
+              <label className="select-title-text" htmlFor="network-tags">
                 Network tags
               </label>
               <TagsInput
@@ -2181,7 +2164,7 @@ function CreateBatch({
                     className="select-batch-radio-style"
                     value="googleManaged"
                     checked={selectedEncryptionRadio === 'googleManaged'}
-                    onChange={() => setSelectedEncryptionRadio('googleManaged')}
+                    onChange={handleGoogleManagedRadio}
                   />
                   <div className="create-batch-message">
                     Google-managed encryption key
@@ -2269,7 +2252,7 @@ function CreateBatch({
                           <label
                             className={
                               selectedRadioValue === 'key'
-                                ?  'select-title-text disable-text'
+                                ? 'select-title-text disable-text'
                                 : 'select-title-text'
                             }
                             htmlFor="enter-key-manually"
@@ -2425,7 +2408,7 @@ function CreateBatch({
               <div
                 className={
                   isSubmitDisabled()
-                      ? 'submit-button-disable-style'
+                    ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }
                 aria-label="submit Batch"

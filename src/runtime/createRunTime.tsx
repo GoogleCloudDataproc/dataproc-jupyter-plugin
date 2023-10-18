@@ -314,14 +314,10 @@ function CreateRunTime({
 
       if (
         runtimeConfig?.repositoryConfig?.pypiRepositoryConfig?.pypiRepository
-          
       ) {
-        
         pythonRepositorySelected =
-          runtimeConfig.repositoryConfig
-            .pypiRepositoryConfig.pypiRepository;
+          runtimeConfig.repositoryConfig.pypiRepositoryConfig.pypiRepository;
         setPythonRepositorySelected(pythonRepositorySelected);
-       
       }
 
       setDisplayNameSelected(displayName);
@@ -421,13 +417,17 @@ function CreateRunTime({
           peripheralsConfig.metastoreService !== undefined
         ) {
           setServicesSelected(peripheralsConfig.metastoreService);
-          const metastoreDetails = peripheralsConfig?.metastoreService?.split('/');
-          const metaProject =peripheralsConfig?.metastoreService?.split('/')? metastoreDetails[1]:'';
-          const  metaRegion = peripheralsConfig?.metastoreService?.split('/')?metastoreDetails[3]:'';
+          const metastoreDetails =
+            peripheralsConfig?.metastoreService?.split('/');
+          const metaProject = peripheralsConfig?.metastoreService?.split('/')
+            ? metastoreDetails[1]
+            : '';
+          const metaRegion = peripheralsConfig?.metastoreService?.split('/')
+            ? metastoreDetails[3]
+            : '';
           setProjectId(metaProject);
           setRegion(metaRegion);
         }
-       
 
         if (
           peripheralsConfig &&
@@ -543,15 +543,11 @@ function CreateRunTime({
     }
   };
 
-  type SubnetworkData = {
-    subnetworks: string;
-  };
-
   const listSubNetworksAPI = async (subnetwork: string) => {
     const credentials = await authApi();
     if (credentials) {
       fetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks/${subnetwork}`,
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -562,39 +558,40 @@ function CreateRunTime({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { subnetworks: string[] }) => {
-              /*
-         Extracting  subnetworks from Network
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/subnetwork",
-      */
-
-              let transformedSubNetworkList = responseResult.subnetworks.map(
-                (data: string) => {
-                  return {
-                    subnetworks: data.split(
-                      `${credentials.region_id}/subnetworks/`
-                    )[1]
-                  };
-                }
-              );
-              const keyLabelStructureSubNetwork = transformedSubNetworkList
-                .filter((obj: SubnetworkData) => obj.subnetworks !== undefined)
-                .map((obj: SubnetworkData) => obj.subnetworks);
-              setSubNetworklist(keyLabelStructureSubNetwork);
-              setSubNetworkSelected(keyLabelStructureSubNetwork[0]);
-            })
-
+            .then(
+              (responseResult: {
+                items: {
+                  name: string;
+                  network: string;
+                  privateIpGoogleAccess: boolean;
+                }[];
+              }) => {
+                const filteredServices = responseResult.items.filter(
+                  (item: { network: string; privateIpGoogleAccess: boolean }) =>
+                    item.network.split('/')[9] === subnetwork &&
+                    item.privateIpGoogleAccess === true
+                );
+                const transformedServiceList = filteredServices.map(
+                  (data: { name: string }) => data.name
+                );
+                setSubNetworklist(transformedServiceList);
+                setSubNetworkSelected(transformedServiceList[0]);
+              }
+            )
             .catch((e: Error) => {
               console.log(e);
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
+          console.error('Error listing subNetworks', err);
         });
     }
   };
 
-  const listMetaStoreAPI = async (data: undefined,network:string |undefined) => {
+  const listMetaStoreAPI = async (
+    data: undefined,
+    network: string | undefined
+  ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
@@ -618,9 +615,9 @@ function CreateRunTime({
                 }[];
               }) => {
                 const filteredServices = responseResult.services.filter(
-                  (service) => service.network.split('/')[4] === network
+                  service => service.network.split('/')[4] === network
                 );
-  
+
                 const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name
                 );
@@ -639,7 +636,6 @@ function CreateRunTime({
         });
     }
   };
-
 
   type Region = {
     name: string;
@@ -768,17 +764,17 @@ function CreateRunTime({
     regionListAPI(data!.toString());
   };
 
-  const handleRegionChange = (data: any,network: string | undefined) => {
+  const handleRegionChange = (data: any, network: string | undefined) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data);
-   listMetaStoreAPI(data,network);
+    listMetaStoreAPI(data, network);
   };
-  const handleNetworkChange = async(data: DropdownProps | null) => {
+  const handleNetworkChange = async (data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
     setSubNetworkSelected(defaultValue);
-   await listSubNetworksAPI(data!.toString());
-  await handleRegionChange(region,data!.toString());
+    await listSubNetworksAPI(data!.toString());
+    await handleRegionChange(region, data!.toString());
   };
 
   const handleNetworkSharedVpcRadioChange = () => {
@@ -793,9 +789,9 @@ function CreateRunTime({
   const handleSubNetworkChange = (data: string | null) => {
     setSubNetworkSelected(data!.toString());
   };
-  const handleSharedSubNetwork = async(data: string | null) => {
+  const handleSharedSubNetwork = async (data: string | null) => {
     setSharedvpcSelected(data!.toString());
-    await handleRegionChange(region,data!.toString());
+    await handleRegionChange(region, data!.toString());
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
@@ -850,7 +846,10 @@ function CreateRunTime({
       duplicateValidation ||
       (selectedNetworkRadio === 'sharedVpc' &&
         sharedSubNetworkList.length === 0) ||
-      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '')
+      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '')||
+      
+        (selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length !== 0 && subNetworkList.length===0)
     );
   }
   const createRuntimeApi = async (payload: any) => {
@@ -1146,7 +1145,7 @@ function CreateRunTime({
           >
             <iconLeftArrow.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           </div>
           <div className="cluster-details-title">
@@ -1156,10 +1155,7 @@ function CreateRunTime({
         <div className="submit-job-container">
           <form>
             <div className="select-text-overlay">
-              <label
-                className= 'select-title-text'
-                htmlFor="display-name"
-              >
+              <label className="select-title-text" htmlFor="display-name">
                 Display name*
               </label>
               <Input
@@ -1178,13 +1174,9 @@ function CreateRunTime({
 
             <div className="select-text-overlay">
               <label
-                className={
-                 `select-title-text${
-                        selectedRuntimeClone !== undefined
-                          ? ' disable-text'
-                          : ''
-                      }`
-                }
+                className={`select-title-text${
+                  selectedRuntimeClone !== undefined ? ' disable-text' : ''
+                }`}
                 htmlFor="runtime-id"
               >
                 Runtime ID*
@@ -1206,10 +1198,7 @@ function CreateRunTime({
             )}
 
             <div className="select-text-overlay">
-              <label
-                className= 'select-title-text'
-                htmlFor="description"
-              >
+              <label className="select-title-text" htmlFor="description">
                 Description*
               </label>
               <Input
@@ -1228,10 +1217,7 @@ function CreateRunTime({
             )}
 
             <div className="select-text-overlay">
-              <label
-                className= 'select-title-text'
-                htmlFor="runtime-version"
-              >
+              <label className="select-title-text" htmlFor="runtime-version">
                 Runtime version*
               </label>
               <Input
@@ -1250,7 +1236,7 @@ function CreateRunTime({
             )}
             <div className="select-text-overlay">
               <label
-                className= 'select-title-text'
+                className="select-title-text"
                 htmlFor="custom-container-image"
               >
                 Custom container image
@@ -1388,6 +1374,12 @@ function CreateRunTime({
                     No local networks are available.
                   </div>
                 )}
+                  {selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length !== 0 && subNetworkList.length===0 &&(
+                  <div className="create-no-list-message">
+                     Please select a valid network and subnetwork.
+                  </div>
+                )}
               {selectedNetworkRadio === 'sharedVpc' && (
                 <div className="select-text-overlay">
                   <Autocomplete
@@ -1409,10 +1401,7 @@ function CreateRunTime({
             </div>
 
             <div className="select-text-overlay">
-              <label
-                className='select-title-text'
-                htmlFor="network-tags"
-              >
+              <label className="select-title-text" htmlFor="network-tags">
                 Network tags
               </label>
               <TagsInput
@@ -1472,7 +1461,9 @@ function CreateRunTime({
                 <Autocomplete
                   options={regionList}
                   value={region}
-                  onChange={(_event, val) => handleRegionChange(val,networkSelected)}
+                  onChange={(_event, val) =>
+                    handleRegionChange(val, networkSelected)
+                  }
                   renderInput={params => (
                     <TextField {...params} label="Metastore region" />
                   )}
@@ -1504,10 +1495,7 @@ function CreateRunTime({
 
             <div className="single-line">
               <div className="select-text-overlay">
-                <label
-                  className= 'select-title-text'
-                  htmlFor="max-idle-time"
-                >
+                <label className="select-title-text" htmlFor="max-idle-time">
                   Max idle time
                 </label>
                 <Input
@@ -1540,10 +1528,7 @@ function CreateRunTime({
 
             <div className="single-line">
               <div className="select-text-overlay">
-                <label
-                  className= 'select-title-text'
-                  htmlFor="max-session-time"
-                >
+                <label className="select-title-text" htmlFor="max-session-time">
                   Max session time
                 </label>
                 <Input
@@ -1576,7 +1561,7 @@ function CreateRunTime({
 
             <div className="select-text-overlay">
               <label
-                className= 'select-title-text'
+                className="select-title-text"
                 htmlFor="python-packages-repository"
               >
                 Python packages repository
@@ -1649,8 +1634,8 @@ function CreateRunTime({
                 }}
                 className={
                   isSaveDisabled()
-                      ? 'submit-button-disable-style'
-                      : 'submit-button-style'
+                    ? 'submit-button-disable-style'
+                    : 'submit-button-style'
                 }
                 aria-label="submit Batch"
               >
