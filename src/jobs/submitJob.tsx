@@ -487,7 +487,7 @@ function SubmitJob({
           archiveUris: archieveFileSelected
         }),
         ...(argumentSelected !== '' && {
-          args: [argumentSelected]
+          args: argumentSelected
         }),
         ...(additionalPythonFileSelected !== '' && {
           pythonFileUris: [additionalPythonFileSelected]
@@ -520,7 +520,7 @@ function SubmitJob({
           jarFileUris: jarFileSelected
         }),
         ...(argumentSelected !== '' && {
-          args: [argumentSelected]
+          args: argumentSelected
         })
       }
     };
@@ -542,7 +542,7 @@ function SubmitJob({
           fileUris: [fileSelected]
         }),
         ...(argumentSelected !== '' && {
-          args: [argumentSelected]
+          args: argumentSelected
         })
       }
     };

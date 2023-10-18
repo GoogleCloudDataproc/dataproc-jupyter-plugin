@@ -193,7 +193,7 @@ function CreateBatch({
       keys = keyringValues[7];
       historyServerValue =
         batchInfoResponse?.environmentConfig?.peripheralsConfig
-          ?.sparkHistoryServerConfig?.dataprocCluster || 'None';
+          ?.sparkHistoryServerConfig?.dataprocCluster || '';
       if (historyServerValue !== '') {
         const parts = historyServerValue.split('/'); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
         historyServer = parts[parts.length - 1];
