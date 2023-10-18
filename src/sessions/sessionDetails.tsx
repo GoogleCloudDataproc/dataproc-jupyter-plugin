@@ -62,7 +62,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
 import PollingTimer from '../utils/pollingTimer';
 import { JupyterLab } from '@jupyterlab/application';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -92,15 +91,13 @@ interface ISessionDetailsProps {
   detailedSessionView: boolean;
   fromPage?: string;
   app?: JupyterLab;
-  themeManager: IThemeManager;
 }
 function SessionDetails({
   sessionSelected,
   setDetailedSessionView,
   detailedSessionView,
   fromPage,
-  app,
-  themeManager
+  app
 }: ISessionDetailsProps) {
   const [sessionInfo, setSessionInfo] = useState({
     state: '',

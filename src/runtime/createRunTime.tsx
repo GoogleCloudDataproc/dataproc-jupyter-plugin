@@ -50,7 +50,6 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
-import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -83,14 +82,12 @@ let value: string[] | (() => string[]) = [];
 function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
-  themeManager,
   launcher,
   app,
   fromPage
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
-  themeManager: IThemeManager;
   launcher: ILauncher;
   app: JupyterLab;
   fromPage: string;
@@ -1612,7 +1609,6 @@ function CreateRunTime({
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
               selectedRuntimeClone={selectedRuntimeClone ? true : false}
-              themeManager={themeManager}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
@@ -1628,7 +1624,6 @@ function CreateRunTime({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
-              themeManager={themeManager}
             />
             <div className="job-button-style-parent">
               <div

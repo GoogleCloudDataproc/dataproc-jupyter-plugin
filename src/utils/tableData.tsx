@@ -28,8 +28,7 @@ function TableData({
   page,
   prepareRow,
   tableDataCondition,
-  fromPage,
-  themeManager
+  fromPage
 }: any) {
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
 

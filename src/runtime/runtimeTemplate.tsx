@@ -25,8 +25,7 @@ import { ILauncher } from '@jupyterlab/launcher';
 
 const RuntimeTemplateComponent = ({
   app,
-  launcher,
-  themeManager
+  launcher
 }: {
   app: JupyterLab;
   launcher: ILauncher;
@@ -45,7 +44,6 @@ const RuntimeTemplateComponent = ({
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
-          themeManager={themeManager}
           app={app}
           launcher={launcher}
           fromPage="launcher"
