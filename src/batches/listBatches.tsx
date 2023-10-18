@@ -38,7 +38,6 @@ import {
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconSubmitJob = new LabIcon({
   name: 'launcher:submit-job-icon',
@@ -82,7 +81,6 @@ interface IListBatchesProps {
   handleBatchDetails: (batchID: string) => void;
   setCreateBatchView: (value: boolean) => void;
   createBatchView: boolean;
-  themeManager : IThemeManager
 }
 
 function ListBatches({
@@ -92,8 +90,7 @@ function ListBatches({
   listBatchAPI,
   handleBatchDetails,
   setCreateBatchView,
-  createBatchView,
-  themeManager
+  createBatchView
 }: IListBatchesProps) {
   const data = batchesList;
   const columns = React.useMemo(
@@ -243,7 +240,6 @@ function ListBatches({
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
-                themeManager = {themeManager}
               />
             </div>
           </div>
@@ -258,7 +254,6 @@ function ListBatches({
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Batches"
-              themeManager = {themeManager}
             />
             {batchesList.length > 50 && (
               <PaginationView

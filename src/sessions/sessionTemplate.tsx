@@ -45,7 +45,6 @@ const [detailedSessionView,setDetailedSessionView] = useState(true);
           detailedSessionView={detailedSessionView}
           fromPage = 'Launcher'
           app ={app}
-          themeManager={themeManager}
         />
       )}
     </div>

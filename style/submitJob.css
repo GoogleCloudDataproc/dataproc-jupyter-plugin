@@ -30,6 +30,7 @@
   color: var(--jp-ui-font-color2);
   border: none;
   font-family: ROBOTO;
+  border-radius: 4px;
 }
 .submit-job-message-input {
   font-style: normal;

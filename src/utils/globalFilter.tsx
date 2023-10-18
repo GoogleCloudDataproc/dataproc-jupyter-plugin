@@ -21,8 +21,7 @@ function GlobalFilter({
   globalFilter,
   setGlobalFilter,
   setPollingDisable,
-  gcsBucket,
-  themeManager
+  gcsBucket
 }: any) {
   const [value, setValue] = React.useState(globalFilter);
   const onChange = (value: string) => {
