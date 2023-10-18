@@ -1213,6 +1213,7 @@ function SubmitJob({
                     handleArgumentsSelection(setArgumentsDuplicateValidation, e)
                   }
                   value={argumentSelected}
+                  addOnBlur={true}
                   inputProps={{ placeholder: '' }}
                 />
               </div>
