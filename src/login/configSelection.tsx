@@ -39,7 +39,6 @@ import { projectListAPI } from '../utils/projectService';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import CreateRuntime from '../runtime/createRunTime';
 import { ISessionTemplate } from '../utils/listRuntimeTemplateInterface';
-import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
 import { ILauncher } from '@jupyterlab/launcher';
 
@@ -54,7 +53,6 @@ const iconExpandMore = new LabIcon({
 interface IConfigSelectionProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
-  themeManager: IThemeManager;
   app: JupyterLab;
   launcher: ILauncher; 
 }
@@ -62,7 +60,6 @@ interface IConfigSelectionProps {
 function ConfigSelection({
   configError,
   setConfigError,
-  themeManager,
   app,
   launcher
 }: IConfigSelectionProps) {
@@ -191,7 +188,6 @@ function ConfigSelection({
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
-          themeManager={themeManager}
           launcher={launcher}
           app={app}
           fromPage="config"

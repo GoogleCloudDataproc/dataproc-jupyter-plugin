@@ -16,7 +16,6 @@
   background-color: rgba(0, 0, 0, 0.08);
   padding: 0px 10px;
   border-radius: 10px;
-  color: var(--jp-ui-font-color0);
   font-weight: 400;
   line-height: 20px;
   margin: 3px 0px;
@@ -150,14 +149,11 @@
   align-items: center;
   padding: 0px 12px;
   gap: 4px;
-
-  width: 75px;
   height: 32px;
-
   background: var(--jp-layout-color0);
   box-shadow: 0px 1px 5px var(--jp-shadow-umbra-color),
-    0px 2px 2px var(--jp-shadow-umbra-color),
-    0px 1px 1px var(--jp-shadow-umbra-color);
+  0px 2px 2px var(--jp-shadow-umbra-color),
+  0px 1px 1px var(--jp-shadow-umbra-color);
   border-radius: 4px;
 }
 
@@ -168,12 +164,10 @@
   padding: 0px 12px;
   gap: 4px;
   color: var(--jp-ui-font-color2);
-
-  width: 75px;
   height: 32px;
-
   background: var(--jp-layout-color0);
   opacity: 0.5;
+  border-radius: 4px;
 }
 
 .job-edit-text-disabled {
@@ -231,7 +225,6 @@
   padding: 0px 10px;
   width: fit-content;
   border-radius: 10px;
-  color: var(--jp-ui-font-color0);
   font-weight: 400;
   line-height: 20px;
   margin: 3px 0px;
@@ -269,4 +262,3 @@
   color: var(--jp-ui-font-color0);
   overflow-wrap: anywhere;
 }
-

@@ -111,7 +111,6 @@ const ClusterComponent = (): React.JSX.Element => {
     previousClustersList?: object
   ) => {
     const pageToken = nextPageToken ?? '';
-
     try {
       const projectId = await getProjectId();
       setProjectId(projectId);
@@ -259,9 +258,15 @@ const ClusterComponent = (): React.JSX.Element => {
       >
         {data.status.state === ClusterStatus.STATUS_STOPPED &&
         !restartEnabled ? (
-          <iconStart.react tag="div" className="logo-alignment-style" />
+          <iconStart.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
         ) : (
-          <iconStartDisable.react tag="div" className="logo-alignment-style" />
+          <iconStartDisable.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
         )}
       </div>
     );
@@ -288,9 +293,15 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconStop.react tag="div" className="logo-alignment-style" />
+          <iconStop.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
         ) : (
-          <iconStopDisable.react tag="div" className="logo-alignment-style" />
+          <iconStopDisable.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
         )}
       </div>
     );
@@ -317,11 +328,14 @@ const ClusterComponent = (): React.JSX.Element => {
         }
       >
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-          <iconRestart.react tag="div" className="logo-alignment-style" />
+          <iconRestart.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
         ) : (
           <iconRestartDisable.react
             tag="div"
-            className="logo-alignment-style"
+            className="icon-white logo-alignment-style"
           />
         )}
       </div>

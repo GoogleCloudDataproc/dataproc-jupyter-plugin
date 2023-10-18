@@ -44,6 +44,7 @@ import {
   SECURITY_KEY,
   SELF_MANAGED_CLUSTER,
   SERVICE_ACCOUNT,
+  SHARED_VPC,
   STATUS_RUNNING
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
@@ -63,7 +64,6 @@ import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
-
 
 type Network = {
   selfLink: string;
@@ -123,8 +123,8 @@ function CreateBatch({
   let mainPythonFileUri = '';
   let queryFileUri = '';
   let serviceAccount = '';
-  let subNetwork = 'default';
-  let network = 'default';
+  let subNetwork = '';
+  let network = '';
   let historyServer = '';
   let historyServerValue = '';
   let metastoreService = '';
@@ -181,7 +181,8 @@ function CreateBatch({
         '';
       subNetwork =
         batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri ||
-        'default';
+        '';
+
       keyType =
         batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
       const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
@@ -189,7 +190,7 @@ function CreateBatch({
       keys = keyringValues[7];
       historyServerValue =
         batchInfoResponse?.environmentConfig?.peripheralsConfig
-          ?.sparkHistoryServerConfig?.dataprocCluster || 'None';
+          ?.sparkHistoryServerConfig?.dataprocCluster || '';
       if (historyServerValue !== '') {
         const parts = historyServerValue.split('/'); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
         historyServer = parts[parts.length - 1];
@@ -257,7 +258,7 @@ function CreateBatch({
   const [region, setRegion] = useState(metaRegion);
   const [regionList, setRegionList] = useState<string[]>([]);
   const [networkList, setNetworklist] = useState([{}]);
-  const [keyRinglist, setKeyRinglist] = useState([{}]);
+  const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState(network);
@@ -300,6 +301,14 @@ function CreateBatch({
     useState(false);
   const [keylist, setKeylist] = useState<string[]>([]);
   const [isloadingNetwork, setIsloadingNetwork] = useState(false);
+  const [selectedNetworkRadio, setSelectedNetworkRadio] = useState<
+    'sharedVpc' | 'projectNetwork'
+  >('projectNetwork');
+  const [sharedSubNetworkList, setSharedSubNetworkList] = useState<string[]>(
+    []
+  );
+  const [sharedvpcSelected, setSharedvpcSelected] = useState('');
+  const [projectInfo, setProjectInfo] = useState('');
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -311,6 +320,14 @@ function CreateBatch({
 
   const handlekeyRingRadio = () => {
     setSelectedRadioValue('key');
+    setManualKeySelected('');
+    setManualValidation(true);
+  };
+
+  const handleGoogleManagedRadio = () => {
+    setSelectedEncryptionRadio('googleManaged');
+    setKeyRingSelected('');
+    setKeySelected('');
     setManualKeySelected('');
   };
   const handlekeyManuallyRadio = () => {
@@ -333,10 +350,11 @@ function CreateBatch({
     ];
 
     setBatchTypeList(batchTypeData);
-    
+
     listClustersAPI();
     listNetworksAPI();
     listKeyRingsAPI();
+    runtimeSharedProject();
   }, [clusterSelected]);
 
   useEffect(() => {
@@ -360,11 +378,35 @@ function CreateBatch({
     duplicateKeyError,
     manualValidation,
     mainJarSelected,
-    jarFilesSelected
+    jarFilesSelected,
+    keyRingSelected,
+    keySelected,
+    manualKeySelected
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
+
     if (batchInfoResponse) {
+      const { environmentConfig } = batchInfoResponse;
+      if (environmentConfig) {
+        const executionConfig = environmentConfig.executionConfig;
+
+        if (executionConfig) {
+          const sharedVpcMatches =
+            /projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
+              executionConfig.subnetworkUri
+            );
+          // Is this a shared VPC?
+          if (sharedVpcMatches?.groups?.['subnetwork']) {
+            setSharedvpcSelected(sharedVpcMatches?.groups?.['subnetwork']);
+            setSelectedNetworkRadio('sharedVpc');
+          } else {
+            setSubNetworkSelected(executionConfig.subnetworkUri);
+            setSelectedNetworkRadio('projectNetwork');
+          }
+        }
+      }
+
       if (Object.keys(batchInfoResponse).length !== 0) {
         if (batchInfoResponse.hasOwnProperty('labels')) {
           const updatedLabelDetail = Object.entries(
@@ -425,6 +467,79 @@ function CreateBatch({
       listNetworksFromSubNetworkAPI(subNetwork);
     }
   }, []);
+  interface IApiResponse {
+    name: string;
+  }
+  const runtimeSharedProject = async () => {
+    const credentials = await authApi();
+    if (credentials) {
+      let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
+      fetch(apiURL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      })
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: IApiResponse) => {
+              setProjectInfo(responseResult.name);
+              listSharedVPC(responseResult.name);
+            })
+            .catch((e: Error) => console.log(e));
+        })
+        .catch((err: Error) => {
+          console.error('Error displaying user info', err);
+          toast.error('Failed to fetch user information', toastifyCustomStyle);
+        });
+    }
+  };
+
+  const listSharedVPC = async (projectName: string) => {
+    try {
+      const credentials = await authApi();
+      if (!credentials) {
+        return false;
+      }
+      const apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
+      const response = await fetch(apiURL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      });
+      const responseResult = await response.json();
+      /*
+        Extracting subNetwork from items
+        Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/aggregated/subnetworks/listUsable",
+      */
+
+      const transformedSharedvpcSubNetworkList: string[] = responseResult.items
+        .map((data: { subnetwork: string }) => {
+          // Extract region and subnet from the subnet URI.
+          const matches =
+            /\/compute\/v1\/projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
+              data.subnetwork
+            )?.groups;
+          if (matches?.['region'] != credentials.region_id) {
+            // If region doesn't match the current region, set it to undefined and let
+            // it be filtered out below.
+            return undefined;
+          }
+          return matches?.['subnetwork'];
+        })
+        // Filter out empty values
+        .filter((subNetwork: string) => subNetwork);
+
+      setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
+    } catch (err) {
+      console.error('Error displaying sharedVPC subNetwork', err);
+      toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
+    }
+  };
   const handleMainClassRadio = () => {
     setSelectedRadio('mainClass');
     setMainJarSelected('');
@@ -460,9 +575,9 @@ function CreateBatch({
             .then((responseResult: INetworkResponse) => {
               let transformedNetworkSelected = '';
               /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
-      */
+               Extracting network from items
+               Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
+              */
 
               transformedNetworkSelected = responseResult.network.split('/')[9];
 
@@ -474,6 +589,7 @@ function CreateBatch({
             });
         })
         .catch((err: Error) => {
+          setIsloadingNetwork(false);
           console.error('Error selecting Network', err);
         });
     }
@@ -481,7 +597,21 @@ function CreateBatch({
 
   function isSubmitDisabled() {
     const commonConditions =
-      batchIdSelected === '' || regionName === '' || batchIdValidation;
+      batchIdSelected === '' ||
+      regionName === '' ||
+      batchIdValidation ||
+      (selectedNetworkRadio === 'sharedVpc' &&
+        sharedSubNetworkList.length === 0) ||
+      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
+      (selectedEncryptionRadio === 'customerManaged' &&
+        selectedRadioValue === 'key' &&
+        keyRingSelected === '' &&
+        keySelected === '') ||
+      (selectedEncryptionRadio === 'customerManaged' &&
+        selectedRadioValue === 'manually' &&
+        manualKeySelected === '') ||
+        (selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length !== 0 && subNetworkList.length===0);
     switch (batchTypeSelected) {
       case 'spark':
         return (
@@ -667,6 +797,7 @@ function CreateBatch({
                 }
               );
               setNetworklist(transformedNetworkList);
+              setNetworkSelected(transformedNetworkList[0]);
             })
 
             .catch((e: Error) => {
@@ -774,14 +905,12 @@ function CreateBatch({
         });
     }
   };
-  type SubnetworkData = {
-    subnetworks: string;
-  };
+
   const listSubNetworksAPI = async (subnetwork: string) => {
     const credentials = await authApi();
     if (credentials) {
       fetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks/${subnetwork}`,
+        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -792,34 +921,40 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { subnetworks: string[] }) => {
-              let transformedSubNetworkList = responseResult.subnetworks.map(
-                (data: string) => {
-                  return {
-                    subnetworks: data.split(
-                      `${credentials.region_id}/subnetworks/`
-                    )[1]
-                  };
-                }
-              );
-              const keyLabelStructureSubNetwork = transformedSubNetworkList
-                .filter((obj: SubnetworkData) => obj.subnetworks !== undefined)
-                .map((obj: SubnetworkData) => 
-                   obj.subnetworks
-               );
-              setSubNetworklist(keyLabelStructureSubNetwork);
-              setSubNetworkSelected(keyLabelStructureSubNetwork[0]);
-            })
+            .then(
+              (responseResult: {
+                items: {
+                  name: string;
+                  network: string;
+                  privateIpGoogleAccess: boolean;
+                }[];
+              }) => {
+                const filteredServices = responseResult.items.filter(
+                  (item: { network: string; privateIpGoogleAccess: boolean }) =>
+                    item.network.split('/')[9] === subnetwork &&
+                    item.privateIpGoogleAccess === true
+                );
+                const transformedServiceList = filteredServices.map(
+                  (data: { name: string }) => data.name
+                );
+                setSubNetworklist(transformedServiceList);
+                setSubNetworkSelected(transformedServiceList[0]);
+              }
+            )
             .catch((e: Error) => {
               console.log(e);
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
+          console.error('Error listing subNetworks', err);
         });
     }
   };
-  const listMetaStoreAPI = async (data: undefined) => {
+
+  const listMetaStoreAPI = async (
+    data: undefined,
+    network: string | undefined
+  ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
@@ -839,9 +974,14 @@ function CreateBatch({
               (responseResult: {
                 services: {
                   name: string;
+                  network: string;
                 }[];
               }) => {
-                const transformedServiceList = responseResult.services.map(
+                const filteredServices = responseResult.services.filter(
+                  service => service.network.split('/')[4] === network
+                );
+
+                const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name
                 );
                 setServicesList(transformedServiceList);
@@ -896,6 +1036,10 @@ function CreateBatch({
           setIsLoadingRegion(false);
         });
     }
+  };
+  const handleSharedSubNetwork = async (data: string | null) => {
+    setSharedvpcSelected(data!.toString());
+    await handleRegionChange(region, data!.toString());
   };
 
   type Payload = {
@@ -1010,6 +1154,10 @@ function CreateBatch({
         ...(serviceAccountSelected !== '' && {
           serviceAccount: serviceAccountSelected
         }),
+        ...(sharedvpcSelected &&
+          selectedNetworkRadio === 'sharedVpc' && {
+            subnetworkUri: `projects/${projectInfo}/regions/${regionName}/subnetworks/${sharedvpcSelected}`
+          }),
         ...(keySelected !== '' &&
           selectedRadioValue === 'key' &&
           keySelected !== undefined && {
@@ -1019,7 +1167,14 @@ function CreateBatch({
           selectedRadioValue === 'manually' && {
             kmsKey: manualKeySelected
           }),
-        subnetworkUri: subNetworkSelected,
+        ...(subNetworkSelected &&
+          selectedNetworkRadio === 'projectNetwork' && {
+            subnetworkUri: subNetworkSelected
+          }),
+        ...(sharedvpcSelected &&
+          selectedNetworkRadio === 'sharedVpc' && {
+            subnetworkUri: `projects/${projectInfo}/regions/${regionName}/subnetworks/${sharedvpcSelected}`
+          }),
         // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
@@ -1144,6 +1299,15 @@ function CreateBatch({
     const newBatchId = event.target.value;
     setBatchIdSelected(newBatchId);
   };
+  const handleNetworkSharedVpcRadioChange = () => {
+    setSelectedNetworkRadio('sharedVpc');
+    setSubNetworkSelected(subNetworkList[0]!.toString());
+    setNetworkSelected(networkList[0]!.toString());
+  };
+  const handleSubNetworkRadioChange = () => {
+    setSelectedNetworkRadio('projectNetwork');
+    setSharedvpcSelected('');
+  };
 
   const handleBatchTypeSelected = (
     event: React.SyntheticEvent<HTMLElement, Event>,
@@ -1164,31 +1328,30 @@ function CreateBatch({
   const handleServiceSelected = (data: string | null) => {
     setServicesSelected(data!.toString());
   };
- 
+
   const handleProjectIdChange = (data: string | null) => {
-    setProjectId(data??'');
+    setProjectId(data ?? '');
     setRegion('');
     setRegionList([]);
     setServicesList([]);
     setServicesSelected('');
     regionListAPI(data!.toString());
   };
-  const handleRegionChange = (data: any) => {
+  const handleRegionChange = (data: any, network: string | undefined) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data);
-    listMetaStoreAPI(data);
+    listMetaStoreAPI(data, network);
   };
-  const handleNetworkChange = (data: DropdownProps | null) => {
+  const handleNetworkChange = async (data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
-    listSubNetworksAPI(data!.toString());
+    await listSubNetworksAPI(data!.toString());
+    await handleRegionChange(region, data!.toString());
   };
-  const handleSubNetworkChange = (
-    data: string|null
-  ) => {
+  const handleSubNetworkChange = (data: string | null) => {
     setSubNetworkSelected(data!.toString());
   };
-  const handleKeyRingChange = (data: DropdownProps | null) => {
+  const handleKeyRingChange = (data: string | null) => {
     setKeyRingSelected(data!.toString());
     listKeysAPI(data!.toString());
   };
@@ -1205,7 +1368,7 @@ function CreateBatch({
   };
 
   const handleClusterSelected = (data: string | null) => {
-    setClusterSelected(data??'');
+    setClusterSelected(data ?? '');
   };
   const handleManualKeySelected = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -1228,7 +1391,10 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+            <iconLeftArrow.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
@@ -1401,7 +1567,6 @@ function CreateBatch({
                 )}
               </div>
             )}
-
             {batchTypeSelected === 'sparkR' && (
               <>
                 <div className="select-text-overlay">
@@ -1586,39 +1751,40 @@ function CreateBatch({
               />
             </div>
             <div className="create-custom-messagelist">
-              {CUSTOM_CONTAINER_MESSAGE} </div> <div className="create-container-message">
-                <div className="create-container-image-message">
+              {CUSTOM_CONTAINER_MESSAGE}{' '}
+            </div>{' '}
+            <div className="create-container-message">
+              <div className="create-container-image-message">
                 {CUSTOM_CONTAINER_MESSAGE_PART}
-                </div>
-                <div
-                  className="learn-more-url"
-                  onClick={() => {
-                    window.open(`${CONTAINER_REGISTERY}`, '_blank');
-                  }}
-                >
-                  Container Registry
-                </div>
-                &nbsp; <div className="create-container-image-message">
-                or 
-              </div>&nbsp;
-                <div
-                  className="learn-more-url"
-                  onClick={() => {
-                    window.open(`${ARTIFACT_REGISTERY}`, '_blank');
-                  }}
-                >
-                  Artifact Registry
-                </div>
-                {' . '}
-                <div
-                  className="learn-more-url"
-                  onClick={() => {
-                    window.open(`${CUSTOM_CONTAINERS}`, '_blank');
-                  }}
-                >
-                  Learn more
-                </div>
               </div>
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${CONTAINER_REGISTERY}`, '_blank');
+                }}
+              >
+                Container Registry
+              </div>
+              &nbsp; <div className="create-container-image-message">or</div>
+              &nbsp;
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${ARTIFACT_REGISTERY}`, '_blank');
+                }}
+              >
+                Artifact Registry
+              </div>
+              {' . '}
+              <div
+                className="learn-more-url"
+                onClick={() => {
+                  window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+                }}
+              >
+                Learn more
+              </div>
+            </div>
             {
               batchTypeSelected !== 'sparkR' && (
                 <>
@@ -1849,44 +2015,120 @@ function CreateBatch({
               </div>
             </div>
             <div className="submit-job-label-header">Network Configuration</div>
-            <div className="runtime-message ">
+            <div className="runtime-message">
               Establishes connectivity for the VM instances in this cluster.
             </div>
-            <div className="runtime-message ">Networks in this project</div>
             <div>
-              {isloadingNetwork ? (
-                <div className="metastore-loader">
-                  <ClipLoader
-                    loading={true}
-                    size={25}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
+              <div className="create-runtime-radio">
+                <Radio
+                  size="small"
+                  className="select-runtime-radio-style"
+                  value="projectNetwork"
+                  checked={selectedNetworkRadio === 'projectNetwork'}
+                  onChange={() => handleSubNetworkRadioChange()}
+                />
+                <div className="create-batch-message">
+                  Networks in this project
                 </div>
-              ) : (
+              </div>
+            </div>
+            <div>
+              <div className="create-runtime-radio">
+                <Radio
+                  size="small"
+                  className="select-runtime-radio-style"
+                  value="sharedVpc"
+                  checked={selectedNetworkRadio === 'sharedVpc'}
+                  onChange={() => handleNetworkSharedVpcRadioChange()}
+                />
+                <div className="create-batch-message">
+                  Networks shared from host project: "{projectInfo}"
+                </div>
+              </div>
+              <div className="create-runtime-sub-message-network">
+                Choose a shared VPC network from project that is different from
+                this cluster's project.{' '}
+                <div
+                  className="submit-job-learn-more"
+                  onClick={() => {
+                    window.open(`${SHARED_VPC}`, '_blank');
+                  }}
+                >
+                  Learn more
+                </div>
+              </div>
+            </div>
+            <div>
+              {selectedNetworkRadio === 'projectNetwork' && (
                 <div className="create-batch-network">
-                  <div className="select-text-overlay">
-                    <Autocomplete
-                      options={networkList}
-                      value={networkSelected}
-                      onChange={(_event, val) => handleNetworkChange(val)}
-                      renderInput={params => (
-                        <TextField {...params} label="Primary network*" />
-                      )}
-                    />
-                  </div>
-                  <div className="select-text-overlay subnetwork-style">
-                    <Autocomplete
-                      options={subNetworkList}
-                      value={subNetworkSelected}
-                      onChange={(_event, val) => handleSubNetworkChange(val)}
-                      renderInput={params => (
-                        <TextField {...params} label="subnetwork*" />
-                      )}
-                    />
-                  </div>
+                  {isloadingNetwork ? (
+                    <div className="metastore-loader">
+                      <ClipLoader
+                        loading={true}
+                        size={25}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="select-text-overlay">
+                        <Autocomplete
+                          options={networkList}
+                          value={networkSelected}
+                          onChange={(_event, val) => handleNetworkChange(val)}
+                          renderInput={params => (
+                            <TextField {...params} label="Primary network*" />
+                          )}
+                        />
+                      </div>
+                      <div className="select-text-overlay subnetwork-style">
+                        <Autocomplete
+                          options={subNetworkList}
+                          value={subNetworkSelected}
+                          onChange={(_event, val) =>
+                            handleSubNetworkChange(val)
+                          }
+                          renderInput={params => (
+                            <TextField {...params} label="subnetwork" />
+                          )}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
+              {selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length === 0 && (
+                  <div className="create-no-list-message">
+                    No local networks are available.
+                  </div>
+                )}
+               {selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length !== 0 && subNetworkList.length===0 &&(
+                  <div className="create-no-list-message">
+                     Please select a valid network and subnetwork.
+                  </div>
+                )}
+             
+              {selectedNetworkRadio === 'sharedVpc' && (
+                <div className="select-text-overlay">
+                  <Autocomplete
+                    options={sharedSubNetworkList}
+                    value={sharedvpcSelected}
+                    onChange={(_event, val) => handleSharedSubNetwork(val)}
+                    renderInput={params => (
+                      <TextField {...params} label="Shared subnetwork" />
+                    )}
+                  />
+                </div>
+              )}
+              {selectedNetworkRadio === 'sharedVpc' &&
+                sharedSubNetworkList.length === 0 && (
+                  <div className="create-no-list-message">
+                    No shared subnetworks are available in this region.
+                  </div>
+                )}
             </div>
             <div className="select-text-overlay">
               <label className="select-title-text" htmlFor="network-tags">
@@ -1922,7 +2164,7 @@ function CreateBatch({
                     className="select-batch-radio-style"
                     value="googleManaged"
                     checked={selectedEncryptionRadio === 'googleManaged'}
-                    onChange={() => setSelectedEncryptionRadio('googleManaged')}
+                    onChange={handleGoogleManagedRadio}
                   />
                   <div className="create-batch-message">
                     Google-managed encryption key
@@ -1968,7 +2210,6 @@ function CreateBatch({
                           value="mainClass"
                           checked={selectedRadioValue === 'key'}
                           onChange={handlekeyRingRadio}
-                          disabled={manualKeySelected !== ''}
                         />
                         <div className="select-text-overlay">
                           <Autocomplete
@@ -1992,7 +2233,7 @@ function CreateBatch({
                             value={keySelected}
                             onChange={(_event, val) => handlekeyChange(val)}
                             renderInput={params => (
-                              <TextField {...params} label="Key rings" />
+                              <TextField {...params} label="Keys" />
                             )}
                           />
                         </div>
@@ -2041,7 +2282,6 @@ function CreateBatch({
                 )}
               </div>
             </div>
-
             <div className="submit-job-label-header">
               Peripheral Configuration
             </div>
@@ -2059,20 +2299,20 @@ function CreateBatch({
             </div>
             <div className="create-messagelist">{METASTORE_MESSAGE}</div>
             <div className="select-text-overlay">
-            <DynamicDropdown
-                  value={projectId}
-                  onChange={(_, projectId) => handleProjectIdChange(projectId)}
-                  fetchFunc={projectListAPI}
-                  label="Project ID"
-                  // Always show the clear indicator and hide the dropdown arrow
-                  // make it very clear that this is an autocomplete.
-                  sx={{
-                    '& .MuiAutocomplete-clearIndicator': {
-                      visibility: 'hidden'
-                    }
-                  }}
-                  popupIcon={null}
-                />
+              <DynamicDropdown
+                value={projectId}
+                onChange={(_, projectId) => handleProjectIdChange(projectId)}
+                fetchFunc={projectListAPI}
+                label="Project ID"
+                // Always show the clear indicator and hide the dropdown arrow
+                // make it very clear that this is an autocomplete.
+                sx={{
+                  '& .MuiAutocomplete-clearIndicator': {
+                    visibility: 'hidden'
+                  }
+                }}
+                popupIcon={null}
+              />
             </div>
             <div className="select-text-overlay">
               {isLoadingRegion ? (
@@ -2088,7 +2328,9 @@ function CreateBatch({
                 <Autocomplete
                   options={regionList}
                   value={region}
-                  onChange={(_event, val) => handleRegionChange(val)}
+                  onChange={(_event, val) =>
+                    handleRegionChange(val, networkSelected)
+                  }
                   renderInput={params => (
                     <TextField {...params} label="Metastore region" />
                   )}
@@ -2132,7 +2374,6 @@ function CreateBatch({
                 )}
               />
             </div>
-
             <div className="submit-job-label-header">Properties</div>
             <LabelProperties
               labelDetail={propertyDetail}

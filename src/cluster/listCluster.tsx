@@ -151,25 +151,33 @@ function ListCluster({
             aria-labels={cell.value}
           >
             {cell.value === STATUS_RUNNING && (
-              <iconClusterRunning.react tag="div" className='logo-alignment-style' />
+              <iconClusterRunning.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             )}
-            {cell.value === STATUS_STOPPED && <iconStop.react tag="div" className='logo-alignment-style' />}
+            {cell.value === STATUS_STOPPED && (
+              <iconStop.react tag="div" className="logo-alignment-style" />
+            )}
             {cell.value === STATUS_ERROR && (
-              <iconClusterError.react tag="div" className='logo-alignment-style' />
+              <iconClusterError.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             )}
             {(cell.value === STATUS_PROVISIONING ||
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-                <ClipLoader
-                  color="#8A8A8A"
-                  loading={true}
-                  size={15}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-              )}
+              <ClipLoader
+                color="#8A8A8A"
+                loading={true}
+                size={15}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>
@@ -222,7 +230,10 @@ function ListCluster({
           }}
         >
           <div className="create-icon">
-            <iconCreateCluster.react tag="div" className='logo-alignment-style' />
+            <iconCreateCluster.react
+              tag="div"
+              className="logo-alignment-style"
+            />
           </div>
           <div className="create-text">Create cluster</div>
         </div>
@@ -232,7 +243,10 @@ function ListCluster({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" className='logo-alignment-style' />
+                <iconFilter.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

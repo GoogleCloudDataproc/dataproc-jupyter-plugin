@@ -244,9 +244,7 @@ function SubmitJob({
     setSubmitJobView(false);
   };
 
-  const handleClusterSelected = (
-    data: DropdownProps|null
-  ) => {
+  const handleClusterSelected = (data: DropdownProps | null) => {
     setClusterSelected(data!.toString());
   };
 
@@ -283,14 +281,13 @@ function SubmitJob({
     transformClusterListData = clusterResponse.clusters.filter(
       (data: IClusterData) => {
         if (data.status.state === STATUS_RUNNING) {
-            return data.clusterName
+          return data.clusterName;
         }
       }
     );
 
     const keyLabelStructure = transformClusterListData.map(
-      (obj: { clusterName: string }) => 
-         obj.clusterName
+      (obj: { clusterName: string }) => obj.clusterName
     );
 
     setClusterList(keyLabelStructure);
@@ -490,7 +487,7 @@ function SubmitJob({
           archiveUris: archieveFileSelected
         }),
         ...(argumentSelected !== '' && {
-          args: [argumentSelected]
+          args: argumentSelected
         }),
         ...(additionalPythonFileSelected !== '' && {
           pythonFileUris: [additionalPythonFileSelected]
@@ -523,7 +520,7 @@ function SubmitJob({
           jarFileUris: jarFileSelected
         }),
         ...(argumentSelected !== '' && {
-          args: [argumentSelected]
+          args: argumentSelected
         })
       }
     };
@@ -545,7 +542,7 @@ function SubmitJob({
           fileUris: [fileSelected]
         }),
         ...(argumentSelected !== '' && {
-          args: [argumentSelected]
+          args: argumentSelected
         })
       }
     };
@@ -771,7 +768,10 @@ function SubmitJob({
             className="back-arrow-icon"
             onClick={() => handleSubmitJobBackView()}
           >
-            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+            <iconLeftArrow.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           </div>
           <div className="cluster-details-title">Submit a job</div>
         </div>
@@ -1213,6 +1213,7 @@ function SubmitJob({
                     handleArgumentsSelection(setArgumentsDuplicateValidation, e)
                   }
                   value={argumentSelected}
+                  addOnBlur={true}
                   inputProps={{ placeholder: '' }}
                 />
               </div>

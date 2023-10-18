@@ -42,7 +42,6 @@ import {
   ISessionTemplateDisplay,
   ISessionTemplateRoot
 } from '../utils/listRuntimeTemplateInterface';
-
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
   svgstr: filterIcon
@@ -150,21 +149,18 @@ function ListRuntimeTemplates({
     previousRuntimeTemplatesList?: object
   ) => {
     try {
-      const queryParams = new URLSearchParams({
-      });
+      const queryParams = new URLSearchParams({});
       const response = await authenticatedFetch({
         uri: 'sessionTemplates',
         method: HTTP_METHOD.GET,
         regionIdentifier: 'locations',
-        queryParams: queryParams,
+        queryParams: queryParams
       });
       const formattedResponse: ISessionTemplateRoot = await response.json();
       if (formattedResponse && formattedResponse.sessionTemplates) {
         setRunTimeTemplateAllList(formattedResponse.sessionTemplates);
       }
-    }
-    catch (error) {
-    }
+    } catch (error) {}
     try {
       const pageToken = nextPageToken ?? '';
       const queryParams = new URLSearchParams({
@@ -235,11 +231,9 @@ function ListRuntimeTemplates({
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing runtime templates', error);
-      toast.error('Failed to fetch runtime templates',toastifyCustomStyle);
+      toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
     }
   };
- 
-  
 
   const handleDeleteRuntimeTemplate = (
     runtimeTemplateName: string,
@@ -310,7 +304,10 @@ function ListRuntimeTemplates({
             )
           }
         >
-          <iconDelete.react tag="div" className="logo-alignment-style" />
+          <iconDelete.react
+            tag="div"
+            className='icon-white logo-alignment-style'
+          />
         </div>
       </div>
     );
@@ -389,7 +386,10 @@ function ListRuntimeTemplates({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" className="logo-alignment-style" />
+              <iconFilter.react
+                tag="div"
+                className='icon-white logo-alignment-style'
+              />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

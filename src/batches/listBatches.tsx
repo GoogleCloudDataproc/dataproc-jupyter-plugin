@@ -231,7 +231,7 @@ function ListBatches({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" className="logo-alignment-style" />
+              <iconFilter.react tag="div" className='icon-white logo-alignment-style' />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">

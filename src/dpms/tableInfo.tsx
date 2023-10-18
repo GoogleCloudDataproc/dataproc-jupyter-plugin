@@ -18,7 +18,7 @@
 import React from 'react';
 import { useTable } from 'react-table';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { DataprocWidget } from '../controls/DataprocWidget';
+import { DataprocWidget} from '../controls/DataprocWidget';
 interface IColumn {
   name: string;
   type: string;
@@ -86,7 +86,10 @@ const TableInfo = ({
     return (
       <div className="dpms-Wrapper">
         <div className="table-container">
-          <table className="schema-table" {...getTableProps()}>
+          <table
+            className= 'schema-table'
+            {...getTableProps()}
+          >
             <thead>
               {headerGroups.map(headerGroup => (
                 <tr {...headerGroup.getHeaderGroupProps()}>

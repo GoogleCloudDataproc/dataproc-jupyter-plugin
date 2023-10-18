@@ -334,7 +334,10 @@ function JobComponent({
           title="Clone Job"
           onClick={() => handleCloneJob(data)}
         >
-          <iconClone.react tag="div" className="logo-alignment-style" />
+          <iconClone.react
+            tag="div"
+            className='icon-white logo-alignment-style'
+          />
         </div>
         <div
           role="button"
@@ -352,9 +355,15 @@ function JobComponent({
           }
         >
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconStop.react tag="div" className="logo-alignment-style" />
+            <iconStop.react
+              tag="div"
+              className='icon-white logo-alignment-style'
+            />
           ) : (
-            <iconStopDisable.react tag="div" className="logo-alignment-style" />
+            <iconStopDisable.react
+              tag="div"
+              className='icon-white logo-alignment-style'
+            />
           )}
         </div>
         <div
@@ -373,9 +382,15 @@ function JobComponent({
           }
         >
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconDelete.react tag="div" className="logo-alignment-style" />
+            <iconDelete.react
+              tag="div"
+              className='icon-white logo-alignment-style'
+            />
           ) : (
-            <iconDelete.react tag="div" className="logo-alignment-style" />
+            <iconDelete.react
+              tag="div"
+              className= 'icon-white logo-alignment-style'
+            />
           )}
         </div>
       </div>
@@ -550,10 +565,12 @@ function JobComponent({
             <div>
               <div className="filter-cluster-overlay">
                 <div className="filter-cluster-icon">
-                  <iconFilter.react
-                    tag="div"
-                    className="logo-alignment-style"
-                  />
+
+                    <iconFilter.react
+                      tag="div"
+                      className="icon-white logo-alignment-style"
+                    />
+
                 </div>
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">

@@ -92,7 +92,6 @@ const AuthLoginComponent = ({
         <ConfigSelection
           configError={configError}
           setConfigError={setConfigError}
-          themeManager={themeManager}
           app={app}
           launcher={launcher}
         />

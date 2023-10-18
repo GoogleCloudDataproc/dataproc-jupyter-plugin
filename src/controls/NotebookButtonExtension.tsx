@@ -63,10 +63,12 @@ class NotebookButtonExtensionPoint implements IDisposable {
     this.isDisposed = false;
     this.context.sessionContext.sessionChanged.connect(this.onSessionChanged);
 
+
     this.sparkLogsButton = new ToolbarButton({
       icon: iconLogs,
       onClick: this.onSparkLogsClick,
-      tooltip: 'Spark Logs'
+      tooltip: 'Spark Logs',
+      className: "dark-theme-logs"
     });
     // TODO: we want to use the registry to specify a rank:
     // https://jupyterlab.readthedocs.io/en/stable/extension/extension_points.html#document-widgets
@@ -75,7 +77,8 @@ class NotebookButtonExtensionPoint implements IDisposable {
     this.sessionDetailsButton = new ToolbarButton({
       icon: iconSessionLogs,
       onClick: this.onSessionDetailsClick,
-      tooltip: 'Session Details'
+      tooltip: 'Session Details',
+      className: "dark-theme-logs" 
     });
     this.panel.toolbar.insertItem(
       1000,

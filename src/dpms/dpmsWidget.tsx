@@ -48,12 +48,6 @@ import { toast } from 'react-toastify';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
-import darkSearchClearIcon from '../../style/icons/dark_search_clear_icon.svg';
-import darkDatabaseIcon from '../../style/icons/database_icon_dark.svg';
-import darkTableIcon from '../../style/icons/table_icon_dark.svg';
-import darkColumnsIcon from '../../style/icons/dpms_icon_dark.svg';
-import darkSearchIcon from '../../style/icons/search_icon_dark.svg';
-
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -69,28 +63,6 @@ const iconRightArrow = new LabIcon({
 const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
-});
-const darkIconSearchClear = new LabIcon({
-  name: 'launcher:dark-search-clear-icon',
-  svgstr: darkSearchClearIcon
-});
-const darkIconDatabase = new LabIcon({
-  name: 'launcher:dark-database-icon',
-  svgstr: darkDatabaseIcon
-});
-
-const darkIconTable = new LabIcon({
-  name: 'launcher:dark-table-icon',
-  svgstr: darkTableIcon
-});
-
-const darkIconColumns = new LabIcon({
-  name: 'launcher:dark-columns-icon',
-  svgstr: darkColumnsIcon
-});
-const darkIconSearch = new LabIcon({
-  name: 'launcher:dark-search-icon',
-  svgstr: darkSearchIcon
 });
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
@@ -108,26 +80,25 @@ const DpmsComponent = ({
   app: JupyterLab;
   themeManager: IThemeManager;
 }): JSX.Element => {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
-  const iconSearchClear = isDarkTheme ? darkIconSearchClear : new LabIcon({
+  const iconSearchClear =  new LabIcon({
     name: 'launcher:search-clear-icon',
     svgstr: searchClearIcon
   });
-  const iconDatabase = isDarkTheme ? darkIconDatabase : new LabIcon({
+  const iconDatabase =  new LabIcon({
     name: 'launcher:database-icon',
     svgstr: databaseIcon
   });
 
-  const iconTable = isDarkTheme ? darkIconTable : new LabIcon({
+  const iconTable =  new LabIcon({
     name: 'launcher:table-icon',
     svgstr: tableIcon
   });
 
-  const iconColumns = isDarkTheme ? darkIconColumns : new LabIcon({
+  const iconColumns =  new LabIcon({
     name: 'launcher:columns-icon',
     svgstr: columnsIcon
   });
-  const iconSearch = isDarkTheme ? darkIconSearch : new LabIcon({
+  const iconSearch =  new LabIcon({
     name: 'launcher:search-icon',
     svgstr: searchIcon
   });
@@ -153,6 +124,7 @@ const DpmsComponent = ({
   const [tableDescription, setTableDescription] = useState<
     Record<string, string>
   >({});
+  const [apiMessage, setApiMessage] = useState('');
 
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
@@ -173,7 +145,7 @@ const DpmsComponent = ({
                 ...prevResponse,
                 responseResult
               ]);
-              if (data) {
+              if(data){
                 setIsLoading(false);
               }
             })
@@ -420,7 +392,8 @@ fetching database name from fully qualified name structure */
               className="caret-icon right"
               onClick={handleIconClick}
             >
-              <iconDownArrow.react tag="div" className="logo-alignment-style" />
+              <iconDownArrow.react tag="div" className="icon-white logo-alignment-style" />
+           
             </div>
           </>
         ) : (
@@ -428,8 +401,9 @@ fetching database name from fully qualified name structure */
             role="treeitem"
             className="caret-icon down"
             onClick={handleIconClick}
-          >
-            <iconRightArrow.react tag="div" className="logo-alignment-style" />
+          > 
+            <iconRightArrow.react tag="div" className="icon-white logo-alignment-style" />
+
           </div>
         )
       ) : null;
@@ -444,7 +418,7 @@ fetching database name from fully qualified name structure */
               >
                 <iconDownArrow.react
                   tag="div"
-                  className="logo-alignment-style"
+                  className="icon-white logo-alignment-style"
                 />
               </div>
             </>
@@ -456,7 +430,7 @@ fetching database name from fully qualified name structure */
             >
               <iconRightArrow.react
                 tag="div"
-                className="logo-alignment-style"
+                className="icon-white logo-alignment-style"
               />
             </div>
           );
@@ -467,7 +441,7 @@ fetching database name from fully qualified name structure */
               <div role="img" className="db-icon" onClick={handleIconClick}>
                 <iconDatabase.react
                   tag="div"
-                  className="logo-alignment-style"
+                  className="icon-white logo-alignment-style"
                 />
               </div>
             </>
@@ -477,7 +451,7 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="table-icon" onClick={handleIconClick}>
-                <iconTable.react tag="div" className="logo-alignment-style" />
+                <iconTable.react tag="div" className="icon-white logo-alignment-style" />
               </div>
             </>
           );
@@ -485,7 +459,7 @@ fetching database name from fully qualified name structure */
 
         return (
           <>
-            <iconColumns.react tag="div" className="logo-alignment-style" />
+            <iconColumns.react tag="div" className="icon-white logo-alignment-style" />
           </>
         );
       }
@@ -494,7 +468,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              <iconDatabase.react tag="div" className="logo-alignment-style" />
+              <iconDatabase.react tag="div" className="icon-white logo-alignment-style" />
             </div>
           </>
         );
@@ -503,7 +477,7 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="table-icon" onClick={handleIconClick}>
-              <iconTable.react tag="div" className="logo-alignment-style" />
+              <iconTable.react tag="div" className="icon-white logo-alignment-style" />
             </div>
           </>
         );
@@ -511,7 +485,7 @@ fetching database name from fully qualified name structure */
 
       return (
         <>
-          <iconColumns.react tag="div" className="logo-alignment-style" />
+          <iconColumns.react tag="div" className="icon-white logo-alignment-style" />
         </>
       );
     };
@@ -531,6 +505,7 @@ fetching database name from fully qualified name structure */
       description: string;
     }>;
     error?: {
+      message: string;
       code: string;
     };
   }
@@ -577,6 +552,7 @@ fetching database name from fully qualified name structure */
               } else {
                 if (responseResult?.error?.code) {
                   setApiError(true);
+                  setApiMessage(responseResult?.error?.message)
                   setSchemaError(false);
                 } else {
                   setSchemaError(true);
@@ -781,7 +757,7 @@ fetching database name from fully qualified name structure */
                         <InputAdornment position="start">
                           <iconSearch.react
                             tag="div"
-                            className="logo-alignment-style"
+                            className="icon-white logo-alignment-style"
                           />
                         </InputAdornment>
                       ),
@@ -792,7 +768,7 @@ fetching database name from fully qualified name structure */
                         >
                           <iconSearchClear.react
                             tag="div"
-                            className="logo-alignment-style search-clear-icon"
+                            className="icon-white logo-alignment-style search-clear-icon"
                           />
                         </IconButton>
                       )
@@ -800,7 +776,7 @@ fetching database name from fully qualified name structure */
                   />
                 </div>
                 <div className="tree-container">
-                  {data[totalDatabases - 1].children.length === totalTables && (
+                  {data.length === totalDatabases ? (data[totalDatabases - 1].children.length === totalTables) &&(
                     <Tree
                       className="Tree"
                       initialData={data}
@@ -821,7 +797,7 @@ fetching database name from fully qualified name structure */
                         <Node {...props} onClick={handleNodeClick} />
                       )}
                     </Tree>
-                  )}
+                  ): ('')} 
                 </div>
               </>
             )}
@@ -838,7 +814,7 @@ fetching database name from fully qualified name structure */
           activate DPMS sync with data catalog
         </div>
       ) : apiError ? (
-        <div className="dpms-error">Datacatalog API is not enabled</div>
+        <div className="dpms-error">{apiMessage}</div>
       ) : schemaError ? (
         <div className="dpms-error">No schema available</div>
       ) : (

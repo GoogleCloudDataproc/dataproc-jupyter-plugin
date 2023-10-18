@@ -43,7 +43,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
-import { DataprocWidget } from '../controls/DataprocWidget';
+import { DataprocWidget} from '../controls/DataprocWidget';
+
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -230,10 +231,11 @@ const BatchesComponent = (): React.JSX.Element => {
           {data.state === BatchStatus.STATUS_PENDING ? (
             <iconDelete.react
               tag="div"
-              className="logo-alignment-style icon-delete"
+              className='icon-white logo-alignment-style icon-delete'
             />
           ) : (
-            <iconDelete.react tag="div" className="logo-alignment-style" />
+            <iconDelete.react tag="div" className='icon-white logo-alignment-style'
+ />
           )}
         </div>
       </div>
@@ -363,6 +365,6 @@ const BatchesComponent = (): React.JSX.Element => {
 
 export class Batches extends DataprocWidget {
   renderInternal(): React.JSX.Element {
-    return <BatchesComponent />;
+    return <BatchesComponent/>;
   }
 }

@@ -57,7 +57,7 @@ function LabelProperties({
   labelEditMode,
   selectedRuntimeClone,
   batchInfoResponse,
-  createBatch
+  createBatch,
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
@@ -200,7 +200,12 @@ function LabelProperties({
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
                       <label
-                        className="select-dropdown-text"
+                        className={
+                          `select-dropdown-text ${labelSplit[0] === '' ||
+                            buttonText !== 'ADD LABEL' ||
+                            duplicateKeyError !== -1?''
+                            : ' disable-text'}`
+                        }
                         htmlFor="metastore-project"
                       >
                         {`Key ${index + 1}*`}
@@ -266,7 +271,9 @@ function LabelProperties({
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
                       <label
-                        className="select-dropdown-text"
+                        className={ `select-dropdown-text ${label === DEFAULT_LABEL_DETAIL &&
+                              buttonText === 'ADD LABEL' ?' disable-text':''}`
+                        }
                         htmlFor="metastore-project"
                       >
                         {`Value ${index + 1}`}
@@ -345,25 +352,33 @@ function LabelProperties({
               ) {
                 handleAddLabel(e);
               }
-            }
-            else{
+            } else {
               e.preventDefault();
             }
           }}
         >
           {labelDetail.length === 0 ||
           labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
-            <iconPlus.react tag="div" className="logo-alignment-style" />
+            <iconPlus.react
+              tag="div"
+              className= 'icon-black logo-alignment-style'
+            />
           ) : (
-            <iconPlusDisable.react tag="div" className="logo-alignment-style" />
+            <iconPlusDisable.react
+              tag="div"
+              className= 'icon-black-disable logo-alignment-style'
+            />
           )}
           <span
-            className={
-              labelDetail.length === 0 ||
-              labelDetail[labelDetail.length - 1].split(':')[0].length > 0
-                ? 'job-edit-text'
-                : 'job-edit-text-disabled'
-            }
+            className=
+
+              {
+                labelDetail.length === 0 ||
+                labelDetail[labelDetail.length - 1].split(':')[0].length > 0
+                  ? 'job-edit-text'
+                  : 'job-edit-text-disabled'
+              }
+
           >
             {buttonText}
           </span>

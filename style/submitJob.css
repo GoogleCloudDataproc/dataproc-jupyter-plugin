@@ -25,12 +25,12 @@
   align-items: center;
   padding: 0px 12px;
   gap: 4px;
-  width: 150px;
   height: 32px;
   background: var(--jp-layout-color0);
   color: var(--jp-ui-font-color2);
   border: none;
   font-family: ROBOTO;
+  border-radius: 4px;
 }
 .submit-job-message-input {
   font-style: normal;
@@ -95,7 +95,7 @@
   z-index: 3;
 }
 .disable-text {
-  color: #80868b;
+  color: var(--jp-layout-color3) !important;
 }
 .select-text-overlay-label {
   position: relative;
@@ -275,6 +275,7 @@ a:hover {
 
 .labels-delete-icon {
   padding-top: 7px;
+  cursor: pointer;
 }
 
 .labels-delete-icon-hide {

@@ -30,7 +30,6 @@ function TableData({
   tableDataCondition,
   fromPage
 }: any) {
-  
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
 
   const displayData = page ? page : rows;
@@ -43,7 +42,7 @@ function TableData({
 
   return (
     <table {...getTableProps()} className="clusters-list-table">
-      <thead className="scroll-fix-header">
+      <thead  className="scroll-fix-header">
         {headerGroups.map((headerGroup: any) => (
           <tr
             {...headerGroup.getHeaderGroupProps()}
