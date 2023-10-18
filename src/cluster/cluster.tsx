@@ -45,7 +45,6 @@ import {
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconStart = new LabIcon({
   name: 'launcher:start-icon',
@@ -73,11 +72,7 @@ const iconRestartDisable = new LabIcon({
   svgstr: restartDisableIcon
 });
 
-const ClusterComponent = ({
-  themeManager
-}: {
-  themeManager: IThemeManager;
-}): React.JSX.Element => {
+const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
   const [clustersList, setclustersList] = useState([]);
   const [clusterResponse, setClusterResponse] = useState([]);
@@ -412,7 +407,6 @@ const ClusterComponent = ({
               selectedJobClone={selectedJobClone}
               setSelectedJobClone={setSelectedJobClone}
               setSubmitJobView={setSubmitJobView}
-              themeManager={themeManager}
             />
           )}
           {!detailedView && (
@@ -447,7 +441,6 @@ const ClusterComponent = ({
                     clusterResponse={clusterResponse}
                     selectedJobClone={selectedJobClone}
                     setSelectedJobClone={setSelectedJobClone}
-                    themeManager={themeManager}
                   />
                 ) : (
                   <ListCluster
@@ -456,7 +449,6 @@ const ClusterComponent = ({
                     setPollingDisable={setPollingDisable}
                     handleClusterDetails={handleClusterDetails}
                     project_id={projectId}
-                    themeManager={themeManager}
                   />
                 )}
               </div>
@@ -479,6 +471,6 @@ const ClusterComponent = ({
 
 export class Cluster extends DataprocWidget {
   renderInternal(): React.JSX.Element {
-    return <ClusterComponent themeManager={this.themeManager} />;
+    return <ClusterComponent />;
   }
 }

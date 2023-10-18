@@ -61,7 +61,6 @@ import { deleteBatchAPI } from '../utils/batchService';
 import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';
 import CreateBatch from './createBatch';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -80,14 +79,12 @@ type BatchDetailsProps = {
   batchSelected: string;
   setDetailedBatchView: (flag: boolean) => void;
   setCreateBatchView: (flag: boolean) => void;
-  themeManager: IThemeManager;
 };
 
 function BatchDetails({
   batchSelected,
   setDetailedBatchView,
   setCreateBatchView,
-  themeManager
 }: BatchDetailsProps) {
   const [batchInfoResponse, setBatchInfoResponse] = useState({
     uuid: '',
@@ -342,7 +339,6 @@ function BatchDetails({
           projectName={projectName}
           batchInfoResponse={batchInfoResponse}
           createBatch={createBatch}
-          themeManager={themeManager}
         />
       )}
       {deletePopupOpen && (

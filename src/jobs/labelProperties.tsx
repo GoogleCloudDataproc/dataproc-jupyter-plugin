@@ -58,7 +58,6 @@ function LabelProperties({
   selectedRuntimeClone,
   batchInfoResponse,
   createBatch,
-  themeManager
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur

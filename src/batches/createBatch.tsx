@@ -64,7 +64,6 @@ import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 type Network = {
   selfLink: string;
@@ -89,7 +88,6 @@ interface ICreateBatchProps {
   batchInfoResponse?: any;
   createBatch?: boolean;
   setCreateBatch?: (value: boolean) => void;
-  themeManager: IThemeManager;
 }
 
 function batchTypeFunction(batchKey: string) {
@@ -115,8 +113,7 @@ function CreateBatch({
   projectName,
   batchInfoResponse,
   setCreateBatch,
-  createBatch,
-  themeManager
+  createBatch
 }: ICreateBatchProps) {
   let batchKeys: string[] = [];
   let batchType = 'spark';
@@ -1988,7 +1985,6 @@ function CreateBatch({
                   setValueValidation={setValueValidation}
                   duplicateKeyError={duplicateKeyError}
                   setDuplicateKeyError={setDuplicateKeyError}
-                  themeManager={themeManager}
                 />
               </>
             )}
@@ -2391,7 +2387,6 @@ function CreateBatch({
               setValueValidation={setValueValidation}
               duplicateKeyError={duplicateKeyError}
               setDuplicateKeyError={setDuplicateKeyError}
-              themeManager={themeManager}
             />
             <div className="submit-job-label-header">Labels</div>
             <LabelProperties
@@ -2408,7 +2403,6 @@ function CreateBatch({
               setDuplicateKeyError={setDuplicateKeyError}
               batchInfoResponse={batchInfoResponse}
               createBatch={createBatch}
-              themeManager={themeManager}
             />
             <div className="job-button-style-parent">
               <div
