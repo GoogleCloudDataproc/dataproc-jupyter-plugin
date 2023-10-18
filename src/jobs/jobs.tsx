@@ -110,8 +110,7 @@ function JobComponent({
   clusterResponse,
   selectedJobClone,
   setSelectedJobClone,
-  clustersList,
-  themeManager
+  clustersList
 }: any) {
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState<string>('');
@@ -515,7 +514,6 @@ function JobComponent({
           setSubmitJobView={setSubmitJobView}
           selectedJobClone={selectedJobClone}
           clusterResponse={clusterResponse}
-          themeManager={themeManager}
         />
       )}
       {deletePopupOpen && (
@@ -538,7 +536,6 @@ function JobComponent({
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
           clustersList={clustersList}
-          themeManager={themeManager}
         />
       )}
       {!submitJobView && !detailedJobView && (
@@ -582,7 +579,6 @@ function JobComponent({
                     globalFilter={state.globalFilter}
                     setGlobalFilter={setGlobalFilter}
                     setPollingDisable={setPollingDisable}
-                    themeManager={themeManager}
                   />
                 </div>
               </div>
@@ -603,7 +599,6 @@ function JobComponent({
                   prepareRow={prepareRow}
                   tableDataCondition={tableDataCondition}
                   fromPage="Jobs"
-                  themeManager={themeManager}
                 />
                 {jobsList.length > 50 && (
                   <PaginationView

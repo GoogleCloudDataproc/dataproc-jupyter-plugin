@@ -39,7 +39,6 @@ import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -80,15 +79,13 @@ interface IListClusterProps {
   setPollingDisable: (value: boolean) => void;
   handleClusterDetails: (clusterName: string) => void;
   project_id: string;
-  themeManager: IThemeManager;
 }
 function ListCluster({
   clustersList,
   isLoading,
   setPollingDisable,
   handleClusterDetails,
-  project_id,
-  themeManager
+  project_id
 }: IListClusterProps) {
   const data = clustersList;
   const columns = React.useMemo(
@@ -258,7 +255,6 @@ function ListCluster({
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
-                themeManager = {themeManager}
               />
             </div>
           </div>
@@ -273,7 +269,6 @@ function ListCluster({
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Clusters"
-              themeManager={themeManager}
             />
             {clustersList.length > 50 && (
               <PaginationView

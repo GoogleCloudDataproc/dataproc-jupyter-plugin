@@ -44,14 +44,14 @@ import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
 import { DataprocWidget} from '../controls/DataprocWidget';
-import { IThemeManager } from '@jupyterlab/apputils';
+
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
   svgstr: deleteIcon
 });
 
-const BatchesComponent = ({themeManager}:{themeManager: IThemeManager}): React.JSX.Element => {
+const BatchesComponent = (): React.JSX.Element => {
   const [batchesList, setBatchesList] = useState([]);
   const [selectedMode, setSelectedMode] = useState('Batches');
   const [isLoading, setIsLoading] = useState(true);
@@ -299,7 +299,6 @@ const BatchesComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
               batchSelected={batchSelected}
               setDetailedBatchView={setDetailedBatchView}
               setCreateBatchView={setCreateBatchView}
-              themeManager={themeManager}
             />
           )}
           {createBatchView && (
@@ -307,7 +306,6 @@ const BatchesComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
               setCreateBatchView={setCreateBatchView}
               regionName={regionName}
               projectName={projectName}
-              themeManager={themeManager}
             />
           )}
 
@@ -333,8 +331,7 @@ const BatchesComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
               }
               <div>
                 {selectedMode === 'Sessions' ? (
-                  <ListSessions
-                  themeManager = {themeManager} />
+                  <ListSessions />
                 ) : (
                   <ListBatches
                     batchesList={batchesList}
@@ -344,7 +341,6 @@ const BatchesComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
                     handleBatchDetails={handleBatchDetails}
                     setCreateBatchView={setCreateBatchView}
                     createBatchView={createBatchView}
-                    themeManager = {themeManager}
                   />
                 )}
               </div>
@@ -369,6 +365,6 @@ const BatchesComponent = ({themeManager}:{themeManager: IThemeManager}): React.J
 
 export class Batches extends DataprocWidget {
   renderInternal(): React.JSX.Element {
-    return <BatchesComponent themeManager={this.themeManager}/>;
+    return <BatchesComponent/>;
   }
 }

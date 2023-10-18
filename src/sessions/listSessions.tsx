@@ -53,7 +53,6 @@ import {
   toastifyCustomStyle
 } from '../utils/utils';
 import SessionDetails from './sessionDetails';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -80,10 +79,8 @@ const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
   svgstr: deleteIcon
 });
-interface IListSession {
-  themeManager: IThemeManager;
-}
-function ListSessions({ themeManager }: IListSession) {
+
+function ListSessions() {
   const [sessionsList, setSessionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
@@ -391,7 +388,6 @@ function ListSessions({ themeManager }: IListSession) {
           sessionSelected={sessionSelected}
           setDetailedSessionView={setDetailedSessionView}
           detailedSessionView={detailedSessionView}
-          themeManager={themeManager}
         />
       )}
       {sessionsList.length > 0 && !detailedSessionView ? (
@@ -410,7 +406,6 @@ function ListSessions({ themeManager }: IListSession) {
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 setPollingDisable={setPollingDisable}
-                themeManager={themeManager}
               />
             </div>
           </div>
@@ -425,7 +420,6 @@ function ListSessions({ themeManager }: IListSession) {
               prepareRow={prepareRow}
               tableDataCondition={tableDataCondition}
               fromPage="Sessions"
-              themeManager={themeManager}
             />
             {sessionsList.length > 50 && (
               <PaginationView

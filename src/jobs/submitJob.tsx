@@ -121,7 +121,7 @@ const handleOptionalFields = (selectedJobClone: any, jobTypeKey: string) => {
 function SubmitJob({
   setSubmitJobView,
   selectedJobClone,
-  clusterResponse,
+  clusterResponse
 }: any) {
   const [clusterList, setClusterList] = useState([{}]);
   const [jobTypeList, setJobTypeList] = useState([{}]);
