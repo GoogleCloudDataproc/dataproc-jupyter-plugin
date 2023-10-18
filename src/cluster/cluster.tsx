@@ -44,7 +44,7 @@ import {
 } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
-import { DataprocWidget, darkTheme } from '../controls/DataprocWidget';
+import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
 
 const iconStart = new LabIcon({
@@ -265,20 +265,12 @@ const ClusterComponent = ({
         !restartEnabled ? (
           <iconStart.react
             tag="div"
-            className={
-              darkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className="icon-white logo-alignment-style"
           />
         ) : (
           <iconStartDisable.react
             tag="div"
-            className={
-              darkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className="icon-white logo-alignment-style"
           />
         )}
       </div>
@@ -308,20 +300,12 @@ const ClusterComponent = ({
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
           <iconStop.react
             tag="div"
-            className={
-              darkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className="icon-white logo-alignment-style"
           />
         ) : (
           <iconStopDisable.react
             tag="div"
-            className={
-              darkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className="icon-white logo-alignment-style"
           />
         )}
       </div>
@@ -351,20 +335,12 @@ const ClusterComponent = ({
         {data.status.state === ClusterStatus.STATUS_RUNNING ? (
           <iconRestart.react
             tag="div"
-            className={
-              darkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className="icon-white logo-alignment-style"
           />
         ) : (
           <iconRestartDisable.react
             tag="div"
-            className={
-              darkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className="icon-white logo-alignment-style"
           />
         )}
       </div>

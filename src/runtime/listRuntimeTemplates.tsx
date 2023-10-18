@@ -69,7 +69,6 @@ function ListRuntimeTemplates({
   setSelectedRuntimeClone,
   themeManager
 }: IListRuntimeTemplate) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [runtimeTemplateslist, setRuntimeTemplateslist] = useState<
     ISessionTemplateDisplay[]
   >([]);
@@ -310,11 +309,7 @@ function ListRuntimeTemplates({
         >
           <iconDelete.react
             tag="div"
-            className={
-              isDarkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            }
+            className='icon-white logo-alignment-style'
           />
         </div>
       </div>
@@ -396,11 +391,7 @@ function ListRuntimeTemplates({
             <div className="filter-cluster-icon">
               <iconFilter.react
                 tag="div"
-                className={
-                  isDarkTheme
-                    ? 'dark-theme logo-alignment-style'
-                    : 'logo-alignment-style'
-                }
+                className='icon-white logo-alignment-style'
               />
             </div>
             <div className="filter-cluster-text"></div>

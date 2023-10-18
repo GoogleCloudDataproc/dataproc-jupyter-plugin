@@ -118,7 +118,6 @@ function CreateBatch({
   createBatch,
   themeManager
 }: ICreateBatchProps) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   let batchKeys: string[] = [];
   let batchType = 'spark';
   let mainClass = '';
@@ -186,7 +185,7 @@ function CreateBatch({
       subNetwork =
         batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri ||
         '';
-      
+
       keyType =
         batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
       const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
@@ -262,7 +261,7 @@ function CreateBatch({
   const [region, setRegion] = useState(metaRegion);
   const [regionList, setRegionList] = useState<string[]>([]);
   const [networkList, setNetworklist] = useState([{}]);
-  const [keyRinglist, setKeyRinglist] = useState([{}]);
+  const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
   const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState(network);
@@ -325,6 +324,7 @@ function CreateBatch({
   const handlekeyRingRadio = () => {
     setSelectedRadioValue('key');
     setManualKeySelected('');
+    setManualValidation(true);
   };
   const handlekeyManuallyRadio = () => {
     setSelectedRadioValue('manually');
@@ -374,15 +374,16 @@ function CreateBatch({
     duplicateKeyError,
     manualValidation,
     mainJarSelected,
-    jarFilesSelected
+    jarFilesSelected,
+    keyRingSelected,
+    keySelected,
+    manualKeySelected,
   ]);
   useEffect(() => {
     let batchKeys: string[] = [];
-    
+
     if (batchInfoResponse) {
-      const {
-        environmentConfig
-      } = batchInfoResponse;
+      const { environmentConfig } = batchInfoResponse;
       if (environmentConfig) {
         const executionConfig = environmentConfig.executionConfig;
 
@@ -399,7 +400,6 @@ function CreateBatch({
             setSubNetworkSelected(executionConfig.subnetworkUri);
             setSelectedNetworkRadio('projectNetwork');
           }
-
         }
       }
 
@@ -593,10 +593,19 @@ function CreateBatch({
 
   function isSubmitDisabled() {
     const commonConditions =
-      batchIdSelected === '' || regionName === '' || batchIdValidation ||
+      batchIdSelected === '' ||
+      regionName === '' ||
+      batchIdValidation ||
       (selectedNetworkRadio === 'sharedVpc' &&
         sharedSubNetworkList.length === 0) ||
-      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '');
+      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
+      (selectedEncryptionRadio === 'customerManaged' &&
+        selectedRadioValue === 'key' &&
+        keyRingSelected === '' &&
+        keySelected === '') ||
+      (selectedEncryptionRadio === 'customerManaged' &&
+        selectedRadioValue === 'manually' &&
+        manualKeySelected === '');
     switch (batchTypeSelected) {
       case 'spark':
         return (
@@ -782,7 +791,7 @@ function CreateBatch({
                 }
               );
               setNetworklist(transformedNetworkList);
-              setNetworkSelected(transformedNetworkList[0])
+              setNetworkSelected(transformedNetworkList[0]);
             })
 
             .catch((e: Error) => {
@@ -933,7 +942,10 @@ function CreateBatch({
         });
     }
   };
-  const listMetaStoreAPI = async (data: undefined,network:string | undefined) => {
+  const listMetaStoreAPI = async (
+    data: undefined,
+    network: string | undefined
+  ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
@@ -957,9 +969,9 @@ function CreateBatch({
                 }[];
               }) => {
                 const filteredServices = responseResult.services.filter(
-                  (service) => service.network.split('/')[4] === network
+                  service => service.network.split('/')[4] === network
                 );
-  
+
                 const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name
                 );
@@ -1016,9 +1028,9 @@ function CreateBatch({
         });
     }
   };
-  const handleSharedSubNetwork = async(data: string | null) => {
+  const handleSharedSubNetwork = async (data: string | null) => {
     setSharedvpcSelected(data!.toString());
-    await handleRegionChange(region,data!.toString());
+    await handleRegionChange(region, data!.toString());
   };
 
   type Payload = {
@@ -1146,14 +1158,14 @@ function CreateBatch({
           selectedRadioValue === 'manually' && {
             kmsKey: manualKeySelected
           }),
-          ...(subNetworkSelected &&
-            selectedNetworkRadio === 'projectNetwork' && {
-              subnetworkUri: subNetworkSelected
-            }),
-          ...(sharedvpcSelected &&
-            selectedNetworkRadio === 'sharedVpc' && {
-              subnetworkUri: `projects/${projectInfo}/regions/${regionName}/subnetworks/${sharedvpcSelected}`
-            }),
+        ...(subNetworkSelected &&
+          selectedNetworkRadio === 'projectNetwork' && {
+            subnetworkUri: subNetworkSelected
+          }),
+        ...(sharedvpcSelected &&
+          selectedNetworkRadio === 'sharedVpc' && {
+            subnetworkUri: `projects/${projectInfo}/regions/${regionName}/subnetworks/${sharedvpcSelected}`
+          }),
         // networkUri:networkSelected,
         ...(networkTagSelected.length > 0 && {
           networkTags: networkTagSelected
@@ -1280,9 +1292,8 @@ function CreateBatch({
   };
   const handleNetworkSharedVpcRadioChange = () => {
     setSelectedNetworkRadio('sharedVpc');
-     setSubNetworkSelected(subNetworkList[0]!.toString());
-     setNetworkSelected(networkList[0]!.toString());
-     
+    setSubNetworkSelected(subNetworkList[0]!.toString());
+    setNetworkSelected(networkList[0]!.toString());
   };
   const handleSubNetworkRadioChange = () => {
     setSelectedNetworkRadio('projectNetwork');
@@ -1317,21 +1328,21 @@ function CreateBatch({
     setServicesSelected('');
     regionListAPI(data!.toString());
   };
-  const handleRegionChange = (data: any,network: string | undefined) => {
+  const handleRegionChange = (data: any, network: string | undefined) => {
     setServicesSelected('');
     setServicesList([]);
     setRegion(data);
-   listMetaStoreAPI(data,network);
+    listMetaStoreAPI(data, network);
   };
-  const handleNetworkChange = async(data: DropdownProps | null) => {
+  const handleNetworkChange = async (data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
-   await listSubNetworksAPI(data!.toString());
-  await handleRegionChange(region,data!.toString());
+    await listSubNetworksAPI(data!.toString());
+    await handleRegionChange(region, data!.toString());
   };
   const handleSubNetworkChange = (data: string | null) => {
     setSubNetworkSelected(data!.toString());
   };
-  const handleKeyRingChange = (data: DropdownProps | null) => {
+  const handleKeyRingChange = (data: string | null) => {
     setKeyRingSelected(data!.toString());
     listKeysAPI(data!.toString());
   };
@@ -1371,11 +1382,7 @@ function CreateBatch({
             className="back-arrow-icon"
             onClick={() => handleCreateBatchBackView()}
           >
-            <iconLeftArrow.react tag="div"  className={
-              isDarkTheme
-                ? 'dark-theme logo-alignment-style'
-                : 'logo-alignment-style'
-            } />
+            <iconLeftArrow.react tag="div"  className= 'icon-white logo-alignment-style'/>
           </div>
           <div className="cluster-details-title">Create batch</div>
         </div>
@@ -1384,11 +1391,7 @@ function CreateBatch({
             <div className="submit-job-label-header">Batch info</div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="batch-id"
               >
                 Batch ID*
@@ -1408,11 +1411,7 @@ function CreateBatch({
             )}
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme region-disable'
-                    : 'select-title-text region-disable'
-                }
+                className='select-title-text region-disable'
                 htmlFor="region"
               >
                 Region*
@@ -1427,11 +1426,7 @@ function CreateBatch({
             <div className="submit-job-label-header">Container</div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-dropdown-text dark-theme'
-                    : 'select-dropdown-text'
-                }
+                className= 'select-dropdown-text'
                 htmlFor="batch-type"
               >
                 Batch type*
@@ -1447,11 +1442,7 @@ function CreateBatch({
             </div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="runtime-version"
               >
                 Runtime version*
@@ -1485,11 +1476,7 @@ function CreateBatch({
                   <div className="create-batch-input">
                     <div className="select-text-overlay">
                       <label
-                        className={
-                          isDarkTheme
-                            ? 'select-title-text dark-theme'
-                            : 'select-title-text'
-                        }
+                        className= 'select-title-text'
                         htmlFor="main-class"
                       >
                         Main class*
@@ -1540,11 +1527,7 @@ function CreateBatch({
                   <div className="create-batch-input">
                     <div className="select-text-overlay">
                       <label
-                        className={
-                          isDarkTheme
-                            ? 'select-title-text dark-theme'
-                            : 'select-title-text'
-                        }
+                        className= 'select-title-text'
                         htmlFor="main-jar"
                       >
                         Main jar*
@@ -1591,11 +1574,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className= 'select-title-text'
                     htmlFor="main-r-file"
                   >
                     Main R file*
@@ -1637,11 +1616,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className= 'select-title-text'
                     htmlFor="main-python-file"
                   >
                     Main python file*
@@ -1683,11 +1658,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className= 'select-title-text'
                     htmlFor="additional-python-files"
                   >
                     Additional python files
@@ -1736,11 +1707,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className='select-title-text'
                     htmlFor="query-file"
                   >
                     Query file*
@@ -1779,11 +1746,7 @@ function CreateBatch({
             )}
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="custom-container-image"
               >
                 Custom container image
@@ -1836,11 +1799,7 @@ function CreateBatch({
                 <>
                   <div className="select-text-overlay">
                     <label
-                      className={
-                        isDarkTheme
-                          ? 'select-title-text dark-theme'
-                          : 'select-title-text'
-                      }
+                      className= 'select-title-text'
                       htmlFor="jar-files"
                     >
                       Jar files
@@ -1895,11 +1854,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className='select-title-text'
                     htmlFor="files"
                   >
                     Files
@@ -1951,11 +1906,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className='select-title-text'
                     htmlFor="archive-files"
                   >
                     Archive files
@@ -2009,11 +1960,7 @@ function CreateBatch({
               <>
                 <div className="select-text-overlay">
                   <label
-                    className={
-                      isDarkTheme
-                        ? 'select-title-text dark-theme'
-                        : 'select-title-text'
-                    }
+                    className= 'select-title-text'
                     htmlFor="arguments"
                   >
                     Arguments
@@ -2068,11 +2015,7 @@ function CreateBatch({
             </div>
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="service-account"
               >
                 Service account
@@ -2140,7 +2083,6 @@ function CreateBatch({
                 </div>
               </div>
             </div>
-
             <div>
               {selectedNetworkRadio === 'projectNetwork' && (
                 <div className="create-batch-network">
@@ -2206,14 +2148,9 @@ function CreateBatch({
                   </div>
                 )}
             </div>
-
             <div className="select-text-overlay">
               <label
-                className={
-                  isDarkTheme
-                    ? 'select-title-text dark-theme'
-                    : 'select-title-text'
-                }
+                className= 'select-title-text'
                 htmlFor="network-tags"
               >
                 Network tags
@@ -2294,7 +2231,6 @@ function CreateBatch({
                           value="mainClass"
                           checked={selectedRadioValue === 'key'}
                           onChange={handlekeyRingRadio}
-                          disabled={manualKeySelected !== ''}
                         />
                         <div className="select-text-overlay">
                           <Autocomplete
@@ -2318,7 +2254,7 @@ function CreateBatch({
                             value={keySelected}
                             onChange={(_event, val) => handlekeyChange(val)}
                             renderInput={params => (
-                              <TextField {...params} label="Key rings" />
+                              <TextField {...params} label="Keys" />
                             )}
                           />
                         </div>
@@ -2337,11 +2273,7 @@ function CreateBatch({
                           <label
                             className={
                               selectedRadioValue === 'key'
-                                ? isDarkTheme
-                                  ? 'dark-theme select-title-text disable-text'
-                                  : 'select-title-text disable-text'
-                                : isDarkTheme
-                                ? 'dark-theme select-title-text'
+                                ?  'select-title-text disable-text'
                                 : 'select-title-text'
                             }
                             htmlFor="enter-key-manually"
@@ -2417,7 +2349,9 @@ function CreateBatch({
                 <Autocomplete
                   options={regionList}
                   value={region}
-                  onChange={(_event, val) => handleRegionChange(val,networkSelected)}
+                  onChange={(_event, val) =>
+                    handleRegionChange(val, networkSelected)
+                  }
                   renderInput={params => (
                     <TextField {...params} label="Metastore region" />
                   )}
@@ -2497,11 +2431,7 @@ function CreateBatch({
               <div
                 className={
                   isSubmitDisabled()
-                    ? isDarkTheme
-                      ? 'dark-theme submit-button-disable-style'
-                      : 'submit-button-disable-style'
-                    : isDarkTheme
-                    ? 'dark-theme submit-button-style'
+                      ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }
                 aria-label="submit Batch"

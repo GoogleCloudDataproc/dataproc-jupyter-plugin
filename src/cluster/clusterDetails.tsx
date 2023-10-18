@@ -122,7 +122,6 @@ function ClusterDetails({
   setSelectedJobClone,
   themeManager
 }: IClusterDetailsProps) {
-  const isDarkTheme = !themeManager.isLight(themeManager.theme!);
   const [clusterInfo, setClusterInfo] = useState({
     status: { state: '' },
     clusterName: '',
@@ -362,11 +361,7 @@ function ClusterDetails({
                     >
                       <iconLeftArrow.react
                         tag="div"
-                        className={
-                          isDarkTheme
-                            ? 'dark-theme logo-alignment-style'
-                            : 'logo-alignment-style'
-                        }
+                        className= 'icon-white logo-alignment-style'
                       />
                     </div>
                     <div className="cluster-details-title">Cluster details</div>

@@ -36,7 +36,6 @@
   line-height: 18px;
   width: 65%;
   color: var(--jp-ui-font-color2);
-  padding-left: 20px;
 }
 .session-detail-status-parent {
   display: flex;
