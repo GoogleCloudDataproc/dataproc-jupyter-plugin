@@ -16,9 +16,21 @@
  */
 
 import { Widget, PanelLayout } from '@lumino/widgets';
+import { ToolbarButton } from '@jupyterlab/apputils';
 import { FileBrowser, IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import 'react-toastify/dist/ReactToastify.css';
+import { LabIcon } from '@jupyterlab/ui-components';
+import gcsNewFolderIcon from '../../style/icons/gcs_folder_new_icon.svg';
+import gcsUploadIcon from '../../style/icons/gcs_upload_icon.svg';
 
+const iconGCSNewFolder = new LabIcon({
+  name: 'gcs-toolbar:gcs-folder-new-icon',
+  svgstr: gcsNewFolderIcon
+});
+const iconGCSUpload = new LabIcon({
+  name: 'gcs-toolbar:gcs-upload-icon',
+  svgstr: gcsUploadIcon
+});
 export class GcsBrowserWidget extends Widget {
   private browser: FileBrowser;
   constructor(
@@ -37,6 +49,26 @@ export class GcsBrowserWidget extends Widget {
     this.layout = new PanelLayout();
     this.node.style.height = '100%';
     (this.layout as PanelLayout).addWidget(this.browser);
+
+    let newFolder = new ToolbarButton({
+      icon: iconGCSNewFolder,
+      className: 'jp-NewFolderIcon',
+      onClick: () => {
+        console.log('Folder New');
+      },
+      tooltip: 'New Folder'
+    });
+    let gcsUpload = new ToolbarButton({
+      icon: iconGCSUpload,
+      className: 'jp-UploadIcon',
+      onClick: () => {
+        console.log('Upload File');
+      },
+      tooltip: 'File Upload'
+    });
+    this.browser.title.caption = 'Google Cloud Storage';
+    this.browser.toolbar.addItem('New Folder', newFolder);
+    this.browser.toolbar.addItem('File Upload', gcsUpload);
   }
 
   dispose() {

@@ -320,15 +320,11 @@ export class GcsService {
         'X-Goog-User-Project': credentials.project_id || ''
       },
     });
-    console.log(response, response.status)
-    if (response.status !== 200) {
-      console.log(response.statusText)
+    
+    if (response.status === 200) {
+      return response.status
+    } else {
       throw response.statusText;
-    } 
-    this.deleteFile({
-      bucket: oldBucket,
-      path: oldPath
-    });
-    return 'Copy Successfully'
+    }
   }
 }
