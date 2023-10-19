@@ -28,6 +28,7 @@ import { KernelAPI } from '@jupyterlab/services';
 import { authenticatedFetch } from '../utils/utils';
 import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
+import serverlessIcon from '../../style/icons/serverless_icon.svg';
 
 const iconLogs = new LabIcon({
   name: 'launcher:logs-icon',
@@ -36,6 +37,10 @@ const iconLogs = new LabIcon({
 const iconSessionLogs = new LabIcon({
   name: 'launcher:session-logs-icon',
   svgstr: sessionLogsIcon
+});
+const iconServerless = new LabIcon({
+  name: 'launcher:serverless-icon',
+  svgstr: serverlessIcon
 });
 
 /**
@@ -100,6 +105,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     );
     const widget = new MainAreaWidget<SessionTemplate>({ content });
     widget.title.label = 'Serverless';
+    widget.title.icon = iconServerless;
     this.app.shell.add(widget, 'main');
   };
 
