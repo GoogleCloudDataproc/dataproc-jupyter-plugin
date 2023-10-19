@@ -87,23 +87,23 @@ const handleOptionalFields = (selectedJobClone: any, jobTypeKey: string) => {
   let maxFailuresPerHour = '';
   let pythonFileUris: string[] = [];
   if (selectedJobClone[jobTypeKey].hasOwnProperty('fileUris')) {
-    fileUris = [selectedJobClone[jobTypeKey].fileUris];
+    fileUris = selectedJobClone[jobTypeKey].fileUris;
   }
 
   if (selectedJobClone[jobTypeKey].hasOwnProperty('jarFileUris')) {
-    jarFileUris = [selectedJobClone[jobTypeKey].jarFileUris];
+    jarFileUris = selectedJobClone[jobTypeKey].jarFileUris;
   }
 
   if (selectedJobClone[jobTypeKey].hasOwnProperty('args')) {
-    args = [selectedJobClone[jobTypeKey].args];
+    args = selectedJobClone[jobTypeKey].args;
   }
 
   if (selectedJobClone[jobTypeKey].hasOwnProperty('archiveUris')) {
-    archiveUris = [selectedJobClone[jobTypeKey].archiveUris];
+    archiveUris = selectedJobClone[jobTypeKey].archiveUris;
   }
 
   if (selectedJobClone[jobTypeKey].hasOwnProperty('pythonFileUris')) {
-    pythonFileUris = [selectedJobClone[jobTypeKey].pythonFileUris];
+    pythonFileUris = selectedJobClone[jobTypeKey].pythonFileUris;
   }
 
   if (selectedJobClone.hasOwnProperty('scheduling')) {
@@ -123,10 +123,11 @@ function SubmitJob({
   selectedJobClone,
   clusterResponse
 }: any) {
+  console.log(selectedJobClone);
   const [clusterList, setClusterList] = useState([{}]);
   const [jobTypeList, setJobTypeList] = useState([{}]);
   const [querySourceTypeList, setQuerySourceTypeList] = useState([{}]);
-  const [clusterSelected, setClusterSelected] = useState('');
+  
   const [jobIdSelected, setJobIdSelected] = useState('');
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
@@ -148,6 +149,7 @@ function SubmitJob({
   let queryType = '';
   let queryList = '';
   let mainClass = '';
+  let clusterSelectedValue='';
   let key: string[] | (() => string[]) = [];
   let value: string[] | (() => string[]) = [];
   let jobKeys: string[] = [];
@@ -167,6 +169,8 @@ function SubmitJob({
     mainJarFileUri = selectedJobClone[jobKeys[0]].mainJarFileUri;
     mainClass = selectedJobClone[jobKeys[0]].mainClass;
     mainRFileUri = selectedJobClone[jobKeys[0]].mainRFileUri;
+    clusterSelectedValue=selectedJobClone.placement.clusterName;
+  
     mainPythonFileUri = selectedJobClone[jobKeys[0]].mainPythonFileUri;
     ({
       fileUris,
@@ -182,6 +186,7 @@ function SubmitJob({
   const [mainClassSelected, setMainClassSelected] = useState(
     initialMainClassSelected
   );
+  const [clusterSelected, setClusterSelected] = useState(clusterSelectedValue);
   const [mainRSelected, setMainRSelected] = useState(mainRFileUri);
   const [mainPythonSelected, setMainPythonSelected] =
     useState(mainPythonFileUri);
