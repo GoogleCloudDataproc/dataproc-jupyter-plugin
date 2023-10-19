@@ -24,27 +24,42 @@ gcloud config set compute/region us-central1
 
 # Install dependencies.
 sudo apt-get update
-sudo apt-get --assume-yes install python3 python3-pip nodejs
+sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv
 
-# Install jupyter lab and build.
-pip install jupyter-client==8.4.0 jupyterlab build
+# Install latest jupyter lab and build.
+python -m venv latest
+source latest/bin/activate
+pip install jupyterlab build
 
 # Navigate to repo.
 cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
 
-# Install the plugin
-pip3 install -e ".[test]"
-# Link your development version of the extension with JupyterLab
-jupyter labextension develop . --overwrite
-# Server extension must be manually installed in develop mode
-jupyter server extension enable dataproc_jupyter_plugin
 # Rebuild extension Typescript source after making changes
+jlpm install
 jlpm build
 # Aslo build python packages to dist/
 python -m build
 
-# Run Playwright Tests
+# install the build
+pip install dist/*.whl
+jupyter server extension enable dataproc_jupyter_plugin
+
+# Run Playwright Tests for latest jupyter lab build
 cd ./ui-tests
 jlpm install
 jlpm playwright install
-PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results/sponge_log.xml jlpm playwright test --reporter=junit
+PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-latest/sponge_log.xml jlpm playwright test --reporter=junit --output="test-results-latest"
+deactivate
+
+# Test 3.6.6
+cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
+python -m venv version_366
+source version_366/bin/activate
+pip install  --force-reinstall "jupyterlab==3.6.6"
+pip install dist/*.whl
+jupyter server extension enable dataproc_jupyter_plugin
+cd ./ui-tests-3.6.6
+jlpm install
+jlpm playwright install
+PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-3.6.6/sponge_log.xml jlpm playwright test --reporter=junit --output="test-results-3.6.6"
+deactivate
