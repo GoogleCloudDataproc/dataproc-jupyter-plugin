@@ -21,7 +21,7 @@ import {
   API_HEADER_CONTENT_TYPE,
   REGION_URL
 } from '../utils/const';
-import { authApi } from '../utils/utils';
+import { authApi, loggedFetch } from '../utils/utils';
 
 interface IRegions {
   name: string;
@@ -32,7 +32,7 @@ const regionListAPI = async (projectId: string) => {
   if (!credentials) {
     return [];
   }
-  const resp = await fetch(`${REGION_URL}/${projectId}/regions`, {
+  const resp = await loggedFetch(`${REGION_URL}/${projectId}/regions`, {
     method: 'GET',
     headers: {
       'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -43,9 +43,7 @@ const regionListAPI = async (projectId: string) => {
   return items ?? [];
 };
 
-export function useRegion(
-  projectId: string
-) {
+export function useRegion(projectId: string) {
   const [regions, setRegions] = useState<IRegions[]>([]);
   const currentRegion = useRef(projectId);
   useEffect(() => {

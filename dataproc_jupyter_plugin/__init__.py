@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.from ._version import __version__
-
+import logging
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 
 from kernels_mixer.kernelspecs import MixingKernelSpecManager
@@ -19,9 +19,14 @@ from kernels_mixer.kernels import MixingMappingKernelManager
 from kernels_mixer.websockets import DelegatingWebsocketConnection
 
 from jupyter_server.services.sessions.sessionmanager import SessionManager
+from traitlets import Unicode
+from traitlets.config import Configurable
 
 
 from .handlers import setup_handlers, update_gateway_client_url
+
+class DataprocPluginConfig(Configurable):
+    log_path = Unicode("", config=True, help="File to log ServerApp and Dataproc Jupyter Plugin events.")
 
 
 def _jupyter_labextension_paths():
@@ -63,6 +68,11 @@ def _link_jupyter_server_extension(server_app):
 
     update_gateway_client_url(c, server_app.log)
 
+    plugin_config = DataprocPluginConfig(config=server_app.config)
+    if (plugin_config.log_path != ""):
+        file_handler = logging.RotatingFileHandler(plugin_config.log_path, maxBytes= 2 * 1024 * 1024, backupCount=5)
+        file_handler.setFormatter(logging.Formatter('[%(levelname)s %(asctime)s %(name)s] %(message)s'))
+        server_app.log.addHandler(file_handler)
 
 def _load_jupyter_server_extension(server_app):
     """Registers the API handler to receive HTTP requests from the frontend extension.
@@ -75,7 +85,5 @@ def _load_jupyter_server_extension(server_app):
     setup_handlers(server_app.web_app)
     name = "dataproc_jupyter_plugin"
     server_app.log.info(f"Registered {name} server extension")
-
-
 # For backward compatibility with notebook server - useful for Binder/JupyterHub
 load_jupyter_server_extension = _load_jupyter_server_extension

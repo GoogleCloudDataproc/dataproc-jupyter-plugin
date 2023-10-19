@@ -20,14 +20,14 @@ import {
   BASE_URL,
   API_HEADER_BEARER
 } from '../utils/const';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
+import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export const deleteBatchAPI = async (selectedBatch: string) => {
   const credentials = await authApi();
   if (credentials) {
-    fetch(
+    loggedFetch(
       `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${selectedBatch}`,
       {
         method: 'DELETE',
@@ -42,13 +42,19 @@ export const deleteBatchAPI = async (selectedBatch: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
-            toast.success(`Batch ${selectedBatch} deleted successfully`, toastifyCustomStyle);
+            toast.success(
+              `Batch ${selectedBatch} deleted successfully`,
+              toastifyCustomStyle
+            );
           })
           .catch((e: Error) => console.log(e));
       })
       .catch((err: Error) => {
         console.error('Error deleting batches', err);
-        toast.error(`Failed to delete the batch ${selectedBatch}`, toastifyCustomStyle);
+        toast.error(
+          `Failed to delete the batch ${selectedBatch}`,
+          toastifyCustomStyle
+        );
       });
   }
 };

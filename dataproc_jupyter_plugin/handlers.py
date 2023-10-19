@@ -37,7 +37,7 @@ credentials_cache = None
 
 def get_cached_credentials():
     global credentials_cache
-    
+
     try:
         cmd = "gcloud config config-helper --format=json"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -53,7 +53,7 @@ def get_cached_credentials():
             token_expiry = config_data['credential']['token_expiry']
             utc_datetime = datetime.datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
             current_utc_datetime = datetime.datetime.utcnow()
-            expiry_timedelta = utc_datetime - current_utc_datetime 
+            expiry_timedelta = utc_datetime - current_utc_datetime
             expiry_seconds = expiry_timedelta.total_seconds()
             if expiry_seconds > 1000:
                 ttl_seconds = 1000
@@ -139,7 +139,7 @@ class RouteHandler(APIHandler):
         try:
             if credentials_cache is None or 'credentials' not in credentials_cache:
                 cached_credentials = get_cached_credentials()
-                self.finish(json.dumps(cached_credentials))               
+                self.finish(json.dumps(cached_credentials))
             else:
                 self.finish(json.dumps(credentials_cache['credentials']))
         except Exception:
@@ -183,6 +183,13 @@ class ConfigHandler(APIHandler):
         else:
             self.finish({'config' : ERROR_MESSAGE + 'failed'})
 
+class LogHandler(APIHandler):
+    @tornado.web.authenticated
+    def post(self):
+        logger = self.log.getChild('DataprocPluginClient')
+        log_body = self.get_json_body()
+        logger.log(log_body["level"], log_body["message"])
+        self.finish({'status': 'OK'})
 
 def setup_handlers(web_app):
     host_pattern = ".*$"
@@ -193,11 +200,15 @@ def setup_handlers(web_app):
     route_pattern = url_path_join(base_url, "dataproc-plugin", "credentials")
     handlers = [(route_pattern, RouteHandler)]
     web_app.add_handlers(host_pattern, handlers)
-    
+
     route_pattern = url_path_join(base_url, "dataproc-plugin", "login")
     handlers = [(route_pattern, LoginHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "configuration")
     handlers = [(route_pattern, ConfigHandler)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "log")
+    handlers = [(route_pattern, LogHandler)]
     web_app.add_handlers(host_pattern, handlers)

@@ -41,7 +41,7 @@ import {
   QUERY_DATABASE,
   QUERY_TABLE
 } from '../utils/const';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
+import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
@@ -80,25 +80,25 @@ const DpmsComponent = ({
   app: JupyterLab;
   themeManager: IThemeManager;
 }): JSX.Element => {
-  const iconSearchClear =  new LabIcon({
+  const iconSearchClear = new LabIcon({
     name: 'launcher:search-clear-icon',
     svgstr: searchClearIcon
   });
-  const iconDatabase =  new LabIcon({
+  const iconDatabase = new LabIcon({
     name: 'launcher:database-icon',
     svgstr: databaseIcon
   });
 
-  const iconTable =  new LabIcon({
+  const iconTable = new LabIcon({
     name: 'launcher:table-icon',
     svgstr: tableIcon
   });
 
-  const iconColumns =  new LabIcon({
+  const iconColumns = new LabIcon({
     name: 'launcher:columns-icon',
     svgstr: columnsIcon
   });
-  const iconSearch =  new LabIcon({
+  const iconSearch = new LabIcon({
     name: 'launcher:search-icon',
     svgstr: searchIcon
   });
@@ -129,7 +129,7 @@ const DpmsComponent = ({
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
-      fetch(`${COLUMN_API}${name}`, {
+      loggedFetch(`${COLUMN_API}${name}`, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -145,7 +145,7 @@ const DpmsComponent = ({
                 ...prevResponse,
                 responseResult
               ]);
-              if(data){
+              if (data) {
                 setIsLoading(false);
               }
             })
@@ -175,7 +175,7 @@ const DpmsComponent = ({
           includeProjectIds: [credentials.project_id]
         }
       };
-      fetch(`${CATALOG_SEARCH}`, {
+      loggedFetch(`${CATALOG_SEARCH}`, {
         method: 'POST',
         body: JSON.stringify(requestBody),
         headers: {
@@ -392,8 +392,10 @@ fetching database name from fully qualified name structure */
               className="caret-icon right"
               onClick={handleIconClick}
             >
-              <iconDownArrow.react tag="div" className="icon-white logo-alignment-style" />
-           
+              <iconDownArrow.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
             </div>
           </>
         ) : (
@@ -401,9 +403,11 @@ fetching database name from fully qualified name structure */
             role="treeitem"
             className="caret-icon down"
             onClick={handleIconClick}
-          > 
-            <iconRightArrow.react tag="div" className="icon-white logo-alignment-style" />
-
+          >
+            <iconRightArrow.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           </div>
         )
       ) : null;
@@ -451,7 +455,10 @@ fetching database name from fully qualified name structure */
             <>
               {arrowIcon}
               <div role="img" className="table-icon" onClick={handleIconClick}>
-                <iconTable.react tag="div" className="icon-white logo-alignment-style" />
+                <iconTable.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
               </div>
             </>
           );
@@ -459,7 +466,10 @@ fetching database name from fully qualified name structure */
 
         return (
           <>
-            <iconColumns.react tag="div" className="icon-white logo-alignment-style" />
+            <iconColumns.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           </>
         );
       }
@@ -468,7 +478,10 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              <iconDatabase.react tag="div" className="icon-white logo-alignment-style" />
+              <iconDatabase.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
             </div>
           </>
         );
@@ -477,7 +490,10 @@ fetching database name from fully qualified name structure */
           <>
             {arrowIcon}
             <div role="img" className="table-icon" onClick={handleIconClick}>
-              <iconTable.react tag="div" className="icon-white logo-alignment-style" />
+              <iconTable.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
             </div>
           </>
         );
@@ -485,7 +501,10 @@ fetching database name from fully qualified name structure */
 
       return (
         <>
-          <iconColumns.react tag="div" className="icon-white logo-alignment-style" />
+          <iconColumns.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
         </>
       );
     };
@@ -518,7 +537,7 @@ fetching database name from fully qualified name structure */
           includeProjectIds: [credentials.project_id]
         }
       };
-      fetch(`${CATALOG_SEARCH}`, {
+      loggedFetch(`${CATALOG_SEARCH}`, {
         method: 'POST',
         body: JSON.stringify(requestBody),
         headers: {
@@ -552,7 +571,7 @@ fetching database name from fully qualified name structure */
               } else {
                 if (responseResult?.error?.code) {
                   setApiError(true);
-                  setApiMessage(responseResult?.error?.message)
+                  setApiMessage(responseResult?.error?.message);
                   setSchemaError(false);
                 } else {
                   setSchemaError(true);
@@ -582,7 +601,7 @@ fetching database name from fully qualified name structure */
   const getClusterDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
         {
           method: 'GET',
@@ -635,7 +654,7 @@ fetching database name from fully qualified name structure */
   const getSessionDetails = async () => {
     const credentials = await authApi();
     if (credentials && notebookValue) {
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,
         {
           method: 'GET',
@@ -776,28 +795,31 @@ fetching database name from fully qualified name structure */
                   />
                 </div>
                 <div className="tree-container">
-                  {data.length === totalDatabases ? (data[totalDatabases - 1].children.length === totalTables) &&(
-                    <Tree
-                      className="Tree"
-                      initialData={data}
-                      openByDefault={false}
-                      indent={24}
-                      width={auto}
-                      height={675}
-                      rowHeight={36}
-                      overscanCount={1}
-                      paddingTop={30}
-                      paddingBottom={10}
-                      padding={25}
-                      searchTerm={searchTerm}
-                      searchMatch={searchMatch}
-                      idAccessor={node => node.id}
-                    >
-                      {(props: NodeRendererProps<any>) => (
-                        <Node {...props} onClick={handleNodeClick} />
-                      )}
-                    </Tree>
-                  ): ('')} 
+                  {data.length === totalDatabases
+                    ? data[totalDatabases - 1].children.length ===
+                        totalTables && (
+                        <Tree
+                          className="Tree"
+                          initialData={data}
+                          openByDefault={false}
+                          indent={24}
+                          width={auto}
+                          height={675}
+                          rowHeight={36}
+                          overscanCount={1}
+                          paddingTop={30}
+                          paddingBottom={10}
+                          padding={25}
+                          searchTerm={searchTerm}
+                          searchMatch={searchMatch}
+                          idAccessor={node => node.id}
+                        >
+                          {(props: NodeRendererProps<any>) => (
+                            <Node {...props} onClick={handleNodeClick} />
+                          )}
+                        </Tree>
+                      )
+                    : ''}
                 </div>
               </>
             )}
