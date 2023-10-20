@@ -2197,7 +2197,7 @@ function CreateBatch({
                   <div
                     className="submit-job-learn-more"
                     onClick={() => {
-                      window.open(`${SECURITY_KEY}`, '_blank');
+                      window.open(`${SECURITY_KEY}?project=${projectName}`, '_blank');
                     }}
                   >
                     Google Cloud Key Management Service
