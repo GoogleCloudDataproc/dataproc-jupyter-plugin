@@ -505,7 +505,7 @@ function CreateBatch({
         return false;
       }
       const apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
-      const response = await fetch(apiURL, {
+      const response = await loggedFetch(apiURL, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
