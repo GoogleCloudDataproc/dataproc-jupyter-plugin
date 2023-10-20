@@ -20,7 +20,7 @@ import {
   BASE_URL,
   API_HEADER_BEARER
 } from '../utils/const';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
+import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -30,7 +30,7 @@ export const deleteRuntimeTemplateAPI = async (
 ) => {
   const credentials = await authApi();
   if (credentials) {
-    fetch(`${BASE_URL}/${selectedRuntimeTemplate}`, {
+    loggedFetch(`${BASE_URL}/${selectedRuntimeTemplate}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,

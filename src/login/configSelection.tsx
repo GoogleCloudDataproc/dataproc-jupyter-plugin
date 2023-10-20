@@ -24,7 +24,12 @@ import {
   USER_INFO_URL,
   VERSION_DETAIL
 } from '../utils/const';
-import { IAuthCredentials, authApi, toastifyCustomStyle } from '../utils/utils';
+import {
+  IAuthCredentials,
+  authApi,
+  toastifyCustomStyle,
+  loggedFetch
+} from '../utils/utils';
 import { requestAPI } from '../handler/handler';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
@@ -54,7 +59,7 @@ interface IConfigSelectionProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
   app: JupyterLab;
-  launcher: ILauncher; 
+  launcher: ILauncher;
 }
 
 function ConfigSelection({
@@ -116,7 +121,7 @@ function ConfigSelection({
 
   const displayUserInfo = async (credentials: IAuthCredentials | undefined) => {
     if (credentials) {
-      fetch(USER_INFO_URL, {
+      loggedFetch(USER_INFO_URL, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,

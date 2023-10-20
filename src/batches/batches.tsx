@@ -22,7 +22,8 @@ import {
   elapsedTime,
   jobTimeFormat,
   jobTypeDisplay,
-  toastifyCustomStyle
+  toastifyCustomStyle,
+  loggedFetch
 } from '../utils/utils';
 import {
   API_HEADER_CONTENT_TYPE,
@@ -103,7 +104,7 @@ const BatchesComponent = (): React.JSX.Element => {
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
@@ -158,8 +159,7 @@ const BatchesComponent = (): React.JSX.Element => {
               }
 
               const existingBatchData = previousBatchesList ?? [];
-             
-              
+
               let allBatchesData: any = [
                 ...(existingBatchData as []),
                 ...transformBatchListData
@@ -193,7 +193,7 @@ const BatchesComponent = (): React.JSX.Element => {
   const handleDeleteBatch = (data: IBatchData) => {
     if (data.state !== BatchStatus.STATUS_PENDING) {
       /*
-      Extracting project id  
+      Extracting project id
       Example: "projects/{project}/locations/{location}/batches/{batch_id}"
       */
       setSelectedBatch(data.name.split('/')[5]);

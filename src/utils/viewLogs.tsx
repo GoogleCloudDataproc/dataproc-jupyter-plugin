@@ -27,30 +27,30 @@ import {
   VIEW_LOGS_CLUSTER_URL,
   VIEW_LOGS_SESSION_URL
 } from './const';
-import { authApi } from './utils';
+import { authApi, loggedFetch } from './utils';
 
 const iconViewLogs = new LabIcon({
   name: 'launcher:view-logs-icon',
   svgstr: ViewLogsIcon
 });
 export interface IViewLogs {
-  config: IConfig
+  config: IConfig;
 }
 
 export interface IConfig {
-  endpointConfig: IEndpointConfig
+  endpointConfig: IEndpointConfig;
 }
 
 export interface IEndpointConfig {
-  httpPorts: IHttpPorts
+  httpPorts: IHttpPorts;
 }
 
 export interface IHttpPorts {
   config: IConfig;
   error: {
-    code:number;
-  }
-  "Spark History Server": string
+    code: number;
+  };
+  'Spark History Server': string;
 }
 interface IViewLogsProps {
   clusterInfo?: {
@@ -60,15 +60,17 @@ interface IViewLogsProps {
   projectName?: string;
   clusterName?: string;
   setErrorView?: (value: boolean) => void;
-  batchInfoResponse?: {
-    runtimeInfo?: {
-      endpoints?: {
-        [key: string]: string;
-      };
-    };
-    name?: string; 
-    createTime?: string; 
-  }|undefined;
+  batchInfoResponse?:
+    | {
+        runtimeInfo?: {
+          endpoints?: {
+            [key: string]: string;
+          };
+        };
+        name?: string;
+        createTime?: string;
+      }
+    | undefined;
   sessionInfo?: {
     runtimeInfo?: {
       endpoints?: {
@@ -91,7 +93,7 @@ function ViewLogs({
   const handleJobDetailsViewLogs = async (clusterName: string) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterName}`,
         {
           method: 'GET',
@@ -105,12 +107,16 @@ function ViewLogs({
           response
             .json()
             .then((responseResult: IHttpPorts) => {
-              if (responseResult.error && responseResult.error.code === 404 && setErrorView) {
+              if (
+                responseResult.error &&
+                responseResult.error.code === 404 &&
+                setErrorView
+              ) {
                 setErrorView(true);
               } else {
                 window.open(
                   responseResult.config.endpointConfig.httpPorts[
-                  SPARK_HISTORY_SERVER
+                    SPARK_HISTORY_SERVER
                   ]
                 );
               }
@@ -132,10 +138,10 @@ function ViewLogs({
         className={
           (batchInfoResponse?.runtimeInfo?.endpoints &&
             batchInfoResponse?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
-            (sessionInfo?.runtimeInfo?.endpoints &&
-              sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
-            (clusterName) ||
-            (clusterInfo)
+          (sessionInfo?.runtimeInfo?.endpoints &&
+            sessionInfo?.runtimeInfo?.endpoints[SPARK_HISTORY_SERVER]) ||
+          clusterName ||
+          clusterInfo
             ? 'action-cluster-section'
             : 'action-disabled action-cluster-section'
         }
@@ -169,7 +175,7 @@ function ViewLogs({
         }}
       >
         <div className="action-cluster-icon">
-          <iconViewLogs.react tag="div" className='logo-alignment-style' />
+          <iconViewLogs.react tag="div" className="logo-alignment-style" />
         </div>
         {clusterInfo ? (
           <div className="action-cluster-text">VIEW CLOUD LOGS</div>
@@ -186,7 +192,7 @@ function ViewLogs({
             Example: "projects/{project}/locations/{location}/sessionTemplates/{session_id}"
             */
           if (sessionInfo) {
-          const sessionValueUri = sessionInfo.name.split('/');
+            const sessionValueUri = sessionInfo.name.split('/');
 
             window.open(
               `${VIEW_LOGS_SESSION_URL} resource.labels.project_id="${sessionValueUri[1]}" resource.labels.location="${sessionValueUri[3]}" resource.labels.session_id="${sessionValueUri[5]}";cursorTimestamp=${sessionInfo.createTime};?project=${sessionValueUri[1]}`,
@@ -194,28 +200,33 @@ function ViewLogs({
             );
           } else {
             /*
-            Extracting project, location, batch_id from batchInfoResponse.name 
+            Extracting project, location, batch_id from batchInfoResponse.name
             Example: "projects/{project}/locations/{location}/batches/{batch_id}"
             */
-            const batchValueUri: string[] | undefined = batchInfoResponse?.name?.split('/');
+            const batchValueUri: string[] | undefined =
+              batchInfoResponse?.name?.split('/');
 
-            if (batchValueUri && batchValueUri.length >= 6 && batchInfoResponse?.createTime) {
+            if (
+              batchValueUri &&
+              batchValueUri.length >= 6 &&
+              batchInfoResponse?.createTime
+            ) {
               const project_id = batchValueUri[1];
               const location = batchValueUri[3];
               const batch_id = batchValueUri[5];
               const cursorTimestamp = batchInfoResponse.createTime;
-            
+
               const url = `${VIEW_LOGS_BATCH_URL} resource.labels.project_id="${project_id}" resource.labels.location="${location}" resource.labels.batch_id="${batch_id}";cursorTimestamp=${cursorTimestamp};?project=${project_id}`;
-            
+
               window.open(url, '_blank');
-            } 
+            }
           }
         }}
       >
         {!clusterInfo && !clusterName && (
           <>
             <div className="action-cluster-icon">
-              <iconViewLogs.react tag="div" className='logo-alignment-style' />
+              <iconViewLogs.react tag="div" className="logo-alignment-style" />
             </div>
             <div className="action-cluster-text">VIEW CLOUD LOGS</div>
           </>

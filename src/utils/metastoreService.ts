@@ -20,7 +20,7 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL_META
 } from './const';
-import { authApi } from './utils';
+import { authApi, loggedFetch } from './utils';
 
 export const metastoreServiceListAPI = async (
   projectId: string,
@@ -37,7 +37,7 @@ export const metastoreServiceListAPI = async (
     requestUrl.searchParams.append('filter', `name:${prefix}*`);
   }
   requestUrl.searchParams.append('pageSize', '200');
-  const resp = await fetch(requestUrl.toString(), {
+  const resp = await loggedFetch(requestUrl.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': API_HEADER_CONTENT_TYPE,

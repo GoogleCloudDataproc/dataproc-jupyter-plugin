@@ -21,12 +21,12 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL
 } from '../utils/const';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
+import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 
 export const deleteClusterApi = async (selectedcluster: string) => {
   const credentials = await authApi();
   if (credentials) {
-    fetch(
+    loggedFetch(
       `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
       {
         method: 'DELETE',
@@ -41,7 +41,10 @@ export const deleteClusterApi = async (selectedcluster: string) => {
           .json()
           .then((responseResult: Response) => {
             console.log(responseResult);
-            toast.success(`Cluster ${selectedcluster} deleted successfully`, toastifyCustomStyle);
+            toast.success(
+              `Cluster ${selectedcluster} deleted successfully`,
+              toastifyCustomStyle
+            );
           })
           .catch((e: Error) => console.log(e));
       })
@@ -57,7 +60,7 @@ export const startStopAPI = async (
 ) => {
   const credentials = await authApi();
   if (credentials) {
-    fetch(
+    loggedFetch(
       `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:${operation}`,
       {
         method: 'POST',
@@ -77,7 +80,10 @@ export const startStopAPI = async (
       })
       .catch((err: Error) => {
         console.error(`Error ${operation} cluster`, err);
-        toast.error(`Failed to ${operation} the cluster ${selectedcluster}`, toastifyCustomStyle);
+        toast.error(
+          `Failed to ${operation} the cluster ${selectedcluster}`,
+          toastifyCustomStyle
+        );
       });
   }
 };

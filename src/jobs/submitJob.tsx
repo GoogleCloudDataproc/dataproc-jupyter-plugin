@@ -19,7 +19,7 @@ import React, { useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import LabelProperties from './labelProperties';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
+import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 
 import {
   API_HEADER_BEARER,
@@ -649,7 +649,7 @@ function SubmitJob({
             ))
         }
       };
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs:submit`,
         {
           method: 'POST',
