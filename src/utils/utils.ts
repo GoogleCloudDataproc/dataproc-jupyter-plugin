@@ -44,6 +44,7 @@ import {
 import { ToastOptions, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 import { KernelSpecAPI } from '@jupyterlab/services';
+import { DataprocLoggingService } from './loggingService';
 export interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
@@ -128,8 +129,22 @@ export const authenticatedFetch = async (config: {
     requestUrl = `${requestUrl}?${serializedQueryParams}`;
   }
 
-  return fetch(requestUrl, requestOptions);
+  return loggedFetch(requestUrl, requestOptions);
 };
+
+/**
+ * Helper method that wraps fetch and logs the request uri and status codes to
+ * jupyter server.
+ */
+export async function loggedFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  const resp = await fetch(input, init);
+  // Intentionally not waiting for log response.
+  DataprocLoggingService.logFetch(input, init, resp);
+  return resp;
+}
 
 /**
  * Makes a request to the auth api to get the current project ID
@@ -332,7 +347,7 @@ export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel) => {
 
 export interface ICellProps {
   getCellProps: () => React.TdHTMLAttributes<HTMLTableDataCellElement>;
-  value: string |any;
+  value: string | any;
   column: {
     Header: string;
   };

@@ -20,7 +20,7 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL_NETWORKS
 } from './const';
-import { authApi } from './utils';
+import { authApi, loggedFetch } from './utils';
 
 type Network = {
   selfLink: string;
@@ -45,7 +45,7 @@ export const listNetworksAPI = async (search: string) => {
   if (search.length > 0) {
     requestUrl.searchParams.append('filter', `name:${search}*`);
   }
-  const resp = await fetch(requestUrl.toString(), {
+  const resp = await loggedFetch(requestUrl.toString(), {
     headers: {
       'Content-Type': API_HEADER_CONTENT_TYPE,
       Authorization: API_HEADER_BEARER + credentials.access_token
@@ -63,7 +63,7 @@ export const listNetworksAPI = async (search: string) => {
 export const listSubNetworksAPI = async (network: string) => {
   const credentials = await authApi();
   if (!credentials) return [];
-  const resp = await fetch(
+  const resp = await loggedFetch(
     `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks/${network}`,
     {
       headers: {

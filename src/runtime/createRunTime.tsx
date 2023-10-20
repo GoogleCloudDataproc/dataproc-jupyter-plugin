@@ -40,7 +40,8 @@ import {
   authApi,
   toastifyCustomStyle,
   authenticatedFetch,
-  iconDisplay
+  iconDisplay,
+  loggedFetch
 } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
@@ -191,7 +192,7 @@ function CreateRunTime({
   const displayUserInfo = async () => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(USER_INFO_URL, {
+      loggedFetch(USER_INFO_URL, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -220,7 +221,7 @@ function CreateRunTime({
     const credentials = await authApi();
     if (credentials) {
       let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
-      fetch(apiURL, {
+      loggedFetch(apiURL, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -250,7 +251,7 @@ function CreateRunTime({
         return false;
       }
       const apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
-      const response = await fetch(apiURL, {
+      const response = await loggedFetch(apiURL, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -458,7 +459,7 @@ function CreateRunTime({
     setIsloadingNetwork(true);
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subnetwork}`,
         {
           headers: {
@@ -546,7 +547,7 @@ function CreateRunTime({
   const listSubNetworksAPI = async (subnetwork: string) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
@@ -595,7 +596,7 @@ function CreateRunTime({
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL_META}/projects/${projectId}/locations/${data}/services`,
         {
           headers: {
@@ -645,7 +646,7 @@ function CreateRunTime({
     setIsLoadingRegion(true);
     const credentials = await authApi();
     if (credentials) {
-      fetch(`${REGION_URL}/${projectId}/regions`, {
+      loggedFetch(`${REGION_URL}/${projectId}/regions`, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
           Authorization: API_HEADER_BEARER + credentials.access_token
@@ -846,16 +847,16 @@ function CreateRunTime({
       duplicateValidation ||
       (selectedNetworkRadio === 'sharedVpc' &&
         sharedSubNetworkList.length === 0) ||
-      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '')||
-      
-        (selectedNetworkRadio === 'projectNetwork' &&
-                networkList.length !== 0 && subNetworkList.length===0)
+      (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
+      (selectedNetworkRadio === 'projectNetwork' &&
+        networkList.length !== 0 &&
+        subNetworkList.length === 0)
     );
   }
   const createRuntimeApi = async (payload: any) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
         {
           method: 'POST',
@@ -988,7 +989,7 @@ function CreateRunTime({
   const updateRuntimeApi = async (payload: any) => {
     const credentials = await authApi();
     if (credentials) {
-      fetch(
+      loggedFetch(
         `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
         {
           method: 'PATCH',
@@ -1374,10 +1375,11 @@ function CreateRunTime({
                     No local networks are available.
                   </div>
                 )}
-                  {selectedNetworkRadio === 'projectNetwork' &&
-                networkList.length !== 0 && subNetworkList.length===0 &&(
+              {selectedNetworkRadio === 'projectNetwork' &&
+                networkList.length !== 0 &&
+                subNetworkList.length === 0 && (
                   <div className="create-no-list-message">
-                     Please select a valid network and subnetwork.
+                    Please select a valid network and subnetwork.
                   </div>
                 )}
               {selectedNetworkRadio === 'sharedVpc' && (
