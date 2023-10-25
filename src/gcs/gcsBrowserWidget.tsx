@@ -34,9 +34,10 @@ const iconGCSUpload = new LabIcon({
 });
 export class GcsBrowserWidget extends Widget {
   private browser: FileBrowser;
+  private fileInput: HTMLInputElement;
 
   // Function to trigger file input dialog when the upload button is clicked
-  private onUploadButtonClick(): void {
+  private onUploadButtonClick = () => {
     if (this.browser.model.path.split(':')[1] !== '') {
       this.fileInput.click();
     } else {
@@ -46,10 +47,15 @@ export class GcsBrowserWidget extends Widget {
         buttons: [Dialog.okButton()]
       });
     }
+  };
+
+  private handleFolderCreation = () => {
+    this.browser.createNewDirectory()
   }
+  
 
   // Function to handle file upload
-  private async handleFileUpload(event: Event): Promise<void> {
+  private handleFileUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files || []);
 
@@ -85,10 +91,7 @@ export class GcsBrowserWidget extends Widget {
         reader.readAsText(file);
       });
     }
-  }
-
-  // Inside your GcsBrowserWidget class
-  private fileInput: HTMLInputElement;
+  };
 
   constructor(
     private driveName: string,
@@ -108,13 +111,10 @@ export class GcsBrowserWidget extends Widget {
     this.node.style.height = '100%';
     (this.layout as PanelLayout).addWidget(this.browser);
 
-
     let newFolder = new ToolbarButton({
       icon: iconGCSNewFolder,
       className: 'jp-NewFolderIcon',
-      onClick: () => {
-        console.log('Folder New', this.browser.model.path);
-      },
+      onClick: this.handleFolderCreation,
       tooltip: 'New Folder'
     });
 
@@ -125,16 +125,14 @@ export class GcsBrowserWidget extends Widget {
     this.fileInput.style.display = 'none';
 
     // Attach event listener for file selection
-    this.fileInput.addEventListener('change', this.handleFileUpload.bind(this));
+    this.fileInput.addEventListener('change', this.handleFileUpload);
 
     // Append the file input element to the widget's node
     this.node.appendChild(this.fileInput);
     let gcsUpload = new ToolbarButton({
       icon: iconGCSUpload,
       className: 'jp-UploadIcon',
-      onClick: () => {
-        this.onUploadButtonClick();
-      },
+      onClick: this.onUploadButtonClick,
       tooltip: 'File Upload'
     });
 
@@ -145,6 +143,7 @@ export class GcsBrowserWidget extends Widget {
 
   dispose() {
     this.browser.dispose();
+    this.fileInput.removeEventListener('change', this.handleFileUpload);
     super.dispose();
   }
 }
