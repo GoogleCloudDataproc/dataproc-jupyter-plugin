@@ -324,6 +324,9 @@ function JobDetails({
               setLabelDetail(labelValue);
               setIsLoading(false);
               setSelectedJobClone(responseResult);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => {
               console.error(e);
