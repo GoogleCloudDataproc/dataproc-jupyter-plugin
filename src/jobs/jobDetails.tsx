@@ -371,7 +371,7 @@ function JobDetails({
     if (labelEditMode) {
       return 'job-edit-button-disabled';
     } else {
-      return 'job-edit-button';
+      return  'job-edit-button';
     }
   };
 
@@ -541,18 +541,19 @@ function JobDetails({
                   {labelEditMode ? (
                     <iconEditDisable.react
                       tag="div"
-                      className={styleIconColor(labelEditMode)}
+                      className= {styleIconColor(labelEditMode)}
                     />
                   ) : (
                     <iconEdit.react
                       tag="div"
-                      className={styleIconColor(labelEditMode)}
+                      className={styleIconColor(labelEditMode)
+                      }
                     />
                   )}
                   <div
-                    className={
-                      labelEditMode ? 'job-edit-text-disabled' : 'job-edit-text'
-                    }
+                    className={labelEditMode
+                      ? 'job-edit-text-disabled'
+                      : 'job-edit-text'}
                   >
                     EDIT
                   </div>
@@ -742,7 +743,9 @@ function JobDetails({
                 </div>
                 {labelEditMode && (
                   <div className="job-button-style-parent">
-                    <div className="job-save-button-style">
+                    <div
+                      className='job-save-button-style'
+                    >
                       <div
                         role="button"
                         onClick={() => {

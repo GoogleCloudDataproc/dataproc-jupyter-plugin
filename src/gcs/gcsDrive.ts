@@ -2,6 +2,8 @@ import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
 import { GcsService } from './gcsService';
 
+import { showDialog, Dialog } from '@jupyterlab/apputils';
+
 // Template for an empty Directory IModel.
 const DIRECTORY_IMODEL: Contents.IModel = {
   type: 'directory',
@@ -208,9 +210,22 @@ export class GCSDrive implements Contents.IDrive {
     };
   }
 
-  async getDownloadUrl(localPath: string): Promise<string> {
-    throw 'Not Implemented';
+  async getDownloadUrl(
+    localPath: string,
+    options?: Contents.IFetchOptions
+  ): Promise<string> {
+    
+    const path = GcsService.pathParser(localPath);
+    const fileContentURL = await GcsService.downloadFile({
+      path: path.path,
+      bucket: path.bucket,
+      name: path.name ? path.name : '',
+      format: options?.format ?? 'text'
+    });
+
+    return fileContentURL
   }
+
 
   async newUntitled(
     options?: Contents.ICreateOptions
@@ -218,15 +233,57 @@ export class GCSDrive implements Contents.IDrive {
     throw 'Not Implemented';
   }
 
-  async delete(localPath: string): Promise<void> {
-    throw 'Not Implemented';
+  async delete(path: string): Promise<void> {
+    const localPath = GcsService.pathParser(path);
+    const resp = await GcsService.deleteFile({
+      bucket: localPath.bucket,
+      path: localPath.path
+    });
+    console.log(resp);
+    this._fileChanged.emit({
+      type: 'delete',
+      oldValue: { path },
+      newValue: null
+    });
   }
 
-  async rename(
-    oldLocalPath: string,
-    newLocalPath: string
-  ): Promise<Contents.IModel> {
-    throw 'Not Implemented';
+  async rename(path: string, newLocalPath: string, options?: Contents.IFetchOptions): Promise<Contents.IModel> {
+    const oldPath = GcsService.pathParser(path);
+    const newPath = GcsService.pathParser(newLocalPath);
+
+    if (!(path.includes('.')) || !(newLocalPath.includes('.'))) {
+      await showDialog({
+        title: 'Rename Error',
+        body: 'Renaming Folder/Bucket is not allowed',
+        buttons: [Dialog.okButton()]
+      });
+      return DIRECTORY_IMODEL;
+    } else {
+      const response = await GcsService.renameFile({
+        oldBucket: oldPath.bucket,
+        oldPath: oldPath.path,
+        newBucket: newPath.bucket,
+        newPath: newPath.path
+      });
+
+      if(response === 200){
+        this.delete(path)
+      }
+
+      const contents = {
+        type: 'file',
+        path: newLocalPath,
+        name: newLocalPath.split('\\').at(-1) ?? '',
+        format: options?.format ?? 'text',
+        content: '',
+        created: '',
+        writable: true,
+        last_modified: '',
+        mimetype: ''
+      };
+
+      return contents
+    }
   }
 
   async copy(localPath: string, toLocalDir: string): Promise<Contents.IModel> {
