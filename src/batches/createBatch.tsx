@@ -1287,6 +1287,7 @@ function CreateBatch({
             );
           } else {
             const errorResponse = await response.json();
+            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
             setError({ isOpen: true, message: errorResponse.error.message });
             console.log(error);
           }
