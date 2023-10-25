@@ -114,12 +114,9 @@ function CreateRunTime({
   const [clusterSelected, setClusterSelected] = useState('');
   const [projectId, setProjectId] = useState<string | null>('');
   const [region, setRegion] = useState('');
-
-  const [regionList, setRegionList] = useState<string[]>([]);
   const [containerImageSelected, setContainerImageSelected] = useState('');
   const [networkList, setNetworklist] = useState([{}]);
   const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
-  const [isLoadingRegion, setIsLoadingRegion] = useState(false);
   const [networkSelected, setNetworkSelected] = useState('');
   const [subNetworkSelected, setSubNetworkSelected] = useState('');
   const [isLoadingService, setIsLoadingService] = useState(false);
@@ -597,12 +594,12 @@ function CreateRunTime({
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_META}/projects/${projectId}/locations/${data}/services`,
+        `${BASE_URL_META}/projects/${data}/locations/${credentials.region_id}/services`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
+            Authorization: API_HEADER_BEARER + credentials.access_token,
+          },
         }
       )
         .then((response: Response) => {
@@ -613,12 +610,17 @@ function CreateRunTime({
                 services: {
                   name: string;
                   network: string;
+                  hiveMetastoreConfig: { endpointProtocol: string };
                 }[];
               }) => {
-                const filteredServices = responseResult.services.filter(
-                  service => service.network.split('/')[4] === network
-                );
-
+                // Filter based on endpointProtocol and network
+                const filteredServices = responseResult.services.filter((service) => {
+                  return (
+                    service.hiveMetastoreConfig.endpointProtocol === 'GRPC' || // Allow GRPC services
+                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT' &&
+                      service.network.split('/')[4] === network) // Filter THRIFT services by network
+                  );
+                });
                 const transformedServiceList = filteredServices.map(
                   (data: { name: string }) => data.name
                 );
@@ -638,44 +640,7 @@ function CreateRunTime({
     }
   };
 
-  type Region = {
-    name: string;
-  };
 
-  const regionListAPI = async (projectId: string) => {
-    setIsLoadingRegion(true);
-    const credentials = await authApi();
-    if (credentials) {
-      loggedFetch(`${REGION_URL}/${projectId}/regions`, {
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: { items: Region[] }) => {
-              let transformedRegionList = [];
-              transformedRegionList = responseResult.items.map(
-                (data: Region) => {
-                  return data.name;
-                }
-              );
-              setRegionList(transformedRegionList);
-              setIsLoadingRegion(false);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoadingRegion(false);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing regions', err);
-          setIsLoadingRegion(false);
-        });
-    }
-  };
 
   const generateRandomHex = () => {
     if (!generationCompleted) {
@@ -756,26 +721,20 @@ function CreateRunTime({
   ) => {
     setAutoSelected(data.value!.toString());
   };
-  const handleProjectIdChange = (data: string | null) => {
+  const handleProjectIdChange = (data: any, network: string | undefined) => {
     setProjectId(data ?? '');
-    setRegion('');
-    setRegionList([]);
     setServicesList([]);
     setServicesSelected('');
-    regionListAPI(data!.toString());
+ 
+    listMetaStoreAPI(data,network);
   };
 
-  const handleRegionChange = (data: any, network: string | undefined) => {
-    setServicesSelected('');
-    setServicesList([]);
-    setRegion(data);
-    listMetaStoreAPI(data, network);
-  };
+
   const handleNetworkChange = async (data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
     setSubNetworkSelected(defaultValue);
     await listSubNetworksAPI(data!.toString());
-    await handleRegionChange(region, data!.toString());
+    await handleProjectIdChange(projectId, data!.toString());
   };
 
   const handleNetworkSharedVpcRadioChange = () => {
@@ -792,7 +751,7 @@ function CreateRunTime({
   };
   const handleSharedSubNetwork = async (data: string | null) => {
     setSharedvpcSelected(data!.toString());
-    await handleRegionChange(region, data!.toString());
+    await handleProjectIdChange(projectId, data!.toString());
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
@@ -1435,7 +1394,7 @@ function CreateRunTime({
             <div className="select-text-overlay">
               <DynamicDropdown
                 value={projectId}
-                onChange={(_, projectId) => handleProjectIdChange(projectId)}
+                onChange={(_, projectId) => handleProjectIdChange(projectId,networkSelected)}
                 fetchFunc={projectListAPI}
                 label="Project ID"
                 // Always show the clear indicator and hide the dropdown arrow
@@ -1449,29 +1408,7 @@ function CreateRunTime({
               />
             </div>
 
-            <div className="select-text-overlay">
-              {isLoadingRegion ? (
-                <div className="metastore-loader">
-                  <ClipLoader
-                    loading={true}
-                    size={25}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                </div>
-              ) : (
-                <Autocomplete
-                  options={regionList}
-                  value={region}
-                  onChange={(_event, val) =>
-                    handleRegionChange(val, networkSelected)
-                  }
-                  renderInput={params => (
-                    <TextField {...params} label="Metastore region" />
-                  )}
-                />
-              )}
-            </div>
+          
 
             <div className="select-text-overlay">
               {isLoadingService ? (
