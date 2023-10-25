@@ -616,9 +616,9 @@ function CreateRunTime({
                 // Filter based on endpointProtocol and network
                 const filteredServices = responseResult.services.filter((service) => {
                   return (
-                    service.hiveMetastoreConfig.endpointProtocol === 'GRPC' || // Allow GRPC services
+                    service.hiveMetastoreConfig.endpointProtocol === 'GRPC' || 
                     (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT' &&
-                      service.network.split('/')[4] === network) // Filter THRIFT services by network
+                      service.network.split('/')[4] === network) 
                   );
                 });
                 const transformedServiceList = filteredServices.map(
