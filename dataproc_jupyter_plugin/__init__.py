@@ -70,7 +70,7 @@ def _link_jupyter_server_extension(server_app):
 
     plugin_config = DataprocPluginConfig(config=server_app.config)
     if (plugin_config.log_path != ""):
-        file_handler = logging.RotatingFileHandler(plugin_config.log_path, maxBytes= 2 * 1024 * 1024, backupCount=5)
+        file_handler = logging.handlers.RotatingFileHandler(plugin_config.log_path, maxBytes= 2 * 1024 * 1024, backupCount=5)
         file_handler.setFormatter(logging.Formatter('[%(levelname)s %(asctime)s %(name)s] %(message)s'))
         server_app.log.addHandler(file_handler)
 
