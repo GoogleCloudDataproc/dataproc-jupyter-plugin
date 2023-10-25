@@ -223,7 +223,7 @@ export class GCSDrive implements Contents.IDrive {
       format: options?.format ?? 'text'
     });
 
-    return Promise.resolve(fileContentURL)
+    return fileContentURL
   }
 
 
