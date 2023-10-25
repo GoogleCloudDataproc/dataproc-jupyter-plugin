@@ -167,7 +167,7 @@ export class GcsService {
     path: string;
     name: string;
     format: 'text' | 'json' | 'base64';
-  }): Promise<void> {
+  }): Promise<string> {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
@@ -189,24 +189,27 @@ export class GcsService {
     if (response.status !== 200) {
       throw response.statusText;
     }
-    let fileName = name.split('/')[name.split('/').length-1]
-    let blob = await response.blob()
-    // Create blob link to download
-    const url = window.URL.createObjectURL(
-      new Blob([blob]),
-    );
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute(
-      'download',
-      decodeURIComponent(fileName),
-    );
+    
+    // let fileName = name.split('/')[name.split('/').length-1]
+    // let blob = await response.blob()
+    // // Create blob link to download
+    // const url = window.URL.createObjectURL(
+    //   new Blob([blob]),
+    // );
+    // const link = document.createElement('a');
+    // link.href = url;
+    // link.setAttribute(
+    //   'download',
+    //   decodeURIComponent(fileName),
+    // );
 
-    // Append to html link element page
-    document.body.appendChild(link);
+    // // Append to html link element page
+    // document.body.appendChild(link);
 
-    // Start download
-    link.click();
+    // // Start download
+    // link.click();
+
+    return response.url;
   }
 
 
