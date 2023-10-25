@@ -146,21 +146,10 @@ function ListRuntimeTemplates({
 
   const listRuntimeTemplatesAPI = async (
     nextPageToken?: string,
-    previousRuntimeTemplatesList?: object
+    previousRuntimeTemplatesList?: object,
+    previousRuntimeTemplatesAllList?: object
   ) => {
-    try {
-      const queryParams = new URLSearchParams({});
-      const response = await authenticatedFetch({
-        uri: 'sessionTemplates',
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'locations',
-        queryParams: queryParams
-      });
-      const formattedResponse: ISessionTemplateRoot = await response.json();
-      if (formattedResponse && formattedResponse.sessionTemplates) {
-        setRunTimeTemplateAllList(formattedResponse.sessionTemplates);
-      }
-    } catch (error) {}
+   
     try {
       const pageToken = nextPageToken ?? '';
       const queryParams = new URLSearchParams({
@@ -212,6 +201,15 @@ function ListRuntimeTemplates({
         );
       }
 
+      const existingRuntimeTemplatesAllData = previousRuntimeTemplatesAllList ?? [];
+      //setStateAction never type issue
+      let allRuntimeTemplatesAllData: any = [
+        ...(existingRuntimeTemplatesAllData as []),
+        ...formattedResponse.sessionTemplates
+      ];
+      
+
+
       const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
       //setStateAction never type issue
       let allRuntimeTemplatesData: ISessionTemplateDisplay[] = [
@@ -222,9 +220,11 @@ function ListRuntimeTemplates({
       if (formattedResponse.nextPageToken) {
         listRuntimeTemplatesAPI(
           formattedResponse.nextPageToken,
-          allRuntimeTemplatesData
+          allRuntimeTemplatesData,
+          allRuntimeTemplatesAllData
         );
       } else {
+        setRunTimeTemplateAllList(allRuntimeTemplatesAllData);
         setRuntimeTemplateslist(allRuntimeTemplatesData);
         setIsLoading(false);
       }
@@ -319,11 +319,13 @@ function ListRuntimeTemplates({
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
+     
     runTimeTemplateAllList.forEach((data: ISessionTemplate) => {
       if (data.name.split('/')[5] === selectedValue.row.original.id) {
         selectedRunTimeAll.push(data);
       }
     });
+
     pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
     setSelectedRuntimeClone(selectedRunTimeAll[0]);
     setOpenCreateTemplate(true);

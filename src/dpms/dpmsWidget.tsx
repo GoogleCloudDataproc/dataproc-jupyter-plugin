@@ -145,7 +145,7 @@ const DpmsComponent = ({
                 ...prevResponse,
                 responseResult
               ]);
-              if (data) {
+              if(data){
                 setIsLoading(false);
               }
             })

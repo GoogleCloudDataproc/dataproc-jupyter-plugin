@@ -96,7 +96,7 @@
 .logs-button {
   cursor: context-menu !important;
 }
-body[data-jp-theme-name='JupyterLab Dark'].scroll-fix-header {
+body[data-jp-theme-light='true'].scroll-fix-header {
   position: sticky;
   top: 0;
   background-color: var(--jp-layout-color0);

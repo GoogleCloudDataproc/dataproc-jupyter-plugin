@@ -160,19 +160,19 @@ function CreateBatch({
       mainRFileUri = batchInfoResponse[batchKeys[0]].mainRFileUri;
       mainPythonFileUri = batchInfoResponse[batchKeys[0]].mainPythonFileUri;
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('jarFileUris')) {
-        jarFileUris = [batchInfoResponse[batchKeys[0]].jarFileUris];
+        jarFileUris = batchInfoResponse[batchKeys[0]].jarFileUris;
       }
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('fileUris')) {
-        fileUris = [batchInfoResponse[batchKeys[0]].fileUris];
+        fileUris = batchInfoResponse[batchKeys[0]].fileUris;
       }
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('archiveUris')) {
-        archiveFileUris = [batchInfoResponse[batchKeys[0]].archiveUris];
+        archiveFileUris = batchInfoResponse[batchKeys[0]].archiveUris;
       }
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('args')) {
-        argumentsUris = [batchInfoResponse[batchKeys[0]].args];
+        argumentsUris = batchInfoResponse[batchKeys[0]].args;
       }
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
-        pythonFileUris = [batchInfoResponse[batchKeys[0]].pythonFileUris];
+        pythonFileUris = batchInfoResponse[batchKeys[0]].pythonFileUris;
       }
       serviceAccount =
         batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount ||
@@ -505,7 +505,7 @@ function CreateBatch({
         return false;
       }
       const apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
-      const response = await fetch(apiURL, {
+      const response = await loggedFetch(apiURL, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -2197,7 +2197,7 @@ function CreateBatch({
                   <div
                     className="submit-job-learn-more"
                     onClick={() => {
-                      window.open(`${SECURITY_KEY}`, '_blank');
+                      window.open(`${SECURITY_KEY}?project=${projectName}`, '_blank');
                     }}
                   >
                     Google Cloud Key Management Service
