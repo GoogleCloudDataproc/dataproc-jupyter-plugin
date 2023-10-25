@@ -118,9 +118,13 @@ const extension: JupyterFrontEndPlugin<void> = {
       localStorage.removeItem('notebookValue');
     });
 
-    // React-Toastify needs a ToastContainer to render toasts, since we don't
-    // have a global React Root, lets just inject one in the body.
-    injectToastContainer();
+    try {
+      // React-Toastify needs a ToastContainer to render toasts, since we don't
+      // have a global React Root, lets just inject one in the body.
+      injectToastContainer();
+    } catch (e) {
+      // do nothing
+    }
 
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
