@@ -27,7 +27,7 @@ sudo apt-get update
 sudo apt-get --assume-yes install python3 python3-pip nodejs
 
 # Install jupyter lab and build.
-pip install jupyterlab build
+pip install jupyter-client==8.4.0 jupyterlab build
 
 # Navigate to repo.
 cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
