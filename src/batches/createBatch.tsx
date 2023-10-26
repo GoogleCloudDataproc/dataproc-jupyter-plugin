@@ -963,15 +963,17 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { items: Region[] }) => {
+            .then((responseResult: { items: Region[],error: {
+              code: number;
+              message: string;
+            }; }) => {
               let transformedRegionList = responseResult.items.map(
                 (data: Region) => {
                   return data.name;
                 }
               );
   
-              const filteredServicesArray: never[] = []; // Create an array to store filtered services
-  
+              const filteredServicesArray: never[] = []; 
               // Use Promise.all to fetch services from all locations concurrently
               const servicePromises = transformedRegionList.map((location) => {
                 return listMetaStoreAPI(projectId, location, network, filteredServicesArray);
@@ -980,8 +982,10 @@ function CreateBatch({
               // Wait for all servicePromises to complete
               Promise.all(servicePromises)
                 .then(() => {
-                  // All services have been fetched, and filtered services are in filteredServicesArray
-                  console.log(filteredServicesArray);
+                
+                  if (responseResult?.error?.code) {
+                    toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                  }
                 })
                 .catch((e) => {
                   console.log(e);
@@ -998,8 +1002,8 @@ function CreateBatch({
   };
   
   const listMetaStoreAPI = async (
-    projectId: any,
-    location: any,
+    projectId: string,
+    location: string,
     network: string | undefined,
     filteredServicesArray: any // Pass the array as a parameter
   ) => {

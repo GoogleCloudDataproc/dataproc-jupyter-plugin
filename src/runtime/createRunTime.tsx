@@ -602,11 +602,15 @@ function CreateRunTime({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { items: Region[] }) => {
+            .then((responseResult: { items: Region[],error: {
+              code: number;
+              message: string;
+            }; }) => {
               let transformedRegionList = responseResult.items.map(
                 (data: Region) => {
                   return data.name;
                 }
+                
               );
   
               const filteredServicesArray: never[] = []; // Create an array to store filtered services
@@ -620,8 +624,12 @@ function CreateRunTime({
               Promise.all(servicePromises)
                 .then(() => {
                   // All services have been fetched, and filtered services are in filteredServicesArray
+                  if (responseResult?.error?.code) {
+                    toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                  }
                   console.log(filteredServicesArray);
                 })
+               
                 .catch((e) => {
                   console.log(e);
                 });
@@ -637,8 +645,8 @@ function CreateRunTime({
   };
   
   const listMetaStoreAPI = async (
-    projectId: any,
-    location: any,
+    projectId: string,
+    location: string,
     network: string | undefined,
     filteredServicesArray: any // Pass the array as a parameter
   ) => {
