@@ -91,6 +91,10 @@ const BatchesComponent = (): React.JSX.Element => {
     stateTime: Date;
   }
   interface IBatchListResponse {
+    error: {
+      code:number;
+      message:string;
+    };
     batches: IBatchData[];
     nextPageToken?: string;
   }
@@ -157,7 +161,9 @@ const BatchesComponent = (): React.JSX.Element => {
                   }
                 );
               }
-
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
               const existingBatchData = previousBatchesList ?? [];
 
               let allBatchesData: any = [

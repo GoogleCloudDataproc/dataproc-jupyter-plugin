@@ -200,6 +200,9 @@ function ListRuntimeTemplates({
           }
         );
       }
+      if (formattedResponse?.error?.code) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      }
 
       const existingRuntimeTemplatesAllData = previousRuntimeTemplatesAllList ?? [];
       //setStateAction never type issue

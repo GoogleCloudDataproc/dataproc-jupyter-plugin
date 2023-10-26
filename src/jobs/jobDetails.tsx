@@ -251,12 +251,18 @@ function JobDetails({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResultJob: Response) => {
+            .then(async (responseResultJob: Response) => {
+              const formattedResponse = await responseResultJob.json()
+              if (formattedResponse?.error?.code) {
+                toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+              }
+              else{
               toast.success(
                 `Request to update job ${jobSelected} submitted`,
                 toastifyCustomStyle
               );
               console.log(responseResultJob);
+              }
             })
             .catch((e: Error) => console.error(e));
         })
