@@ -82,13 +82,14 @@ export class GcsService {
    * Thin wrapper around storage.bucket.list
    * @see https://cloud.google.com/storage/docs/listing-buckets#rest-list-buckets
    */
-  static async listBuckets() {
+  static async listBuckets({ filterValue }: { filterValue: string }) {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
     }
     const requestUrl = new URL(`${this.STORAGE_DOMAIN_URL}/storage/v1/b`);
     requestUrl.searchParams.append('project', credentials.project_id ?? '');
+    requestUrl.searchParams.append('prefix', filterValue);
     const response = await loggedFetch(requestUrl.toString(), {
       method: 'GET',
       headers: {
@@ -189,7 +190,7 @@ export class GcsService {
     if (response.status !== 200) {
       throw response.statusText;
     }
-    
+
     // let fileName = name.split('/')[name.split('/').length-1]
     // let blob = await response.blob()
     // // Create blob link to download
@@ -211,7 +212,6 @@ export class GcsService {
 
     return response.url;
   }
-
 
   /**
    * Thin wrapper around object upload
@@ -251,16 +251,46 @@ export class GcsService {
   }
 
   /**
-   * Thin wrapper around object delete
-   * @see https://cloud.google.com/storage/docs/deleting-objects
+   * Thin wrapper around object upload
+   * @see https://cloud.google.com/storage/docs/uploading-objects#rest-upload-objects
    */
-  static async deleteFile({
+  static async createFolder({
     bucket,
     path
   }: {
     bucket: string;
     path: string;
   }) {
+    const credentials = await authApi();
+    if (!credentials) {
+      throw 'not logged in';
+    }
+    const requestUrl = new URL(
+      `${this.STORAGE_DOMAIN_URL}/upload/storage/v1/b/${bucket}/o`
+    );
+    let newFolderPath =
+      path === '' ? path + 'UntitledFolder/' : path + '/UntitledFolder/';
+    requestUrl.searchParams.append('name', newFolderPath);
+    // requestUrl.searchParams.append('uploadType', 'media');
+    const response = await loggedFetch(requestUrl.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token,
+        'X-Goog-User-Project': credentials.project_id || ''
+      }
+    });
+    if (response.status !== 200) {
+      throw response.statusText;
+    }
+    return (await response.json()) as storage_v1.Schema$Object;
+  }
+
+  /**
+   * Thin wrapper around object delete
+   * @see https://cloud.google.com/storage/docs/deleting-objects
+   */
+  static async deleteFile({ bucket, path }: { bucket: string; path: string }) {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
@@ -277,14 +307,14 @@ export class GcsService {
         'Content-Type': API_HEADER_CONTENT_TYPE,
         Authorization: API_HEADER_BEARER + credentials.access_token,
         'X-Goog-User-Project': credentials.project_id || ''
-      },
+      }
     });
     if (response.status !== 204) {
-      if(response.status === 404) {
-        throw 'Deleting Folder/Bucket is not allowed'
+      if (response.status === 404) {
+        throw 'Deleting Folder/Bucket is not allowed';
       }
       throw response.statusText;
-    } 
+    }
   }
 
   /**
@@ -308,11 +338,11 @@ export class GcsService {
     }
 
     const requestUrl = new URL(
-      `${this.STORAGE_DOMAIN_URL}/storage/v1/b/${oldBucket}/o/${encodeURIComponent(
+      `${
+        this.STORAGE_DOMAIN_URL
+      }/storage/v1/b/${oldBucket}/o/${encodeURIComponent(
         oldPath
-      )}/rewriteTo/b/${newBucket}/o/${encodeURIComponent(
-        newPath
-      )}`
+      )}/rewriteTo/b/${newBucket}/o/${encodeURIComponent(newPath)}`
     );
 
     const response = await fetch(requestUrl.toString(), {
@@ -321,11 +351,11 @@ export class GcsService {
         'Content-Type': API_HEADER_CONTENT_TYPE,
         Authorization: API_HEADER_BEARER + credentials.access_token,
         'X-Goog-User-Project': credentials.project_id || ''
-      },
+      }
     });
-    
+
     if (response.status === 200) {
-      return response.status
+      return response.status;
     } else {
       throw response.statusText;
     }

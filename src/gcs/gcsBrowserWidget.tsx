@@ -50,9 +50,8 @@ export class GcsBrowserWidget extends Widget {
   };
 
   private handleFolderCreation = () => {
-    this.browser.createNewDirectory()
-  }
-  
+    this.browser.createNewDirectory();
+  };
 
   // Function to handle file upload
   private handleFileUpload = async (event: Event) => {
@@ -93,6 +92,10 @@ export class GcsBrowserWidget extends Widget {
     }
   };
 
+  private filterFilesByName = async (filterValue: string) => {
+    console.log(filterValue)
+  }
+
   constructor(
     private driveName: string,
     private fileBrowserFactory: IFileBrowserFactory
@@ -110,6 +113,23 @@ export class GcsBrowserWidget extends Widget {
     this.layout = new PanelLayout();
     this.node.style.height = '100%';
     (this.layout as PanelLayout).addWidget(this.browser);
+
+
+
+    let filterInput = document.createElement('input');
+    filterInput.id = 'filter-buckets-objects'
+    filterInput.type = 'text';
+    filterInput.placeholder = 'Filter by File Name';
+
+    filterInput.addEventListener('input', event => {
+      const filterValue = (event.target as HTMLInputElement).value;
+      //@ts-ignore
+      document.getElementById('filter-buckets-objects').setAttribute('value', filterValue);
+      // Call a function to filter files based on filterValue
+      this.filterFilesByName(filterValue);
+    });
+
+    
 
     let newFolder = new ToolbarButton({
       icon: iconGCSNewFolder,
@@ -139,6 +159,8 @@ export class GcsBrowserWidget extends Widget {
     this.browser.title.caption = 'Google Cloud Storage';
     this.browser.toolbar.addItem('New Folder', newFolder);
     this.browser.toolbar.addItem('File Upload', gcsUpload);
+    let filterItem = new Widget({ node: filterInput });
+    this.browser.toolbar.addItem('Filter by Name:', filterItem);
   }
 
   dispose() {
