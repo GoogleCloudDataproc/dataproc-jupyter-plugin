@@ -947,16 +947,71 @@ function CreateBatch({
         });
     }
   };
+  type Region = {
+    name: string;
+  };
 
+  const regionListAPI = async (projectId: string,  network: string | undefined) => {
+    const credentials = await authApi();
+    if (credentials) {
+      loggedFetch(`${REGION_URL}/${projectId}/regions`, {
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token,
+        },
+      })
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: { items: Region[],error: {
+              code: number;
+              message: string;
+            }; }) => {
+              let transformedRegionList = responseResult.items.map(
+                (data: Region) => {
+                  return data.name;
+                }
+              );
+  
+              const filteredServicesArray: never[] = []; 
+              // Use Promise.all to fetch services from all locations concurrently
+              const servicePromises = transformedRegionList.map((location) => {
+                return listMetaStoreAPI(projectId, location, network, filteredServicesArray);
+              });
+  
+              // Wait for all servicePromises to complete
+              Promise.all(servicePromises)
+                .then(() => {
+                
+                  if (responseResult?.error?.code) {
+                    toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                  }
+                })
+                .catch((e) => {
+                  console.log(e);
+                });
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing regions', err);
+        });
+    }
+  };
+  
   const listMetaStoreAPI = async (
-    data: undefined,
-    network: string | undefined
+    projectId: string,
+    location: string,
+    network: string | undefined,
+    filteredServicesArray: any // Pass the array as a parameter
   ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_META}/projects/${data}/locations/${credentials.region_id}/services`,
+        `${BASE_URL_META}/projects/${projectId}/locations/${location}/services`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -979,15 +1034,17 @@ function CreateBatch({
                 const filteredServices = responseResult.services.filter((service) => {
                   return (
                     service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
-                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT' &&
+                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT'  && location ==regionName &&
                       service.network.split('/')[4] === network) 
                   );
                 });
-               
-                const transformedServiceList = filteredServices.map(
+                // Push filtered services into the array
+                filteredServicesArray.push(...filteredServices);
+                const transformedServiceList = filteredServicesArray.map(
                   (data: { name: string }) => data.name
                 );
                 setServicesList(transformedServiceList);
+  
                 setIsLoadingService(false);
               }
             )
@@ -1299,8 +1356,8 @@ function CreateBatch({
     setProjectId(data ?? '');
     setServicesList([]);
     setServicesSelected('');
- 
-    listMetaStoreAPI(data,network);
+    regionListAPI(data,network);
+    
   };
   const handleNetworkChange = async (data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
