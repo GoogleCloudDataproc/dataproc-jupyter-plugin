@@ -677,7 +677,7 @@ function CreateRunTime({
                 const filteredServices = responseResult.services.filter((service) => {
                   return (
                     service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
-                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT'  &&
+                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT'  &&  location ==region  &&
                       service.network.split('/')[4] === network) 
                   );
                 });
