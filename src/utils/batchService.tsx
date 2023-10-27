@@ -23,6 +23,7 @@ import {
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const deleteBatchAPI = async (selectedBatch: string) => {
   const credentials = await authApi();
@@ -51,6 +52,7 @@ export const deleteBatchAPI = async (selectedBatch: string) => {
       })
       .catch((err: Error) => {
         console.error('Error deleting batches', err);
+        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         toast.error(
           `Failed to delete the batch ${selectedBatch}`,
           toastifyCustomStyle

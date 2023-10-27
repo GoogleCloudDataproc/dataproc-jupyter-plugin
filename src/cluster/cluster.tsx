@@ -28,6 +28,7 @@ import stopIcon from '../../style/icons/stop_icon.svg';
 import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
 import JobComponent from '../jobs/jobs';
 import { startClusterApi, stopClusterApi } from '../utils/clusterServices';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ClusterStatus,
   HTTP_METHOD,
@@ -169,6 +170,7 @@ const ClusterComponent = (): React.JSX.Element => {
       }
     } catch (error) {
       setIsLoading(false);
+      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
       console.error('Error listing clusters', error);
       toast.error('Failed to fetch clusters', toastifyCustomStyle);
     }
@@ -196,6 +198,7 @@ const ClusterComponent = (): React.JSX.Element => {
       listClustersAPI();
     } catch (error) {
       console.error('Error fetching status', error);
+      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
       toast.error(
         `Failed to fetch the status ${selectedCluster}`,
         toastifyCustomStyle
@@ -225,6 +228,7 @@ const ClusterComponent = (): React.JSX.Element => {
       setRestartEnabled(false);
     } catch (error) {
       console.error('Error restarting cluster', error);
+      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
       toast.error(
         `Failed to restart the cluster ${selectedCluster}`,
         toastifyCustomStyle

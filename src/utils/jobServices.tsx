@@ -18,6 +18,7 @@
 import { toast } from 'react-toastify';
 import { BASE_URL, API_HEADER_CONTENT_TYPE, API_HEADER_BEARER } from './const';
 import { authApi, toastifyCustomStyle, loggedFetch } from './utils';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const stopJobApi = async (jobId: string) => {
   const credentials = await authApi();
@@ -42,6 +43,7 @@ export const stopJobApi = async (jobId: string) => {
       })
       .catch((err: Error) => {
         console.error('Error to  stop job', err);
+        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         toast.error(`Failed to stop job ${jobId}`, toastifyCustomStyle);
       });
   }
@@ -73,6 +75,7 @@ export const deleteJobApi = async (jobId: string) => {
       })
       .catch((err: Error) => {
         console.error('Error Deleting Job', err);
+        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         toast.error(`Failed to delete the job ${jobId}`, toastifyCustomStyle);
       });
   }

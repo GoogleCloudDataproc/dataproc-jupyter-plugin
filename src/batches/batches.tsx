@@ -45,6 +45,7 @@ import { deleteBatchAPI } from '../utils/batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
 import { DataprocWidget} from '../controls/DataprocWidget';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 
 const iconDelete = new LabIcon({
@@ -181,6 +182,7 @@ const BatchesComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing batches', err);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch batches', toastifyCustomStyle);
         });
     }

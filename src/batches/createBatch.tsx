@@ -65,6 +65,7 @@ import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 type Network = {
   selfLink: string;
@@ -489,6 +490,7 @@ function CreateBatch({
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
           toast.error('Failed to fetch user information', toastifyCustomStyle);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -586,6 +588,7 @@ function CreateBatch({
         })
         .catch((err: Error) => {
           setIsloadingNetwork(false);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
           console.error('Error selecting Network', err);
         });
     }
@@ -763,6 +766,7 @@ function CreateBatch({
       setClustersList(transformClusterListData);
     } catch (error) {
       console.error('Error listing clusters', error);
+      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
       toast.error('Failed to list the clusters', toastifyCustomStyle);
     }
   };
@@ -803,6 +807,7 @@ function CreateBatch({
         })
         .catch((err: Error) => {
           console.error('Error listing Networks', err);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -848,6 +853,7 @@ function CreateBatch({
         })
         .catch((err: Error) => {
           console.error('Error listing Networks', err);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -899,6 +905,7 @@ function CreateBatch({
         })
         .catch((err: Error) => {
           console.error('Error listing Networks', err);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -944,6 +951,7 @@ function CreateBatch({
         })
         .catch((err: Error) => {
           console.error('Error listing subNetworks', err);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -997,6 +1005,7 @@ function CreateBatch({
         })
         .catch((err: Error) => {
           console.error('Error listing regions', err);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -1056,6 +1065,7 @@ function CreateBatch({
         .catch((err: Error) => {
           console.error('Error listing services', err);
           setIsLoadingService(false);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -1298,6 +1308,7 @@ function CreateBatch({
         .catch((err: Error) => {
           console.error('Error submitting Batch', err);
           toast.error('Failed to submit the Batch', toastifyCustomStyle);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
         });
     }
   };

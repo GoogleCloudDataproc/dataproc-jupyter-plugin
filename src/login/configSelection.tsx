@@ -46,6 +46,7 @@ import CreateRuntime from '../runtime/createRunTime';
 import { ISessionTemplate } from '../utils/listRuntimeTemplateInterface';
 import { JupyterLab } from '@jupyterlab/application';
 import { ILauncher } from '@jupyterlab/launcher';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -140,6 +141,7 @@ function ConfigSelection({
         .catch((err: Error) => {
           setIsLoadingUser(false);
           console.error('Error displaying user info', err);
+          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
