@@ -20,6 +20,8 @@ const DIRECTORY_IMODEL: Contents.IModel = {
   mimetype: ''
 };
 
+let untitledFolderSuffix = '';
+
 export class GCSDrive implements Contents.IDrive {
   constructor() {
     // Not actually used, but the Contents.IDrive interface requires one.
@@ -54,7 +56,7 @@ export class GCSDrive implements Contents.IDrive {
    * @returns IModel directory containing all the GCS buckets for the current project.
    */
   private async getBuckets() {
-    let searchInput = document.getElementById('filter-buckets-objects')
+    let searchInput = document.getElementById('filter-buckets-objects');
     //@ts-ignore
     let searchValue = searchInput.value;
     const content = await GcsService.listBuckets({
@@ -81,7 +83,8 @@ export class GCSDrive implements Contents.IDrive {
     const path = GcsService.pathParser(localPath);
     const content = await GcsService.list({
       prefix: path.path,
-      bucket: path.bucket
+      bucket: path.bucket,
+      prefixCheck: ''
     });
     if (!content) {
       throw 'Error Listing Objects';
@@ -230,7 +233,7 @@ export class GCSDrive implements Contents.IDrive {
       format: options?.format ?? 'text'
     });
 
-    return fileContentURL
+    return fileContentURL;
   }
 
   async newUntitled(
@@ -248,50 +251,26 @@ export class GCSDrive implements Contents.IDrive {
       return Promise.reject('Cannot create new objects in the root directory.');
     }
 
-
-    // let ext = '';
-    // let baseName = 'UntitledFolder';
-    // let model: Contents.IModel;
-    // // let contents: Contents.IModel;
-
-    // if (options.type === 'directory') {
-    //   localPath = PathExt.join(localPath, baseName);
-    //   ext = ext || '';
-    //   model = {
-    //     type: 'directory',
-    //     path: localPath,
-    //     name: baseName, // Extract folder name from path
-    //     format: 'json',
-    //     created: '',
-    //     writable: true,
-    //     last_modified: new Date().toISOString(), // Use current timestamp as last modified
-    //     mimetype: '',
-    //     content: []
-    //   };
-
-      
-    //   // contents = model;
-
-    //   try {
-    //     Contents.validateContentsModel(model);
-    //   } catch (error) {
-    //     throw Error("Failed Content validation");
-    //   }
-    //   this._fileChanged.emit({
-    //     type: 'new',
-    //     oldValue: null,
-    //     newValue: model
-    //   });
-    //   return model;
-    // }
-
-
-
     const path = GcsService.pathParser(localPath);
+
+    const content = await GcsService.list({
+      prefix: path.path === '' ? path.path + 'UntitledFolder' : path.path + '/UntitledFolder',
+      bucket: path.bucket,
+      prefixCheck: 'UntitledFolder'
+    });
+    if (content.prefixes) {
+      let finalElement = content.prefixes[content.prefixes.length - 1];
+      let finalElementSuffix = finalElement.split('/')[finalElement.split('/').length-2].match(/\d+$/);
+      untitledFolderSuffix = finalElementSuffix === null ? '1' : (parseInt(finalElementSuffix[0])+1).toString()
+    } else {
+      untitledFolderSuffix = ''
+    }
+    let folderName = 'UntitledFolder' + untitledFolderSuffix;
     // Create the folder in your backend service
     const response = await GcsService.createFolder({
       bucket: path.bucket,
-      path: path.path
+      path: path.path,
+      folderName: folderName
     });
 
     // Handle the response from your backend service appropriately
@@ -300,7 +279,7 @@ export class GCSDrive implements Contents.IDrive {
       return {
         type: 'directory',
         path: localPath.split(':')[1],
-        name: 'UntitledFolder', // Extract folder name from path
+        name: folderName, // Extract folder name from path
         format: null,
         created: new Date().toISOString(),
         writable: true,
@@ -308,11 +287,7 @@ export class GCSDrive implements Contents.IDrive {
         mimetype: '',
         content: null
       };
-
-    } 
-
-
-    else {
+    } else {
       // Handle folder creation failure
       return Promise.reject('Failed to create folder.');
     }
@@ -339,8 +314,10 @@ export class GCSDrive implements Contents.IDrive {
   ): Promise<Contents.IModel> {
     const oldPath = GcsService.pathParser(path);
     const newPath = GcsService.pathParser(newLocalPath);
-
-    if (!path.includes('UntitledFolder') && (!path.includes('.') || !newLocalPath.includes('.'))) {
+    if (
+      !path.includes('UntitledFolder'+untitledFolderSuffix) &&
+      (!path.includes('.') || !newLocalPath.includes('.'))
+    ) {
       await showDialog({
         title: 'Rename Error',
         body: 'Renaming Folder/Bucket is not allowed',
@@ -348,10 +325,10 @@ export class GCSDrive implements Contents.IDrive {
       });
       return DIRECTORY_IMODEL;
     } else {
-      if(oldPath.path.includes('UntitledFolder')){
-        oldPath.path = oldPath.path + '/'
-        newPath.path = newPath.path + '/'
-        path = path + '/'
+      if (oldPath.path.includes('UntitledFolder'+untitledFolderSuffix)) {
+        oldPath.path = oldPath.path + '/';
+        newPath.path = newPath.path + '/';
+        path = path + '/';
       }
       const response = await GcsService.renameFile({
         oldBucket: oldPath.bucket,

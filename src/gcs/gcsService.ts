@@ -54,7 +54,7 @@ export class GcsService {
    * Thin wrapper around storage.object.list
    * @see https://cloud.google.com/storage/docs/listing-objects#rest-list-objects
    */
-  static async list({ prefix, bucket }: { prefix: string; bucket: string }) {
+  static async list({ prefix, bucket, prefixCheck }: { prefix: string; bucket: string; prefixCheck: string }) {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
@@ -63,7 +63,7 @@ export class GcsService {
       `${this.STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o`
     );
 
-    prefix = prefix.length > 0 ? `${prefix}/` : prefix;
+    prefix = prefix.length > 0 && prefixCheck !== 'UntitledFolder' ? `${prefix}/` : prefix;
 
     requestUrl.searchParams.append('prefix', prefix);
     requestUrl.searchParams.append('delimiter', '/');
@@ -256,10 +256,12 @@ export class GcsService {
    */
   static async createFolder({
     bucket,
-    path
+    path,
+    folderName
   }: {
     bucket: string;
     path: string;
+    folderName: string;
   }) {
     const credentials = await authApi();
     if (!credentials) {
@@ -269,7 +271,7 @@ export class GcsService {
       `${this.STORAGE_DOMAIN_URL}/upload/storage/v1/b/${bucket}/o`
     );
     let newFolderPath =
-      path === '' ? path + 'UntitledFolder/' : path + '/UntitledFolder/';
+      path === '' ? path + folderName +'/' : path + '/'+folderName+'/';
     requestUrl.searchParams.append('name', newFolderPath);
     // requestUrl.searchParams.append('uploadType', 'media');
     const response = await loggedFetch(requestUrl.toString(), {

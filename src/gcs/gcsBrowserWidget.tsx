@@ -114,7 +114,8 @@ export class GcsBrowserWidget extends Widget {
     this.node.style.height = '100%';
     (this.layout as PanelLayout).addWidget(this.browser);
 
-
+    let titlePart = document.createElement('div');
+    titlePart.innerHTML = 'Google Cloud Storage';
 
     let filterInput = document.createElement('input');
     filterInput.id = 'filter-buckets-objects'
@@ -156,7 +157,8 @@ export class GcsBrowserWidget extends Widget {
       tooltip: 'File Upload'
     });
 
-    this.browser.title.caption = 'Google Cloud Storage';
+    let titleSection = new Widget({ node: titlePart });
+    this.browser.toolbar.addItem('Title', titleSection);
     this.browser.toolbar.addItem('New Folder', newFolder);
     this.browser.toolbar.addItem('File Upload', gcsUpload);
     let filterItem = new Widget({ node: filterInput });
