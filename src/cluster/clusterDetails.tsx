@@ -165,6 +165,7 @@ function ClusterDetails({
   };
   interface IClusterDetailsResponse {
     error: {
+      message: string;
       code: number;
     };
     status: {
@@ -196,6 +197,9 @@ function ClusterDetails({
             .then((responseResult: IClusterDetailsResponse) => {
               if (responseResult.error && responseResult.error.code === 404) {
                 setErrorView(true);
+              }
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
               }
               setClusterInfo(responseResult);
               setIsLoading(false);

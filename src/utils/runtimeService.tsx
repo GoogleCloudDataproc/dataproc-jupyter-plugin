@@ -37,12 +37,18 @@ export const deleteRuntimeTemplateAPI = async (
         Authorization: API_HEADER_BEARER + credentials.access_token
       }
     })
-      .then((response: Response) => {
+      .then(async (response: Response) => {
+        const formattedResponse = await response.json()
+        if (formattedResponse?.error?.code) {
+          toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        }
+        else{
         toast.success(
           `${selectedRuntimeTemplateDisplayName} is deleted successfully`,
           toastifyCustomStyle
         );
         console.log(response);
+        }
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);

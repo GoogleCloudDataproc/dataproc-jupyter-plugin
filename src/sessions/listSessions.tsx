@@ -204,6 +204,9 @@ function ListSessions() {
           setIsLoading(false);
         }
       }
+      if (formattedResponse?.error?.code) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      }
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing Sessions', error);
