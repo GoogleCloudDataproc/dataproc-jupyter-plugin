@@ -14,6 +14,8 @@ dataproc_jupyter_plugin/_version.py
 # Integration tests
 ui-tests/test-results/
 ui-tests/playwright-report/
+ui-tests-3.6.6/test-results/
+ui-tests-3.6.6/playwright-report/
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
