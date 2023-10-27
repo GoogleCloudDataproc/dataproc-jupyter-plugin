@@ -2,10 +2,7 @@ import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
 import { GcsService } from './gcsService';
 
-// import { DocumentRegistry } from '@jupyterlab/docregistry';
-
 import { showDialog, Dialog } from '@jupyterlab/apputils';
-// import { PathExt } from '@jupyterlab/coreutils';
 
 // Template for an empty Directory IModel.
 const DIRECTORY_IMODEL: Contents.IModel = {
