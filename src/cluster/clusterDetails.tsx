@@ -209,7 +209,7 @@ function ClusterDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters Details', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing clusters Details', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to fetch cluster details ${clusterSelected}`,
             toastifyCustomStyle

@@ -313,7 +313,7 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing jobs', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch jobs', toastifyCustomStyle);
         });
     }

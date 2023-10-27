@@ -208,7 +208,7 @@ function ListSessions() {
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing Sessions', error);
-      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+      DataprocLoggingService.log('Error listing Sessions', LOG_LEVEL.ERROR);
       toast.error('Failed to fetch sessions', toastifyCustomStyle);
     }
   };

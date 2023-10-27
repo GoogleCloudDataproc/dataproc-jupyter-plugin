@@ -156,7 +156,7 @@ const DpmsComponent = ({
         })
         .catch((err: Error) => {
           console.error('Error getting column details', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error getting column details', LOG_LEVEL.ERROR);
           toast.error('Error getting column details', toastifyCustomStyle);
         });
     }
@@ -221,7 +221,7 @@ const DpmsComponent = ({
         })
         .catch((err: Error) => {
           console.error('Error getting table details', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error getting table details', LOG_LEVEL.ERROR);
           toast.error('Error getting table details', toastifyCustomStyle);
         });
     }
@@ -590,7 +590,7 @@ fetching database name from fully qualified name structure */
         })
         .catch((err: Error) => {
           console.error('Error getting database details', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error getting database details', LOG_LEVEL.ERROR);
           toast.error('Error getting database details', toastifyCustomStyle);
         });
     }
@@ -643,7 +643,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing session details', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing session details', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch session details'), toastifyCustomStyle;
         });
     }
@@ -697,7 +697,7 @@ fetching database name from fully qualified name structure */
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters details', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing clusters details', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch cluster details', toastifyCustomStyle);
         });
     }

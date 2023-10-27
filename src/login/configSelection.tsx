@@ -141,7 +141,7 @@ function ConfigSelection({
         .catch((err: Error) => {
           setIsLoadingUser(false);
           console.error('Error displaying user info', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error displaying user info', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }

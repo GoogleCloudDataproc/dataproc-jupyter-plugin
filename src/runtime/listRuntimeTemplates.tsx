@@ -232,7 +232,7 @@ function ListRuntimeTemplates({
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing runtime templates', error);
-      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+      DataprocLoggingService.log('Error listing runtime templates', LOG_LEVEL.ERROR);
       toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
     }
   };

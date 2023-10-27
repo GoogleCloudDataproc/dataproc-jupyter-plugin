@@ -47,7 +47,7 @@ export const deleteRuntimeTemplateAPI = async (
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
-        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+        DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
         toast.error(
           `Failed to delete the session ${selectedRuntimeTemplateDisplayName}`,
           toastifyCustomStyle

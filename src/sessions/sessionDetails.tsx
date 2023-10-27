@@ -169,7 +169,7 @@ function SessionDetails({
     } catch (error) {
       setIsLoading(false);
       console.error('Error loading session details', error);
-      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+      DataprocLoggingService.log('Error loading session details', LOG_LEVEL.ERROR);
       toast.error(
         `Failed to fetch session details ${sessionSelected}`,
         toastifyCustomStyle

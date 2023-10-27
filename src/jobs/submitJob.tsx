@@ -681,7 +681,7 @@ function SubmitJob({
         })
         .catch((err: Error) => {
           console.error('Error submitting job', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error submitting job', LOG_LEVEL.ERROR);
           toast.error('Failed to submit the job', toastifyCustomStyle);
         });
     }

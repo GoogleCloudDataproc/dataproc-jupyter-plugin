@@ -263,7 +263,7 @@ function JobDetails({
         })
         .catch((err: Error) => {
           console.error('Error in updating job', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error in updating job', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to update the job ${jobSelected}`,
             toastifyCustomStyle
@@ -335,7 +335,7 @@ function JobDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting job details', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error in getting job details', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to fetch job details ${jobSelected}`,
             toastifyCustomStyle

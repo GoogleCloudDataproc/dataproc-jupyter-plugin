@@ -265,7 +265,7 @@ function BatchDetails({
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error in getting Batch details', LOG_LEVEL.ERROR);
           console.error('Error in getting Batch details', err);
           toast.error(
             `Failed to fetch batch details ${batchSelected}`,

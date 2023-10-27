@@ -182,7 +182,7 @@ const BatchesComponent = (): React.JSX.Element => {
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing batches', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch batches', toastifyCustomStyle);
         });
     }

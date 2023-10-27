@@ -51,7 +51,7 @@ export const deleteClusterApi = async (selectedcluster: string) => {
       })
       .catch((err: Error) => {
         console.error('Error deleting cluster', err);
-        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+        DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
       });
   }
 };
@@ -82,7 +82,7 @@ export const startStopAPI = async (
       })
       .catch((err: Error) => {
         console.error(`Error ${operation} cluster`, err);
-        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+        DataprocLoggingService.log(`Error ${operation} cluster`, LOG_LEVEL.ERROR);
         toast.error(
           `Failed to ${operation} the cluster ${selectedcluster}`,
           toastifyCustomStyle

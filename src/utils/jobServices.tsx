@@ -43,7 +43,7 @@ export const stopJobApi = async (jobId: string) => {
       })
       .catch((err: Error) => {
         console.error('Error to  stop job', err);
-        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+        DataprocLoggingService.log('Error to  stop job', LOG_LEVEL.ERROR);
         toast.error(`Failed to stop job ${jobId}`, toastifyCustomStyle);
       });
   }
@@ -75,7 +75,7 @@ export const deleteJobApi = async (jobId: string) => {
       })
       .catch((err: Error) => {
         console.error('Error Deleting Job', err);
-        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+        DataprocLoggingService.log('Error Deleting Job', LOG_LEVEL.ERROR);
         toast.error(`Failed to delete the job ${jobId}`, toastifyCustomStyle);
       });
   }

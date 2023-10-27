@@ -47,7 +47,7 @@ export const deleteSessionAPI = async (selectedSession: string) => {
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
-        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+        DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
         toast.error(
           `Failed to delete the session ${selectedSession}`,
           toastifyCustomStyle
@@ -78,7 +78,7 @@ export const terminateSessionAPI = async (selectedSession: string) => {
       })
       .catch((err: Error) => {
         console.error('Error terminating session', err);
-        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+        DataprocLoggingService.log('Error terminating session', LOG_LEVEL.ERROR);
         toast.error(
           `Failed to terminate session ${selectedSession}`,
           toastifyCustomStyle

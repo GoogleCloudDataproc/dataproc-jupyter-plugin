@@ -128,7 +128,7 @@ function ViewLogs({
         })
         .catch((err: Error) => {
           console.error('Error listing clusters Details', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing clusters Details', LOG_LEVEL.ERROR);
           
         });
     }

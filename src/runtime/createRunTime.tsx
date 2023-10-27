@@ -207,7 +207,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error displaying user info', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
@@ -238,7 +238,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error displaying user info', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
@@ -284,7 +284,7 @@ function CreateRunTime({
       setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
     } catch (err) {
       console.error('Error displaying sharedVPC subNetwork', err);
-      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+      DataprocLoggingService.log('Error displaying sharedVPC subNetwork', LOG_LEVEL.ERROR);
       toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
     }
   };
@@ -492,7 +492,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           setIsloadingNetwork(false);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error selecting Network', LOG_LEVEL.ERROR);
           console.error('Error selecting Network', err);
         });
     }
@@ -516,7 +516,7 @@ function CreateRunTime({
       setClustersList(transformClusterListData);
     } catch (error) {
       console.error('Error listing clusters', error);
-      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
       toast.error('Failed to list the clusters', toastifyCustomStyle);
     }
   };
@@ -543,7 +543,7 @@ function CreateRunTime({
       setNetworklist(transformedNetworkList);
       setNetworkSelected(transformedNetworkList[0]);
     } catch (error) {
-      DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+      DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
       console.error('Error listing Networks', error);
     }
   };
@@ -589,7 +589,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error listing subNetworks', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing subNetworks', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -648,7 +648,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error listing regions', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing regions', LOG_LEVEL.ERROR);
         });
     }
   };
@@ -707,7 +707,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error listing services', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error listing services', LOG_LEVEL.ERROR);
           setIsLoadingService(false);
         });
     }
@@ -1013,7 +1013,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error Creating template', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error Creating template', LOG_LEVEL.ERROR);
           toast.error('Failed to create the template', toastifyCustomStyle);
         });
     }
@@ -1052,7 +1052,7 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error updating template', err);
-          DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log('Error updating template', LOG_LEVEL.ERROR);
           toast.error('Failed to update the template', toastifyCustomStyle);
         });
     }

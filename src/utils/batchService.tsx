@@ -52,7 +52,7 @@ export const deleteBatchAPI = async (selectedBatch: string) => {
       })
       .catch((err: Error) => {
         console.error('Error deleting batches', err);
-        DataprocLoggingService.log('ERROR message', LOG_LEVEL.ERROR);
+        DataprocLoggingService.log('Error deleting batches', LOG_LEVEL.ERROR);
         toast.error(
           `Failed to delete the batch ${selectedBatch}`,
           toastifyCustomStyle
