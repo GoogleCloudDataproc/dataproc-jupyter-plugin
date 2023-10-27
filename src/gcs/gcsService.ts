@@ -273,7 +273,6 @@ export class GcsService {
     let newFolderPath =
       path === '' ? path + folderName +'/' : path + '/'+folderName+'/';
     requestUrl.searchParams.append('name', newFolderPath);
-    // requestUrl.searchParams.append('uploadType', 'media');
     const response = await loggedFetch(requestUrl.toString(), {
       method: 'POST',
       headers: {
