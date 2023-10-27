@@ -254,16 +254,26 @@ export class GCSDrive implements Contents.IDrive {
     const path = GcsService.pathParser(localPath);
 
     const content = await GcsService.list({
-      prefix: path.path === '' ? path.path + 'UntitledFolder' : path.path + '/UntitledFolder',
+      prefix:
+        path.path === ''
+          ? path.path + 'UntitledFolder'
+          : path.path + '/UntitledFolder',
       bucket: path.bucket,
       prefixCheck: 'UntitledFolder'
     });
     if (content.prefixes) {
-      let finalElement = content.prefixes[content.prefixes.length - 1];
-      let finalElementSuffix = finalElement.split('/')[finalElement.split('/').length-2].match(/\d+$/);
-      untitledFolderSuffix = finalElementSuffix === null ? '1' : (parseInt(finalElementSuffix[0])+1).toString()
+      let maxSuffix = 1;
+      content.prefixes.forEach((data: string) => {
+        let suffixElement = data
+          .split('/')
+          [data.split('/').length - 2].match(/\d+$/);
+        if (suffixElement !== null && parseInt(suffixElement[0]) >= maxSuffix) {
+          maxSuffix = parseInt(suffixElement[0]) + 1;
+        }
+        untitledFolderSuffix = maxSuffix.toString();
+      });
     } else {
-      untitledFolderSuffix = ''
+      untitledFolderSuffix = '';
     }
     let folderName = 'UntitledFolder' + untitledFolderSuffix;
     // Create the folder in your backend service
@@ -315,7 +325,7 @@ export class GCSDrive implements Contents.IDrive {
     const oldPath = GcsService.pathParser(path);
     const newPath = GcsService.pathParser(newLocalPath);
     if (
-      !path.includes('UntitledFolder'+untitledFolderSuffix) &&
+      !path.includes('UntitledFolder' + untitledFolderSuffix) &&
       (!path.includes('.') || !newLocalPath.includes('.'))
     ) {
       await showDialog({
@@ -325,7 +335,7 @@ export class GCSDrive implements Contents.IDrive {
       });
       return DIRECTORY_IMODEL;
     } else {
-      if (oldPath.path.includes('UntitledFolder'+untitledFolderSuffix)) {
+      if (oldPath.path.includes('UntitledFolder' + untitledFolderSuffix)) {
         oldPath.path = oldPath.path + '/';
         newPath.path = newPath.path + '/';
         path = path + '/';
