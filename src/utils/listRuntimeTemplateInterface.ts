@@ -1,4 +1,8 @@
 export interface ISessionTemplateRoot {
+  error: {
+    code: number;
+    message: string;
+  };
   sessionTemplates: ISessionTemplate[];
   nextPageToken: string;
 }

@@ -166,6 +166,10 @@ const ClusterComponent = (): React.JSX.Element => {
         setclustersList(allClustersData);
         setIsLoading(false);
         setLoggedIn(true);
+
+      }
+      if (formattedResponse?.error?.code) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
       }
     } catch (error) {
       setIsLoading(false);
@@ -193,6 +197,9 @@ const ClusterComponent = (): React.JSX.Element => {
         startClusterApi(selectedCluster);
         clearInterval(timer.current);
       }
+      if (formattedResponse?.error?.code) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      }
       listClustersAPI();
     } catch (error) {
       console.error('Error fetching status', error);
@@ -218,7 +225,9 @@ const ClusterComponent = (): React.JSX.Element => {
       timer.current = setInterval(() => {
         statusApi(selectedCluster);
       }, POLLING_TIME_LIMIT);
-
+      if (formattedResponse?.error?.code) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      }
       // This is an artifact of the refactoring
       listClustersAPI();
 

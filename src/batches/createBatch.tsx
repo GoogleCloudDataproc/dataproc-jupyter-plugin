@@ -465,6 +465,10 @@ function CreateBatch({
   }, []);
   interface IApiResponse {
     name: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
   const runtimeSharedProject = async () => {
     const credentials = await authApi();
@@ -483,6 +487,9 @@ function CreateBatch({
             .then((responseResult: IApiResponse) => {
               setProjectInfo(responseResult.name);
               listSharedVPC(responseResult.name);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => console.log(e));
         })
@@ -531,6 +538,9 @@ function CreateBatch({
         .filter((subNetwork: string) => subNetwork);
 
       setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
+      if (responseResult?.error?.code) {
+        toast.error(responseResult?.error?.message, toastifyCustomStyle);
+      }
     } catch (err) {
       console.error('Error displaying sharedVPC subNetwork', err);
       toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
@@ -551,6 +561,10 @@ function CreateBatch({
   };
   interface INetworkResponse {
     network: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
   const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
     setIsloadingNetwork(true);
@@ -579,6 +593,9 @@ function CreateBatch({
 
               setNetworkSelected(transformedNetworkSelected);
               setIsloadingNetwork(false);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -781,7 +798,10 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { items: Network[] }) => {
+            .then((responseResult: { items: Network[], error: {
+              message: string;
+              code: number;
+            }; }) => {
               let transformedNetworkList = [];
               /*
          Extracting network from items
@@ -795,6 +815,9 @@ function CreateBatch({
               );
               setNetworklist(transformedNetworkList);
               setNetworkSelected(transformedNetworkList[0]);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
 
             .catch((e: Error) => {
@@ -810,6 +833,10 @@ function CreateBatch({
     keyRings: Array<{
       name: string;
     }>;
+    error: {
+      message: string;
+      code: number;
+    };
   };
 
   const listKeyRingsAPI = async () => {
@@ -835,11 +862,14 @@ function CreateBatch({
       */
 
               transformedKeyList = responseResult.keyRings.map(
-                (data: { name: string }) => {
+                (data: { name: string },) => {
                   return data.name.split('/')[5];
                 }
               );
               setKeyRinglist(transformedKeyList);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
 
             .catch((e: Error) => {
@@ -859,6 +889,10 @@ function CreateBatch({
   }
   interface IKeyListResponse {
     cryptoKeys: IKey[];
+    error: {
+      message: string;
+      code: number;
+    };
   }
 
   const listKeysAPI = async (keyRing: string) => {
@@ -891,6 +925,9 @@ function CreateBatch({
                 .map((data: { name: string }) => data.name.split('/')[7]);
               setKeylist(transformedKeyList);
               setKeySelected(transformedKeyList[0]);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
 
             .catch((e: Error) => {
@@ -925,6 +962,10 @@ function CreateBatch({
                   network: string;
                   privateIpGoogleAccess: boolean;
                 }[];
+                error: {
+                  message: string;
+                  code: number;
+                };
               }) => {
                 const filteredServices = responseResult.items.filter(
                   (item: { network: string; privateIpGoogleAccess: boolean }) =>
@@ -936,6 +977,9 @@ function CreateBatch({
                 );
                 setSubNetworklist(transformedServiceList);
                 setSubNetworkSelected(transformedServiceList[0]);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
               }
             )
             .catch((e: Error) => {
@@ -947,16 +991,71 @@ function CreateBatch({
         });
     }
   };
+  type Region = {
+    name: string;
+  };
 
+  const regionListAPI = async (projectId: string,  network: string | undefined) => {
+    const credentials = await authApi();
+    if (credentials) {
+      loggedFetch(`${REGION_URL}/${projectId}/regions`, {
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token,
+        },
+      })
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: { items: Region[],error: {
+              code: number;
+              message: string;
+            }; }) => {
+              let transformedRegionList = responseResult.items.map(
+                (data: Region) => {
+                  return data.name;
+                }
+              );
+  
+              const filteredServicesArray: never[] = []; 
+              // Use Promise.all to fetch services from all locations concurrently
+              const servicePromises = transformedRegionList.map((location) => {
+                return listMetaStoreAPI(projectId, location, network, filteredServicesArray);
+              });
+  
+              // Wait for all servicePromises to complete
+              Promise.all(servicePromises)
+                .then(() => {
+                
+                  if (responseResult?.error?.code) {
+                    toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                  }
+                })
+                .catch((e) => {
+                  console.log(e);
+                });
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing regions', err);
+        });
+    }
+  };
+  
   const listMetaStoreAPI = async (
-    data: undefined,
-    network: string | undefined
+    projectId: string,
+    location: string,
+    network: string | undefined,
+    filteredServicesArray: any // Pass the array as a parameter
   ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_META}/projects/${data}/locations/${credentials.region_id}/services`,
+        `${BASE_URL_META}/projects/${projectId}/locations/${location}/services`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -974,22 +1073,33 @@ function CreateBatch({
                   network: string;
                   hiveMetastoreConfig: { endpointProtocol: string };
                 }[];
+                error: {
+                  message: string;
+                  code: number;
+                };
               }) => {
                 // Filter based on endpointProtocol and network
                 const filteredServices = responseResult.services.filter((service) => {
                   return (
                     service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
-                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT' &&
+                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT'  && location ==regionName &&
                       service.network.split('/')[4] === network) 
                   );
                 });
-               
-                const transformedServiceList = filteredServices.map(
+                // Push filtered services into the array
+                filteredServicesArray.push(...filteredServices);
+                const transformedServiceList = filteredServicesArray.map(
                   (data: { name: string }) => data.name
                 );
                 setServicesList(transformedServiceList);
+  
                 setIsLoadingService(false);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
+
               }
+              
             )
             .catch((e: Error) => {
               console.log(e);
@@ -1234,6 +1344,7 @@ function CreateBatch({
             );
           } else {
             const errorResponse = await response.json();
+            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
             setError({ isOpen: true, message: errorResponse.error.message });
             console.log(error);
           }
@@ -1299,8 +1410,8 @@ function CreateBatch({
     setProjectId(data ?? '');
     setServicesList([]);
     setServicesSelected('');
- 
-    listMetaStoreAPI(data,network);
+    regionListAPI(data,network);
+    
   };
   const handleNetworkChange = async (data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());

@@ -185,6 +185,10 @@ function CreateRunTime({
   interface IUserInfoResponse {
     email: string;
     picture: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
   const displayUserInfo = async () => {
     const credentials = await authApi();
@@ -201,6 +205,9 @@ function CreateRunTime({
             .json()
             .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult.email);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => console.log(e));
         })
@@ -212,6 +219,10 @@ function CreateRunTime({
   };
   interface IApiResponse {
     name: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
 
   const runtimeSharedProject = async () => {
@@ -231,6 +242,9 @@ function CreateRunTime({
             .then((responseResult: IApiResponse) => {
               setProjectInfo(responseResult.name);
               listSharedVPC(responseResult.name);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => console.log(e));
         })
@@ -279,6 +293,9 @@ function CreateRunTime({
         .filter((subNetwork: string) => subNetwork);
 
       setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
+      if (responseResult?.error?.code) {
+        toast.error(responseResult?.error?.message, toastifyCustomStyle);
+      }
     } catch (err) {
       console.error('Error displaying sharedVPC subNetwork', err);
       toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
@@ -451,6 +468,10 @@ function CreateRunTime({
   };
   interface INetworkAPI {
     network: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
   const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
     setIsloadingNetwork(true);
@@ -480,6 +501,9 @@ function CreateRunTime({
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
               setIsloadingNetwork(false);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
 
             .catch((e: Error) => {
@@ -563,6 +587,10 @@ function CreateRunTime({
                   network: string;
                   privateIpGoogleAccess: boolean;
                 }[];
+                error: {
+                  message: string;
+                  code: number;
+                };
               }) => {
                 const filteredServices = responseResult.items.filter(
                   (item: { network: string; privateIpGoogleAccess: boolean }) =>
@@ -574,6 +602,9 @@ function CreateRunTime({
                 );
                 setSubNetworklist(transformedServiceList);
                 setSubNetworkSelected(transformedServiceList[0]);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
               }
             )
             .catch((e: Error) => {
@@ -586,15 +617,75 @@ function CreateRunTime({
     }
   };
 
+  type Region = {
+    name: string;
+  };
+
+  const regionListAPI = async (projectId: string,  network: string | undefined) => {
+    const credentials = await authApi();
+    if (credentials) {
+      loggedFetch(`${REGION_URL}/${projectId}/regions`, {
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token,
+        },
+      })
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: { items: Region[],error: {
+              code: number;
+              message: string;
+            }; }) => {
+              let transformedRegionList = responseResult.items.map(
+                (data: Region) => {
+                  return data.name;
+                }
+                
+              );
+  
+              const filteredServicesArray: never[] = []; // Create an array to store filtered services
+  
+              // Use Promise.all to fetch services from all locations concurrently
+              const servicePromises = transformedRegionList.map((location) => {
+                return listMetaStoreAPI(projectId, location, network, filteredServicesArray);
+              });
+  
+              // Wait for all servicePromises to complete
+              Promise.all(servicePromises)
+                .then(() => {
+                  // All services have been fetched, and filtered services are in filteredServicesArray
+                  if (responseResult?.error?.code) {
+                    toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                  }
+                  console.log(filteredServicesArray);
+                })
+               
+                .catch((e) => {
+                  console.log(e);
+                });
+            })
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          console.error('Error listing regions', err);
+        });
+    }
+  };
+  
   const listMetaStoreAPI = async (
-    data: undefined,
-    network: string | undefined
+    projectId: string,
+    location: string,
+    network: string | undefined,
+    filteredServicesArray: any // Pass the array as a parameter
   ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_META}/projects/${data}/locations/${credentials.region_id}/services`,
+        `${BASE_URL_META}/projects/${projectId}/locations/${location}/services`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -612,20 +703,30 @@ function CreateRunTime({
                   network: string;
                   hiveMetastoreConfig: { endpointProtocol: string };
                 }[];
+                error: {
+                  message: string;
+                  code: number;
+                };
               }) => {
                 // Filter based on endpointProtocol and network
                 const filteredServices = responseResult.services.filter((service) => {
                   return (
-                    service.hiveMetastoreConfig.endpointProtocol === 'GRPC' || 
-                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT' &&
+                    service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
+                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT'  &&  location ==region  &&
                       service.network.split('/')[4] === network) 
                   );
                 });
-                const transformedServiceList = filteredServices.map(
+                // Push filtered services into the array
+                filteredServicesArray.push(...filteredServices);
+                const transformedServiceList = filteredServicesArray.map(
                   (data: { name: string }) => data.name
                 );
                 setServicesList(transformedServiceList);
+  
                 setIsLoadingService(false);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
               }
             )
             .catch((e: Error) => {
@@ -725,8 +826,7 @@ function CreateRunTime({
     setProjectId(data ?? '');
     setServicesList([]);
     setServicesSelected('');
- 
-    listMetaStoreAPI(data,network);
+    regionListAPI(data,network);
   };
 
 
@@ -830,10 +930,7 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-            toast.success(
-              `Runtime Template ${displayNameSelected} successfully submitted`,
-              toastifyCustomStyle
-            );
+           
 
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
@@ -937,7 +1034,9 @@ function CreateRunTime({
             const errorResponse = await response.json();
             console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
+            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
           }
+        
         })
         .catch((err: Error) => {
           console.error('Error Creating template', err);
@@ -975,7 +1074,9 @@ function CreateRunTime({
             const errorResponse = await response.json();
             console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
+            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
           }
+       
         })
         .catch((err: Error) => {
           console.error('Error updating template', err);

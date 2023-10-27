@@ -115,6 +115,10 @@ function ConfigSelection({
     }
   };
   interface IUserInfoResponse {
+    error: {
+      code:number;
+      message: string;
+    };
     email: string;
     picture: string;
   }
@@ -132,8 +136,13 @@ function ConfigSelection({
           response
             .json()
             .then((responseResult: IUserInfoResponse) => {
-              setUserInfo(responseResult);
-              setIsLoadingUser(false);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
+              else{
+                setUserInfo(responseResult);
+                setIsLoadingUser(false);
+              }
             })
             .catch((e: Error) => console.log(e));
         })

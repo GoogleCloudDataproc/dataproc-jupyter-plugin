@@ -145,7 +145,7 @@ const DpmsComponent = ({
                 ...prevResponse,
                 responseResult
               ]);
-              if(data){
+              if (data) {
                 setIsLoading(false);
               }
             })
@@ -592,6 +592,10 @@ fetching database name from fully qualified name structure */
     }
   };
   interface IClusterDetailsResponse {
+    error: {
+      code:number;
+      message: string;
+    };
     config?: {
       metastoreConfig?: {
         dataprocMetastoreService?: string;
@@ -630,6 +634,9 @@ fetching database name from fully qualified name structure */
               } else {
                 setNoDpmsInstance(true);
                 setCluster(true);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
               }
             })
             .catch((e: Error) => {
@@ -644,6 +651,7 @@ fetching database name from fully qualified name structure */
     }
   };
   interface ISessionDetailsResponse {
+    error: any;
     environmentConfig?: {
       peripheralsConfig?: {
         metastoreService?: string;
@@ -671,6 +679,7 @@ fetching database name from fully qualified name structure */
               const metastoreServices =
                 responseResult.environmentConfig?.peripheralsConfig
                   ?.metastoreService;
+              
               if (metastoreServices) {
                 const lastIndex = metastoreServices.lastIndexOf('/');
                 const instanceName =
@@ -683,6 +692,9 @@ fetching database name from fully qualified name structure */
               } else {
                 setNoDpmsInstance(true);
                 setSession(true);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
               }
             })
             .catch((e: Error) => {
