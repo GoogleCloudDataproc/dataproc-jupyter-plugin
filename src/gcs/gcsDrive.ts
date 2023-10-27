@@ -78,10 +78,17 @@ export class GCSDrive implements Contents.IDrive {
    */
   private async getDirectory(localPath: string) {
     const path = GcsService.pathParser(localPath);
+    let searchInput = document.getElementById('filter-buckets-objects');
+    //@ts-ignore
+    let searchValue = searchInput.value;
     const content = await GcsService.list({
-      prefix: path.path,
+      prefix: searchValue
+        ? path.path === ''
+          ? path.path + searchValue
+          : path.path + '/' + searchValue
+        : path.path,
       bucket: path.bucket,
-      prefixCheck: ''
+      prefixCheck: searchValue ? 'UntitledFolder' : ''
     });
     if (!content) {
       throw 'Error Listing Objects';
