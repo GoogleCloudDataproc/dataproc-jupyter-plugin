@@ -660,7 +660,7 @@ function SubmitJob({
           }
         }
       )
-        .then((response: Response) => {
+        .then(async (response: Response) => {
           if (response.status === 200) {
             response
               .json()
@@ -675,7 +675,10 @@ function SubmitJob({
                 console.log(e);
               });
           } else {
+            const errorResponse = await response.json();
+            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
             throw new Error(`API failed with status: ${response.status}`);
+            
           }
         })
         .catch((err: Error) => {

@@ -113,7 +113,7 @@ export class GcsBrowserWidget extends Widget {
 
     let newFolder = new ToolbarButton({
       icon: iconGCSNewFolder,
-      className: 'jp-NewFolderIcon',
+      className: 'icon-white jp-NewFolderIcon',
       onClick: this.handleFolderCreation,
       tooltip: 'New Folder'
     });
@@ -131,7 +131,7 @@ export class GcsBrowserWidget extends Widget {
     this.node.appendChild(this.fileInput);
     let gcsUpload = new ToolbarButton({
       icon: iconGCSUpload,
-      className: 'jp-UploadIcon',
+      className: 'icon-white jp-UploadIcon',
       onClick: this.onUploadButtonClick,
       tooltip: 'File Upload'
     });

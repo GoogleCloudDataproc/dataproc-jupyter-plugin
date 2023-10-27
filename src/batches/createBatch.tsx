@@ -465,6 +465,10 @@ function CreateBatch({
   }, []);
   interface IApiResponse {
     name: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
   const runtimeSharedProject = async () => {
     const credentials = await authApi();
@@ -483,6 +487,9 @@ function CreateBatch({
             .then((responseResult: IApiResponse) => {
               setProjectInfo(responseResult.name);
               listSharedVPC(responseResult.name);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => console.log(e));
         })
@@ -531,6 +538,9 @@ function CreateBatch({
         .filter((subNetwork: string) => subNetwork);
 
       setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
+      if (responseResult?.error?.code) {
+        toast.error(responseResult?.error?.message, toastifyCustomStyle);
+      }
     } catch (err) {
       console.error('Error displaying sharedVPC subNetwork', err);
       toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
@@ -551,6 +561,10 @@ function CreateBatch({
   };
   interface INetworkResponse {
     network: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
   const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
     setIsloadingNetwork(true);
@@ -579,6 +593,9 @@ function CreateBatch({
 
               setNetworkSelected(transformedNetworkSelected);
               setIsloadingNetwork(false);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -781,7 +798,10 @@ function CreateBatch({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { items: Network[] }) => {
+            .then((responseResult: { items: Network[], error: {
+              message: string;
+              code: number;
+            }; }) => {
               let transformedNetworkList = [];
               /*
          Extracting network from items
@@ -795,6 +815,9 @@ function CreateBatch({
               );
               setNetworklist(transformedNetworkList);
               setNetworkSelected(transformedNetworkList[0]);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
 
             .catch((e: Error) => {
@@ -810,6 +833,10 @@ function CreateBatch({
     keyRings: Array<{
       name: string;
     }>;
+    error: {
+      message: string;
+      code: number;
+    };
   };
 
   const listKeyRingsAPI = async () => {
@@ -835,11 +862,14 @@ function CreateBatch({
       */
 
               transformedKeyList = responseResult.keyRings.map(
-                (data: { name: string }) => {
+                (data: { name: string },) => {
                   return data.name.split('/')[5];
                 }
               );
               setKeyRinglist(transformedKeyList);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
 
             .catch((e: Error) => {
@@ -859,6 +889,10 @@ function CreateBatch({
   }
   interface IKeyListResponse {
     cryptoKeys: IKey[];
+    error: {
+      message: string;
+      code: number;
+    };
   }
 
   const listKeysAPI = async (keyRing: string) => {
@@ -891,6 +925,9 @@ function CreateBatch({
                 .map((data: { name: string }) => data.name.split('/')[7]);
               setKeylist(transformedKeyList);
               setKeySelected(transformedKeyList[0]);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
 
             .catch((e: Error) => {
@@ -925,6 +962,10 @@ function CreateBatch({
                   network: string;
                   privateIpGoogleAccess: boolean;
                 }[];
+                error: {
+                  message: string;
+                  code: number;
+                };
               }) => {
                 const filteredServices = responseResult.items.filter(
                   (item: { network: string; privateIpGoogleAccess: boolean }) =>
@@ -936,6 +977,9 @@ function CreateBatch({
                 );
                 setSubNetworklist(transformedServiceList);
                 setSubNetworkSelected(transformedServiceList[0]);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
               }
             )
             .catch((e: Error) => {
@@ -1029,6 +1073,10 @@ function CreateBatch({
                   network: string;
                   hiveMetastoreConfig: { endpointProtocol: string };
                 }[];
+                error: {
+                  message: string;
+                  code: number;
+                };
               }) => {
                 // Filter based on endpointProtocol and network
                 const filteredServices = responseResult.services.filter((service) => {
@@ -1046,7 +1094,12 @@ function CreateBatch({
                 setServicesList(transformedServiceList);
   
                 setIsLoadingService(false);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
+
               }
+              
             )
             .catch((e: Error) => {
               console.log(e);
@@ -1291,6 +1344,7 @@ function CreateBatch({
             );
           } else {
             const errorResponse = await response.json();
+            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
             setError({ isOpen: true, message: errorResponse.error.message });
             console.log(error);
           }
