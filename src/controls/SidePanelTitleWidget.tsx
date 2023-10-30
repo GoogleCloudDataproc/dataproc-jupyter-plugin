@@ -29,12 +29,14 @@ export const TitleComponent = function ({
   return (
     <div
       style={{
-        padding: '8px 12px',
+        padding: '10px 14px',
         textTransform: 'none',
         fontFamily: 'Roboto',
         fontSize: '15px',
         fontWeight: 600,
         letterSpacing: 0,
+        borderBottom: 'var(--jp-border-width) solid var(--jp-border-color2)',
+        background: 'var(--jp-layout-color1)',
         ...styles
       }}
     >
@@ -59,6 +61,7 @@ export const TitleComponent = function ({
 export class TitleWidget extends ReactWidget {
   constructor(private titleStr: string, private isPreview: boolean) {
     super();
+    this.node.style.flexShrink = '0';
   }
   render() {
     return (

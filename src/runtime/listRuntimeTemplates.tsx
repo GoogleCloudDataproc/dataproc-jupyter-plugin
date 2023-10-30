@@ -150,7 +150,6 @@ function ListRuntimeTemplates({
     previousRuntimeTemplatesList?: object,
     previousRuntimeTemplatesAllList?: object
   ) => {
-   
     try {
       const pageToken = nextPageToken ?? '';
       const queryParams = new URLSearchParams({
@@ -205,14 +204,13 @@ function ListRuntimeTemplates({
         toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
       }
 
-      const existingRuntimeTemplatesAllData = previousRuntimeTemplatesAllList ?? [];
+      const existingRuntimeTemplatesAllData =
+        previousRuntimeTemplatesAllList ?? [];
       //setStateAction never type issue
       let allRuntimeTemplatesAllData: any = [
         ...(existingRuntimeTemplatesAllData as []),
         ...formattedResponse.sessionTemplates
       ];
-      
-
 
       const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
       //setStateAction never type issue
@@ -235,7 +233,10 @@ function ListRuntimeTemplates({
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing runtime templates', error);
-      DataprocLoggingService.log('Error listing runtime templates', LOG_LEVEL.ERROR);
+      DataprocLoggingService.log(
+        'Error listing runtime templates',
+        LOG_LEVEL.ERROR
+      );
       toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
     }
   };
@@ -295,7 +296,7 @@ function ListRuntimeTemplates({
 
   const renderActions = (data: ISessionTemplate) => {
     let runtimeTemplateName = data.name;
-    let runtimeTemplateDisplayName = data.jupyterSession.displayName;
+    let runtimeTemplateDisplayName = data?.jupyterSession?.displayName;
     return (
       <div className="actions-icon">
         <div
@@ -311,7 +312,7 @@ function ListRuntimeTemplates({
         >
           <iconDelete.react
             tag="div"
-            className='icon-white logo-alignment-style'
+            className="icon-white logo-alignment-style"
           />
         </div>
       </div>
@@ -324,7 +325,7 @@ function ListRuntimeTemplates({
          Extracting runtimeId from name
          Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
       */
-     
+
     runTimeTemplateAllList.forEach((data: ISessionTemplate) => {
       if (data.name.split('/')[5] === selectedValue.row.original.id) {
         selectedRunTimeAll.push(data);
@@ -395,7 +396,7 @@ function ListRuntimeTemplates({
             <div className="filter-cluster-icon">
               <iconFilter.react
                 tag="div"
-                className='icon-white logo-alignment-style'
+                className="icon-white logo-alignment-style"
               />
             </div>
             <div className="filter-cluster-text"></div>
