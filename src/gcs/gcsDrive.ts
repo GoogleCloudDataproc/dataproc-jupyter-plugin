@@ -27,6 +27,7 @@ export class GCSDrive implements Contents.IDrive {
 
   private _isDisposed = false;
   private _fileChanged = new Signal<this, Contents.IChangedArgs>(this);
+  private _currentPrefix = '';
   readonly serverSettings: ServerConnection.ISettings;
 
   get name() {
@@ -53,23 +54,21 @@ export class GCSDrive implements Contents.IDrive {
    * @returns IModel directory containing all the GCS buckets for the current project.
    */
   private async getBuckets() {
-    let searchInput = document.getElementById('filter-buckets-objects');
-    //@ts-ignore
-    let searchValue = searchInput.value;
     const content = await GcsService.listBuckets({
-      filterValue: searchValue ? searchValue : ''
+      prefix: this._currentPrefix
     });
     if (!content) {
       throw 'Error Listing Buckets';
     }
     return {
       ...DIRECTORY_IMODEL,
-      content: content.items?.map(bucket => ({
-        ...DIRECTORY_IMODEL,
-        path: bucket.name,
-        name: bucket.name,
-        last_modified: bucket.updated ?? ''
-      }))
+      content:
+        content.items?.map(bucket => ({
+          ...DIRECTORY_IMODEL,
+          path: bucket.name,
+          name: bucket.name,
+          last_modified: bucket.updated ?? ''
+        })) ?? []
     };
   }
 
@@ -78,17 +77,10 @@ export class GCSDrive implements Contents.IDrive {
    */
   private async getDirectory(localPath: string) {
     const path = GcsService.pathParser(localPath);
-    let searchInput = document.getElementById('filter-buckets-objects');
-    //@ts-ignore
-    let searchValue = searchInput.value;
+    const prefix = path.path.length > 0 ? `${path.path}/` : path.path;
     const content = await GcsService.list({
-      prefix: searchValue
-        ? path.path === ''
-          ? path.path + searchValue
-          : path.path + '/' + searchValue
-        : path.path,
-      bucket: path.bucket,
-      prefixCheck: searchValue ? 'UntitledFolder' : ''
+      prefix: prefix + this._currentPrefix,
+      bucket: path.bucket
     });
     if (!content) {
       throw 'Error Listing Objects';
@@ -197,6 +189,10 @@ export class GCSDrive implements Contents.IDrive {
     return directory;
   }
 
+  updateQuery(query: string): void {
+    this._currentPrefix = query;
+  }
+
   async save(
     localPath: string,
     options?: Partial<Contents.IModel>
@@ -262,8 +258,7 @@ export class GCSDrive implements Contents.IDrive {
         path.path === ''
           ? path.path + 'UntitledFolder'
           : path.path + '/UntitledFolder',
-      bucket: path.bucket,
-      prefixCheck: 'UntitledFolder'
+      bucket: path.bucket
     });
     if (content.prefixes) {
       let maxSuffix = 1;
@@ -352,7 +347,10 @@ export class GCSDrive implements Contents.IDrive {
       });
 
       if (response === 200) {
-        this.delete(path);
+        await GcsService.deleteFile({
+          bucket: oldPath.bucket,
+          path: oldPath.path
+        });
       }
 
       const contents = {

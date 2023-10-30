@@ -54,7 +54,7 @@ export class GcsService {
    * Thin wrapper around storage.object.list
    * @see https://cloud.google.com/storage/docs/listing-objects#rest-list-objects
    */
-  static async list({ prefix, bucket, prefixCheck }: { prefix: string; bucket: string; prefixCheck: string }) {
+  static async list({ prefix, bucket }: { prefix: string; bucket: string }) {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
@@ -62,12 +62,9 @@ export class GcsService {
     const requestUrl = new URL(
       `${this.STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o`
     );
-
-    prefix = prefix.length > 0 && prefixCheck !== 'UntitledFolder' ? `${prefix}/` : prefix;
-
     requestUrl.searchParams.append('prefix', prefix);
     requestUrl.searchParams.append('delimiter', '/');
-    const response = await loggedFetch(requestUrl.toString(), {
+    const response = await fetch(requestUrl.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -82,14 +79,14 @@ export class GcsService {
    * Thin wrapper around storage.bucket.list
    * @see https://cloud.google.com/storage/docs/listing-buckets#rest-list-buckets
    */
-  static async listBuckets({ filterValue }: { filterValue: string }) {
+  static async listBuckets({ prefix }: { prefix: string }) {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
     }
     const requestUrl = new URL(`${this.STORAGE_DOMAIN_URL}/storage/v1/b`);
     requestUrl.searchParams.append('project', credentials.project_id ?? '');
-    requestUrl.searchParams.append('prefix', filterValue);
+    requestUrl.searchParams.append('prefix', prefix);
     const response = await loggedFetch(requestUrl.toString(), {
       method: 'GET',
       headers: {
@@ -271,7 +268,7 @@ export class GcsService {
       `${this.STORAGE_DOMAIN_URL}/upload/storage/v1/b/${bucket}/o`
     );
     let newFolderPath =
-      path === '' ? path + folderName +'/' : path + '/'+folderName+'/';
+      path === '' ? path + folderName + '/' : path + '/' + folderName + '/';
     requestUrl.searchParams.append('name', newFolderPath);
     const response = await loggedFetch(requestUrl.toString(), {
       method: 'POST',
