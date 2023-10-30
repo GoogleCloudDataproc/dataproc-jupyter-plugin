@@ -62,6 +62,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { terminateSessionAPI } from '../utils/sessionService';
 import PollingTimer from '../utils/pollingTimer';
 import { JupyterLab } from '@jupyterlab/application';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -171,6 +172,7 @@ function SessionDetails({
     } catch (error) {
       setIsLoading(false);
       console.error('Error loading session details', error);
+      DataprocLoggingService.log('Error loading session details', LOG_LEVEL.ERROR);
       toast.error(
         `Failed to fetch session details ${sessionSelected}`,
         toastifyCustomStyle
@@ -214,7 +216,7 @@ function SessionDetails({
   return (
     <div>
       {sessionInfo.name !== '' ? (
-        <div className="scroll-comp">
+        <div className="scroll">
           {detailedSessionView && (
             <div>
               <div

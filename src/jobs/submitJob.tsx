@@ -43,6 +43,7 @@ import { Select } from '../controls/MuiWrappedSelect';
 import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { Autocomplete, TextField } from '@mui/material';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -683,6 +684,7 @@ function SubmitJob({
         })
         .catch((err: Error) => {
           console.error('Error submitting job', err);
+          DataprocLoggingService.log('Error submitting job', LOG_LEVEL.ERROR);
           toast.error('Failed to submit the job', toastifyCustomStyle);
         });
     }

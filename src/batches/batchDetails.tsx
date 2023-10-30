@@ -62,6 +62,7 @@ import { deleteBatchAPI } from '../utils/batchService';
 import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';
 import CreateBatch from './createBatch';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -271,6 +272,7 @@ function BatchDetails({
         })
         .catch((err: Error) => {
           setIsLoading(false);
+          DataprocLoggingService.log('Error in getting Batch details', LOG_LEVEL.ERROR);
           console.error('Error in getting Batch details', err);
           toast.error(
             `Failed to fetch batch details ${batchSelected}`,
@@ -361,7 +363,7 @@ function BatchDetails({
       )}
 
       {!createBatch && batchInfoResponse.uuid !== '' && (
-        <div className="scroll-comp-batchdetails">
+        <div className="scroll">
           <div
             className='scroll-fix-header cluster-details-header'
           >

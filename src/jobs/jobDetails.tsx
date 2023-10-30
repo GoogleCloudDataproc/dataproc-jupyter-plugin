@@ -58,6 +58,7 @@ import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { IJobDetails } from '../utils/jobDetailsInterface';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -268,6 +269,7 @@ function JobDetails({
         })
         .catch((err: Error) => {
           console.error('Error in updating job', err);
+          DataprocLoggingService.log('Error in updating job', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to update the job ${jobSelected}`,
             toastifyCustomStyle
@@ -342,6 +344,7 @@ function JobDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error in getting job details', err);
+          DataprocLoggingService.log('Error in getting job details', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to fetch job details ${jobSelected}`,
             toastifyCustomStyle
@@ -445,7 +448,7 @@ function JobDetails({
         />
       )}
       {!submitJobView && !detailedClusterView && !errorView && (
-        <div className="scroll-comp-jobdetails">
+        <div className="scroll">
           {jobInfo.jobUuid !== '' && (
             <div>
               <div className="scroll-fix-header cluster-details-header">

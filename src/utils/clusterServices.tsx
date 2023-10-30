@@ -22,6 +22,7 @@ import {
   BASE_URL
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const deleteClusterApi = async (selectedcluster: string) => {
   const credentials = await authApi();
@@ -56,6 +57,7 @@ export const deleteClusterApi = async (selectedcluster: string) => {
       })
       .catch((err: Error) => {
         console.error('Error deleting cluster', err);
+        DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
       });
   }
 };
@@ -90,6 +92,7 @@ export const startStopAPI = async (
       })
       .catch((err: Error) => {
         console.error(`Error ${operation} cluster`, err);
+        DataprocLoggingService.log(`Error ${operation} cluster`, LOG_LEVEL.ERROR);
         toast.error(
           `Failed to ${operation} the cluster ${selectedcluster}`,
           toastifyCustomStyle

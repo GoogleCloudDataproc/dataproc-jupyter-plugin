@@ -37,6 +37,7 @@ import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ISessionTemplate,
   ISessionTemplateDisplay,
@@ -234,6 +235,7 @@ function ListRuntimeTemplates({
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing runtime templates', error);
+      DataprocLoggingService.log('Error listing runtime templates', LOG_LEVEL.ERROR);
       toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
     }
   };
