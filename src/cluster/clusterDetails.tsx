@@ -54,6 +54,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SubmitJob from '../jobs/submitJob';
 import PollingTimer from '../utils/pollingTimer';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -212,6 +213,7 @@ function ClusterDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters Details', err);
+          DataprocLoggingService.log('Error listing clusters Details', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to fetch cluster details ${clusterSelected}`,
             toastifyCustomStyle

@@ -28,6 +28,7 @@ import {
   VIEW_LOGS_SESSION_URL
 } from './const';
 import { authApi, loggedFetch } from './utils';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconViewLogs = new LabIcon({
   name: 'launcher:view-logs-icon',
@@ -127,6 +128,8 @@ function ViewLogs({
         })
         .catch((err: Error) => {
           console.error('Error listing clusters Details', err);
+          DataprocLoggingService.log('Error listing clusters Details', LOG_LEVEL.ERROR);
+          
         });
     }
   };

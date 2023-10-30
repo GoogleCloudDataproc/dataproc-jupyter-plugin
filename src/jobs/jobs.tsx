@@ -63,6 +63,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { stopJobApi, deleteJobApi } from '../utils/jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -319,6 +320,7 @@ function JobComponent({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing jobs', err);
+          DataprocLoggingService.log('Error listing jobs', LOG_LEVEL.ERROR);
           toast.error('Failed to fetch jobs', toastifyCustomStyle);
         });
     }

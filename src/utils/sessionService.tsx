@@ -23,6 +23,7 @@ import {
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const deleteSessionAPI = async (selectedSession: string) => {
   const credentials = await authApi();
@@ -52,6 +53,7 @@ export const deleteSessionAPI = async (selectedSession: string) => {
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
+        DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
         toast.error(
           `Failed to delete the session ${selectedSession}`,
           toastifyCustomStyle
@@ -86,6 +88,7 @@ export const terminateSessionAPI = async (selectedSession: string) => {
       })
       .catch((err: Error) => {
         console.error('Error terminating session', err);
+        DataprocLoggingService.log('Error terminating session', LOG_LEVEL.ERROR);
         toast.error(
           `Failed to terminate session ${selectedSession}`,
           toastifyCustomStyle
