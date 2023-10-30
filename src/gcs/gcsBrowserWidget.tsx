@@ -95,10 +95,6 @@ export class GcsBrowserWidget extends Widget {
     }
   };
 
-  private filterFilesByName = async (filterValue: string) => {
-    this.browser.model.refresh();
-  };
-
   constructor(
     private drive: GCSDrive,
     private fileBrowserFactory: IFileBrowserFactory
@@ -162,9 +158,6 @@ export class GcsBrowserWidget extends Widget {
     this.browser.toolbar.addItem('Search Box', searchBox);
     this.browser.toolbar.addItem('New Folder', newFolder);
     this.browser.toolbar.addItem('File Upload', gcsUpload);
-
-    let filterItem = new Widget({ node: filterInput });
-    this.browser.toolbar.addItem('Filter by Name:', filterItem);
   }
 
   dispose() {

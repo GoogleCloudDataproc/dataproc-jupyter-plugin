@@ -54,7 +54,7 @@ export class GcsService {
    * Thin wrapper around storage.object.list
    * @see https://cloud.google.com/storage/docs/listing-objects#rest-list-objects
    */
-  static async list({ prefix, bucket, prefixCheck }: { prefix: string; bucket: string; prefixCheck: string }) {
+  static async list({ prefix, bucket }: { prefix: string; bucket: string }) {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
