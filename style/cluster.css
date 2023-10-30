@@ -113,8 +113,10 @@
 
 .spin-loaderMain {
   display: flex;
-  margin-top: 20%;
-  margin-left: 50%;
+  max-height: 100%;
+  justify-content: center;
+  align-items: center;
+  margin: 35%;
 }
 
 .filter-cluster-overlay {
