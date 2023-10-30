@@ -347,7 +347,7 @@ function ClusterDetails({
         />
       )}
       {!submitJobView && (
-        <div className="scroll-comp-cluster">
+        <div className="scroll">
           {!errorView && clusterInfo.clusterName !== '' ? (
             <div>
               {!detailedJobView && (

@@ -231,7 +231,7 @@
 }
 
 .jobs-list-table-parent {
-  height: 75.8vh;
+  height: 100%;
   overflow: auto;
 }
 .scroll-comp-jobdetails {
