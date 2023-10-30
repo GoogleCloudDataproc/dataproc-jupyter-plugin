@@ -22,9 +22,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import gcsNewFolderIcon from '../../style/icons/gcs_folder_new_icon.svg';
 import gcsUploadIcon from '../../style/icons/gcs_upload_icon.svg';
 import { GcsService } from './gcsService';
-import { FilenameSearcher, IScore } from '@jupyterlab/ui-components';
 import { GCSDrive } from './gcsDrive';
-import { debounce } from '@mui/material/utils';
 import { TitleWidget } from '../controls/SidePanelTitleWidget';
 
 const iconGCSNewFolder = new LabIcon({
@@ -106,16 +104,19 @@ export class GcsBrowserWidget extends Widget {
         driveName: this.drive.name
       }
     );
-
-    this.browser.showFileCheckboxes = false;
-    this.browser.node.style.height = '100%';
     this.layout = new PanelLayout();
     this.node.style.height = '100%';
-    (this.layout as PanelLayout).addWidget(this.browser);
+    this.node.style.display = 'flex';
+    this.node.style.flexDirection = 'column';
 
-    this.browser.header.addWidget(
+    (this.layout as PanelLayout).addWidget(
       new TitleWidget('Google Cloud Storage', true)
     );
+
+    this.browser.showFileCheckboxes = false;
+    (this.layout as PanelLayout).addWidget(this.browser);
+    this.browser.node.style.flexShrink = '1';
+    this.browser.node.style.flexGrow = '1';
 
     let newFolder = new ToolbarButton({
       icon: iconGCSNewFolder,
@@ -141,21 +142,6 @@ export class GcsBrowserWidget extends Widget {
       onClick: this.onUploadButtonClick,
       tooltip: 'File Upload'
     });
-
-    const debounceRefresh = debounce(() => this.browser.model.refresh(), 100);
-    const searchBox = FilenameSearcher({
-      updateFilter: (
-        filterFn: (item: string) => Partial<IScore> | null,
-        query?: string
-      ) => {
-        this.drive.updateQuery(query ?? '');
-        debounceRefresh();
-      },
-      placeholder: 'Filter by prefix',
-      forceRefresh: true,
-      useFuzzyFilter: false
-    });
-    this.browser.toolbar.addItem('Search Box', searchBox);
     this.browser.toolbar.addItem('New Folder', newFolder);
     this.browser.toolbar.addItem('File Upload', gcsUpload);
   }
