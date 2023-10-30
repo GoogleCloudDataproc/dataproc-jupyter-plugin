@@ -113,8 +113,10 @@
 
 .spin-loaderMain {
   display: flex;
-  margin-top: 20%;
-  margin-left: 50%;
+  max-height: 100%;
+  justify-content: center;
+  align-items: center;
+  margin: 35%;
 }
 
 .filter-cluster-overlay {
@@ -193,7 +195,7 @@
 }
 
 .clusters-list-table-parent {
-  height: 75.8vh;
+  height: 100%;
   overflow: auto;
 }
 
@@ -270,8 +272,10 @@
 }
 
 .component-level {
-  max-height: 85vh;
+  max-height: 100%;
   font-family: 'Roboto';
+  overflow: auto;
+  overflow-x: hidden;
 }
 .scroll-comp {
   overflow-y: auto;

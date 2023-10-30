@@ -216,7 +216,7 @@ function SessionDetails({
   return (
     <div>
       {sessionInfo.name !== '' ? (
-        <div className="scroll-comp">
+        <div className="scroll">
           {detailedSessionView && (
             <div>
               <div
