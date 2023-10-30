@@ -38,12 +38,18 @@ export const deleteSessionAPI = async (selectedSession: string) => {
         }
       }
     )
-      .then((response: Response) => {
+      .then(async (response: Response) => {
         console.log(response);
+        const formattedResponse = await response.json()
+        if (formattedResponse?.error?.code) {
+          toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        }
+        else{
         toast.success(
           `Session ${selectedSession} deleted successfully`,
           toastifyCustomStyle
         );
+        }
       })
       .catch((err: Error) => {
         console.error('Error deleting session', err);
@@ -71,8 +77,12 @@ export const terminateSessionAPI = async (selectedSession: string) => {
       .then((response: Response) => {
         response
           .json()
-          .then((responseResult: Response) => {
+          .then(async (responseResult: Response) => {
             console.log(responseResult);
+            const formattedResponse = await responseResult.json()
+            if (formattedResponse?.error?.code) {
+              toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+            }
           })
           .catch((e: Error) => console.log(e));
       })

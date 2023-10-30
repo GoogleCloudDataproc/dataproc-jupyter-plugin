@@ -40,12 +40,18 @@ export const deleteClusterApi = async (selectedcluster: string) => {
       .then((response: Response) => {
         response
           .json()
-          .then((responseResult: Response) => {
+          .then(async (responseResult: Response) => {
             console.log(responseResult);
+            const formattedResponse = await responseResult.json()
+            if (formattedResponse?.error?.code) {
+              toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+            }
+            else{
             toast.success(
               `Cluster ${selectedcluster} deleted successfully`,
               toastifyCustomStyle
             );
+            }
           })
           .catch((e: Error) => console.log(e));
       })
@@ -75,8 +81,12 @@ export const startStopAPI = async (
       .then((response: Response) => {
         response
           .json()
-          .then((responseResult: Response) => {
+          .then(async (responseResult: Response) => {
             console.log(responseResult);
+            const formattedResponse = await responseResult.json()
+            if (formattedResponse?.error?.code) {
+              toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+            }
           })
           .catch((e: Error) => console.log(e));
       })

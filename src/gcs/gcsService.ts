@@ -62,12 +62,9 @@ export class GcsService {
     const requestUrl = new URL(
       `${this.STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o`
     );
-
-    prefix = prefix.length > 0 ? `${prefix}/` : prefix;
-
     requestUrl.searchParams.append('prefix', prefix);
     requestUrl.searchParams.append('delimiter', '/');
-    const response = await loggedFetch(requestUrl.toString(), {
+    const response = await fetch(requestUrl.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -82,13 +79,14 @@ export class GcsService {
    * Thin wrapper around storage.bucket.list
    * @see https://cloud.google.com/storage/docs/listing-buckets#rest-list-buckets
    */
-  static async listBuckets() {
+  static async listBuckets({ prefix }: { prefix: string }) {
     const credentials = await authApi();
     if (!credentials) {
       throw 'not logged in';
     }
     const requestUrl = new URL(`${this.STORAGE_DOMAIN_URL}/storage/v1/b`);
     requestUrl.searchParams.append('project', credentials.project_id ?? '');
+    requestUrl.searchParams.append('prefix', prefix);
     const response = await loggedFetch(requestUrl.toString(), {
       method: 'GET',
       headers: {
@@ -154,6 +152,65 @@ export class GcsService {
   }
 
   /**
+   * Thin wrapper around object download
+   * @see https://cloud.google.com/storage/docs/downloading-objects#rest-download-object
+   */
+  static async downloadFile({
+    bucket,
+    path,
+    name,
+    format
+  }: {
+    bucket: string;
+    path: string;
+    name: string;
+    format: 'text' | 'json' | 'base64';
+  }): Promise<string> {
+    const credentials = await authApi();
+    if (!credentials) {
+      throw 'not logged in';
+    }
+    const requestUrl = new URL(
+      `${this.STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o/${encodeURIComponent(
+        path
+      )}`
+    );
+    requestUrl.searchParams.append('alt', 'media');
+    const response = await fetch(requestUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token,
+        'X-Goog-User-Project': credentials.project_id || ''
+      }
+    });
+    if (response.status !== 200) {
+      throw response.statusText;
+    }
+
+    // let fileName = name.split('/')[name.split('/').length-1]
+    // let blob = await response.blob()
+    // // Create blob link to download
+    // const url = window.URL.createObjectURL(
+    //   new Blob([blob]),
+    // );
+    // const link = document.createElement('a');
+    // link.href = url;
+    // link.setAttribute(
+    //   'download',
+    //   decodeURIComponent(fileName),
+    // );
+
+    // // Append to html link element page
+    // document.body.appendChild(link);
+
+    // // Start download
+    // link.click();
+
+    return response.url;
+  }
+
+  /**
    * Thin wrapper around object upload
    * @see https://cloud.google.com/storage/docs/uploading-objects#rest-upload-objects
    */
@@ -188,5 +245,117 @@ export class GcsService {
       throw response.statusText;
     }
     return (await response.json()) as storage_v1.Schema$Object;
+  }
+
+  /**
+   * Thin wrapper around object upload
+   * @see https://cloud.google.com/storage/docs/uploading-objects#rest-upload-objects
+   */
+  static async createFolder({
+    bucket,
+    path,
+    folderName
+  }: {
+    bucket: string;
+    path: string;
+    folderName: string;
+  }) {
+    const credentials = await authApi();
+    if (!credentials) {
+      throw 'not logged in';
+    }
+    const requestUrl = new URL(
+      `${this.STORAGE_DOMAIN_URL}/upload/storage/v1/b/${bucket}/o`
+    );
+    let newFolderPath =
+      path === '' ? path + folderName + '/' : path + '/' + folderName + '/';
+    requestUrl.searchParams.append('name', newFolderPath);
+    const response = await loggedFetch(requestUrl.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token,
+        'X-Goog-User-Project': credentials.project_id || ''
+      }
+    });
+    if (response.status !== 200) {
+      throw response.statusText;
+    }
+    return (await response.json()) as storage_v1.Schema$Object;
+  }
+
+  /**
+   * Thin wrapper around object delete
+   * @see https://cloud.google.com/storage/docs/deleting-objects
+   */
+  static async deleteFile({ bucket, path }: { bucket: string; path: string }) {
+    const credentials = await authApi();
+    if (!credentials) {
+      throw 'not logged in';
+    }
+    const requestUrl = new URL(
+      `${this.STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o/${encodeURIComponent(
+        path
+      )}`
+    );
+
+    const response = await fetch(requestUrl.toString(), {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token,
+        'X-Goog-User-Project': credentials.project_id || ''
+      }
+    });
+    if (response.status !== 204) {
+      if (response.status === 404) {
+        throw 'Deleting Folder/Bucket is not allowed';
+      }
+      throw response.statusText;
+    }
+  }
+
+  /**
+   * Thin wrapper around object delete
+   * @see https://cloud.google.com/storage/docs/copying-renaming-moving-objects
+   */
+  static async renameFile({
+    oldBucket,
+    oldPath,
+    newBucket,
+    newPath
+  }: {
+    oldBucket: string;
+    oldPath: string;
+    newBucket: string;
+    newPath: string;
+  }) {
+    const credentials = await authApi();
+    if (!credentials) {
+      throw 'not logged in';
+    }
+
+    const requestUrl = new URL(
+      `${
+        this.STORAGE_DOMAIN_URL
+      }/storage/v1/b/${oldBucket}/o/${encodeURIComponent(
+        oldPath
+      )}/rewriteTo/b/${newBucket}/o/${encodeURIComponent(newPath)}`
+    );
+
+    const response = await fetch(requestUrl.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token,
+        'X-Goog-User-Project': credentials.project_id || ''
+      }
+    });
+
+    if (response.status === 200) {
+      return response.status;
+    } else {
+      throw response.statusText;
+    }
   }
 }

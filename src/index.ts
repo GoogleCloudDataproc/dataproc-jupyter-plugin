@@ -33,12 +33,7 @@ import serverlessIcon from '../style/icons/serverless_icon.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
-import {
-  Contents,
-  Kernel,
-  KernelAPI,
-  KernelSpecAPI
-} from '@jupyterlab/services';
+import { Kernel, KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
@@ -118,9 +113,13 @@ const extension: JupyterFrontEndPlugin<void> = {
       localStorage.removeItem('notebookValue');
     });
 
-    // React-Toastify needs a ToastContainer to render toasts, since we don't
-    // have a global React Root, lets just inject one in the body.
-    injectToastContainer();
+    try {
+      // React-Toastify needs a ToastContainer to render toasts, since we don't
+      // have a global React Root, lets just inject one in the body.
+      injectToastContainer();
+    } catch (e) {
+      // do nothing
+    }
 
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
@@ -128,7 +127,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     // The current value of whether or not preview features are enabled.
     let previewEnabled = settings.get('previewEnabled').composite as boolean;
     let panelDpms: Panel | undefined, panelGcs: Panel | undefined;
-    let gcsDrive: Contents.IDrive | undefined;
+    let gcsDrive: GCSDrive | undefined;
     settings.changed.connect(() => {
       onPreviewEnabledChanged();
     });
@@ -176,7 +175,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         gcsDrive = new GCSDrive();
         documentManager.services.contents.addDrive(gcsDrive);
         panelGcs.addWidget(
-          new GcsBrowserWidget(gcsDrive.name, factory as IFileBrowserFactory)
+          new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
         );
         // Update the icons.
         onThemeChanged();

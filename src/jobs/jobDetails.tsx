@@ -252,12 +252,18 @@ function JobDetails({
         .then((response: Response) => {
           response
             .json()
-            .then((responseResultJob: Response) => {
+            .then(async (responseResultJob: Response) => {
+              const formattedResponse = await responseResultJob.json()
+              if (formattedResponse?.error?.code) {
+                toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+              }
+              else{
               toast.success(
                 `Request to update job ${jobSelected} submitted`,
                 toastifyCustomStyle
               );
               console.log(responseResultJob);
+              }
             })
             .catch((e: Error) => console.error(e));
         })
@@ -326,6 +332,9 @@ function JobDetails({
               setLabelDetail(labelValue);
               setIsLoading(false);
               setSelectedJobClone(responseResult);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => {
               console.error(e);

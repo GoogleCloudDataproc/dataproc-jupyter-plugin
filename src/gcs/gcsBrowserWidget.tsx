@@ -14,33 +14,155 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { Widget, PanelLayout } from '@lumino/widgets';
+import { Dialog, ToolbarButton, showDialog } from '@jupyterlab/apputils';
 import { FileBrowser, IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import 'react-toastify/dist/ReactToastify.css';
+import { LabIcon } from '@jupyterlab/ui-components';
+import gcsNewFolderIcon from '../../style/icons/gcs_folder_new_icon.svg';
+import gcsUploadIcon from '../../style/icons/gcs_upload_icon.svg';
+import { GcsService } from './gcsService';
+import { FilenameSearcher, IScore } from '@jupyterlab/ui-components';
+import { GCSDrive } from './gcsDrive';
+import { debounce } from '@mui/material/utils';
+import { TitleWidget } from '../controls/SidePanelTitleWidget';
 
+const iconGCSNewFolder = new LabIcon({
+  name: 'gcs-toolbar:gcs-folder-new-icon',
+  svgstr: gcsNewFolderIcon
+});
+const iconGCSUpload = new LabIcon({
+  name: 'gcs-toolbar:gcs-upload-icon',
+  svgstr: gcsUploadIcon
+});
 export class GcsBrowserWidget extends Widget {
   private browser: FileBrowser;
+  private fileInput: HTMLInputElement;
+
+  // Function to trigger file input dialog when the upload button is clicked
+  private onUploadButtonClick = () => {
+    if (this.browser.model.path.split(':')[1] !== '') {
+      this.fileInput.click();
+    } else {
+      showDialog({
+        title: 'Upload Error',
+        body: 'Uploading files at bucket level is not allowed',
+        buttons: [Dialog.okButton()]
+      });
+    }
+  };
+
+  private handleFolderCreation = () => {
+    this.browser.createNewDirectory();
+  };
+
+  // Function to handle file upload
+  private handleFileUpload = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files || []);
+
+    if (files && files.length > 0) {
+      files.forEach((fileData: any) => {
+        const file = fileData;
+        const reader = new FileReader();
+
+        reader.onloadend = async () => {
+          // Upload the file content to Google Cloud Storage
+          const gcsPath = this.browser.model.path.split(':')[1];
+          const path = GcsService.pathParser(gcsPath);
+          let filePath;
+
+          if (path.path === '') {
+            filePath = file.name;
+          } else {
+            filePath = path.path + '/' + file.name;
+          }
+
+          await GcsService.saveFile({
+            bucket: path.bucket,
+            path: filePath,
+            contents: reader.result as string // assuming contents is a string
+          });
+
+          // Optionally, update the FileBrowser model to reflect the newly uploaded file
+          // Example: Refresh the current directory
+          await this.browser.model.refresh();
+        };
+
+        // Read the file as text
+        reader.readAsText(file);
+      });
+    }
+  };
+
   constructor(
-    private driveName: string,
+    private drive: GCSDrive,
     private fileBrowserFactory: IFileBrowserFactory
   ) {
     super();
     this.browser = this.fileBrowserFactory.createFileBrowser(
       'dataproc-jupyter-plugin:gcsBrowser',
       {
-        driveName: this.driveName
+        driveName: this.drive.name
       }
     );
+
     this.browser.showFileCheckboxes = false;
     this.browser.node.style.height = '100%';
     this.layout = new PanelLayout();
     this.node.style.height = '100%';
     (this.layout as PanelLayout).addWidget(this.browser);
+
+    this.browser.header.addWidget(
+      new TitleWidget('Google Cloud Storage', true)
+    );
+
+    let newFolder = new ToolbarButton({
+      icon: iconGCSNewFolder,
+      className: 'icon-white jp-NewFolderIcon',
+      onClick: this.handleFolderCreation,
+      tooltip: 'New Folder'
+    });
+
+    // Create a file input element
+    this.fileInput = document.createElement('input');
+    this.fileInput.type = 'file';
+    this.fileInput.multiple = true; // Enable multiple file selection
+    this.fileInput.style.display = 'none';
+
+    // Attach event listener for file selection
+    this.fileInput.addEventListener('change', this.handleFileUpload);
+
+    // Append the file input element to the widget's node
+    this.node.appendChild(this.fileInput);
+    let gcsUpload = new ToolbarButton({
+      icon: iconGCSUpload,
+      className: 'icon-white jp-UploadIcon',
+      onClick: this.onUploadButtonClick,
+      tooltip: 'File Upload'
+    });
+
+    const debounceRefresh = debounce(() => this.browser.model.refresh(), 100);
+    const searchBox = FilenameSearcher({
+      updateFilter: (
+        filterFn: (item: string) => Partial<IScore> | null,
+        query?: string
+      ) => {
+        this.drive.updateQuery(query ?? '');
+        debounceRefresh();
+      },
+      placeholder: 'Filter by prefix',
+      forceRefresh: true,
+      useFuzzyFilter: false
+    });
+    this.browser.toolbar.addItem('Search Box', searchBox);
+    this.browser.toolbar.addItem('New Folder', newFolder);
+    this.browser.toolbar.addItem('File Upload', gcsUpload);
   }
 
   dispose() {
     this.browser.dispose();
+    this.fileInput.removeEventListener('change', this.handleFileUpload);
     super.dispose();
   }
 }

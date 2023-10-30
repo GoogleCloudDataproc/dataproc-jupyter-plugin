@@ -207,6 +207,10 @@ function JobComponent({
     setDeletePopupOpen(false);
   };
   interface IJobList {
+    error: {
+      code: number;
+      message: string;
+    };
     jobs: Array<{
       reference: {
         jobId: string;
@@ -255,6 +259,9 @@ function JobComponent({
                 labels: string[];
                 actions: React.JSX.Element;
               }[] = [];
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
                   const startTime = jobTimeFormat(

@@ -41,12 +41,18 @@ export const deleteBatchAPI = async (selectedBatch: string) => {
       .then((response: Response) => {
         response
           .json()
-          .then((responseResult: Response) => {
+          .then(async (responseResult: Response) => {
             console.log(responseResult);
+            const formattedResponse = await responseResult.json()
+            if (formattedResponse?.error?.code) {
+              toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+            }
+            else{
             toast.success(
               `Batch ${selectedBatch} deleted successfully`,
               toastifyCustomStyle
             );
+            }
           })
           .catch((e: Error) => console.log(e));
       })

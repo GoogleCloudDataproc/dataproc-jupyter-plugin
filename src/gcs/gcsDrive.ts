@@ -2,6 +2,8 @@ import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
 import { GcsService } from './gcsService';
 
+import { showDialog, Dialog } from '@jupyterlab/apputils';
+
 // Template for an empty Directory IModel.
 const DIRECTORY_IMODEL: Contents.IModel = {
   type: 'directory',
@@ -15,6 +17,8 @@ const DIRECTORY_IMODEL: Contents.IModel = {
   mimetype: ''
 };
 
+let untitledFolderSuffix = '';
+
 export class GCSDrive implements Contents.IDrive {
   constructor() {
     // Not actually used, but the Contents.IDrive interface requires one.
@@ -23,6 +27,7 @@ export class GCSDrive implements Contents.IDrive {
 
   private _isDisposed = false;
   private _fileChanged = new Signal<this, Contents.IChangedArgs>(this);
+  private _currentPrefix = '';
   readonly serverSettings: ServerConnection.ISettings;
 
   get name() {
@@ -49,18 +54,21 @@ export class GCSDrive implements Contents.IDrive {
    * @returns IModel directory containing all the GCS buckets for the current project.
    */
   private async getBuckets() {
-    const content = await GcsService.listBuckets();
+    const content = await GcsService.listBuckets({
+      prefix: this._currentPrefix
+    });
     if (!content) {
       throw 'Error Listing Buckets';
     }
     return {
       ...DIRECTORY_IMODEL,
-      content: content.items?.map(bucket => ({
-        ...DIRECTORY_IMODEL,
-        path: bucket.name,
-        name: bucket.name,
-        last_modified: bucket.updated ?? ''
-      }))
+      content:
+        content.items?.map(bucket => ({
+          ...DIRECTORY_IMODEL,
+          path: bucket.name,
+          name: bucket.name,
+          last_modified: bucket.updated ?? ''
+        })) ?? []
     };
   }
 
@@ -69,8 +77,9 @@ export class GCSDrive implements Contents.IDrive {
    */
   private async getDirectory(localPath: string) {
     const path = GcsService.pathParser(localPath);
+    const prefix = path.path.length > 0 ? `${path.path}/` : path.path;
     const content = await GcsService.list({
-      prefix: path.path,
+      prefix: prefix + this._currentPrefix,
       bucket: path.bucket
     });
     if (!content) {
@@ -180,6 +189,10 @@ export class GCSDrive implements Contents.IDrive {
     return directory;
   }
 
+  updateQuery(query: string): void {
+    this._currentPrefix = query;
+  }
+
   async save(
     localPath: string,
     options?: Partial<Contents.IModel>
@@ -208,25 +221,152 @@ export class GCSDrive implements Contents.IDrive {
     };
   }
 
-  async getDownloadUrl(localPath: string): Promise<string> {
-    throw 'Not Implemented';
+  async getDownloadUrl(
+    localPath: string,
+    options?: Contents.IFetchOptions
+  ): Promise<string> {
+    const path = GcsService.pathParser(localPath);
+    const fileContentURL = await GcsService.downloadFile({
+      path: path.path,
+      bucket: path.bucket,
+      name: path.name ? path.name : '',
+      format: options?.format ?? 'text'
+    });
+
+    return fileContentURL;
   }
 
   async newUntitled(
     options?: Contents.ICreateOptions
   ): Promise<Contents.IModel> {
-    throw 'Not Implemented';
+    if (!options || !options.path) {
+      return Promise.reject('Invalid path provided for new folder.');
+    }
+
+    // Extract the localPath from options
+    let localPath = options.path;
+
+    // Check if the provided path is valid and not the root directory
+    if (localPath === '/' || localPath === '') {
+      return Promise.reject('Cannot create new objects in the root directory.');
+    }
+
+    const path = GcsService.pathParser(localPath);
+
+    const content = await GcsService.list({
+      prefix:
+        path.path === ''
+          ? path.path + 'UntitledFolder'
+          : path.path + '/UntitledFolder',
+      bucket: path.bucket
+    });
+    if (content.prefixes) {
+      let maxSuffix = 1;
+      content.prefixes.forEach((data: string) => {
+        let suffixElement = data
+          .split('/')
+          [data.split('/').length - 2].match(/\d+$/);
+        if (suffixElement !== null && parseInt(suffixElement[0]) >= maxSuffix) {
+          maxSuffix = parseInt(suffixElement[0]) + 1;
+        }
+        untitledFolderSuffix = maxSuffix.toString();
+      });
+    } else {
+      untitledFolderSuffix = '';
+    }
+    let folderName = 'UntitledFolder' + untitledFolderSuffix;
+    // Create the folder in your backend service
+    const response = await GcsService.createFolder({
+      bucket: path.bucket,
+      path: path.path,
+      folderName: folderName
+    });
+
+    // Handle the response from your backend service appropriately
+    if (response) {
+      // Folder created successfully, return the folder metadata
+      return {
+        type: 'directory',
+        path: localPath.split(':')[1],
+        name: folderName, // Extract folder name from path
+        format: null,
+        created: new Date().toISOString(),
+        writable: true,
+        last_modified: new Date().toISOString(), // Use current timestamp as last modified
+        mimetype: '',
+        content: null
+      };
+    } else {
+      // Handle folder creation failure
+      return Promise.reject('Failed to create folder.');
+    }
   }
 
-  async delete(localPath: string): Promise<void> {
-    throw 'Not Implemented';
+  async delete(path: string): Promise<void> {
+    const localPath = GcsService.pathParser(path);
+    const resp = await GcsService.deleteFile({
+      bucket: localPath.bucket,
+      path: localPath.path
+    });
+    console.log(resp);
+    this._fileChanged.emit({
+      type: 'delete',
+      oldValue: { path },
+      newValue: null
+    });
   }
 
   async rename(
-    oldLocalPath: string,
-    newLocalPath: string
+    path: string,
+    newLocalPath: string,
+    options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    throw 'Not Implemented';
+    const oldPath = GcsService.pathParser(path);
+    const newPath = GcsService.pathParser(newLocalPath);
+    if (
+      !path.includes('UntitledFolder' + untitledFolderSuffix) &&
+      (!path.includes('.') || !newLocalPath.includes('.'))
+    ) {
+      await showDialog({
+        title: 'Rename Error',
+        body: 'Renaming Folder/Bucket is not allowed',
+        buttons: [Dialog.okButton()]
+      });
+      return DIRECTORY_IMODEL;
+    } else {
+      if (oldPath.path.includes('UntitledFolder' + untitledFolderSuffix)) {
+        oldPath.path = oldPath.path + '/';
+        newPath.path = newPath.path + '/';
+        path = path + '/';
+      }
+      const response = await GcsService.renameFile({
+        oldBucket: oldPath.bucket,
+        oldPath: oldPath.path,
+        newBucket: newPath.bucket,
+        newPath: newPath.path
+      });
+
+      if (response === 200) {
+        await GcsService.deleteFile({
+          bucket: oldPath.bucket,
+          path: oldPath.path
+        });
+      }
+
+      const contents = {
+        type: 'file',
+        path: newLocalPath,
+        name: newLocalPath.split('\\').at(-1) ?? '',
+        format: options?.format ?? 'text',
+        content: '',
+        created: '',
+        writable: true,
+        last_modified: '',
+        mimetype: ''
+      };
+
+      return contents;
+    }
   }
 
   async copy(localPath: string, toLocalDir: string): Promise<Contents.IModel> {

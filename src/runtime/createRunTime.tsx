@@ -186,6 +186,10 @@ function CreateRunTime({
   interface IUserInfoResponse {
     email: string;
     picture: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
   const displayUserInfo = async () => {
     const credentials = await authApi();
@@ -202,6 +206,9 @@ function CreateRunTime({
             .json()
             .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult.email);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => console.log(e));
         })
@@ -214,6 +221,10 @@ function CreateRunTime({
   };
   interface IApiResponse {
     name: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
 
   const runtimeSharedProject = async () => {
@@ -233,6 +244,9 @@ function CreateRunTime({
             .then((responseResult: IApiResponse) => {
               setProjectInfo(responseResult.name);
               listSharedVPC(responseResult.name);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => console.log(e));
         })
@@ -282,6 +296,9 @@ function CreateRunTime({
         .filter((subNetwork: string) => subNetwork);
 
       setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
+      if (responseResult?.error?.code) {
+        toast.error(responseResult?.error?.message, toastifyCustomStyle);
+      }
     } catch (err) {
       console.error('Error displaying sharedVPC subNetwork', err);
       DataprocLoggingService.log('Error displaying sharedVPC subNetwork', LOG_LEVEL.ERROR);
@@ -455,6 +472,10 @@ function CreateRunTime({
   };
   interface INetworkAPI {
     network: string;
+    error: {
+      message: string;
+      code: number;
+    };
   }
   const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
     setIsloadingNetwork(true);
@@ -484,6 +505,9 @@ function CreateRunTime({
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
               setIsloadingNetwork(false);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
 
             .catch((e: Error) => {
@@ -570,6 +594,10 @@ function CreateRunTime({
                   network: string;
                   privateIpGoogleAccess: boolean;
                 }[];
+                error: {
+                  message: string;
+                  code: number;
+                };
               }) => {
                 const filteredServices = responseResult.items.filter(
                   (item: { network: string; privateIpGoogleAccess: boolean }) =>
@@ -581,6 +609,9 @@ function CreateRunTime({
                 );
                 setSubNetworklist(transformedServiceList);
                 setSubNetworkSelected(transformedServiceList[0]);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
               }
             )
             .catch((e: Error) => {
@@ -681,6 +712,10 @@ function CreateRunTime({
                   network: string;
                   hiveMetastoreConfig: { endpointProtocol: string };
                 }[];
+                error: {
+                  message: string;
+                  code: number;
+                };
               }) => {
                 // Filter based on endpointProtocol and network
                 const filteredServices = responseResult.services.filter((service) => {
@@ -698,6 +733,9 @@ function CreateRunTime({
                 setServicesList(transformedServiceList);
   
                 setIsLoadingService(false);
+                if (responseResult?.error?.code) {
+                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                }
               }
             )
             .catch((e: Error) => {
@@ -902,10 +940,7 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-            toast.success(
-              `Runtime Template ${displayNameSelected} successfully submitted`,
-              toastifyCustomStyle
-            );
+           
 
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
@@ -1009,7 +1044,9 @@ function CreateRunTime({
             const errorResponse = await response.json();
             console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
+            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
           }
+        
         })
         .catch((err: Error) => {
           console.error('Error Creating template', err);
@@ -1048,7 +1085,9 @@ function CreateRunTime({
             const errorResponse = await response.json();
             console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
+            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
           }
+       
         })
         .catch((err: Error) => {
           console.error('Error updating template', err);

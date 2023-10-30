@@ -49,6 +49,7 @@ import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { TitleComponent } from '../controls/SidePanelTitleWidget';
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -146,7 +147,7 @@ const DpmsComponent = ({
                 ...prevResponse,
                 responseResult
               ]);
-              if(data){
+              if (data) {
                 setIsLoading(false);
               }
             })
@@ -596,6 +597,10 @@ fetching database name from fully qualified name structure */
     }
   };
   interface IClusterDetailsResponse {
+    error: {
+      code: number;
+      message: string;
+    };
     config?: {
       metastoreConfig?: {
         dataprocMetastoreService?: string;
@@ -634,6 +639,12 @@ fetching database name from fully qualified name structure */
               } else {
                 setNoDpmsInstance(true);
                 setCluster(true);
+                if (responseResult?.error?.code) {
+                  toast.error(
+                    responseResult?.error?.message,
+                    toastifyCustomStyle
+                  );
+                }
               }
             })
             .catch((e: Error) => {
@@ -649,6 +660,7 @@ fetching database name from fully qualified name structure */
     }
   };
   interface ISessionDetailsResponse {
+    error: any;
     environmentConfig?: {
       peripheralsConfig?: {
         metastoreService?: string;
@@ -688,6 +700,12 @@ fetching database name from fully qualified name structure */
               } else {
                 setNoDpmsInstance(true);
                 setSession(true);
+                if (responseResult?.error?.code) {
+                  toast.error(
+                    responseResult?.error?.message,
+                    toastifyCustomStyle
+                  );
+                }
               }
             })
             .catch((e: Error) => {
@@ -747,9 +765,14 @@ fetching database name from fully qualified name structure */
 
   return (
     <div className="dpms-Wrapper">
-      <div>
-        <div className="dpms-title">Metadata Explorer</div>
-      </div>
+      <TitleComponent
+        titleStr="Metadata Explorer"
+        isPreview
+        styles={{
+          padding: '10px 14px',
+          borderBottom: 'var(--jp-border-width) solid var(--jp-border-color2)'
+        }}
+      />
       {!noDpmsInstance ? (
         <>
           <div>

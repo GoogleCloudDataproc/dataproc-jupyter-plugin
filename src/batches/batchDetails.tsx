@@ -176,6 +176,10 @@ function BatchDetails({
     };
   }, []);
   interface IBatchDetailsResponse {
+    error: {
+      code: number;
+      message: string;
+    };
     uuid: '';
     state: '';
     createTime: '';
@@ -257,6 +261,9 @@ function BatchDetails({
                 setLabelDetail(labelValue);
               }
               setIsLoading(false);
+              if (responseResult?.error?.code) {
+                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+              }
             })
             .catch((e: Error) => {
               console.log(e);
