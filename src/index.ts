@@ -44,7 +44,6 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
-import { injectToastContainer } from './utils/injectToastContainer';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { GCSDrive } from './gcs/gcsDrive';
@@ -112,14 +111,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
-
-    try {
-      // React-Toastify needs a ToastContainer to render toasts, since we don't
-      // have a global React Root, lets just inject one in the body.
-      injectToastContainer();
-    } catch (e) {
-      // do nothing
-    }
 
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
@@ -477,6 +468,19 @@ const extension: JupyterFrontEndPlugin<void> = {
         rank: 2
       });
     }
+
+    // the plugin depends on having a toast container, and Jupyter labs lazy
+    // loads one when a notification occurs.  Let's hackily fire off a notification
+    // so jupyter would give us a toast container.
+    // Long term we should just replace the toast calls across the plugin with
+    // apputils:notify.
+    commands.execute('apputils:notify', {
+      message: 'Dataproc Jupyter Plugin Successfully Loaded',
+      type: 'success',
+      options: {
+        autoClose: 1000
+      }
+    });
   }
 };
 
