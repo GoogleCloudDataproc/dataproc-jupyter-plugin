@@ -14,6 +14,16 @@
   display: none;
 }
 
+/*Changing Icon for category with image add runtime*/
+.f1hgkb35 svg[data-icon='launcher:add-runtime-icon'] {
+  content-visibility: hidden;
+  display: block;
+  height: 32px;
+  margin: 0 auto;
+  width: 32px;
+  background-image: url('./icons/dataproc_icon.svg');
+}
+
 /*Changing Icon for category with image pyspark*/
 .f1hgkb35 svg[data-icon='launcher:pyspark-logo-icon'] {
   content-visibility: hidden;
