@@ -666,7 +666,6 @@ function CreateRunTime({
                   if (responseResult?.error?.code) {
                     toast.error(responseResult?.error?.message, toastifyCustomStyle);
                   }
-                  console.log(filteredServicesArray);
                 })
                
                 .catch((e) => {
@@ -721,7 +720,7 @@ function CreateRunTime({
                 const filteredServices = responseResult.services.filter((service) => {
                   return (
                     service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
-                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT'  &&  location ==region  &&
+                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT'  && location ==credentials.region_id &&
                       service.network.split('/')[4] === network) 
                   );
                 });
