@@ -70,16 +70,12 @@ export const deleteJobApi = async (jobId: string) => {
           .json()
           .then(async (responseResult: Response) => {
             console.log(responseResult);
-            const formattedResponse = await responseResult.json()
-            if (formattedResponse?.error?.code) {
-              toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-            }
-            else{
+            
             toast.success(
               `Job ${jobId} deleted successfully`,
               toastifyCustomStyle
             );
-            }
+          
           })
           .catch((e: Error) => console.log(e));
       })
