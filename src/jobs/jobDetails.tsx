@@ -366,7 +366,6 @@ function JobDetails({
   );
 
   let elapsedTimeString = elapsedTime(endTime, jobStartTime);
-  console.log(elapsedTimeString,jobStartTime,endTime);
   const statusStyleSelection = (jobInfo: any) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
