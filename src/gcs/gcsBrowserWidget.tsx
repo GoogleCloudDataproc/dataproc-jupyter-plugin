@@ -76,6 +76,19 @@ export class GcsBrowserWidget extends Widget {
             filePath = path.path + '/' + file.name;
           }
 
+          const content = await GcsService.list({
+            prefix: filePath,
+            bucket: path.bucket
+          });
+
+          if(content.items && content.items.length > 0) {
+            showDialog({
+              title: 'Upload files',
+              body: file.name + ' already exists in ' + path.bucket +' and overwriting file',
+              buttons: [Dialog.okButton()]
+            });
+          }
+
           await GcsService.saveFile({
             bucket: path.bucket,
             path: filePath,
@@ -91,6 +104,10 @@ export class GcsBrowserWidget extends Widget {
         reader.readAsText(file);
       });
     }
+  };
+
+  private filterFilesByName = async (filterValue: string) => {
+    this.browser.model.refresh();
   };
 
   constructor(
@@ -112,6 +129,22 @@ export class GcsBrowserWidget extends Widget {
     (this.layout as PanelLayout).addWidget(
       new TitleWidget('Google Cloud Storage', true)
     );
+
+    let filterInput = document.createElement('input');
+    filterInput.id = 'filter-buckets-objects';
+    filterInput.type = 'text';
+    filterInput.placeholder = 'Filter by Name';
+
+    filterInput.addEventListener('input', event => {
+      console.log(event)
+      const filterValue = (event.target as HTMLInputElement).value;
+      //@ts-ignore
+      document
+        .getElementById('filter-buckets-objects')
+        .setAttribute('value', filterValue);
+      // Call a function to filter files based on filterValue
+      this.filterFilesByName(filterValue);
+    });
 
     this.browser.showFileCheckboxes = false;
     (this.layout as PanelLayout).addWidget(this.browser);
@@ -144,6 +177,8 @@ export class GcsBrowserWidget extends Widget {
     });
     this.browser.toolbar.addItem('New Folder', newFolder);
     this.browser.toolbar.addItem('File Upload', gcsUpload);
+    let filterItem = new Widget({ node: filterInput });
+    this.browser.toolbar.addItem('Filter by Name:', filterItem);
   }
 
   dispose() {
