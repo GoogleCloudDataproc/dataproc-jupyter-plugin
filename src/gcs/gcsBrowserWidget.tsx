@@ -95,6 +95,12 @@ export class GcsBrowserWidget extends Widget {
                 contents: reader.result as string // assuming contents is a string
               });
             }
+          } else {
+            await GcsService.saveFile({
+              bucket: path.bucket,
+              path: filePath,
+              contents: reader.result as string // assuming contents is a string
+            });
           }
           
 
