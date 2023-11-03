@@ -106,6 +106,13 @@
 .logs-button {
   cursor: context-menu !important;
 }
+body[data-jp-theme-name='JupyterLab Light'] .filter-search-gcs {
+  padding: 0px 5px;
+  background-color: var(--jp-layout-color0);
+  border: 1px solid var(--jp-layout-color4);
+  color: var(--jp-ui-font-color1);
+  height: 30px;
+}
 body[data-jp-theme-light='true'].scroll-fix-header {
   position: sticky;
   top: 0;
@@ -130,6 +137,7 @@ body[data-jp-theme-name='JupyterLab Dark'] .filter-search-gcs {
   background-color: var(--jp-layout-color0);
   border: 1px solid var(--jp-layout-color4);
   color: var(--jp-ui-font-color1);
+  height: 30px;
 }
 body[data-jp-theme-name='JupyterLab Dark'] .select-dropdown-text {
   background-color: var(--jp-layout-color0);

@@ -82,18 +82,21 @@ export class GcsBrowserWidget extends Widget {
           });
 
           if(content.items && content.items.length > 0) {
-            showDialog({
+            const result = await showDialog({
               title: 'Upload files',
-              body: file.name + ' already exists in ' + path.bucket +' and overwriting file',
-              buttons: [Dialog.okButton()]
+              body: file.name + ' already exists in ' + path.bucket +' and click ok to overwriting file',
+              buttons: [Dialog.okButton(), Dialog.cancelButton()]
             });
-          }
 
-          await GcsService.saveFile({
-            bucket: path.bucket,
-            path: filePath,
-            contents: reader.result as string // assuming contents is a string
-          });
+            if (result.button.accept) {
+              await GcsService.saveFile({
+                bucket: path.bucket,
+                path: filePath,
+                contents: reader.result as string // assuming contents is a string
+              });
+            }
+          }
+          
 
           // Optionally, update the FileBrowser model to reflect the newly uploaded file
           // Example: Refresh the current directory
