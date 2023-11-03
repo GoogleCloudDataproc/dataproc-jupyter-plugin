@@ -289,7 +289,7 @@ function LabelProperties({
                           label === DEFAULT_LABEL_DETAIL &&
                           buttonText === 'ADD LABEL'
                         }
-                        defaultValue={labelSplit[1]}
+                        defaultValue={labelSplit.length>2?labelSplit[1]+':'+labelSplit[2]:labelSplit[1]}
                       />
                     </div>
                     {valueValidation === index &&
