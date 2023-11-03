@@ -132,6 +132,7 @@ export class GcsBrowserWidget extends Widget {
 
     let filterInput = document.createElement('input');
     filterInput.id = 'filter-buckets-objects';
+    filterInput.className = "filter-search-gcs"
     filterInput.type = 'text';
     filterInput.placeholder = 'Filter by Name';
 

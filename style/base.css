@@ -125,6 +125,12 @@ body[data-jp-theme-name='JupyterLab Dark'] .select-title-text {
   background-color: var(--jp-layout-color0);
   color: var(--jp-layout-color4);
 }
+body[data-jp-theme-name='JupyterLab Dark'] .filter-search-gcs {
+  padding: 0px 5px;
+  background-color: var(--jp-layout-color0);
+  border: 1px solid var(--jp-layout-color4);
+  color: var(--jp-ui-font-color1);
+}
 body[data-jp-theme-name='JupyterLab Dark'] .select-dropdown-text {
   background-color: var(--jp-layout-color0);
   color: var(--jp-layout-color4);
