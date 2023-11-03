@@ -212,7 +212,6 @@ function JobDetails({
       pollingJobDetails(getJobDetails, true);
     };
   }, [labelEditMode]);
-
   const handleJobLabelEdit = () => {
     setLabelEditMode(true);
     setLabelDetailUpdated(labelDetail);
@@ -363,10 +362,10 @@ function JobDetails({
   const statusMsg = statusMessage(jobInfo);
   const endTime = new Date(jobInfo.status.stateStartTime);
   const jobStartTime = new Date(
-    jobInfo.statusHistory[jobInfo.statusHistory.length - 1].stateStartTime
+    jobInfo.statusHistory[0].stateStartTime
   );
-  const elapsedTimeString = elapsedTime(endTime, jobStartTime);
 
+  let elapsedTimeString = elapsedTime(endTime, jobStartTime);
   const statusStyleSelection = (jobInfo: any) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
