@@ -1296,7 +1296,7 @@ function CreateBatch({
       propertyDetailUpdated.forEach((label: string) => {
         const labelSplit = label.split(':');
         const key = labelSplit[0];
-        const value = labelSplit[1];
+        const value = labelSplit.length>2?labelSplit[1]+':'+labelSplit[2]:labelSplit[1];
         propertyObject[key] = value;
       });
       const parameterObject: { [key: string]: string } = {};

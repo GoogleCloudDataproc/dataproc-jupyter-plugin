@@ -78,7 +78,7 @@
 .cluster-detail-status-parent {
   display: flex;
   align-items: center;
-  height: 29px;
+  /* height: 29px; */
   color: var(--jp-ui-font-color2);
 }
 
