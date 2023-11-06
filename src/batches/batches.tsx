@@ -281,7 +281,7 @@ const BatchesComponent = (): React.JSX.Element => {
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loaderMain">
           <ClipLoader
-            color="#8A8A8A"
+              color="#3367d6"
             loading={true}
             size={18}
             aria-label="Loading Spinner"

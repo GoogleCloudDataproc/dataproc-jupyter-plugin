@@ -787,8 +787,8 @@ fetching database name from fully qualified name structure */
             {isLoading ? (
               <div className="database-loader">
                 <div>
-                  <ClipLoader
-                    color="#8A8A8A"
+                <ClipLoader
+              color="#3367d6"
                     loading={true}
                     size={20}
                     aria-label="Loading Spinner"

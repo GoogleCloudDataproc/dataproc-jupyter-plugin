@@ -439,8 +439,8 @@ function ListRuntimeTemplates({
         <div>
           {isLoading && (
             <div className="spin-loader-runtime">
-              <ClipLoader
-                color="#8A8A8A"
+             <ClipLoader
+              color="#3367d6"
                 loading={true}
                 size={18}
                 aria-label="Loading Spinner"
