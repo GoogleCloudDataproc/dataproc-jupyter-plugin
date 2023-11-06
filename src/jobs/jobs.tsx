@@ -60,7 +60,7 @@ import TableData from '../utils/tableData';
 import DeletePopup from '../utils/deletePopup';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { stopJobApi, deleteJobApi } from './jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';

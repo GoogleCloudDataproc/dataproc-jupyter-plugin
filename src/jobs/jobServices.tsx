@@ -16,8 +16,8 @@
  */
 
 import { toast } from 'react-toastify';
-import { BASE_URL, API_HEADER_CONTENT_TYPE, API_HEADER_BEARER } from './const';
-import { authApi, toastifyCustomStyle, loggedFetch } from './utils';
+import { BASE_URL, API_HEADER_CONTENT_TYPE, API_HEADER_BEARER } from '../utils/const';
+import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const stopJobApi = async (jobId: string) => {

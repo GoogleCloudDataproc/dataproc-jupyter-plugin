@@ -41,7 +41,7 @@ import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { deleteBatchAPI } from '../utils/batchService';
+import { deleteBatchAPI } from './batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
 import { DataprocWidget} from '../controls/DataprocWidget';

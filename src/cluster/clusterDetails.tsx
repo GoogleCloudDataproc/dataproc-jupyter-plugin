@@ -32,7 +32,7 @@ import {
   deleteClusterApi,
   startClusterApi,
   stopClusterApi
-} from '../utils/clusterServices';
+} from './clusterServices';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
