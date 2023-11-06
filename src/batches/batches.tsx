@@ -16,22 +16,8 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  authApi,
-  checkConfig,
-  elapsedTime,
-  jobTimeFormat,
-  jobTypeDisplay,
-  toastifyCustomStyle,
-  loggedFetch
-} from '../utils/utils';
-import {
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL,
-  API_HEADER_BEARER,
-  LOGIN_STATE,
-  BatchStatus
-} from '../utils/const';
+import { checkConfig } from '../utils/utils';
+import { LOGIN_STATE, BatchStatus } from '../utils/const';
 import ListBatches from './listBatches';
 import { LabIcon } from '@jupyterlab/ui-components';
 import deleteIcon from '../../style/icons/delete_icon.svg';
@@ -39,14 +25,11 @@ import BatchDetails from './batchDetails';
 import ListSessions from '../sessions/listSessions';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { deleteBatchAPI } from './batchService';
+import { deleteBatchAPI, listBatchAPIInfo } from './batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
-import { DataprocWidget} from '../controls/DataprocWidget';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-
+import { DataprocWidget } from '../controls/DataprocWidget';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -91,108 +74,18 @@ const BatchesComponent = (): React.JSX.Element => {
     createTime: string;
     stateTime: Date;
   }
-  interface IBatchListResponse {
-    error: {
-      code:number;
-      message:string;
-    };
-    batches: IBatchData[];
-    nextPageToken?: string;
-  }
 
-  const listBatchAPI = async (
-    nextPageToken?: string,
-    previousBatchesList?: object
-  ) => {
-    const credentials = await authApi();
-    const pageToken = nextPageToken ?? '';
-    if (credentials) {
-      setRegionName(credentials.region_id || '');
-      setProjectName(credentials.project_id || '');
-      loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IBatchListResponse) => {
-              let transformBatchListData: {
-                batchID: string;
-                status: string;
-                location: string;
-                creationTime: string;
-                type: string | undefined;
-                elapsedTime: string;
-                actions: React.JSX.Element;
-              }[] = [];
-              if (responseResult && responseResult.batches) {
-                transformBatchListData = responseResult.batches.map(
-                  (data: IBatchData) => {
-                    const startTimeDisplay = jobTimeFormat(data.createTime);
-                    const startTime = new Date(data.createTime);
-                    const elapsedTimeString = elapsedTime(
-                      data.stateTime,
-                      startTime
-                    );
-                    const batchType = Object.keys(data).filter(key =>
-                      key.endsWith('Batch')
-                    );
-                    /*
-                     Extracting batchID, location from batchInfo.name
-                      Example: "projects/{project}/locations/{location}/batches/{batchID}"
-                    */
-                    const batchTypeDisplay = jobTypeDisplay(
-                      batchType[0].split('Batch')[0]
-                    );
-                    return {
-                      batchID: data.name.split('/')[5],
-                      status: data.state,
-                      location: data.name.split('/')[3],
-                      creationTime: startTimeDisplay,
-                      type: batchTypeDisplay,
-                      elapsedTime: elapsedTimeString,
-                      actions: renderActions(data)
-                    };
-                  }
-                );
-              }
-              if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
-              }
-              const existingBatchData = previousBatchesList ?? [];
-
-              let allBatchesData: any = [
-                ...(existingBatchData as []),
-                ...transformBatchListData
-              ];
-
-              if (responseResult.nextPageToken) {
-                listBatchAPI(responseResult.nextPageToken, allBatchesData);
-              } else {
-                setBatchesList(allBatchesData);
-                setIsLoading(false);
-                setLoggedIn(true);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing batches', err);
-          DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
-          toast.error('Failed to fetch batches', toastifyCustomStyle);
-        });
-    }
+  const listBatchAPI = async () => {
+    await listBatchAPIInfo(
+      setRegionName,
+      setProjectName,
+      renderActions,
+      setBatchesList,
+      setIsLoading,
+      setLoggedIn
+    );
   };
+
   const handleBatchDetails = (selectedName: string) => {
     pollingBatches(listBatchAPI, true);
     setBatchSelected(selectedName);
@@ -239,11 +132,13 @@ const BatchesComponent = (): React.JSX.Element => {
           {data.state === BatchStatus.STATUS_PENDING ? (
             <iconDelete.react
               tag="div"
-              className='icon-white logo-alignment-style icon-delete'
+              className="icon-white logo-alignment-style icon-delete"
             />
           ) : (
-            <iconDelete.react tag="div" className='icon-white logo-alignment-style'
- />
+            <iconDelete.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           )}
         </div>
       </div>
@@ -373,6 +268,6 @@ const BatchesComponent = (): React.JSX.Element => {
 
 export class Batches extends DataprocWidget {
   renderInternal(): React.JSX.Element {
-    return <BatchesComponent/>;
+    return <BatchesComponent />;
   }
 }
