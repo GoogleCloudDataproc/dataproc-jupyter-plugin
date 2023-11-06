@@ -30,6 +30,7 @@ import {
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
   HTTP_METHOD,
+  LOGIN_STATE,
   REGION_URL,
   SHARED_VPC,
   STATUS_RUNNING,
@@ -41,7 +42,8 @@ import {
   toastifyCustomStyle,
   authenticatedFetch,
   iconDisplay,
-  loggedFetch
+  loggedFetch,
+  checkConfig
 } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
@@ -143,11 +145,22 @@ function CreateRunTime({
     'sharedVpc' | 'projectNetwork'
   >('projectNetwork');
   const [projectInfo, setProjectInfo] = useState('');
+  const [configError, setConfigError] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loginError, setLoginError] = useState(false);
+  const [configLoading, setConfigLoading] = useState(true);
+
   const [sharedSubNetworkList, setSharedSubNetworkList] = useState<string[]>(
     []
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
   useEffect(() => {
+    checkConfig(setLoggedIn, setConfigError, setLoginError);
+    const localstorageGetInformation = localStorage.getItem('loginState');
+    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
+    if (loggedIn) {
+      setConfigLoading(false);
+    }
     const timeData = [
       { key: 'h', value: 'h', text: 'hour' },
       { key: 'm', value: 'm', text: 'min' },
@@ -162,6 +175,7 @@ function CreateRunTime({
   }, []);
 
   useEffect(() => {
+
     if (selectedRuntimeClone === undefined) {
       generateRandomHex();
     }
@@ -1254,6 +1268,19 @@ function CreateRunTime({
 
   return (
     <div>
+        {configLoading && !loggedIn && !configError && !loginError && (
+        <div className="spin-loaderMain">
+          <ClipLoader
+              color="#3367d6"
+            loading={true}
+            size={18}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+          Loading RunTime
+        </div>
+      )}
+       
       <div className="cluster-details-header">
         <div
           role="button"
@@ -1267,7 +1294,8 @@ function CreateRunTime({
         </div>
         <div className="cluster-details-title">Serverless Runtime Template</div>
       </div>
-      <div className="submit-job-container">
+      {loggedIn && !configError ? (
+      <div className="runtime-container">
         <form>
           <div className="select-text-overlay">
             <label className="select-title-text" htmlFor="display-name">
@@ -1750,6 +1778,19 @@ function CreateRunTime({
           </div>
         </form>
       </div>
+      ) : (
+        loginError && (
+          <div role="alert" className="login-error">
+            Please login to continue
+          </div>
+        )
+      )}
+     
+       {configError && (
+        <div role="alert" className="login-error">
+          Please configure gcloud with account, project-id and region
+        </div>
+      )}
     </div>
   );
 }

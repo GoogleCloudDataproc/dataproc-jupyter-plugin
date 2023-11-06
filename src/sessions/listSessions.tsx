@@ -351,8 +351,8 @@ function ListSessions() {
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_TERMINATING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#8A8A8A"
+            <ClipLoader
+              color="#3367d6"
                 loading={true}
                 size={15}
                 aria-label="Loading Spinner"
@@ -444,8 +444,8 @@ function ListSessions() {
         <div>
           {isLoading && (
             <div className="spin-loaderMain">
-              <ClipLoader
-                color="#8A8A8A"
+            <ClipLoader
+              color="#3367d6"
                 loading={true}
                 size={18}
                 aria-label="Loading Spinner"

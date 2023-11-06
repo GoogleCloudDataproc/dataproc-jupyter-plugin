@@ -66,7 +66,7 @@ export const statusDisplay = (statusMsg: string) => {
         statusMsg === STATUS_PENDING ||
         statusMsg === STATUS_DELETING) && (
           <ClipLoader
-            color="#8A8A8A"
+          color="#3367d6"
             loading={true}
             size={15}
             aria-label="Loading Spinner"

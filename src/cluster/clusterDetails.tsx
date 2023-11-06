@@ -425,7 +425,7 @@ function ClusterDetails({
                           clusterInfo.status.state === STATUS_DELETING) && (
                           <div>
                             <ClipLoader
-                              color="#8A8A8A"
+              color="#3367d6"
                               loading={true}
                               size={15}
                               aria-label="Loading Spinner"
@@ -457,20 +457,22 @@ function ClusterDetails({
               />
             </div>
           ) : (
-            <div className="loader-full-style">
-              {isLoading && (
-                <div>
-                  <ClipLoader
-                    color="#8A8A8A"
-                    loading={true}
-                    size={20}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                  Loading Cluster Details
-                </div>
-              )}
-            </div>
+            <>
+            {isLoading && (
+          <div className="spin-loaderMain">
+           <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={18}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+            Loading Cluster Details
+          </div>
+        )}
+         
+        </>
+      
           )}
         </div>
       )}

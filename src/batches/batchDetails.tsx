@@ -86,7 +86,7 @@ type BatchDetailsProps = {
 function BatchDetails({
   batchSelected,
   setDetailedBatchView,
-  setCreateBatchView,
+  setCreateBatchView
 }: BatchDetailsProps) {
   const [batchInfoResponse, setBatchInfoResponse] = useState({
     uuid: '',
@@ -262,7 +262,10 @@ function BatchDetails({
               }
               setIsLoading(false);
               if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
               }
             })
             .catch((e: Error) => {
@@ -272,7 +275,10 @@ function BatchDetails({
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          DataprocLoggingService.log('Error in getting Batch details', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error in getting Batch details',
+            LOG_LEVEL.ERROR
+          );
           console.error('Error in getting Batch details', err);
           toast.error(
             `Failed to fetch batch details ${batchSelected}`,
@@ -326,20 +332,17 @@ function BatchDetails({
 
   return (
     <div>
-      {batchInfoResponse.uuid === '' && (
-        <div className="loader-full-style">
-          {isLoading && (
-            <div>
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={20}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-              Loading Batch Details
-            </div>
-          )}
+      {batchInfoResponse.uuid === '' && isLoading && (
+        <div className="spin-loaderMain">
+        <ClipLoader
+              color="#3367d6"
+      
+            loading={true}
+            size={18}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+          Loading Batch Details
         </div>
       )}
       {createBatch && (
@@ -364,9 +367,7 @@ function BatchDetails({
 
       {!createBatch && batchInfoResponse.uuid !== '' && (
         <div className="scroll">
-          <div
-            className='scroll-fix-header cluster-details-header'
-          >
+          <div className="scroll-fix-header cluster-details-header">
             <div
               role="button"
               className="back-arrow-icon"
@@ -374,7 +375,7 @@ function BatchDetails({
             >
               <iconLeftArrow.react
                 tag="div"
-                className='icon-white logo-alignment-style'
+                className="icon-white logo-alignment-style"
               />
             </div>
             <div className="cluster-details-title">{batchSelected}</div>

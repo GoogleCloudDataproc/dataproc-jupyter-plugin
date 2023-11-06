@@ -191,8 +191,8 @@ function ConfigSelection({
     <div>
       {isLoadingUser && !configError ? (
         <div className="spin-loaderMain">
-          <ClipLoader
-            color="#8A8A8A"
+         <ClipLoader
+              color="#3367d6"
             loading={true}
             size={20}
             aria-label="Loading Spinner"

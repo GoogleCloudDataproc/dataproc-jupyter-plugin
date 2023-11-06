@@ -68,7 +68,7 @@ function TableData({
         {isLoading ? (
           <div className="spin-loader">
             <ClipLoader
-              color="#8A8A8A"
+              color="#3367d6"
               loading={true}
               size={18}
               aria-label="Loading Spinner"
