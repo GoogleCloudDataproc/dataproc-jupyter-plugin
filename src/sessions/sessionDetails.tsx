@@ -310,8 +310,8 @@ function SessionDetails({
                       sessionInfo.state === STATUS_TERMINATING ||
                       sessionInfo.state === STATUS_DELETING) && (
                       <div>
-                        <ClipLoader
-                          color="#8A8A8A"
+                      <ClipLoader
+              color="#3367d6"
                           loading={true}
                           size={15}
                           aria-label="Loading Spinner"
@@ -533,20 +533,22 @@ function SessionDetails({
           )}
         </div>
       ) : (
-        <div className="loader-full-style">
-          {isLoading && (
-            <div className="session-loader">
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={20}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-              Loading Session Details
-            </div>
-          )}
-        </div>
+        <>
+            {isLoading && (
+          <div className="spin-loaderMain">
+            <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={18}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+            Loading Session Details
+          </div>
+        )}
+         
+        </>
+      
       )}
     </div>
   );

@@ -783,20 +783,22 @@ function JobDetails({
           )}
 
           {jobInfo.jobUuid === '' && (
-            <div className="loader-full-style">
-              {isLoading && (
-                <div>
-                  <ClipLoader
-                    color="#8A8A8A"
-                    loading={true}
-                    size={20}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                  Loading Job Details
-                </div>
-              )}
-            </div>
+           <>
+           {isLoading && (
+         <div className="spin-loaderMain">
+          <ClipLoader
+              color="#3367d6"
+             loading={true}
+             size={18}
+             aria-label="Loading Spinner"
+             data-testid="loader"
+           />
+           Loading Job Details
+         </div>
+       )}
+        
+       </>
+     
           )}
         </div>
       )}
