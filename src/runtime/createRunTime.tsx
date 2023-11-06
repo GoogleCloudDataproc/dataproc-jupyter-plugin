@@ -221,14 +221,20 @@ function CreateRunTime({
             .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult.email);
               if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
               }
             })
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
-          DataprocLoggingService.log('Error displaying user info', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error displaying user info',
+            LOG_LEVEL.ERROR
+          );
           toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
@@ -259,14 +265,20 @@ function CreateRunTime({
               setProjectInfo(responseResult.name);
               listSharedVPC(responseResult.name);
               if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
               }
             })
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
-          DataprocLoggingService.log('Error displaying user info', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error displaying user info',
+            LOG_LEVEL.ERROR
+          );
           toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
@@ -315,7 +327,10 @@ function CreateRunTime({
       }
     } catch (err) {
       console.error('Error displaying sharedVPC subNetwork', err);
-      DataprocLoggingService.log('Error displaying sharedVPC subNetwork', LOG_LEVEL.ERROR);
+      DataprocLoggingService.log(
+        'Error displaying sharedVPC subNetwork',
+        LOG_LEVEL.ERROR
+      );
       toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
     }
   };
@@ -520,7 +535,10 @@ function CreateRunTime({
               setDefaultValue(subnetwork);
               setIsloadingNetwork(false);
               if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
               }
             })
 
@@ -530,7 +548,10 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           setIsloadingNetwork(false);
-          DataprocLoggingService.log('Error selecting Network', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error selecting Network',
+            LOG_LEVEL.ERROR
+          );
           console.error('Error selecting Network', err);
         });
     }
@@ -624,7 +645,10 @@ function CreateRunTime({
                 setSubNetworklist(transformedServiceList);
                 setSubNetworkSelected(transformedServiceList[0]);
                 if (responseResult?.error?.code) {
-                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                  toast.error(
+                    responseResult?.error?.message,
+                    toastifyCustomStyle
+                  );
                 }
               }
             )
@@ -634,7 +658,10 @@ function CreateRunTime({
         })
         .catch((err: Error) => {
           console.error('Error listing subNetworks', err);
-          DataprocLoggingService.log('Error listing subNetworks', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error listing subNetworks',
+            LOG_LEVEL.ERROR
+          );
         });
     }
   };
@@ -643,49 +670,65 @@ function CreateRunTime({
     name: string;
   };
 
-  const regionListAPI = async (projectId: string,  network: string | undefined) => {
+  const regionListAPI = async (
+    projectId: string,
+    network: string | undefined
+  ) => {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(`${REGION_URL}/${projectId}/regions`, {
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token,
-        },
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
       })
         .then((response: Response) => {
           response
             .json()
-            .then((responseResult: { items: Region[],error: {
-              code: number;
-              message: string;
-            }; }) => {
-              let transformedRegionList = responseResult.items.map(
-                (data: Region) => {
-                  return data.name;
-                }
-                
-              );
-  
-              const filteredServicesArray: never[] = []; // Create an array to store filtered services
-  
-              // Use Promise.all to fetch services from all locations concurrently
-              const servicePromises = transformedRegionList.map((location) => {
-                return listMetaStoreAPI(projectId, location, network, filteredServicesArray);
-              });
-  
-              // Wait for all servicePromises to complete
-              Promise.all(servicePromises)
-                .then(() => {
-                  // All services have been fetched, and filtered services are in filteredServicesArray
-                  if (responseResult?.error?.code) {
-                    toast.error(responseResult?.error?.message, toastifyCustomStyle);
+            .then(
+              (responseResult: {
+                items: Region[];
+                error: {
+                  code: number;
+                  message: string;
+                };
+              }) => {
+                let transformedRegionList = responseResult.items.map(
+                  (data: Region) => {
+                    return data.name;
                   }
-                })
-               
-                .catch((e) => {
-                  console.log(e);
+                );
+
+                const filteredServicesArray: never[] = []; // Create an array to store filtered services
+
+                // Use Promise.all to fetch services from all locations concurrently
+                const servicePromises = transformedRegionList.map(location => {
+                  return listMetaStoreAPI(
+                    projectId,
+                    location,
+                    network,
+                    filteredServicesArray
+                  );
                 });
-            })
+
+                // Wait for all servicePromises to complete
+                Promise.all(servicePromises)
+                  .then(() => {
+                    // All services have been fetched, and filtered services are in filteredServicesArray
+                    if (responseResult?.error?.code) {
+                      toast.error(
+                        responseResult?.error?.message,
+                        toastifyCustomStyle
+                      );
+                    }
+                    console.log(filteredServicesArray);
+                  })
+
+                  .catch(e => {
+                    console.log(e);
+                  });
+              }
+            )
             .catch((e: Error) => {
               console.log(e);
             });
@@ -696,7 +739,7 @@ function CreateRunTime({
         });
     }
   };
-  
+
   const listMetaStoreAPI = async (
     projectId: string,
     location: string,
@@ -711,8 +754,8 @@ function CreateRunTime({
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token,
-          },
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
         }
       )
         .then((response: Response) => {
@@ -744,10 +787,13 @@ function CreateRunTime({
                   (data: { name: string }) => data.name
                 );
                 setServicesList(transformedServiceList);
-  
+
                 setIsLoadingService(false);
                 if (responseResult?.error?.code) {
-                  toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                  toast.error(
+                    responseResult?.error?.message,
+                    toastifyCustomStyle
+                  );
                 }
               }
             )
@@ -763,8 +809,6 @@ function CreateRunTime({
         });
     }
   };
-
-
 
   const generateRandomHex = () => {
     if (!generationCompleted) {
@@ -849,9 +893,8 @@ function CreateRunTime({
     setProjectId(data ?? '');
     setServicesList([]);
     setServicesSelected('');
-    regionListAPI(data,network);
+    regionListAPI(data, network);
   };
-
 
   const handleNetworkChange = async (data: DropdownProps | null) => {
     setNetworkSelected(data!.toString());
@@ -953,7 +996,6 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-           
 
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
@@ -1059,11 +1101,13 @@ function CreateRunTime({
             setError({ isOpen: true, message: errorResponse.error.message });
             toast.error(errorResponse?.error?.message, toastifyCustomStyle);
           }
-        
         })
         .catch((err: Error) => {
           console.error('Error Creating template', err);
-          DataprocLoggingService.log('Error Creating template', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error Creating template',
+            LOG_LEVEL.ERROR
+          );
           toast.error('Failed to create the template', toastifyCustomStyle);
         });
     }
@@ -1100,11 +1144,13 @@ function CreateRunTime({
             setError({ isOpen: true, message: errorResponse.error.message });
             toast.error(errorResponse?.error?.message, toastifyCustomStyle);
           }
-       
         })
         .catch((err: Error) => {
           console.error('Error updating template', err);
-          DataprocLoggingService.log('Error updating template', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error updating template',
+            LOG_LEVEL.ERROR
+          );
           toast.error('Failed to update the template', toastifyCustomStyle);
         });
     }
@@ -1234,509 +1280,503 @@ function CreateRunTime({
           Loading RunTime
         </div>
       )}
-        {loggedIn && !configError ? (
-      <div className="scroll-comp">
-        <div className="cluster-details-header">
-          <div
-            role="button"
-            className="back-arrow-icon"
-            onClick={handleCancelButton}
-          >
-            <iconLeftArrow.react
-              tag="div"
-              className="icon-white logo-alignment-style"
+       
+      <div className="cluster-details-header">
+        <div
+          role="button"
+          className="back-arrow-icon"
+          onClick={handleCancelButton}
+        >
+          <iconLeftArrow.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+        <div className="cluster-details-title">Serverless Runtime Template</div>
+      </div>
+      {loggedIn && !configError ? (
+      <div className="runtime-container">
+        <form>
+          <div className="select-text-overlay">
+            <label className="select-title-text" htmlFor="display-name">
+              Display name*
+            </label>
+            <Input
+              className="create-runtime-style "
+              value={displayNameSelected}
+              onChange={e => handleDisplayNameChange(e)}
+              type="text"
             />
           </div>
-          <div className="cluster-details-title">
-            Serverless Runtime Template
+          {displayNameValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">Name is required</div>
+            </div>
+          )}
+
+          <div className="select-text-overlay">
+            <label
+              className={`select-title-text${
+                selectedRuntimeClone !== undefined ? ' disable-text' : ''
+              }`}
+              htmlFor="runtime-id"
+            >
+              Runtime ID*
+            </label>
+            <Input
+              className="create-runtime-style "
+              value={runTimeSelected}
+              onChange={e => handleInputChange(e)}
+              type="text"
+              disabled={selectedRuntimeClone !== undefined}
+            />
           </div>
-        </div>
-        <div className="submit-job-container">
-          <form>
-            <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="display-name">
-                Display name*
-              </label>
-              <Input
-                className="create-runtime-style "
-                value={displayNameSelected}
-                onChange={e => handleDisplayNameChange(e)}
-                type="text"
+
+          {runTimeValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">ID is required</div>
+            </div>
+          )}
+
+          <div className="select-text-overlay">
+            <label className="select-title-text" htmlFor="description">
+              Description*
+            </label>
+            <Input
+              className="create-runtime-style "
+              value={desciptionSelected}
+              onChange={e => handleDescriptionChange(e)}
+              type="text"
+            />
+          </div>
+
+          {descriptionValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">Description is required</div>
+            </div>
+          )}
+
+          <div className="select-text-overlay">
+            <label className="select-title-text" htmlFor="runtime-version">
+              Runtime version*
+            </label>
+            <Input
+              className="create-runtime-style "
+              value={versionSelected}
+              onChange={e => handleVersionChange(e)}
+              type="text"
+            />
+          </div>
+
+          {versionValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">Version is required</div>
+            </div>
+          )}
+          <div className="select-text-overlay">
+            <label
+              className="select-title-text"
+              htmlFor="custom-container-image"
+            >
+              Custom container image
+            </label>
+            <Input
+              className="create-batch-style "
+              value={containerImageSelected}
+              onChange={e => setContainerImageSelected(e.target.value)}
+              type="text"
+              placeholder="Enter URI, for example, gcr.io/my-project-id/my-image:1.0.1"
+            />
+          </div>
+          <div className="create-custom-messagelist">
+            {CUSTOM_CONTAINER_MESSAGE}{' '}
+          </div>
+          <div className="create-container-message">
+            <div className="create-container-image-message">
+              {CUSTOM_CONTAINER_MESSAGE_PART}
+            </div>
+            <div
+              className="learn-more-url"
+              onClick={() => {
+                window.open(`${CONTAINER_REGISTERY}`, '_blank');
+              }}
+            >
+              Container Registry
+            </div>
+            &nbsp; <div className="create-container-image-message">or</div>
+            <div
+              className="learn-more-url"
+              onClick={() => {
+                window.open(`${ARTIFACT_REGISTERY}`, '_blank');
+              }}
+            >
+              Artifact Registry
+            </div>
+            {' . '}
+            <div
+              className="learn-more-url"
+              onClick={() => {
+                window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+              }}
+            >
+              Learn more
+            </div>
+          </div>
+          <div className="submit-job-label-header">Network Configuration</div>
+          <div className="runtime-message">
+            Establishes connectivity for the VM instances in this cluster.
+          </div>
+          <div>
+            <div className="create-runtime-radio">
+              <Radio
+                size="small"
+                className="select-runtime-radio-style"
+                value="projectNetwork"
+                checked={selectedNetworkRadio === 'projectNetwork'}
+                onChange={() => handleSubNetworkRadioChange()}
               />
-            </div>
-            {displayNameValidation && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">Name is required</div>
+              <div className="create-batch-message">
+                Networks in this project
               </div>
-            )}
-
-            <div className="select-text-overlay">
-              <label
-                className={`select-title-text${
-                  selectedRuntimeClone !== undefined ? ' disable-text' : ''
-                }`}
-                htmlFor="runtime-id"
-              >
-                Runtime ID*
-              </label>
-              <Input
-                className="create-runtime-style "
-                value={runTimeSelected}
-                onChange={e => handleInputChange(e)}
-                type="text"
-                disabled={selectedRuntimeClone !== undefined}
+            </div>
+          </div>
+          <div>
+            <div className="create-runtime-radio">
+              <Radio
+                size="small"
+                className="select-runtime-radio-style"
+                value="sharedVpc"
+                checked={selectedNetworkRadio === 'sharedVpc'}
+                onChange={() => handleNetworkSharedVpcRadioChange()}
               />
-            </div>
-
-            {runTimeValidation && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">ID is required</div>
+              <div className="create-batch-message">
+                Networks shared from host project: "{projectInfo}"
               </div>
-            )}
-
-            <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="description">
-                Description*
-              </label>
-              <Input
-                className="create-runtime-style "
-                value={desciptionSelected}
-                onChange={e => handleDescriptionChange(e)}
-                type="text"
-              />
             </div>
-
-            {descriptionValidation && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">Description is required</div>
-              </div>
-            )}
-
-            <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="runtime-version">
-                Runtime version*
-              </label>
-              <Input
-                className="create-runtime-style "
-                value={versionSelected}
-                onChange={e => handleVersionChange(e)}
-                type="text"
-              />
-            </div>
-
-            {versionValidation && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">Version is required</div>
-              </div>
-            )}
-            <div className="select-text-overlay">
-              <label
-                className="select-title-text"
-                htmlFor="custom-container-image"
-              >
-                Custom container image
-              </label>
-              <Input
-                className="create-batch-style "
-                value={containerImageSelected}
-                onChange={e => setContainerImageSelected(e.target.value)}
-                type="text"
-                placeholder="Enter URI, for example, gcr.io/my-project-id/my-image:1.0.1"
-              />
-            </div>
-            <div className="create-custom-messagelist">
-              {CUSTOM_CONTAINER_MESSAGE}{' '}
-            </div>
-            <div className="create-container-message">
-              <div className="create-container-image-message">
-                {CUSTOM_CONTAINER_MESSAGE_PART}
-              </div>
+            <div className="create-runtime-sub-message-network">
+              Choose a shared VPC network from project that is different from
+              this cluster's project.{' '}
               <div
-                className="learn-more-url"
+                className="submit-job-learn-more"
                 onClick={() => {
-                  window.open(`${CONTAINER_REGISTERY}`, '_blank');
-                }}
-              >
-                Container Registry
-              </div>
-              &nbsp; <div className="create-container-image-message">or</div>
-              <div
-                className="learn-more-url"
-                onClick={() => {
-                  window.open(`${ARTIFACT_REGISTERY}`, '_blank');
-                }}
-              >
-                Artifact Registry
-              </div>
-              {' . '}
-              <div
-                className="learn-more-url"
-                onClick={() => {
-                  window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+                  window.open(`${SHARED_VPC}`, '_blank');
                 }}
               >
                 Learn more
               </div>
             </div>
-            <div className="submit-job-label-header">Network Configuration</div>
-            <div className="runtime-message">
-              Establishes connectivity for the VM instances in this cluster.
-            </div>
-            <div>
-              <div className="create-runtime-radio">
-                <Radio
-                  size="small"
-                  className="select-runtime-radio-style"
-                  value="projectNetwork"
-                  checked={selectedNetworkRadio === 'projectNetwork'}
-                  onChange={() => handleSubNetworkRadioChange()}
-                />
-                <div className="create-batch-message">
-                  Networks in this project
-                </div>
-              </div>
-            </div>
-            <div>
-              <div className="create-runtime-radio">
-                <Radio
-                  size="small"
-                  className="select-runtime-radio-style"
-                  value="sharedVpc"
-                  checked={selectedNetworkRadio === 'sharedVpc'}
-                  onChange={() => handleNetworkSharedVpcRadioChange()}
-                />
-                <div className="create-batch-message">
-                  Networks shared from host project: "{projectInfo}"
-                </div>
-              </div>
-              <div className="create-runtime-sub-message-network">
-                Choose a shared VPC network from project that is different from
-                this cluster's project.{' '}
-                <div
-                  className="submit-job-learn-more"
-                  onClick={() => {
-                    window.open(`${SHARED_VPC}`, '_blank');
-                  }}
-                >
-                  Learn more
-                </div>
-              </div>
-            </div>
+          </div>
 
-            <div>
-              {selectedNetworkRadio === 'projectNetwork' && (
-                <div className="create-batch-network">
-                  {isloadingNetwork ? (
-                    <div className="metastore-loader">
-                      <ClipLoader
-                        loading={true}
-                        size={25}
-                        aria-label="Loading Spinner"
-                        data-testid="loader"
+          <div>
+            {selectedNetworkRadio === 'projectNetwork' && (
+              <div className="create-batch-network">
+                {isloadingNetwork ? (
+                  <div className="metastore-loader">
+                    <ClipLoader
+                      loading={true}
+                      size={25}
+                      aria-label="Loading Spinner"
+                      data-testid="loader"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="select-text-overlay">
+                      <Autocomplete
+                        options={networkList}
+                        value={networkSelected}
+                        onChange={(_event, val) => handleNetworkChange(val)}
+                        renderInput={params => (
+                          <TextField {...params} label="Primary network*" />
+                        )}
                       />
                     </div>
-                  ) : (
-                    <>
-                      <div className="select-text-overlay">
-                        <Autocomplete
-                          options={networkList}
-                          value={networkSelected}
-                          onChange={(_event, val) => handleNetworkChange(val)}
-                          renderInput={params => (
-                            <TextField {...params} label="Primary network*" />
-                          )}
-                        />
-                      </div>
-                      <div className="select-text-overlay subnetwork-style">
-                        <Autocomplete
-                          options={subNetworkList}
-                          value={subNetworkSelected}
-                          onChange={(_event, val) =>
-                            handleSubNetworkChange(val)
-                          }
-                          renderInput={params => (
-                            <TextField {...params} label="subnetwork" />
-                          )}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-              {selectedNetworkRadio === 'projectNetwork' &&
-                networkList.length === 0 && (
-                  <div className="create-no-list-message">
-                    No local networks are available.
-                  </div>
+                    <div className="select-text-overlay subnetwork-style">
+                      <Autocomplete
+                        options={subNetworkList}
+                        value={subNetworkSelected}
+                        onChange={(_event, val) => handleSubNetworkChange(val)}
+                        renderInput={params => (
+                          <TextField {...params} label="subnetwork" />
+                        )}
+                      />
+                    </div>
+                  </>
                 )}
-              {selectedNetworkRadio === 'projectNetwork' &&
-                networkList.length !== 0 &&
-                subNetworkList.length === 0 && (
-                  <div className="create-no-list-message">
-                    Please select a valid network and subnetwork.
-                  </div>
-                )}
-              {selectedNetworkRadio === 'sharedVpc' && (
-                <div className="select-text-overlay">
-                  <Autocomplete
-                    options={sharedSubNetworkList}
-                    value={sharedvpcSelected}
-                    onChange={(_event, val) => handleSharedSubNetwork(val)}
-                    renderInput={params => (
-                      <TextField {...params} label="Shared subnetwork" />
-                    )}
-                  />
-                </div>
-              )}
-              {selectedNetworkRadio === 'sharedVpc' &&
-                sharedSubNetworkList.length === 0 && (
-                  <div className="create-no-list-message">
-                    No shared subnetworks are available in this region.
-                  </div>
-                )}
-            </div>
-
-            <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="network-tags">
-                Network tags
-              </label>
-              <TagsInput
-                className="select-runtime-style"
-                onChange={e => handleNetworkTags(setDuplicateValidation, e)}
-                addOnBlur={true}
-                value={networkTagSelected}
-                inputProps={{ placeholder: '' }}
-              />
-            </div>
-            {duplicateValidation && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">
-                  Duplicate paths are not allowed
-                </div>
               </div>
             )}
-
-            {!duplicateValidation && (
-              <div className="create-messagelist">
-                Network tags are text attributes you can add to make firewall
-                rules and routes applicable to specific VM instances.
-              </div>
-            )}
-
-            <div className="submit-job-label-header">Metastore</div>
-
-            <div className="select-text-overlay">
-              <DynamicDropdown
-                value={projectId}
-                onChange={(_, projectId) => handleProjectIdChange(projectId,networkSelected)}
-                fetchFunc={projectListAPI}
-                label="Project ID"
-                // Always show the clear indicator and hide the dropdown arrow
-                // make it very clear that this is an autocomplete.
-                sx={{
-                  '& .MuiAutocomplete-clearIndicator': {
-                    visibility: 'hidden'
-                  }
-                }}
-                popupIcon={null}
-              />
-            </div>
-
-          
-
-            <div className="select-text-overlay">
-              {isLoadingService ? (
-                <div className="metastore-loader">
-                  <ClipLoader
-                    loading={true}
-                    size={25}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
+            {selectedNetworkRadio === 'projectNetwork' &&
+              networkList.length === 0 && (
+                <div className="create-no-list-message">
+                  No local networks are available.
                 </div>
-              ) : (
+              )}
+            {selectedNetworkRadio === 'projectNetwork' &&
+              networkList.length !== 0 &&
+              subNetworkList.length === 0 && (
+                <div className="create-no-list-message">
+                  Please select a valid network and subnetwork.
+                </div>
+              )}
+            {selectedNetworkRadio === 'sharedVpc' && (
+              <div className="select-text-overlay">
                 <Autocomplete
-                  options={servicesList}
-                  value={servicesSelected}
-                  onChange={(_event, val) => handleServiceSelected(val)}
+                  options={sharedSubNetworkList}
+                  value={sharedvpcSelected}
+                  onChange={(_event, val) => handleSharedSubNetwork(val)}
                   renderInput={params => (
-                    <TextField {...params} label="Metastore services" />
+                    <TextField {...params} label="Shared subnetwork" />
                   )}
                 />
+              </div>
+            )}
+            {selectedNetworkRadio === 'sharedVpc' &&
+              sharedSubNetworkList.length === 0 && (
+                <div className="create-no-list-message">
+                  No shared subnetworks are available in this region.
+                </div>
               )}
-            </div>
+          </div>
 
-            <div className="single-line">
-              <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="max-idle-time">
-                  Max idle time
-                </label>
-                <Input
-                  className="runtimetemplate-max-idle"
-                  value={idleTimeSelected}
-                  onChange={e => handleIdleSelected(e)}
-                  type="text"
+          <div className="select-text-overlay">
+            <label className="select-title-text" htmlFor="network-tags">
+              Network tags
+            </label>
+            <TagsInput
+              className="select-runtime-style"
+              onChange={e => handleNetworkTags(setDuplicateValidation, e)}
+              addOnBlur={true}
+              value={networkTagSelected}
+              inputProps={{ placeholder: '' }}
+            />
+          </div>
+          {duplicateValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">
+                Duplicate paths are not allowed
+              </div>
+            </div>
+          )}
+
+          {!duplicateValidation && (
+            <div className="create-messagelist">
+              Network tags are text attributes you can add to make firewall
+              rules and routes applicable to specific VM instances.
+            </div>
+          )}
+
+          <div className="submit-job-label-header">Metastore</div>
+
+          <div className="select-text-overlay">
+            <DynamicDropdown
+              value={projectId}
+              onChange={(_, projectId) =>
+                handleProjectIdChange(projectId, networkSelected)
+              }
+              fetchFunc={projectListAPI}
+              label="Project ID"
+              // Always show the clear indicator and hide the dropdown arrow
+              // make it very clear that this is an autocomplete.
+              sx={{
+                '& .MuiAutocomplete-clearIndicator': {
+                  visibility: 'hidden'
+                }
+              }}
+              popupIcon={null}
+            />
+          </div>
+
+          <div className="select-text-overlay">
+            {isLoadingService ? (
+              <div className="metastore-loader">
+                <ClipLoader
+                  loading={true}
+                  size={25}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
                 />
               </div>
-              <Select
-                className="runtimetemplate-max-idle-select"
-                value={timeSelected}
-                onChange={handletimeSelected}
-                type="text"
-                search
-                selection
-                options={timeList}
+            ) : (
+              <Autocomplete
+                options={servicesList}
+                value={servicesSelected}
+                onChange={(_event, val) => handleServiceSelected(val)}
+                renderInput={params => (
+                  <TextField {...params} label="Metastore services" />
+                )}
               />
-            </div>
-            <div className="create-messagelist">
-              Max notebook idle time before the session is auto-terminated 10
-              mins to 330 hours.
-            </div>
-            {idleValidation && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">Only Numeric is allowed</div>
-              </div>
             )}
+          </div>
 
-            <div className="single-line">
-              <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="max-session-time">
-                  Max session time
-                </label>
-                <Input
-                  className="runtimetemplate-max-idle"
-                  value={autoTimeSelected}
-                  onChange={e => handleAutoTimeSelected(e)}
-                  type="text"
-                />
-              </div>
-
-              <Select
-                search
-                selection
-                className="runtimetemplate-max-idle-select"
-                value={autoSelected}
-                onChange={handleAutoSelected}
-                type="text"
-                options={timeList}
-              />
-            </div>
-            <div className="create-messagelist">
-              Max lifetime of a session. 10 mins and 330 hours.
-            </div>
-            {autoValidation && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">Only Numeric is allowed</div>
-              </div>
-            )}
-
+          <div className="single-line">
             <div className="select-text-overlay">
-              <label
-                className="select-title-text"
-                htmlFor="python-packages-repository"
-              >
-                Python packages repository
+              <label className="select-title-text" htmlFor="max-idle-time">
+                Max idle time
               </label>
               <Input
-                className="create-runtime-style "
-                value={pythonRepositorySelected}
-                onChange={e => setPythonRepositorySelected(e.target.value)}
+                className="runtimetemplate-max-idle"
+                value={idleTimeSelected}
+                onChange={e => handleIdleSelected(e)}
                 type="text"
               />
             </div>
-            <div className="create-messagelist">
-              Enter the URI for the repository to install Python packages. By
-              default packages are installed to PyPI pull-through cache on GCP.
+            <Select
+              className="runtimetemplate-max-idle-select"
+              value={timeSelected}
+              onChange={handletimeSelected}
+              type="text"
+              search
+              selection
+              options={timeList}
+            />
+          </div>
+          <div className="create-messagelist">
+            Max notebook idle time before the session is auto-terminated 10 mins
+            to 330 hours.
+          </div>
+          {idleValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">Only Numeric is allowed</div>
             </div>
+          )}
 
-            <div className="submit-job-label-header">
-              Persistent Spark History Server
-            </div>
-
-            <div className="create-batches-message">
-              Choose a history server cluster to store logs in.{' '}
-            </div>
+          <div className="single-line">
             <div className="select-text-overlay">
-              <Autocomplete
-                options={clustersList}
-                value={clusterSelected}
-                onChange={(_event, val) => handleClusterSelected(val)}
-                renderInput={params => (
-                  <TextField {...params} label="History server cluster" />
-                )}
+              <label className="select-title-text" htmlFor="max-session-time">
+                Max session time
+              </label>
+              <Input
+                className="runtimetemplate-max-idle"
+                value={autoTimeSelected}
+                onChange={e => handleAutoTimeSelected(e)}
+                type="text"
               />
             </div>
-            <div className="submit-job-label-header">Spark Properties</div>
-            <LabelProperties
-              labelDetail={propertyDetail}
-              setLabelDetail={setPropertyDetail}
-              labelDetailUpdated={propertyDetailUpdated}
-              setLabelDetailUpdated={setPropertyDetailUpdated}
-              buttonText="ADD PROPERTY"
-              keyValidation={keyValidation}
-              setKeyValidation={setKeyValidation}
-              valueValidation={valueValidation}
-              setValueValidation={setValueValidation}
-              duplicateKeyError={duplicateKeyError}
-              setDuplicateKeyError={setDuplicateKeyError}
-              selectedRuntimeClone={selectedRuntimeClone ? true : false}
+
+            <Select
+              search
+              selection
+              className="runtimetemplate-max-idle-select"
+              value={autoSelected}
+              onChange={handleAutoSelected}
+              type="text"
+              options={timeList}
             />
-            <div className="submit-job-label-header">Labels</div>
-            <LabelProperties
-              labelDetail={labelDetail}
-              setLabelDetail={setLabelDetail}
-              labelDetailUpdated={labelDetailUpdated}
-              setLabelDetailUpdated={setLabelDetailUpdated}
-              buttonText="ADD LABEL"
-              selectedRuntimeClone={selectedRuntimeClone}
-              keyValidation={keyValidation}
-              setKeyValidation={setKeyValidation}
-              valueValidation={valueValidation}
-              setValueValidation={setValueValidation}
-              duplicateKeyError={duplicateKeyError}
-              setDuplicateKeyError={setDuplicateKeyError}
-            />
-            <div className="job-button-style-parent">
-              <div
-                onClick={() => {
-                  if (!isSaveDisabled()) {
-                    handleSave();
-                  }
-                }}
-                className={
-                  isSaveDisabled()
-                    ? 'submit-button-disable-style'
-                    : 'submit-button-style'
-                }
-                aria-label="submit Batch"
-              >
-                <div>SAVE</div>
-              </div>
-              <div
-                className="job-cancel-button-style"
-                aria-label="cancel Batch"
-                onClick={handleCancelButton}
-              >
-                <div>CANCEL</div>
-              </div>
-              {error.isOpen && (
-                <ErrorPopup
-                  onCancel={() => setError({ isOpen: false, message: '' })}
-                  errorPopupOpen={error.isOpen}
-                  errorMsg={error.message}
-                />
-              )}
+          </div>
+          <div className="create-messagelist">
+            Max lifetime of a session. 10 mins and 330 hours.
+          </div>
+          {autoValidation && (
+            <div className="error-key-parent">
+              <iconError.react tag="div" className="logo-alignment-style" />
+              <div className="error-key-missing">Only Numeric is allowed</div>
             </div>
-          </form>
-         
-        </div>
+          )}
+
+          <div className="select-text-overlay">
+            <label
+              className="select-title-text"
+              htmlFor="python-packages-repository"
+            >
+              Python packages repository
+            </label>
+            <Input
+              className="create-runtime-style "
+              value={pythonRepositorySelected}
+              onChange={e => setPythonRepositorySelected(e.target.value)}
+              type="text"
+            />
+          </div>
+          <div className="create-messagelist">
+            Enter the URI for the repository to install Python packages. By
+            default packages are installed to PyPI pull-through cache on GCP.
+          </div>
+
+          <div className="submit-job-label-header">
+            Persistent Spark History Server
+          </div>
+
+          <div className="create-batches-message">
+            Choose a history server cluster to store logs in.{' '}
+          </div>
+          <div className="select-text-overlay">
+            <Autocomplete
+              options={clustersList}
+              value={clusterSelected}
+              onChange={(_event, val) => handleClusterSelected(val)}
+              renderInput={params => (
+                <TextField {...params} label="History server cluster" />
+              )}
+            />
+          </div>
+          <div className="submit-job-label-header">Spark Properties</div>
+          <LabelProperties
+            labelDetail={propertyDetail}
+            setLabelDetail={setPropertyDetail}
+            labelDetailUpdated={propertyDetailUpdated}
+            setLabelDetailUpdated={setPropertyDetailUpdated}
+            buttonText="ADD PROPERTY"
+            keyValidation={keyValidation}
+            setKeyValidation={setKeyValidation}
+            valueValidation={valueValidation}
+            setValueValidation={setValueValidation}
+            duplicateKeyError={duplicateKeyError}
+            setDuplicateKeyError={setDuplicateKeyError}
+            selectedRuntimeClone={selectedRuntimeClone ? true : false}
+          />
+          <div className="submit-job-label-header">Labels</div>
+          <LabelProperties
+            labelDetail={labelDetail}
+            setLabelDetail={setLabelDetail}
+            labelDetailUpdated={labelDetailUpdated}
+            setLabelDetailUpdated={setLabelDetailUpdated}
+            buttonText="ADD LABEL"
+            selectedRuntimeClone={selectedRuntimeClone}
+            keyValidation={keyValidation}
+            setKeyValidation={setKeyValidation}
+            valueValidation={valueValidation}
+            setValueValidation={setValueValidation}
+            duplicateKeyError={duplicateKeyError}
+            setDuplicateKeyError={setDuplicateKeyError}
+          />
+          <div className="job-button-style-parent">
+            <div
+              onClick={() => {
+                if (!isSaveDisabled()) {
+                  handleSave();
+                }
+              }}
+              className={
+                isSaveDisabled()
+                  ? 'submit-button-disable-style'
+                  : 'submit-button-style'
+              }
+              aria-label="submit Batch"
+            >
+              <div>SAVE</div>
+            </div>
+            <div
+              className="job-cancel-button-style"
+              aria-label="cancel Batch"
+              onClick={handleCancelButton}
+            >
+              <div>CANCEL</div>
+            </div>
+            {error.isOpen && (
+              <ErrorPopup
+                onCancel={() => setError({ isOpen: false, message: '' })}
+                errorPopupOpen={error.isOpen}
+                errorMsg={error.message}
+              />
+            )}
+          </div>
+        </form>
       </div>
       ) : (
         loginError && (
@@ -1745,6 +1785,7 @@ function CreateRunTime({
           </div>
         )
       )}
+     
        {configError && (
         <div role="alert" className="login-error">
           Please configure gcloud with account, project-id and region

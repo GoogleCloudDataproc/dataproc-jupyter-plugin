@@ -128,7 +128,7 @@ function SubmitJob({
   const [clusterList, setClusterList] = useState([{}]);
   const [jobTypeList, setJobTypeList] = useState([{}]);
   const [querySourceTypeList, setQuerySourceTypeList] = useState([{}]);
-  
+
   const [jobIdSelected, setJobIdSelected] = useState('');
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
@@ -150,7 +150,7 @@ function SubmitJob({
   let queryType = '';
   let queryList = '';
   let mainClass = '';
-  let clusterSelectedValue='';
+  let clusterSelectedValue = '';
   let key: string[] | (() => string[]) = [];
   let value: string[] | (() => string[]) = [];
   let jobKeys: string[] = [];
@@ -170,8 +170,8 @@ function SubmitJob({
     mainJarFileUri = selectedJobClone[jobKeys[0]].mainJarFileUri;
     mainClass = selectedJobClone[jobKeys[0]].mainClass;
     mainRFileUri = selectedJobClone[jobKeys[0]].mainRFileUri;
-    clusterSelectedValue=selectedJobClone.placement.clusterName;
-  
+    clusterSelectedValue = selectedJobClone.placement.clusterName;
+
     mainPythonFileUri = selectedJobClone[jobKeys[0]].mainPythonFileUri;
     ({
       fileUris,
@@ -679,7 +679,6 @@ function SubmitJob({
             const errorResponse = await response.json();
             toast.error(errorResponse?.error?.message, toastifyCustomStyle);
             throw new Error(`API failed with status: ${response.status}`);
-            
           }
         })
         .catch((err: Error) => {
@@ -771,221 +770,114 @@ function SubmitJob({
 
   return (
     <div>
-      <div className="scroll-comp">
-        <div className="cluster-details-header">
-          <div
-            role="button"
-            className="back-arrow-icon"
-            onClick={() => handleSubmitJobBackView()}
-          >
-            <iconLeftArrow.react
-              tag="div"
-              className="icon-white logo-alignment-style"
+      <div className="cluster-details-header">
+        <div
+          role="button"
+          className="back-arrow-icon"
+          onClick={() => handleSubmitJobBackView()}
+        >
+          <iconLeftArrow.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+        <div className="cluster-details-title">Submit a job</div>
+      </div>
+      <div className="submit-job-container">
+        <div className="submit-job-label-header">Cluster</div>
+        <div>Choose a cluster to run your job in.</div>
+
+        {clusterList.length === 0 ? (
+          <Input className="input-style" value="No clusters running" readOnly />
+        ) : (
+          <div className="select-text-overlay">
+            <Autocomplete
+              options={clusterList}
+              value={clusterSelected}
+              onChange={(_event, val) => handleClusterSelected(val)}
+              renderInput={params => <TextField {...params} label="Cluster*" />}
             />
           </div>
-          <div className="cluster-details-title">Submit a job</div>
+        )}
+        <div className="submit-job-label-header">Job</div>
+        <div className="select-text-overlay">
+          <label className="select-title-text" htmlFor="job-id">
+            Job ID*
+          </label>
+          <Input
+            className="submit-job-input-style"
+            onChange={e => handleJobIdChange(e)}
+            type="text"
+            value={hexNumber}
+          />
         </div>
-        <div className="submit-job-container">
-          <div className="submit-job-label-header">Cluster</div>
-          <div>Choose a cluster to run your job in.</div>
 
-          {clusterList.length === 0 ? (
-            <Input
-              className="input-style"
-              value="No clusters running"
-              readOnly
-            />
-          ) : (
+        {!jobIdValidation && (
+          <div className="error-key-parent">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div className="error-key-missing">ID is required</div>
+          </div>
+        )}
+        {jobIdSpecialValidation && jobIdValidation && (
+          <div className="error-key-parent">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div className="error-key-missing">
+              ID must contain only letters, numbers, hyphens, and underscores
+            </div>
+          </div>
+        )}
+
+        <div className="select-text-overlay">
+          <label className="select-title-text" htmlFor="metastore-project">
+            Job type*
+          </label>
+          <Select
+            className="project-region-select"
+            search
+            onChange={handleJobTypeSelected}
+            options={jobTypeList}
+            value={jobTypeSelected}
+          />
+        </div>
+
+        {jobTypeSelected === 'sparkSql' && (
+          <>
             <div className="select-text-overlay">
-              <Autocomplete
-                options={clusterList}
-                value={clusterSelected}
-                onChange={(_event, val) => handleClusterSelected(val)}
-                renderInput={params => (
-                  <TextField {...params} label="Cluster*" />
-                )}
+              <label className="select-title-text" htmlFor="metastore-project">
+                Query source type*
+              </label>
+              <Select
+                className="project-region-select"
+                search
+                onChange={handleQuerySourceTypeSelected}
+                options={querySourceTypeList}
+                value={querySourceSelected}
               />
             </div>
-          )}
-          <div className="submit-job-label-header">Job</div>
-          <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="job-id">
-              Job ID*
-            </label>
-            <Input
-              className="submit-job-input-style"
-              onChange={e => handleJobIdChange(e)}
-              type="text"
-              value={hexNumber}
-            />
-          </div>
-
-          {!jobIdValidation && (
-            <div className="error-key-parent">
-              <iconError.react tag="div" className="logo-alignment-style" />
-              <div className="error-key-missing">ID is required</div>
-            </div>
-          )}
-          {jobIdSpecialValidation && jobIdValidation && (
-            <div className="error-key-parent">
-              <iconError.react tag="div" className="logo-alignment-style" />
-              <div className="error-key-missing">
-                ID must contain only letters, numbers, hyphens, and underscores
-              </div>
-            </div>
-          )}
-
-          <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="metastore-project">
-              Job type*
-            </label>
-            <Select
-              className="project-region-select"
-              search
-              onChange={handleJobTypeSelected}
-              options={jobTypeList}
-              value={jobTypeSelected}
-            />
-          </div>
-
-          {jobTypeSelected === 'sparkSql' && (
+          </>
+        )}
+        {querySourceSelected === 'queryFile' &&
+          jobTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label
-                  className="select-title-text"
-                  htmlFor="metastore-project"
-                >
-                  Query source type*
-                </label>
-                <Select
-                  className="project-region-select"
-                  search
-                  onChange={handleQuerySourceTypeSelected}
-                  options={querySourceTypeList}
-                  value={querySourceSelected}
-                />
-              </div>
-            </>
-          )}
-          {querySourceSelected === 'queryFile' &&
-            jobTypeSelected === 'sparkSql' && (
-              <>
-                <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="query-file">
-                    Query file*
-                  </label>
-                  <Input
-                    className="submit-job-input-style"
-                    onChange={e =>
-                      handleValidationFiles(
-                        e.target.value,
-                        setQueryFileSelected,
-                        setQueryFileValidation
-                      )
-                    }
-                    addOnBlur={true}
-                    value={queryFileSelected}
-                  />
-                </div>
-
-                {!queryFileValidation && (
-                  <div className="error-key-parent">
-                    <iconError.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
-                    <div className="error-key-missing">
-                      File must include a valid scheme prefix: 'file://',
-                      'gs://', or 'hdfs://'
-                    </div>
-                  </div>
-                )}
-                {queryFileValidation && (
-                  <div className="submit-job-message-input">
-                    {QUERY_FILE_MESSAGE}
-                  </div>
-                )}
-              </>
-            )}
-          {querySourceSelected === 'queryText' &&
-            jobTypeSelected === 'sparkSql' && (
-              <>
-                <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="query-text">
-                    Query text*
-                  </label>
-                  <Input
-                    className="submit-job-input-style"
-                    onChange={e => setQueryTextSelected(e.target.value)}
-                    value={queryTextSelected}
-                  />
-                </div>
-
-                <div className="submit-job-message-input">
-                  The query to execute
-                </div>
-              </>
-            )}
-          {jobTypeSelected === 'spark' && (
-            <>
-              <div className="select-text-overlay">
-                <label
-                  className="select-title-text"
-                  htmlFor="main-class-or-jar"
-                >
-                  Main class or jar*
+                <label className="select-title-text" htmlFor="query-file">
+                  Query file*
                 </label>
                 <Input
                   className="submit-job-input-style"
                   onChange={e =>
                     handleValidationFiles(
                       e.target.value,
-                      setMainClassSelected,
-                      setMainClassValidation
-                    )
-                  }
-                  onBlur={() => setMainClassActive(true)}
-                  addOnBlur={true}
-                  value={mainClassSelected}
-                />
-              </div>
-
-              {mainClassSelected === '' && mainClassActive && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Main class or jar is required
-                  </div>
-                </div>
-              )}
-              {(mainClassSelected !== '' || !mainClassActive) && (
-                <div className="submit-job-message-input">
-                  {MAIN_CLASS_MESSAGE}
-                </div>
-              )}
-            </>
-          )}
-          {jobTypeSelected === 'sparkR' && (
-            <>
-              <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="main-r-file">
-                  Main R file*
-                </label>
-                <Input
-                  className="submit-job-input-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setMainRSelected,
-                      setMainRValidation
+                      setQueryFileSelected,
+                      setQueryFileValidation
                     )
                   }
                   addOnBlur={true}
-                  value={mainRSelected}
+                  value={queryFileSelected}
                 />
               </div>
 
-              {!mainRValidation && (
+              {!queryFileValidation && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" className="logo-alignment-style" />
                   <div className="error-key-missing">
@@ -994,354 +886,439 @@ function SubmitJob({
                   </div>
                 </div>
               )}
-              {mainRValidation && (
+              {queryFileValidation && (
                 <div className="submit-job-message-input">
                   {QUERY_FILE_MESSAGE}
                 </div>
               )}
             </>
           )}
-          {jobTypeSelected === 'pySpark' && (
+        {querySourceSelected === 'queryText' &&
+          jobTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="main-python-file">
-                  Main Python file*
+                <label className="select-title-text" htmlFor="query-text">
+                  Query text*
                 </label>
                 <Input
                   className="submit-job-input-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e.target.value,
-                      setMainPythonSelected,
-                      setMainPythonValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={mainPythonSelected}
+                  onChange={e => setQueryTextSelected(e.target.value)}
+                  value={queryTextSelected}
                 />
               </div>
 
-              {!mainPythonValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    File must include a valid scheme prefix: 'file://', 'gs://',
-                    or 'hdfs://'
-                  </div>
-                </div>
-              )}
-              {mainPythonValidation && (
-                <div className="submit-job-message-input">
-                  {QUERY_FILE_MESSAGE}
-                </div>
-              )}
-            </>
-          )}
-          {jobTypeSelected === 'pySpark' && (
-            <>
-              <div className="select-text-overlay">
-                <label
-                  className="select-title-text"
-                  htmlFor="additional-python-files"
-                >
-                  Additional python files
-                </label>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setAdditionalPythonFileSelected,
-                      setAdditionalPythonFileValidation,
-                      setAdditionalPythonFileDuplicateValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={additionalPythonFileSelected}
-                  inputProps={{ placeholder: '' }}
-                />
+              <div className="submit-job-message-input">
+                The query to execute
               </div>
-              {!additionalPythonFileValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    All files must include a valid scheme prefix: 'file://',
-                    'gs://', or 'hdfs://'
-                  </div>
-                </div>
-              )}
-              {additionalPythonFileDuplicateValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Duplicate paths are not allowed
-                  </div>
-                </div>
-              )}
             </>
           )}
-          {jobTypeSelected !== 'sparkR' && (
-            <>
-              <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="jar-files">
-                  Jar files
-                </label>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setJarFileSelected,
-                      setJarFileValidation,
-                      setJarFileDuplicateValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={jarFileSelected}
-                  inputProps={{ placeholder: '' }}
-                />
+        {jobTypeSelected === 'spark' && (
+          <>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="main-class-or-jar">
+                Main class or jar*
+              </label>
+              <Input
+                className="submit-job-input-style"
+                onChange={e =>
+                  handleValidationFiles(
+                    e.target.value,
+                    setMainClassSelected,
+                    setMainClassValidation
+                  )
+                }
+                onBlur={() => setMainClassActive(true)}
+                addOnBlur={true}
+                value={mainClassSelected}
+              />
+            </div>
+
+            {mainClassSelected === '' && mainClassActive && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Main class or jar is required
+                </div>
               </div>
-              {jarFileDuplicateValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Duplicate paths are not allowed
-                  </div>
-                </div>
-              )}
-              {!jarFileValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    All files must include a valid scheme prefix: 'file://',
-                    'gs://', or 'hdfs://'
-                  </div>
-                </div>
-              )}
-              {jarFileValidation && !jarFileDuplicateValidation && (
-                <div className="submit-job-message">{JAR_FILE_MESSAGE}</div>
-              )}
-            </>
-          )}
-          {jobTypeSelected !== 'sparkSql' && (
-            <>
-              <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="files">
-                  Files
-                </label>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setFileSelected,
-                      setFileValidation,
-                      setFileDuplicateValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={fileSelected}
-                  inputProps={{ placeholder: '' }}
-                />
-              </div>
-              {fileDuplicateValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Duplicate paths are not allowed
-                  </div>
-                </div>
-              )}
-              {!fileValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    All files must include a valid scheme prefix: 'file://',
-                    'gs://', or 'hdfs://'
-                  </div>
-                </div>
-              )}
-              {fileValidation && !fileDuplicateValidation && (
-                <div className="submit-job-message">{FILES_MESSAGE}</div>
-              )}
-            </>
-          )}
-          {(jobTypeSelected === 'spark' || jobTypeSelected === 'pySpark') && (
-            <>
-              <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="archive-files">
-                  Archive files
-                </label>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleValidationFiles(
-                      e,
-                      setArchieveFileSelected,
-                      setArchieveFileValidation,
-                      setArchiveDuplicateValidation
-                    )
-                  }
-                  addOnBlur={true}
-                  value={archieveFileSelected}
-                  inputProps={{ placeholder: '' }}
-                />
-              </div>
-              {archiveDuplicateValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Duplicate paths are not allowed
-                  </div>
-                </div>
-              )}
-              {!archieveFileValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    All files must include a valid scheme prefix: 'file://',
-                    'gs://', or 'hdfs://'
-                  </div>
-                </div>
-              )}
-              {archieveFileValidation && !archiveDuplicateValidation && (
-                <div className="submit-job-message">
-                  {ARCHIVE_FILES_MESSAGE}
-                </div>
-              )}
-            </>
-          )}
-          {jobTypeSelected !== 'sparkSql' && (
-            <>
-              <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="arguments">
-                  Arguments
-                </label>
-                <TagsInput
-                  className="select-job-style"
-                  onChange={e =>
-                    handleArgumentsSelection(setArgumentsDuplicateValidation, e)
-                  }
-                  value={argumentSelected}
-                  addOnBlur={true}
-                  inputProps={{ placeholder: '' }}
-                />
-              </div>
-              {argumentsDuplicateValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Duplicate paths are not allowed
-                  </div>
-                </div>
-              )}
-              {!argumentsDuplicateValidation && (
-                <div className="submit-job-message">{ARGUMENTS_MESSAGE}</div>
-              )}
-            </>
-          )}
-          {querySourceSelected === 'queryFile' &&
-            jobTypeSelected === 'sparkSql' && (
-              <>
-                <div className="submit-job-label-header">Query parameters</div>
-                <LabelProperties
-                  labelDetail={parameterDetail}
-                  setLabelDetail={setParameterDetail}
-                  labelDetailUpdated={parameterDetailUpdated}
-                  setLabelDetailUpdated={setParameterDetailUpdated}
-                  selectedJobClone={selectedJobClone ? true : false}
-                  buttonText="ADD PARAMETER"
-                  keyValidation={keyValidation}
-                  setKeyValidation={setKeyValidation}
-                  valueValidation={valueValidation}
-                  setValueValidation={setValueValidation}
-                  duplicateKeyError={duplicateKeyError}
-                  setDuplicateKeyError={setDuplicateKeyError}
-                />
-              </>
             )}
-          <div className="select-text-overlay">
-            <label
-              className="select-title-text"
-              htmlFor="max-restarts-per-hour"
-            >
-              Max restarts per hour
-            </label>
-            <Input
-              className="submit-job-input-style"
-              onChange={e => setMaxRestartSelected(e.target.value)}
-              value={maxRestartSelected}
-            />
-          </div>
+            {(mainClassSelected !== '' || !mainClassActive) && (
+              <div className="submit-job-message-input">
+                {MAIN_CLASS_MESSAGE}
+              </div>
+            )}
+          </>
+        )}
+        {jobTypeSelected === 'sparkR' && (
+          <>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="main-r-file">
+                Main R file*
+              </label>
+              <Input
+                className="submit-job-input-style"
+                onChange={e =>
+                  handleValidationFiles(
+                    e.target.value,
+                    setMainRSelected,
+                    setMainRValidation
+                  )
+                }
+                addOnBlur={true}
+                value={mainRSelected}
+              />
+            </div>
 
-          <div className="submit-job-message-with-link">
-            {MAX_RESTART_MESSAGE}
+            {!mainRValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  File must include a valid scheme prefix: 'file://', 'gs://',
+                  or 'hdfs://'
+                </div>
+              </div>
+            )}
+            {mainRValidation && (
+              <div className="submit-job-message-input">
+                {QUERY_FILE_MESSAGE}
+              </div>
+            )}
+          </>
+        )}
+        {jobTypeSelected === 'pySpark' && (
+          <>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="main-python-file">
+                Main Python file*
+              </label>
+              <Input
+                className="submit-job-input-style"
+                onChange={e =>
+                  handleValidationFiles(
+                    e.target.value,
+                    setMainPythonSelected,
+                    setMainPythonValidation
+                  )
+                }
+                addOnBlur={true}
+                value={mainPythonSelected}
+              />
+            </div>
+
+            {!mainPythonValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  File must include a valid scheme prefix: 'file://', 'gs://',
+                  or 'hdfs://'
+                </div>
+              </div>
+            )}
+            {mainPythonValidation && (
+              <div className="submit-job-message-input">
+                {QUERY_FILE_MESSAGE}
+              </div>
+            )}
+          </>
+        )}
+        {jobTypeSelected === 'pySpark' && (
+          <>
+            <div className="select-text-overlay">
+              <label
+                className="select-title-text"
+                htmlFor="additional-python-files"
+              >
+                Additional python files
+              </label>
+              <TagsInput
+                className="select-job-style"
+                onChange={e =>
+                  handleValidationFiles(
+                    e,
+                    setAdditionalPythonFileSelected,
+                    setAdditionalPythonFileValidation,
+                    setAdditionalPythonFileDuplicateValidation
+                  )
+                }
+                addOnBlur={true}
+                value={additionalPythonFileSelected}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
+            {!additionalPythonFileValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  All files must include a valid scheme prefix: 'file://',
+                  'gs://', or 'hdfs://'
+                </div>
+              </div>
+            )}
+            {additionalPythonFileDuplicateValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Duplicate paths are not allowed
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        {jobTypeSelected !== 'sparkR' && (
+          <>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="jar-files">
+                Jar files
+              </label>
+              <TagsInput
+                className="select-job-style"
+                onChange={e =>
+                  handleValidationFiles(
+                    e,
+                    setJarFileSelected,
+                    setJarFileValidation,
+                    setJarFileDuplicateValidation
+                  )
+                }
+                addOnBlur={true}
+                value={jarFileSelected}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
+            {jarFileDuplicateValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Duplicate paths are not allowed
+                </div>
+              </div>
+            )}
+            {!jarFileValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  All files must include a valid scheme prefix: 'file://',
+                  'gs://', or 'hdfs://'
+                </div>
+              </div>
+            )}
+            {jarFileValidation && !jarFileDuplicateValidation && (
+              <div className="submit-job-message">{JAR_FILE_MESSAGE}</div>
+            )}
+          </>
+        )}
+        {jobTypeSelected !== 'sparkSql' && (
+          <>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="files">
+                Files
+              </label>
+              <TagsInput
+                className="select-job-style"
+                onChange={e =>
+                  handleValidationFiles(
+                    e,
+                    setFileSelected,
+                    setFileValidation,
+                    setFileDuplicateValidation
+                  )
+                }
+                addOnBlur={true}
+                value={fileSelected}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
+            {fileDuplicateValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Duplicate paths are not allowed
+                </div>
+              </div>
+            )}
+            {!fileValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  All files must include a valid scheme prefix: 'file://',
+                  'gs://', or 'hdfs://'
+                </div>
+              </div>
+            )}
+            {fileValidation && !fileDuplicateValidation && (
+              <div className="submit-job-message">{FILES_MESSAGE}</div>
+            )}
+          </>
+        )}
+        {(jobTypeSelected === 'spark' || jobTypeSelected === 'pySpark') && (
+          <>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="archive-files">
+                Archive files
+              </label>
+              <TagsInput
+                className="select-job-style"
+                onChange={e =>
+                  handleValidationFiles(
+                    e,
+                    setArchieveFileSelected,
+                    setArchieveFileValidation,
+                    setArchiveDuplicateValidation
+                  )
+                }
+                addOnBlur={true}
+                value={archieveFileSelected}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
+            {archiveDuplicateValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Duplicate paths are not allowed
+                </div>
+              </div>
+            )}
+            {!archieveFileValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  All files must include a valid scheme prefix: 'file://',
+                  'gs://', or 'hdfs://'
+                </div>
+              </div>
+            )}
+            {archieveFileValidation && !archiveDuplicateValidation && (
+              <div className="submit-job-message">{ARCHIVE_FILES_MESSAGE}</div>
+            )}
+          </>
+        )}
+        {jobTypeSelected !== 'sparkSql' && (
+          <>
+            <div className="select-text-overlay">
+              <label className="select-title-text" htmlFor="arguments">
+                Arguments
+              </label>
+              <TagsInput
+                className="select-job-style"
+                onChange={e =>
+                  handleArgumentsSelection(setArgumentsDuplicateValidation, e)
+                }
+                value={argumentSelected}
+                addOnBlur={true}
+                inputProps={{ placeholder: '' }}
+              />
+            </div>
+            {argumentsDuplicateValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Duplicate paths are not allowed
+                </div>
+              </div>
+            )}
+            {!argumentsDuplicateValidation && (
+              <div className="submit-job-message">{ARGUMENTS_MESSAGE}</div>
+            )}
+          </>
+        )}
+        {querySourceSelected === 'queryFile' &&
+          jobTypeSelected === 'sparkSql' && (
+            <>
+              <div className="submit-job-label-header">Query parameters</div>
+              <LabelProperties
+                labelDetail={parameterDetail}
+                setLabelDetail={setParameterDetail}
+                labelDetailUpdated={parameterDetailUpdated}
+                setLabelDetailUpdated={setParameterDetailUpdated}
+                selectedJobClone={selectedJobClone ? true : false}
+                buttonText="ADD PARAMETER"
+                keyValidation={keyValidation}
+                setKeyValidation={setKeyValidation}
+                valueValidation={valueValidation}
+                setValueValidation={setValueValidation}
+                duplicateKeyError={duplicateKeyError}
+                setDuplicateKeyError={setDuplicateKeyError}
+              />
+            </>
+          )}
+        <div className="select-text-overlay">
+          <label className="select-title-text" htmlFor="max-restarts-per-hour">
+            Max restarts per hour
+          </label>
+          <Input
+            className="submit-job-input-style"
+            onChange={e => setMaxRestartSelected(e.target.value)}
+            value={maxRestartSelected}
+          />
+        </div>
+
+        <div className="submit-job-message-with-link">
+          {MAX_RESTART_MESSAGE}
+          <div
+            className="submit-job-learn-more"
+            onClick={() => {
+              window.open(`${RESTART_JOB_URL}`, '_blank');
+            }}
+          >
+            Learn more
+          </div>
+        </div>
+
+        <div className="submit-job-label-header">Properties</div>
+        <LabelProperties
+          labelDetail={propertyDetail}
+          setLabelDetail={setPropertyDetail}
+          labelDetailUpdated={propertyDetailUpdated}
+          setLabelDetailUpdated={setPropertyDetailUpdated}
+          selectedJobClone={selectedJobClone ? true : false}
+          buttonText="ADD PROPERTY"
+          keyValidation={keyValidation}
+          setKeyValidation={setKeyValidation}
+          valueValidation={valueValidation}
+          setValueValidation={setValueValidation}
+          duplicateKeyError={duplicateKeyError}
+          setDuplicateKeyError={setDuplicateKeyError}
+        />
+        <div className="submit-job-label-header">Labels</div>
+        <LabelProperties
+          labelDetail={labelDetail}
+          setLabelDetail={setLabelDetail}
+          labelDetailUpdated={labelDetailUpdated}
+          setLabelDetailUpdated={setLabelDetailUpdated}
+          selectedJobClone={selectedJobClone ? true : false}
+          buttonText="ADD LABEL"
+          keyValidation={keyValidation}
+          setKeyValidation={setKeyValidation}
+          valueValidation={valueValidation}
+          setValueValidation={setValueValidation}
+          duplicateKeyError={duplicateKeyError}
+          setDuplicateKeyError={setDuplicateKeyError}
+        />
+        <div className="job-button-style-parent">
+          <div
+            className={
+              submitDisabled
+                ? 'submit-button-disable-style'
+                : 'submit-button-style'
+            }
+          >
             <div
-              className="submit-job-learn-more"
+              role="button"
               onClick={() => {
-                window.open(`${RESTART_JOB_URL}`, '_blank');
+                handleSubmitJobView();
               }}
             >
-              Learn more
+              SUBMIT
             </div>
           </div>
-
-          <div className="submit-job-label-header">Properties</div>
-          <LabelProperties
-            labelDetail={propertyDetail}
-            setLabelDetail={setPropertyDetail}
-            labelDetailUpdated={propertyDetailUpdated}
-            setLabelDetailUpdated={setPropertyDetailUpdated}
-            selectedJobClone={selectedJobClone ? true : false}
-            buttonText="ADD PROPERTY"
-            keyValidation={keyValidation}
-            setKeyValidation={setKeyValidation}
-            valueValidation={valueValidation}
-            setValueValidation={setValueValidation}
-            duplicateKeyError={duplicateKeyError}
-            setDuplicateKeyError={setDuplicateKeyError}
-          />
-          <div className="submit-job-label-header">Labels</div>
-          <LabelProperties
-            labelDetail={labelDetail}
-            setLabelDetail={setLabelDetail}
-            labelDetailUpdated={labelDetailUpdated}
-            setLabelDetailUpdated={setLabelDetailUpdated}
-            selectedJobClone={selectedJobClone ? true : false}
-            buttonText="ADD LABEL"
-            keyValidation={keyValidation}
-            setKeyValidation={setKeyValidation}
-            valueValidation={valueValidation}
-            setValueValidation={setValueValidation}
-            duplicateKeyError={duplicateKeyError}
-            setDuplicateKeyError={setDuplicateKeyError}
-          />
-          <div className="job-button-style-parent">
+          <div className="job-cancel-button-style">
             <div
-              className={
-                submitDisabled
-                  ? 'submit-button-disable-style'
-                  : 'submit-button-style'
-              }
+              role="button"
+              onClick={() => {
+                handleCancelJobButton();
+              }}
             >
-              <div
-                role="button"
-                onClick={() => {
-                  handleSubmitJobView();
-                }}
-              >
-                SUBMIT
-              </div>
-            </div>
-            <div className="job-cancel-button-style">
-              <div
-                role="button"
-                onClick={() => {
-                  handleCancelJobButton();
-                }}
-              >
-                CANCEL
-              </div>
+              CANCEL
             </div>
           </div>
         </div>
