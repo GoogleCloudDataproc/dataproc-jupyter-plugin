@@ -162,7 +162,6 @@ export class GcsBrowserWidget extends Widget {
     const debouncedFilter = debounce(this.filterFilesByName, 300);
 
     filterInput.addEventListener('input', event => {
-      console.log(event)
       const filterValue = (event.target as HTMLInputElement).value;
       //@ts-ignore
       document
