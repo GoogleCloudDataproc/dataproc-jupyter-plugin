@@ -33,6 +33,16 @@ const iconGCSUpload = new LabIcon({
   name: 'gcs-toolbar:gcs-upload-icon',
   svgstr: gcsUploadIcon
 });
+
+const debounce = (func: any, delay: any) => {
+  let timeoutId: any;
+  return function (...args: any) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+}
 export class GcsBrowserWidget extends Widget {
   private browser: FileBrowser;
   private fileInput: HTMLInputElement;
@@ -58,6 +68,9 @@ export class GcsBrowserWidget extends Widget {
   private handleFileUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files || []);
+
+    // Clear the input element's value to force the 'change' event on subsequent selections
+    input.value = '';
 
     if (files && files.length > 0) {
       files.forEach((fileData: any) => {
@@ -145,6 +158,9 @@ export class GcsBrowserWidget extends Widget {
     filterInput.type = 'text';
     filterInput.placeholder = 'Filter by Name';
 
+    // Debounce the filterFilesByName function with a delay of 300 milliseconds
+    const debouncedFilter = debounce(this.filterFilesByName, 300);
+
     filterInput.addEventListener('input', event => {
       console.log(event)
       const filterValue = (event.target as HTMLInputElement).value;
@@ -153,7 +169,7 @@ export class GcsBrowserWidget extends Widget {
         .getElementById('filter-buckets-objects')
         .setAttribute('value', filterValue);
       // Call a function to filter files based on filterValue
-      this.filterFilesByName(filterValue);
+      debouncedFilter(filterValue);
     });
 
     this.browser.showFileCheckboxes = false;
