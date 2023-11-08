@@ -51,7 +51,7 @@ import {
 } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
 import 'react-toastify/dist/ReactToastify.css';
-import { deleteBatchAPI, getBatchDetailsInfo } from './batchService';
+import { BatchService } from './batchService';
 import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';
 import CreateBatch from './createBatch';
@@ -169,7 +169,7 @@ function BatchDetails({
   }, []);
 
   const getBatchDetails = async () => {
-    await getBatchDetailsInfo(
+    await BatchService.getBatchDetailsService(
       setRegionName,
       setProjectName,
       batchSelected,
@@ -213,7 +213,7 @@ function BatchDetails({
   };
 
   const handleDelete = async () => {
-    await deleteBatchAPI(selectedBatch);
+    await BatchService.deleteBatchAPIService(selectedBatch);
     handleDetailedBatchView();
     setDeletePopupOpen(false);
   };

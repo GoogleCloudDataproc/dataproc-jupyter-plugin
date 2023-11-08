@@ -26,7 +26,7 @@ import ListSessions from '../sessions/listSessions';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import 'react-toastify/dist/ReactToastify.css';
-import { deleteBatchAPI, listBatchAPIInfo } from './batchService';
+import { BatchService } from './batchService';
 import CreateBatch from './createBatch';
 import PollingTimer from '../utils/pollingTimer';
 import { DataprocWidget } from '../controls/DataprocWidget';
@@ -76,7 +76,7 @@ const BatchesComponent = (): React.JSX.Element => {
   }
 
   const listBatchAPI = async () => {
-    await listBatchAPIInfo(
+    await BatchService.listBatchAPIService(
       setRegionName,
       setProjectName,
       renderActions,
@@ -106,7 +106,7 @@ const BatchesComponent = (): React.JSX.Element => {
   };
 
   const handleDelete = async () => {
-    await deleteBatchAPI(selectedBatch);
+    await BatchService.deleteBatchAPIService(selectedBatch);
     listBatchAPI();
     setDetailedBatchView(false);
     setDeletePopupOpen(false);

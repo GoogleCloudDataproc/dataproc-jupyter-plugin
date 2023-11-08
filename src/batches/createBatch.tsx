@@ -58,16 +58,7 @@ import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import {
-  creatBatchSubmitService,
-  listKeyRingsAPIService,
-  listKeysAPIService,
-  listNetworksAPIService,
-  listNetworksFromSubNetworkAPIService,
-  listSubNetworksAPIService,
-  regionListAPIService,
-  runtimeSharedProjectService
-} from './batchService';
+import { BatchService } from './batchService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -462,7 +453,7 @@ function CreateBatch({
   }, []);
 
   const runtimeSharedProject = async () => {
-    await runtimeSharedProjectService(setProjectInfo, setSharedSubNetworkList);
+    await BatchService.runtimeSharedProjectService(setProjectInfo, setSharedSubNetworkList);
   };
 
   const handleMainClassRadio = () => {
@@ -480,7 +471,7 @@ function CreateBatch({
   };
 
   const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
-    await listNetworksFromSubNetworkAPIService(
+    await BatchService.listNetworksFromSubNetworkAPIService(
       subNetwork,
       setIsloadingNetwork,
       setNetworkSelected
@@ -664,19 +655,19 @@ function CreateBatch({
     }
   };
   const listNetworksAPI = async () => {
-    await listNetworksAPIService(setNetworklist, setNetworkSelected);
+    await BatchService.listNetworksAPIService(setNetworklist, setNetworkSelected);
   };
 
   const listKeyRingsAPI = async () => {
-    await listKeyRingsAPIService(setKeyRinglist);
+    await BatchService.listKeyRingsAPIService(setKeyRinglist);
   };
 
   const listKeysAPI = async (keyRing: string) => {
-    await listKeysAPIService(keyRing, setKeylist, setKeySelected);
+    await BatchService.listKeysAPIService(keyRing, setKeylist, setKeySelected);
   };
 
   const listSubNetworksAPI = async (subnetwork: string) => {
-    await listSubNetworksAPIService(
+    await BatchService.listSubNetworksAPIService(
       subnetwork,
       setSubNetworklist,
       setSubNetworkSelected
@@ -687,7 +678,7 @@ function CreateBatch({
     projectId: string,
     network: string | undefined
   ) => {
-    await regionListAPIService(
+    await BatchService.regionListAPIService(
       projectId,
       network,
       setIsLoadingService,
@@ -903,7 +894,7 @@ function CreateBatch({
         mainPythonSelected,
         queryFileSelected
       );
-      await creatBatchSubmitService(
+      await BatchService.creatBatchSubmitService(
         credentials,
         payload,
         batchIdSelected,
