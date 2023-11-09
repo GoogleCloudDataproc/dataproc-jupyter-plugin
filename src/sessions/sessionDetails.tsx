@@ -263,17 +263,17 @@ function SessionDetails({
                 <div
                   role="button"
                   className={
-                    sessionInfo.state === STATUS_ACTIVE
+                    sessionInfo.state === STATUS_ACTIVE|| sessionInfo.state === STATUS_CREATING
                       ? 'action-cluster-section'
                       : 'action-cluster-section disabled'
                   }
                   onClick={() =>
-                    sessionInfo.state === STATUS_ACTIVE &&
+                    sessionInfo.state === STATUS_ACTIVE|| sessionInfo.state === STATUS_CREATING &&
                     terminateSessionAPI(sessionInfo.name.split('/')[5])
                   }
                 >
                   <div className="action-cluster-icon">
-                    {sessionInfo.state === STATUS_ACTIVE ? (
+                    {sessionInfo.state === STATUS_ACTIVE|| sessionInfo.state === STATUS_CREATING ? (
                       <iconStopCluster.react
                         tag="div"
                         className="logo-alignment-style"

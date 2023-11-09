@@ -65,11 +65,13 @@ export class RuntimeTemplate extends DataprocWidget {
 
   renderInternal(): React.JSX.Element {
     return (
+      <div className='component-level'>
       <RuntimeTemplateComponent
         app={this.app}
         launcher={this.launcher}
         themeManager={this.themeManager}
       />
+      </div>
     );
   }
 }
