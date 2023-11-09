@@ -996,7 +996,10 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-
+            toast.success(
+              `Runtime Template ${displayNameSelected} successfully created`,
+              toastifyCustomStyle
+            );
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
 
@@ -1281,9 +1284,11 @@ function CreateRunTime({
         </div>
       )}
        
+      
+      {loggedIn && !configError ? (
+        <>
       <div className="cluster-details-header">
         <div
-          role="button"
           className="back-arrow-icon"
           onClick={handleCancelButton}
         >
@@ -1294,7 +1299,6 @@ function CreateRunTime({
         </div>
         <div className="cluster-details-title">Serverless Runtime Template</div>
       </div>
-      {loggedIn && !configError ? (
       <div className="runtime-container">
         <form>
           <div className="select-text-overlay">
@@ -1778,6 +1782,7 @@ function CreateRunTime({
           </div>
         </form>
       </div>
+      </>
       ) : (
         loginError && (
           <div role="alert" className="login-error">
