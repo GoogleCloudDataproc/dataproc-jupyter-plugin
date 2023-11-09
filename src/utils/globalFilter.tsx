@@ -24,6 +24,7 @@ function GlobalFilter({
   gcsBucket
 }: any) {
   const [value, setValue] = React.useState(globalFilter);
+  console.log(value, globalFilter)
   const onChange = (value: string) => {
     setGlobalFilter(value || undefined);
   };

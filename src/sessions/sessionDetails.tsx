@@ -22,6 +22,7 @@ import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
 import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
+import errorIcon from '../../style/icons/error_icon.svg';
 import {
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
@@ -85,6 +86,10 @@ const iconClusterError = new LabIcon({
   name: 'launcher:cluster-error-icon',
   svgstr: clusterErrorIcon
 });
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
+});
 
 interface ISessionDetailsProps {
   sessionSelected: string;
@@ -128,6 +133,7 @@ function SessionDetails({
   const [isLoading, setIsLoading] = useState(true);
   const [labelDetail, setLabelDetail] = useState(['']);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [errorView, setErrorView] = useState(false);
 
   const pollingSessionDetails = async (
     pollingFunction: () => void,
@@ -157,6 +163,9 @@ function SessionDetails({
       });
 
       const formattedResponse = await response.json();
+      if (formattedResponse.error && formattedResponse.error.code === 404) {
+        setErrorView(true);
+      }
       setSessionInfo(formattedResponse);
       const labelValue: string[] = [];
       if (formattedResponse.labels) {
@@ -215,7 +224,25 @@ function SessionDetails({
 
   return (
     <div>
-      {sessionInfo.name !== '' ? (
+        {errorView && (
+        <div className="error-view-parent">
+          <div
+            role="button"
+            aria-label="back-arrow-icon"
+            className="back-arrow-icon"
+            onClick={() => handleDetailedView()}
+          >
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+          </div>
+          <div className="error-view-message-parent">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div role="alert" className="error-view-message">
+              Unable to find the resource you requested
+            </div>
+          </div>
+        </div>
+      )}
+      {sessionInfo.name !== '' && !errorView ? (
         <div className="scroll">
           {detailedSessionView && (
             <div>
@@ -236,17 +263,17 @@ function SessionDetails({
                 <div
                   role="button"
                   className={
-                    sessionInfo.state === STATUS_ACTIVE
+                    sessionInfo.state === STATUS_ACTIVE|| sessionInfo.state === STATUS_CREATING
                       ? 'action-cluster-section'
                       : 'action-cluster-section disabled'
                   }
                   onClick={() =>
-                    sessionInfo.state === STATUS_ACTIVE &&
+                    sessionInfo.state === STATUS_ACTIVE|| sessionInfo.state === STATUS_CREATING &&
                     terminateSessionAPI(sessionInfo.name.split('/')[5])
                   }
                 >
                   <div className="action-cluster-icon">
-                    {sessionInfo.state === STATUS_ACTIVE ? (
+                    {sessionInfo.state === STATUS_ACTIVE|| sessionInfo.state === STATUS_CREATING ? (
                       <iconStopCluster.react
                         tag="div"
                         className="logo-alignment-style"

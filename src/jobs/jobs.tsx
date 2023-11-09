@@ -517,6 +517,7 @@ function JobComponent({
     usePagination
   );
 
+  console.log('jobs', jobsList)
   return (
     <div>
       {submitJobView && !detailedJobView && (

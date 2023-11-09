@@ -208,6 +208,7 @@ function ListSessions() {
       if (formattedResponse?.error?.code) {
         toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
       }
+      setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing Sessions', error);

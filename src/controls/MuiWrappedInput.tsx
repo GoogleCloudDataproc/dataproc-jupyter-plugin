@@ -14,25 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TextField, styled } from '@mui/material';
+import {  TextField, styled } from '@mui/material';
 import React from 'react';
-import type { InputProps } from 'semantic-ui-react';
+import {  type InputProps } from 'semantic-ui-react';
 
 function InputInternal(props: InputProps) {
-  const { className, value, onChange, placeholder, disabled, defaultValue ,onBlur} = props;
+  const { className, value, onChange, placeholder, disabled, defaultValue ,onBlur,Label} = props;
   return (
-    <TextField
+  <TextField
       className={className}
       value={value}
-      onChange={e =>
-        onChange?.(e as React.ChangeEvent<HTMLInputElement>, {
-          value: e.target.value
-        })
-      }
+      onChange={e => onChange?.(e as React.ChangeEvent<HTMLInputElement>, {
+        value: e.target.value
+      })}
       onBlur={onBlur}
       placeholder={placeholder}
-      disabled = {disabled}
+      disabled={disabled}
       defaultValue={defaultValue}
+      label={Label}
     ></TextField>
   );
 }

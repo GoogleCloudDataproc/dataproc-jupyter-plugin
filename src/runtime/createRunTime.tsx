@@ -52,7 +52,6 @@ import { toast } from 'react-toastify';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
-import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { JupyterLab } from '@jupyterlab/application';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -62,6 +61,7 @@ import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { Autocomplete, Radio, TextField } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { MuiChipsInput } from 'mui-chips-input';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -774,13 +774,17 @@ function CreateRunTime({
                 };
               }) => {
                 // Filter based on endpointProtocol and network
-                const filteredServices = responseResult.services.filter((service) => {
-                  return (
-                    service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
-                    (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT'  && location ==credentials.region_id &&
-                      service.network.split('/')[4] === network) 
-                  );
-                });
+                const filteredServices = responseResult.services.filter(
+                  service => {
+                    return (
+                      service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
+                      (service.hiveMetastoreConfig.endpointProtocol ===
+                        'THRIFT' &&
+                        location == credentials.region_id &&
+                        service.network.split('/')[4] === network)
+                    );
+                  }
+                );
                 // Push filtered services into the array
                 filteredServicesArray.push(...filteredServices);
                 const transformedServiceList = filteredServicesArray.map(
@@ -996,7 +1000,10 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-
+            toast.success(
+              `Runtime Template ${displayNameSelected} successfully created`,
+              toastifyCustomStyle
+            );
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
 
@@ -1267,6 +1274,7 @@ function CreateRunTime({
   };
 
   return (
+    <div className="component-level">
     <div>
         {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loaderMain">
@@ -1281,9 +1289,11 @@ function CreateRunTime({
         </div>
       )}
        
+      
+      {loggedIn && !configError ? (
+        <>
       <div className="cluster-details-header">
         <div
-          role="button"
           className="back-arrow-icon"
           onClick={handleCancelButton}
         >
@@ -1294,18 +1304,15 @@ function CreateRunTime({
         </div>
         <div className="cluster-details-title">Serverless Runtime Template</div>
       </div>
-      {loggedIn && !configError ? (
       <div className="runtime-container">
         <form>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="display-name">
-              Display name*
-            </label>
             <Input
               className="create-runtime-style "
               value={displayNameSelected}
               onChange={e => handleDisplayNameChange(e)}
               type="text"
+              Label="Display name*"
             />
           </div>
           {displayNameValidation && (
@@ -1316,20 +1323,15 @@ function CreateRunTime({
           )}
 
           <div className="select-text-overlay">
-            <label
-              className={`select-title-text${
-                selectedRuntimeClone !== undefined ? ' disable-text' : ''
-              }`}
-              htmlFor="runtime-id"
-            >
-              Runtime ID*
-            </label>
             <Input
-              className="create-runtime-style "
+            className={`create-runtime-style ${
+              selectedRuntimeClone !== undefined ? ' disable-text' : ''
+            }`}
               value={runTimeSelected}
               onChange={e => handleInputChange(e)}
               type="text"
               disabled={selectedRuntimeClone !== undefined}
+              Label = "Runtime ID*"
             />
           </div>
 
@@ -1341,14 +1343,12 @@ function CreateRunTime({
           )}
 
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="description">
-              Description*
-            </label>
             <Input
               className="create-runtime-style "
               value={desciptionSelected}
               onChange={e => handleDescriptionChange(e)}
               type="text"
+              Label="Description*"
             />
           </div>
 
@@ -1360,14 +1360,12 @@ function CreateRunTime({
           )}
 
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="runtime-version">
-              Runtime version*
-            </label>
             <Input
               className="create-runtime-style "
               value={versionSelected}
               onChange={e => handleVersionChange(e)}
               type="text"
+              Label="Runtime version*"
             />
           </div>
 
@@ -1378,18 +1376,13 @@ function CreateRunTime({
             </div>
           )}
           <div className="select-text-overlay">
-            <label
-              className="select-title-text"
-              htmlFor="custom-container-image"
-            >
-              Custom container image
-            </label>
             <Input
               className="create-batch-style "
               value={containerImageSelected}
               onChange={e => setContainerImageSelected(e.target.value)}
               type="text"
               placeholder="Enter URI, for example, gcr.io/my-project-id/my-image:1.0.1"
+              Label = "Custom container image"
             />
           </div>
           <div className="create-custom-messagelist">
@@ -1543,15 +1536,13 @@ function CreateRunTime({
           </div>
 
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="network-tags">
-              Network tags
-            </label>
-            <TagsInput
+            <MuiChipsInput
               className="select-runtime-style"
               onChange={e => handleNetworkTags(setDuplicateValidation, e)}
               addOnBlur={true}
               value={networkTagSelected}
               inputProps={{ placeholder: '' }}
+              label = "Network tags"
             />
           </div>
           {duplicateValidation && (
@@ -1615,14 +1606,12 @@ function CreateRunTime({
 
           <div className="single-line">
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="max-idle-time">
-                Max idle time
-              </label>
               <Input
                 className="runtimetemplate-max-idle"
                 value={idleTimeSelected}
                 onChange={e => handleIdleSelected(e)}
                 type="text"
+                Label="Max idle time"
               />
             </div>
             <Select
@@ -1648,14 +1637,12 @@ function CreateRunTime({
 
           <div className="single-line">
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="max-session-time">
-                Max session time
-              </label>
               <Input
                 className="runtimetemplate-max-idle"
                 value={autoTimeSelected}
                 onChange={e => handleAutoTimeSelected(e)}
                 type="text"
+                Label="Max session time"
               />
             </div>
 
@@ -1680,17 +1667,12 @@ function CreateRunTime({
           )}
 
           <div className="select-text-overlay">
-            <label
-              className="select-title-text"
-              htmlFor="python-packages-repository"
-            >
-              Python packages repository
-            </label>
             <Input
               className="create-runtime-style "
               value={pythonRepositorySelected}
               onChange={e => setPythonRepositorySelected(e.target.value)}
               type="text"
+              Label="Python packages repository"
             />
           </div>
           <div className="create-messagelist">
@@ -1778,6 +1760,7 @@ function CreateRunTime({
           </div>
         </form>
       </div>
+      </>
       ) : (
         loginError && (
           <div role="alert" className="login-error">
@@ -1791,6 +1774,7 @@ function CreateRunTime({
           Please configure gcloud with account, project-id and region
         </div>
       )}
+    </div>
     </div>
   );
 }
