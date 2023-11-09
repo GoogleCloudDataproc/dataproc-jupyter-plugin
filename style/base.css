@@ -176,3 +176,10 @@ body[data-jp-theme-name='JupyterLab Dark'] .metastore-loader span {
 body[data-jp-theme-name='JupyterLab Dark'] .job-cancel-button-style:hover {
   background-color: var(--jp-layout-color3);
 }
+.css-uqjlkp-MuiFormControl-root-MuiTextField-root .MuiInputBase-root {
+  padding: unset !important;
+  }
+  .css-uqjlkp-MuiFormControl-root-MuiTextField-root .MuiInputBase-root input {
+  height: 21px;
+  }
+  

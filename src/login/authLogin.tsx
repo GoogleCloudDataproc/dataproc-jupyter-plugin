@@ -75,7 +75,7 @@ const AuthLoginComponent = ({
   }, []);
 
   return (
-    <div>
+    <div className='component-level'> 
       {configLoading && !loginState && !configError && !loginError && (
         <div className="spin-loaderMain">
           <ClipLoader

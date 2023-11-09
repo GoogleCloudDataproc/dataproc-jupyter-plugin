@@ -61,11 +61,11 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
 import { Autocomplete, Radio, TextField } from '@mui/material';
-import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { MuiChipsInput } from 'mui-chips-input';
 
 type Network = {
   selfLink: string;
@@ -306,6 +306,7 @@ function CreateBatch({
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
   const [projectInfo, setProjectInfo] = useState('');
+  const [labelFocused, setLabelFocused] = useState(false);
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -1348,7 +1349,10 @@ function CreateBatch({
       propertyDetailUpdated.forEach((label: string) => {
         const labelSplit = label.split(':');
         const key = labelSplit[0];
-        const value = labelSplit.length>2?labelSplit[1]+':'+labelSplit[2]:labelSplit[1];
+        const value =
+          labelSplit.length > 2
+            ? labelSplit[1] + ':' + labelSplit[2]
+            : labelSplit[1];
         propertyObject[key] = value;
       });
       const parameterObject: { [key: string]: string } = {};
@@ -1515,6 +1519,12 @@ function CreateBatch({
 
     setManualKeySelected(inputValue);
   };
+  const handleSelectFocus = () => {
+    setLabelFocused(true);
+  };
+  const handleBlur = () => {
+    setLabelFocused(false);
+  };
   return (
     <div>
       <div className="cluster-details-header">
@@ -1533,14 +1543,12 @@ function CreateBatch({
         <form onSubmit={handleSubmit}>
           <div className="submit-job-label-header">Batch info</div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="batch-id">
-              Batch ID*
-            </label>
             <Input
               className="create-batch-style"
               value={hexNumber}
               onChange={e => handleInputChange(e)}
               type="text"
+              Label="Batch ID*"
             />
           </div>
           {batchIdValidation && (
@@ -1550,22 +1558,24 @@ function CreateBatch({
             </div>
           )}
           <div className="select-text-overlay">
-            <label
-              className="select-title-text region-disable"
-              htmlFor="region"
-            >
-              Region*
-            </label>
             <Input
-              className="create-batch-style"
+              className="create-batch-style region-disable"
               value={regionName}
               type="text"
               disabled={true}
+              Label="Region*"
             />
           </div>
           <div className="submit-job-label-header">Container</div>
           <div className="select-text-overlay">
-            <label className="select-dropdown-text" htmlFor="batch-type">
+            <label
+              className={
+                labelFocused
+                  ? 'select-dropdown-text label-focused'
+                  : 'select-dropdown-text'
+              }
+              htmlFor="batch-type"
+            >
               Batch type*
             </label>
             <Select
@@ -1575,17 +1585,17 @@ function CreateBatch({
               type="text"
               options={batchTypeList}
               onChange={handleBatchTypeSelected}
+              onFocus={handleSelectFocus}
+              onBlur={handleBlur}
             />
           </div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="runtime-version">
-              Runtime version*
-            </label>
             <Input
               className="create-batch-style "
               value={versionSelected}
               onChange={e => setVersionSelected(e.target.value)}
               type="text"
+              Label="Runtime version*"
             />
           </div>
           {batchTypeSelected === 'spark' && (
@@ -1609,14 +1619,12 @@ function CreateBatch({
               {selectedRadio === 'mainClass' && (
                 <div className="create-batch-input">
                   <div className="select-text-overlay">
-                    <label className="select-title-text" htmlFor="main-class">
-                      Main class*
-                    </label>
                     <Input
                       className="create-batch-style-mini"
                       value={mainClassSelected}
                       onChange={e => handleMainClassSelected(e.target.value)}
                       type="text"
+                      Label="Main class*"
                     />
                   </div>
 
@@ -1657,14 +1665,12 @@ function CreateBatch({
               {selectedRadio === 'mainJarURI' && (
                 <div className="create-batch-input">
                   <div className="select-text-overlay">
-                    <label className="select-title-text" htmlFor="main-jar">
-                      Main jar*
-                    </label>
                     <Input
                       className="create-batch-style-mini"
                       value={mainJarSelected}
                       onChange={e => handleMainJarSelected(e.target.value)}
                       type="text"
+                      Label="Main jar*"
                     />
                   </div>
 
@@ -1701,9 +1707,6 @@ function CreateBatch({
           {batchTypeSelected === 'sparkR' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="main-r-file">
-                  Main R file*
-                </label>
                 <Input
                   className="create-batch-style"
                   onChange={e =>
@@ -1715,6 +1718,7 @@ function CreateBatch({
                   }
                   addOnBlur={true}
                   value={mainRSelected}
+                  Label="Main R file*"
                 />
               </div>
 
@@ -1737,9 +1741,6 @@ function CreateBatch({
           {batchTypeSelected === 'pySpark' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="main-python-file">
-                  Main python file*
-                </label>
                 <Input
                   //placeholder="Main R file*"
                   className="create-batch-style"
@@ -1752,6 +1753,7 @@ function CreateBatch({
                   }
                   addOnBlur={true}
                   value={mainPythonSelected}
+                  Label=" Main python file*"
                 />
               </div>
               {!mainPythonValidation && (
@@ -1773,13 +1775,7 @@ function CreateBatch({
           {batchTypeSelected === 'pySpark' && (
             <>
               <div className="select-text-overlay">
-                <label
-                  className="select-title-text"
-                  htmlFor="additional-python-files"
-                >
-                  Additional python files
-                </label>
-                <TagsInput
+                <MuiChipsInput
                   className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
@@ -1792,6 +1788,7 @@ function CreateBatch({
                   addOnBlur={true}
                   value={additionalPythonFileSelected}
                   inputProps={{ placeholder: '' }}
+                  label="Additional python files"
                 />
               </div>
               {!additionalPythonFileValidation && (
@@ -1816,9 +1813,6 @@ function CreateBatch({
           {batchTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="query-file">
-                  Query file*
-                </label>
                 <Input
                   //placeholder="Main R file*"
                   className="create-batch-style"
@@ -1831,6 +1825,7 @@ function CreateBatch({
                   }
                   addOnBlur={true}
                   value={queryFileSelected}
+                  Label="Query file*"
                 />
               </div>
 
@@ -1849,18 +1844,13 @@ function CreateBatch({
             </>
           )}
           <div className="select-text-overlay">
-            <label
-              className="select-title-text"
-              htmlFor="custom-container-image"
-            >
-              Custom container image
-            </label>
             <Input
               className="create-batch-style "
               value={containerImageSelected}
               onChange={e => setContainerImageSelected(e.target.value)}
               type="text"
               placeholder="Enter URI, for example, gcr.io/my-project-id/my-image:1.0.1"
+              Label=" Custom container image"
             />
           </div>
           <div className="create-custom-messagelist">
@@ -1902,10 +1892,7 @@ function CreateBatch({
             batchTypeSelected !== 'sparkR' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="jar-files">
-                    Jar files
-                  </label>
-                  <TagsInput
+                  <MuiChipsInput
                     className="select-job-style"
                     onChange={e =>
                       handleValidationFiles(
@@ -1918,6 +1905,7 @@ function CreateBatch({
                     addOnBlur={true}
                     value={jarFilesSelected}
                     inputProps={{ placeholder: '' }}
+                    label="Jar files"
                   />
                 </div>
 
@@ -1954,10 +1942,7 @@ function CreateBatch({
           {batchTypeSelected !== 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="files">
-                  Files
-                </label>
-                <TagsInput
+                <MuiChipsInput
                   className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
@@ -1970,6 +1955,7 @@ function CreateBatch({
                   addOnBlur={true}
                   value={filesSelected}
                   inputProps={{ placeholder: '' }}
+                  label="Files"
                 />
               </div>
               {!fileValidation && (
@@ -1997,10 +1983,7 @@ function CreateBatch({
           {batchTypeSelected !== 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="archive-files">
-                  Archive files
-                </label>
-                <TagsInput
+                <MuiChipsInput
                   className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
@@ -2013,6 +1996,7 @@ function CreateBatch({
                   addOnBlur={true}
                   value={ArchiveFilesSelected}
                   inputProps={{ placeholder: '' }}
+                  label="Archive files"
                 />
               </div>
               {!archieveFileValidation && (
@@ -2042,10 +2026,7 @@ function CreateBatch({
           {batchTypeSelected !== 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="arguments">
-                  Arguments
-                </label>
-                <TagsInput
+                <MuiChipsInput
                   className="select-job-style"
                   onChange={e =>
                     handleArguments(setArgumentsDuplicateValidation, e)
@@ -2053,6 +2034,7 @@ function CreateBatch({
                   addOnBlur={true}
                   value={argumentsSelected}
                   inputProps={{ placeholder: '' }}
+                  label="Arguments"
                 />
               </div>
               {argumentsDuplicateValidation && (
@@ -2088,15 +2070,13 @@ function CreateBatch({
           )}
           <div className="submit-job-label-header">Execution Configuration</div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="service-account">
-              Service account
-            </label>
             <Input
               className="create-batch-style "
               value={serviceAccountSelected}
               onChange={e => setServiceAccountSelected(e.target.value)}
               type="text"
               placeholder=""
+              Label="Service account"
             />
           </div>
           <div className="create-custom-messagelist">
@@ -2226,10 +2206,7 @@ function CreateBatch({
               )}
           </div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="network-tags">
-              Network tags
-            </label>
-            <TagsInput
+            <MuiChipsInput
               className="select-job-style"
               onChange={e =>
                 handleNetworkTags(setNetworkTagsDuplicateValidation, e)
@@ -2237,6 +2214,7 @@ function CreateBatch({
               addOnBlur={true}
               value={networkTagSelected}
               inputProps={{ placeholder: '' }}
+              label="Network tags"
             />
           </div>
           {networkTagsDuplicateValidation && (
@@ -2345,22 +2323,17 @@ function CreateBatch({
                         onChange={handlekeyManuallyRadio}
                       />
                       <div className="select-text-overlay">
-                        <label
+                        <Input
                           className={
                             selectedRadioValue === 'key'
-                              ? 'select-title-text disable-text'
-                              : 'select-title-text'
+                              ? 'disable-text create-batch-key manual-key'
+                              : 'create-batch-style manual-key'
                           }
-                          htmlFor="enter-key-manually"
-                        >
-                          Enter key manually
-                        </label>
-                        <Input
-                          className="create-batch-style manual-key"
                           value={manualKeySelected}
                           type="text"
                           disabled={selectedRadioValue === 'key'}
                           onChange={handleManualKeySelected}
+                          Label="Enter key manually"
                         />
                       </div>
                     </div>
