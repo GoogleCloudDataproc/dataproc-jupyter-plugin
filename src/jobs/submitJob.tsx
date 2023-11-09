@@ -40,10 +40,10 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
-import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { Autocomplete, TextField } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { MuiChipsInput } from 'mui-chips-input';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -235,7 +235,7 @@ function SubmitJob({
     useState(false);
   const [argumentsDuplicateValidation, setArgumentsDuplicateValidation] =
     useState(false);
-
+  const [labelFocused, setLabelFocused] = useState(false);
   const handleCancelJobButton = () => {
     setSubmitJobView(false);
   };
@@ -767,7 +767,12 @@ function SubmitJob({
     setArgumentSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
-
+  const handleSelectFocus = () => {
+    setLabelFocused(true);
+  };
+  const handleBlur = () => {
+    setLabelFocused(false);
+  };
   return (
     <div>
       <div className="cluster-details-header">
@@ -801,14 +806,12 @@ function SubmitJob({
         )}
         <div className="submit-job-label-header">Job</div>
         <div className="select-text-overlay">
-          <label className="select-title-text" htmlFor="job-id">
-            Job ID*
-          </label>
           <Input
             className="submit-job-input-style"
             onChange={e => handleJobIdChange(e)}
             type="text"
             value={hexNumber}
+            Label="Job ID*"
           />
         </div>
 
@@ -828,7 +831,14 @@ function SubmitJob({
         )}
 
         <div className="select-text-overlay">
-          <label className="select-title-text" htmlFor="metastore-project">
+          <label
+            className={
+              labelFocused
+                ? 'select-title-text label-focused'
+                : 'select-title-text'
+            }
+            htmlFor="metastore-project"
+          >
             Job type*
           </label>
           <Select
@@ -837,13 +847,22 @@ function SubmitJob({
             onChange={handleJobTypeSelected}
             options={jobTypeList}
             value={jobTypeSelected}
+            onFocus={handleSelectFocus}
+            onBlur={handleBlur}
           />
         </div>
 
         {jobTypeSelected === 'sparkSql' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-project">
+              <label
+                className={
+                  labelFocused
+                    ? 'select-title-text label-focused'
+                    : 'select-title-text'
+                }
+                htmlFor="metastore-project"
+              >
                 Query source type*
               </label>
               <Select
@@ -852,6 +871,8 @@ function SubmitJob({
                 onChange={handleQuerySourceTypeSelected}
                 options={querySourceTypeList}
                 value={querySourceSelected}
+                onFocus={handleSelectFocus}
+                onBlur={handleBlur}
               />
             </div>
           </>
@@ -860,9 +881,6 @@ function SubmitJob({
           jobTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="query-file">
-                  Query file*
-                </label>
                 <Input
                   className="submit-job-input-style"
                   onChange={e =>
@@ -874,6 +892,7 @@ function SubmitJob({
                   }
                   addOnBlur={true}
                   value={queryFileSelected}
+                  Label="Query file*"
                 />
               </div>
 
@@ -897,13 +916,11 @@ function SubmitJob({
           jobTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="query-text">
-                  Query text*
-                </label>
                 <Input
                   className="submit-job-input-style"
                   onChange={e => setQueryTextSelected(e.target.value)}
                   value={queryTextSelected}
+                  Label=" Query text*"
                 />
               </div>
 
@@ -915,9 +932,6 @@ function SubmitJob({
         {jobTypeSelected === 'spark' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="main-class-or-jar">
-                Main class or jar*
-              </label>
               <Input
                 className="submit-job-input-style"
                 onChange={e =>
@@ -930,6 +944,7 @@ function SubmitJob({
                 onBlur={() => setMainClassActive(true)}
                 addOnBlur={true}
                 value={mainClassSelected}
+                Label="Main class or jar*"
               />
             </div>
 
@@ -951,9 +966,6 @@ function SubmitJob({
         {jobTypeSelected === 'sparkR' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="main-r-file">
-                Main R file*
-              </label>
               <Input
                 className="submit-job-input-style"
                 onChange={e =>
@@ -965,6 +977,7 @@ function SubmitJob({
                 }
                 addOnBlur={true}
                 value={mainRSelected}
+                Label="Main R file*"
               />
             </div>
 
@@ -987,9 +1000,6 @@ function SubmitJob({
         {jobTypeSelected === 'pySpark' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="main-python-file">
-                Main Python file*
-              </label>
               <Input
                 className="submit-job-input-style"
                 onChange={e =>
@@ -1001,6 +1011,7 @@ function SubmitJob({
                 }
                 addOnBlur={true}
                 value={mainPythonSelected}
+                Label="Main Python file*"
               />
             </div>
 
@@ -1023,13 +1034,7 @@ function SubmitJob({
         {jobTypeSelected === 'pySpark' && (
           <>
             <div className="select-text-overlay">
-              <label
-                className="select-title-text"
-                htmlFor="additional-python-files"
-              >
-                Additional python files
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1042,6 +1047,7 @@ function SubmitJob({
                 addOnBlur={true}
                 value={additionalPythonFileSelected}
                 inputProps={{ placeholder: '' }}
+                label="Additional python files"
               />
             </div>
             {!additionalPythonFileValidation && (
@@ -1066,10 +1072,7 @@ function SubmitJob({
         {jobTypeSelected !== 'sparkR' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="jar-files">
-                Jar files
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1082,6 +1085,7 @@ function SubmitJob({
                 addOnBlur={true}
                 value={jarFileSelected}
                 inputProps={{ placeholder: '' }}
+                label="Jar files"
               />
             </div>
             {jarFileDuplicateValidation && (
@@ -1109,10 +1113,7 @@ function SubmitJob({
         {jobTypeSelected !== 'sparkSql' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="files">
-                Files
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1125,6 +1126,7 @@ function SubmitJob({
                 addOnBlur={true}
                 value={fileSelected}
                 inputProps={{ placeholder: '' }}
+                label="Files"
               />
             </div>
             {fileDuplicateValidation && (
@@ -1152,10 +1154,7 @@ function SubmitJob({
         {(jobTypeSelected === 'spark' || jobTypeSelected === 'pySpark') && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="archive-files">
-                Archive files
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1168,6 +1167,7 @@ function SubmitJob({
                 addOnBlur={true}
                 value={archieveFileSelected}
                 inputProps={{ placeholder: '' }}
+                label="Archive files"
               />
             </div>
             {archiveDuplicateValidation && (
@@ -1195,10 +1195,7 @@ function SubmitJob({
         {jobTypeSelected !== 'sparkSql' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="arguments">
-                Arguments
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleArgumentsSelection(setArgumentsDuplicateValidation, e)
@@ -1206,6 +1203,7 @@ function SubmitJob({
                 value={argumentSelected}
                 addOnBlur={true}
                 inputProps={{ placeholder: '' }}
+                label="Arguments"
               />
             </div>
             {argumentsDuplicateValidation && (
@@ -1242,13 +1240,11 @@ function SubmitJob({
             </>
           )}
         <div className="select-text-overlay">
-          <label className="select-title-text" htmlFor="max-restarts-per-hour">
-            Max restarts per hour
-          </label>
           <Input
             className="submit-job-input-style"
             onChange={e => setMaxRestartSelected(e.target.value)}
             value={maxRestartSelected}
+            Label="Max restarts per hour"
           />
         </div>
 

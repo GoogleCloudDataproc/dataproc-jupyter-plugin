@@ -58,7 +58,7 @@
 }
 
 .select-batch-encrypt-radio-style {
-  margin-top: 20px;
+  margin-top: 20px !important;
   margin-right: 10px;
 }
 
@@ -98,7 +98,10 @@
   margin-top: 10px;
   outline: none;
 }
-
+.create-batch-key{
+height: 36px;
+width: 419px;
+}
 .create-batch-style-mini {
   background: var(--jp-layout-color0);
   width: 473px;
