@@ -216,7 +216,6 @@ function ListCluster({
     usePagination
   );
 
-  console.log('clusters', clustersList)
   return (
     <div>
       <div className="create-cluster-overlay">
