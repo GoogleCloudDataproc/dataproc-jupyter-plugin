@@ -33,7 +33,7 @@ import {
 import DeletePopup from '../utils/deletePopup';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
+import { deleteRuntimeTemplateAPI } from './runtimeService';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';

@@ -54,7 +54,7 @@ import ViewLogs from '../utils/viewLogs';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
-import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { stopJobApi, deleteJobApi } from './jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { IJobDetails } from '../utils/jobDetailsInterface';
