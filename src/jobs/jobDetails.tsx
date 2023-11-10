@@ -256,13 +256,14 @@ function JobDetails({
               if (formattedResponse?.error?.code) {
                 toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
               }
-              else{
+            
+             
+              console.log(responseResultJob);
               toast.success(
                 `Request to update job ${jobSelected} submitted`,
                 toastifyCustomStyle
               );
-              console.log(responseResultJob);
-              }
+              
             })
             .catch((e: Error) => console.error(e));
         })
