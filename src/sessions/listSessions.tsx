@@ -43,7 +43,7 @@ import DeletePopup from '../utils/deletePopup';
 import GlobalFilter from '../utils/globalFilter';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
-import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
+import { deleteSessionAPI, terminateSessionAPI } from './sessionService';
 import TableData from '../utils/tableData';
 import {
   ICellProps,

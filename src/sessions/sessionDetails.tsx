@@ -60,7 +60,7 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { terminateSessionAPI } from '../utils/sessionService';
+import { terminateSessionAPI } from './sessionService';
 import PollingTimer from '../utils/pollingTimer';
 import { JupyterLab } from '@jupyterlab/application';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
