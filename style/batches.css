@@ -22,7 +22,7 @@
   overflow-wrap: anywhere;
 }
 .learn-more-url {
-  color:var(--jp-brand-color1);
+  color: var(--jp-brand-color1);
   text-decoration: underline;
   cursor: pointer;
   padding-left: 3px;
@@ -104,3 +104,7 @@
   max-height: 85vh;
 }
 
+.css-1a47yig-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.css-1a47yig-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.css-1a47yig-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+  height: 17px !important;
+  width: 466px !important;
+}

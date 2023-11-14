@@ -171,7 +171,7 @@ function LabelProperties({
         labelDetail[labelDetail.length - 1].split(':')[0].length === 0) &&
       duplicateKeyError !== -1
     ) {
-      return 'job-add-label-button-disabled';
+      return 'job-add-property-button-disabled';
     } else if (
       buttonText !== 'ADD LABEL' &&
       (labelDetail.length === 0 ||

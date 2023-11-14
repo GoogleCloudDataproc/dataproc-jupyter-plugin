@@ -1271,7 +1271,6 @@ function CreateRunTime({
   };
 
   return (
-    <div className="component-level">
     <div>
         {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loaderMain">
@@ -1769,7 +1768,6 @@ function CreateRunTime({
           Please configure gcloud with account, project-id and region
         </div>
       )}
-    </div>
     </div>
   );
 }

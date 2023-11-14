@@ -7,8 +7,6 @@
   margin-bottom: 15px;
   display: flex;
   flex-direction: column;
-  max-height: 83vh;
-  overflow: auto;
 }
 
 .spin-loader-runtime {
