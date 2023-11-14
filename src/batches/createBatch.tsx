@@ -20,15 +20,9 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import 'react-toastify/dist/ReactToastify.css';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
   ARTIFACT_REGISTERY,
-  BASE_URL,
-  BASE_URL_KEY,
-  BASE_URL_META,
-  BASE_URL_NETWORKS,
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
@@ -40,7 +34,6 @@ import {
   METASTORE_MESSAGE,
   NETWORK_TAG_MESSAGE,
   QUERY_FILE_MESSAGE,
-  REGION_URL,
   SECURITY_KEY,
   SELF_MANAGED_CLUSTER,
   SERVICE_ACCOUNT,
@@ -51,8 +44,7 @@ import LabelProperties from '../jobs/labelProperties';
 import {
   authApi,
   authenticatedFetch,
-  toastifyCustomStyle,
-  loggedFetch
+  toastifyCustomStyle
 } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
@@ -65,13 +57,8 @@ import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { BatchService } from './batchService';
 import { MuiChipsInput } from 'mui-chips-input';
-
-type Network = {
-  selfLink: string;
-  network: string;
-  subnetworks: string;
-};
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -465,96 +452,11 @@ function CreateBatch({
       listNetworksFromSubNetworkAPI(subNetwork);
     }
   }, []);
-  interface IApiResponse {
-    name: string;
-    error: {
-      message: string;
-      code: number;
-    };
-  }
+
   const runtimeSharedProject = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
-      loggedFetch(apiURL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IApiResponse) => {
-              setProjectInfo(responseResult.name);
-              listSharedVPC(responseResult.name);
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
-          DataprocLoggingService.log(
-            'Error displaying user info',
-            LOG_LEVEL.ERROR
-          );
-        });
-    }
+    await BatchService.runtimeSharedProjectService(setProjectInfo, setSharedSubNetworkList);
   };
 
-  const listSharedVPC = async (projectName: string) => {
-    try {
-      const credentials = await authApi();
-      if (!credentials) {
-        return false;
-      }
-      const apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
-      const response = await loggedFetch(apiURL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      });
-      const responseResult = await response.json();
-      /*
-        Extracting subNetwork from items
-        Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/aggregated/subnetworks/listUsable",
-      */
-
-      const transformedSharedvpcSubNetworkList: string[] = responseResult.items
-        .map((data: { subnetwork: string }) => {
-          // Extract region and subnet from the subnet URI.
-          const matches =
-            /\/compute\/v1\/projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
-              data.subnetwork
-            )?.groups;
-          if (matches?.['region'] != credentials.region_id) {
-            // If region doesn't match the current region, set it to undefined and let
-            // it be filtered out below.
-            return undefined;
-          }
-          return matches?.['subnetwork'];
-        })
-        // Filter out empty values
-        .filter((subNetwork: string) => subNetwork);
-
-      setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
-      if (responseResult?.error?.code) {
-        toast.error(responseResult?.error?.message, toastifyCustomStyle);
-      }
-    } catch (err) {
-      console.error('Error displaying sharedVPC subNetwork', err);
-      toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
-    }
-  };
   const handleMainClassRadio = () => {
     setSelectedRadio('mainClass');
     setMainJarSelected('');
@@ -568,60 +470,13 @@ function CreateBatch({
     setMainJarSelected('');
     setMainJarValidation(true);
   };
-  interface INetworkResponse {
-    network: string;
-    error: {
-      message: string;
-      code: number;
-    };
-  }
+
   const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
-    setIsloadingNetwork(true);
-    const credentials = await authApi();
-    if (credentials) {
-      loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subNetwork}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: INetworkResponse) => {
-              let transformedNetworkSelected = '';
-              /*
-               Extracting network from items
-               Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
-              */
-
-              transformedNetworkSelected = responseResult.network.split('/')[9];
-
-              setNetworkSelected(transformedNetworkSelected);
-              setIsloadingNetwork(false);
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          setIsloadingNetwork(false);
-          DataprocLoggingService.log(
-            'Error selecting Network',
-            LOG_LEVEL.ERROR
-          );
-          console.error('Error selecting Network', err);
-        });
-    }
+    await BatchService.listNetworksFromSubNetworkAPIService(
+      subNetwork,
+      setIsloadingNetwork,
+      setNetworkSelected
+    );
   };
 
   function isSubmitDisabled() {
@@ -801,379 +656,36 @@ function CreateBatch({
     }
   };
   const listNetworksAPI = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                items: Network[];
-                error: {
-                  message: string;
-                  code: number;
-                };
-              }) => {
-                let transformedNetworkList = [];
-                /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-      */
-
-                transformedNetworkList = responseResult.items.map(
-                  (data: Network) => {
-                    return data.selfLink.split('/')[9];
-                  }
-                );
-                setNetworklist(transformedNetworkList);
-                setNetworkSelected(transformedNetworkList[0]);
-                if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
-                }
-              }
-            )
-
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing Networks', err);
-          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-        });
-    }
-  };
-  type IKeyRings = {
-    keyRings: Array<{
-      name: string;
-    }>;
-    error: {
-      message: string;
-      code: number;
-    };
+    await BatchService.listNetworksAPIService(setNetworklist, setNetworkSelected);
   };
 
   const listKeyRingsAPI = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      loggedFetch(
-        `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IKeyRings) => {
-              let transformedKeyList = [];
-              /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-      */
-
-              transformedKeyList = responseResult.keyRings.map(
-                (data: { name: string }) => {
-                  return data.name.split('/')[5];
-                }
-              );
-              setKeyRinglist(transformedKeyList);
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing Networks', err);
-          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-        });
-    }
+    await BatchService.listKeyRingsAPIService(setKeyRinglist);
   };
-  interface IKey {
-    primary: {
-      state: string;
-    };
-    name: string;
-  }
-  interface IKeyListResponse {
-    cryptoKeys: IKey[];
-    error: {
-      message: string;
-      code: number;
-    };
-  }
 
   const listKeysAPI = async (keyRing: string) => {
-    const credentials = await authApi();
-    if (credentials) {
-      loggedFetch(
-        `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRing}/cryptoKeys`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IKeyListResponse) => {
-              let transformedKeyList = [];
-              /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-      */
-
-              transformedKeyList = responseResult.cryptoKeys
-                .filter(
-                  (data: IKey) =>
-                    data.primary && data.primary.state === 'ENABLED'
-                )
-                .map((data: { name: string }) => data.name.split('/')[7]);
-              setKeylist(transformedKeyList);
-              setKeySelected(transformedKeyList[0]);
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing Networks', err);
-          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-        });
-    }
+    await BatchService.listKeysAPIService(keyRing, setKeylist, setKeySelected);
   };
 
   const listSubNetworksAPI = async (subnetwork: string) => {
-    const credentials = await authApi();
-    if (credentials) {
-      loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                items: {
-                  name: string;
-                  network: string;
-                  privateIpGoogleAccess: boolean;
-                }[];
-                error: {
-                  message: string;
-                  code: number;
-                };
-              }) => {
-                const filteredServices = responseResult.items.filter(
-                  (item: { network: string; privateIpGoogleAccess: boolean }) =>
-                    item.network.split('/')[9] === subnetwork &&
-                    item.privateIpGoogleAccess === true
-                );
-                const transformedServiceList = filteredServices.map(
-                  (data: { name: string }) => data.name
-                );
-                setSubNetworklist(transformedServiceList);
-                setSubNetworkSelected(transformedServiceList[0]);
-                if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
-                }
-              }
-            )
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing subNetworks', err);
-          DataprocLoggingService.log(
-            'Error listing subNetworks',
-            LOG_LEVEL.ERROR
-          );
-        });
-    }
-  };
-  type Region = {
-    name: string;
+    await BatchService.listSubNetworksAPIService(
+      subnetwork,
+      setSubNetworklist,
+      setSubNetworkSelected
+    );
   };
 
   const regionListAPI = async (
     projectId: string,
     network: string | undefined
   ) => {
-    const credentials = await authApi();
-    if (credentials) {
-      loggedFetch(`${REGION_URL}/${projectId}/regions`, {
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                items: Region[];
-                error: {
-                  code: number;
-                  message: string;
-                };
-              }) => {
-                let transformedRegionList = responseResult.items.map(
-                  (data: Region) => {
-                    return data.name;
-                  }
-                );
-
-                const filteredServicesArray: never[] = [];
-                // Use Promise.all to fetch services from all locations concurrently
-                const servicePromises = transformedRegionList.map(location => {
-                  return listMetaStoreAPI(
-                    projectId,
-                    location,
-                    network,
-                    filteredServicesArray
-                  );
-                });
-
-                // Wait for all servicePromises to complete
-                Promise.all(servicePromises)
-                  .then(() => {
-                    if (responseResult?.error?.code) {
-                      toast.error(
-                        responseResult?.error?.message,
-                        toastifyCustomStyle
-                      );
-                    }
-                  })
-                  .catch(e => {
-                    console.log(e);
-                  });
-              }
-            )
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing regions', err);
-          DataprocLoggingService.log('Error listing regions', LOG_LEVEL.ERROR);
-        });
-    }
-  };
-
-  const listMetaStoreAPI = async (
-    projectId: string,
-    location: string,
-    network: string | undefined,
-    filteredServicesArray: any // Pass the array as a parameter
-  ) => {
-    setIsLoadingService(true);
-    const credentials = await authApi();
-    if (credentials) {
-      loggedFetch(
-        `${BASE_URL_META}/projects/${projectId}/locations/${location}/services`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                services: {
-                  name: string;
-                  network: string;
-                  hiveMetastoreConfig: { endpointProtocol: string };
-                }[];
-                error: {
-                  message: string;
-                  code: number;
-                };
-              }) => {
-                // Filter based on endpointProtocol and network
-                const filteredServices = responseResult.services.filter(
-                  service => {
-                    return (
-                      service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
-                      (service.hiveMetastoreConfig.endpointProtocol ===
-                        'THRIFT' &&
-                        location == regionName &&
-                        service.network.split('/')[4] === network)
-                    );
-                  }
-                );
-                // Push filtered services into the array
-                filteredServicesArray.push(...filteredServices);
-                const transformedServiceList = filteredServicesArray.map(
-                  (data: { name: string }) => data.name
-                );
-                setServicesList(transformedServiceList);
-
-                setIsLoadingService(false);
-                if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
-                }
-              }
-            )
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoadingService(false);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing services', err);
-          setIsLoadingService(false);
-          DataprocLoggingService.log('Error listing services', LOG_LEVEL.ERROR);
-        });
-    }
+    await BatchService.regionListAPIService(
+      projectId,
+      network,
+      setIsLoadingService,
+      regionName,
+      setServicesList
+    );
   };
 
   const handleSharedSubNetwork = async (data: string | null) => {
@@ -1383,43 +895,15 @@ function CreateBatch({
         mainPythonSelected,
         queryFileSelected
       );
-      loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then(async (response: Response) => {
-          if (response.ok) {
-            const responseResult = await response.json();
-            console.log(responseResult);
-            if (setCreateBatchView) {
-              setCreateBatchView(false);
-            }
-            if (setCreateBatch) {
-              setCreateBatch(false);
-            }
-            toast.success(
-              `Batch ${batchIdSelected} successfully submitted`,
-              toastifyCustomStyle
-            );
-          } else {
-            const errorResponse = await response.json();
-            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
-            setError({ isOpen: true, message: errorResponse.error.message });
-            console.log(error);
-          }
-        })
-        .catch((err: Error) => {
-          console.error('Error submitting Batch', err);
-          toast.error('Failed to submit the Batch', toastifyCustomStyle);
-          DataprocLoggingService.log('Error submitting Batch', LOG_LEVEL.ERROR);
-        });
+      await BatchService.creatBatchSubmitService(
+        credentials,
+        payload,
+        batchIdSelected,
+        setCreateBatchView,
+        setCreateBatch,
+        setError,
+        error
+      );
     }
   };
   const generateRandomHex = () => {

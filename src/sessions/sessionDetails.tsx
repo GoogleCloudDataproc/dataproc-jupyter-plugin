@@ -22,6 +22,7 @@ import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
 import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
+import errorIcon from '../../style/icons/error_icon.svg';
 import {
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
@@ -59,7 +60,7 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { terminateSessionAPI } from '../utils/sessionService';
+import { terminateSessionAPI } from './sessionService';
 import PollingTimer from '../utils/pollingTimer';
 import { JupyterLab } from '@jupyterlab/application';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
@@ -84,6 +85,10 @@ const iconSucceeded = new LabIcon({
 const iconClusterError = new LabIcon({
   name: 'launcher:cluster-error-icon',
   svgstr: clusterErrorIcon
+});
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
 });
 
 interface ISessionDetailsProps {
@@ -128,6 +133,7 @@ function SessionDetails({
   const [isLoading, setIsLoading] = useState(true);
   const [labelDetail, setLabelDetail] = useState(['']);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [errorView, setErrorView] = useState(false);
 
   const pollingSessionDetails = async (
     pollingFunction: () => void,
@@ -157,6 +163,9 @@ function SessionDetails({
       });
 
       const formattedResponse = await response.json();
+      if (formattedResponse.error && formattedResponse.error.code === 404) {
+        setErrorView(true);
+      }
       setSessionInfo(formattedResponse);
       const labelValue: string[] = [];
       if (formattedResponse.labels) {
@@ -215,7 +224,25 @@ function SessionDetails({
 
   return (
     <div>
-      {sessionInfo.name !== '' ? (
+        {errorView && (
+        <div className="error-view-parent">
+          <div
+            role="button"
+            aria-label="back-arrow-icon"
+            className="back-arrow-icon"
+            onClick={() => handleDetailedView()}
+          >
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+          </div>
+          <div className="error-view-message-parent">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div role="alert" className="error-view-message">
+              Unable to find the resource you requested
+            </div>
+          </div>
+        </div>
+      )}
+      {sessionInfo.name !== '' && !errorView ? (
         <div className="scroll">
           {detailedSessionView && (
             <div>

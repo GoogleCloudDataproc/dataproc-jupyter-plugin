@@ -27,7 +27,7 @@ import startDisableIcon from '../../style/icons/start_icon_disable.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
 import JobComponent from '../jobs/jobs';
-import { startClusterApi, stopClusterApi } from '../utils/clusterServices';
+import { startClusterApi, stopClusterApi } from './clusterServices';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ClusterStatus,
