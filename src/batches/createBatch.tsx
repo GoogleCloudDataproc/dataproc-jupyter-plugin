@@ -1334,7 +1334,7 @@ function CreateBatch({
               onChange={e => setContainerImageSelected(e.target.value)}
               type="text"
               placeholder="Enter URI, for example, gcr.io/my-project-id/my-image:1.0.1"
-              Label=" Custom container image"
+              Label="Custom container image"
             />
           </div>
           <div className="create-custom-messagelist">
