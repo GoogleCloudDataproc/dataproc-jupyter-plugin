@@ -855,20 +855,8 @@ function SubmitJob({
         {jobTypeSelected === 'sparkSql' && (
           <>
             <div className="select-text-overlay">
-              {/* <label
-                className={
-                  labelFocused
-                    ? 'select-title-text label-focused'
-                    : 'select-title-text'
-                }
-                htmlFor="metastore-project"
-              >
-                Query source type*
-              </label> */}
               <Autocomplete
                 className="project-region-select"
-                // search
-                // onChange={(_event, val) => handleClusterSelected(val)}
                 onChange={(_event, val) => handleQuerySourceTypeSelected}
                 options={querySourceTypeList}
                 value={querySourceSelected}

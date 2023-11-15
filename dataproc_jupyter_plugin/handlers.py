@@ -145,7 +145,6 @@ class RouteHandler(APIHandler):
                 t1 = threading.Thread(target=get_cached_credentials, args=())
                 t1.start()
                 self.finish(json.dumps(credentials_cache['credentials']))
-                t1.join()
         except Exception:
             cached_credentials = get_cached_credentials()
             self.finish(json.dumps(cached_credentials))
