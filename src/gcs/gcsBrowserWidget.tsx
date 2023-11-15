@@ -61,7 +61,15 @@ export class GcsBrowserWidget extends Widget {
   };
 
   private handleFolderCreation = () => {
-    this.browser.createNewDirectory();
+    if (this.browser.model.path.split(':')[1] !== '') {
+      this.browser.createNewDirectory();
+    } else {
+      showDialog({
+        title: 'Create Bucket Error',
+        body: 'Please use console to create new bucket',
+        buttons: [Dialog.okButton()]
+      });
+    }
   };
 
   // Function to handle file upload
