@@ -209,7 +209,6 @@ function ListSessions() {
         toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
         setIsLoading(false);
       }
-  
     } catch (error) {
       setIsLoading(false);
       console.error('Error listing Sessions', error);
@@ -253,7 +252,9 @@ function ListSessions() {
   );
 
   useEffect(() => {
-    listSessionsAPI();
+    if (!pollingDisable) {
+      listSessionsAPI();
+    }
     return () => {
       pollingSessions(listSessionsAPI, true);
     };
@@ -290,12 +291,12 @@ function ListSessions() {
           {data.state === ClusterStatus.STATUS_ACTIVE ? (
             <iconStop.react
               tag="div"
-              className= 'icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           ) : (
             <iconStopDisable.react
               tag="div"
-              className= 'icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           )}
         </div>
@@ -307,7 +308,7 @@ function ListSessions() {
         >
           <iconDelete.react
             tag="div"
-            className='icon-white logo-alignment-style'
+            className="icon-white logo-alignment-style"
           />
         </div>
       </div>
@@ -353,8 +354,8 @@ function ListSessions() {
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_TERMINATING ||
               cell.value === STATUS_DELETING) && (
-            <ClipLoader
-              color="#3367d6"
+              <ClipLoader
+                color="#3367d6"
                 loading={true}
                 size={15}
                 aria-label="Loading Spinner"
@@ -401,10 +402,10 @@ function ListSessions() {
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-                <iconFilter.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
+              <iconFilter.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
@@ -446,8 +447,8 @@ function ListSessions() {
         <div>
           {isLoading && (
             <div className="spin-loaderMain">
-            <ClipLoader
-              color="#3367d6"
+              <ClipLoader
+                color="#3367d6"
                 loading={true}
                 size={18}
                 aria-label="Loading Spinner"
