@@ -294,6 +294,10 @@ function JobDetails({
     });
     payload.labels = labelObject;
     updateJobDetails(payload);
+    toast.success(
+      `Request to update job ${jobSelected} submitted`,
+      toastifyCustomStyle
+    );
     setLabelEditMode(false);
     getJobDetails();
   };
