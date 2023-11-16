@@ -112,7 +112,7 @@ function JobComponent({
   clusterResponse,
   selectedJobClone,
   setSelectedJobClone,
-  clustersList
+  fromPage
 }: any) {
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState<string>('');
@@ -260,7 +260,10 @@ function JobComponent({
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
@@ -346,7 +349,7 @@ function JobComponent({
         >
           <iconClone.react
             tag="div"
-            className='icon-white logo-alignment-style'
+            className="icon-white logo-alignment-style"
           />
         </div>
         <div
@@ -367,12 +370,12 @@ function JobComponent({
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
             <iconStop.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           ) : (
             <iconStopDisable.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           )}
         </div>
@@ -394,12 +397,12 @@ function JobComponent({
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
             <iconDelete.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           ) : (
             <iconDelete.react
               tag="div"
-              className= 'icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           )}
         </div>
@@ -408,7 +411,9 @@ function JobComponent({
   };
 
   useEffect(() => {
-    listJobsAPI();
+    if (!pollingDisable) {
+      listJobsAPI();
+    }
     return () => {
       pollingJobs(listJobsAPI, true);
     };
@@ -458,7 +463,7 @@ function JobComponent({
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-                <ClipLoader
+              <ClipLoader
                 color="#3367d6"
                 loading={true}
                 size={15}
@@ -545,7 +550,7 @@ function JobComponent({
           region={region}
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
-          clustersList={clustersList}
+          fromPage={fromPage}
         />
       )}
       {!submitJobView && !detailedJobView && (
@@ -575,12 +580,10 @@ function JobComponent({
             <div>
               <div className="filter-cluster-overlay">
                 <div className="filter-cluster-icon">
-
-                    <iconFilter.react
-                      tag="div"
-                      className="icon-white logo-alignment-style"
-                    />
-
+                  <iconFilter.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
                 </div>
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
@@ -628,8 +631,8 @@ function JobComponent({
             <div>
               {isLoading && (
                 <div className="spin-loaderMain">
-                 <ClipLoader
-              color="#3367d6"
+                  <ClipLoader
+                    color="#3367d6"
                     loading={true}
                     size={20}
                     aria-label="Loading Spinner"

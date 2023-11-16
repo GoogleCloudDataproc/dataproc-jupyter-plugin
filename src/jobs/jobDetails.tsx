@@ -100,7 +100,7 @@ interface IJobDetailsProps {
   region: any;
   setDetailedView: (value: boolean) => void;
   clusterResponse: object;
-  clustersList: object;
+  fromPage: string;
 }
 function JobDetails({
   jobSelected,
@@ -108,7 +108,7 @@ function JobDetails({
   region,
   setDetailedView,
   clusterResponse,
-  clustersList
+  fromPage
 }: IJobDetailsProps) {
   const initialJobDetails: IJobDetails = {
     status: { state: '', stateStartTime: '' },
@@ -194,7 +194,7 @@ function JobDetails({
 
   const handleDetailedClusterView = () => {
     pollingJobDetails(getJobDetails, true);
-    if (!clustersList) {
+    if (fromPage !== "clusters") {
       setDetailedJobView(false);
     }
     setDetailedClusterView(true);

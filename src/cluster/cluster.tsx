@@ -167,7 +167,6 @@ const ClusterComponent = (): React.JSX.Element => {
         setclustersList(allClustersData);
         setIsLoading(false);
         setLoggedIn(true);
-
       }
       if (formattedResponse?.error?.code) {
         toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
@@ -382,7 +381,9 @@ const ClusterComponent = (): React.JSX.Element => {
     if (loggedIn) {
       setConfigLoading(false);
     }
-    listClustersAPI();
+    if (!pollingDisable) {
+      listClustersAPI();
+    }
 
     return () => {
       pollingClusters(listClustersAPI, true);
@@ -397,8 +398,8 @@ const ClusterComponent = (): React.JSX.Element => {
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loaderMain">
-      <ClipLoader
-              color="#3367d6"
+          <ClipLoader
+            color="#3367d6"
             loading={true}
             size={18}
             aria-label="Loading Spinner"
@@ -445,7 +446,7 @@ const ClusterComponent = (): React.JSX.Element => {
               <div>
                 {selectedMode === 'Jobs' ? (
                   <JobComponent
-                    clustersList={clustersList}
+                    fromPage="clusters"
                     detailedJobView={detailedJobView}
                     setDetailedJobView={setDetailedJobView}
                     submitJobView={submitJobView}
