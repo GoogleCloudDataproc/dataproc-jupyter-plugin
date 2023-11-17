@@ -128,7 +128,7 @@ function LabelProperties({
           const duplicateIndex = labelEdit.findIndex(
             (label, i) => i !== index && label.split(':')[0] === newKey
           );
-          if (duplicateIndex !== -1) {
+          if (duplicateIndex !== -1 && buttonText==='ADD LABEL') {
             setDuplicateKeyError(index);
           } else {
             setDuplicateKeyError(-1);
@@ -225,7 +225,7 @@ function LabelProperties({
                     </div>
 
                     {labelDetailUpdated[index].split(':')[0] === '' &&
-                    labelDetailUpdated[index] !== '' ? (
+                    labelDetailUpdated[index] !== '' && duplicateKeyError !== index ? (
                       <div role="alert" className="error-key-parent">
                         <iconError.react
                           tag="div"
@@ -282,8 +282,7 @@ function LabelProperties({
                         Label =  {`Value ${index + 1}`}
                       />
                     </div>
-                    {valueValidation === index &&
-                      buttonText === 'ADD LABEL' && (
+                    {valueValidation === index  && (
                         <div className="error-key-parent">
                           <iconError.react
                             tag="div"
