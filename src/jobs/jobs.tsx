@@ -26,7 +26,9 @@ import {
   jobTypeDisplay,
   ICellProps,
   toastifyCustomStyle,
-  loggedFetch
+  loggedFetch,
+  authenticatedFetch,
+  statusValue
 } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -44,6 +46,7 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   ClusterStatus,
+  HTTP_METHOD,
   STATUS_CANCELLED,
   STATUS_CREATING,
   STATUS_DELETING,
@@ -109,7 +112,6 @@ function JobComponent({
   submitJobView,
   setSubmitJobView,
   setDetailedView,
-  clusterResponse,
   selectedJobClone,
   setSelectedJobClone,
   fromPage
@@ -121,6 +123,9 @@ function JobComponent({
   const [region, setRegion] = useState('');
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
+
+  const [clusterResponse, setClusterResponse] = useState([]);
+
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingJobs = async (
@@ -329,6 +334,63 @@ function JobComponent({
     }
   };
 
+  const listClustersAPI = async (
+    nextPageToken?: string,
+    previousClustersList?: object
+  ) => {
+    const pageToken = nextPageToken ?? '';
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('pageSize', '50');
+      queryParams.append('pageToken', pageToken);
+
+      const response = await authenticatedFetch({
+        uri: 'clusters',
+        regionIdentifier: 'regions',
+        method: HTTP_METHOD.GET,
+        queryParams: queryParams
+      });
+      console.log(response)
+      const formattedResponse = await response.json();
+      let transformClusterListData = [];
+      if (formattedResponse && formattedResponse.clusters) {
+        transformClusterListData = formattedResponse.clusters.map(
+          (data: any) => {
+            const statusVal = statusValue(data);
+            // Extracting zone from zoneUri
+            // Example: "projects/{project}/zones/{zone}"
+            return {
+              clusterUuid: data.clusterUuid,
+              status: statusVal,
+              clusterName: data.clusterName
+            };
+          }
+        );
+      }
+      const existingClusterData = previousClustersList ?? [];
+      //setStateAction never type issue
+      const allClustersData: any = [
+        ...(existingClusterData as []),
+        ...transformClusterListData
+      ];
+
+      console.log(formattedResponse, allClustersData)
+
+      if (formattedResponse.nextPageToken) {
+        listClustersAPI(formattedResponse.nextPageToken, allClustersData);
+      } else {
+        setClusterResponse(allClustersData);
+      }
+      if (formattedResponse?.error?.code) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      }
+    } catch (error) {
+      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
+      console.error('Error listing clusters', error);
+      toast.error('Failed to fetch clusters', toastifyCustomStyle);
+    }
+  };
+
   const handleCloneJob = (data: object) => {
     setSubmitJobView(true);
     setSelectedJobClone(data);
@@ -413,6 +475,7 @@ function JobComponent({
   useEffect(() => {
     if (!pollingDisable) {
       listJobsAPI();
+      listClustersAPI();
     }
     return () => {
       pollingJobs(listJobsAPI, true);
@@ -556,8 +619,7 @@ function JobComponent({
       {!submitJobView && !detailedJobView && (
         <div>
           {clusterResponse &&
-            clusterResponse.clusters &&
-            clusterResponse.clusters.length > 0 && (
+            clusterResponse.length > 0 && (
               <div className="create-cluster-overlay">
                 <div
                   role="button"

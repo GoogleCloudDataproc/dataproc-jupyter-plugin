@@ -200,7 +200,10 @@ function ClusterDetails({
                 setErrorView(true);
               }
               if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
               }
               setClusterInfo(responseResult);
               setIsLoading(false);
@@ -213,7 +216,10 @@ function ClusterDetails({
         .catch((err: Error) => {
           setIsLoading(false);
           console.error('Error listing clusters Details', err);
-          DataprocLoggingService.log('Error listing clusters Details', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error listing clusters Details',
+            LOG_LEVEL.ERROR
+          );
           toast.error(
             `Failed to fetch cluster details ${clusterSelected}`,
             toastifyCustomStyle
@@ -425,7 +431,7 @@ function ClusterDetails({
                           clusterInfo.status.state === STATUS_DELETING) && (
                           <div>
                             <ClipLoader
-              color="#3367d6"
+                              color="#3367d6"
                               loading={true}
                               size={15}
                               aria-label="Loading Spinner"
@@ -458,21 +464,19 @@ function ClusterDetails({
             </div>
           ) : (
             <>
-            {isLoading && (
-          <div className="spin-loaderMain">
-           <ClipLoader
-              color="#3367d6"
-              loading={true}
-              size={18}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
-            Loading Cluster Details
-          </div>
-        )}
-         
-        </>
-      
+              {isLoading && (
+                <div className="spin-loaderMain">
+                  <ClipLoader
+                    color="#3367d6"
+                    loading={true}
+                    size={18}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                  Loading Cluster Details
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

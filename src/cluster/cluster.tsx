@@ -76,7 +76,6 @@ const iconRestartDisable = new LabIcon({
 const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
   const [clustersList, setclustersList] = useState([]);
-  const [clusterResponse, setClusterResponse] = useState([]);
   const [detailedJobView, setDetailedJobView] = useState(false);
   const [submitJobView, setSubmitJobView] = useState(false);
   const [restartEnabled, setRestartEnabled] = useState(false);
@@ -129,7 +128,6 @@ const ClusterComponent = (): React.JSX.Element => {
       const formattedResponse = await response.json();
       let transformClusterListData = [];
       if (formattedResponse && formattedResponse.clusters) {
-        setClusterResponse(formattedResponse);
         transformClusterListData = formattedResponse.clusters.map(
           (data: any) => {
             const statusVal = statusValue(data);
@@ -417,7 +415,7 @@ const ClusterComponent = (): React.JSX.Element => {
               detailedJobView={detailedJobView}
               setDetailedJobView={setDetailedJobView}
               submitJobView={submitJobView}
-              clusterResponse={clusterResponse}
+              clusterResponse={clustersList}
               selectedJobClone={selectedJobClone}
               setSelectedJobClone={setSelectedJobClone}
               setSubmitJobView={setSubmitJobView}
@@ -452,7 +450,6 @@ const ClusterComponent = (): React.JSX.Element => {
                     submitJobView={submitJobView}
                     setSubmitJobView={setSubmitJobView}
                     setDetailedView={setDetailedView}
-                    clusterResponse={clusterResponse}
                     selectedJobClone={selectedJobClone}
                     setSelectedJobClone={setSelectedJobClone}
                   />
