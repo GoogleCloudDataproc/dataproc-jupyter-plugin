@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import createClusterIcon from '../../style/icons/create_cluster_icon.svg';
@@ -26,6 +26,7 @@ import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import { ClipLoader } from 'react-spinners';
 import {
   CREATE_CLUSTER_URL,
+  ClusterStatus,
   STATUS_CREATING,
   STATUS_DELETING,
   STATUS_ERROR,
@@ -39,6 +40,14 @@ import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
+
+import restartIcon from '../../style/icons/restart_icon.svg';
+import restartDisableIcon from '../../style/icons/restart_icon_disable.svg';
+import startIcon from '../../style/icons/start_icon.svg';
+import startDisableIcon from '../../style/icons/start_icon_disable.svg';
+import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
+import PollingTimer from '../utils/pollingTimer';
+import { ClusterService } from './clusterServices';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -62,6 +71,28 @@ const iconClusterError = new LabIcon({
   name: 'launcher:cluster-error-icon',
   svgstr: clusterErrorIcon
 });
+const iconStart = new LabIcon({
+  name: 'launcher:start-icon',
+  svgstr: startIcon
+});
+const iconRestart = new LabIcon({
+  name: 'launcher:restart-icon',
+  svgstr: restartIcon
+});
+
+const iconStartDisable = new LabIcon({
+  name: 'launcher:start-disable-icon',
+  svgstr: startDisableIcon
+});
+const iconStopDisable = new LabIcon({
+  name: 'launcher:stop-disable-icon',
+  svgstr: stopDisableIcon
+});
+const iconRestartDisable = new LabIcon({
+  name: 'launcher:restart-disable-icon',
+  svgstr: restartDisableIcon
+});
+
 interface ICluster {
   clusterName: string;
   status: string;
@@ -75,18 +106,36 @@ interface ICluster {
 
 interface IListClusterProps {
   clustersList: ICluster[];
-  isLoading: boolean;
-  setPollingDisable: (value: boolean) => void;
-  handleClusterDetails: (clusterName: string) => void;
-  project_id: string;
+  setclustersList: (value: any)=> void;
+  setClusterSelected: (value: string)=> void;
+  detailedView: boolean,
+  setDetailedView: (value: boolean) => void;
+  setLoggedIn: (value: boolean) => void;
 }
 function ListCluster({
   clustersList,
-  isLoading,
-  setPollingDisable,
-  handleClusterDetails,
-  project_id
+  setclustersList,
+  setClusterSelected,
+  detailedView,
+  setDetailedView,
+  setLoggedIn
 }: IListClusterProps) {
+  const [restartEnabled, setRestartEnabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pollingDisable, setPollingDisable] = useState(false);
+  const [projectId, setProjectId] = useState('');
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  const pollingClusters = async (
+    pollingFunction: () => void,
+    pollingDisable: boolean
+  ) => {
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
+  };
   const data = clustersList;
   const columns = React.useMemo(
     () => [
@@ -125,6 +174,177 @@ function ListCluster({
     ],
     []
   );
+
+  const listClustersAPI = async () => {
+    await ClusterService.listClustersAPIService(
+      setProjectId,
+      renderActions,
+      setclustersList,
+      setIsLoading,
+      setLoggedIn
+    );
+  };
+
+  const handleClusterDetails = (selectedName: string) => {
+    pollingClusters(listClustersAPI, true);
+    setClusterSelected(selectedName);
+    setDetailedView(true);
+  };
+
+  const statusApi = async (selectedCluster: string) => {
+    await ClusterService.statusApiService(
+      selectedCluster,
+      listClustersAPI,
+      timer
+    );
+  };
+
+  const restartClusterApi = async (selectedCluster: string) => {
+    await ClusterService.restartClusterApiService(
+      selectedCluster,
+      setRestartEnabled,
+      listClustersAPI,
+      timer,
+      statusApi
+    );
+  };
+
+  const startButton = (data: {
+    status: { state: ClusterStatus };
+    clusterName: string;
+  }) => {
+    return (
+      <div
+        role="button"
+        aria-disabled={
+          data.status.state !== ClusterStatus.STATUS_STOPPED &&
+          restartEnabled !== true
+        }
+        className={
+          data.status.state === ClusterStatus.STATUS_STOPPED &&
+          restartEnabled !== true
+            ? 'icon-buttons-style'
+            : 'icon-buttons-style-disable'
+        }
+        title="Start Cluster"
+        onClick={
+          data.status.state === ClusterStatus.STATUS_STOPPED && !restartEnabled
+            ? () => ClusterService.startClusterApi(data.clusterName)
+            : undefined
+        }
+      >
+        {data.status.state === ClusterStatus.STATUS_STOPPED &&
+        !restartEnabled ? (
+          <iconStart.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        ) : (
+          <iconStartDisable.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        )}
+      </div>
+    );
+  };
+
+  const stopButton = (data: {
+    status: { state: ClusterStatus };
+    clusterName: string;
+  }) => {
+    return (
+      <div
+        role="button"
+        aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
+        className={
+          data.status.state === ClusterStatus.STATUS_RUNNING
+            ? 'icon-buttons-style'
+            : 'icon-buttons-style-disable'
+        }
+        title="Stop Cluster"
+        onClick={
+          data.status.state === ClusterStatus.STATUS_RUNNING
+            ? () => ClusterService.stopClusterApi(data.clusterName)
+            : undefined
+        }
+      >
+        {data.status.state === ClusterStatus.STATUS_RUNNING ? (
+          <iconStop.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        ) : (
+          <iconStopDisable.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        )}
+      </div>
+    );
+  };
+
+  const restartButton = (data: {
+    status: { state: ClusterStatus };
+    clusterName: string;
+  }) => {
+    return (
+      <div
+        role="button"
+        aria-disabled={data.status.state !== ClusterStatus.STATUS_RUNNING}
+        className={
+          data.status.state === ClusterStatus.STATUS_RUNNING
+            ? 'icon-buttons-style'
+            : 'icon-buttons-style-disable'
+        }
+        title="Restart Cluster"
+        onClick={
+          data.status.state === ClusterStatus.STATUS_RUNNING
+            ? () => restartClusterApi(data.clusterName)
+            : undefined
+        }
+      >
+        {data.status.state === ClusterStatus.STATUS_RUNNING ? (
+          <iconRestart.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        ) : (
+          <iconRestartDisable.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        )}
+      </div>
+    );
+  };
+  const renderActions = (data: {
+    status: { state: ClusterStatus };
+    clusterName: string;
+  }) => {
+    return (
+      <div className="actions-icon">
+        {startButton(data)}
+        {stopButton(data)}
+        {restartButton(data)}
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    if (!pollingDisable) {
+      listClustersAPI();
+    }
+
+    return () => {
+      pollingClusters(listClustersAPI, true);
+    };
+  }, [pollingDisable, detailedView]);
+  useEffect(() => {
+    if (!detailedView  && !isLoading) {
+      pollingClusters(listClustersAPI, pollingDisable);
+    }
+  }, [isLoading]);
 
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Name') {
@@ -224,7 +444,7 @@ function ListCluster({
           className="create-cluster-sub-overlay"
           onClick={() => {
             window.open(
-              `${CREATE_CLUSTER_URL}?project=${project_id}`,
+              `${CREATE_CLUSTER_URL}?project=${projectId}`,
               '_blank'
             );
           }}
