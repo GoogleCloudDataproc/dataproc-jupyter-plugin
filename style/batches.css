@@ -22,7 +22,7 @@
   overflow-wrap: anywhere;
 }
 .learn-more-url {
-  color:var(--jp-brand-color1);
+  color: var(--jp-brand-color1);
   text-decoration: underline;
   cursor: pointer;
   padding-left: 3px;
@@ -103,4 +103,7 @@
   overflow-y: auto;
   max-height: 85vh;
 }
-
+.css-pjtntf-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root .MuiInputBase-input { 
+  height: 17px !important;
+  width: 466px !important;
+}
