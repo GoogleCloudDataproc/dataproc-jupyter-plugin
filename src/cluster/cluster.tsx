@@ -18,8 +18,6 @@
 import { LabIcon } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import restartIcon from '../../style/icons/restart_icon.svg';
 import restartDisableIcon from '../../style/icons/restart_icon_disable.svg';
 import startIcon from '../../style/icons/start_icon.svg';
@@ -28,21 +26,9 @@ import stopIcon from '../../style/icons/stop_icon.svg';
 import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
 import JobComponent from '../jobs/jobs';
 import { ClusterService } from './clusterServices';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import {
-  ClusterStatus,
-  HTTP_METHOD,
-  LOGIN_STATE,
-  POLLING_TIME_LIMIT
-} from '../utils/const';
+import { ClusterStatus, LOGIN_STATE } from '../utils/const';
 import PollingTimer from '../utils/pollingTimer';
-import {
-  authenticatedFetch,
-  checkConfig,
-  getProjectId,
-  statusValue,
-  toastifyCustomStyle
-} from '../utils/utils';
+import { checkConfig } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
 import { DataprocWidget } from '../controls/DataprocWidget';
@@ -106,75 +92,14 @@ const ClusterComponent = (): React.JSX.Element => {
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
   };
-  const listClustersAPI = async (
-    nextPageToken?: string,
-    previousClustersList?: object
-  ) => {
-    const pageToken = nextPageToken ?? '';
-    try {
-      const projectId = await getProjectId();
-      setProjectId(projectId);
-
-      const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
-      queryParams.append('pageToken', pageToken);
-
-      const response = await authenticatedFetch({
-        uri: 'clusters',
-        regionIdentifier: 'regions',
-        method: HTTP_METHOD.GET,
-        queryParams: queryParams
-      });
-      const formattedResponse = await response.json();
-      let transformClusterListData = [];
-      if (formattedResponse && formattedResponse.clusters) {
-        transformClusterListData = formattedResponse.clusters.map(
-          (data: any) => {
-            const statusVal = statusValue(data);
-            // Extracting zone from zoneUri
-            // Example: "projects/{project}/zones/{zone}"
-
-            const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
-
-            return {
-              clusterUuid: data.clusterUuid,
-              status: statusVal,
-              clusterName: data.clusterName,
-              clusterImage: data.config.softwareConfig.imageVersion,
-              region: data.labels['goog-dataproc-location'],
-              zone: zoneUri[zoneUri.length - 1],
-              totalWorkersNode: data.config.workerConfig
-                ? data.config.workerConfig.numInstances
-                : 0,
-              schedulesDeletion: data.config.lifecycleConfig ? 'On' : 'Off',
-              actions: renderActions(data)
-            };
-          }
-        );
-      }
-      const existingClusterData = previousClustersList ?? [];
-      //setStateAction never type issue
-      const allClustersData: any = [
-        ...(existingClusterData as []),
-        ...transformClusterListData
-      ];
-
-      if (formattedResponse.nextPageToken) {
-        listClustersAPI(formattedResponse.nextPageToken, allClustersData);
-      } else {
-        setclustersList(allClustersData);
-        setIsLoading(false);
-        setLoggedIn(true);
-      }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-    } catch (error) {
-      setIsLoading(false);
-      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters', toastifyCustomStyle);
-    }
+  const listClustersAPI = async () => {
+    await ClusterService.listClustersAPIService(
+      setProjectId,
+      renderActions,
+      setclustersList,
+      setIsLoading,
+      setLoggedIn
+    );
   };
 
   const handleClusterDetails = (selectedName: string) => {
@@ -184,62 +109,21 @@ const ClusterComponent = (): React.JSX.Element => {
   };
 
   const statusApi = async (selectedCluster: string) => {
-    try {
-      const response = await authenticatedFetch({
-        uri: `clusters/${selectedCluster}`,
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'regions'
-      });
-      const formattedResponse = await response.json();
-
-      if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
-        ClusterService.startClusterApi(selectedCluster);
-        clearInterval(timer.current);
-      }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-      listClustersAPI();
-    } catch (error) {
-      console.error('Error fetching status', error);
-      DataprocLoggingService.log('Error fetching status', LOG_LEVEL.ERROR);
-      toast.error(
-        `Failed to fetch the status ${selectedCluster}`,
-        toastifyCustomStyle
-      );
-    }
+    await ClusterService.statusApiService(
+      selectedCluster,
+      listClustersAPI,
+      timer
+    );
   };
 
   const restartClusterApi = async (selectedCluster: string) => {
-    setRestartEnabled(true);
-
-    try {
-      const response = await authenticatedFetch({
-        uri: `clusters/${selectedCluster}:stop`,
-        method: HTTP_METHOD.POST,
-        regionIdentifier: 'regions'
-      });
-      const formattedResponse = await response.json();
-      console.log(formattedResponse);
-      listClustersAPI();
-      timer.current = setInterval(() => {
-        statusApi(selectedCluster);
-      }, POLLING_TIME_LIMIT);
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-      // This is an artifact of the refactoring
-      listClustersAPI();
-
-      setRestartEnabled(false);
-    } catch (error) {
-      console.error('Error restarting cluster', error);
-      DataprocLoggingService.log('Error restarting cluster', LOG_LEVEL.ERROR);
-      toast.error(
-        `Failed to restart the cluster ${selectedCluster}`,
-        toastifyCustomStyle
-      );
-    }
+    await ClusterService.restartClusterApiService(
+      selectedCluster,
+      setRestartEnabled,
+      listClustersAPI,
+      timer,
+      statusApi
+    );
   };
 
   const startButton = (data: {

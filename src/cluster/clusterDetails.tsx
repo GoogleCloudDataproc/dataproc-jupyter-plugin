@@ -28,13 +28,8 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
+import { ClusterService } from './clusterServices';
 import {
-  ClusterService
-} from './clusterServices';
-import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   STATUS_CREATING,
   STATUS_DELETING,
   STATUS_ERROR,
@@ -44,15 +39,11 @@ import {
   STATUS_STOPPED,
   STATUS_STOPPING
 } from '../utils/const';
-import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import DeletePopup from '../utils/deletePopup';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import SubmitJob from '../jobs/submitJob';
 import PollingTimer from '../utils/pollingTimer';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -162,68 +153,15 @@ function ClusterDetails({
     setDeletePopupOpen(false);
     handleDetailedView();
   };
-  interface IClusterDetailsResponse {
-    error: {
-      message: string;
-      code: number;
-    };
-    status: {
-      state: string;
-    };
-    clusterName: string;
-    clusterUuid: string;
-    projectId?: string;
-    regionId?: string;
-  }
 
   const getClusterDetails = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      setProjectName(credentials.project_id || '');
-      loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IClusterDetailsResponse) => {
-              if (responseResult.error && responseResult.error.code === 404) {
-                setErrorView(true);
-              }
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-              setClusterInfo(responseResult);
-              setIsLoading(false);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing clusters Details', err);
-          DataprocLoggingService.log(
-            'Error listing clusters Details',
-            LOG_LEVEL.ERROR
-          );
-          toast.error(
-            `Failed to fetch cluster details ${clusterSelected}`,
-            toastifyCustomStyle
-          );
-        });
-    }
+    await ClusterService.getClusterDetailsService(
+      setProjectName,
+      clusterSelected,
+      setErrorView,
+      setIsLoading,
+      setClusterInfo
+    );
   };
 
   const clusterDetailsAction = () => {
