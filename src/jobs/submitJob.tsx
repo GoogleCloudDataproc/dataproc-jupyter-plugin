@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { SyntheticEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import LabelProperties from './labelProperties';
@@ -271,7 +271,7 @@ function SubmitJob({
   };
 
   const handleQuerySourceTypeSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
+    event: SyntheticEvent<Element, Event>,
     data: DropdownProps
   ) => {
     setQuerySourceSelected(data.value!.toString());
@@ -303,11 +303,11 @@ function SubmitJob({
       { key: 'sparkSql', value: 'sparkSql', text: 'SparkSql' },
       { key: 'pySpark', value: 'pySpark', text: 'PySpark' }
     ];
-    const querySourceData = [
-      { key: 'queryFile', value: 'queryFile', text: 'Query file' },
-      { key: 'queryText', value: 'queryText', text: 'Query text' }
-    ];
     setJobTypeList(jobTypeData);
+    const querySourceData = [
+      { value: 'queryFile', label: 'Query file' },
+      { value: 'queryText', label: 'Query text' }
+  ];
     setQuerySourceTypeList(querySourceData);
   }, []);
   useEffect(() => {
@@ -855,25 +855,15 @@ function SubmitJob({
         {jobTypeSelected === 'sparkSql' && (
           <>
             <div className="select-text-overlay">
-              <label
-                className={
-                  labelFocused
-                    ? 'select-title-text label-focused'
-                    : 'select-title-text'
-                }
-                htmlFor="metastore-project"
-              >
-                Query source type*
-              </label>
-              <Select
+              <Autocomplete
                 className="project-region-select"
-                search
-                onChange={handleQuerySourceTypeSelected}
+                onChange={(_event, val) => handleQuerySourceTypeSelected}
                 options={querySourceTypeList}
                 value={querySourceSelected}
                 onFocus={handleSelectFocus}
-                onBlur={handleBlur}
-              />
+                onBlur={handleBlur} 
+                renderInput={params => <TextField {...params} label= "Query source type*"/>}
+                     />
             </div>
           </>
         )}
