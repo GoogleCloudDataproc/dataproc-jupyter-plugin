@@ -27,7 +27,7 @@ import startDisableIcon from '../../style/icons/start_icon_disable.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
 import JobComponent from '../jobs/jobs';
-import { startClusterApi, stopClusterApi } from './clusterServices';
+import { ClusterService } from './clusterServices';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ClusterStatus,
@@ -193,7 +193,7 @@ const ClusterComponent = (): React.JSX.Element => {
       const formattedResponse = await response.json();
 
       if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
-        startClusterApi(selectedCluster);
+        ClusterService.startClusterApi(selectedCluster);
         clearInterval(timer.current);
       }
       if (formattedResponse?.error?.code) {
@@ -262,7 +262,7 @@ const ClusterComponent = (): React.JSX.Element => {
         title="Start Cluster"
         onClick={
           data.status.state === ClusterStatus.STATUS_STOPPED && !restartEnabled
-            ? () => startClusterApi(data.clusterName)
+            ? () => ClusterService.startClusterApi(data.clusterName)
             : undefined
         }
       >
@@ -298,7 +298,7 @@ const ClusterComponent = (): React.JSX.Element => {
         title="Stop Cluster"
         onClick={
           data.status.state === ClusterStatus.STATUS_RUNNING
-            ? () => stopClusterApi(data.clusterName)
+            ? () => ClusterService.stopClusterApi(data.clusterName)
             : undefined
         }
       >

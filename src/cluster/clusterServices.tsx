@@ -24,7 +24,8 @@ import {
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
-export const deleteClusterApi = async (selectedcluster: string) => {
+export class ClusterService {
+static deleteClusterApi = async (selectedcluster: string) => {
   const credentials = await authApi();
   if (credentials) {
     loggedFetch(
@@ -62,7 +63,7 @@ export const deleteClusterApi = async (selectedcluster: string) => {
   }
 };
 
-export const startStopAPI = async (
+static startStopAPI = async (
   selectedcluster: string,
   operation: 'start' | 'stop'
 ) => {
@@ -101,9 +102,10 @@ export const startStopAPI = async (
   }
 };
 
-export const startClusterApi = async (selectedcluster: string) => {
-  startStopAPI(selectedcluster, 'start');
+static startClusterApi = async (selectedcluster: string) => {
+  this.startStopAPI(selectedcluster, 'start');
 };
-export const stopClusterApi = async (selectedcluster: string) => {
-  startStopAPI(selectedcluster, 'stop');
+static stopClusterApi = async (selectedcluster: string) => {
+  this.startStopAPI(selectedcluster, 'stop');
 };
+}

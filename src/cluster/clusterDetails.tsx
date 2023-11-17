@@ -29,9 +29,7 @@ import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import {
-  deleteClusterApi,
-  startClusterApi,
-  stopClusterApi
+  ClusterService
 } from './clusterServices';
 import {
   API_HEADER_BEARER,
@@ -159,7 +157,7 @@ function ClusterDetails({
   };
 
   const handleDelete = async () => {
-    await deleteClusterApi(selectedCluster);
+    await ClusterService.deleteClusterApi(selectedCluster);
 
     setDeletePopupOpen(false);
     handleDetailedView();
@@ -241,7 +239,7 @@ function ClusterDetails({
           }
           onClick={() =>
             clusterInfo.status.state === STATUS_STOPPED &&
-            startClusterApi(clusterInfo.clusterName)
+            ClusterService.startClusterApi(clusterInfo.clusterName)
           }
         >
           <div
@@ -273,7 +271,7 @@ function ClusterDetails({
           }
           onClick={() =>
             clusterInfo.status.state === STATUS_RUNNING &&
-            stopClusterApi(clusterInfo.clusterName)
+            ClusterService.stopClusterApi(clusterInfo.clusterName)
           }
         >
           <div className="action-cluster-icon">
