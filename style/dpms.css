@@ -3,6 +3,10 @@
 .dpms-Wrapper{
   font-family: 'Roboto' !important;
   background: var(--jp-layout-color1);
+  display: block;
+  box-sizing: border-box;
+  height: 100vh;
+  overflow: auto;
 }
 .dpms-title {
   line-height: 20px;

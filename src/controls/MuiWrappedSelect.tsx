@@ -19,7 +19,7 @@ import React from 'react';
 import type { SelectProps } from 'semantic-ui-react';
 
 function SelectInternal(props: SelectProps) {
-  const { className, value, onChange, options,disabled,onFocus, onBlur }= props;
+  const { className, value, onChange, options,disabled,onFocus, onBlur ,Label}= props;
   return (
     <MuiSelect
       className={className}
@@ -39,6 +39,7 @@ function SelectInternal(props: SelectProps) {
           value: e.target.value
         })
       }
+      label = {Label}
     >
       {options.map(option => (
         <MenuItem value={option.value as string}>{option.text}</MenuItem>

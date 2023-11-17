@@ -19,6 +19,7 @@ import tornado
 import subprocess
 from cachetools import TTLCache
 import datetime
+import threading
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url
 
@@ -141,6 +142,8 @@ class RouteHandler(APIHandler):
                 cached_credentials = get_cached_credentials()
                 self.finish(json.dumps(cached_credentials))
             else:
+                t1 = threading.Thread(target=get_cached_credentials, args=())
+                t1.start()
                 self.finish(json.dumps(credentials_cache['credentials']))
         except Exception:
             cached_credentials = get_cached_credentials()
