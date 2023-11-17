@@ -55,6 +55,7 @@ import { BatchService } from './batchService';
 import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';
 import CreateBatch from './createBatch';
+import errorIcon from '../../style/icons/error_icon.svg';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -67,6 +68,10 @@ const iconCloneJob = new LabIcon({
 const iconDeleteCluster = new LabIcon({
   name: 'launcher:delete-cluster-icon',
   svgstr: DeleteClusterIcon
+});
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
 });
 
 type BatchDetailsProps = {
@@ -134,6 +139,7 @@ function BatchDetails({
     stateTime: ''
   });
   const [regionName, setRegionName] = useState('');
+  const [errorView, setErrorView] = useState(false);
   const [labelDetail, setLabelDetail] = useState(['']);
   const [isLoading, setIsLoading] = useState(true);
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
@@ -175,15 +181,16 @@ function BatchDetails({
       batchSelected,
       setBatchInfoResponse,
       setLabelDetail,
-      setIsLoading
+      setIsLoading,
+      setErrorView
     );
   };
 
-  const statusMsg = statusMessageBatch(batchInfoResponse);
-  const startTime = jobTimeFormat(batchInfoResponse.createTime);
-  const startTimeElapsed = new Date(batchInfoResponse.createTime);
+  const statusMsg = !errorView ?statusMessageBatch(batchInfoResponse):"";
+  const startTime = !errorView ? jobTimeFormat(batchInfoResponse.createTime):"";
+  const startTimeElapsed = !errorView ? new Date(batchInfoResponse.createTime):new Date;
 
-  const endTime = new Date(batchInfoResponse.stateTime);
+  const endTime = !errorView ? new Date(batchInfoResponse.stateTime):new Date;
 
   let jobStartTime: Date;
   let runTimeString = '';
@@ -195,10 +202,10 @@ function BatchDetails({
     runTimeString = elapsedTime(endTime, jobStartTime);
   }
 
-  const batch = BatchTypeValue(batchInfoResponse);
-  const batchConcat = Object.keys(batchInfoResponse).filter(key =>
+  const batch = !errorView ? BatchTypeValue(batchInfoResponse):"";
+  const batchConcat = !errorView ? Object.keys(batchInfoResponse).filter(key =>
     key.endsWith('Batch')
-  );
+  ):"";
   const elapsedTimeString = elapsedTime(
     new Date(batchInfoResponse.stateTime),
     startTimeElapsed
@@ -254,8 +261,26 @@ function BatchDetails({
           }
         />
       )}
+      {errorView && (
+        <div className="error-view-parent">
+          <div
+            role="button"
+            aria-label="back-arrow-icon"
+            className="back-arrow-icon"
+            onClick={() => handleDetailedBatchView()}
+          >
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+          </div>
+          <div className="error-view-message-parent">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div role="alert" className="error-view-message">
+              Unable to find the resource you requested
+            </div>
+          </div>
+        </div>
+      )}
 
-      {!createBatch && batchInfoResponse.uuid !== '' && (
+      {!errorView && !createBatch && batchInfoResponse.uuid !== '' && (
         <div className="scroll">
           <div className="scroll-fix-header cluster-details-header">
             <div
