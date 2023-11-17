@@ -323,6 +323,9 @@ function JobDetails({
           response
             .json()
             .then((responseResult: any) => {
+              if (responseResult.error && responseResult.error.code === 404) {
+                setErrorView(true);
+              }
               setjobInfoResponse(responseResult);
               const labelValue: string[] = [];
               if (responseResult.labels) {
@@ -357,20 +360,20 @@ function JobDetails({
     }
   };
 
-  const startTime = jobTimeFormat(jobInfo.statusHistory[0].stateStartTime);
-  const job = jobTypeValue(jobInfo);
-  const jobType = jobTypeDisplay(job);
-  const jobArgument = jobTypeValueArguments(jobInfo);
-  const jobTypeConcat = jobArgument + 'Job';
+  const startTime = !errorView?jobTimeFormat(jobInfo.statusHistory[0].stateStartTime):"";
+  const job =!errorView? jobTypeValue(jobInfo):"";
+  const jobType = !errorView?jobTypeDisplay(job):"";
+  const jobArgument = !errorView?jobTypeValueArguments(jobInfo):"";
+  const jobTypeConcat = !errorView?jobArgument + 'Job':"";
   //@ts-ignore string used as index
-  const argumentsList = jobInfo[jobTypeConcat].args;
-  const statusMsg = statusMessage(jobInfo);
-  const endTime = new Date(jobInfo.status.stateStartTime);
-  const jobStartTime = new Date(
+  const argumentsList =!errorView? jobInfo[jobTypeConcat].args:"";
+  const statusMsg = !errorView?statusMessage(jobInfo):"";
+  const endTime =!errorView?new Date(jobInfo.status.stateStartTime):new Date;
+  const jobStartTime =!errorView? new Date(
     jobInfo.statusHistory[0].stateStartTime
-  );
+  ):new Date;
 
-  let elapsedTimeString = elapsedTime(endTime, jobStartTime);
+  let elapsedTimeString = !errorView?elapsedTime(endTime, jobStartTime):"";
   const statusStyleSelection = (jobInfo: any) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
@@ -406,7 +409,7 @@ function JobDetails({
           <div
             role="button"
             className="back-arrow-icon"
-            onClick={() => setErrorView(false)}
+            onClick={() => handleDetailedJobView()}
           >
             <iconLeftArrow.react
               tag="div"
