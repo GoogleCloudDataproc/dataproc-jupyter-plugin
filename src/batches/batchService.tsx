@@ -178,6 +178,7 @@ export class BatchService {
           response
             .json()
             .then(async (responseResult: Response) => {
+              
               console.log(responseResult);
 
               toast.success(
@@ -204,7 +205,8 @@ export class BatchService {
     batchSelected: string,
     setBatchInfoResponse: (value: IBatchDetailsResponse) => void,
     setLabelDetail: (value: string[]) => void,
-    setIsLoading: (value: boolean) => void
+    setIsLoading: (value: boolean) => void,
+    setErrorView: (value: boolean) => void
   ) => {
     const credentials = await authApi();
     if (credentials) {
@@ -224,6 +226,9 @@ export class BatchService {
           response
             .json()
             .then((responseResult: IBatchDetailsResponse) => {
+              if (responseResult.error && responseResult.error.code === 404) {
+                setErrorView(true);
+              }
               setBatchInfoResponse(responseResult);
               if (responseResult.labels) {
                 const labelValue = Object.entries(responseResult.labels).map(
