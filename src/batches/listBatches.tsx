@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
@@ -26,7 +26,7 @@ import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
 import {
-  // CREATE_BATCH_URL,
+  BatchStatus,
   STATUS_CREATING,
   STATUS_DELETING,
   STATUS_FAIL,
@@ -38,6 +38,13 @@ import {
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
+import { BatchService } from './batchService';
+import PollingTimer from '../utils/pollingTimer';
+import DeletePopup from '../utils/deletePopup';
+import BatchDetails from './batchDetails';
+import CreateBatch from './createBatch';
+
+import deleteIcon from '../../style/icons/delete_icon.svg';
 
 const iconSubmitJob = new LabIcon({
   name: 'launcher:submit-job-icon',
@@ -60,38 +67,35 @@ const iconClusterError = new LabIcon({
   name: 'launcher:cluster-error-icon',
   svgstr: clusterErrorIcon
 });
+const iconDelete = new LabIcon({
+  name: 'launcher:delete-icon',
+  svgstr: deleteIcon
+});
 
-interface IBatch {
-  batchID: string;
-  status: string;
-  location: string;
-  creationTime: string;
-  elapsedTime: string;
-  type: string;
-  actions: JSX.Element;
-  setCreateBatchView: (value: boolean) => void;
-  createBatchView: boolean;
-}
+function ListBatches({ setLoggedIn }: any) {
+  const [detailedBatchView, setDetailedBatchView] = useState(false);
 
-interface IListBatchesProps {
-  batchesList: IBatch[];
-  isLoading: boolean;
-  setPollingDisable: (value: boolean) => void;
-  listBatchAPI: () => void;
-  handleBatchDetails: (batchID: string) => void;
-  setCreateBatchView: (value: boolean) => void;
-  createBatchView: boolean;
-}
+  const [createBatchView, setCreateBatchView] = useState(false);
 
-function ListBatches({
-  batchesList,
-  isLoading,
-  setPollingDisable,
-  listBatchAPI,
-  handleBatchDetails,
-  setCreateBatchView,
-  createBatchView
-}: IListBatchesProps) {
+  const [batchesList, setBatchesList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [batchSelected, setBatchSelected] = useState('');
+  const [pollingDisable, setPollingDisable] = useState(false);
+  const [deletePopupOpen, setDeletePopupOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState('');
+  const [regionName, setRegionName] = useState('');
+  const [projectName, setProjectName] = useState('');
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const pollingBatches = async (
+    pollingFunction: () => void,
+    pollingDisable: boolean
+  ) => {
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
+  };
   const data = batchesList;
   const columns = React.useMemo(
     () => [
@@ -189,7 +193,7 @@ function ListBatches({
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_DELETING) && (
-                <ClipLoader
+              <ClipLoader
                 color="#3367d6"
                 loading={true}
                 size={15}
@@ -212,81 +216,209 @@ function ListBatches({
     }
   };
 
-  return (
-    <div>
-      <div className="create-batch-wrapper ">
+  interface IBatchData {
+    name: string;
+    state: BatchStatus;
+    createTime: string;
+    stateTime: Date;
+  }
+
+  const listBatchAPI = async () => {
+    await BatchService.listBatchAPIService(
+      setRegionName,
+      setProjectName,
+      renderActions,
+      setBatchesList,
+      setIsLoading,
+      setLoggedIn
+    );
+  };
+
+  const handleBatchDetails = (selectedName: string) => {
+    pollingBatches(listBatchAPI, true);
+    setBatchSelected(selectedName);
+    setDetailedBatchView(true);
+  };
+  const handleDeleteBatch = (data: IBatchData) => {
+    if (data.state !== BatchStatus.STATUS_PENDING) {
+      /*
+      Extracting project id
+      Example: "projects/{project}/locations/{location}/batches/{batch_id}"
+      */
+      setSelectedBatch(data.name.split('/')[5]);
+      setDeletePopupOpen(true);
+    }
+  };
+  const handleCancelDelete = () => {
+    setDeletePopupOpen(false);
+  };
+
+  const handleDelete = async () => {
+    await BatchService.deleteBatchAPIService(selectedBatch);
+    listBatchAPI();
+    setDetailedBatchView(false);
+    setDeletePopupOpen(false);
+  };
+
+  const renderActions = (data: IBatchData) => {
+    return (
+      <div
+        className="actions-icon"
+        role="button"
+        aria-label="Delete Job"
+        aria-disabled={data.state === BatchStatus.STATUS_PENDING}
+      >
         <div
-          className="create-batch-overlay"
-          onClick={() => {
-            handleCreateBatchOpen();
-          }}
+          className={
+            data.state === BatchStatus.STATUS_PENDING
+              ? 'icon-buttons-style-delete-batch-disable'
+              : 'icon-buttons-style-delete-batch'
+          }
+          title="Delete Batch"
+          onClick={() => handleDeleteBatch(data)}
         >
-          <div className="create-icon">
-            <iconSubmitJob.react tag="div" className="logo-alignment-style" />
-          </div>
-          <div className="create-text">Create Batch</div>
+          {data.state === BatchStatus.STATUS_PENDING ? (
+            <iconDelete.react
+              tag="div"
+              className="icon-white logo-alignment-style icon-delete"
+            />
+          ) : (
+            <iconDelete.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          )}
         </div>
       </div>
-      {batchesList.length > 0 && !createBatchView ? (
-        <div>
-          <div className="filter-cluster-overlay">
-            <div className="filter-cluster-icon">
-              <iconFilter.react tag="div" className='icon-white logo-alignment-style' />
-            </div>
-            <div className="filter-cluster-text"></div>
-            <div className="filter-cluster-section">
-              <GlobalFilter
-                preGlobalFilteredRows={preGlobalFilteredRows}
-                globalFilter={state.globalFilter}
-                setGlobalFilter={setGlobalFilter}
-                setPollingDisable={setPollingDisable}
-              />
+    );
+  };
+
+  useEffect(() => {
+    if (!pollingDisable) {
+      listBatchAPI();
+    }
+
+    return () => {
+      pollingBatches(listBatchAPI, true);
+    };
+  }, [pollingDisable, detailedBatchView]);
+  useEffect(() => {
+    if (!detailedBatchView && !isLoading) {
+      pollingBatches(listBatchAPI, pollingDisable);
+    }
+  }, [isLoading]);
+
+  return (
+    <div>
+      {deletePopupOpen && (
+        <DeletePopup
+          onCancel={() => handleCancelDelete()}
+          onDelete={() => handleDelete()}
+          deletePopupOpen={deletePopupOpen}
+          DeleteMsg={
+            'This will delete ' + selectedBatch + ' and cannot be undone.'
+          }
+        />
+      )}
+      {detailedBatchView && (
+        <BatchDetails
+          batchSelected={batchSelected}
+          setDetailedBatchView={setDetailedBatchView}
+          setCreateBatchView={setCreateBatchView}
+        />
+      )}
+      {createBatchView && (
+        <CreateBatch
+          setCreateBatchView={setCreateBatchView}
+          regionName={regionName}
+          projectName={projectName}
+        />
+      )}
+
+      {!detailedBatchView && !createBatchView && (
+        <>
+          <div className="create-batch-wrapper ">
+            <div
+              className="create-batch-overlay"
+              onClick={() => {
+                handleCreateBatchOpen();
+              }}
+            >
+              <div className="create-icon">
+                <iconSubmitJob.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
+              </div>
+              <div className="create-text">Create Batch</div>
             </div>
           </div>
-          <div className="clusters-list-table-parent">
-            <TableData
-              getTableProps={getTableProps}
-              headerGroups={headerGroups}
-              getTableBodyProps={getTableBodyProps}
-              isLoading={isLoading}
-              rows={rows}
-              page={page}
-              prepareRow={prepareRow}
-              tableDataCondition={tableDataCondition}
-              fromPage="Batches"
-            />
-            {batchesList.length > 50 && (
-              <PaginationView
-                pageSize={pageSize}
-                setPageSize={setPageSize}
-                pageIndex={pageIndex}
-                allData={batchesList}
-                previousPage={previousPage}
-                nextPage={nextPage}
-                canPreviousPage={canPreviousPage}
-                canNextPage={canNextPage}
-              />
-            )}
-          </div>
-        </div>
-      ) : (
-        <div>
-          {isLoading && (
-            <div className="spin-loaderMain">
-          <ClipLoader
-              color="#3367d6"
-                loading={true}
-                size={18}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-              Loading Batches
+
+          {batchesList.length > 0 && !createBatchView ? (
+            <div>
+              <div className="filter-cluster-overlay">
+                <div className="filter-cluster-icon">
+                  <iconFilter.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                </div>
+                <div className="filter-cluster-text"></div>
+                <div className="filter-cluster-section">
+                  <GlobalFilter
+                    preGlobalFilteredRows={preGlobalFilteredRows}
+                    globalFilter={state.globalFilter}
+                    setGlobalFilter={setGlobalFilter}
+                    setPollingDisable={setPollingDisable}
+                  />
+                </div>
+              </div>
+              <div className="clusters-list-table-parent">
+                <TableData
+                  getTableProps={getTableProps}
+                  headerGroups={headerGroups}
+                  getTableBodyProps={getTableBodyProps}
+                  isLoading={isLoading}
+                  rows={rows}
+                  page={page}
+                  prepareRow={prepareRow}
+                  tableDataCondition={tableDataCondition}
+                  fromPage="Batches"
+                />
+                {batchesList.length > 50 && (
+                  <PaginationView
+                    pageSize={pageSize}
+                    setPageSize={setPageSize}
+                    pageIndex={pageIndex}
+                    allData={batchesList}
+                    previousPage={previousPage}
+                    nextPage={nextPage}
+                    canPreviousPage={canPreviousPage}
+                    canNextPage={canNextPage}
+                  />
+                )}
+              </div>
+            </div>
+          ) : (
+            <div>
+              {isLoading && (
+                <div className="spin-loaderMain">
+                  <ClipLoader
+                    color="#3367d6"
+                    loading={true}
+                    size={18}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                  Loading Batches
+                </div>
+              )}
+              {!isLoading && (
+                <div className="no-data-style">No rows to display</div>
+              )}
             </div>
           )}
-          {!isLoading && (
-            <div className="no-data-style">No rows to display</div>
-          )}
-        </div>
+        </>
       )}
     </div>
   );
