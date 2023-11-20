@@ -124,7 +124,6 @@ function SubmitJob({
   selectedJobClone,
   clusterResponse
 }: any) {
-  console.log(selectedJobClone);
   const [clusterList, setClusterList] = useState([{}]);
   const [jobTypeList, setJobTypeList] = useState([{}]);
   const [querySourceTypeList, setQuerySourceTypeList] = useState([{}]);
@@ -279,14 +278,15 @@ function SubmitJob({
   };
   interface IClusterData {
     clusterName: string;
-    status: { state: string };
+    status: string;
   }
 
   useEffect(() => {
     let transformClusterListData = [];
-    transformClusterListData = clusterResponse.clusters.filter(
+    console.log(clusterResponse)
+    transformClusterListData = clusterResponse.filter(
       (data: IClusterData) => {
-        if (data.status.state === STATUS_RUNNING) {
+        if (data.status === STATUS_RUNNING) {
           return data.clusterName;
         }
       }
