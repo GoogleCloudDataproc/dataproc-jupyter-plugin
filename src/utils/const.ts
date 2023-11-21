@@ -28,11 +28,8 @@ interface UrlResponse {
 const data = await requestAPI('Url');
 let urlResponseObj = data as UrlResponse;
 const responseData = urlResponseObj?.data || '';
-console.log(responseData);
-
 localStorage.setItem('Base_Url', responseData);
 export const BASE_URL = localStorage.getItem('Base_Url');
-console.log(BASE_URL);
 export const BASE_URL_NETWORKS = 'https://compute.googleapis.com/compute/v1';
 export const BASE_URL_META = 'https://metastore.googleapis.com/v1';
 export const BASE_URL_KEY = 'https://cloudkms.googleapis.com/v1';
