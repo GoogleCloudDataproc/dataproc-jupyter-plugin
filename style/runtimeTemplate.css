@@ -2,6 +2,12 @@
   height: 29vh;
   overflow: auto;
 }
+.runtime-container {
+  margin-left: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
 
 .spin-loader-runtime {
   display: flex;

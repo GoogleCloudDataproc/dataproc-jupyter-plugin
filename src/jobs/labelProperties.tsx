@@ -128,7 +128,7 @@ function LabelProperties({
           const duplicateIndex = labelEdit.findIndex(
             (label, i) => i !== index && label.split(':')[0] === newKey
           );
-          if (duplicateIndex !== -1) {
+          if (duplicateIndex !== -1 && buttonText==='ADD LABEL') {
             setDuplicateKeyError(index);
           } else {
             setDuplicateKeyError(-1);
@@ -171,7 +171,7 @@ function LabelProperties({
         labelDetail[labelDetail.length - 1].split(':')[0].length === 0) &&
       duplicateKeyError !== -1
     ) {
-      return 'job-add-label-button-disabled';
+      return 'job-add-property-button-disabled';
     } else if (
       buttonText !== 'ADD LABEL' &&
       (labelDetail.length === 0 ||
@@ -199,21 +199,15 @@ function LabelProperties({
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
-                      <label
-                        className={
-                          `select-dropdown-text ${labelSplit[0] === '' ||
+
+                      <Input
+                        sx={{ margin: 0 }}
+                       className={
+                          `edit-input-style ${labelSplit[0] === '' ||
                             buttonText !== 'ADD LABEL' ||
                             duplicateKeyError !== -1?''
                             : ' disable-text'}`
                         }
-                        htmlFor="metastore-project"
-                      >
-                        {`Key ${index + 1}*`}
-                      </label>
-
-                      <Input
-                        sx={{ margin: 0 }}
-                        className="edit-input-style"
                         disabled={
                           labelSplit[0] === '' ||
                           buttonText !== 'ADD LABEL' ||
@@ -226,11 +220,12 @@ function LabelProperties({
                           handleEditLabel(e.target.value, index, 'key')
                         }
                         defaultValue={labelSplit[0]}
+                        Label = {`Key ${index + 1}*`}
                       />
                     </div>
 
                     {labelDetailUpdated[index].split(':')[0] === '' &&
-                    labelDetailUpdated[index] !== '' ? (
+                    labelDetailUpdated[index] !== '' && duplicateKeyError !== index ? (
                       <div role="alert" className="error-key-parent">
                         <iconError.react
                           tag="div"
@@ -270,17 +265,11 @@ function LabelProperties({
                   </div>
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
-                      <label
-                        className={ `select-dropdown-text ${label === DEFAULT_LABEL_DETAIL &&
-                              buttonText === 'ADD LABEL' ?' disable-text':''}`
-                        }
-                        htmlFor="metastore-project"
-                      >
-                        {`Value ${index + 1}`}
-                      </label>
                       <Input
                         sx={{ margin: 0 }}
-                        className="edit-input-style"
+                        className={ `edit-input-style ${label === DEFAULT_LABEL_DETAIL &&
+                          buttonText === 'ADD LABEL' ?' disable-text':''}`
+                    }
                         onBlur={() => handleEditLabelSwitch()}
                         onChange={e =>
                           handleEditLabel(e.target.value, index, 'value')
@@ -289,11 +278,11 @@ function LabelProperties({
                           label === DEFAULT_LABEL_DETAIL &&
                           buttonText === 'ADD LABEL'
                         }
-                        defaultValue={labelSplit[1]}
+                        defaultValue={labelSplit.length>2?labelSplit[1]+':'+labelSplit[2]:labelSplit[1]}
+                        Label =  {`Value ${index + 1}`}
                       />
                     </div>
-                    {valueValidation === index &&
-                      buttonText === 'ADD LABEL' && (
+                    {valueValidation === index  && (
                         <div className="error-key-parent">
                           <iconError.react
                             tag="div"

@@ -33,6 +33,16 @@ const iconGCSUpload = new LabIcon({
   name: 'gcs-toolbar:gcs-upload-icon',
   svgstr: gcsUploadIcon
 });
+
+const debounce = (func: any, delay: any) => {
+  let timeoutId: any;
+  return function (...args: any) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+}
 export class GcsBrowserWidget extends Widget {
   private browser: FileBrowser;
   private fileInput: HTMLInputElement;
@@ -51,13 +61,24 @@ export class GcsBrowserWidget extends Widget {
   };
 
   private handleFolderCreation = () => {
-    this.browser.createNewDirectory();
+    if (this.browser.model.path.split(':')[1] !== '') {
+      this.browser.createNewDirectory();
+    } else {
+      showDialog({
+        title: 'Create Bucket Error',
+        body: 'Please use console to create new bucket',
+        buttons: [Dialog.okButton()]
+      });
+    }
   };
 
   // Function to handle file upload
   private handleFileUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files || []);
+
+    // Clear the input element's value to force the 'change' event on subsequent selections
+    input.value = '';
 
     if (files && files.length > 0) {
       files.forEach((fileData: any) => {
@@ -76,11 +97,33 @@ export class GcsBrowserWidget extends Widget {
             filePath = path.path + '/' + file.name;
           }
 
-          await GcsService.saveFile({
-            bucket: path.bucket,
-            path: filePath,
-            contents: reader.result as string // assuming contents is a string
+          const content = await GcsService.list({
+            prefix: filePath,
+            bucket: path.bucket
           });
+
+          if(content.items && content.items.length > 0) {
+            const result = await showDialog({
+              title: 'Upload files',
+              body: file.name + ' already exists in ' + path.bucket +' and click ok to overwriting file',
+              buttons: [Dialog.okButton(), Dialog.cancelButton()]
+            });
+
+            if (result.button.accept) {
+              await GcsService.saveFile({
+                bucket: path.bucket,
+                path: filePath,
+                contents: reader.result as string // assuming contents is a string
+              });
+            }
+          } else {
+            await GcsService.saveFile({
+              bucket: path.bucket,
+              path: filePath,
+              contents: reader.result as string // assuming contents is a string
+            });
+          }
+          
 
           // Optionally, update the FileBrowser model to reflect the newly uploaded file
           // Example: Refresh the current directory
@@ -91,6 +134,10 @@ export class GcsBrowserWidget extends Widget {
         reader.readAsText(file);
       });
     }
+  };
+
+  private filterFilesByName = async (filterValue: string) => {
+    this.browser.model.refresh();
   };
 
   constructor(
@@ -112,6 +159,25 @@ export class GcsBrowserWidget extends Widget {
     (this.layout as PanelLayout).addWidget(
       new TitleWidget('Google Cloud Storage', true)
     );
+
+    let filterInput = document.createElement('input');
+    filterInput.id = 'filter-buckets-objects';
+    filterInput.className = "filter-search-gcs"
+    filterInput.type = 'text';
+    filterInput.placeholder = 'Filter by Name';
+
+    // Debounce the filterFilesByName function with a delay of 300 milliseconds
+    const debouncedFilter = debounce(this.filterFilesByName, 300);
+
+    filterInput.addEventListener('input', event => {
+      const filterValue = (event.target as HTMLInputElement).value;
+      //@ts-ignore
+      document
+        .getElementById('filter-buckets-objects')
+        .setAttribute('value', filterValue);
+      // Call a function to filter files based on filterValue
+      debouncedFilter(filterValue);
+    });
 
     this.browser.showFileCheckboxes = false;
     (this.layout as PanelLayout).addWidget(this.browser);
@@ -144,6 +210,8 @@ export class GcsBrowserWidget extends Widget {
     });
     this.browser.toolbar.addItem('New Folder', newFolder);
     this.browser.toolbar.addItem('File Upload', gcsUpload);
+    let filterItem = new Widget({ node: filterInput });
+    this.browser.toolbar.addItem('Filter by Name:', filterItem);
   }
 
   dispose() {

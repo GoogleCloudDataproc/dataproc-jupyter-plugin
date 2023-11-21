@@ -23,9 +23,6 @@ import ViewLogs from '../utils/viewLogs';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
 import { ClipLoader } from 'react-spinners';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
   BATCH_FIELDS_EXCLUDED,
@@ -45,24 +42,20 @@ import {
 import {
   BatchTypeValue,
   IBatchInfoResponse,
-  authApi,
   batchDetailsOptionalDisplay,
   convertToDCUHours,
   convertToGBMonths,
   elapsedTime,
   jobTimeFormat,
-  statusMessageBatch,
-  toastifyCustomStyle,
-  loggedFetch
+  statusMessageBatch
 } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { deleteBatchAPI } from '../utils/batchService';
+import { BatchService } from './batchService';
 import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';
 import CreateBatch from './createBatch';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import errorIcon from '../../style/icons/error_icon.svg';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -76,6 +69,10 @@ const iconDeleteCluster = new LabIcon({
   name: 'launcher:delete-cluster-icon',
   svgstr: DeleteClusterIcon
 });
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
+});
 
 type BatchDetailsProps = {
   batchSelected: string;
@@ -86,7 +83,7 @@ type BatchDetailsProps = {
 function BatchDetails({
   batchSelected,
   setDetailedBatchView,
-  setCreateBatchView,
+  setCreateBatchView
 }: BatchDetailsProps) {
   const [batchInfoResponse, setBatchInfoResponse] = useState({
     uuid: '',
@@ -142,6 +139,7 @@ function BatchDetails({
     stateTime: ''
   });
   const [regionName, setRegionName] = useState('');
+  const [errorView, setErrorView] = useState(false);
   const [labelDetail, setLabelDetail] = useState(['']);
   const [isLoading, setIsLoading] = useState(true);
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
@@ -175,118 +173,24 @@ function BatchDetails({
       pollingBatchDetails(getBatchDetails, true);
     };
   }, []);
-  interface IBatchDetailsResponse {
-    error: {
-      code: number;
-      message: string;
-    };
-    uuid: '';
-    state: '';
-    createTime: '';
-    runtimeInfo: {
-      endpoints: {};
-      approximateUsage: { milliDcuSeconds: ''; shuffleStorageGbSeconds: '' };
-    };
-    creator: '';
-    runtimeConfig: {
-      version: '';
-      containerImage: '';
-      properties: {
-        'spark:spark.executor.instances': '';
-        'spark:spark.driver.cores': '';
-        'spark:spark.driver.memory': '';
-        'spark:spark.executor.cores': '';
-        'spark:spark.executor.memory': '';
-        'spark:spark.dynamicAllocation.executorAllocationRatio': '';
-        'spark:spark.app.name': '';
-      };
-    };
-    sparkBatch: {
-      mainJarFileUri: '';
-      mainClass: '';
-      jarFileUris: '';
-    };
-    pysparkBatch: {
-      mainPythonFileUri: '';
-    };
-    sparkRBatch: {
-      mainRFileUri: '';
-    };
-    sparkSqlBatch: {
-      queryFileUri: '';
-    };
-    environmentConfig: {
-      executionConfig: {
-        serviceAccount: '';
-        subnetworkUri: '';
-        networkTags: [];
-        kmsKey: '';
-      };
-      peripheralsConfig: {
-        metastoreService: '';
-        sparkHistoryServerConfig: {
-          dataprocCluster: '';
-        };
-      };
-    };
-    stateHistory: [{ state: ''; stateStartTime: '' }];
-    stateTime: '';
-    labels: {};
-  }
 
   const getBatchDetails = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      setRegionName(credentials.region_id || '');
-      setProjectName(credentials.project_id || '');
-      loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${batchSelected}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IBatchDetailsResponse) => {
-              setBatchInfoResponse(responseResult);
-              if (responseResult.labels) {
-                const labelValue = Object.entries(responseResult.labels).map(
-                  ([key, value]) => `${key}:${value}`
-                );
-                setLabelDetail(labelValue);
-              }
-              setIsLoading(false);
-              if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          DataprocLoggingService.log('Error in getting Batch details', LOG_LEVEL.ERROR);
-          console.error('Error in getting Batch details', err);
-          toast.error(
-            `Failed to fetch batch details ${batchSelected}`,
-            toastifyCustomStyle
-          );
-        });
-    }
+    await BatchService.getBatchDetailsService(
+      setRegionName,
+      setProjectName,
+      batchSelected,
+      setBatchInfoResponse,
+      setLabelDetail,
+      setIsLoading,
+      setErrorView
+    );
   };
 
-  const statusMsg = statusMessageBatch(batchInfoResponse);
-  const startTime = jobTimeFormat(batchInfoResponse.createTime);
-  const startTimeElapsed = new Date(batchInfoResponse.createTime);
+  const statusMsg = !errorView ?statusMessageBatch(batchInfoResponse):"";
+  const startTime = !errorView ? jobTimeFormat(batchInfoResponse.createTime):"";
+  const startTimeElapsed = !errorView ? new Date(batchInfoResponse.createTime):new Date;
 
-  const endTime = new Date(batchInfoResponse.stateTime);
+  const endTime = !errorView ? new Date(batchInfoResponse.stateTime):new Date;
 
   let jobStartTime: Date;
   let runTimeString = '';
@@ -298,10 +202,10 @@ function BatchDetails({
     runTimeString = elapsedTime(endTime, jobStartTime);
   }
 
-  const batch = BatchTypeValue(batchInfoResponse);
-  const batchConcat = Object.keys(batchInfoResponse).filter(key =>
+  const batch = !errorView ? BatchTypeValue(batchInfoResponse):"";
+  const batchConcat = !errorView ? Object.keys(batchInfoResponse).filter(key =>
     key.endsWith('Batch')
-  );
+  ):"";
   const elapsedTimeString = elapsedTime(
     new Date(batchInfoResponse.stateTime),
     startTimeElapsed
@@ -316,7 +220,7 @@ function BatchDetails({
   };
 
   const handleDelete = async () => {
-    await deleteBatchAPI(selectedBatch);
+    await BatchService.deleteBatchAPIService(selectedBatch);
     handleDetailedBatchView();
     setDeletePopupOpen(false);
   };
@@ -326,20 +230,16 @@ function BatchDetails({
 
   return (
     <div>
-      {batchInfoResponse.uuid === '' && (
-        <div className="loader-full-style">
-          {isLoading && (
-            <div>
-              <ClipLoader
-                color="#8A8A8A"
-                loading={true}
-                size={20}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-              Loading Batch Details
-            </div>
-          )}
+      {batchInfoResponse.uuid === '' && isLoading && (
+        <div className="spin-loaderMain">
+          <ClipLoader
+            color="#3367d6"
+            loading={true}
+            size={18}
+            aria-label="Loading Spinner"
+            data-testid="loader"
+          />
+          Loading Batch Details
         </div>
       )}
       {createBatch && (
@@ -361,12 +261,28 @@ function BatchDetails({
           }
         />
       )}
-
-      {!createBatch && batchInfoResponse.uuid !== '' && (
-        <div className="scroll">
+      {errorView && (
+        <div className="error-view-parent">
           <div
-            className='scroll-fix-header cluster-details-header'
+            role="button"
+            aria-label="back-arrow-icon"
+            className="back-arrow-icon"
+            onClick={() => handleDetailedBatchView()}
           >
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+          </div>
+          <div className="error-view-message-parent">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div role="alert" className="error-view-message">
+              Unable to find the resource you requested
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!errorView && !createBatch && batchInfoResponse.uuid !== '' && (
+        <div className="scroll">
+          <div className="scroll-fix-header cluster-details-header">
             <div
               role="button"
               className="back-arrow-icon"
@@ -374,7 +290,7 @@ function BatchDetails({
             >
               <iconLeftArrow.react
                 tag="div"
-                className='icon-white logo-alignment-style'
+                className="icon-white logo-alignment-style"
               />
             </div>
             <div className="cluster-details-title">{batchSelected}</div>

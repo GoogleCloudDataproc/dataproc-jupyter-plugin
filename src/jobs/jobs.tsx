@@ -26,7 +26,9 @@ import {
   jobTypeDisplay,
   ICellProps,
   toastifyCustomStyle,
-  loggedFetch
+  loggedFetch,
+  authenticatedFetch,
+  statusValue
 } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -44,6 +46,7 @@ import {
   API_HEADER_CONTENT_TYPE,
   BASE_URL,
   ClusterStatus,
+  HTTP_METHOD,
   STATUS_CANCELLED,
   STATUS_CREATING,
   STATUS_DELETING,
@@ -60,7 +63,7 @@ import TableData from '../utils/tableData';
 import DeletePopup from '../utils/deletePopup';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { stopJobApi, deleteJobApi } from './jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
@@ -109,10 +112,9 @@ function JobComponent({
   submitJobView,
   setSubmitJobView,
   setDetailedView,
-  clusterResponse,
   selectedJobClone,
   setSelectedJobClone,
-  clustersList
+  fromPage
 }: any) {
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState<string>('');
@@ -121,6 +123,9 @@ function JobComponent({
   const [region, setRegion] = useState('');
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
+
+  const [clusterResponse, setClusterResponse] = useState([]);
+
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingJobs = async (
@@ -260,7 +265,10 @@ function JobComponent({
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
@@ -326,6 +334,63 @@ function JobComponent({
     }
   };
 
+  const listClustersAPI = async (
+    nextPageToken?: string,
+    previousClustersList?: object
+  ) => {
+    const pageToken = nextPageToken ?? '';
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('pageSize', '50');
+      queryParams.append('pageToken', pageToken);
+
+      const response = await authenticatedFetch({
+        uri: 'clusters',
+        regionIdentifier: 'regions',
+        method: HTTP_METHOD.GET,
+        queryParams: queryParams
+      });
+      console.log(response)
+      const formattedResponse = await response.json();
+      let transformClusterListData = [];
+      if (formattedResponse && formattedResponse.clusters) {
+        transformClusterListData = formattedResponse.clusters.map(
+          (data: any) => {
+            const statusVal = statusValue(data);
+            // Extracting zone from zoneUri
+            // Example: "projects/{project}/zones/{zone}"
+            return {
+              clusterUuid: data.clusterUuid,
+              status: statusVal,
+              clusterName: data.clusterName
+            };
+          }
+        );
+      }
+      const existingClusterData = previousClustersList ?? [];
+      //setStateAction never type issue
+      const allClustersData: any = [
+        ...(existingClusterData as []),
+        ...transformClusterListData
+      ];
+
+      console.log(formattedResponse, allClustersData)
+
+      if (formattedResponse.nextPageToken) {
+        listClustersAPI(formattedResponse.nextPageToken, allClustersData);
+      } else {
+        setClusterResponse(allClustersData);
+      }
+      if (formattedResponse?.error?.code) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      }
+    } catch (error) {
+      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
+      console.error('Error listing clusters', error);
+      toast.error('Failed to fetch clusters', toastifyCustomStyle);
+    }
+  };
+
   const handleCloneJob = (data: object) => {
     setSubmitJobView(true);
     setSelectedJobClone(data);
@@ -346,7 +411,7 @@ function JobComponent({
         >
           <iconClone.react
             tag="div"
-            className='icon-white logo-alignment-style'
+            className="icon-white logo-alignment-style"
           />
         </div>
         <div
@@ -367,12 +432,12 @@ function JobComponent({
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
             <iconStop.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           ) : (
             <iconStopDisable.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           )}
         </div>
@@ -394,12 +459,12 @@ function JobComponent({
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
             <iconDelete.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           ) : (
             <iconDelete.react
               tag="div"
-              className= 'icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           )}
         </div>
@@ -408,7 +473,10 @@ function JobComponent({
   };
 
   useEffect(() => {
-    listJobsAPI();
+    if (!pollingDisable) {
+      listJobsAPI();
+      listClustersAPI();
+    }
     return () => {
       pollingJobs(listJobsAPI, true);
     };
@@ -459,7 +527,7 @@ function JobComponent({
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
               <ClipLoader
-                color="#8A8A8A"
+                color="#3367d6"
                 loading={true}
                 size={15}
                 aria-label="Loading Spinner"
@@ -545,14 +613,13 @@ function JobComponent({
           region={region}
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
-          clustersList={clustersList}
+          fromPage={fromPage}
         />
       )}
       {!submitJobView && !detailedJobView && (
         <div>
           {clusterResponse &&
-            clusterResponse.clusters &&
-            clusterResponse.clusters.length > 0 && (
+            clusterResponse.length > 0 && (
               <div className="create-cluster-overlay">
                 <div
                   role="button"
@@ -575,12 +642,10 @@ function JobComponent({
             <div>
               <div className="filter-cluster-overlay">
                 <div className="filter-cluster-icon">
-
-                    <iconFilter.react
-                      tag="div"
-                      className="icon-white logo-alignment-style"
-                    />
-
+                  <iconFilter.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
                 </div>
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
@@ -629,7 +694,7 @@ function JobComponent({
               {isLoading && (
                 <div className="spin-loaderMain">
                   <ClipLoader
-                    color="#8A8A8A"
+                    color="#3367d6"
                     loading={true}
                     size={20}
                     aria-label="Loading Spinner"

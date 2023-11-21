@@ -54,7 +54,7 @@ import ViewLogs from '../utils/viewLogs';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
-import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { stopJobApi, deleteJobApi } from './jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { IJobDetails } from '../utils/jobDetailsInterface';
@@ -100,7 +100,7 @@ interface IJobDetailsProps {
   region: any;
   setDetailedView: (value: boolean) => void;
   clusterResponse: object;
-  clustersList: object;
+  fromPage: string;
 }
 function JobDetails({
   jobSelected,
@@ -108,7 +108,7 @@ function JobDetails({
   region,
   setDetailedView,
   clusterResponse,
-  clustersList
+  fromPage
 }: IJobDetailsProps) {
   const initialJobDetails: IJobDetails = {
     status: { state: '', stateStartTime: '' },
@@ -194,7 +194,7 @@ function JobDetails({
 
   const handleDetailedClusterView = () => {
     pollingJobDetails(getJobDetails, true);
-    if (!clustersList) {
+    if (fromPage !== "clusters") {
       setDetailedJobView(false);
     }
     setDetailedClusterView(true);
@@ -212,7 +212,6 @@ function JobDetails({
       pollingJobDetails(getJobDetails, true);
     };
   }, [labelEditMode]);
-
   const handleJobLabelEdit = () => {
     setLabelEditMode(true);
     setLabelDetailUpdated(labelDetail);
@@ -257,13 +256,14 @@ function JobDetails({
               if (formattedResponse?.error?.code) {
                 toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
               }
-              else{
+            
+             
+              console.log(responseResultJob);
               toast.success(
                 `Request to update job ${jobSelected} submitted`,
                 toastifyCustomStyle
               );
-              console.log(responseResultJob);
-              }
+              
             })
             .catch((e: Error) => console.error(e));
         })
@@ -294,6 +294,10 @@ function JobDetails({
     });
     payload.labels = labelObject;
     updateJobDetails(payload);
+    toast.success(
+      `Request to update job ${jobSelected} submitted`,
+      toastifyCustomStyle
+    );
     setLabelEditMode(false);
     getJobDetails();
   };
@@ -319,6 +323,9 @@ function JobDetails({
           response
             .json()
             .then((responseResult: any) => {
+              if (responseResult.error && responseResult.error.code === 404) {
+                setErrorView(true);
+              }
               setjobInfoResponse(responseResult);
               const labelValue: string[] = [];
               if (responseResult.labels) {
@@ -353,20 +360,20 @@ function JobDetails({
     }
   };
 
-  const startTime = jobTimeFormat(jobInfo.statusHistory[0].stateStartTime);
-  const job = jobTypeValue(jobInfo);
-  const jobType = jobTypeDisplay(job);
-  const jobArgument = jobTypeValueArguments(jobInfo);
-  const jobTypeConcat = jobArgument + 'Job';
+  const startTime = !errorView?jobTimeFormat(jobInfo.statusHistory[0].stateStartTime):"";
+  const job =!errorView? jobTypeValue(jobInfo):"";
+  const jobType = !errorView?jobTypeDisplay(job):"";
+  const jobArgument = !errorView?jobTypeValueArguments(jobInfo):"";
+  const jobTypeConcat = !errorView?jobArgument + 'Job':"";
   //@ts-ignore string used as index
-  const argumentsList = jobInfo[jobTypeConcat].args;
-  const statusMsg = statusMessage(jobInfo);
-  const endTime = new Date(jobInfo.status.stateStartTime);
-  const jobStartTime = new Date(
-    jobInfo.statusHistory[jobInfo.statusHistory.length - 1].stateStartTime
-  );
-  const elapsedTimeString = elapsedTime(endTime, jobStartTime);
+  const argumentsList =!errorView? jobInfo[jobTypeConcat].args:"";
+  const statusMsg = !errorView?statusMessage(jobInfo):"";
+  const endTime =!errorView?new Date(jobInfo.status.stateStartTime):new Date;
+  const jobStartTime =!errorView? new Date(
+    jobInfo.statusHistory[0].stateStartTime
+  ):new Date;
 
+  let elapsedTimeString = !errorView?elapsedTime(endTime, jobStartTime):"";
   const statusStyleSelection = (jobInfo: any) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
@@ -402,7 +409,7 @@ function JobDetails({
           <div
             role="button"
             className="back-arrow-icon"
-            onClick={() => setErrorView(false)}
+            onClick={() => handleDetailedJobView()}
           >
             <iconLeftArrow.react
               tag="div"
@@ -784,20 +791,22 @@ function JobDetails({
           )}
 
           {jobInfo.jobUuid === '' && (
-            <div className="loader-full-style">
-              {isLoading && (
-                <div>
-                  <ClipLoader
-                    color="#8A8A8A"
-                    loading={true}
-                    size={20}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                  Loading Job Details
-                </div>
-              )}
-            </div>
+           <>
+           {isLoading && (
+         <div className="spin-loaderMain">
+          <ClipLoader
+              color="#3367d6"
+             loading={true}
+             size={18}
+             aria-label="Loading Spinner"
+             data-testid="loader"
+           />
+           Loading Job Details
+         </div>
+       )}
+        
+       </>
+     
           )}
         </div>
       )}

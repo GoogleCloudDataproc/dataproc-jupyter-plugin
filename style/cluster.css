@@ -78,7 +78,7 @@
 .cluster-detail-status-parent {
   display: flex;
   align-items: center;
-  height: 29px;
+  /* height: 29px; */
   color: var(--jp-ui-font-color2);
 }
 
@@ -116,7 +116,7 @@
   max-height: 100%;
   justify-content: center;
   align-items: center;
-  margin: 35%;
+  margin: 20%;
 }
 
 .filter-cluster-overlay {
@@ -277,11 +277,7 @@
   overflow: auto;
   overflow-x: hidden;
 }
-.scroll-comp {
-  overflow-y: auto;
-  max-height: 92vh;
-  font-family: 'Roboto';
-}
+
 .scroll-comp-cluster {
   overflow-y: auto;
   max-height: 90vh;

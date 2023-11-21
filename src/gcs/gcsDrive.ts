@@ -27,7 +27,7 @@ export class GCSDrive implements Contents.IDrive {
 
   private _isDisposed = false;
   private _fileChanged = new Signal<this, Contents.IChangedArgs>(this);
-  private _currentPrefix = '';
+  // private _currentPrefix = '';
   readonly serverSettings: ServerConnection.ISettings;
 
   get name() {
@@ -54,8 +54,11 @@ export class GCSDrive implements Contents.IDrive {
    * @returns IModel directory containing all the GCS buckets for the current project.
    */
   private async getBuckets() {
+    let searchInput = document.getElementById('filter-buckets-objects');
+    //@ts-ignore
+    let searchValue = searchInput.value;
     const content = await GcsService.listBuckets({
-      prefix: this._currentPrefix
+      prefix: searchValue
     });
     if (!content) {
       throw 'Error Listing Buckets';
@@ -77,9 +80,12 @@ export class GCSDrive implements Contents.IDrive {
    */
   private async getDirectory(localPath: string) {
     const path = GcsService.pathParser(localPath);
+    let searchInput = document.getElementById('filter-buckets-objects');
+    //@ts-ignore
+    let searchValue = searchInput.value;
     const prefix = path.path.length > 0 ? `${path.path}/` : path.path;
     const content = await GcsService.list({
-      prefix: prefix + this._currentPrefix,
+      prefix: prefix + searchValue,
       bucket: path.bucket
     });
     if (!content) {
@@ -189,9 +195,9 @@ export class GCSDrive implements Contents.IDrive {
     return directory;
   }
 
-  updateQuery(query: string): void {
-    this._currentPrefix = query;
-  }
+  // updateQuery(query: string): void {
+  //   this._currentPrefix = query;
+  // }
 
   async save(
     localPath: string,
@@ -323,6 +329,15 @@ export class GCSDrive implements Contents.IDrive {
   ): Promise<Contents.IModel> {
     const oldPath = GcsService.pathParser(path);
     const newPath = GcsService.pathParser(newLocalPath);
+
+    if(newLocalPath.split('/')[newLocalPath.split('/').length-1].length >= 1024){
+      await showDialog({
+        title: 'Rename Error',
+        body: 'The maximum object length is 1024 characters',
+        buttons: [Dialog.okButton()]
+      });
+      return DIRECTORY_IMODEL;
+    }
     if (
       !path.includes('UntitledFolder' + untitledFolderSuffix) &&
       (!path.includes('.') || !newLocalPath.includes('.'))

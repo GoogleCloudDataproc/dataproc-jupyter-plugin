@@ -33,7 +33,7 @@ import {
 import DeletePopup from '../utils/deletePopup';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { deleteRuntimeTemplateAPI } from '../utils/runtimeService';
+import { deleteRuntimeTemplateAPI } from './runtimeService';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
@@ -439,8 +439,8 @@ function ListRuntimeTemplates({
         <div>
           {isLoading && (
             <div className="spin-loader-runtime">
-              <ClipLoader
-                color="#8A8A8A"
+             <ClipLoader
+              color="#3367d6"
                 loading={true}
                 size={18}
                 aria-label="Loading Spinner"
