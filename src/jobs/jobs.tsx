@@ -350,7 +350,6 @@ function JobComponent({
         method: HTTP_METHOD.GET,
         queryParams: queryParams
       });
-      console.log(response)
       const formattedResponse = await response.json();
       let transformClusterListData = [];
       if (formattedResponse && formattedResponse.clusters) {
@@ -373,8 +372,6 @@ function JobComponent({
         ...(existingClusterData as []),
         ...transformClusterListData
       ];
-
-      console.log(formattedResponse, allClustersData)
 
       if (formattedResponse.nextPageToken) {
         listClustersAPI(formattedResponse.nextPageToken, allClustersData);
@@ -690,7 +687,7 @@ function JobComponent({
           ) : (
             <div>
               {isLoading && (
-                <div className="spin-loaderMain">
+                <div className="spin-loader-main">
                   <ClipLoader
                     color="#3367d6"
                     loading={true}
