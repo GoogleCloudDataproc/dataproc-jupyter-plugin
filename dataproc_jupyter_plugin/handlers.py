@@ -204,13 +204,13 @@ class UrlHandler(APIHandler):
         if process.returncode == 0:
             base_url = output.decode("utf-8").strip()
             if not base_url:
-                url_value = _.decode("utf-8").strip()
-            url_match = re.search(r'https?://[^\s/]+/', url_value)
+                base_url_value = _.decode("utf-8").strip()
+            url_match = re.search(r'https?://[^\s/]+/', base_url_value)
             if url_match:
                 base_url= url_match.group()+ "v1"
                 self.finish({'data': base_url})
             else:
-                self.finish({'data': None})
+                self.finish({'data': base_url})
         else:
             self.finish({'login' : 'FAILED'})
 
