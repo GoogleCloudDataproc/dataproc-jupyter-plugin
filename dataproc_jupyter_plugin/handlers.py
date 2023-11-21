@@ -202,13 +202,13 @@ class UrlHandler(APIHandler):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _= process.communicate()
         if process.returncode == 0:
-            decoded_output = output.decode("utf-8").strip()
-            if not decoded_output:
+            base_url = output.decode("utf-8").strip()
+            if not base_url:
                 url_value = _.decode("utf-8").strip()
             url_match = re.search(r'https?://[^\s/]+/', url_value)
             if url_match:
-                decoded_output= url_match.group()+ "v1"
-                self.finish({'data': decoded_output})
+                base_url= url_match.group()+ "v1"
+                self.finish({'data': base_url})
             else:
                 self.finish({'data': None})
         else:
