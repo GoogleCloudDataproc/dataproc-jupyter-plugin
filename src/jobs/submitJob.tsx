@@ -19,14 +19,11 @@ import React, { SyntheticEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import LabelProperties from './labelProperties';
-import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
+import { authApi } from '../utils/utils';
 
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
-  BASE_URL,
   FILES_MESSAGE,
   JAR_FILE_MESSAGE,
   MAIN_CLASS_MESSAGE,
@@ -36,14 +33,12 @@ import {
   STATUS_RUNNING
 } from '../utils/const';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 import { DropdownProps } from 'semantic-ui-react';
 import { Autocomplete, TextField } from '@mui/material';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { MuiChipsInput } from 'mui-chips-input';
+import { JobService } from './jobServices';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -650,42 +645,7 @@ function SubmitJob({
             ))
         }
       };
-      loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs:submit`,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then(async (response: Response) => {
-          if (response.status === 200) {
-            response
-              .json()
-              .then((responseResult: unknown) => {
-                console.log(responseResult);
-                toast.success(
-                  `Job ${jobIdSelected} successfully submitted`,
-                  toastifyCustomStyle
-                );
-              })
-              .catch((e: Error) => {
-                console.log(e);
-              });
-          } else {
-            const errorResponse = await response.json();
-            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
-            throw new Error(`API failed with status: ${response.status}`);
-          }
-        })
-        .catch((err: Error) => {
-          console.error('Error submitting job', err);
-          DataprocLoggingService.log('Error submitting job', LOG_LEVEL.ERROR);
-          toast.error('Failed to submit the job', toastifyCustomStyle);
-        });
+      await JobService.submitJobService(payload, jobIdSelected, credentials)
     }
   };
   const handleJobIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
