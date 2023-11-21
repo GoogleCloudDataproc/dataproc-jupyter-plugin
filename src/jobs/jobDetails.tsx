@@ -54,7 +54,7 @@ import ViewLogs from '../utils/viewLogs';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
-import { stopJobApi, deleteJobApi } from './jobServices';
+import { JobService } from './jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { IJobDetails } from '../utils/jobDetailsInterface';
@@ -95,8 +95,6 @@ const iconError = new LabIcon({
 interface IJobDetailsProps {
   jobSelected: string;
   setDetailedJobView: (value: boolean) => void;
-  stopJobApi: (jobId: string) => Promise<void>;
-  deleteJobApi: (jobId: string) => Promise<void>;
   region: any;
   setDetailedView: (value: boolean) => void;
   clusterResponse: object;
@@ -222,14 +220,14 @@ function JobDetails({
   };
   const handleStopJob = async (jobId: string) => {
     setSelectedJobId(jobId);
-    await stopJobApi(selectedJobId);
+    await JobService.stopJobApi(selectedJobId);
   };
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
   };
 
   const handleDelete = async () => {
-    await deleteJobApi(selectedJobId);
+    await JobService.deleteJobApi(selectedJobId);
     setDeletePopupOpen(false);
     handleDetailedJobView();
   };

@@ -63,7 +63,7 @@ import TableData from '../utils/tableData';
 import DeletePopup from '../utils/deletePopup';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { stopJobApi, deleteJobApi } from './jobServices';
+import { JobService } from './jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
@@ -201,14 +201,14 @@ function JobComponent({
   };
   const handleStopJob = async (jobId: string) => {
     setSelectedJobId(jobId);
-    await stopJobApi(jobId);
+    await JobService.stopJobApi(jobId);
   };
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
   };
 
   const handleDelete = async () => {
-    await deleteJobApi(selectedJobId);
+    await JobService.deleteJobApi(selectedJobId);
     setDeletePopupOpen(false);
   };
   interface IJobList {
@@ -608,8 +608,6 @@ function JobComponent({
         <JobDetails
           jobSelected={jobSelected}
           setDetailedJobView={setDetailedJobView}
-          stopJobApi={stopJobApi}
-          deleteJobApi={deleteJobApi}
           region={region}
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
