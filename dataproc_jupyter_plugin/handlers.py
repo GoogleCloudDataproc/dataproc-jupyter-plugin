@@ -19,6 +19,7 @@ import tornado
 import subprocess
 from cachetools import TTLCache
 import datetime
+import re
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url
 
@@ -191,6 +192,25 @@ class LogHandler(APIHandler):
         logger.log(log_body["level"], log_body["message"])
         self.finish({'status': 'OK'})
 
+class UrlHandler(APIHandler):
+    @tornado.web.authenticated
+    def get(self):
+        cmd = "gcloud config get api_endpoint_overrides/dataproc"
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        output, _= process.communicate()
+        if process.returncode == 0:
+            decoded_output = output.decode("utf-8").strip()
+            if not decoded_output:
+                url_value = _.decode("utf-8").strip()
+            url_match = re.search(r'https?://[^\s/]+/', url_value)
+            if url_match:
+                decoded_output= url_match.group()+ "v1"
+                self.finish({'data': decoded_output})
+            else:
+                self.finish({'data': None})
+        else:
+            self.finish({'login' : 'FAILED'})
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -211,4 +231,8 @@ def setup_handlers(web_app):
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "log")
     handlers = [(route_pattern, LogHandler)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "Url")
+    handlers = [(route_pattern, UrlHandler)]
     web_app.add_handlers(host_pattern, handlers)

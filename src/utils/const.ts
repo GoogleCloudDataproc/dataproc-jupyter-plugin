@@ -15,12 +15,25 @@
  * limitations under the License.
  */
 
-export const VERSION_DETAIL = "0.1.58"
+import { requestAPI } from '../handler/handler';
+
+export const VERSION_DETAIL = '0.1.58';
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
   'https://console.cloud.google.com/dataproc/batches/create';
-export const BASE_URL = 'https://dataproc.googleapis.com/v1';
+
+interface UrlResponse {
+  data: string;
+}
+const data = await requestAPI('Url');
+let urlResponseObj = data as UrlResponse;
+const responseData = urlResponseObj?.data || '';
+console.log(responseData);
+
+localStorage.setItem('Base_Url', responseData);
+export const BASE_URL = localStorage.getItem('Base_Url');
+console.log(BASE_URL);
 export const BASE_URL_NETWORKS = 'https://compute.googleapis.com/compute/v1';
 export const BASE_URL_META = 'https://metastore.googleapis.com/v1';
 export const BASE_URL_KEY = 'https://cloudkms.googleapis.com/v1';
@@ -122,7 +135,7 @@ export const SERVICE_ACCOUNT =
   'https://cloud.google.com/compute/docs/access/service-accounts';
 export const CUSTOM_CONTAINERS =
   'https://cloud.google.com/dataproc-serverless/docs/guides/custom-containers';
-export const SHARED_VPC='https://cloud.google.com/vpc/docs/shared-vpc';
+export const SHARED_VPC = 'https://cloud.google.com/vpc/docs/shared-vpc';
 
 export const CONTAINER_REGISTERY = 'https://console.cloud.google.com/gcr';
 export const ARTIFACT_REGISTERY = 'https://console.cloud.google.com/artifacts';
@@ -130,7 +143,8 @@ export const METASTORE_MESSAGE =
   'We recommend this option to persist table metadata when the batch finishes processing. A metastore can be shared across many serverless batches in different projects and GCP regions.';
 export const CUSTOM_CONTAINER_MESSAGE =
   'Specify a custom container image to add Java or Python dependencies not provided by the default container';
-export const CUSTOM_CONTAINER_MESSAGE_PART='image. You must host your custom container on';
+export const CUSTOM_CONTAINER_MESSAGE_PART =
+  'image. You must host your custom container on';
 export const SPARK = 'Spark';
 export const SPARKSQL = 'SparkSQL';
 export const SPARKR = 'SparkR';
@@ -143,10 +157,13 @@ export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';
 export const JOB_FIELDS_EXCLUDED = ['queryList', 'properties', 'args'];
 export const BATCH_FIELDS_EXCLUDED = ['queryList', 'properties'];
 export const GCS_URL = 'https://storage.googleapis.com/storage/v1/b';
-export const GCS_UPLOAD_URL = 'https://storage.googleapis.com/upload/storage/v1/b'
-export const KEY_MESSAGE='Example format:projects/<project-name>/locations/<location-name>/keyRings/<keyring-name>/cryptoKeys/<key-name>';
+export const GCS_UPLOAD_URL =
+  'https://storage.googleapis.com/upload/storage/v1/b';
+export const KEY_MESSAGE =
+  'Example format:projects/<project-name>/locations/<location-name>/keyRings/<keyring-name>/cryptoKeys/<key-name>';
 export enum HTTP_METHOD {
   GET = 'GET',
   POST = 'POST'
-};
-export const NETWORK_TAG_MESSAGE = 'Network tags are text attributes you can add to make firewall rules and routes applicable to specific VM instances.';
+}
+export const NETWORK_TAG_MESSAGE =
+  'Network tags are text attributes you can add to make firewall rules and routes applicable to specific VM instances.';
