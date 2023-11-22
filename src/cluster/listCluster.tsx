@@ -105,21 +105,18 @@ interface ICluster {
 }
 
 interface IListClusterProps {
-  clustersList: ICluster[];
-  setclustersList: (value: any)=> void;
   setClusterSelected: (value: string)=> void;
   detailedView: boolean,
   setDetailedView: (value: boolean) => void;
   setLoggedIn: (value: boolean) => void;
 }
 function ListCluster({
-  clustersList,
-  setclustersList,
   setClusterSelected,
   detailedView,
   setDetailedView,
   setLoggedIn
 }: IListClusterProps) {
+  const [clustersList, setclustersList] = useState<ICluster[]>([]);
   const [restartEnabled, setRestartEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);

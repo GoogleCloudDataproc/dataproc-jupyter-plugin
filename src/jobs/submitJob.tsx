@@ -278,7 +278,6 @@ function SubmitJob({
 
   useEffect(() => {
     let transformClusterListData = [];
-    console.log(clusterResponse)
     transformClusterListData = clusterResponse.filter(
       (data: IClusterData) => {
         if (data.status === STATUS_RUNNING) {

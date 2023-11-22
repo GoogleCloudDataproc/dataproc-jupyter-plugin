@@ -361,7 +361,6 @@ function JobDetails({
           setDetailedClusterView={setDetailedClusterView}
           submitJobView={submitJobView}
           selectedJobClone={selectedJobClone}
-          clusterResponse={clusterResponse}
           setSubmitJobView={setSubmitJobView}
           setDetailedJobView={setDetailedJobView}
           setSelectedJobClone={setSelectedJobClone}

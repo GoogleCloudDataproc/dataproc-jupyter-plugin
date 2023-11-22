@@ -26,7 +26,7 @@ import { DataprocWidget } from '../controls/DataprocWidget';
 
 const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
-  const [clustersList, setclustersList] = useState([]);
+  
   const [detailedJobView, setDetailedJobView] = useState(false);
   const [submitJobView, setSubmitJobView] = useState(false);
   const [selectedMode, setSelectedMode] = useState<Mode>('Clusters');
@@ -73,7 +73,7 @@ const ClusterComponent = (): React.JSX.Element => {
           Loading Clusters
         </div>
       )}
-      {loggedIn && !configError ? (
+      {loggedIn && !loginError && !configError ? (
         <>
           {detailedView && (
             <ClusterDetails
@@ -82,7 +82,6 @@ const ClusterComponent = (): React.JSX.Element => {
               detailedJobView={detailedJobView}
               setDetailedJobView={setDetailedJobView}
               submitJobView={submitJobView}
-              clusterResponse={clustersList}
               selectedJobClone={selectedJobClone}
               setSelectedJobClone={setSelectedJobClone}
               setSubmitJobView={setSubmitJobView}
@@ -122,8 +121,6 @@ const ClusterComponent = (): React.JSX.Element => {
                   />
                 ) : (
                   <ListCluster
-                    clustersList={clustersList}
-                    setclustersList={setclustersList}
                     setClusterSelected={setClusterSelected}
                     detailedView={detailedView}
                     setDetailedView={setDetailedView}
