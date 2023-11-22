@@ -28,7 +28,6 @@ import {
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
   FILES_MESSAGE,
-  HTTP_METHOD,
   JAR_FILE_MESSAGE,
   KEY_MESSAGE,
   METASTORE_MESSAGE,
@@ -37,17 +36,11 @@ import {
   SECURITY_KEY,
   SELF_MANAGED_CLUSTER,
   SERVICE_ACCOUNT,
-  SHARED_VPC,
-  STATUS_RUNNING
+  SHARED_VPC
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import {
-  authApi,
-  authenticatedFetch,
-  toastifyCustomStyle
-} from '../utils/utils';
+import { authApi } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
-import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Select } from '../controls/MuiWrappedSelect';
@@ -56,7 +49,6 @@ import { Autocomplete, Radio, TextField } from '@mui/material';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { BatchService } from './batchService';
 import { MuiChipsInput } from 'mui-chips-input';
 
@@ -454,7 +446,10 @@ function CreateBatch({
   }, []);
 
   const runtimeSharedProject = async () => {
-    await BatchService.runtimeSharedProjectService(setProjectInfo, setSharedSubNetworkList);
+    await BatchService.runtimeSharedProjectService(
+      setProjectInfo,
+      setSharedSubNetworkList
+    );
   };
 
   const handleMainClassRadio = () => {
@@ -633,30 +628,13 @@ function CreateBatch({
   };
 
   const listClustersAPI = async () => {
-    try {
-      const queryParams = new URLSearchParams({ pageSize: '100' });
-      const response = await authenticatedFetch({
-        uri: 'clusters',
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'regions',
-        queryParams: queryParams
-      });
-      const formattedResponse = await response.json();
-      let transformClusterListData: string[] = [];
-      transformClusterListData = formattedResponse.clusters
-        .filter((data: { clusterName: string; status: { state: string } }) => {
-          return data.status.state === STATUS_RUNNING;
-        })
-        .map((data: { clusterName: string }) => data.clusterName);
-      setClustersList(transformClusterListData);
-    } catch (error) {
-      console.error('Error listing clusters', error);
-      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      toast.error('Failed to list the clusters', toastifyCustomStyle);
-    }
+    await BatchService.listClustersAPIService(setClustersList);
   };
   const listNetworksAPI = async () => {
-    await BatchService.listNetworksAPIService(setNetworklist, setNetworkSelected);
+    await BatchService.listNetworksAPIService(
+      setNetworklist,
+      setNetworkSelected
+    );
   };
 
   const listKeyRingsAPI = async () => {
