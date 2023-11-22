@@ -85,7 +85,6 @@ export class JobService {
           response
             .json()
             .then(async (responseResult: Response) => {
-              console.log(responseResult);
               const formattedResponse = await responseResult.json();
               if (formattedResponse?.error?.code) {
                 toast.error(
@@ -232,7 +231,6 @@ export class JobService {
                 );
               }
 
-              console.log(responseResultJob);
               toast.success(
                 `Request to update job ${jobSelected} submitted`,
                 toastifyCustomStyle
