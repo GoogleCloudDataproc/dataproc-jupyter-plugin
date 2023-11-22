@@ -198,6 +198,7 @@ export class SessionService {
           this.listSessionsAPIService(
             renderActions,
             setIsLoading,
+            setSessionsList,
             formattedResponse.nextPageToken,
             allSessionsData
           );

@@ -17,19 +17,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
-import {
-  authApi,
-  jobTimeFormat,
-  jobTypeValue,
-  elapsedTime,
-  statusMessage,
-  jobTypeDisplay,
-  ICellProps,
-  toastifyCustomStyle,
-  loggedFetch,
-  authenticatedFetch,
-  statusValue
-} from '../utils/utils';
+import { ICellProps } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import cloneIcon from '../../style/icons/clone_icon.svg';
@@ -42,11 +30,7 @@ import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   ClusterStatus,
-  HTTP_METHOD,
   STATUS_CANCELLED,
   STATUS_CREATING,
   STATUS_DELETING,
@@ -61,12 +45,9 @@ import SubmitJob from './submitJob';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import DeletePopup from '../utils/deletePopup';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { stopJobApi, deleteJobApi } from './jobServices';
+import { JobService } from './jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -201,194 +182,28 @@ function JobComponent({
   };
   const handleStopJob = async (jobId: string) => {
     setSelectedJobId(jobId);
-    await stopJobApi(jobId);
+    await JobService.stopJobApi(jobId);
   };
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
   };
 
   const handleDelete = async () => {
-    await deleteJobApi(selectedJobId);
+    await JobService.deleteJobApi(selectedJobId);
     setDeletePopupOpen(false);
   };
-  interface IJobList {
-    error: {
-      code: number;
-      message: string;
-    };
-    jobs: Array<{
-      reference: {
-        jobId: string;
-      };
-      statusHistory: Array<{
-        stateStartTime: string;
-      }>;
-      status: {
-        stateStartTime: string;
-      };
-      labels?: {
-        [key: string]: string;
-      };
-    }>;
-    nextPageToken?: string;
-  }
 
-  const listJobsAPI = async (
-    nextPageToken?: string,
-    previousJobsList?: object
-  ) => {
-    const credentials = await authApi();
-    const clusterName = clusterSelected ?? '';
-    const pageToken = nextPageToken ?? '';
-    if (credentials) {
-      loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IJobList) => {
-              let transformJobListData: {
-                jobid: number;
-                status: string;
-                region: string | undefined;
-                type: string | undefined;
-                starttime: string;
-                elapsedtime: string;
-                labels: string[];
-                actions: React.JSX.Element;
-              }[] = [];
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-              if (responseResult && responseResult.jobs) {
-                transformJobListData = responseResult.jobs.map((data: any) => {
-                  const startTime = jobTimeFormat(
-                    data.statusHistory[0].stateStartTime
-                  );
-                  const job = jobTypeValue(data);
-                  const jobType = jobTypeDisplay(job);
-                  const endTime = data.status.stateStartTime;
-                  const jobStartTime = new Date(
-                    data.statusHistory[0].stateStartTime
-                  );
-
-                  const elapsedTimeString = elapsedTime(endTime, jobStartTime);
-
-                  const statusMsg = statusMessage(data);
-
-                  const labelvalue = [];
-                  if (data.labels) {
-                    for (const [key, value] of Object.entries(data.labels)) {
-                      labelvalue.push(`${key} : ${value}`);
-                    }
-                  } else {
-                    labelvalue.push('None');
-                  }
-                  return {
-                    jobid: data.reference.jobId,
-                    status: statusMsg,
-                    region: credentials.region_id,
-                    type: jobType,
-                    starttime: startTime,
-                    elapsedtime: elapsedTimeString,
-                    labels: labelvalue,
-                    actions: renderActions(data)
-                  };
-                });
-              }
-              const existingJobsData = previousJobsList ?? [];
-              //setStateAction never type issue
-              let allJobsData: any = [
-                ...(existingJobsData as []),
-                ...transformJobListData
-              ];
-
-              if (responseResult.nextPageToken) {
-                listJobsAPI(responseResult.nextPageToken, allJobsData);
-              } else {
-                setjobsList(allJobsData);
-                setIsLoading(false);
-              }
-            })
-            .catch((e: Error) => {
-              console.error(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing jobs', err);
-          DataprocLoggingService.log('Error listing jobs', LOG_LEVEL.ERROR);
-          toast.error('Failed to fetch jobs', toastifyCustomStyle);
-        });
-    }
+  const listJobsAPI = async () => {
+    await JobService.listJobsAPIService(
+      clusterSelected,
+      setIsLoading,
+      setjobsList,
+      renderActions
+    );
   };
 
-  const listClustersAPI = async (
-    nextPageToken?: string,
-    previousClustersList?: object
-  ) => {
-    const pageToken = nextPageToken ?? '';
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
-      queryParams.append('pageToken', pageToken);
-
-      const response = await authenticatedFetch({
-        uri: 'clusters',
-        regionIdentifier: 'regions',
-        method: HTTP_METHOD.GET,
-        queryParams: queryParams
-      });
-      console.log(response)
-      const formattedResponse = await response.json();
-      let transformClusterListData = [];
-      if (formattedResponse && formattedResponse.clusters) {
-        transformClusterListData = formattedResponse.clusters.map(
-          (data: any) => {
-            const statusVal = statusValue(data);
-            // Extracting zone from zoneUri
-            // Example: "projects/{project}/zones/{zone}"
-            return {
-              clusterUuid: data.clusterUuid,
-              status: statusVal,
-              clusterName: data.clusterName
-            };
-          }
-        );
-      }
-      const existingClusterData = previousClustersList ?? [];
-      //setStateAction never type issue
-      const allClustersData: any = [
-        ...(existingClusterData as []),
-        ...transformClusterListData
-      ];
-
-      console.log(formattedResponse, allClustersData)
-
-      if (formattedResponse.nextPageToken) {
-        listClustersAPI(formattedResponse.nextPageToken, allClustersData);
-      } else {
-        setClusterResponse(allClustersData);
-      }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-    } catch (error) {
-      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters', toastifyCustomStyle);
-    }
+  const listClustersAPI = async () => {
+    await JobService.listClustersAPIService(setClusterResponse);
   };
 
   const handleCloneJob = (data: object) => {
@@ -608,8 +423,6 @@ function JobComponent({
         <JobDetails
           jobSelected={jobSelected}
           setDetailedJobView={setDetailedJobView}
-          stopJobApi={stopJobApi}
-          deleteJobApi={deleteJobApi}
           region={region}
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
@@ -618,26 +431,25 @@ function JobComponent({
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {clusterResponse &&
-            clusterResponse.length > 0 && (
-              <div className="create-cluster-overlay">
-                <div
-                  role="button"
-                  className="create-cluster-sub-overlay"
-                  onClick={() => {
-                    handleSubmitJobOpen();
-                  }}
-                >
-                  <div className="create-icon">
-                    <iconSubmitJob.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
-                  </div>
-                  <div className="create-text">SUBMIT JOB</div>
+          {clusterResponse && clusterResponse.length > 0 && (
+            <div className="create-cluster-overlay">
+              <div
+                role="button"
+                className="create-cluster-sub-overlay"
+                onClick={() => {
+                  handleSubmitJobOpen();
+                }}
+              >
+                <div className="create-icon">
+                  <iconSubmitJob.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 </div>
+                <div className="create-text">SUBMIT JOB</div>
               </div>
-            )}
+            </div>
+          )}
           {jobsList.length > 0 ? (
             <div>
               <div className="filter-cluster-overlay">
@@ -692,7 +504,7 @@ function JobComponent({
           ) : (
             <div>
               {isLoading && (
-                <div className="spin-loaderMain">
+                <div className="spin-loader-main">
                   <ClipLoader
                     color="#3367d6"
                     loading={true}
