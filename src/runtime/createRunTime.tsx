@@ -30,6 +30,7 @@ import {
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
   HTTP_METHOD,
+  LOGIN_ERROR_MESSAGE,
   LOGIN_STATE,
   REGION_URL,
   SHARED_VPC,
@@ -1763,7 +1764,7 @@ function CreateRunTime({
       ) : (
         loginError && (
           <div role="alert" className="login-error">
-            Please login to continue
+             {LOGIN_ERROR_MESSAGE}
           </div>
         )
       )}

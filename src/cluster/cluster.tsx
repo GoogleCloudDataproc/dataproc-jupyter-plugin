@@ -18,7 +18,7 @@
 import React, { useEffect, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
 import JobComponent from '../jobs/jobs';
-import { LOGIN_STATE } from '../utils/const';
+import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
@@ -136,7 +136,7 @@ const ClusterComponent = (): React.JSX.Element => {
         </>
       ) : (
         loginError && (
-          <div className="login-error">Please login to continue</div>
+          <div className="login-error"> {LOGIN_ERROR_MESSAGE}</div>
         )
       )}
       {configError && (

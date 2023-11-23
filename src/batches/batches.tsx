@@ -19,7 +19,7 @@ import React, { useEffect, useState } from 'react';
 import ListBatches from './listBatches';
 import ListSessions from '../sessions/listSessions';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { LOGIN_STATE } from '../utils/const';
+import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
 import { ClipLoader } from 'react-spinners';
 import { checkConfig } from '../utils/utils';
 
@@ -68,7 +68,7 @@ const BatchesComponent = (): React.JSX.Element => {
       )}
       {loginError && (
         <div role="alert" className="login-error">
-          Please login to continue
+         {LOGIN_ERROR_MESSAGE}
         </div>
       )}
       {configError && (
