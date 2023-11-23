@@ -44,6 +44,7 @@ import ViewLogs from '../utils/viewLogs';
 import DeletePopup from '../utils/deletePopup';
 import SubmitJob from '../jobs/submitJob';
 import PollingTimer from '../utils/pollingTimer';
+import { JobService } from '../jobs/jobServices';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -93,7 +94,6 @@ interface IClusterDetailsProps {
   setDetailedJobView?: (value: boolean) => void;
   setSubmitJobView?: (value: boolean) => void;
   submitJobView: boolean;
-  clusterResponse: object;
   selectedJobClone: any;
   setSelectedJobClone?: (value: boolean) => void;
 }
@@ -105,7 +105,6 @@ function ClusterDetails({
   setSubmitJobView,
   setDetailedJobView,
   submitJobView,
-  clusterResponse,
   selectedJobClone,
   setSelectedJobClone
 }: IClusterDetailsProps) {
@@ -119,6 +118,9 @@ function ClusterDetails({
   const [projectName, setProjectName] = useState('');
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedCluster, setSelectedCluster] = useState('');
+
+  const [clusterResponse, setClusterResponse] = useState([]);
+
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingClusterDetails = async (
@@ -132,6 +134,10 @@ function ClusterDetails({
     );
   };
 
+  const listClustersAPI = async () => {
+    await JobService.listClustersAPIService(setClusterResponse);
+  };
+  
   const handleDetailedView = () => {
     pollingClusterDetails(getClusterDetails, true);
     setDetailedView(false);
@@ -246,6 +252,7 @@ function ClusterDetails({
 
   useEffect(() => {
     getClusterDetails();
+    listClustersAPI();
     pollingClusterDetails(getClusterDetails, false);
 
     return () => {
@@ -395,13 +402,12 @@ function ClusterDetails({
                 setDetailedJobView={setDetailedJobView}
                 setSubmitJobView={setSubmitJobView}
                 setSelectedJobClone={setSelectedJobClone}
-                clusterResponse={clusterResponse}
               />
             </div>
           ) : (
             <>
               {isLoading && (
-                <div className="spin-loaderMain">
+                <div className="spin-loader-main">
                   <ClipLoader
                     color="#3367d6"
                     loading={true}

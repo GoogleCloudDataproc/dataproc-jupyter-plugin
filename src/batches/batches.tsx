@@ -55,7 +55,7 @@ const BatchesComponent = (): React.JSX.Element => {
   return (
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (
-        <div className="spin-loaderMain">
+        <div className="spin-loader-main">
           <ClipLoader
             color="#3367d6"
             loading={true}

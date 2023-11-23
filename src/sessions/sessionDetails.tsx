@@ -531,7 +531,7 @@ function SessionDetails({
       ) : (
         <>
           {isLoading && (
-            <div className="spin-loaderMain">
+            <div className="spin-loader-main">
               <ClipLoader
                 color="#3367d6"
                 loading={true}
