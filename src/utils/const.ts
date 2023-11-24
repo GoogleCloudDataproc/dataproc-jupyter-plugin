@@ -35,8 +35,8 @@ interface IGcpUrlResponseData {
 const data = await requestAPI('getGcpServiceUrls');
 let gcpServiceUrl = data as IGcpUrlResponseData;
 const urlResponseJson = JSON.stringify(gcpServiceUrl);
-localStorage.setItem('UrlResponseObj', urlResponseJson);
-const storedUrlResponseJson = localStorage.getItem('UrlResponseObj');
+localStorage.setItem('GCP_SERVICE_URLS', urlResponseJson);
+const storedUrlResponseJson = localStorage.getItem('GCP_SERVICE_URLS');
 const storedUrlResponseObj = storedUrlResponseJson
   ? JSON.parse(storedUrlResponseJson)
   : null;
