@@ -33,7 +33,7 @@ import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
 import {
-  BASE_URL,
+  BASE_URL_DATAPROC,
   API_HEADER_CONTENT_TYPE,
   API_HEADER_BEARER,
   CATALOG_SEARCH,
@@ -620,7 +620,7 @@ fetching database name from fully qualified name structure */
     const credentials = await authApi();
     if (credentials && notebookValue) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
         {
           method: 'GET',
           headers: {
@@ -684,7 +684,7 @@ fetching database name from fully qualified name structure */
     const credentials = await authApi();
     if (credentials && notebookValue) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,
         {
           method: 'GET',
           headers: {

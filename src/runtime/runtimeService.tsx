@@ -17,7 +17,7 @@
 
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
+  BASE_URL_DATAPROC,
   API_HEADER_BEARER,
   HTTP_METHOD,
   USER_INFO_URL,
@@ -81,7 +81,7 @@ export class RunTimeSerive {
   ) => {
     const credentials = await authApi();
     if (credentials) {
-      loggedFetch(`${BASE_URL}/${selectedRuntimeTemplate}`, {
+      loggedFetch(`${BASE_URL_DATAPROC}/${selectedRuntimeTemplate}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -676,7 +676,7 @@ export class RunTimeSerive {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
         {
           method: 'PATCH',
           body: JSON.stringify(payload),

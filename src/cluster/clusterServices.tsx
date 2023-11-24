@@ -20,7 +20,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
+  BASE_URL_DATAPROC,
   ClusterStatus,
   HTTP_METHOD,
   POLLING_TIME_LIMIT
@@ -149,7 +149,7 @@ export class ClusterService {
     if (credentials) {
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
         {
           method: 'GET',
           headers: {
@@ -267,7 +267,7 @@ export class ClusterService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
         {
           method: 'DELETE',
           headers: {
@@ -310,7 +310,7 @@ export class ClusterService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:${operation}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:${operation}`,
         {
           method: 'POST',
           headers: {

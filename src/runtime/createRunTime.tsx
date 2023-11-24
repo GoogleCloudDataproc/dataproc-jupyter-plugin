@@ -22,11 +22,12 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   ARTIFACT_REGISTERY,
-  BASE_URL,
+  BASE_URL_DATAPROC,
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
+  LOGIN_ERROR_MESSAGE,
   LOGIN_STATE,
   SHARED_VPC
 } from '../utils/const';
@@ -573,7 +574,7 @@ function CreateRunTime({
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
         {
           method: 'POST',
           body: JSON.stringify(payload),
@@ -1327,7 +1328,7 @@ function CreateRunTime({
       ) : (
         loginError && (
           <div role="alert" className="login-error">
-            Please login to continue
+             {LOGIN_ERROR_MESSAGE}
           </div>
         )
       )}

@@ -18,7 +18,7 @@
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
-  BASE_URL,
+  BASE_URL_DATAPROC,
   API_HEADER_CONTENT_TYPE,
   API_HEADER_BEARER,
   LABEL_TEXT,
@@ -72,7 +72,7 @@ export class JobService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}:cancel`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}:cancel`,
         {
           method: 'POST',
           headers: {
@@ -106,7 +106,7 @@ export class JobService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}`,
         {
           method: 'DELETE',
           headers: {
@@ -147,7 +147,7 @@ export class JobService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}`,
         {
           method: 'GET',
           headers: {
@@ -209,7 +209,7 @@ export class JobService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}?updateMask=${LABEL_TEXT}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}?updateMask=${LABEL_TEXT}`,
         {
           method: 'PATCH',
           body: JSON.stringify(payloadJob),
@@ -261,7 +261,7 @@ export class JobService {
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -423,7 +423,7 @@ export class JobService {
     credentials: any
   ) => {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs:submit`,
+      `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs:submit`,
       {
         method: 'POST',
         body: JSON.stringify(payload),

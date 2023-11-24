@@ -21,7 +21,7 @@ import ViewLogsIcon from '../../style/icons/view_logs_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
+  BASE_URL_DATAPROC,
   SPARK_HISTORY_SERVER,
   VIEW_LOGS_BATCH_URL,
   VIEW_LOGS_CLUSTER_URL,
@@ -95,7 +95,7 @@ function ViewLogs({
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterName}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterName}`,
         {
           method: 'GET',
           headers: {

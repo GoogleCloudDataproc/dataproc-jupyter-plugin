@@ -155,11 +155,11 @@ function SubmitJob({
 
     if (selectedJobClone[jobTypeKey].hasOwnProperty('queryFileUri')) {
       queryFileUri = selectedJobClone[jobTypeKey].queryFileUri;
-      queryType = 'queryFile';
+      queryType = 'Query file';
     }
     if (selectedJobClone[jobTypeKey].hasOwnProperty('queryList')) {
       queryList = selectedJobClone[jobTypeKey].queryList.queries[0];
-      queryType = 'queryText';
+      queryType = 'Query text';
     }
     mainJarFileUri = selectedJobClone[jobKeys[0]].mainJarFileUri;
     mainClass = selectedJobClone[jobKeys[0]].mainClass;
@@ -267,9 +267,9 @@ function SubmitJob({
 
   const handleQuerySourceTypeSelected = (
     event: SyntheticEvent<Element, Event>,
-    data: DropdownProps
+    data: DropdownProps | null
   ) => {
-    setQuerySourceSelected(data.value!.toString());
+    setQuerySourceSelected(data!.toString());
   };
   interface IClusterData {
     clusterName: string;
@@ -278,13 +278,11 @@ function SubmitJob({
 
   useEffect(() => {
     let transformClusterListData = [];
-    transformClusterListData = clusterResponse.filter(
-      (data: IClusterData) => {
-        if (data.status === STATUS_RUNNING) {
-          return data.clusterName;
-        }
+    transformClusterListData = clusterResponse.filter((data: IClusterData) => {
+      if (data.status === STATUS_RUNNING) {
+        return data.clusterName;
       }
-    );
+    });
 
     const keyLabelStructure = transformClusterListData.map(
       (obj: { clusterName: string }) => obj.clusterName
@@ -298,10 +296,7 @@ function SubmitJob({
       { key: 'pySpark', value: 'pySpark', text: 'PySpark' }
     ];
     setJobTypeList(jobTypeData);
-    const querySourceData = [
-      { value: 'queryFile', label: 'Query file' },
-      { value: 'queryText', label: 'Query text' }
-  ];
+    const querySourceData = ['Query file', 'Query text'];
     setQuerySourceTypeList(querySourceData);
   }, []);
   useEffect(() => {
@@ -385,7 +380,7 @@ function SubmitJob({
           !jarFileDuplicateValidation) ||
         (isSparkSqlJob &&
           queryFileSelected !== '' &&
-          querySourceSelected === 'queryFile' &&
+          querySourceSelected === 'Query file' &&
           queryFileValidation &&
           jarFileValidation &&
           keyValidation === -1 &&
@@ -396,7 +391,7 @@ function SubmitJob({
           !jarFileDuplicateValidation) ||
         (isSparkSqlJob &&
           queryTextSelected !== '' &&
-          querySourceSelected === 'queryText' &&
+          querySourceSelected === 'Query text' &&
           jarFileValidation &&
           keyValidation === -1 &&
           valueValidation === -1 &&
@@ -564,10 +559,10 @@ function SubmitJob({
           jarFileUris: [jarFileSelected]
         }),
         scriptVariables: {},
-        ...(querySourceSelected === 'queryFile' && {
+        ...(querySourceSelected === 'Query file' && {
           queryFileUri: queryFileSelected
         }),
-        ...(querySourceSelected === 'queryText' && {
+        ...(querySourceSelected === 'Query text' && {
           queryList: { queries: [queryTextSelected] }
         })
       }
@@ -816,17 +811,21 @@ function SubmitJob({
             <div className="select-text-overlay">
               <Autocomplete
                 className="project-region-select"
-                onChange={(_event, val) => handleQuerySourceTypeSelected}
+                onChange={(_event, val) =>
+                  handleQuerySourceTypeSelected(_event, val)
+                }
                 options={querySourceTypeList}
                 value={querySourceSelected}
                 onFocus={handleSelectFocus}
-                onBlur={handleBlur} 
-                renderInput={params => <TextField {...params} label= "Query source type*"/>}
-                     />
+                onBlur={handleBlur}
+                renderInput={params => (
+                  <TextField {...params} label="Query source type*" />
+                )}
+              />
             </div>
           </>
         )}
-        {querySourceSelected === 'queryFile' &&
+        {querySourceSelected === 'Query file' &&
           jobTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
@@ -861,7 +860,7 @@ function SubmitJob({
               )}
             </>
           )}
-        {querySourceSelected === 'queryText' &&
+        {querySourceSelected === 'Query text' &&
           jobTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
@@ -1168,7 +1167,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {querySourceSelected === 'queryFile' &&
+        {querySourceSelected === 'Query file' &&
           jobTypeSelected === 'sparkSql' && (
             <>
               <div className="submit-job-label-header">Query parameters</div>

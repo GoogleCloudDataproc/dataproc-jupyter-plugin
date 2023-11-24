@@ -19,6 +19,7 @@ import tornado
 import subprocess
 from cachetools import TTLCache
 import datetime
+import re
 import threading
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url
@@ -120,6 +121,23 @@ def get_cached_credentials():
 
         return credentials
 
+def gcpServiceUrl(cmd):
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        output, _= process.communicate()
+        if process.returncode == 0:
+            base_url = output.decode("utf-8").strip()
+            if not base_url:
+                base_url_value = _.decode("utf-8").strip()
+                url_match = re.search(r'https?://[^\s/]+/', base_url_value)
+                if url_match:
+                    base_url= url_match.group()
+                    return base_url
+                else:
+                    base_url = ""
+                    return base_url
+            else:
+                return base_url
+
 class TestHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
@@ -194,6 +212,30 @@ class LogHandler(APIHandler):
         logger.log(log_body["level"], log_body["message"])
         self.finish({'status': 'OK'})
 
+class UrlHandler(APIHandler):
+    @tornado.web.authenticated
+    def get(self):
+        url = {}
+        dataproc_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/dataproc")
+        compute_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/compute")
+        metastore_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/metastore")
+        cloudkms_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/cloudkms")
+        cloudresourcemanager_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/cloudresourcemanager")
+        datacatalog_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/datacatalog")
+        storage_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/storage")
+        url = {
+            'dataproc_url': dataproc_url,
+            'compute_url': compute_url,
+            'metastore_url': metastore_url,
+            'cloudkms_url': cloudkms_url,
+            'cloudresourcemanager_url': cloudresourcemanager_url,
+            'datacatalog_url': datacatalog_url,
+            'storage_url': storage_url
+            }
+        self.finish(url)
+# 
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -214,4 +256,8 @@ def setup_handlers(web_app):
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "log")
     handlers = [(route_pattern, LogHandler)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "getGcpServiceUrls")
+    handlers = [(route_pattern, UrlHandler)]
     web_app.add_handlers(host_pattern, handlers)
