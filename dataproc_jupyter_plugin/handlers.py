@@ -121,7 +121,7 @@ def get_cached_credentials():
 
         return credentials
 
-def CheckOverrideUrl(cmd):
+def dataproc_url(cmd):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _= process.communicate()
         if process.returncode == 0:
@@ -216,15 +216,15 @@ class UrlHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         url = {}
-        base_url = CheckOverrideUrl("gcloud config get api_endpoint_overrides/dataproc")
-        compute_url = CheckOverrideUrl("gcloud config get api_endpoint_overrides/compute")
-        metastore_url = CheckOverrideUrl("gcloud config get api_endpoint_overrides/metastore")
-        cloudkms_url = CheckOverrideUrl("gcloud config get api_endpoint_overrides/cloudkms")
-        cloudresourcemanager_url = CheckOverrideUrl("gcloud config get api_endpoint_overrides/cloudresourcemanager")
-        datacatalog_url = CheckOverrideUrl("gcloud config get api_endpoint_overrides/datacatalog")
-        storage_url = CheckOverrideUrl("gcloud config get api_endpoint_overrides/storage")
+        base_url = dataproc_url("gcloud config get api_endpoint_overrides/dataproc")
+        compute_url = dataproc_url("gcloud config get api_endpoint_overrides/compute")
+        metastore_url = dataproc_url("gcloud config get api_endpoint_overrides/metastore")
+        cloudkms_url = dataproc_url("gcloud config get api_endpoint_overrides/cloudkms")
+        cloudresourcemanager_url = dataproc_url("gcloud config get api_endpoint_overrides/cloudresourcemanager")
+        datacatalog_url = dataproc_url("gcloud config get api_endpoint_overrides/datacatalog")
+        storage_url = dataproc_url("gcloud config get api_endpoint_overrides/storage")
         url = {
-            'dataproc_base_url': base_url,
+            'dataproc_url': base_url,
             'compute_url': compute_url,
             'metastore_url': metastore_url,
             'cloudkms_url': cloudkms_url,
@@ -258,6 +258,6 @@ def setup_handlers(web_app):
     handlers = [(route_pattern, LogHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "Url")
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "getGcpServiceUrls")
     handlers = [(route_pattern, UrlHandler)]
     web_app.add_handlers(host_pattern, handlers)
