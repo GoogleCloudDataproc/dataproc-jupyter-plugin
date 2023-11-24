@@ -23,7 +23,9 @@ import {
   REGION_URL,
   BASE_URL_NETWORKS,
   BASE_URL_KEY,
-  BASE_URL_META
+  BASE_URL_META,
+  HTTP_METHOD,
+  STATUS_RUNNING
 } from '../utils/const';
 import {
   authApi,
@@ -31,7 +33,8 @@ import {
   loggedFetch,
   jobTimeFormat,
   elapsedTime,
-  jobTypeDisplay
+  jobTypeDisplay,
+  authenticatedFetch
 } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -178,7 +181,6 @@ export class BatchService {
           response
             .json()
             .then(async (responseResult: Response) => {
-              
               console.log(responseResult);
 
               toast.success(
@@ -938,5 +940,30 @@ export class BatchService {
         toast.error('Failed to submit the Batch', toastifyCustomStyle);
         DataprocLoggingService.log('Error submitting Batch', LOG_LEVEL.ERROR);
       });
+  };
+  static listClustersAPIService = async (
+    setClustersList: (value: string[]) => void
+  ) => {
+    try {
+      const queryParams = new URLSearchParams({ pageSize: '100' });
+      const response = await authenticatedFetch({
+        uri: 'clusters',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'regions',
+        queryParams: queryParams
+      });
+      const formattedResponse = await response.json();
+      let transformClusterListData: string[] = [];
+      transformClusterListData = formattedResponse.clusters
+        .filter((data: { clusterName: string; status: { state: string } }) => {
+          return data.status.state === STATUS_RUNNING;
+        })
+        .map((data: { clusterName: string }) => data.clusterName);
+      setClustersList(transformClusterListData);
+    } catch (error) {
+      console.error('Error listing clusters', error);
+      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
+      toast.error('Failed to list the clusters', toastifyCustomStyle);
+    }
   };
 }

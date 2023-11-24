@@ -22,26 +22,16 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
-import { HTTP_METHOD } from '../utils/const';
 import TableData from '../utils/tableData';
-import {
-  ICellProps,
-  jobTimeFormat,
-  toastifyCustomStyle,
-  authenticatedFetch
-} from '../utils/utils';
+import { ICellProps } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { deleteRuntimeTemplateAPI } from './runtimeService';
+import { RunTimeSerive } from './runtimeService';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ISessionTemplate,
-  ISessionTemplateDisplay,
-  ISessionTemplateRoot
+  ISessionTemplateDisplay
 } from '../utils/listRuntimeTemplateInterface';
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -145,100 +135,13 @@ function ListRuntimeTemplates({
     []
   );
 
-  const listRuntimeTemplatesAPI = async (
-    nextPageToken?: string,
-    previousRuntimeTemplatesList?: object,
-    previousRuntimeTemplatesAllList?: object
-  ) => {
-    try {
-      const pageToken = nextPageToken ?? '';
-      const queryParams = new URLSearchParams({
-        pageSize: '50',
-        pageToken: pageToken
-      });
-
-      const response = await authenticatedFetch({
-        uri: 'sessionTemplates',
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'locations',
-        queryParams: queryParams
-      });
-      const formattedResponse: ISessionTemplateRoot = await response.json();
-      let transformRuntimeTemplatesListData: ISessionTemplateDisplay[] = [];
-      if (formattedResponse && formattedResponse.sessionTemplates) {
-        let runtimeTemplatesListNew = formattedResponse.sessionTemplates;
-        runtimeTemplatesListNew.sort(
-          (a: { updateTime: string }, b: { updateTime: string }) => {
-            const dateA = new Date(a.updateTime);
-            const dateB = new Date(b.updateTime);
-            return Number(dateB) - Number(dateA);
-          }
-        );
-        transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
-          (data: ISessionTemplate) => {
-            const startTimeDisplay = data.updateTime
-              ? jobTimeFormat(data.updateTime)
-              : '';
-
-            let displayName = '';
-
-            if (data.jupyterSession && data.jupyterSession.displayName) {
-              displayName = data.jupyterSession.displayName;
-            }
-
-            // Extracting runtimeId from name
-            // Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
-
-            return {
-              name: displayName,
-              owner: data.creator,
-              description: data.description,
-              lastModified: startTimeDisplay,
-              actions: renderActions(data),
-              id: data.name.split('/')[5]
-            };
-          }
-        );
-      }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-
-      const existingRuntimeTemplatesAllData =
-        previousRuntimeTemplatesAllList ?? [];
-      //setStateAction never type issue
-      let allRuntimeTemplatesAllData: any = [
-        ...(existingRuntimeTemplatesAllData as []),
-        ...formattedResponse.sessionTemplates
-      ];
-
-      const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
-      //setStateAction never type issue
-      let allRuntimeTemplatesData: ISessionTemplateDisplay[] = [
-        ...(existingRuntimeTemplatesData as []),
-        ...transformRuntimeTemplatesListData
-      ];
-
-      if (formattedResponse.nextPageToken) {
-        listRuntimeTemplatesAPI(
-          formattedResponse.nextPageToken,
-          allRuntimeTemplatesData,
-          allRuntimeTemplatesAllData
-        );
-      } else {
-        setRunTimeTemplateAllList(allRuntimeTemplatesAllData);
-        setRuntimeTemplateslist(allRuntimeTemplatesData);
-        setIsLoading(false);
-      }
-    } catch (error) {
-      setIsLoading(false);
-      console.error('Error listing runtime templates', error);
-      DataprocLoggingService.log(
-        'Error listing runtime templates',
-        LOG_LEVEL.ERROR
-      );
-      toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
-    }
+  const listRuntimeTemplatesAPI = async () => {
+    await RunTimeSerive.listRuntimeTemplatesAPIService(
+      renderActions,
+      setIsLoading,
+      setRuntimeTemplateslist,
+      setRunTimeTemplateAllList
+    );
   };
 
   const handleDeleteRuntimeTemplate = (
@@ -254,7 +157,7 @@ function ListRuntimeTemplates({
   };
 
   const handleDelete = async () => {
-    await deleteRuntimeTemplateAPI(
+    await RunTimeSerive.deleteRuntimeTemplateAPI(
       selectedRuntimeTemplateValue,
       selectedRuntimeTemplateDisplayName
     );
@@ -439,8 +342,8 @@ function ListRuntimeTemplates({
         <div>
           {isLoading && (
             <div className="spin-loader-runtime">
-             <ClipLoader
-              color="#3367d6"
+              <ClipLoader
+                color="#3367d6"
                 loading={true}
                 size={18}
                 aria-label="Loading Spinner"
