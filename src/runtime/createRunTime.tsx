@@ -22,7 +22,7 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   ARTIFACT_REGISTERY,
-  BASE_URL,
+  BASE_URL_DATAPROC,
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
@@ -574,7 +574,7 @@ function CreateRunTime({
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
         {
           method: 'POST',
           body: JSON.stringify(payload),

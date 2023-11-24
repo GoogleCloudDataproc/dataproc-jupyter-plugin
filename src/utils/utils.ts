@@ -24,7 +24,7 @@ import { requestAPI } from '../handler/handler';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
+  BASE_URL_DATAPROC,
   DCU_HOURS,
   GB_MONTHS,
   HTTP_METHOD,
@@ -105,7 +105,7 @@ export const authenticatedFetch = async (config: {
   };
 
   const serializedQueryParams = queryParams?.toString();
-  const base = baseUrl ?? BASE_URL;
+  const base = baseUrl ?? BASE_URL_DATAPROC;
   let requestUrl = `${base}/projects/${credentials.project_id}`;
 
   if (regionIdentifier) {

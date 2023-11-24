@@ -121,7 +121,7 @@ def get_cached_credentials():
 
         return credentials
 
-def dataproc_url(cmd):
+def gcpServiceUrl(cmd):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _= process.communicate()
         if process.returncode == 0:
@@ -216,15 +216,15 @@ class UrlHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         url = {}
-        base_url = dataproc_url("gcloud config get api_endpoint_overrides/dataproc")
-        compute_url = dataproc_url("gcloud config get api_endpoint_overrides/compute")
-        metastore_url = dataproc_url("gcloud config get api_endpoint_overrides/metastore")
-        cloudkms_url = dataproc_url("gcloud config get api_endpoint_overrides/cloudkms")
-        cloudresourcemanager_url = dataproc_url("gcloud config get api_endpoint_overrides/cloudresourcemanager")
-        datacatalog_url = dataproc_url("gcloud config get api_endpoint_overrides/datacatalog")
-        storage_url = dataproc_url("gcloud config get api_endpoint_overrides/storage")
+        dataproc_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/dataproc")
+        compute_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/compute")
+        metastore_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/metastore")
+        cloudkms_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/cloudkms")
+        cloudresourcemanager_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/cloudresourcemanager")
+        datacatalog_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/datacatalog")
+        storage_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/storage")
         url = {
-            'dataproc_url': base_url,
+            'dataproc_url': dataproc_url,
             'compute_url': compute_url,
             'metastore_url': metastore_url,
             'cloudkms_url': cloudkms_url,

@@ -17,7 +17,7 @@
 
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
+  BASE_URL_DATAPROC,
   API_HEADER_BEARER,
   BatchStatus,
   REGION_URL,
@@ -168,7 +168,7 @@ export class BatchService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${selectedBatch}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${selectedBatch}`,
         {
           method: 'DELETE',
           headers: {
@@ -215,7 +215,7 @@ export class BatchService {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${batchSelected}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${batchSelected}`,
         {
           method: 'GET',
           headers: {
@@ -282,7 +282,7 @@ export class BatchService {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -904,7 +904,7 @@ export class BatchService {
     error: any
   ) => {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
+      `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
       {
         method: 'POST',
         body: JSON.stringify(payload),

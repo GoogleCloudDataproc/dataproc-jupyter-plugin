@@ -17,7 +17,7 @@
 
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
+  BASE_URL_DATAPROC,
   API_HEADER_BEARER,
   HTTP_METHOD,
   STATUS_FAIL,
@@ -46,7 +46,7 @@ export class SessionService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}`,
         {
           method: 'DELETE',
           headers: {
@@ -81,7 +81,7 @@ export class SessionService {
     const credentials = await authApi();
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}:terminate`,
+        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}:terminate`,
         {
           method: 'POST',
           headers: {

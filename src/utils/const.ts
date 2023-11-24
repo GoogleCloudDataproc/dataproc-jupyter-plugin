@@ -22,7 +22,7 @@ export const CREATE_CLUSTER_URL =
 export const CREATE_BATCH_URL =
   'https://console.cloud.google.com/dataproc/batches/create';
 
-interface IUrlResponseData {
+interface IGcpUrlResponseData {
   dataproc_url: string;
   compute_url: string;
   metastore_url: string;
@@ -33,14 +33,14 @@ interface IUrlResponseData {
 }
 
 const data = await requestAPI('getGcpServiceUrls');
-let urlResponseObj = data as IUrlResponseData;
-const urlResponseJson = JSON.stringify(urlResponseObj);
+let gcpServiceUrl = data as IGcpUrlResponseData;
+const urlResponseJson = JSON.stringify(gcpServiceUrl);
 localStorage.setItem('UrlResponseObj', urlResponseJson);
 const storedUrlResponseJson = localStorage.getItem('UrlResponseObj');
 const storedUrlResponseObj = storedUrlResponseJson
   ? JSON.parse(storedUrlResponseJson)
   : null;
-export const BASE_URL = storedUrlResponseObj.dataproc_url + 'v1';
+export const BASE_URL_DATAPROC = storedUrlResponseObj.dataproc_url + 'v1';
 export const BASE_URL_NETWORKS =
   storedUrlResponseObj.compute_url + 'compute/v1';
 export const BASE_URL_META = storedUrlResponseObj.metastore_url + 'v1';
