@@ -20,8 +20,7 @@ import subprocess
 from cachetools import TTLCache
 import datetime
 
-from google.cloud.jupyter_config.config import gcp_kernel_gateway_url
-from google.cloud.jupyter_config.config import get_gcloud_config
+from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
 
 
 def update_gateway_client_url(c, log):
