@@ -32,7 +32,7 @@ interface IGcpUrlResponseData {
   storage_url: string;
 }
 
-const data: unknown = requestAPI('getGcpServiceUrls');
+const data = await requestAPI('getGcpServiceUrls');
 const gcpServiceUrl = data as IGcpUrlResponseData ;
 const urlResponseJson = JSON.stringify(gcpServiceUrl);
 localStorage.setItem('GCP_SERVICE_URLS', urlResponseJson);
