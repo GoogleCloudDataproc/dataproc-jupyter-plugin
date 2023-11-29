@@ -120,10 +120,13 @@ def get_cached_credentials():
 
         return credentials
 
+
 def gcp_service_url(service_name, default_url=None):
     default_url = default_url or f'https://{service_name}.googleapis.com/'
     configured_url = get_gcloud_config(f'configuration.properties.api_endpoint_overrides.{service_name}')
     return configured_url or default_url
+
+
 class TestHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
@@ -133,6 +136,7 @@ class TestHandler(APIHandler):
         self.finish(json.dumps({
             "data": "This is /dataproc-plugin/get-example endpoint!"
         }))
+
 
 class RouteHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
@@ -164,6 +168,7 @@ class LoginHandler(APIHandler):
         else:
             self.finish({'login' : 'FAILED'})
 
+
 class ConfigHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
@@ -188,6 +193,7 @@ class ConfigHandler(APIHandler):
         else:
             self.finish({'config' : ERROR_MESSAGE + 'failed'})
 
+
 class UrlHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
@@ -209,6 +215,8 @@ class UrlHandler(APIHandler):
             'storage_url': storage_url
             }
         self.finish(url)
+
+
 class LogHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
@@ -216,6 +224,7 @@ class LogHandler(APIHandler):
         log_body = self.get_json_body()
         logger.log(log_body["level"], log_body["message"])
         self.finish({'status': 'OK'})
+
 
 def setup_handlers(web_app):
     host_pattern = ".*$"
