@@ -198,7 +198,7 @@ class UrlHandler(APIHandler):
         cloudkms_url = gcp_service_url('cloudkms')
         cloudresourcemanager_url = gcp_service_url('cloudresourcemanager')
         datacatalog_url = gcp_service_url('datacatalog')
-        storage_url = gcp_service_url('storage', default_url='https://storage.googleapis.com/storage/v1/')
+        storage_url = gcp_service_url('storage', default_url='https://content-storage.googleapis.com')
         url = {
             'dataproc_url': dataproc_url,
             'compute_url': compute_url,

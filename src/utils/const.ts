@@ -32,8 +32,8 @@ interface IGcpUrlResponseData {
   storage_url: string;
 }
 
-const data = await requestAPI('getGcpServiceUrls');
-let gcpServiceUrl = data as IGcpUrlResponseData;
+const data: unknown = requestAPI('getGcpServiceUrls');
+const gcpServiceUrl = data as IGcpUrlResponseData ;
 const urlResponseJson = JSON.stringify(gcpServiceUrl);
 localStorage.setItem('GCP_SERVICE_URLS', urlResponseJson);
 const storedUrlResponseJson = localStorage.getItem('GCP_SERVICE_URLS');
@@ -165,7 +165,7 @@ export const SPARK_HISTORY_SERVER = 'Spark History Server';
 export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';
 export const JOB_FIELDS_EXCLUDED = ['queryList', 'properties', 'args'];
 export const BATCH_FIELDS_EXCLUDED = ['queryList', 'properties'];
-export const GCS_URL = storedUrlResponseObj.storage_url + 'storage/v1/b';
+export const STORAGE_DOMAIN_URL = storedUrlResponseObj.storage_url;
 export const GCS_UPLOAD_URL =
   'https://storage.googleapis.com/upload/storage/v1/b';
 export const KEY_MESSAGE =
