@@ -27,7 +27,7 @@ interface IGcpUrlResponseData {
   compute_url: string;
   metastore_url: string;
   cloudkms_url: string;
-  cloudresourcemanger_url: string;
+  cloudresourcemanager_url: string;
   datacatalog_url: string;
   storage_url: string;
 }
