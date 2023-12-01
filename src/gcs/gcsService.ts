@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE, STORAGE_DOMAIN_URL } from '../utils/const';
+import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE, CONTENT_STORAGE_URL, STORAGE_DOMAIN_URL } from '../utils/const';
 import { authApi, loggedFetch } from '../utils/utils';
 import type { storage_v1 } from '@googleapis/storage';
 
@@ -60,7 +60,7 @@ export class GcsService {
       throw 'not logged in';
     }
     const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o`
+      `${STORAGE_DOMAIN_URL}b/${bucket}/o`
     );
     requestUrl.searchParams.append('prefix', prefix);
     requestUrl.searchParams.append('delimiter', '/');
@@ -84,7 +84,7 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
-    const requestUrl = new URL(`${STORAGE_DOMAIN_URL}/storage/v1/b`);
+    const requestUrl = new URL(`${STORAGE_DOMAIN_URL}b`);
     requestUrl.searchParams.append('project', credentials.project_id ?? '');
     requestUrl.searchParams.append('prefix', prefix);
     const response = await loggedFetch(requestUrl.toString(), {
@@ -116,7 +116,7 @@ export class GcsService {
       throw 'not logged in';
     }
     const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o/${encodeURIComponent(
+      `${STORAGE_DOMAIN_URL}b/${bucket}/o/${encodeURIComponent(
         path
       )}`
     );
@@ -171,7 +171,7 @@ export class GcsService {
       throw 'not logged in';
     }
     const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o/${encodeURIComponent(
+      `${CONTENT_STORAGE_URL}/storage/v1/b/${bucket}/o/${encodeURIComponent(
         path
       )}`
     );
@@ -228,7 +228,7 @@ export class GcsService {
       throw 'not logged in';
     }
     const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}/upload/storage/v1/b/${bucket}/o`
+      `${CONTENT_STORAGE_URL}/upload/storage/v1/b/${bucket}/o`
     );
     requestUrl.searchParams.append('name', path);
     requestUrl.searchParams.append('uploadType', 'media');
@@ -265,7 +265,7 @@ export class GcsService {
       throw 'not logged in';
     }
     const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}/upload/storage/v1/b/${bucket}/o`
+      `${CONTENT_STORAGE_URL}/upload/storage/v1/b/${bucket}/o`
     );
     let newFolderPath =
       path === '' ? path + folderName + '/' : path + '/' + folderName + '/';
@@ -294,7 +294,7 @@ export class GcsService {
       throw 'not logged in';
     }
     const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}/storage/v1/b/${bucket}/o/${encodeURIComponent(
+      `${STORAGE_DOMAIN_URL}b/${bucket}/o/${encodeURIComponent(
         path
       )}`
     );
@@ -338,7 +338,7 @@ export class GcsService {
     const requestUrl = new URL(
       `${
         STORAGE_DOMAIN_URL
-      }/storage/v1/b/${oldBucket}/o/${encodeURIComponent(
+      }b/${oldBucket}/o/${encodeURIComponent(
         oldPath
       )}/rewriteTo/b/${newBucket}/o/${encodeURIComponent(newPath)}`
     );

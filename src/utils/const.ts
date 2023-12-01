@@ -168,6 +168,7 @@ export const BATCH_FIELDS_EXCLUDED = ['queryList', 'properties'];
 export const STORAGE_DOMAIN_URL = storedUrlResponseObj.storage_url;
 export const GCS_UPLOAD_URL =
   'https://storage.googleapis.com/upload/storage/v1/b';
+export const CONTENT_STORAGE_URL = "https://content-storage.googleapis.com";
 export const KEY_MESSAGE =
   'Example format:projects/<project-name>/locations/<location-name>/keyRings/<keyring-name>/cryptoKeys/<key-name>';
 export enum HTTP_METHOD {
