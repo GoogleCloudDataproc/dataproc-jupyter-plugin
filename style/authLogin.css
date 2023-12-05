@@ -266,10 +266,7 @@
 }
 
 .settings-component {
-  height: 90vh;
-  overflow-y: auto;
   margin-left: 40px;
-  overflow-x: hidden;
   font-family: 'Roboto';
 }
 
