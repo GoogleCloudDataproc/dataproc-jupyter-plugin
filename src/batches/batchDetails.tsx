@@ -25,7 +25,6 @@ import { ClipLoader } from 'react-spinners';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
   BATCH_FIELDS_EXCLUDED,
@@ -40,7 +39,8 @@ import {
   SPARK_HISTORY_SERVER,
   SPARK_HISTORY_SERVER_KEY,
   SUBNETWORK_KEY,
-  SUBNETWORK_LABEL
+  SUBNETWORK_LABEL,
+  gcpServiceUrls
 } from '../utils/const';
 import {
   BatchTypeValue,
@@ -236,11 +236,12 @@ function BatchDetails({
 
   const getBatchDetails = async () => {
     const credentials = await authApi();
+    const { DATAPROC} = await gcpServiceUrls;
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${batchSelected}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${batchSelected}`,
         {
           method: 'GET',
           headers: {

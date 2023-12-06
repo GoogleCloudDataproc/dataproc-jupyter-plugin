@@ -26,14 +26,14 @@ import {
   API_HEADER_CONTENT_TYPE,
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
-  BASE_URL,
   FILES_MESSAGE,
   JAR_FILE_MESSAGE,
   MAIN_CLASS_MESSAGE,
   MAX_RESTART_MESSAGE,
   QUERY_FILE_MESSAGE,
   RESTART_JOB_URL,
-  STATUS_RUNNING
+  STATUS_RUNNING,
+  gcpServiceUrls
 } from '../utils/const';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
@@ -582,6 +582,7 @@ function SubmitJob({
 
   const submitJob = async () => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       const labelObject: { [key: string]: string } = {};
       labelDetailUpdated.forEach((label: string) => {
@@ -651,7 +652,7 @@ function SubmitJob({
         }
       };
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs:submit`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs:submit`,
         {
           method: 'POST',
           body: JSON.stringify(payload),

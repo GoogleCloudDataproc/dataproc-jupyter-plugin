@@ -16,15 +16,16 @@
  */
 
 import { toast } from 'react-toastify';
-import { BASE_URL, API_HEADER_CONTENT_TYPE, API_HEADER_BEARER } from './const';
+import { API_HEADER_CONTENT_TYPE, API_HEADER_BEARER, gcpServiceUrls } from './const';
 import { authApi, toastifyCustomStyle, loggedFetch } from './utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const stopJobApi = async (jobId: string) => {
   const credentials = await authApi();
+  const { DATAPROC } = await gcpServiceUrls;
   if (credentials) {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}:cancel`,
+      `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}:cancel`,
       {
         method: 'POST',
         headers: {
@@ -54,9 +55,10 @@ export const stopJobApi = async (jobId: string) => {
 };
 export const deleteJobApi = async (jobId: string) => {
   const credentials = await authApi();
+  const { DATAPROC } = await gcpServiceUrls;
   if (credentials) {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}`,
+      `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobId}`,
       {
         method: 'DELETE',
         headers: {
