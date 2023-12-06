@@ -770,7 +770,7 @@ function CreateRunTime({
                       service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
                       (service.hiveMetastoreConfig.endpointProtocol ===
                         'THRIFT' &&
-                        location == region &&
+                        location == credentials.region_id &&
                         service.network.split('/')[4] === network)
                     );
                   }
