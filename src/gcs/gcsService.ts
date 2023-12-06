@@ -186,26 +186,12 @@ export class GcsService {
       throw response.statusText;
     }
 
-    // let fileName = name.split('/')[name.split('/').length-1]
-    // let blob = await response.blob()
-    // // Create blob link to download
-    // const url = window.URL.createObjectURL(
-    //   new Blob([blob]),
-    // );
-    // const link = document.createElement('a');
-    // link.href = url;
-    // link.setAttribute(
-    //   'download',
-    //   decodeURIComponent(fileName),
-    // );
-
-    // // Append to html link element page
-    // document.body.appendChild(link);
-
-    // // Start download
-    // link.click();
-
-    return response.url;
+    let blob = await response.blob()
+    // Create blob link to download
+    const url = window.URL.createObjectURL(
+      new Blob([blob]),
+    );
+    return url;
   }
 
   /**
