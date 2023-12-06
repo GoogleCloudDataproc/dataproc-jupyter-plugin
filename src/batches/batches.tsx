@@ -27,10 +27,10 @@ import {
 } from '../utils/utils';
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   API_HEADER_BEARER,
   LOGIN_STATE,
-  BatchStatus
+  BatchStatus,
+  gcpServiceUrls
 } from '../utils/const';
 import ListBatches from './listBatches';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -105,12 +105,13 @@ const BatchesComponent = (): React.JSX.Element => {
     previousBatchesList?: object
   ) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,

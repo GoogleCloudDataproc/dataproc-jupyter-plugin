@@ -17,8 +17,8 @@
 
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
-  API_HEADER_BEARER
+  API_HEADER_BEARER,
+  gcpServiceUrls
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { toast } from 'react-toastify';
@@ -30,8 +30,9 @@ export const deleteRuntimeTemplateAPI = async (
   selectedRuntimeTemplateDisplayName: string
 ) => {
   const credentials = await authApi();
+  const { DATAPROC } = await gcpServiceUrls;
   if (credentials) {
-    loggedFetch(`${BASE_URL}/${selectedRuntimeTemplate}`, {
+    loggedFetch(`${DATAPROC}/${selectedRuntimeTemplate}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,

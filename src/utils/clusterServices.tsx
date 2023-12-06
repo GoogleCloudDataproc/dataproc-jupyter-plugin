@@ -19,16 +19,17 @@ import { toast } from 'react-toastify';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL
+  gcpServiceUrls,
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const deleteClusterApi = async (selectedcluster: string) => {
   const credentials = await authApi();
+  const { DATAPROC } = await gcpServiceUrls;
   if (credentials) {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
+      `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
       {
         method: 'DELETE',
         headers: {
@@ -67,9 +68,10 @@ export const startStopAPI = async (
   operation: 'start' | 'stop'
 ) => {
   const credentials = await authApi();
+  const { DATAPROC } = await gcpServiceUrls;
   if (credentials) {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:${operation}`,
+      `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:${operation}`,
       {
         method: 'POST',
         headers: {

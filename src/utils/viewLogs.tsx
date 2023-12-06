@@ -21,11 +21,11 @@ import ViewLogsIcon from '../../style/icons/view_logs_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   SPARK_HISTORY_SERVER,
   VIEW_LOGS_BATCH_URL,
   VIEW_LOGS_CLUSTER_URL,
-  VIEW_LOGS_SESSION_URL
+  VIEW_LOGS_SESSION_URL,
+  gcpServiceUrls
 } from './const';
 import { authApi, loggedFetch } from './utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
@@ -93,9 +93,10 @@ function ViewLogs({
 }: IViewLogsProps) {
   const handleJobDetailsViewLogs = async (clusterName: string) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterName}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterName}`,
         {
           method: 'GET',
           headers: {

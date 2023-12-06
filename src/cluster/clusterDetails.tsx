@@ -36,7 +36,6 @@ import {
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   STATUS_CREATING,
   STATUS_DELETING,
   STATUS_ERROR,
@@ -44,7 +43,8 @@ import {
   STATUS_RUNNING,
   STATUS_STARTING,
   STATUS_STOPPED,
-  STATUS_STOPPING
+  STATUS_STOPPING,
+  gcpServiceUrls
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
@@ -180,10 +180,11 @@ function ClusterDetails({
 
   const getClusterDetails = async () => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
         {
           method: 'GET',
           headers: {
