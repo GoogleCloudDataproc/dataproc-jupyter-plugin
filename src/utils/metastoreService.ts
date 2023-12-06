@@ -18,7 +18,7 @@
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL_META
+  gcpServiceUrls
 } from './const';
 import { authApi, loggedFetch } from './utils';
 
@@ -27,11 +27,12 @@ export const metastoreServiceListAPI = async (
   prefix: string
 ): Promise<string[]> => {
   const credentials = await authApi();
+  const { METASTORE } = await gcpServiceUrls;
   if (!credentials) {
     return [];
   }
   const requestUrl = new URL(
-    `${BASE_URL_META}/projects/${projectId}/locations/${credentials.region_id}/services`
+    `${METASTORE}/projects/${projectId}/locations/${credentials.region_id}/services`
   );
   if (prefix.length > 0) {
     requestUrl.searchParams.append('filter', `name:${prefix}*`);

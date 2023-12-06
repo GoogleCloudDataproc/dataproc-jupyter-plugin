@@ -22,18 +22,15 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   ARTIFACT_REGISTERY,
-  BASE_URL,
-  BASE_URL_META,
-  BASE_URL_NETWORKS,
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
   HTTP_METHOD,
-  REGION_URL,
   SHARED_VPC,
   STATUS_RUNNING,
-  USER_INFO_URL
+  USER_INFO_URL,
+  gcpServiceUrls
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -235,6 +232,7 @@ function CreateRunTime({
 
   const runtimeSharedProject = async () => {
     const credentials = await authApi();
+    const { REGION_URL } = await gcpServiceUrls;
     if (credentials) {
       let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
       loggedFetch(apiURL, {
@@ -273,6 +271,7 @@ function CreateRunTime({
   const listSharedVPC = async (projectName: string) => {
     try {
       const credentials = await authApi();
+      const { REGION_URL } = await gcpServiceUrls;
       if (!credentials) {
         return false;
       }
@@ -495,9 +494,10 @@ function CreateRunTime({
   const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
     setIsloadingNetwork(true);
     const credentials = await authApi();
+    const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subnetwork}`,
+        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subnetwork}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -568,8 +568,9 @@ function CreateRunTime({
 
   const listNetworksAPI = async () => {
     try {
+      const { COMPUTE } = await gcpServiceUrls;
       const response = await authenticatedFetch({
-        baseUrl: BASE_URL_NETWORKS,
+        baseUrl: COMPUTE,
         uri: 'networks',
         method: HTTP_METHOD.GET,
         regionIdentifier: 'global'
@@ -595,9 +596,10 @@ function CreateRunTime({
 
   const listSubNetworksAPI = async (subnetwork: string) => {
     const credentials = await authApi();
+    const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
+        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -661,6 +663,7 @@ function CreateRunTime({
     network: string | undefined
   ) => {
     const credentials = await authApi();
+    const { REGION_URL } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(`${REGION_URL}/${projectId}/regions`, {
         headers: {
@@ -734,9 +737,10 @@ function CreateRunTime({
   ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
+    const { METASTORE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_META}/projects/${projectId}/locations/${location}/services`,
+        `${METASTORE}/projects/${projectId}/locations/${location}/services`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -970,9 +974,10 @@ function CreateRunTime({
   }
   const createRuntimeApi = async (payload: any) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
         {
           method: 'POST',
           body: JSON.stringify(payload),
@@ -1104,9 +1109,10 @@ function CreateRunTime({
   };
   const updateRuntimeApi = async (payload: any) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
         {
           method: 'PATCH',
           body: JSON.stringify(payload),

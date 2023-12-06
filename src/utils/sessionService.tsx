@@ -17,8 +17,8 @@
 
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
-  API_HEADER_BEARER
+  API_HEADER_BEARER,
+  gcpServiceUrls
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { toast } from 'react-toastify';
@@ -27,9 +27,10 @@ import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const deleteSessionAPI = async (selectedSession: string) => {
   const credentials = await authApi();
+  const { DATAPROC } = await gcpServiceUrls;
   if (credentials) {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}`,
+      `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}`,
       {
         method: 'DELETE',
         headers: {
@@ -63,9 +64,10 @@ export const deleteSessionAPI = async (selectedSession: string) => {
 };
 export const terminateSessionAPI = async (selectedSession: string) => {
   const credentials = await authApi();
+  const { DATAPROC } = await gcpServiceUrls;
   if (credentials) {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}:terminate`,
+      `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}:terminate`,
       {
         method: 'POST',
         headers: {

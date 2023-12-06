@@ -24,7 +24,6 @@ import { requestAPI } from '../handler/handler';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   DCU_HOURS,
   GB_MONTHS,
   HTTP_METHOD,
@@ -39,7 +38,8 @@ import {
   STATUS_PROVISIONING,
   STATUS_SETUP_DONE,
   STATUS_STARTING,
-  STATUS_SUCCESS
+  STATUS_SUCCESS,
+  gcpServiceUrls
 } from './const';
 import { ToastOptions, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
@@ -105,7 +105,8 @@ export const authenticatedFetch = async (config: {
   };
 
   const serializedQueryParams = queryParams?.toString();
-  const base = baseUrl ?? BASE_URL;
+  const { DATAPROC } = await gcpServiceUrls;
+  const base = baseUrl ?? DATAPROC;
   let requestUrl = `${base}/projects/${credentials.project_id}`;
 
   if (regionIdentifier) {

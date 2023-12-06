@@ -18,7 +18,7 @@
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  PROJECT_LIST_URL
+  gcpServiceUrls
 } from '../utils/const';
 import { authApi, loggedFetch } from '../utils/utils';
 
@@ -29,10 +29,11 @@ interface IProject {
 
 export const projectListAPI = async (prefix: string): Promise<string[]> => {
   const credentials = await authApi();
+  const { CLOUD_RESOURCE_MANAGER } = await gcpServiceUrls;
   if (!credentials) {
     return [];
   }
-  const requestUrl = new URL(PROJECT_LIST_URL);
+  const requestUrl = new URL(CLOUD_RESOURCE_MANAGER);
   if (prefix.length > 0) {
     requestUrl.searchParams.append('filter', `name:${prefix}*`);
   }

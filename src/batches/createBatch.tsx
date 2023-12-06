@@ -25,10 +25,6 @@ import {
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
   ARTIFACT_REGISTERY,
-  BASE_URL,
-  BASE_URL_KEY,
-  BASE_URL_META,
-  BASE_URL_NETWORKS,
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
@@ -40,12 +36,12 @@ import {
   METASTORE_MESSAGE,
   NETWORK_TAG_MESSAGE,
   QUERY_FILE_MESSAGE,
-  REGION_URL,
   SECURITY_KEY,
   SELF_MANAGED_CLUSTER,
   SERVICE_ACCOUNT,
   SHARED_VPC,
-  STATUS_RUNNING
+  STATUS_RUNNING,
+  gcpServiceUrls
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -473,6 +469,7 @@ function CreateBatch({
   }
   const runtimeSharedProject = async () => {
     const credentials = await authApi();
+    const { REGION_URL } = await gcpServiceUrls;
     if (credentials) {
       let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
       loggedFetch(apiURL, {
@@ -511,6 +508,7 @@ function CreateBatch({
   const listSharedVPC = async (projectName: string) => {
     try {
       const credentials = await authApi();
+      const { REGION_URL } = await gcpServiceUrls;
       if (!credentials) {
         return false;
       }
@@ -577,9 +575,10 @@ function CreateBatch({
   const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
     setIsloadingNetwork(true);
     const credentials = await authApi();
+    const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subNetwork}`,
+        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subNetwork}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -801,9 +800,10 @@ function CreateBatch({
   };
   const listNetworksAPI = async () => {
     const credentials = await authApi();
+    const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks`,
+        `${COMPUTE}/projects/${credentials.project_id}/global/networks`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -866,9 +866,10 @@ function CreateBatch({
 
   const listKeyRingsAPI = async () => {
     const credentials = await authApi();
+    const {CLOUD_KMS} = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings`,
+        `${CLOUD_KMS}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -926,9 +927,10 @@ function CreateBatch({
 
   const listKeysAPI = async (keyRing: string) => {
     const credentials = await authApi();
+    const { CLOUD_KMS} = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_KEY}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRing}/cryptoKeys`,
+        `${CLOUD_KMS}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRing}/cryptoKeys`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -975,9 +977,10 @@ function CreateBatch({
 
   const listSubNetworksAPI = async (subnetwork: string) => {
     const credentials = await authApi();
+    const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
+        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -1040,6 +1043,7 @@ function CreateBatch({
     network: string | undefined
   ) => {
     const credentials = await authApi();
+    const { REGION_URL } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(`${REGION_URL}/${projectId}/regions`, {
         headers: {
@@ -1109,9 +1113,10 @@ function CreateBatch({
   ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
+    const { METASTORE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_META}/projects/${projectId}/locations/${location}/services`,
+        `${METASTORE}/projects/${projectId}/locations/${location}/services`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -1336,6 +1341,7 @@ function CreateBatch({
 
   const handleSubmit = async () => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       const labelObject: { [key: string]: string } = {};
       labelDetailUpdated.forEach((label: string) => {
@@ -1380,7 +1386,7 @@ function CreateBatch({
         queryFileSelected
       );
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
         {
           method: 'POST',
           body: JSON.stringify(payload),

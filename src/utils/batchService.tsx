@@ -17,8 +17,8 @@
 
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
-  API_HEADER_BEARER
+  API_HEADER_BEARER,
+  gcpServiceUrls
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { toast } from 'react-toastify';
@@ -27,9 +27,10 @@ import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 export const deleteBatchAPI = async (selectedBatch: string) => {
   const credentials = await authApi();
+  const { DATAPROC } = await gcpServiceUrls;
   if (credentials) {
     loggedFetch(
-      `${BASE_URL}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${selectedBatch}`,
+      `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${selectedBatch}`,
       {
         method: 'DELETE',
         headers: {

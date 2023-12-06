@@ -28,10 +28,10 @@ import DeletePopup from '../utils/deletePopup';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   JOB_FIELDS_EXCLUDED,
   LABEL_TEXT,
-  STATUS_RUNNING
+  STATUS_RUNNING,
+  gcpServiceUrls
 } from '../utils/const';
 import {
   authApi,
@@ -237,9 +237,10 @@ function JobDetails({
 
   const updateJobDetails = async (payloadJob: object) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}?updateMask=${LABEL_TEXT}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}?updateMask=${LABEL_TEXT}`,
         {
           method: 'PATCH',
           body: JSON.stringify(payloadJob),
@@ -304,9 +305,10 @@ function JobDetails({
 
   const getJobDetails = async () => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}`,
         {
           method: 'GET',
           headers: {

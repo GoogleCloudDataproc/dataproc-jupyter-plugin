@@ -42,7 +42,6 @@ import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL,
   ClusterStatus,
   STATUS_CANCELLED,
   STATUS_CREATING,
@@ -51,7 +50,8 @@ import {
   STATUS_PROVISIONING,
   STATUS_STARTING,
   STATUS_STOPPING,
-  STATUS_SUCCESS
+  STATUS_SUCCESS,
+  gcpServiceUrls
 } from '../utils/const';
 import ClipLoader from 'react-spinners/ClipLoader';
 import SubmitJob from './submitJob';
@@ -233,11 +233,12 @@ function JobComponent({
     previousJobsList?: object
   ) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     const clusterName = clusterSelected ?? '';
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       loggedFetch(
-        `${BASE_URL}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,

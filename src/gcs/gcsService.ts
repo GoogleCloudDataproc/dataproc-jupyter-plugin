@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE, CONTENT_STORAGE_URL, STORAGE_DOMAIN_URL } from '../utils/const';
+import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE, gcpServiceUrls } from '../utils/const';
 import { authApi, loggedFetch } from '../utils/utils';
 import type { storage_v1 } from '@googleapis/storage';
 
@@ -59,9 +59,8 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
-    const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}b/${bucket}/o`
-    );
+    const { STORAGE } = await gcpServiceUrls;
+    const requestUrl = new URL(`${STORAGE}b/${bucket}/o`);
     requestUrl.searchParams.append('prefix', prefix);
     requestUrl.searchParams.append('delimiter', '/');
     const response = await fetch(requestUrl.toString(), {
@@ -84,7 +83,8 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
-    const requestUrl = new URL(`${STORAGE_DOMAIN_URL}b`);
+    const { STORAGE } = await gcpServiceUrls;
+    const requestUrl = new URL(`${STORAGE}b`);
     requestUrl.searchParams.append('project', credentials.project_id ?? '');
     requestUrl.searchParams.append('prefix', prefix);
     const response = await loggedFetch(requestUrl.toString(), {
@@ -115,10 +115,9 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
+    const { STORAGE } = await gcpServiceUrls;
     const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}b/${bucket}/o/${encodeURIComponent(
-        path
-      )}`
+      `${STORAGE}b/${bucket}/o/${encodeURIComponent(path)}`
     );
     requestUrl.searchParams.append('alt', 'media');
     const response = await loggedFetch(requestUrl.toString(), {
@@ -170,10 +169,9 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
+    const { STORAGE } = await gcpServiceUrls;
     const requestUrl = new URL(
-      `${CONTENT_STORAGE_URL}/storage/v1/b/${bucket}/o/${encodeURIComponent(
-        path
-      )}`
+      `${STORAGE}b/${bucket}/o/${encodeURIComponent(path)}`
     );
     requestUrl.searchParams.append('alt', 'media');
     const response = await fetch(requestUrl.toString(), {
@@ -227,9 +225,8 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
-    const requestUrl = new URL(
-      `${CONTENT_STORAGE_URL}/upload/storage/v1/b/${bucket}/o`
-    );
+    const { STORAGE_UPLOAD } = await gcpServiceUrls;
+    const requestUrl = new URL(`${STORAGE_UPLOAD}b/${bucket}/o`);
     requestUrl.searchParams.append('name', path);
     requestUrl.searchParams.append('uploadType', 'media');
     const response = await loggedFetch(requestUrl.toString(), {
@@ -264,9 +261,8 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
-    const requestUrl = new URL(
-      `${CONTENT_STORAGE_URL}/upload/storage/v1/b/${bucket}/o`
-    );
+    const { STORAGE_UPLOAD } = await gcpServiceUrls;
+    const requestUrl = new URL(`${STORAGE_UPLOAD}b/${bucket}/o`);
     let newFolderPath =
       path === '' ? path + folderName + '/' : path + '/' + folderName + '/';
     requestUrl.searchParams.append('name', newFolderPath);
@@ -293,10 +289,9 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
+    const { STORAGE } = await gcpServiceUrls;
     const requestUrl = new URL(
-      `${STORAGE_DOMAIN_URL}b/${bucket}/o/${encodeURIComponent(
-        path
-      )}`
+      `${STORAGE}b/${bucket}/o/${encodeURIComponent(path)}`
     );
 
     const response = await fetch(requestUrl.toString(), {
@@ -334,11 +329,9 @@ export class GcsService {
     if (!credentials) {
       throw 'not logged in';
     }
-
+    const { STORAGE } = await gcpServiceUrls;
     const requestUrl = new URL(
-      `${
-        STORAGE_DOMAIN_URL
-      }b/${oldBucket}/o/${encodeURIComponent(
+      `${STORAGE}b/${oldBucket}/o/${encodeURIComponent(
         oldPath
       )}/rewriteTo/b/${newBucket}/o/${encodeURIComponent(newPath)}`
     );
