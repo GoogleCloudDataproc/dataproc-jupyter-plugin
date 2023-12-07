@@ -27,9 +27,11 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
 import { Batches } from './batches/batches';
+import { Templates } from './template/templates'
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
+//import templateIcon from '';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
@@ -96,6 +98,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
+    // template Icon
     const iconStorage = new LabIcon({
       name: 'launcher:storage-icon',
       svgstr: storageIcon
@@ -355,6 +358,21 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
+    const createTemplateComponentCommand = 'create-template-component';
+    commands.addCommand(createTemplateComponentCommand, {
+      caption: 'Create a new Template Component',
+      label: 'Template',
+      // @ts-ignore jupyter lab icon command issue
+      icon: args => (args['isPalette'] ? null : iconServerless),//change icon according to info
+      execute: () => {
+        const content = new Templates(themeManager);
+        const widget = new MainAreaWidget<Templates>({ content });
+        widget.title.label = 'Templates';
+        widget.title.icon = iconServerless;// change Icon 
+        app.shell.add(widget, 'main');
+      }
+    });
+
     const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Cloud Dataproc Settings',
@@ -466,6 +484,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         command: createBatchesComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 2
+      });
+      launcher.add({
+        command: createTemplateComponentCommand,
+        category: TITLE_LAUNCHER_CATEGORY,
+        rank: 3
       });
     }
 
