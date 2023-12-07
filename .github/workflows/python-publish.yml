@@ -28,7 +28,7 @@ jobs:
         python -m build
 
     - name: Upload package to GCS
-      uses: GoogleCloudPlatform/github-actions/upload-to-cloud-storage@master
+      uses: google-github-actions/upload-cloud-storage@v1
       with:
         serviceAccountKey: ${{ secrets.GCS_SA_KEY }}
         source: dist/*
