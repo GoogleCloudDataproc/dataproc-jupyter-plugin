@@ -39,7 +39,7 @@ const RuntimeTemplateComponent = ({
     setSelectedRuntimeClone(undefined);
   });
   return (
-    <div>
+    <div className='component-level'>
       {!openCreateTemplate && (
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}

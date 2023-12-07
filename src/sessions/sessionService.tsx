@@ -17,12 +17,12 @@
 
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL_DATAPROC,
   API_HEADER_BEARER,
   HTTP_METHOD,
   STATUS_FAIL,
   STATUS_TERMINATED,
-  ClusterStatus
+  ClusterStatus,
+  gcpServiceUrls
 } from '../utils/const';
 import {
   authApi,
@@ -44,9 +44,10 @@ interface IRenderActionsData {
 export class SessionService {
   static deleteSessionAPI = async (selectedSession: string) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}`,
         {
           method: 'DELETE',
           headers: {
@@ -79,9 +80,10 @@ export class SessionService {
   };
   static terminateSessionAPI = async (selectedSession: string) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}:terminate`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessions/${selectedSession}:terminate`,
         {
           method: 'POST',
           headers: {

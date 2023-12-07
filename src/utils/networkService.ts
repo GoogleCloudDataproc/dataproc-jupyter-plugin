@@ -18,7 +18,7 @@
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  BASE_URL_NETWORKS
+  gcpServiceUrls
 } from './const';
 import { authApi, loggedFetch } from './utils';
 
@@ -36,11 +36,12 @@ type Network = {
  */
 export const listNetworksAPI = async (search: string) => {
   const credentials = await authApi();
+  const { COMPUTE } = await gcpServiceUrls;
   if (!credentials) {
     return [];
   }
   const requestUrl = new URL(
-    `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks`
+    `${COMPUTE}/projects/${credentials.project_id}/global/networks`
   );
   if (search.length > 0) {
     requestUrl.searchParams.append('filter', `name:${search}*`);
@@ -62,9 +63,10 @@ export const listNetworksAPI = async (search: string) => {
  */
 export const listSubNetworksAPI = async (network: string) => {
   const credentials = await authApi();
+  const { COMPUTE } = await gcpServiceUrls;
   if (!credentials) return [];
   const resp = await loggedFetch(
-    `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/global/networks/${network}`,
+    `${COMPUTE}/projects/${credentials.project_id}/global/networks/${network}`,
     {
       headers: {
         'Content-Type': API_HEADER_CONTENT_TYPE,

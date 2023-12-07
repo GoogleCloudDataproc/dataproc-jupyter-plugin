@@ -33,13 +33,11 @@ import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
 import {
-  BASE_URL_DATAPROC,
   API_HEADER_CONTENT_TYPE,
   API_HEADER_BEARER,
-  CATALOG_SEARCH,
-  COLUMN_API,
   QUERY_DATABASE,
-  QUERY_TABLE
+  QUERY_TABLE,
+  gcpServiceUrls
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { Table } from './tableInfo';
@@ -130,8 +128,9 @@ const DpmsComponent = ({
 
   const getColumnDetails = async (name: string) => {
     const credentials = await authApi();
+    const { COLUMN } = await gcpServiceUrls;
     if (credentials && notebookValue) {
-      loggedFetch(`${COLUMN_API}${name}`, {
+      loggedFetch(`${COLUMN}${name}`, {
         method: 'GET',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -174,6 +173,7 @@ const DpmsComponent = ({
   }
   const getTableDetails = async (database: string) => {
     const credentials = await authApi();
+    const { CATALOG } = await gcpServiceUrls;
     if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_TABLE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}.${database}`,
@@ -181,7 +181,7 @@ const DpmsComponent = ({
           includeProjectIds: [credentials.project_id]
         }
       };
-      loggedFetch(`${CATALOG_SEARCH}`, {
+      loggedFetch(`${CATALOG}`, {
         method: 'POST',
         body: JSON.stringify(requestBody),
         headers: {
@@ -540,6 +540,7 @@ fetching database name from fully qualified name structure */
   }
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
+    const { CATALOG} = await gcpServiceUrls;
     if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_DATABASE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
@@ -547,7 +548,7 @@ fetching database name from fully qualified name structure */
           includeProjectIds: [credentials.project_id]
         }
       };
-      loggedFetch(`${CATALOG_SEARCH}`, {
+      loggedFetch(`${CATALOG}`, {
         method: 'POST',
         body: JSON.stringify(requestBody),
         headers: {
@@ -618,9 +619,10 @@ fetching database name from fully qualified name structure */
   }
   const getClusterDetails = async () => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials && notebookValue) {
       loggedFetch(
-        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
         {
           method: 'GET',
           headers: {
@@ -682,9 +684,10 @@ fetching database name from fully qualified name structure */
 
   const getSessionDetails = async () => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials && notebookValue) {
       loggedFetch(
-        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,
         {
           method: 'GET',
           headers: {
