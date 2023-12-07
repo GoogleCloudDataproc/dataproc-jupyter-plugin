@@ -203,7 +203,7 @@ class UrlHandler(APIHandler):
         default_url = default_url or f'https://{service_name}.googleapis.com/'
         configured_url = get_gcloud_config(f'configuration.properties.api_endpoint_overrides.{service_name}')
         url = configured_url or default_url
-        self.log('Service_url for service {service_name}: {url}')
+        self.log.info('Service_url for service {service_name}: {url}')
         return url
 
 
