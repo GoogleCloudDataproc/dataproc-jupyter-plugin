@@ -37,7 +37,7 @@ def update_gateway_client_url(c, log):
 
 credentials_cache = None
 
-def get_cached_credentials():
+def get_cached_credentials(log):
     global credentials_cache
 
     try:
@@ -112,31 +112,14 @@ def get_cached_credentials():
             credentials_cache['credentials'] = credentials
             return credentials
     except Exception:
+        log.exception(f"Error fetching credentials from gcloud")
         credentials = {
             'access_token': '',
             'config_error': 1
         }
         credentials_cache = TTLCache(maxsize=1, ttl=2)
         credentials_cache['credentials'] = credentials
-
         return credentials
-
-
-def gcp_service_url(service_name, default_url=None):
-    default_url = default_url or f'https://{service_name}.googleapis.com/'
-    configured_url = get_gcloud_config(f'configuration.properties.api_endpoint_overrides.{service_name}')
-    return configured_url or default_url
-
-
-class TestHandler(APIHandler):
-    # The following decorator should be present on all verb methods (head, get, post,
-    # patch, put, delete, options) to ensure only authorized user can request the
-    # Jupyter server
-    @tornado.web.authenticated
-    def get(self):
-        self.finish(json.dumps({
-            "data": "This is /dataproc-plugin/get-example endpoint!"
-        }))
 
 
 class RouteHandler(APIHandler):
@@ -148,14 +131,15 @@ class RouteHandler(APIHandler):
     def get(self):
         try:
             if credentials_cache is None or 'credentials' not in credentials_cache:
-                cached_credentials = get_cached_credentials()
+                cached_credentials = get_cached_credentials(self.log)
                 self.finish(json.dumps(cached_credentials))
             else:
                 t1 = threading.Thread(target=get_cached_credentials, args=())
                 t1.start()
                 self.finish(json.dumps(credentials_cache['credentials']))
         except Exception:
-            cached_credentials = get_cached_credentials()
+            self.log.exception(f"Error handling credential request")
+            cached_credentials = get_cached_credentials(self.log)
             self.finish(json.dumps(cached_credentials))
 
 
@@ -201,13 +185,13 @@ class UrlHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         url = {}
-        dataproc_url = gcp_service_url('dataproc')
-        compute_url = gcp_service_url('compute', default_url='https://compute.googleapis.com/compute/v1')
-        metastore_url = gcp_service_url('metastore')
-        cloudkms_url = gcp_service_url('cloudkms')
-        cloudresourcemanager_url = gcp_service_url('cloudresourcemanager')
-        datacatalog_url = gcp_service_url('datacatalog')
-        storage_url = gcp_service_url('storage', default_url='https://storage.googleapis.com/storage/v1/')
+        dataproc_url = self.gcp_service_url('dataproc')
+        compute_url = self.gcp_service_url('compute', default_url='https://compute.googleapis.com/compute/v1')
+        metastore_url = self.gcp_service_url('metastore')
+        cloudkms_url = self.gcp_service_url('cloudkms')
+        cloudresourcemanager_url = self.gcp_service_url('cloudresourcemanager')
+        datacatalog_url = self.gcp_service_url('datacatalog')
+        storage_url = self.gcp_service_url('storage', default_url='https://storage.googleapis.com/storage/v1/')
         url = {
             'dataproc_url': dataproc_url,
             'compute_url': compute_url,
@@ -218,6 +202,13 @@ class UrlHandler(APIHandler):
             'storage_url': storage_url
             }
         self.finish(url)
+
+    def gcp_service_url(self, service_name, default_url=None):
+        default_url = default_url or f'https://{service_name}.googleapis.com/'
+        configured_url = get_gcloud_config(f'configuration.properties.api_endpoint_overrides.{service_name}')
+        url = configured_url or default_url
+        self.log.info('Service_url for service {service_name}: {url}')
+        return url
 
 
 class LogHandler(APIHandler):
