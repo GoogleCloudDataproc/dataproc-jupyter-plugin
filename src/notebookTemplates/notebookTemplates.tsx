@@ -1,27 +1,18 @@
-/**
- * @license
- * Copyright 2023 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import React, { useEffect, useState } from 'react';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
 import { ClipLoader } from 'react-spinners';
 import { checkConfig } from '../utils/utils';
+import ListNotebookTemplates from './listNotebookTemplates';
+import { JupyterLab } from '@jupyterlab/application';
+import { IThemeManager } from '@jupyterlab/apputils';
 
-const TemplatesComponent = (): React.JSX.Element => {
+const NotebookTemplatesComponent= ({
+  app
+}: {
+  app: JupyterLab;
+  themeManager: IThemeManager;
+}): JSX.Element=> {
   const [loggedIn, setLoggedIn] = useState(false);
   const [configError, setConfigError] = useState(false);
   const [loginError, setLoginError] = useState(false);
@@ -68,17 +59,34 @@ const TemplatesComponent = (): React.JSX.Element => {
               <div>
                 Templates
               </div>
-          
             </div>
           }
+          <div>
+              <ListNotebookTemplates
+               app={app} />
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-export class Templates extends DataprocWidget {
+export class NotebookTemplates extends DataprocWidget {
+  app: JupyterLab;
+
+  constructor(app: JupyterLab, themeManager: IThemeManager) {
+    super(themeManager);
+    this.app = app;
+  }
+
   renderInternal(): React.JSX.Element {
-    return <TemplatesComponent />;
+    return (
+      <div className='component-level'>
+      <NotebookTemplatesComponent
+        app={this.app}
+        themeManager={this.themeManager}
+      />
+      </div>
+    );
   }
 }

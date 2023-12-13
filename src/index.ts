@@ -27,7 +27,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
 import { Batches } from './batches/batches';
-import { Templates } from './template/templates'
+import { NotebookTemplates } from './notebookTemplates/notebookTemplates'
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
@@ -365,9 +365,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),//change icon according to info
       execute: () => {
-        const content = new Templates(themeManager);
-        const widget = new MainAreaWidget<Templates>({ content });
-        widget.title.label = 'Templates';
+        const content = new NotebookTemplates(app as JupyterLab,themeManager);
+        const widget = new MainAreaWidget<NotebookTemplates>({ content });
+        widget.title.label = 'NotebookTemplates';
         widget.title.icon = iconServerless;// change Icon 
         app.shell.add(widget, 'main');
       }
