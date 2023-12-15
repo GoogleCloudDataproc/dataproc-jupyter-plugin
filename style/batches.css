@@ -103,7 +103,8 @@
   overflow-y: auto;
   max-height: 85vh;
 }
-.css-pjtntf-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root .MuiInputBase-input { 
+.css-pjtntf-MuiInputBase-root-MuiOutlinedInput-root-MuiSelect-root
+  .MuiInputBase-input {
   height: 17px !important;
   width: 466px !important;
 }

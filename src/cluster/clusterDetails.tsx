@@ -137,7 +137,7 @@ function ClusterDetails({
   const listClustersAPI = async () => {
     await JobService.listClustersAPIService(setClusterResponse);
   };
-  
+
   const handleDetailedView = () => {
     pollingClusterDetails(getClusterDetails, true);
     setDetailedView(false);

@@ -42,7 +42,7 @@ const debounce = (func: any, delay: any) => {
       func(...args);
     }, delay);
   };
-}
+};
 export class GcsBrowserWidget extends Widget {
   private browser: FileBrowser;
   private fileInput: HTMLInputElement;
@@ -102,10 +102,14 @@ export class GcsBrowserWidget extends Widget {
             bucket: path.bucket
           });
 
-          if(content.items && content.items.length > 0) {
+          if (content.items && content.items.length > 0) {
             const result = await showDialog({
               title: 'Upload files',
-              body: file.name + ' already exists in ' + path.bucket +' and click ok to overwriting file',
+              body:
+                file.name +
+                ' already exists in ' +
+                path.bucket +
+                ' and click ok to overwriting file',
               buttons: [Dialog.okButton(), Dialog.cancelButton()]
             });
 
@@ -123,7 +127,6 @@ export class GcsBrowserWidget extends Widget {
               contents: reader.result as string // assuming contents is a string
             });
           }
-          
 
           // Optionally, update the FileBrowser model to reflect the newly uploaded file
           // Example: Refresh the current directory
@@ -162,7 +165,7 @@ export class GcsBrowserWidget extends Widget {
 
     let filterInput = document.createElement('input');
     filterInput.id = 'filter-buckets-objects';
-    filterInput.className = "filter-search-gcs"
+    filterInput.className = 'filter-search-gcs';
     filterInput.type = 'text';
     filterInput.placeholder = 'Filter by Name';
 

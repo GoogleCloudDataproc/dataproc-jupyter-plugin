@@ -423,7 +423,7 @@ export class JobService {
     }
   };
   static submitJobService = async (
-    payload: any, 
+    payload: any,
     jobIdSelected: string,
     credentials: any
   ) => {
@@ -464,5 +464,5 @@ export class JobService {
         DataprocLoggingService.log('Error submitting job', LOG_LEVEL.ERROR);
         toast.error('Failed to submit the job', toastifyCustomStyle);
       });
-  }
+  };
 }

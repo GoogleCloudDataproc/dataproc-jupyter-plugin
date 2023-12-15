@@ -57,7 +57,7 @@ export class ClusterService {
   static listClustersAPIService = async (
     setProjectId: (value: string) => void,
     renderActions: (value: IClusterRenderData) => React.JSX.Element,
-    setclustersList: (value: any) => void,
+    setClustersList: (value: any) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
     nextPageToken?: string,
@@ -116,14 +116,14 @@ export class ClusterService {
         this.listClustersAPIService(
           setProjectId,
           renderActions,
-          setclustersList,
+          setClustersList,
           setIsLoading,
           setLoggedIn,
           formattedResponse.nextPageToken,
           allClustersData
         );
       } else {
-        setclustersList(allClustersData);
+        setClustersList(allClustersData);
         setIsLoading(false);
         setLoggedIn(true);
       }
