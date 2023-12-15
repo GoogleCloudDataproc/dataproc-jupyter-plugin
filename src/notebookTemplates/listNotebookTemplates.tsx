@@ -130,7 +130,7 @@ function ListNotebookTemplates({app}: any) {
   );
 
   const tableDataCondition = (cell: ICellProps) => {
-    if (cell.column.Header === 'name') {
+    if (cell.column.Header === 'Name') {
       return (
         <td
           role="button"
