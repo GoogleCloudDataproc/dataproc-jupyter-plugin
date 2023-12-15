@@ -34,7 +34,7 @@ const iconGCSUpload = new LabIcon({
   svgstr: gcsUploadIcon
 });
 
-const debounce = (func: any, delay: any) => {
+const debounce = (func: any, delay: number) => {
   let timeoutId: any;
   return function (...args: any) {
     clearTimeout(timeoutId);

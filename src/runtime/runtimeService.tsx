@@ -174,7 +174,7 @@ export class RunTimeSerive {
       const existingRuntimeTemplatesAllData =
         previousRuntimeTemplatesAllList ?? [];
       //setStateAction never type issue
-      let allRuntimeTemplatesAllData: any = [
+      let allRuntimeTemplatesAllData: ISessionTemplate[] = [
         ...(existingRuntimeTemplatesAllData as []),
         ...formattedResponse.sessionTemplates
       ];

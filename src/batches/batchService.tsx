@@ -30,7 +30,8 @@ import {
   jobTimeFormat,
   elapsedTime,
   jobTypeDisplay,
-  authenticatedFetch
+  authenticatedFetch,
+  IAuthCredentials
 } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -902,7 +903,7 @@ export class BatchService {
   };
 
   static creatBatchSubmitService = async (
-    credentials: any,
+    credentials: IAuthCredentials,
     payload: any,
     batchIdSelected: string,
     setCreateBatchView: any,

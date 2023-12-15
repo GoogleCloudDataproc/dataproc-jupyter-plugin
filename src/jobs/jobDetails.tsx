@@ -284,7 +284,7 @@ function JobDetails({
     : new Date();
 
   let elapsedTimeString = !errorView ? elapsedTime(endTime, jobStartTime) : '';
-  const statusStyleSelection = (jobInfo: any) => {
+  const statusStyleSelection = (jobInfo: IJobDetails) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
     } else {

@@ -35,7 +35,8 @@ import {
   jobTypeValue,
   jobTypeDisplay,
   authenticatedFetch,
-  statusValue
+  statusValue,
+  IAuthCredentials
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { IJobDetails } from '../utils/jobDetailsInterface';
@@ -65,6 +66,12 @@ interface IJobList {
 interface IRenderActionsData {
   reference: { jobId: string };
   status: { state: ClusterStatus };
+  clusterName: string;
+}
+
+interface IClusterResponse {
+  clusterUuid: string;
+  status: string;
   clusterName: string;
 }
 export class JobService {
@@ -399,7 +406,7 @@ export class JobService {
       }
       const existingClusterData = previousClustersList ?? [];
       //setStateAction never type issue
-      const allClustersData: any = [
+      const allClustersData: IClusterResponse[] = [
         ...(existingClusterData as []),
         ...transformClusterListData
       ];
@@ -425,7 +432,7 @@ export class JobService {
   static submitJobService = async (
     payload: any,
     jobIdSelected: string,
-    credentials: any
+    credentials: IAuthCredentials
   ) => {
     const { DATAPROC } = await gcpServiceUrls;
     loggedFetch(

@@ -674,7 +674,10 @@ fetching database name from fully qualified name structure */
     }
   };
   interface ISessionDetailsResponse {
-    error: any;
+    error: {
+      code: number;
+      message: string;
+    };
     environmentConfig?: {
       peripheralsConfig?: {
         metastoreService?: string;

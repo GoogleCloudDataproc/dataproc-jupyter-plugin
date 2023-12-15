@@ -119,7 +119,7 @@ export class ClusterService {
       }
       const existingClusterData = previousClustersList ?? [];
       //setStateAction never type issue
-      const allClustersData: any = [
+      const allClustersData: ICluster[] = [
         ...(existingClusterData as []),
         ...transformClusterListData
       ];
