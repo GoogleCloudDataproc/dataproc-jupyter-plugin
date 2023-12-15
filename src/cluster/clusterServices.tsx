@@ -53,11 +53,23 @@ interface IClusterDetailsResponse {
   projectId?: string;
   regionId?: string;
 }
+
+interface ICluster {
+  clusterName: string;
+  status: string;
+  clusterImage: string;
+  region: string;
+  zone: string;
+  totalWorkersNode: string;
+  schedulesDeletion: string;
+  actions: React.ReactNode;
+}
+
 export class ClusterService {
   static listClustersAPIService = async (
     setProjectId: (value: string) => void,
     renderActions: (value: IClusterRenderData) => React.JSX.Element,
-    setClustersList: (value: any) => void,
+    setClustersList: (value: ICluster[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
     nextPageToken?: string,
@@ -143,7 +155,7 @@ export class ClusterService {
     clusterSelected: string,
     setErrorView: (value: boolean) => void,
     setIsLoading: (value: boolean) => void,
-    setClusterInfo: any
+    setClusterInfo: (value: IClusterDetailsResponse) => void
   ) => {
     const credentials = await authApi();
     const { DATAPROC } = await gcpServiceUrls;

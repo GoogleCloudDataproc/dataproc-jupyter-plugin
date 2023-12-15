@@ -95,6 +95,16 @@ interface IBatchDetailsResponse {
   labels: {};
 }
 
+interface IBatchesList {
+  batchID: string;
+  status: string;
+  location: string;
+  creationTime: string;
+  type: string | undefined;
+  elapsedTime: string;
+  actions: React.JSX.Element;
+}
+
 interface IBatchData {
   name: string;
   state: BatchStatus;
@@ -268,7 +278,7 @@ export class BatchService {
     setRegionName: (value: string) => void,
     setProjectName: (value: string) => void,
     renderActions: (value: IBatchData) => React.JSX.Element,
-    setBatchesList: (value: any) => void,
+    setBatchesList: (value: IBatchesList[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
     nextPageToken?: string,
@@ -293,15 +303,7 @@ export class BatchService {
           response
             .json()
             .then((responseResult: IBatchListResponse) => {
-              let transformBatchListData: {
-                batchID: string;
-                status: string;
-                location: string;
-                creationTime: string;
-                type: string | undefined;
-                elapsedTime: string;
-                actions: React.JSX.Element;
-              }[] = [];
+              let transformBatchListData: IBatchesList[] = [];
               if (responseResult && responseResult.batches) {
                 transformBatchListData = responseResult.batches.map(
                   (data: IBatchData) => {
@@ -341,10 +343,7 @@ export class BatchService {
               }
               const existingBatchData = previousBatchesList ?? [];
 
-              let allBatchesData: any = [
-                ...(existingBatchData as []),
-                ...transformBatchListData
-              ];
+              let allBatchesData: IBatchesList[] = [...(existingBatchData as []), ...transformBatchListData];
 
               if (responseResult.nextPageToken) {
                 this.listBatchAPIService(
