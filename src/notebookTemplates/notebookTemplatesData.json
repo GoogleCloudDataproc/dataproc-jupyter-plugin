@@ -11,28 +11,28 @@
       "name": "logistic_regression",
       "category": "classification",
       "description": "Wine Quality Classification",
-      "url": "https://github.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/blob/main/classification/logistic_regression/wine_quality_classification_mlr.ipynb"
+      "url": "https://api.github.com/repos/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/contents/classification/logistic_regression/wine_quality_classification_mlr.ipynb"
     },
     {
       "id": 3,
       "name": "multilayer_perceptron_classifier",
       "category": "classification",
       "description": "SMS Spam Filtering",
-      "url": "https://github.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/blob/main/classification/multilayer_perceptron_classifier/sms_spam_filtering.ipynb"
+      "url": "https://api.github.com/repos/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/contents/classification/multilayer_perceptron_classifier/sms_spam_filtering.ipynb"
     },
     {
       "id": 4,
       "name": "decision_tree_regression",
       "category": "regression",
       "description": "Housing prices prediction from real estate assessments",
-      "url":"https://github.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/blob/main/regression/decision_tree_regression/housing_prices_prediction.ipynb"
+      "url":"https://api.github.com/repos/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/contents/regression/decision_tree_regression/housing_prices_prediction.ipynb"
     },
     {
       "id": 5,
       "name": "random_forest_regression",
       "category": "regression",
       "description": "Bike trip duration prediction",
-      "url": "https://github.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/blob/main/regression/random_forest_regression/bike_trip_duration_prediction.ipynb"
+      "url": "https://api.github.com/repos/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/contents/regression/random_forest_regression/bike_trip_duration_prediction.ipynb"
     }
 ]
    

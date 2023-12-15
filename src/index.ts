@@ -31,7 +31,7 @@ import { NotebookTemplates } from './notebookTemplates/notebookTemplates'
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
-//import templateIcon from '';
+import notebookTemplateIcon from '../style/icons/notebook_template_icon.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
@@ -98,7 +98,10 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
-    // template Icon
+    const iconNotebookTemplate = new LabIcon({
+      name: 'launcher:notebook-template-icon',
+      svgstr: notebookTemplateIcon
+    });
     const iconStorage = new LabIcon({
       name: 'launcher:storage-icon',
       svgstr: storageIcon
@@ -361,14 +364,14 @@ const extension: JupyterFrontEndPlugin<void> = {
     const createTemplateComponentCommand = 'create-template-component';
     commands.addCommand(createTemplateComponentCommand, {
       caption: 'Create a new Template Component',
-      label: 'Template',
+      label: 'Notebook Templates',
       // @ts-ignore jupyter lab icon command issue
-      icon: args => (args['isPalette'] ? null : iconServerless),//change icon according to info
+      icon: args => (args['isPalette'] ? null : iconNotebookTemplate),//change icon according to info
       execute: () => {
         const content = new NotebookTemplates(app as JupyterLab,themeManager);
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'NotebookTemplates';
-        widget.title.icon = iconServerless;// change Icon 
+        widget.title.icon = iconNotebookTemplate;
         app.shell.add(widget, 'main');
       }
     });

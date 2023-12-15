@@ -54,13 +54,6 @@ const NotebookTemplatesComponent= ({
       )}
       {loggedIn && !configError && !loginError && (
         <div className="clusters-list-component" role="tablist">
-          {
-            <div className="clusters-list-overlay" role="tab">
-              <div>
-                Templates
-              </div>
-            </div>
-          }
           <div>
               <ListNotebookTemplates
                app={app} />
