@@ -25,7 +25,7 @@ interface IBatch {
   location: string;
   creationTime: string;
   elapsedTime: string;
-  type: string;
+  type: string | undefined;
   actions: JSX.Element;
 }
 interface ICluster {

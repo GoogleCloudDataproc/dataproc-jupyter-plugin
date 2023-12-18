@@ -202,8 +202,7 @@ body[data-jp-theme-name='JupyterLab Dark'] .job-cancel-button-style:hover {
 }
 .css-uqjlkp-MuiFormControl-root-MuiTextField-root .MuiInputBase-root {
   padding: unset !important;
-  }
-  .css-uqjlkp-MuiFormControl-root-MuiTextField-root .MuiInputBase-root input {
+}
+.css-uqjlkp-MuiFormControl-root-MuiTextField-root .MuiInputBase-root input {
   height: 21px;
-  }
-  
+}

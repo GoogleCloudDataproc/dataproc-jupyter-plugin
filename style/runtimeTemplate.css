@@ -136,7 +136,7 @@
 }
 .create-no-list-message {
   color: var(--jp-ui-font-color0);
-  background: var(--jp-layout-color2);;
+  background: var(--jp-layout-color2);
   font-size: 13px;
   border-radius: 4px;
   width: 482px;

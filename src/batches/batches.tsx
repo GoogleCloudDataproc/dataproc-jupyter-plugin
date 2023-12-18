@@ -68,7 +68,7 @@ const BatchesComponent = (): React.JSX.Element => {
       )}
       {loginError && (
         <div role="alert" className="login-error">
-         {LOGIN_ERROR_MESSAGE}
+          {LOGIN_ERROR_MESSAGE}
         </div>
       )}
       {configError && (

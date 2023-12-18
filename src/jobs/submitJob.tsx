@@ -639,7 +639,7 @@ function SubmitJob({
             ))
         }
       };
-      await JobService.submitJobService(payload, jobIdSelected, credentials)
+      await JobService.submitJobService(payload, jobIdSelected, credentials);
     }
   };
   const handleJobIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {

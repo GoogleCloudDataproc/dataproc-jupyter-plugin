@@ -19,7 +19,16 @@ import React from 'react';
 import type { SelectProps } from 'semantic-ui-react';
 
 function SelectInternal(props: SelectProps) {
-  const { className, value, onChange, options,disabled,onFocus, onBlur ,Label}= props;
+  const {
+    className,
+    value,
+    onChange,
+    options,
+    disabled,
+    onFocus,
+    onBlur,
+    Label
+  } = props;
   return (
     <MuiSelect
       className={className}
@@ -33,13 +42,14 @@ function SelectInternal(props: SelectProps) {
       onFocus={e =>
         onFocus?.(e as unknown as React.FocusEvent<HTMLInputElement>, {
           value
-        })}
+        })
+      }
       onBlur={e =>
         onBlur?.(e as unknown as React.FocusEvent<HTMLInputElement>, {
           value: e.target.value
         })
       }
-      label = {Label}
+      label={Label}
     >
       {options.map(option => (
         <MenuItem value={option.value as string}>{option.text}</MenuItem>

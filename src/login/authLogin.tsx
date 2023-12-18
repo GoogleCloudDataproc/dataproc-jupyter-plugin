@@ -75,11 +75,11 @@ const AuthLoginComponent = ({
   }, []);
 
   return (
-    <div className='component-level'> 
+    <div className="component-level">
       {configLoading && !loginState && !configError && !loginError && (
         <div className="spin-loader-main">
-         <ClipLoader
-              color="#3367d6"
+          <ClipLoader
+            color="#3367d6"
             loading={true}
             size={18}
             aria-label="Loading Spinner"
