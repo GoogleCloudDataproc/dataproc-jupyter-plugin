@@ -9,8 +9,9 @@ import { PaginationView } from '../utils/paginationView';
 import { ICellProps, loggedFetch } from '../utils/utils';
 import * as path from 'path';
 import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
+import { JupyterFrontEnd } from '@jupyterlab/application';
 
-function ListNotebookTemplates({ app }: any) {
+function ListNotebookTemplates({ app }: { app: JupyterFrontEnd }) {
   const iconFilter = new LabIcon({
     name: 'launcher:filter-icon',
     svgstr: filterIcon
