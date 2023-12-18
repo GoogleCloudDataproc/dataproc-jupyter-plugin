@@ -22,7 +22,7 @@ import datetime
 import re
 import threading
 
-from google.cloud.jupyter_config.config import gcp_kernel_gateway_url
+from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
 
 
 def update_gateway_client_url(c, log):
@@ -37,7 +37,7 @@ def update_gateway_client_url(c, log):
 
 credentials_cache = None
 
-def get_cached_credentials():
+def get_cached_credentials(log):
     global credentials_cache
 
     try:
@@ -112,41 +112,15 @@ def get_cached_credentials():
             credentials_cache['credentials'] = credentials
             return credentials
     except Exception:
+        log.exception(f"Error fetching credentials from gcloud")
         credentials = {
             'access_token': '',
             'config_error': 1
         }
         credentials_cache = TTLCache(maxsize=1, ttl=2)
         credentials_cache['credentials'] = credentials
-
         return credentials
 
-def gcpServiceUrl(cmd):
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        output, _= process.communicate()
-        if process.returncode == 0:
-            base_url = output.decode("utf-8").strip()
-            if not base_url:
-                base_url_value = _.decode("utf-8").strip()
-                url_match = re.search(r'https?://[^\s/]+/', base_url_value)
-                if url_match:
-                    base_url= url_match.group()
-                    return base_url
-                else:
-                    base_url = ""
-                    return base_url
-            else:
-                return base_url
-
-class TestHandler(APIHandler):
-    # The following decorator should be present on all verb methods (head, get, post,
-    # patch, put, delete, options) to ensure only authorized user can request the
-    # Jupyter server
-    @tornado.web.authenticated
-    def get(self):
-        self.finish(json.dumps({
-            "data": "This is /dataproc-plugin/get-example endpoint!"
-        }))
 
 class RouteHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
@@ -157,14 +131,15 @@ class RouteHandler(APIHandler):
     def get(self):
         try:
             if credentials_cache is None or 'credentials' not in credentials_cache:
-                cached_credentials = get_cached_credentials()
+                cached_credentials = get_cached_credentials(self.log)
                 self.finish(json.dumps(cached_credentials))
             else:
                 t1 = threading.Thread(target=get_cached_credentials, args=())
                 t1.start()
                 self.finish(json.dumps(credentials_cache['credentials']))
         except Exception:
-            cached_credentials = get_cached_credentials()
+            self.log.exception(f"Error handling credential request")
+            cached_credentials = get_cached_credentials(self.log)
             self.finish(json.dumps(cached_credentials))
 
 
@@ -179,6 +154,7 @@ class LoginHandler(APIHandler):
             self.finish({'login' : 'SUCCEEDED'})
         else:
             self.finish({'login' : 'FAILED'})
+
 
 class ConfigHandler(APIHandler):
     @tornado.web.authenticated
@@ -204,25 +180,18 @@ class ConfigHandler(APIHandler):
         else:
             self.finish({'config' : ERROR_MESSAGE + 'failed'})
 
-class LogHandler(APIHandler):
-    @tornado.web.authenticated
-    def post(self):
-        logger = self.log.getChild('DataprocPluginClient')
-        log_body = self.get_json_body()
-        logger.log(log_body["level"], log_body["message"])
-        self.finish({'status': 'OK'})
 
 class UrlHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
         url = {}
-        dataproc_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/dataproc")
-        compute_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/compute")
-        metastore_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/metastore")
-        cloudkms_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/cloudkms")
-        cloudresourcemanager_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/cloudresourcemanager")
-        datacatalog_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/datacatalog")
-        storage_url = gcpServiceUrl("gcloud config get api_endpoint_overrides/storage")
+        dataproc_url = self.gcp_service_url('dataproc')
+        compute_url = self.gcp_service_url('compute', default_url='https://compute.googleapis.com/compute/v1')
+        metastore_url = self.gcp_service_url('metastore')
+        cloudkms_url = self.gcp_service_url('cloudkms')
+        cloudresourcemanager_url = self.gcp_service_url('cloudresourcemanager')
+        datacatalog_url = self.gcp_service_url('datacatalog')
+        storage_url = self.gcp_service_url('storage', default_url='https://storage.googleapis.com/storage/v1/')
         url = {
             'dataproc_url': dataproc_url,
             'compute_url': compute_url,
@@ -233,7 +202,22 @@ class UrlHandler(APIHandler):
             'storage_url': storage_url
             }
         self.finish(url)
-# 
+
+    def gcp_service_url(self, service_name, default_url=None):
+        default_url = default_url or f'https://{service_name}.googleapis.com/'
+        configured_url = get_gcloud_config(f'configuration.properties.api_endpoint_overrides.{service_name}')
+        url = configured_url or default_url
+        self.log.info('Service_url for service {service_name}: {url}')
+        return url
+
+
+class LogHandler(APIHandler):
+    @tornado.web.authenticated
+    def post(self):
+        logger = self.log.getChild('DataprocPluginClient')
+        log_body = self.get_json_body()
+        logger.log(log_body["level"], log_body["message"])
+        self.finish({'status': 'OK'})
 
 
 def setup_handlers(web_app):
@@ -252,6 +236,10 @@ def setup_handlers(web_app):
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "configuration")
     handlers = [(route_pattern, ConfigHandler)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "getGcpServiceUrls")
+    handlers = [(route_pattern, UrlHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "log")

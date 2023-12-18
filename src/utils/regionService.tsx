@@ -17,7 +17,7 @@
 
 
 import { useEffect, useRef, useState } from 'react';
-import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE, REGION_URL } from '../utils/const';
+import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE, gcpServiceUrls } from '../utils/const';
 import { authApi, toastifyCustomStyle } from '../utils/utils';
 import { toast } from 'react-toastify';
 
@@ -26,6 +26,7 @@ interface IRegions {
 }
 
 const regionListAPI = async (projectId: string, credentials: any) => {
+  const { REGION_URL } = await gcpServiceUrls;
   if(projectId !== ''){
   try {
     const resp = await fetch(`${REGION_URL}/${projectId}/regions`, {

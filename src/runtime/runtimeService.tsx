@@ -17,14 +17,11 @@
 
 import {
   API_HEADER_CONTENT_TYPE,
-  BASE_URL_DATAPROC,
   API_HEADER_BEARER,
   HTTP_METHOD,
   USER_INFO_URL,
-  REGION_URL,
-  BASE_URL_NETWORKS,
-  STATUS_RUNNING,
-  BASE_URL_META
+  gcpServiceUrls,
+  STATUS_RUNNING
 } from '../utils/const';
 import {
   authApi,
@@ -80,8 +77,9 @@ export class RunTimeSerive {
     selectedRuntimeTemplateDisplayName: string
   ) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
-      loggedFetch(`${BASE_URL_DATAPROC}/${selectedRuntimeTemplate}`, {
+      loggedFetch(`${DATAPROC}/${selectedRuntimeTemplate}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -255,6 +253,7 @@ export class RunTimeSerive {
   ) => {
     try {
       const credentials = await authApi();
+      const { REGION_URL } = await gcpServiceUrls;
       if (!credentials) {
         return false;
       }
@@ -307,6 +306,7 @@ export class RunTimeSerive {
     setSharedSubNetworkList: (value: string[]) => void
   ) => {
     const credentials = await authApi();
+    const { REGION_URL } = await gcpServiceUrls;
     if (credentials) {
       let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
       loggedFetch(apiURL, {
@@ -353,9 +353,10 @@ export class RunTimeSerive {
   ) => {
     setIsloadingNetwork(true);
     const credentials = await authApi();
+    const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subnetwork}`,
+        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subnetwork}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -429,9 +430,10 @@ export class RunTimeSerive {
     setNetworklist: (value: string[]) => void,
     setNetworkSelected: (value: string) => void
   ) => {
+    const { COMPUTE } = await gcpServiceUrls;
     try {
       const response = await authenticatedFetch({
-        baseUrl: BASE_URL_NETWORKS,
+        baseUrl: COMPUTE,
         uri: 'networks',
         method: HTTP_METHOD.GET,
         regionIdentifier: 'global'
@@ -464,9 +466,10 @@ export class RunTimeSerive {
   ) => {
     setIsLoadingService(true);
     const credentials = await authApi();
+    const { METASTORE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_META}/projects/${projectId}/locations/${location}/services`,
+        `${METASTORE}/projects/${projectId}/locations/${location}/services`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -536,6 +539,7 @@ export class RunTimeSerive {
     setServicesList: (value: string[]) => void
   ) => {
     const credentials = await authApi();
+    const { REGION_URL } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(`${REGION_URL}/${projectId}/regions`, {
         headers: {
@@ -608,9 +612,10 @@ export class RunTimeSerive {
     setSubNetworkSelected: (value: string) => void
   ) => {
     const credentials = await authApi();
+    const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_NETWORKS}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
+        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -674,9 +679,10 @@ export class RunTimeSerive {
     setOpenCreateTemplate: (value: boolean) => void
   ) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
         {
           method: 'PATCH',
           body: JSON.stringify(payload),

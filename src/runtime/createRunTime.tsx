@@ -22,7 +22,7 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   ARTIFACT_REGISTERY,
-  BASE_URL_DATAPROC,
+  gcpServiceUrls,
   CONTAINER_REGISTERY,
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
@@ -572,9 +572,10 @@ function CreateRunTime({
   }
   const createRuntimeApi = async (payload: any) => {
     const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       loggedFetch(
-        `${BASE_URL_DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates`,
         {
           method: 'POST',
           body: JSON.stringify(payload),
