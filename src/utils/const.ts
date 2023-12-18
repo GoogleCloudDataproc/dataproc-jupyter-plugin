@@ -182,3 +182,5 @@ export const NETWORK_TAG_MESSAGE =
   'Network tags are text attributes you can add to make firewall rules and routes applicable to specific VM instances.';
 export const LOGIN_ERROR_MESSAGE =
   'Please navigate to Settings -> Cloud Dataproc Settings to login and continue';
+export const NOTEBOOK_TEMPLATES_LIST_URL =
+'https://api.github.com/repos/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/contents/.ci/index.json';
