@@ -109,7 +109,7 @@ export class GcsBrowserWidget extends Widget {
                 file.name +
                 ' already exists in ' +
                 path.bucket +
-                ' and click ok to overwriting file',
+                ' Do you want to overwrite the file?',
               buttons: [Dialog.okButton(), Dialog.cancelButton()]
             });
 
