@@ -222,7 +222,7 @@ function ListRuntimeTemplates({
     );
   };
 
-  const handleRuntimeTemplatesName = (selectedValue: any) => {
+  const handleRuntimeTemplatesName = (selectedValue: ICellProps) => {
     let selectedRunTimeAll: ISessionTemplate[] = [];
     /*
          Extracting runtimeId from name

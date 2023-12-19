@@ -72,12 +72,22 @@ const iconDelete = new LabIcon({
   svgstr: deleteIcon
 });
 
+interface IBatchesList {
+  batchID: string;
+  status: string;
+  location: string;
+  creationTime: string;
+  type: string | undefined;
+  elapsedTime: string;
+  actions: React.JSX.Element;
+}
+
 function ListBatches({ setLoggedIn }: any) {
   const [detailedBatchView, setDetailedBatchView] = useState(false);
 
   const [createBatchView, setCreateBatchView] = useState(false);
 
-  const [batchesList, setBatchesList] = useState([]);
+  const [batchesList, setBatchesList] = useState<IBatchesList[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [batchSelected, setBatchSelected] = useState('');
   const [pollingDisable, setPollingDisable] = useState(false);

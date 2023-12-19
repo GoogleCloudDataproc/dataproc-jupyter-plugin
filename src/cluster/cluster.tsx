@@ -26,7 +26,7 @@ import { DataprocWidget } from '../controls/DataprocWidget';
 
 const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
-  
+
   const [detailedJobView, setDetailedJobView] = useState(false);
   const [submitJobView, setSubmitJobView] = useState(false);
   const [selectedMode, setSelectedMode] = useState<Mode>('Clusters');
@@ -132,9 +132,7 @@ const ClusterComponent = (): React.JSX.Element => {
           )}
         </>
       ) : (
-        loginError && (
-          <div className="login-error"> {LOGIN_ERROR_MESSAGE}</div>
-        )
+        loginError && <div className="login-error"> {LOGIN_ERROR_MESSAGE}</div>
       )}
       {configError && (
         <div className="login-error">

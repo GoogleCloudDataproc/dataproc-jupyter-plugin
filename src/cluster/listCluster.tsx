@@ -105,8 +105,8 @@ interface ICluster {
 }
 
 interface IListClusterProps {
-  setClusterSelected: (value: string)=> void;
-  detailedView: boolean,
+  setClusterSelected: (value: string) => void;
+  detailedView: boolean;
   setDetailedView: (value: boolean) => void;
   setLoggedIn: (value: boolean) => void;
 }
@@ -116,7 +116,7 @@ function ListCluster({
   setDetailedView,
   setLoggedIn
 }: IListClusterProps) {
-  const [clustersList, setclustersList] = useState<ICluster[]>([]);
+  const [clustersList, setClustersList] = useState<ICluster[]>([]);
   const [restartEnabled, setRestartEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
@@ -176,7 +176,7 @@ function ListCluster({
     await ClusterService.listClustersAPIService(
       setProjectId,
       renderActions,
-      setclustersList,
+      setClustersList,
       setIsLoading,
       setLoggedIn
     );
@@ -338,7 +338,7 @@ function ListCluster({
     };
   }, [pollingDisable, detailedView]);
   useEffect(() => {
-    if (!detailedView  && !isLoading) {
+    if (!detailedView && !isLoading) {
       pollingClusters(listClustersAPI, pollingDisable);
     }
   }, [isLoading]);
@@ -387,7 +387,7 @@ function ListCluster({
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-                <ClipLoader
+              <ClipLoader
                 color="#3367d6"
                 loading={true}
                 size={15}
@@ -440,10 +440,7 @@ function ListCluster({
           role="button"
           className="create-cluster-sub-overlay"
           onClick={() => {
-            window.open(
-              `${CREATE_CLUSTER_URL}?project=${projectId}`,
-              '_blank'
-            );
+            window.open(`${CREATE_CLUSTER_URL}?project=${projectId}`, '_blank');
           }}
         >
           <div className="create-icon">
@@ -460,10 +457,10 @@ function ListCluster({
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-                <iconFilter.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
+              <iconFilter.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
@@ -505,8 +502,8 @@ function ListCluster({
         <div>
           {isLoading && (
             <div className="spin-loader-main">
-            <ClipLoader
-              color="#3367d6"
+              <ClipLoader
+                color="#3367d6"
                 loading={true}
                 size={18}
                 aria-label="Loading Spinner"

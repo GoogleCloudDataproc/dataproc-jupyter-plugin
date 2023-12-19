@@ -30,7 +30,8 @@ import {
   jobTimeFormat,
   elapsedTime,
   jobTypeDisplay,
-  authenticatedFetch
+  authenticatedFetch,
+  IAuthCredentials
 } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -93,6 +94,16 @@ interface IBatchDetailsResponse {
   stateHistory: [{ state: ''; stateStartTime: '' }];
   stateTime: '';
   labels: {};
+}
+
+interface IBatchesList {
+  batchID: string;
+  status: string;
+  location: string;
+  creationTime: string;
+  type: string | undefined;
+  elapsedTime: string;
+  actions: React.JSX.Element;
 }
 
 interface IBatchData {
@@ -268,7 +279,7 @@ export class BatchService {
     setRegionName: (value: string) => void,
     setProjectName: (value: string) => void,
     renderActions: (value: IBatchData) => React.JSX.Element,
-    setBatchesList: (value: any) => void,
+    setBatchesList: (value: IBatchesList[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
     nextPageToken?: string,
@@ -293,15 +304,7 @@ export class BatchService {
           response
             .json()
             .then((responseResult: IBatchListResponse) => {
-              let transformBatchListData: {
-                batchID: string;
-                status: string;
-                location: string;
-                creationTime: string;
-                type: string | undefined;
-                elapsedTime: string;
-                actions: React.JSX.Element;
-              }[] = [];
+              let transformBatchListData: IBatchesList[] = [];
               if (responseResult && responseResult.batches) {
                 transformBatchListData = responseResult.batches.map(
                   (data: IBatchData) => {
@@ -341,10 +344,7 @@ export class BatchService {
               }
               const existingBatchData = previousBatchesList ?? [];
 
-              let allBatchesData: any = [
-                ...(existingBatchData as []),
-                ...transformBatchListData
-              ];
+              let allBatchesData: IBatchesList[] = [...(existingBatchData as []), ...transformBatchListData];
 
               if (responseResult.nextPageToken) {
                 this.listBatchAPIService(
@@ -903,7 +903,7 @@ export class BatchService {
   };
 
   static creatBatchSubmitService = async (
-    credentials: any,
+    credentials: IAuthCredentials,
     payload: any,
     batchIdSelected: string,
     setCreateBatchView: any,

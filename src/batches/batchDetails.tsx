@@ -186,11 +186,17 @@ function BatchDetails({
     );
   };
 
-  const statusMsg = !errorView ?statusMessageBatch(batchInfoResponse):"";
-  const startTime = !errorView ? jobTimeFormat(batchInfoResponse.createTime):"";
-  const startTimeElapsed = !errorView ? new Date(batchInfoResponse.createTime):new Date;
+  const statusMsg = !errorView ? statusMessageBatch(batchInfoResponse) : '';
+  const startTime = !errorView
+    ? jobTimeFormat(batchInfoResponse.createTime)
+    : '';
+  const startTimeElapsed = !errorView
+    ? new Date(batchInfoResponse.createTime)
+    : new Date();
 
-  const endTime = !errorView ? new Date(batchInfoResponse.stateTime):new Date;
+  const endTime = !errorView
+    ? new Date(batchInfoResponse.stateTime)
+    : new Date();
 
   let jobStartTime: Date;
   let runTimeString = '';
@@ -202,10 +208,10 @@ function BatchDetails({
     runTimeString = elapsedTime(endTime, jobStartTime);
   }
 
-  const batch = !errorView ? BatchTypeValue(batchInfoResponse):"";
-  const batchConcat = !errorView ? Object.keys(batchInfoResponse).filter(key =>
-    key.endsWith('Batch')
-  ):"";
+  const batch = !errorView ? BatchTypeValue(batchInfoResponse) : '';
+  const batchConcat = !errorView
+    ? Object.keys(batchInfoResponse).filter(key => key.endsWith('Batch'))
+    : '';
   const elapsedTimeString = elapsedTime(
     new Date(batchInfoResponse.stateTime),
     startTimeElapsed

@@ -330,7 +330,9 @@ export class GCSDrive implements Contents.IDrive {
     const oldPath = GcsService.pathParser(path);
     const newPath = GcsService.pathParser(newLocalPath);
 
-    if(newLocalPath.split('/')[newLocalPath.split('/').length-1].length >= 1024){
+    if (
+      newLocalPath.split('/')[newLocalPath.split('/').length - 1].length >= 1024
+    ) {
       await showDialog({
         title: 'Rename Error',
         body: 'The maximum object length is 1024 characters',

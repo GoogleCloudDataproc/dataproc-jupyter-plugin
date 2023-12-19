@@ -117,7 +117,7 @@ function ConfigSelection({
   };
   interface IUserInfoResponse {
     error: {
-      code:number;
+      code: number;
       message: string;
     };
     email: string;
@@ -138,9 +138,11 @@ function ConfigSelection({
             .json()
             .then((responseResult: IUserInfoResponse) => {
               if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
-              }
-              else{
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
+              } else {
                 setUserInfo(responseResult);
                 setIsLoadingUser(false);
               }
@@ -150,7 +152,10 @@ function ConfigSelection({
         .catch((err: Error) => {
           setIsLoadingUser(false);
           console.error('Error displaying user info', err);
-          DataprocLoggingService.log('Error displaying user info', LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error displaying user info',
+            LOG_LEVEL.ERROR
+          );
           toast.error('Failed to fetch user information', toastifyCustomStyle);
         });
     }
@@ -191,8 +196,8 @@ function ConfigSelection({
     <div>
       {isLoadingUser && !configError ? (
         <div className="spin-loader-main">
-         <ClipLoader
-              color="#3367d6"
+          <ClipLoader
+            color="#3367d6"
             loading={true}
             size={20}
             aria-label="Loading Spinner"

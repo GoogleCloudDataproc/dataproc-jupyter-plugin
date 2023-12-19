@@ -25,10 +25,7 @@ import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
 import EditIcon from '../../style/icons/edit_icon.svg';
 import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
 import DeletePopup from '../utils/deletePopup';
-import {
-  JOB_FIELDS_EXCLUDED,
-  STATUS_RUNNING
-} from '../utils/const';
+import { JOB_FIELDS_EXCLUDED, STATUS_RUNNING } from '../utils/const';
 import {
   elapsedTime,
   jobDetailsOptionalDisplay,
@@ -287,7 +284,7 @@ function JobDetails({
     : new Date();
 
   let elapsedTimeString = !errorView ? elapsedTime(endTime, jobStartTime) : '';
-  const statusStyleSelection = (jobInfo: any) => {
+  const statusStyleSelection = (jobInfo: IJobDetails) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
     } else {

@@ -57,7 +57,7 @@ function LabelProperties({
   labelEditMode,
   selectedRuntimeClone,
   batchInfoResponse,
-  createBatch,
+  createBatch
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
@@ -128,7 +128,7 @@ function LabelProperties({
           const duplicateIndex = labelEdit.findIndex(
             (label, i) => i !== index && label.split(':')[0] === newKey
           );
-          if (duplicateIndex !== -1 && buttonText==='ADD LABEL') {
+          if (duplicateIndex !== -1 && buttonText === 'ADD LABEL') {
             setDuplicateKeyError(index);
           } else {
             setDuplicateKeyError(-1);
@@ -199,15 +199,15 @@ function LabelProperties({
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
-
                       <Input
                         sx={{ margin: 0 }}
-                       className={
-                          `edit-input-style ${labelSplit[0] === '' ||
-                            buttonText !== 'ADD LABEL' ||
-                            duplicateKeyError !== -1?''
-                            : ' disable-text'}`
-                        }
+                        className={`edit-input-style ${
+                          labelSplit[0] === '' ||
+                          buttonText !== 'ADD LABEL' ||
+                          duplicateKeyError !== -1
+                            ? ''
+                            : ' disable-text'
+                        }`}
                         disabled={
                           labelSplit[0] === '' ||
                           buttonText !== 'ADD LABEL' ||
@@ -220,12 +220,13 @@ function LabelProperties({
                           handleEditLabel(e.target.value, index, 'key')
                         }
                         defaultValue={labelSplit[0]}
-                        Label = {`Key ${index + 1}*`}
+                        Label={`Key ${index + 1}*`}
                       />
                     </div>
 
                     {labelDetailUpdated[index].split(':')[0] === '' &&
-                    labelDetailUpdated[index] !== '' && duplicateKeyError !== index ? (
+                    labelDetailUpdated[index] !== '' &&
+                    duplicateKeyError !== index ? (
                       <div role="alert" className="error-key-parent">
                         <iconError.react
                           tag="div"
@@ -267,9 +268,12 @@ function LabelProperties({
                     <div className="select-text-overlay-label">
                       <Input
                         sx={{ margin: 0 }}
-                        className={ `edit-input-style ${label === DEFAULT_LABEL_DETAIL &&
-                          buttonText === 'ADD LABEL' ?' disable-text':''}`
-                    }
+                        className={`edit-input-style ${
+                          label === DEFAULT_LABEL_DETAIL &&
+                          buttonText === 'ADD LABEL'
+                            ? ' disable-text'
+                            : ''
+                        }`}
                         onBlur={() => handleEditLabelSwitch()}
                         onChange={e =>
                           handleEditLabel(e.target.value, index, 'value')
@@ -278,23 +282,27 @@ function LabelProperties({
                           label === DEFAULT_LABEL_DETAIL &&
                           buttonText === 'ADD LABEL'
                         }
-                        defaultValue={labelSplit.length>2?labelSplit[1]+':'+labelSplit[2]:labelSplit[1]}
-                        Label =  {`Value ${index + 1}`}
+                        defaultValue={
+                          labelSplit.length > 2
+                            ? labelSplit[1] + ':' + labelSplit[2]
+                            : labelSplit[1]
+                        }
+                        Label={`Value ${index + 1}`}
                       />
                     </div>
-                    {valueValidation === index  && (
-                        <div className="error-key-parent">
-                          <iconError.react
-                            tag="div"
-                            className="logo-alignment-style"
-                          />
-                          <div className="error-key-missing">
-                            Only hyphens (-), underscores (_), lowercase
-                            characters, and numbers are allowed. International
-                            characters are allowed.
-                          </div>
+                    {valueValidation === index && (
+                      <div className="error-key-parent">
+                        <iconError.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
+                        <div className="error-key-missing">
+                          Only hyphens (-), underscores (_), lowercase
+                          characters, and numbers are allowed. International
+                          characters are allowed.
                         </div>
-                      )}
+                      </div>
+                    )}
                   </div>
 
                   <div
@@ -350,24 +358,21 @@ function LabelProperties({
           labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
             <iconPlus.react
               tag="div"
-              className= 'icon-black logo-alignment-style'
+              className="icon-black logo-alignment-style"
             />
           ) : (
             <iconPlusDisable.react
               tag="div"
-              className= 'icon-black-disable logo-alignment-style'
+              className="icon-black-disable logo-alignment-style"
             />
           )}
           <span
-            className=
-
-              {
-                labelDetail.length === 0 ||
-                labelDetail[labelDetail.length - 1].split(':')[0].length > 0
-                  ? 'job-edit-text'
-                  : 'job-edit-text-disabled'
-              }
-
+            className={
+              labelDetail.length === 0 ||
+              labelDetail[labelDetail.length - 1].split(':')[0].length > 0
+                ? 'job-edit-text'
+                : 'job-edit-text-disabled'
+            }
           >
             {buttonText}
           </span>
