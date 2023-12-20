@@ -19,8 +19,6 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
 import { useGlobalFilter, usePagination, useTable } from 'react-table';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -29,7 +27,6 @@ import stopIcon from '../../style/icons/stop_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import {
   ClusterStatus,
-  HTTP_METHOD,
   STATUS_ACTIVE,
   STATUS_CREATING,
   STATUS_DELETING,
@@ -43,17 +40,10 @@ import DeletePopup from '../utils/deletePopup';
 import GlobalFilter from '../utils/globalFilter';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
-import { deleteSessionAPI, terminateSessionAPI } from '../utils/sessionService';
+import { SessionService } from './sessionService';
 import TableData from '../utils/tableData';
-import {
-  ICellProps,
-  authenticatedFetch,
-  elapsedTime,
-  jobTimeFormat,
-  toastifyCustomStyle
-} from '../utils/utils';
+import { ICellProps } from '../utils/utils';
 import SessionDetails from './sessionDetails';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -139,81 +129,12 @@ function ListSessions() {
     []
   );
 
-  const listSessionsAPI = async (
-    nextPageToken?: string,
-    previousSessionsList?: object
-  ) => {
-    try {
-      const pageToken = nextPageToken ?? '';
-      const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
-      queryParams.append('pageToken', pageToken);
-
-      const response = await authenticatedFetch({
-        uri: 'sessions',
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'locations',
-        queryParams: queryParams
-      });
-      const formattedResponse = await response.json();
-      let transformSessionListData: React.SetStateAction<never[]> = [];
-      if (formattedResponse && formattedResponse.sessions) {
-        let sessionsListNew = formattedResponse.sessions;
-
-        const existingSessionsData = previousSessionsList ?? [];
-        // setStateAction never type issue
-        let allSessionsData: any = [
-          ...(existingSessionsData as []),
-          ...sessionsListNew
-        ];
-
-        if (formattedResponse.nextPageToken) {
-          listSessionsAPI(formattedResponse.nextPageToken, allSessionsData);
-        } else {
-          allSessionsData.sort(
-            (a: { createTime: string }, b: { createTime: string }) => {
-              const dateA = new Date(a.createTime);
-              const dateB = new Date(b.createTime);
-              return Number(dateB) - Number(dateA);
-            }
-          );
-          transformSessionListData = allSessionsData.map((data: any) => {
-            const startTimeDisplay = jobTimeFormat(data.createTime);
-            const startTime = new Date(data.createTime);
-            let elapsedTimeString = '';
-            if (
-              data.state === STATUS_TERMINATED ||
-              data.state === STATUS_FAIL
-            ) {
-              elapsedTimeString = elapsedTime(data.stateTime, startTime);
-            }
-
-            // Extracting sessionID, location from sessionInfo.name
-            // Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
-
-            return {
-              sessionID: data.name.split('/')[5],
-              status: data.state,
-              location: data.name.split('/')[3],
-              creator: data.creator,
-              creationTime: startTimeDisplay,
-              elapsedTime: elapsedTimeString,
-              actions: renderActions(data)
-            };
-          });
-          setSessionsList(transformSessionListData);
-          setIsLoading(false);
-        }
-      }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-    } catch (error) {
-      setIsLoading(false);
-      console.error('Error listing Sessions', error);
-      DataprocLoggingService.log('Error listing Sessions', LOG_LEVEL.ERROR);
-      toast.error('Failed to fetch sessions', toastifyCustomStyle);
-    }
+  const listSessionsAPI = async () => {
+    await SessionService.listSessionsAPIService(
+      renderActions,
+      setIsLoading,
+      setSessionsList
+    );
   };
 
   const handleDeleteSession = (session: string) => {
@@ -225,9 +146,10 @@ function ListSessions() {
   };
 
   const handleDelete = async () => {
-    await deleteSessionAPI(selectedSessionValue);
+    await SessionService.deleteSessionAPI(selectedSessionValue);
     setDeletePopupOpen(false);
   };
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -251,7 +173,9 @@ function ListSessions() {
   );
 
   useEffect(() => {
-    listSessionsAPI();
+    if (!pollingDisable) {
+      listSessionsAPI();
+    }
     return () => {
       pollingSessions(listSessionsAPI, true);
     };
@@ -281,19 +205,19 @@ function ListSessions() {
           title="Terminate Session"
           onClick={
             data.state === ClusterStatus.STATUS_ACTIVE
-              ? () => terminateSessionAPI(sessionValue)
+              ? () => SessionService.terminateSessionAPI(sessionValue)
               : undefined
           }
         >
           {data.state === ClusterStatus.STATUS_ACTIVE ? (
             <iconStop.react
               tag="div"
-              className= 'icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           ) : (
             <iconStopDisable.react
               tag="div"
-              className= 'icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           )}
         </div>
@@ -305,7 +229,7 @@ function ListSessions() {
         >
           <iconDelete.react
             tag="div"
-            className='icon-white logo-alignment-style'
+            className="icon-white logo-alignment-style"
           />
         </div>
       </div>
@@ -352,7 +276,7 @@ function ListSessions() {
               cell.value === STATUS_TERMINATING ||
               cell.value === STATUS_DELETING) && (
               <ClipLoader
-                color="#8A8A8A"
+                color="#3367d6"
                 loading={true}
                 size={15}
                 aria-label="Loading Spinner"
@@ -399,10 +323,10 @@ function ListSessions() {
         <div>
           <div className="filter-cluster-overlay">
             <div className="filter-cluster-icon">
-                <iconFilter.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
+              <iconFilter.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
             </div>
             <div className="filter-cluster-text"></div>
             <div className="filter-cluster-section">
@@ -443,9 +367,9 @@ function ListSessions() {
       ) : (
         <div>
           {isLoading && (
-            <div className="spin-loaderMain">
+            <div className="spin-loader-main">
               <ClipLoader
-                color="#8A8A8A"
+                color="#3367d6"
                 loading={true}
                 size={18}
                 aria-label="Loading Spinner"

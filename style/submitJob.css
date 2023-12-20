@@ -53,7 +53,7 @@
   align-items: center;
   padding: 0px 12px;
   gap: 4px;
- 
+
   height: 32px;
   background: var(--jp-layout-color0);
   box-shadow: 0px 1px 5px var(--jp-shadow-umbra-color),
@@ -81,7 +81,7 @@
 .select-title-text {
   height: 13px;
   font-style: normal;
-  font-weight: 1000;
+  font-weight: 400;
   font-size: 12px;
   line-height: 13px;
   display: flex;
@@ -285,7 +285,7 @@ a:hover {
 .select-dropdown-text {
   height: 13px;
   font-style: normal;
-  font-weight: 1000;
+  font-weight: 400;
   font-size: 12px;
   line-height: 13px;
   display: flex;
@@ -297,4 +297,8 @@ a:hover {
   padding: 0px 3px;
   left: 7px;
   z-index: 3;
+}
+
+.label-focused {
+  color: #3367d6 !important;
 }

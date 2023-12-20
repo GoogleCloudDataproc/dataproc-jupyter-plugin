@@ -35,14 +35,14 @@ function TableData({
   const displayData = page ? page : rows;
 
   const handleRowClicked = (row: Row, index: number) => {
-      if (parseInt(row.id) === index) {
-        setSelectedRowIndex(index);
-      }
-    };
+    if (parseInt(row.id) === index) {
+      setSelectedRowIndex(index);
+    }
+  };
 
   return (
     <table {...getTableProps()} className="clusters-list-table">
-      <thead  className="scroll-fix-header">
+      <thead className="scroll-fix-header">
         {headerGroups.map((headerGroup: any) => (
           <tr
             {...headerGroup.getHeaderGroupProps()}
@@ -61,14 +61,12 @@ function TableData({
       </thead>
       <tbody
         {...getTableBodyProps()}
-        className={
-          fromPage === '' ? 'gcs-table-body' : 'clusters-table-body'
-        }
+        className={fromPage === '' ? 'gcs-table-body' : 'clusters-table-body'}
       >
         {isLoading ? (
           <div className="spin-loader">
             <ClipLoader
-              color="#8A8A8A"
+              color="#3367d6"
               loading={true}
               size={18}
               aria-label="Loading Spinner"
@@ -83,11 +81,13 @@ function TableData({
               <tr
                 {...row.getRowProps()}
                 className={
-                  fromPage === '' ?
-                    (selectedRowIndex === index ? 'gcs-row-data-parent-selected': 'gcs-row-data-parent')
+                  fromPage === ''
+                    ? selectedRowIndex === index
+                      ? 'gcs-row-data-parent-selected'
+                      : 'gcs-row-data-parent'
                     : 'cluster-list-data-parent'
                 }
-                onClick={()=>handleRowClicked(row, index)}
+                onClick={() => handleRowClicked(row, index)}
               >
                 {row.cells.map((cell: Cell) => {
                   return tableDataCondition(cell);

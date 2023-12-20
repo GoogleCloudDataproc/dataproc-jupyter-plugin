@@ -20,8 +20,6 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import 'react-toastify/dist/ReactToastify.css';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
   ARTIFACT_REGISTERY,
@@ -30,7 +28,6 @@ import {
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
   FILES_MESSAGE,
-  HTTP_METHOD,
   JAR_FILE_MESSAGE,
   KEY_MESSAGE,
   METASTORE_MESSAGE,
@@ -39,35 +36,21 @@ import {
   SECURITY_KEY,
   SELF_MANAGED_CLUSTER,
   SERVICE_ACCOUNT,
-  SHARED_VPC,
-  STATUS_RUNNING,
-  gcpServiceUrls
+  SHARED_VPC
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import {
-  authApi,
-  authenticatedFetch,
-  toastifyCustomStyle,
-  loggedFetch
-} from '../utils/utils';
+import { authApi } from '../utils/utils';
 import { ClipLoader } from 'react-spinners';
-import { toast } from 'react-toastify';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
 import { Autocomplete, Radio, TextField } from '@mui/material';
-import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-
-type Network = {
-  selfLink: string;
-  network: string;
-  subnetworks: string;
-};
+import { BatchService } from './batchService';
+import { MuiChipsInput } from 'mui-chips-input';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -302,6 +285,7 @@ function CreateBatch({
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
   const [projectInfo, setProjectInfo] = useState('');
+  const [labelFocused, setLabelFocused] = useState(false);
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -460,98 +444,14 @@ function CreateBatch({
       listNetworksFromSubNetworkAPI(subNetwork);
     }
   }, []);
-  interface IApiResponse {
-    name: string;
-    error: {
-      message: string;
-      code: number;
-    };
-  }
+
   const runtimeSharedProject = async () => {
-    const credentials = await authApi();
-    const { REGION_URL } = await gcpServiceUrls;
-    if (credentials) {
-      let apiURL = `${REGION_URL}/${credentials.project_id}/getXpnHost`;
-      loggedFetch(apiURL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IApiResponse) => {
-              setProjectInfo(responseResult.name);
-              listSharedVPC(responseResult.name);
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
-          DataprocLoggingService.log(
-            'Error displaying user info',
-            LOG_LEVEL.ERROR
-          );
-        });
-    }
+    await BatchService.runtimeSharedProjectService(
+      setProjectInfo,
+      setSharedSubNetworkList
+    );
   };
 
-  const listSharedVPC = async (projectName: string) => {
-    try {
-      const credentials = await authApi();
-      const { REGION_URL } = await gcpServiceUrls;
-      if (!credentials) {
-        return false;
-      }
-      const apiURL = `${REGION_URL}/${projectName}/aggregated/subnetworks/listUsable`;
-      const response = await loggedFetch(apiURL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      });
-      const responseResult = await response.json();
-      /*
-        Extracting subNetwork from items
-        Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/aggregated/subnetworks/listUsable",
-      */
-
-      const transformedSharedvpcSubNetworkList: string[] = responseResult.items
-        .map((data: { subnetwork: string }) => {
-          // Extract region and subnet from the subnet URI.
-          const matches =
-            /\/compute\/v1\/projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
-              data.subnetwork
-            )?.groups;
-          if (matches?.['region'] != credentials.region_id) {
-            // If region doesn't match the current region, set it to undefined and let
-            // it be filtered out below.
-            return undefined;
-          }
-          return matches?.['subnetwork'];
-        })
-        // Filter out empty values
-        .filter((subNetwork: string) => subNetwork);
-
-      setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
-      if (responseResult?.error?.code) {
-        toast.error(responseResult?.error?.message, toastifyCustomStyle);
-      }
-    } catch (err) {
-      console.error('Error displaying sharedVPC subNetwork', err);
-      toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
-    }
-  };
   const handleMainClassRadio = () => {
     setSelectedRadio('mainClass');
     setMainJarSelected('');
@@ -565,61 +465,13 @@ function CreateBatch({
     setMainJarSelected('');
     setMainJarValidation(true);
   };
-  interface INetworkResponse {
-    network: string;
-    error: {
-      message: string;
-      code: number;
-    };
-  }
+
   const listNetworksFromSubNetworkAPI = async (subNetwork: string) => {
-    setIsloadingNetwork(true);
-    const credentials = await authApi();
-    const { COMPUTE } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subNetwork}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: INetworkResponse) => {
-              let transformedNetworkSelected = '';
-              /*
-               Extracting network from items
-               Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
-              */
-
-              transformedNetworkSelected = responseResult.network.split('/')[9];
-
-              setNetworkSelected(transformedNetworkSelected);
-              setIsloadingNetwork(false);
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          setIsloadingNetwork(false);
-          DataprocLoggingService.log(
-            'Error selecting Network',
-            LOG_LEVEL.ERROR
-          );
-          console.error('Error selecting Network', err);
-        });
-    }
+    await BatchService.listNetworksFromSubNetworkAPIService(
+      subNetwork,
+      setIsloadingNetwork,
+      setNetworkSelected
+    );
   };
 
   function isSubmitDisabled() {
@@ -776,408 +628,42 @@ function CreateBatch({
   };
 
   const listClustersAPI = async () => {
-    try {
-      const queryParams = new URLSearchParams({ pageSize: '100' });
-      const response = await authenticatedFetch({
-        uri: 'clusters',
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'regions',
-        queryParams: queryParams
-      });
-      const formattedResponse = await response.json();
-      let transformClusterListData: string[] = [];
-      transformClusterListData = formattedResponse.clusters
-        .filter((data: { clusterName: string; status: { state: string } }) => {
-          return data.status.state === STATUS_RUNNING;
-        })
-        .map((data: { clusterName: string }) => data.clusterName);
-      setClustersList(transformClusterListData);
-    } catch (error) {
-      console.error('Error listing clusters', error);
-      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      toast.error('Failed to list the clusters', toastifyCustomStyle);
-    }
+    await BatchService.listClustersAPIService(setClustersList);
   };
   const listNetworksAPI = async () => {
-    const credentials = await authApi();
-    const { COMPUTE } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${COMPUTE}/projects/${credentials.project_id}/global/networks`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                items: Network[];
-                error: {
-                  message: string;
-                  code: number;
-                };
-              }) => {
-                let transformedNetworkList = [];
-                /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-      */
-
-                transformedNetworkList = responseResult.items.map(
-                  (data: Network) => {
-                    return data.selfLink.split('/')[9];
-                  }
-                );
-                setNetworklist(transformedNetworkList);
-                setNetworkSelected(transformedNetworkList[0]);
-                if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
-                }
-              }
-            )
-
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing Networks', err);
-          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-        });
-    }
-  };
-  type IKeyRings = {
-    keyRings: Array<{
-      name: string;
-    }>;
-    error: {
-      message: string;
-      code: number;
-    };
+    await BatchService.listNetworksAPIService(
+      setNetworklist,
+      setNetworkSelected
+    );
   };
 
   const listKeyRingsAPI = async () => {
-    const credentials = await authApi();
-    const {CLOUD_KMS} = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${CLOUD_KMS}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IKeyRings) => {
-              let transformedKeyList = [];
-              /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-      */
-
-              transformedKeyList = responseResult.keyRings.map(
-                (data: { name: string }) => {
-                  return data.name.split('/')[5];
-                }
-              );
-              setKeyRinglist(transformedKeyList);
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing Networks', err);
-          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-        });
-    }
+    await BatchService.listKeyRingsAPIService(setKeyRinglist);
   };
-  interface IKey {
-    primary: {
-      state: string;
-    };
-    name: string;
-  }
-  interface IKeyListResponse {
-    cryptoKeys: IKey[];
-    error: {
-      message: string;
-      code: number;
-    };
-  }
 
   const listKeysAPI = async (keyRing: string) => {
-    const credentials = await authApi();
-    const { CLOUD_KMS} = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${CLOUD_KMS}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRing}/cryptoKeys`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IKeyListResponse) => {
-              let transformedKeyList = [];
-              /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-      */
-
-              transformedKeyList = responseResult.cryptoKeys
-                .filter(
-                  (data: IKey) =>
-                    data.primary && data.primary.state === 'ENABLED'
-                )
-                .map((data: { name: string }) => data.name.split('/')[7]);
-              setKeylist(transformedKeyList);
-              setKeySelected(transformedKeyList[0]);
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing Networks', err);
-          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-        });
-    }
+    await BatchService.listKeysAPIService(keyRing, setKeylist, setKeySelected);
   };
 
   const listSubNetworksAPI = async (subnetwork: string) => {
-    const credentials = await authApi();
-    const { COMPUTE } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                items: {
-                  name: string;
-                  network: string;
-                  privateIpGoogleAccess: boolean;
-                }[];
-                error: {
-                  message: string;
-                  code: number;
-                };
-              }) => {
-                const filteredServices = responseResult.items.filter(
-                  (item: { network: string; privateIpGoogleAccess: boolean }) =>
-                    item.network.split('/')[9] === subnetwork &&
-                    item.privateIpGoogleAccess === true
-                );
-                const transformedServiceList = filteredServices.map(
-                  (data: { name: string }) => data.name
-                );
-                setSubNetworklist(transformedServiceList);
-                setSubNetworkSelected(transformedServiceList[0]);
-                if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
-                }
-              }
-            )
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing subNetworks', err);
-          DataprocLoggingService.log(
-            'Error listing subNetworks',
-            LOG_LEVEL.ERROR
-          );
-        });
-    }
-  };
-  type Region = {
-    name: string;
+    await BatchService.listSubNetworksAPIService(
+      subnetwork,
+      setSubNetworklist,
+      setSubNetworkSelected
+    );
   };
 
   const regionListAPI = async (
     projectId: string,
     network: string | undefined
   ) => {
-    const credentials = await authApi();
-    const { REGION_URL } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(`${REGION_URL}/${projectId}/regions`, {
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                items: Region[];
-                error: {
-                  code: number;
-                  message: string;
-                };
-              }) => {
-                let transformedRegionList = responseResult.items.map(
-                  (data: Region) => {
-                    return data.name;
-                  }
-                );
-
-                const filteredServicesArray: never[] = [];
-                // Use Promise.all to fetch services from all locations concurrently
-                const servicePromises = transformedRegionList.map(location => {
-                  return listMetaStoreAPI(
-                    projectId,
-                    location,
-                    network,
-                    filteredServicesArray
-                  );
-                });
-
-                // Wait for all servicePromises to complete
-                Promise.all(servicePromises)
-                  .then(() => {
-                    if (responseResult?.error?.code) {
-                      toast.error(
-                        responseResult?.error?.message,
-                        toastifyCustomStyle
-                      );
-                    }
-                  })
-                  .catch(e => {
-                    console.log(e);
-                  });
-              }
-            )
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing regions', err);
-          DataprocLoggingService.log('Error listing regions', LOG_LEVEL.ERROR);
-        });
-    }
-  };
-
-  const listMetaStoreAPI = async (
-    projectId: string,
-    location: string,
-    network: string | undefined,
-    filteredServicesArray: any // Pass the array as a parameter
-  ) => {
-    setIsLoadingService(true);
-    const credentials = await authApi();
-    const { METASTORE } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${METASTORE}/projects/${projectId}/locations/${location}/services`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                services: {
-                  name: string;
-                  network: string;
-                  hiveMetastoreConfig: { endpointProtocol: string };
-                }[];
-                error: {
-                  message: string;
-                  code: number;
-                };
-              }) => {
-                // Filter based on endpointProtocol and network
-                const filteredServices = responseResult.services.filter(
-                  service => {
-                    return (
-                      service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
-                      (service.hiveMetastoreConfig.endpointProtocol ===
-                        'THRIFT' &&
-                        location == regionName &&
-                        service.network.split('/')[4] === network)
-                    );
-                  }
-                );
-                // Push filtered services into the array
-                filteredServicesArray.push(...filteredServices);
-                const transformedServiceList = filteredServicesArray.map(
-                  (data: { name: string }) => data.name
-                );
-                setServicesList(transformedServiceList);
-
-                setIsLoadingService(false);
-                if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
-                }
-              }
-            )
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoadingService(false);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error listing services', err);
-          setIsLoadingService(false);
-          DataprocLoggingService.log('Error listing services', LOG_LEVEL.ERROR);
-        });
-    }
+    await BatchService.regionListAPIService(
+      projectId,
+      network,
+      setIsLoadingService,
+      regionName,
+      setServicesList
+    );
   };
 
   const handleSharedSubNetwork = async (data: string | null) => {
@@ -1341,7 +827,6 @@ function CreateBatch({
 
   const handleSubmit = async () => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       const labelObject: { [key: string]: string } = {};
       labelDetailUpdated.forEach((label: string) => {
@@ -1354,7 +839,10 @@ function CreateBatch({
       propertyDetailUpdated.forEach((label: string) => {
         const labelSplit = label.split(':');
         const key = labelSplit[0];
-        const value = labelSplit[1];
+        const value =
+          labelSplit.length > 2
+            ? labelSplit[1] + ':' + labelSplit[2]
+            : labelSplit[1];
         propertyObject[key] = value;
       });
       const parameterObject: { [key: string]: string } = {};
@@ -1385,43 +873,15 @@ function CreateBatch({
         mainPythonSelected,
         queryFileSelected
       );
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?batchId=${batchIdSelected}`,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then(async (response: Response) => {
-          if (response.ok) {
-            const responseResult = await response.json();
-            console.log(responseResult);
-            if (setCreateBatchView) {
-              setCreateBatchView(false);
-            }
-            if (setCreateBatch) {
-              setCreateBatch(false);
-            }
-            toast.success(
-              `Batch ${batchIdSelected} successfully submitted`,
-              toastifyCustomStyle
-            );
-          } else {
-            const errorResponse = await response.json();
-            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
-            setError({ isOpen: true, message: errorResponse.error.message });
-            console.log(error);
-          }
-        })
-        .catch((err: Error) => {
-          console.error('Error submitting Batch', err);
-          toast.error('Failed to submit the Batch', toastifyCustomStyle);
-          DataprocLoggingService.log('Error submitting Batch', LOG_LEVEL.ERROR);
-        });
+      await BatchService.creatBatchSubmitService(
+        credentials,
+        payload,
+        batchIdSelected,
+        setCreateBatchView,
+        setCreateBatch,
+        setError,
+        error
+      );
     }
   };
   const generateRandomHex = () => {
@@ -1521,6 +981,12 @@ function CreateBatch({
 
     setManualKeySelected(inputValue);
   };
+  const handleSelectFocus = () => {
+    setLabelFocused(true);
+  };
+  const handleBlur = () => {
+    setLabelFocused(false);
+  };
   return (
     <div>
       <div className="cluster-details-header">
@@ -1539,14 +1005,12 @@ function CreateBatch({
         <form onSubmit={handleSubmit}>
           <div className="submit-job-label-header">Batch info</div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="batch-id">
-              Batch ID*
-            </label>
             <Input
               className="create-batch-style"
               value={hexNumber}
               onChange={e => handleInputChange(e)}
               type="text"
+              Label="Batch ID*"
             />
           </div>
           {batchIdValidation && (
@@ -1556,22 +1020,24 @@ function CreateBatch({
             </div>
           )}
           <div className="select-text-overlay">
-            <label
-              className="select-title-text region-disable"
-              htmlFor="region"
-            >
-              Region*
-            </label>
             <Input
-              className="create-batch-style"
+              className="create-batch-style region-disable"
               value={regionName}
               type="text"
               disabled={true}
+              Label="Region*"
             />
           </div>
           <div className="submit-job-label-header">Container</div>
           <div className="select-text-overlay">
-            <label className="select-dropdown-text" htmlFor="batch-type">
+            <label
+              className={
+                labelFocused
+                  ? 'select-dropdown-text label-focused'
+                  : 'select-dropdown-text'
+              }
+              htmlFor="batch-type"
+            >
               Batch type*
             </label>
             <Select
@@ -1581,17 +1047,17 @@ function CreateBatch({
               type="text"
               options={batchTypeList}
               onChange={handleBatchTypeSelected}
+              onFocus={handleSelectFocus}
+              onBlur={handleBlur}
             />
           </div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="runtime-version">
-              Runtime version*
-            </label>
             <Input
               className="create-batch-style "
               value={versionSelected}
               onChange={e => setVersionSelected(e.target.value)}
               type="text"
+              Label="Runtime version*"
             />
           </div>
           {batchTypeSelected === 'spark' && (
@@ -1615,14 +1081,12 @@ function CreateBatch({
               {selectedRadio === 'mainClass' && (
                 <div className="create-batch-input">
                   <div className="select-text-overlay">
-                    <label className="select-title-text" htmlFor="main-class">
-                      Main class*
-                    </label>
                     <Input
                       className="create-batch-style-mini"
                       value={mainClassSelected}
                       onChange={e => handleMainClassSelected(e.target.value)}
                       type="text"
+                      Label="Main class*"
                     />
                   </div>
 
@@ -1663,14 +1127,12 @@ function CreateBatch({
               {selectedRadio === 'mainJarURI' && (
                 <div className="create-batch-input">
                   <div className="select-text-overlay">
-                    <label className="select-title-text" htmlFor="main-jar">
-                      Main jar*
-                    </label>
                     <Input
                       className="create-batch-style-mini"
                       value={mainJarSelected}
                       onChange={e => handleMainJarSelected(e.target.value)}
                       type="text"
+                      Label="Main jar*"
                     />
                   </div>
 
@@ -1707,9 +1169,6 @@ function CreateBatch({
           {batchTypeSelected === 'sparkR' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="main-r-file">
-                  Main R file*
-                </label>
                 <Input
                   className="create-batch-style"
                   onChange={e =>
@@ -1721,6 +1180,7 @@ function CreateBatch({
                   }
                   addOnBlur={true}
                   value={mainRSelected}
+                  Label="Main R file*"
                 />
               </div>
 
@@ -1743,9 +1203,6 @@ function CreateBatch({
           {batchTypeSelected === 'pySpark' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="main-python-file">
-                  Main python file*
-                </label>
                 <Input
                   //placeholder="Main R file*"
                   className="create-batch-style"
@@ -1758,6 +1215,7 @@ function CreateBatch({
                   }
                   addOnBlur={true}
                   value={mainPythonSelected}
+                  Label=" Main python file*"
                 />
               </div>
               {!mainPythonValidation && (
@@ -1779,13 +1237,7 @@ function CreateBatch({
           {batchTypeSelected === 'pySpark' && (
             <>
               <div className="select-text-overlay">
-                <label
-                  className="select-title-text"
-                  htmlFor="additional-python-files"
-                >
-                  Additional python files
-                </label>
-                <TagsInput
+                <MuiChipsInput
                   className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
@@ -1798,6 +1250,7 @@ function CreateBatch({
                   addOnBlur={true}
                   value={additionalPythonFileSelected}
                   inputProps={{ placeholder: '' }}
+                  label="Additional python files"
                 />
               </div>
               {!additionalPythonFileValidation && (
@@ -1822,9 +1275,6 @@ function CreateBatch({
           {batchTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="query-file">
-                  Query file*
-                </label>
                 <Input
                   //placeholder="Main R file*"
                   className="create-batch-style"
@@ -1837,6 +1287,7 @@ function CreateBatch({
                   }
                   addOnBlur={true}
                   value={queryFileSelected}
+                  Label="Query file*"
                 />
               </div>
 
@@ -1855,18 +1306,13 @@ function CreateBatch({
             </>
           )}
           <div className="select-text-overlay">
-            <label
-              className="select-title-text"
-              htmlFor="custom-container-image"
-            >
-              Custom container image
-            </label>
             <Input
               className="create-batch-style "
               value={containerImageSelected}
               onChange={e => setContainerImageSelected(e.target.value)}
               type="text"
               placeholder="Enter URI, for example, gcr.io/my-project-id/my-image:1.0.1"
+              Label="Custom container image"
             />
           </div>
           <div className="create-custom-messagelist">
@@ -1908,10 +1354,7 @@ function CreateBatch({
             batchTypeSelected !== 'sparkR' && (
               <>
                 <div className="select-text-overlay">
-                  <label className="select-title-text" htmlFor="jar-files">
-                    Jar files
-                  </label>
-                  <TagsInput
+                  <MuiChipsInput
                     className="select-job-style"
                     onChange={e =>
                       handleValidationFiles(
@@ -1924,6 +1367,7 @@ function CreateBatch({
                     addOnBlur={true}
                     value={jarFilesSelected}
                     inputProps={{ placeholder: '' }}
+                    label="Jar files"
                   />
                 </div>
 
@@ -1960,10 +1404,7 @@ function CreateBatch({
           {batchTypeSelected !== 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="files">
-                  Files
-                </label>
-                <TagsInput
+                <MuiChipsInput
                   className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
@@ -1976,6 +1417,7 @@ function CreateBatch({
                   addOnBlur={true}
                   value={filesSelected}
                   inputProps={{ placeholder: '' }}
+                  label="Files"
                 />
               </div>
               {!fileValidation && (
@@ -2003,10 +1445,7 @@ function CreateBatch({
           {batchTypeSelected !== 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="archive-files">
-                  Archive files
-                </label>
-                <TagsInput
+                <MuiChipsInput
                   className="select-job-style"
                   onChange={e =>
                     handleValidationFiles(
@@ -2019,6 +1458,7 @@ function CreateBatch({
                   addOnBlur={true}
                   value={ArchiveFilesSelected}
                   inputProps={{ placeholder: '' }}
+                  label="Archive files"
                 />
               </div>
               {!archieveFileValidation && (
@@ -2048,10 +1488,7 @@ function CreateBatch({
           {batchTypeSelected !== 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="arguments">
-                  Arguments
-                </label>
-                <TagsInput
+                <MuiChipsInput
                   className="select-job-style"
                   onChange={e =>
                     handleArguments(setArgumentsDuplicateValidation, e)
@@ -2059,6 +1496,7 @@ function CreateBatch({
                   addOnBlur={true}
                   value={argumentsSelected}
                   inputProps={{ placeholder: '' }}
+                  label="Arguments"
                 />
               </div>
               {argumentsDuplicateValidation && (
@@ -2094,15 +1532,13 @@ function CreateBatch({
           )}
           <div className="submit-job-label-header">Execution Configuration</div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="service-account">
-              Service account
-            </label>
             <Input
               className="create-batch-style "
               value={serviceAccountSelected}
               onChange={e => setServiceAccountSelected(e.target.value)}
               type="text"
               placeholder=""
+              Label="Service account"
             />
           </div>
           <div className="create-custom-messagelist">
@@ -2232,10 +1668,7 @@ function CreateBatch({
               )}
           </div>
           <div className="select-text-overlay">
-            <label className="select-title-text" htmlFor="network-tags">
-              Network tags
-            </label>
-            <TagsInput
+            <MuiChipsInput
               className="select-job-style"
               onChange={e =>
                 handleNetworkTags(setNetworkTagsDuplicateValidation, e)
@@ -2243,6 +1676,7 @@ function CreateBatch({
               addOnBlur={true}
               value={networkTagSelected}
               inputProps={{ placeholder: '' }}
+              label="Network tags"
             />
           </div>
           {networkTagsDuplicateValidation && (
@@ -2351,22 +1785,17 @@ function CreateBatch({
                         onChange={handlekeyManuallyRadio}
                       />
                       <div className="select-text-overlay">
-                        <label
+                        <Input
                           className={
                             selectedRadioValue === 'key'
-                              ? 'select-title-text disable-text'
-                              : 'select-title-text'
+                              ? 'disable-text create-batch-key manual-key'
+                              : 'create-batch-style manual-key'
                           }
-                          htmlFor="enter-key-manually"
-                        >
-                          Enter key manually
-                        </label>
-                        <Input
-                          className="create-batch-style manual-key"
                           value={manualKeySelected}
                           type="text"
                           disabled={selectedRadioValue === 'key'}
                           onChange={handleManualKeySelected}
+                          Label="Enter key manually"
                         />
                       </div>
                     </div>

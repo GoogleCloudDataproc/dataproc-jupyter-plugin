@@ -15,15 +15,13 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { SyntheticEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import LabelProperties from './labelProperties';
-import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
+import { authApi } from '../utils/utils';
 
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
   FILES_MESSAGE,
@@ -32,18 +30,15 @@ import {
   MAX_RESTART_MESSAGE,
   QUERY_FILE_MESSAGE,
   RESTART_JOB_URL,
-  STATUS_RUNNING,
-  gcpServiceUrls
+  STATUS_RUNNING
 } from '../utils/const';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
-import { TagsInput } from '../controls/MuiWrappedTagsInput';
 import { DropdownProps } from 'semantic-ui-react';
 import { Autocomplete, TextField } from '@mui/material';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { MuiChipsInput } from 'mui-chips-input';
+import { JobService } from './jobServices';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -124,7 +119,6 @@ function SubmitJob({
   selectedJobClone,
   clusterResponse
 }: any) {
-  console.log(selectedJobClone);
   const [clusterList, setClusterList] = useState([{}]);
   const [jobTypeList, setJobTypeList] = useState([{}]);
   const [querySourceTypeList, setQuerySourceTypeList] = useState([{}]);
@@ -161,11 +155,11 @@ function SubmitJob({
 
     if (selectedJobClone[jobTypeKey].hasOwnProperty('queryFileUri')) {
       queryFileUri = selectedJobClone[jobTypeKey].queryFileUri;
-      queryType = 'queryFile';
+      queryType = 'Query file';
     }
     if (selectedJobClone[jobTypeKey].hasOwnProperty('queryList')) {
       queryList = selectedJobClone[jobTypeKey].queryList.queries[0];
-      queryType = 'queryText';
+      queryType = 'Query text';
     }
     mainJarFileUri = selectedJobClone[jobKeys[0]].mainJarFileUri;
     mainClass = selectedJobClone[jobKeys[0]].mainClass;
@@ -235,7 +229,7 @@ function SubmitJob({
     useState(false);
   const [argumentsDuplicateValidation, setArgumentsDuplicateValidation] =
     useState(false);
-
+  const [labelFocused, setLabelFocused] = useState(false);
   const handleCancelJobButton = () => {
     setSubmitJobView(false);
   };
@@ -272,25 +266,23 @@ function SubmitJob({
   };
 
   const handleQuerySourceTypeSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
+    event: SyntheticEvent<Element, Event>,
+    data: DropdownProps | null
   ) => {
-    setQuerySourceSelected(data.value!.toString());
+    setQuerySourceSelected(data!.toString());
   };
   interface IClusterData {
     clusterName: string;
-    status: { state: string };
+    status: string;
   }
 
   useEffect(() => {
     let transformClusterListData = [];
-    transformClusterListData = clusterResponse.clusters.filter(
-      (data: IClusterData) => {
-        if (data.status.state === STATUS_RUNNING) {
-          return data.clusterName;
-        }
+    transformClusterListData = clusterResponse.filter((data: IClusterData) => {
+      if (data.status === STATUS_RUNNING) {
+        return data.clusterName;
       }
-    );
+    });
 
     const keyLabelStructure = transformClusterListData.map(
       (obj: { clusterName: string }) => obj.clusterName
@@ -303,11 +295,8 @@ function SubmitJob({
       { key: 'sparkSql', value: 'sparkSql', text: 'SparkSql' },
       { key: 'pySpark', value: 'pySpark', text: 'PySpark' }
     ];
-    const querySourceData = [
-      { key: 'queryFile', value: 'queryFile', text: 'Query file' },
-      { key: 'queryText', value: 'queryText', text: 'Query text' }
-    ];
     setJobTypeList(jobTypeData);
+    const querySourceData = ['Query file', 'Query text'];
     setQuerySourceTypeList(querySourceData);
   }, []);
   useEffect(() => {
@@ -391,7 +380,7 @@ function SubmitJob({
           !jarFileDuplicateValidation) ||
         (isSparkSqlJob &&
           queryFileSelected !== '' &&
-          querySourceSelected === 'queryFile' &&
+          querySourceSelected === 'Query file' &&
           queryFileValidation &&
           jarFileValidation &&
           keyValidation === -1 &&
@@ -402,7 +391,7 @@ function SubmitJob({
           !jarFileDuplicateValidation) ||
         (isSparkSqlJob &&
           queryTextSelected !== '' &&
-          querySourceSelected === 'queryText' &&
+          querySourceSelected === 'Query text' &&
           jarFileValidation &&
           keyValidation === -1 &&
           valueValidation === -1 &&
@@ -570,10 +559,10 @@ function SubmitJob({
           jarFileUris: [jarFileSelected]
         }),
         scriptVariables: {},
-        ...(querySourceSelected === 'queryFile' && {
+        ...(querySourceSelected === 'Query file' && {
           queryFileUri: queryFileSelected
         }),
-        ...(querySourceSelected === 'queryText' && {
+        ...(querySourceSelected === 'Query text' && {
           queryList: { queries: [queryTextSelected] }
         })
       }
@@ -582,7 +571,6 @@ function SubmitJob({
 
   const submitJob = async () => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       const labelObject: { [key: string]: string } = {};
       labelDetailUpdated.forEach((label: string) => {
@@ -651,42 +639,7 @@ function SubmitJob({
             ))
         }
       };
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs:submit`,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then(async (response: Response) => {
-          if (response.status === 200) {
-            response
-              .json()
-              .then((responseResult: unknown) => {
-                console.log(responseResult);
-                toast.success(
-                  `Job ${jobIdSelected} successfully submitted`,
-                  toastifyCustomStyle
-                );
-              })
-              .catch((e: Error) => {
-                console.log(e);
-              });
-          } else {
-            const errorResponse = await response.json();
-            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
-            throw new Error(`API failed with status: ${response.status}`);
-          }
-        })
-        .catch((err: Error) => {
-          console.error('Error submitting job', err);
-          DataprocLoggingService.log('Error submitting job', LOG_LEVEL.ERROR);
-          toast.error('Failed to submit the job', toastifyCustomStyle);
-        });
+      await JobService.submitJobService(payload, jobIdSelected, credentials);
     }
   };
   const handleJobIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -768,7 +721,12 @@ function SubmitJob({
     setArgumentSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
-
+  const handleSelectFocus = () => {
+    setLabelFocused(true);
+  };
+  const handleBlur = () => {
+    setLabelFocused(false);
+  };
   return (
     <div>
       <div className="cluster-details-header">
@@ -802,14 +760,12 @@ function SubmitJob({
         )}
         <div className="submit-job-label-header">Job</div>
         <div className="select-text-overlay">
-          <label className="select-title-text" htmlFor="job-id">
-            Job ID*
-          </label>
           <Input
             className="submit-job-input-style"
             onChange={e => handleJobIdChange(e)}
             type="text"
             value={hexNumber}
+            Label="Job ID*"
           />
         </div>
 
@@ -829,7 +785,14 @@ function SubmitJob({
         )}
 
         <div className="select-text-overlay">
-          <label className="select-title-text" htmlFor="metastore-project">
+          <label
+            className={
+              labelFocused
+                ? 'select-title-text label-focused'
+                : 'select-title-text'
+            }
+            htmlFor="metastore-project"
+          >
             Job type*
           </label>
           <Select
@@ -838,32 +801,34 @@ function SubmitJob({
             onChange={handleJobTypeSelected}
             options={jobTypeList}
             value={jobTypeSelected}
+            onFocus={handleSelectFocus}
+            onBlur={handleBlur}
           />
         </div>
 
         {jobTypeSelected === 'sparkSql' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="metastore-project">
-                Query source type*
-              </label>
-              <Select
+              <Autocomplete
                 className="project-region-select"
-                search
-                onChange={handleQuerySourceTypeSelected}
+                onChange={(_event, val) =>
+                  handleQuerySourceTypeSelected(_event, val)
+                }
                 options={querySourceTypeList}
                 value={querySourceSelected}
+                onFocus={handleSelectFocus}
+                onBlur={handleBlur}
+                renderInput={params => (
+                  <TextField {...params} label="Query source type*" />
+                )}
               />
             </div>
           </>
         )}
-        {querySourceSelected === 'queryFile' &&
+        {querySourceSelected === 'Query file' &&
           jobTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="query-file">
-                  Query file*
-                </label>
                 <Input
                   className="submit-job-input-style"
                   onChange={e =>
@@ -875,6 +840,7 @@ function SubmitJob({
                   }
                   addOnBlur={true}
                   value={queryFileSelected}
+                  Label="Query file*"
                 />
               </div>
 
@@ -894,17 +860,15 @@ function SubmitJob({
               )}
             </>
           )}
-        {querySourceSelected === 'queryText' &&
+        {querySourceSelected === 'Query text' &&
           jobTypeSelected === 'sparkSql' && (
             <>
               <div className="select-text-overlay">
-                <label className="select-title-text" htmlFor="query-text">
-                  Query text*
-                </label>
                 <Input
                   className="submit-job-input-style"
                   onChange={e => setQueryTextSelected(e.target.value)}
                   value={queryTextSelected}
+                  Label=" Query text*"
                 />
               </div>
 
@@ -916,9 +880,6 @@ function SubmitJob({
         {jobTypeSelected === 'spark' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="main-class-or-jar">
-                Main class or jar*
-              </label>
               <Input
                 className="submit-job-input-style"
                 onChange={e =>
@@ -931,6 +892,7 @@ function SubmitJob({
                 onBlur={() => setMainClassActive(true)}
                 addOnBlur={true}
                 value={mainClassSelected}
+                Label="Main class or jar*"
               />
             </div>
 
@@ -952,9 +914,6 @@ function SubmitJob({
         {jobTypeSelected === 'sparkR' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="main-r-file">
-                Main R file*
-              </label>
               <Input
                 className="submit-job-input-style"
                 onChange={e =>
@@ -966,6 +925,7 @@ function SubmitJob({
                 }
                 addOnBlur={true}
                 value={mainRSelected}
+                Label="Main R file*"
               />
             </div>
 
@@ -988,9 +948,6 @@ function SubmitJob({
         {jobTypeSelected === 'pySpark' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="main-python-file">
-                Main Python file*
-              </label>
               <Input
                 className="submit-job-input-style"
                 onChange={e =>
@@ -1002,6 +959,7 @@ function SubmitJob({
                 }
                 addOnBlur={true}
                 value={mainPythonSelected}
+                Label="Main Python file*"
               />
             </div>
 
@@ -1024,13 +982,7 @@ function SubmitJob({
         {jobTypeSelected === 'pySpark' && (
           <>
             <div className="select-text-overlay">
-              <label
-                className="select-title-text"
-                htmlFor="additional-python-files"
-              >
-                Additional python files
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1043,6 +995,7 @@ function SubmitJob({
                 addOnBlur={true}
                 value={additionalPythonFileSelected}
                 inputProps={{ placeholder: '' }}
+                label="Additional python files"
               />
             </div>
             {!additionalPythonFileValidation && (
@@ -1067,10 +1020,7 @@ function SubmitJob({
         {jobTypeSelected !== 'sparkR' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="jar-files">
-                Jar files
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1083,6 +1033,7 @@ function SubmitJob({
                 addOnBlur={true}
                 value={jarFileSelected}
                 inputProps={{ placeholder: '' }}
+                label="Jar files"
               />
             </div>
             {jarFileDuplicateValidation && (
@@ -1110,10 +1061,7 @@ function SubmitJob({
         {jobTypeSelected !== 'sparkSql' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="files">
-                Files
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1126,6 +1074,7 @@ function SubmitJob({
                 addOnBlur={true}
                 value={fileSelected}
                 inputProps={{ placeholder: '' }}
+                label="Files"
               />
             </div>
             {fileDuplicateValidation && (
@@ -1153,10 +1102,7 @@ function SubmitJob({
         {(jobTypeSelected === 'spark' || jobTypeSelected === 'pySpark') && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="archive-files">
-                Archive files
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleValidationFiles(
@@ -1169,6 +1115,7 @@ function SubmitJob({
                 addOnBlur={true}
                 value={archieveFileSelected}
                 inputProps={{ placeholder: '' }}
+                label="Archive files"
               />
             </div>
             {archiveDuplicateValidation && (
@@ -1196,10 +1143,7 @@ function SubmitJob({
         {jobTypeSelected !== 'sparkSql' && (
           <>
             <div className="select-text-overlay">
-              <label className="select-title-text" htmlFor="arguments">
-                Arguments
-              </label>
-              <TagsInput
+              <MuiChipsInput
                 className="select-job-style"
                 onChange={e =>
                   handleArgumentsSelection(setArgumentsDuplicateValidation, e)
@@ -1207,6 +1151,7 @@ function SubmitJob({
                 value={argumentSelected}
                 addOnBlur={true}
                 inputProps={{ placeholder: '' }}
+                label="Arguments"
               />
             </div>
             {argumentsDuplicateValidation && (
@@ -1222,7 +1167,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {querySourceSelected === 'queryFile' &&
+        {querySourceSelected === 'Query file' &&
           jobTypeSelected === 'sparkSql' && (
             <>
               <div className="submit-job-label-header">Query parameters</div>
@@ -1243,13 +1188,11 @@ function SubmitJob({
             </>
           )}
         <div className="select-text-overlay">
-          <label className="select-title-text" htmlFor="max-restarts-per-hour">
-            Max restarts per hour
-          </label>
           <Input
             className="submit-job-input-style"
             onChange={e => setMaxRestartSelected(e.target.value)}
             value={maxRestartSelected}
+            Label="Max restarts per hour"
           />
         </div>
 

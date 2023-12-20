@@ -2,6 +2,12 @@
   height: 29vh;
   overflow: auto;
 }
+.runtime-container {
+  margin-left: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
 
 .spin-loader-runtime {
   display: flex;
@@ -130,7 +136,7 @@
 }
 .create-no-list-message {
   color: var(--jp-ui-font-color0);
-  background: var(--jp-layout-color2);;
+  background: var(--jp-layout-color2);
   font-size: 13px;
   border-radius: 4px;
   width: 482px;

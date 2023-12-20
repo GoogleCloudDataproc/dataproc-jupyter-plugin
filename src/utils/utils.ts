@@ -354,6 +354,7 @@ export interface ICellProps {
   };
   row: {
     original: {
+      id: string;
       status: string;
     };
   };

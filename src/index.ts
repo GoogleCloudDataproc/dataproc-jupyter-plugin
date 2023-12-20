@@ -33,7 +33,7 @@ import serverlessIcon from '../style/icons/serverless_icon.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
-import { Kernel, KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
+import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
@@ -251,7 +251,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       } else {
         document.title = title.label;
       }
-      console.log(Kernel);
     };
     labShell.currentChanged.connect(async (_, change) => {
       await KernelAPI.listRunning();

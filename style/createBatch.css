@@ -58,7 +58,7 @@
 }
 
 .select-batch-encrypt-radio-style {
-  margin-top: 20px;
+  margin-top: 20px !important;
   margin-right: 10px;
 }
 
@@ -98,7 +98,10 @@
   margin-top: 10px;
   outline: none;
 }
-
+.create-batch-key {
+  height: 36px;
+  width: 419px;
+}
 .create-batch-style-mini {
   background: var(--jp-layout-color0);
   width: 473px;
@@ -114,7 +117,6 @@
 .single-line {
   display: flex;
   width: 512px;
-
 }
 
 .create-batch-learn-more {
@@ -174,7 +176,6 @@
   display: flex;
 }
 
-
 .create-batches-subMessage {
   font-style: normal;
   font-weight: 400;
@@ -187,14 +188,13 @@
   width: 50%;
 }
 
-.ui.radio.checkbox input:checked~label:after {
+.ui.radio.checkbox input:checked ~ label:after {
   background-color: #3367d6 !important;
   border-color: #3367d6 !important;
   border-width: 2px !important;
 }
 
-
-.ui.checkbox input:checked~label:before {
+.ui.checkbox input:checked ~ label:before {
   background: var(--jp-layout-color0);
   border-color: grey;
   border-width: 2px !important;
@@ -210,7 +210,7 @@
   left: 0;
 }
 
-.ui.modal>.header {
+.ui.modal > .header {
   font-family: 'Roboto' !important;
 }
 
@@ -218,10 +218,10 @@
   padding-top: 15px;
   padding-left: 10px;
 }
-.region-disable{
+.region-disable {
   color: lightgrey;
 }
-.icon-delete{
+.icon-delete {
   opacity: 0.5;
 }
 .css-1gjd5ff-MuiFormControl-root-MuiTextField-root .MuiInputBase-root input {
@@ -233,16 +233,16 @@
 .css-x2abiu-MuiInputBase-input-MuiOutlinedInput-input {
   height: 17px !important;
 }
-.history-server{
+.history-server {
   border: 1px solid lightgray !important;
   border-radius: 4px;
 }
-.batch-container-msg{
-  color:var(--jp-brand-color1);
+.batch-container-msg {
+  color: var(--jp-brand-color1);
   text-decoration: underline;
   cursor: pointer;
 }
-.error-key-parent-manual{
+.error-key-parent-manual {
   padding-top: 10px;
   display: flex;
   align-items: center;

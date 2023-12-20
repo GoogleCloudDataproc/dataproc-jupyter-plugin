@@ -17,17 +17,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
-import {
-  authApi,
-  jobTimeFormat,
-  jobTypeValue,
-  elapsedTime,
-  statusMessage,
-  jobTypeDisplay,
-  ICellProps,
-  toastifyCustomStyle,
-  loggedFetch
-} from '../utils/utils';
+import { ICellProps } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import cloneIcon from '../../style/icons/clone_icon.svg';
@@ -40,8 +30,6 @@ import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
   ClusterStatus,
   STATUS_CANCELLED,
   STATUS_CREATING,
@@ -50,20 +38,16 @@ import {
   STATUS_PROVISIONING,
   STATUS_STARTING,
   STATUS_STOPPING,
-  STATUS_SUCCESS,
-  gcpServiceUrls
+  STATUS_SUCCESS
 } from '../utils/const';
 import ClipLoader from 'react-spinners/ClipLoader';
 import SubmitJob from './submitJob';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import DeletePopup from '../utils/deletePopup';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { JobService } from './jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -109,10 +93,9 @@ function JobComponent({
   submitJobView,
   setSubmitJobView,
   setDetailedView,
-  clusterResponse,
   selectedJobClone,
   setSelectedJobClone,
-  clustersList
+  fromPage
 }: any) {
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState<string>('');
@@ -121,6 +104,9 @@ function JobComponent({
   const [region, setRegion] = useState('');
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState('');
+
+  const [clusterResponse, setClusterResponse] = useState([]);
+
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingJobs = async (
@@ -196,135 +182,28 @@ function JobComponent({
   };
   const handleStopJob = async (jobId: string) => {
     setSelectedJobId(jobId);
-    await stopJobApi(jobId);
+    await JobService.stopJobApi(jobId);
   };
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
   };
 
   const handleDelete = async () => {
-    await deleteJobApi(selectedJobId);
+    await JobService.deleteJobApi(selectedJobId);
     setDeletePopupOpen(false);
   };
-  interface IJobList {
-    error: {
-      code: number;
-      message: string;
-    };
-    jobs: Array<{
-      reference: {
-        jobId: string;
-      };
-      statusHistory: Array<{
-        stateStartTime: string;
-      }>;
-      status: {
-        stateStartTime: string;
-      };
-      labels?: {
-        [key: string]: string;
-      };
-    }>;
-    nextPageToken?: string;
-  }
 
-  const listJobsAPI = async (
-    nextPageToken?: string,
-    previousJobsList?: object
-  ) => {
-    const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
-    const clusterName = clusterSelected ?? '';
-    const pageToken = nextPageToken ?? '';
-    if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IJobList) => {
-              let transformJobListData: {
-                jobid: number;
-                status: string;
-                region: string | undefined;
-                type: string | undefined;
-                starttime: string;
-                elapsedtime: string;
-                labels: string[];
-                actions: React.JSX.Element;
-              }[] = [];
-              if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
-              }
-              if (responseResult && responseResult.jobs) {
-                transformJobListData = responseResult.jobs.map((data: any) => {
-                  const startTime = jobTimeFormat(
-                    data.statusHistory[0].stateStartTime
-                  );
-                  const job = jobTypeValue(data);
-                  const jobType = jobTypeDisplay(job);
-                  const endTime = data.status.stateStartTime;
-                  const jobStartTime = new Date(
-                    data.statusHistory[0].stateStartTime
-                  );
+  const listJobsAPI = async () => {
+    await JobService.listJobsAPIService(
+      clusterSelected,
+      setIsLoading,
+      setjobsList,
+      renderActions
+    );
+  };
 
-                  const elapsedTimeString = elapsedTime(endTime, jobStartTime);
-
-                  const statusMsg = statusMessage(data);
-
-                  const labelvalue = [];
-                  if (data.labels) {
-                    for (const [key, value] of Object.entries(data.labels)) {
-                      labelvalue.push(`${key} : ${value}`);
-                    }
-                  } else {
-                    labelvalue.push('None');
-                  }
-                  return {
-                    jobid: data.reference.jobId,
-                    status: statusMsg,
-                    region: credentials.region_id,
-                    type: jobType,
-                    starttime: startTime,
-                    elapsedtime: elapsedTimeString,
-                    labels: labelvalue,
-                    actions: renderActions(data)
-                  };
-                });
-              }
-              const existingJobsData = previousJobsList ?? [];
-              //setStateAction never type issue
-              let allJobsData: any = [
-                ...(existingJobsData as []),
-                ...transformJobListData
-              ];
-
-              if (responseResult.nextPageToken) {
-                listJobsAPI(responseResult.nextPageToken, allJobsData);
-              } else {
-                setjobsList(allJobsData);
-                setIsLoading(false);
-              }
-            })
-            .catch((e: Error) => {
-              console.error(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing jobs', err);
-          DataprocLoggingService.log('Error listing jobs', LOG_LEVEL.ERROR);
-          toast.error('Failed to fetch jobs', toastifyCustomStyle);
-        });
-    }
+  const listClustersAPI = async () => {
+    await JobService.listClustersAPIService(setClusterResponse);
   };
 
   const handleCloneJob = (data: object) => {
@@ -347,7 +226,7 @@ function JobComponent({
         >
           <iconClone.react
             tag="div"
-            className='icon-white logo-alignment-style'
+            className="icon-white logo-alignment-style"
           />
         </div>
         <div
@@ -368,12 +247,12 @@ function JobComponent({
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
             <iconStop.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           ) : (
             <iconStopDisable.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           )}
         </div>
@@ -395,12 +274,12 @@ function JobComponent({
           {data.status.state === ClusterStatus.STATUS_RUNNING ? (
             <iconDelete.react
               tag="div"
-              className='icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           ) : (
             <iconDelete.react
               tag="div"
-              className= 'icon-white logo-alignment-style'
+              className="icon-white logo-alignment-style"
             />
           )}
         </div>
@@ -409,7 +288,10 @@ function JobComponent({
   };
 
   useEffect(() => {
-    listJobsAPI();
+    if (!pollingDisable) {
+      listJobsAPI();
+      listClustersAPI();
+    }
     return () => {
       pollingJobs(listJobsAPI, true);
     };
@@ -460,7 +342,7 @@ function JobComponent({
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
               <ClipLoader
-                color="#8A8A8A"
+                color="#3367d6"
                 loading={true}
                 size={15}
                 aria-label="Loading Spinner"
@@ -541,47 +423,41 @@ function JobComponent({
         <JobDetails
           jobSelected={jobSelected}
           setDetailedJobView={setDetailedJobView}
-          stopJobApi={stopJobApi}
-          deleteJobApi={deleteJobApi}
           region={region}
           setDetailedView={setDetailedView}
           clusterResponse={clusterResponse}
-          clustersList={clustersList}
+          fromPage={fromPage}
         />
       )}
       {!submitJobView && !detailedJobView && (
         <div>
-          {clusterResponse &&
-            clusterResponse.clusters &&
-            clusterResponse.clusters.length > 0 && (
-              <div className="create-cluster-overlay">
-                <div
-                  role="button"
-                  className="create-cluster-sub-overlay"
-                  onClick={() => {
-                    handleSubmitJobOpen();
-                  }}
-                >
-                  <div className="create-icon">
-                    <iconSubmitJob.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
-                  </div>
-                  <div className="create-text">SUBMIT JOB</div>
+          {clusterResponse && clusterResponse.length > 0 && (
+            <div className="create-cluster-overlay">
+              <div
+                role="button"
+                className="create-cluster-sub-overlay"
+                onClick={() => {
+                  handleSubmitJobOpen();
+                }}
+              >
+                <div className="create-icon">
+                  <iconSubmitJob.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 </div>
+                <div className="create-text">SUBMIT JOB</div>
               </div>
-            )}
+            </div>
+          )}
           {jobsList.length > 0 ? (
             <div>
               <div className="filter-cluster-overlay">
                 <div className="filter-cluster-icon">
-
-                    <iconFilter.react
-                      tag="div"
-                      className="icon-white logo-alignment-style"
-                    />
-
+                  <iconFilter.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
                 </div>
                 <div className="filter-cluster-text"></div>
                 <div className="filter-cluster-section">
@@ -628,9 +504,9 @@ function JobComponent({
           ) : (
             <div>
               {isLoading && (
-                <div className="spin-loaderMain">
+                <div className="spin-loader-main">
                   <ClipLoader
-                    color="#8A8A8A"
+                    color="#3367d6"
                     loading={true}
                     size={20}
                     aria-label="Loading Spinner"

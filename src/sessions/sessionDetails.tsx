@@ -22,10 +22,10 @@ import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
 import StopClusterDisableIcon from '../../style/icons/stop_cluster_disable_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
+import errorIcon from '../../style/icons/error_icon.svg';
 import {
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
-  HTTP_METHOD,
   METASTORE_SERVICE_KEY,
   METASTORE_SERVICE_LABEL,
   NETWORK_KEY,
@@ -49,20 +49,12 @@ import {
   SUBNETWORK_KEY,
   SUBNETWORK_LABEL
 } from '../utils/const';
-import {
-  authenticatedFetch,
-  elapsedTime,
-  jobTimeFormat,
-  toastifyCustomStyle
-} from '../utils/utils';
+import { elapsedTime, jobTimeFormat } from '../utils/utils';
 import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { terminateSessionAPI } from '../utils/sessionService';
+import { SessionService } from './sessionService';
 import PollingTimer from '../utils/pollingTimer';
 import { JupyterLab } from '@jupyterlab/application';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -84,6 +76,10 @@ const iconSucceeded = new LabIcon({
 const iconClusterError = new LabIcon({
   name: 'launcher:cluster-error-icon',
   svgstr: clusterErrorIcon
+});
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
 });
 
 interface ISessionDetailsProps {
@@ -128,6 +124,7 @@ function SessionDetails({
   const [isLoading, setIsLoading] = useState(true);
   const [labelDetail, setLabelDetail] = useState(['']);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [errorView, setErrorView] = useState(false);
 
   const pollingSessionDetails = async (
     pollingFunction: () => void,
@@ -149,35 +146,13 @@ function SessionDetails({
     }
   };
   const getSessionDetails = async () => {
-    try {
-      const response = await authenticatedFetch({
-        uri: `sessions/${sessionSelected}`,
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'locations'
-      });
-
-      const formattedResponse = await response.json();
-      setSessionInfo(formattedResponse);
-      const labelValue: string[] = [];
-      if (formattedResponse.labels) {
-        for (const [key, value] of Object.entries(formattedResponse.labels)) {
-          labelValue.push(`${key}:${value}`);
-        }
-      }
-      setLabelDetail(labelValue);
-      setIsLoading(false);
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-    } catch (error) {
-      setIsLoading(false);
-      console.error('Error loading session details', error);
-      DataprocLoggingService.log('Error loading session details', LOG_LEVEL.ERROR);
-      toast.error(
-        `Failed to fetch session details ${sessionSelected}`,
-        toastifyCustomStyle
-      );
-    }
+    await SessionService.getSessionDetailsService(
+      sessionSelected,
+      setErrorView,
+      setIsLoading,
+      setLabelDetail,
+      setSessionInfo
+    );
   };
 
   useEffect(() => {
@@ -215,13 +190,29 @@ function SessionDetails({
 
   return (
     <div>
-      {sessionInfo.name !== '' ? (
+      {errorView && (
+        <div className="error-view-parent">
+          <div
+            role="button"
+            aria-label="back-arrow-icon"
+            className="back-arrow-icon"
+            onClick={() => handleDetailedView()}
+          >
+            <iconLeftArrow.react tag="div" className="logo-alignment-style" />
+          </div>
+          <div className="error-view-message-parent">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div role="alert" className="error-view-message">
+              Unable to find the resource you requested
+            </div>
+          </div>
+        </div>
+      )}
+      {sessionInfo.name !== '' && !errorView ? (
         <div className="scroll">
           {detailedSessionView && (
             <div>
-              <div
-                className='scroll-fix-header cluster-details-header'
-              >
+              <div className="scroll-fix-header cluster-details-header">
                 <div
                   role="button"
                   className="back-arrow-icon"
@@ -229,24 +220,29 @@ function SessionDetails({
                 >
                   <iconLeftArrow.react
                     tag="div"
-                    className='icon-white logo-alignment-style'
+                    className="icon-white logo-alignment-style"
                   />
                 </div>
                 <div className="cluster-details-title">Session details</div>
                 <div
                   role="button"
                   className={
-                    sessionInfo.state === STATUS_ACTIVE
+                    sessionInfo.state === STATUS_ACTIVE ||
+                    sessionInfo.state === STATUS_CREATING
                       ? 'action-cluster-section'
                       : 'action-cluster-section disabled'
                   }
                   onClick={() =>
-                    sessionInfo.state === STATUS_ACTIVE &&
-                    terminateSessionAPI(sessionInfo.name.split('/')[5])
+                    sessionInfo.state === STATUS_ACTIVE ||
+                    (sessionInfo.state === STATUS_CREATING &&
+                      SessionService.terminateSessionAPI(
+                        sessionInfo.name.split('/')[5]
+                      ))
                   }
                 >
                   <div className="action-cluster-icon">
-                    {sessionInfo.state === STATUS_ACTIVE ? (
+                    {sessionInfo.state === STATUS_ACTIVE ||
+                    sessionInfo.state === STATUS_CREATING ? (
                       <iconStopCluster.react
                         tag="div"
                         className="logo-alignment-style"
@@ -311,7 +307,7 @@ function SessionDetails({
                       sessionInfo.state === STATUS_DELETING) && (
                       <div>
                         <ClipLoader
-                          color="#8A8A8A"
+                          color="#3367d6"
                           loading={true}
                           size={15}
                           aria-label="Loading Spinner"
@@ -406,9 +402,7 @@ function SessionDetails({
                   } else if (key === NETWORK_TAGS_KEY) {
                     return (
                       <div className="row-details" key={key}>
-                        <div className="session-env-details-label">
-                          {label}
-                        </div>
+                        <div className="session-env-details-label">{label}</div>
                         <div className="session-env-details-value">
                           {
                             //@ts-ignore value type issue
@@ -452,9 +446,7 @@ function SessionDetails({
                   if (key === METASTORE_SERVICE_KEY) {
                     return (
                       <div className="row-details" key={key}>
-                        <div className="session-env-details-label">
-                          {label}
-                        </div>
+                        <div className="session-env-details-label">{label}</div>
                         <div className="session-env-details-value">
                           {
                             sessionInfo.environmentConfig.peripheralsConfig[
@@ -493,7 +485,9 @@ function SessionDetails({
                 })}
 
                 <div className="row-details">
-                  <div className="session-env-details-label">Encryption type</div>
+                  <div className="session-env-details-label">
+                    Encryption type
+                  </div>
                   <div className="session-env-details-value">
                     {sessionInfo?.environmentConfig?.executionConfig?.kmsKey
                       ? 'Customer-managed'
@@ -502,7 +496,9 @@ function SessionDetails({
                 </div>
                 {sessionInfo?.environmentConfig?.executionConfig?.kmsKey && (
                   <div className="row-details">
-                    <div className="session-env-details-label">Encryption key</div>
+                    <div className="session-env-details-label">
+                      Encryption key
+                    </div>
                     <div className="session-env-details-value">
                       {sessionInfo.environmentConfig.executionConfig.kmsKey}
                     </div>
@@ -533,20 +529,20 @@ function SessionDetails({
           )}
         </div>
       ) : (
-        <div className="loader-full-style">
+        <>
           {isLoading && (
-            <div className="session-loader">
+            <div className="spin-loader-main">
               <ClipLoader
-                color="#8A8A8A"
+                color="#3367d6"
                 loading={true}
-                size={20}
+                size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"
               />
               Loading Session Details
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

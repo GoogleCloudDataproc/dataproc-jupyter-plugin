@@ -540,7 +540,7 @@ fetching database name from fully qualified name structure */
   }
   const getDatabaseDetails = async () => {
     const credentials = await authApi();
-    const { CATALOG} = await gcpServiceUrls;
+    const { CATALOG } = await gcpServiceUrls;
     if (credentials && notebookValue) {
       const requestBody = {
         query: `${QUERY_DATABASE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
@@ -674,7 +674,10 @@ fetching database name from fully qualified name structure */
     }
   };
   interface ISessionDetailsResponse {
-    error: any;
+    error: {
+      code: number;
+      message: string;
+    };
     environmentConfig?: {
       peripheralsConfig?: {
         metastoreService?: string;
@@ -791,7 +794,7 @@ fetching database name from fully qualified name structure */
               <div className="database-loader">
                 <div>
                   <ClipLoader
-                    color="#8A8A8A"
+                    color="#3367d6"
                     loading={true}
                     size={20}
                     aria-label="Loading Spinner"

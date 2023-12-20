@@ -16,7 +16,7 @@
  */
 
 import { requestAPI } from '../handler/handler';
-export const VERSION_DETAIL = "0.1.66"
+export const VERSION_DETAIL = '0.1.69';
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
@@ -180,3 +180,5 @@ export enum HTTP_METHOD {
 }
 export const NETWORK_TAG_MESSAGE =
   'Network tags are text attributes you can add to make firewall rules and routes applicable to specific VM instances.';
+export const LOGIN_ERROR_MESSAGE =
+  'Please navigate to Settings -> Cloud Dataproc Settings to login and continue';

@@ -25,16 +25,8 @@ import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
 import EditIcon from '../../style/icons/edit_icon.svg';
 import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
 import DeletePopup from '../utils/deletePopup';
+import { JOB_FIELDS_EXCLUDED, STATUS_RUNNING } from '../utils/const';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  JOB_FIELDS_EXCLUDED,
-  LABEL_TEXT,
-  STATUS_RUNNING,
-  gcpServiceUrls
-} from '../utils/const';
-import {
-  authApi,
   elapsedTime,
   jobDetailsOptionalDisplay,
   jobTimeFormat,
@@ -42,8 +34,7 @@ import {
   jobTypeValue,
   jobTypeValueArguments,
   statusMessage,
-  toastifyCustomStyle,
-  loggedFetch
+  toastifyCustomStyle
 } from '../utils/utils';
 
 import ClusterDetails from '../cluster/clusterDetails';
@@ -54,11 +45,10 @@ import ViewLogs from '../utils/viewLogs';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
-import { stopJobApi, deleteJobApi } from '../utils/jobServices';
+import { JobService } from './jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { IJobDetails } from '../utils/jobDetailsInterface';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -95,12 +85,10 @@ const iconError = new LabIcon({
 interface IJobDetailsProps {
   jobSelected: string;
   setDetailedJobView: (value: boolean) => void;
-  stopJobApi: (jobId: string) => Promise<void>;
-  deleteJobApi: (jobId: string) => Promise<void>;
   region: any;
   setDetailedView: (value: boolean) => void;
   clusterResponse: object;
-  clustersList: object;
+  fromPage: string;
 }
 function JobDetails({
   jobSelected,
@@ -108,7 +96,7 @@ function JobDetails({
   region,
   setDetailedView,
   clusterResponse,
-  clustersList
+  fromPage
 }: IJobDetailsProps) {
   const initialJobDetails: IJobDetails = {
     status: { state: '', stateStartTime: '' },
@@ -194,7 +182,7 @@ function JobDetails({
 
   const handleDetailedClusterView = () => {
     pollingJobDetails(getJobDetails, true);
-    if (!clustersList) {
+    if (fromPage !== 'clusters') {
       setDetailedJobView(false);
     }
     setDetailedClusterView(true);
@@ -212,7 +200,6 @@ function JobDetails({
       pollingJobDetails(getJobDetails, true);
     };
   }, [labelEditMode]);
-
   const handleJobLabelEdit = () => {
     setLabelEditMode(true);
     setLabelDetailUpdated(labelDetail);
@@ -223,60 +210,20 @@ function JobDetails({
   };
   const handleStopJob = async (jobId: string) => {
     setSelectedJobId(jobId);
-    await stopJobApi(selectedJobId);
+    await JobService.stopJobApi(selectedJobId);
   };
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
   };
 
   const handleDelete = async () => {
-    await deleteJobApi(selectedJobId);
+    await JobService.deleteJobApi(selectedJobId);
     setDeletePopupOpen(false);
     handleDetailedJobView();
   };
 
   const updateJobDetails = async (payloadJob: object) => {
-    const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}?updateMask=${LABEL_TEXT}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify(payloadJob),
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResultJob: Response) => {
-              const formattedResponse = await responseResultJob.json()
-              if (formattedResponse?.error?.code) {
-                toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-              }
-              else{
-              toast.success(
-                `Request to update job ${jobSelected} submitted`,
-                toastifyCustomStyle
-              );
-              console.log(responseResultJob);
-              }
-            })
-            .catch((e: Error) => console.error(e));
-        })
-        .catch((err: Error) => {
-          console.error('Error in updating job', err);
-          DataprocLoggingService.log('Error in updating job', LOG_LEVEL.ERROR);
-          toast.error(
-            `Failed to update the job ${jobSelected}`,
-            toastifyCustomStyle
-          );
-        });
-    }
+    await JobService.updateJobDetailsService(payloadJob, jobSelected);
   };
 
   const handleSaveEdit = () => {
@@ -295,6 +242,10 @@ function JobDetails({
     });
     payload.labels = labelObject;
     updateJobDetails(payload);
+    toast.success(
+      `Request to update job ${jobSelected} submitted`,
+      toastifyCustomStyle
+    );
     setLabelEditMode(false);
     getJobDetails();
   };
@@ -304,72 +255,36 @@ function JobDetails({
   };
 
   const getJobDetails = async () => {
-    const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs/${jobSelected}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: any) => {
-              setjobInfoResponse(responseResult);
-              const labelValue: string[] = [];
-              if (responseResult.labels) {
-                for (const [key, value] of Object.entries(
-                  responseResult.labels
-                )) {
-                  labelValue.push(`${key}:${value}`);
-                }
-              }
-              setjobInfo(responseResult);
-              setLabelDetail(labelValue);
-              setIsLoading(false);
-              setSelectedJobClone(responseResult);
-              if (responseResult?.error?.code) {
-                toast.error(responseResult?.error?.message, toastifyCustomStyle);
-              }
-            })
-            .catch((e: Error) => {
-              console.error(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error in getting job details', err);
-          DataprocLoggingService.log('Error in getting job details', LOG_LEVEL.ERROR);
-          toast.error(
-            `Failed to fetch job details ${jobSelected}`,
-            toastifyCustomStyle
-          );
-        });
-    }
+    await JobService.getJobDetailsService(
+      jobSelected,
+      setErrorView,
+      setIsLoading,
+      setjobInfoResponse,
+      setjobInfo,
+      setLabelDetail,
+      setSelectedJobClone
+    );
   };
 
-  const startTime = jobTimeFormat(jobInfo.statusHistory[0].stateStartTime);
-  const job = jobTypeValue(jobInfo);
-  const jobType = jobTypeDisplay(job);
-  const jobArgument = jobTypeValueArguments(jobInfo);
-  const jobTypeConcat = jobArgument + 'Job';
+  const startTime = !errorView
+    ? jobTimeFormat(jobInfo.statusHistory[0].stateStartTime)
+    : '';
+  const job = !errorView ? jobTypeValue(jobInfo) : '';
+  const jobType = !errorView ? jobTypeDisplay(job) : '';
+  const jobArgument = !errorView ? jobTypeValueArguments(jobInfo) : '';
+  const jobTypeConcat = !errorView ? jobArgument + 'Job' : '';
   //@ts-ignore string used as index
-  const argumentsList = jobInfo[jobTypeConcat].args;
-  const statusMsg = statusMessage(jobInfo);
-  const endTime = new Date(jobInfo.status.stateStartTime);
-  const jobStartTime = new Date(
-    jobInfo.statusHistory[jobInfo.statusHistory.length - 1].stateStartTime
-  );
-  const elapsedTimeString = elapsedTime(endTime, jobStartTime);
+  const argumentsList = !errorView ? jobInfo[jobTypeConcat].args : '';
+  const statusMsg = !errorView ? statusMessage(jobInfo) : '';
+  const endTime = !errorView
+    ? new Date(jobInfo.status.stateStartTime)
+    : new Date();
+  const jobStartTime = !errorView
+    ? new Date(jobInfo.statusHistory[0].stateStartTime)
+    : new Date();
 
-  const statusStyleSelection = (jobInfo: any) => {
+  let elapsedTimeString = !errorView ? elapsedTime(endTime, jobStartTime) : '';
+  const statusStyleSelection = (jobInfo: IJobDetails) => {
     if (jobInfo.status.state === STATUS_RUNNING) {
       return 'action-cluster-section'; //CSS class
     } else {
@@ -385,7 +300,7 @@ function JobDetails({
     if (labelEditMode) {
       return 'job-edit-button-disabled';
     } else {
-      return  'job-edit-button';
+      return 'job-edit-button';
     }
   };
 
@@ -404,7 +319,7 @@ function JobDetails({
           <div
             role="button"
             className="back-arrow-icon"
-            onClick={() => setErrorView(false)}
+            onClick={() => handleDetailedJobView()}
           >
             <iconLeftArrow.react
               tag="div"
@@ -443,7 +358,6 @@ function JobDetails({
           setDetailedClusterView={setDetailedClusterView}
           submitJobView={submitJobView}
           selectedJobClone={selectedJobClone}
-          clusterResponse={clusterResponse}
           setSubmitJobView={setSubmitJobView}
           setDetailedJobView={setDetailedJobView}
           setSelectedJobClone={setSelectedJobClone}
@@ -555,19 +469,18 @@ function JobDetails({
                   {labelEditMode ? (
                     <iconEditDisable.react
                       tag="div"
-                      className= {styleIconColor(labelEditMode)}
+                      className={styleIconColor(labelEditMode)}
                     />
                   ) : (
                     <iconEdit.react
                       tag="div"
-                      className={styleIconColor(labelEditMode)
-                      }
+                      className={styleIconColor(labelEditMode)}
                     />
                   )}
                   <div
-                    className={labelEditMode
-                      ? 'job-edit-text-disabled'
-                      : 'job-edit-text'}
+                    className={
+                      labelEditMode ? 'job-edit-text-disabled' : 'job-edit-text'
+                    }
                   >
                     EDIT
                   </div>
@@ -757,9 +670,7 @@ function JobDetails({
                 </div>
                 {labelEditMode && (
                   <div className="job-button-style-parent">
-                    <div
-                      className='job-save-button-style'
-                    >
+                    <div className="job-save-button-style">
                       <div
                         role="button"
                         onClick={() => {
@@ -786,20 +697,20 @@ function JobDetails({
           )}
 
           {jobInfo.jobUuid === '' && (
-            <div className="loader-full-style">
+            <>
               {isLoading && (
-                <div>
+                <div className="spin-loader-main">
                   <ClipLoader
-                    color="#8A8A8A"
+                    color="#3367d6"
                     loading={true}
-                    size={20}
+                    size={18}
                     aria-label="Loading Spinner"
                     data-testid="loader"
                   />
                   Loading Job Details
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
       )}

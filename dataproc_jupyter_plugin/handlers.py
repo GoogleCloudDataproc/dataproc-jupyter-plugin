@@ -19,6 +19,8 @@ import tornado
 import subprocess
 from cachetools import TTLCache
 import datetime
+import re
+import threading
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
 
@@ -132,6 +134,8 @@ class RouteHandler(APIHandler):
                 cached_credentials = get_cached_credentials(self.log)
                 self.finish(json.dumps(cached_credentials))
             else:
+                t1 = threading.Thread(target=get_cached_credentials, args=())
+                t1.start()
                 self.finish(json.dumps(credentials_cache['credentials']))
         except Exception:
             self.log.exception(f"Error handling credential request")
@@ -240,4 +244,8 @@ def setup_handlers(web_app):
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "log")
     handlers = [(route_pattern, LogHandler)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "getGcpServiceUrls")
+    handlers = [(route_pattern, UrlHandler)]
     web_app.add_handlers(host_pattern, handlers)

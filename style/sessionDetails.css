@@ -40,7 +40,6 @@
 .session-detail-status-parent {
   display: flex;
   align-items: center;
-  height: 29px;
   color: var(--jp-ui-font-color2);
   padding-left: 20px;
 }
@@ -59,11 +58,11 @@
 }
 
 .session-loader {
-    display: flex;
-    align-items: end;
+  display: flex;
+  align-items: end;
 }
 
 .session-list-table-parent {
-    max-height: 100%;
-    overflow: auto;
+  max-height: 100%;
+  overflow: auto;
 }
