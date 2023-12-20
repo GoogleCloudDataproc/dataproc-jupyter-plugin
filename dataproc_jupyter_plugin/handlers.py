@@ -15,14 +15,24 @@
 import json
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
+from requests import HTTPError
 import tornado
 import subprocess
 from cachetools import TTLCache
 import datetime
 import re
 import threading
+from jupyter_server.utils import ensure_async
+# from dataproc_jupyter_plugin.environments import EnvironmentRetrievalError
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
+from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
+# from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
+from dataproc_jupyter_plugin.contollers.composerController import ComposerController
+from dataproc_jupyter_plugin.contollers.dagContoller import DagController
+from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
+from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
+
 
 
 def update_gateway_client_url(c, log):
@@ -182,9 +192,9 @@ class ConfigHandler(APIHandler):
 
 
 class UrlHandler(APIHandler):
+    url = {}
     @tornado.web.authenticated
     def get(self):
-        url = {}
         dataproc_url = self.gcp_service_url('dataproc')
         compute_url = self.gcp_service_url('compute', default_url='https://compute.googleapis.com/compute/v1')
         metastore_url = self.gcp_service_url('metastore')
@@ -211,6 +221,7 @@ class UrlHandler(APIHandler):
         return url
 
 
+        
 class LogHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
@@ -246,6 +257,21 @@ def setup_handlers(web_app):
     handlers = [(route_pattern, LogHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "getGcpServiceUrls")
-    handlers = [(route_pattern, UrlHandler)]
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "composer")
+    handlers = [(route_pattern, ExecutorController)]
     web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "dagList")
+    handlers = [(route_pattern, DagController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "clusterList")
+    handlers = [(route_pattern, ClusterController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "runtimeList")
+    handlers = [(route_pattern, RuntimeController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+
+
