@@ -29,7 +29,8 @@ import {
   CUSTOM_CONTAINER_MESSAGE_PART,
   LOGIN_ERROR_MESSAGE,
   LOGIN_STATE,
-  SHARED_VPC
+  SHARED_VPC,
+  SERVICE_ACCOUNT
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -107,6 +108,7 @@ function CreateRunTime({
   const [projectId, setProjectId] = useState<string | null>('');
   const [region, setRegion] = useState('');
   const [containerImageSelected, setContainerImageSelected] = useState('');
+  const [serviceAccountSelected, setServiceAccountSelected] = useState('');
   const [networkList, setNetworklist] = useState([{}]);
   const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
   const [networkSelected, setNetworkSelected] = useState('');
@@ -281,6 +283,9 @@ function CreateRunTime({
         const peripheralsConfig = environmentConfig.peripheralsConfig;
 
         if (executionConfig) {
+          if (executionConfig.serviceAccount) {
+            setServiceAccountSelected(executionConfig.serviceAccount);
+          }
           const sharedVpcMatches =
             /projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
               executionConfig.subnetworkUri
@@ -769,6 +774,9 @@ function CreateRunTime({
         },
         environmentConfig: {
           executionConfig: {
+            ...(serviceAccountSelected !== '' && {
+              serviceAccount: serviceAccountSelected
+            }),
             ...(networkTagSelected.length > 0 && {
               networkTags: networkTagSelected
             }),
@@ -970,6 +978,30 @@ function CreateRunTime({
                   className="learn-more-url"
                   onClick={() => {
                     window.open(`${CUSTOM_CONTAINERS}`, '_blank');
+                  }}
+                >
+                  Learn more
+                </div>
+              </div>
+              <div className="submit-job-label-header">
+                Execution Configuration
+              </div>
+              <div className="select-text-overlay">
+                <Input
+                  className="create-batch-style "
+                  value={serviceAccountSelected}
+                  onChange={e => setServiceAccountSelected(e.target.value)}
+                  type="text"
+                  placeholder=""
+                  Label="Service account"
+                />
+              </div>
+              <div className="create-custom-messagelist">
+                If not provided, the default GCE service account will be used.
+                <div
+                  className="submit-job-learn-more"
+                  onClick={() => {
+                    window.open(`${SERVICE_ACCOUNT}`, '_blank');
                   }}
                 >
                   Learn more

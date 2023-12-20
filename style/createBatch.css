@@ -140,6 +140,7 @@
 }
 
 .create-custom-messagelist {
+  display: flex;
   font-style: normal;
   font-weight: 400;
   font-size: 10px;
