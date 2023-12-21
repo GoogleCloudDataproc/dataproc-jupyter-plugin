@@ -180,7 +180,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
+      new NotebookButtonExtension(app as JupyterLab, launcher, labShell, themeManager)
     );
 
     const loadDpmsWidget = (value: string) => {

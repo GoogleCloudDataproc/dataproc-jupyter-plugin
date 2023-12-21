@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { JupyterLab } from '@jupyterlab/application';
+import { ILabShell, JupyterLab } from '@jupyterlab/application';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDisposable } from '@lumino/disposable';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -29,6 +29,8 @@ import { authenticatedFetch } from '../utils/utils';
 import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
+import notebookSchedulerIcon from '../../style/icons/notebook_scheduler.svg';
+import { NotebookScheduler } from '../scheduler/notebookScheduler';
 
 const iconLogs = new LabIcon({
   name: 'launcher:logs-icon',
@@ -42,6 +44,10 @@ const iconServerless = new LabIcon({
   name: 'launcher:serverless-icon',
   svgstr: serverlessIcon
 });
+const iconNotebookScheduler = new LabIcon({
+  name: 'launcher:notebook-scheduler-icon',
+  svgstr: notebookSchedulerIcon
+});
 
 /**
  * A disposable class to track the toolbar widget for a single notebook.
@@ -51,6 +57,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
   isDisposed: boolean;
   private readonly sparkLogsButton: ToolbarButton;
   private readonly sessionDetailsButton: ToolbarButton;
+  private readonly notebookSchedulerButton: ToolbarButton;
   private sessionId?: string;
 
   /**
@@ -63,11 +70,11 @@ class NotebookButtonExtensionPoint implements IDisposable {
     private readonly context: DocumentRegistry.IContext<INotebookModel>,
     private readonly app: JupyterLab,
     private readonly launcher: ILauncher,
+    private readonly labShell: ILabShell,
     private readonly themeManager: IThemeManager
   ) {
     this.isDisposed = false;
     this.context.sessionContext.sessionChanged.connect(this.onSessionChanged);
-
 
     this.sparkLogsButton = new ToolbarButton({
       icon: iconLogs,
@@ -90,7 +97,29 @@ class NotebookButtonExtensionPoint implements IDisposable {
       'session-details',
       this.sessionDetailsButton
     );
+    this.notebookSchedulerButton = new ToolbarButton({
+      icon: iconNotebookScheduler,
+      onClick: ()=>this.onNotebookSchedulerClick(),
+      tooltip: 'Notebook Scheduler',
+      className: "dark-theme-logs" 
+    });
+    this.panel.toolbar.insertItem(
+      1000,
+      'notebook-scheduler',
+      this.notebookSchedulerButton
+    );
   }
+
+  private onNotebookSchedulerClick = () => {
+    const content = new NotebookScheduler(
+      this.labShell,
+      this.themeManager
+    );
+    const widget = new MainAreaWidget<NotebookScheduler>({ content });
+    widget.title.label = 'Notebook Scheduler';
+    widget.title.icon = iconNotebookScheduler;
+    this.app.shell.add(widget, 'main');
+  };
 
   private onSessionDetailsClick = () => {
     if (!this.sessionId) {
@@ -200,6 +229,7 @@ export class NotebookButtonExtension
   constructor(
     private app: JupyterLab,
     private launcher: ILauncher,
+    private labShell: ILabShell,
     private themeManager: IThemeManager
   ) {}
 
@@ -212,6 +242,7 @@ export class NotebookButtonExtension
       context,
       this.app,
       this.launcher,
+      this.labShell,
       this.themeManager
     );
   }
