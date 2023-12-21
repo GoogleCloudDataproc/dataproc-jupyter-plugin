@@ -8,14 +8,14 @@ from requests import HTTPError
 
 
 class ComposerController(APIHandler):
-    async def get(self):
+    def get(self):
         """Returns names of available runtime environments and output formats mappings"""
         print("RUNTIME")
         try:
             environments_manager = ComposerService()
             credentials = handlers.get_cached_credentials(self.log)
-            environments = await ensure_async(environments_manager.list_environments(credentials))
-            output_formats = await ensure_async(environments_manager.output_formats_mapping())
+            environments = environments_manager.list_environments(credentials)
+            output_formats = environments_manager.output_formats_mapping()
         except:
             raise HTTPError(500, "Error")
 

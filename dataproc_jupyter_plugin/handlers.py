@@ -258,7 +258,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "composer")
-    handlers = [(route_pattern, ExecutorController)]
+    handlers = [(route_pattern, ComposerController)]
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "dagList")

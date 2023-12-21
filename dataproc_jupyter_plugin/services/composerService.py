@@ -72,7 +72,7 @@ class ComposerService():
             for env in envs:
                 name = os.path.basename(env)
                 environments.append(
-                    RuntimeEnvironment(
+                    ComposerEnvironment(
                         name=name,
                         label=name,
                         description=f"Environment: {name}",
