@@ -27,11 +27,11 @@ class DescribeJob(BaseModel):
     composer_environment_name: str = None
     output_formats: Optional[List[str]] = None
     parameters: Optional[Dict[str, str]] = None
-    retryCount: int = 2
-    retryDelay: int = 5
-    emailOnFailure: bool = False
-    emailOnDelay: bool = False
-    emailList: Optional[List[str]] = None
+    retry_count: int = 2
+    retry_delay: int = 5
+    email_failure: bool = False
+    email_delay: bool = False
+    email: Optional[List[str]] = None
     name: str = None
     dag_id: str = None
 

@@ -10,7 +10,6 @@ import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 from jupyter_scheduler.models import JobFeature
 import subprocess
-from dataproc_jupyter_plugin import handlers 
 from jinja2 import Environment, FileSystemLoader
 import uuid
 from datetime import datetime
@@ -58,8 +57,7 @@ def check_file_exists(bucket, file_path):
 class ExecutorService():
     """Default execution manager that executes notebooks"""
     @staticmethod
-    def uploadToGcloud(runtime_env,dag_file):
-        credentials = handlers.get_cached_credentials()
+    def uploadToGcloud(runtime_env,dag_file,credentials):
         if 'region_id' in credentials:
             region = credentials['region_id']
             cmd = f"gcloud beta composer environments storage dags import --environment {runtime_env} --location {region} --source={dag_file}"
@@ -88,13 +86,6 @@ class ExecutorService():
         DAG_TEMPLATE_V1 = "pysparkJobTemplate-v1.py"
         environment = Environment(loader=FileSystemLoader(TEMPLATES_FOLDER_PATH))
         template = environment.get_template(DAG_TEMPLATE_V1)
-        # tags = self.model.tags
-        # cluster_name = json.loads(tags[0])['cluster']
-        # retry_count = json.loads(tags[0])['retryCount']
-        # retry_delay = json.loads(tags[0])['retryDelay']
-        # email_failure = json.loads(tags[0])['emailOnFailure']
-        # email_delay = json.loads(tags[0])['emailOnDelay']
-        # email_list = json.loads(tags[0])['emailList']
         if 'project_id' and'region_id' in credentials:
             gcp_project_id = credentials['project_id']
             gcp_region_id = credentials['region_id']
@@ -103,9 +94,7 @@ class ExecutorService():
         owner, error = process.communicate()
         content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                   gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}",\
-                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}_{job.dag_id}.ipynb")
-                                #   cluster_name=cluster_name,\
-                                #   retry_count=retry_count,retry_delay=retry_delay,email_failure=email_failure,email_delay=email_delay, email_list=email_list, owner=owner)
+                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}_{job.dag_id}.ipynb",owner = owner)
         print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:
             message.write(content)
@@ -117,12 +106,12 @@ class ExecutorService():
             "composer_environment_name": "composer4",
             "output_formats": ['ipynb', 'html'],
             "parameters": None,
-            "cluster": "cluster-test-5",
-            "retryCount": 4,
-            "retryDelay": 10,
-            "emailOnFailure": False,
-            "emailOnDelay": True,
-            "emailList": ["test@google.com", "abc@gmail.com"],
+            "cluster_name": "cluster-test-5",
+            "retry_count": 4,
+            "retry_delay": 10,
+            "email_failure": False,
+            "email_delay": True,
+            "email": ["test@google.com", "abc@gmail.com"],
             "name": 'Untitled.ipynb',
             "dag_id": '83dfd16c-e09d-4791-a589-a1dfe5240e9c'
         }
@@ -166,7 +155,7 @@ class ExecutorService():
         #     output, resources = cls().from_notebook_node(nb)
         #     with fsspec.open(self.staging_paths[output_format], "w", encoding="utf-8") as f:
         #         f.write(output)
-        # self.uploadToGcloud(job.composer_environment_name,dag_file)
+        self.uploadToGcloud(job.composer_environment_name,dag_file,credentials)
 
     def supported_features(cls) -> Dict[JobFeature, bool]:
         return {
