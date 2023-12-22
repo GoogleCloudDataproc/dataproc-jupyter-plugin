@@ -256,7 +256,7 @@ const NotebookSchedulerComponent = ({
           <Input
             className="create-batch-style "
             value={jobNameSelected}
-            onChange={(e => setJobNameSelected(e.target.value)}
+            onChange={e => setJobNameSelected(e.target.value)}
             type="text"
             placeholder=""
             Label="Job name"
