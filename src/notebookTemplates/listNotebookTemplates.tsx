@@ -10,8 +10,9 @@ import { ICellProps, loggedFetch } from '../utils/utils';
 import * as path from 'path';
 import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
 import { JupyterFrontEnd } from '@jupyterlab/application';
+import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 
-function ListNotebookTemplates({ app }: { app: JupyterFrontEnd }) {
+function ListNotebookTemplates({ app, defaultFileBrowser }: { app: JupyterFrontEnd, defaultFileBrowser: IDefaultFileBrowser }) {
   const iconFilter = new LabIcon({
     name: 'launcher:filter-icon',
     svgstr: filterIcon
@@ -41,29 +42,17 @@ function ListNotebookTemplates({ app }: { app: JupyterFrontEnd }) {
     ],
     []
   );
-
   const downloadNotebook = async (
     notebookContent: any,
     notebookUrl: string
   ) => {
-    // Get the contents manager to save the file
     const contentsManager = app.serviceManager.contents;
 
     // Define the path to the 'notebookTemplateDownload' folder within the local application directory
-    const notebookTemplateDownloadFolderPath = `${path.sep}notebookTemplateDownload`;
-
-    try {
-      // Check if the 'notebookTemplateDownload' folder exists
-      await contentsManager.get(notebookTemplateDownloadFolderPath);
-    } catch (error) {
-      // The folder does not exist; create it
-      await contentsManager.save(notebookTemplateDownloadFolderPath, {
-        type: 'directory'
-      });
-    }
-
+    const notebookTemplateDownloadFolderPath = defaultFileBrowser.model.path;
+    
     const urlParts = notebookUrl.split('/');
-    const filePath = `.${notebookTemplateDownloadFolderPath}${path.sep}${
+    const filePath = `${notebookTemplateDownloadFolderPath}${path.sep}${
       urlParts[urlParts.length - 1]
     }`;
 
@@ -74,7 +63,7 @@ function ListNotebookTemplates({ app }: { app: JupyterFrontEnd }) {
       content: JSON.stringify(notebookContent)
     });
 
-    // Refresh the file browser to reflect the new file
+    // Refresh the file fileBrowser to reflect the new file
     app.shell.currentWidget?.update();
 
     app.commands.execute('docmanager:open', {
@@ -82,8 +71,9 @@ function ListNotebookTemplates({ app }: { app: JupyterFrontEnd }) {
     });
   };
 
-  const handleNameClick = async (template: any) => {
+  const handleClick = async (template: any) => {
     const notebookUrl = template.url;
+    
     loggedFetch(notebookUrl, {
       method: 'GET',
       headers: {
@@ -177,7 +167,7 @@ function ListNotebookTemplates({ app }: { app: JupyterFrontEnd }) {
         role="button"
         aria-label="Use notebook template"
         title="Use notebook template"
-        onClick={() => handleNameClick(data)}
+        onClick={() => handleClick(data)}
       >
         Use this template
       </div>

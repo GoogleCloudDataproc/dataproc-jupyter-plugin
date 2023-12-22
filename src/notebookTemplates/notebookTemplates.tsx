@@ -6,12 +6,15 @@ import { checkConfig } from '../utils/utils';
 import ListNotebookTemplates from './listNotebookTemplates';
 import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
+import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 
 const NotebookTemplatesComponent= ({
-  app
+  app,
+  defaultFileBrowser
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
+  defaultFileBrowser: IDefaultFileBrowser;
 }): JSX.Element=> {
   const [loggedIn, setLoggedIn] = useState(false);
   const [configError, setConfigError] = useState(false);
@@ -56,7 +59,8 @@ const NotebookTemplatesComponent= ({
         <div className="clusters-list-component" role="tablist">
           <div>
               <ListNotebookTemplates
-               app={app} />
+               app={app} 
+               defaultFileBrowser={defaultFileBrowser}/>
           </div>
         </div>
       )}
@@ -66,10 +70,12 @@ const NotebookTemplatesComponent= ({
 
 export class NotebookTemplates extends DataprocWidget {
   app: JupyterLab;
+  defaultFileBrowser: IDefaultFileBrowser;
 
-  constructor(app: JupyterLab, themeManager: IThemeManager) {
+  constructor(app: JupyterLab, themeManager: IThemeManager, defaultFileBrowser: IDefaultFileBrowser) {
     super(themeManager);
     this.app = app;
+    this.defaultFileBrowser = defaultFileBrowser
   }
 
   renderInternal(): React.JSX.Element {
@@ -78,6 +84,7 @@ export class NotebookTemplates extends DataprocWidget {
       <NotebookTemplatesComponent
         app={this.app}
         themeManager={this.themeManager}
+        defaultFileBrowser={this.defaultFileBrowser}
       />
       </div>
     );

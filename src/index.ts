@@ -42,7 +42,7 @@ import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
-import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import { IFileBrowserFactory, IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
@@ -64,6 +64,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   optional: [
     IFileBrowserFactory,
+    IDefaultFileBrowser,
     ILauncher,
     IMainMenu,
     ILabShell,
@@ -75,6 +76,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   activate: async (
     app: JupyterFrontEnd,
     factory: IFileBrowserFactory,
+    defaultFileBrowser:IDefaultFileBrowser,
     launcher: ILauncher,
     mainMenu: IMainMenu,
     labShell: ILabShell,
@@ -367,7 +369,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconNotebookTemplate),//change icon according to info
       execute: () => {
-        const content = new NotebookTemplates(app as JupyterLab,themeManager);
+        const content = new NotebookTemplates(app as JupyterLab, themeManager, defaultFileBrowser as IDefaultFileBrowser);
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'NotebookTemplates';
         widget.title.icon = iconNotebookTemplate;
