@@ -351,8 +351,7 @@ const CreateNotebookScheduler = ({
     listSessionTemplatesAPI();
     const handleActiveChanged = async (_: any, change: any) => {
       const { oldValue } = change;
-      console.log(oldValue?.title.label);
-      if (oldValue?.title.label) {
+      if (oldValue?.title.label.includes(".ipynb")) {
         setInputFileSelected(oldValue?.title.label);
       }
     };
