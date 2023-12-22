@@ -247,11 +247,15 @@ const CreateNotebookScheduler = ({
     }
   };
 
-  const handleOutputNotebookChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOutputNotebookChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setOutputNotebook(event.target.checked);
   };
 
-  const handleOutputHtmlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOutputHtmlChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setOutputHtml(event.target.checked);
   };
 
@@ -305,8 +309,44 @@ const CreateNotebookScheduler = ({
     setEmailList(data);
   };
 
+  const handleCreateJobScheduler = async () => {
+    let outputFormats = []
+    if(outputNotebook) {
+      outputFormats.push('ipynb')
+    }
+    if(outputHtml) {
+      outputFormats.push('html')
+    }
+
+    const payload = {
+      input_filename: inputFileSelected,
+      composer_environment_name: composerSelected,
+      output_formats: outputFormats,
+      parameters: 'none',
+      cluster_name: clusterSelected,
+      retry_count: retryCount,
+      retry_delay: retryDelay,
+      email_failure: emailOnFailure,
+      email_delay: emailOnRetry,
+      email: emailList,
+      name: jobNameSelected,
+      dag_id: '83dfd16c-e09d-4791-a589-a1dfe5240e9c'
+    };
+    try {
+      const data = await requestAPI('createJobScheduler', {
+        body: JSON.stringify(payload),
+        method: 'POST'
+      });
+      console.log(data)
+    } catch (reason) {
+      console.error(`Error on POST {dataToSend}.\n${reason}`);
+    } finally {
+      // setIsSaving(false);
+    }
+  };
+
   useEffect(() => {
-    listComposersAPI()
+    listComposersAPI();
     listClustersAPI();
     listSessionTemplatesAPI();
     const handleActiveChanged = async (_: any, change: any) => {
@@ -535,11 +575,40 @@ const CreateNotebookScheduler = ({
                 className="create-scheduler-label-style"
                 control={<Radio size="small" />}
                 label={
-                  <Typography sx={{ fontSize: 13 }}>Run on a schedule</Typography>
+                  <Typography sx={{ fontSize: 13 }}>
+                    Run on a schedule
+                  </Typography>
                 }
               />
             </RadioGroup>
           </FormControl>
+        </div>
+        <div className="job-button-style-parent">
+          <div
+            onClick={() => {
+              // if (!isSaveDisabled()) {
+              //   handleSave();
+              // }
+              console.log('Save clicked');
+              handleCreateJobScheduler();
+            }}
+            className={
+              // isSaveDisabled()
+              //   ? 'submit-button-disable-style'
+              // :
+              'submit-button-style'
+            }
+            aria-label="submit Batch"
+          >
+            <div>SAVE</div>
+          </div>
+          <div
+            className="job-cancel-button-style"
+            aria-label="cancel Batch"
+            // onClick={handleCancelButton}
+          >
+            <div>CANCEL</div>
+          </div>
         </div>
       </div>
     </div>
