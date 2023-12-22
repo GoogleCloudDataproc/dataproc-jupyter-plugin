@@ -29,12 +29,12 @@ const NotebookSchedulerComponent = ({
   labShell: ILabShell;
 }): JSX.Element => {
   return (
-    <>
+    <div className="component-level">
       <CreateNotebookScheduler
         themeManager={themeManager}
         labShell={labShell}
       />
-    </>
+    </div>
   );
 };
 

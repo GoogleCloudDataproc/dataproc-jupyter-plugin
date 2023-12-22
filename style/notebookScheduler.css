@@ -21,11 +21,30 @@
 }
 
 .create-scheduler-label-style {
- font-size: 14px;
+  font-size: 14px;
 }
 
 .create-scheduler-form-element {
   margin-top: 15px;
 }
 
+.create-job-scheduler-title {
+  height: 30px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color0);
+}
 
+.create-scheduler-label {
+  padding-top: 20px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color2);
+}

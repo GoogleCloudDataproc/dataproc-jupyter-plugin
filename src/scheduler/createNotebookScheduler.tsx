@@ -47,19 +47,23 @@ const CreateNotebookScheduler = ({
 }): JSX.Element => {
   const [jobNameSelected, setJobNameSelected] = useState('');
   const [inputFileSelected, setInputFileSelected] = useState('');
+  const [composerList, setComposerList] = useState([{}]);
+  const [composerSelected, setComposerSelected] = useState('');
+  const [outputNotebook, setOutputNotebook] = useState(true);
+  const [outputHtml, setOutputHtml] = useState(true);
 
+  const [selectedMode, setSelectedMode] = useState('cluster');
   const [clusterList, setClusterList] = useState([{}]);
   const [serverlessList, setServerlessList] = useState([{}]);
   const [clusterSelected, setClusterSelected] = useState('');
   const [serverlessSelected, setServerlessSelected] = useState('');
   const [retryCount, setRetryCount] = useState<number | undefined>(2);
   const [retryDelay, setRetryDelay] = useState<number | undefined>(5);
-
   const [emailOnFailure, setEmailOnFailure] = useState(true);
   const [emailOnRetry, setEmailonRetry] = useState(true);
   const [emailList, setEmailList] = useState<string[]>([]);
 
-  const [selectedMode, setSelectedMode] = useState('cluster');
+  const [scheduleMode, setScheduleMode] = useState('runNow');
 
   const listClustersAPI = async (
     nextPageToken?: string,
@@ -176,10 +180,91 @@ const CreateNotebookScheduler = ({
     }
   };
 
+  const listComposersAPI = async (
+    nextPageToken?: string,
+    previousSessionTemplatesList?: object
+  ) => {
+    const pageToken = nextPageToken ?? '';
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('pageSize', '50');
+      queryParams.append('pageToken', pageToken);
+
+      const response = await authenticatedFetch({
+        uri: 'sessionTemplates',
+        regionIdentifier: 'locations',
+        method: HTTP_METHOD.GET,
+        queryParams: queryParams
+      });
+      const formattedResponse = await response.json();
+      let transformSessionTemplateListData = [];
+      if (formattedResponse && formattedResponse.sessionTemplates) {
+        transformSessionTemplateListData =
+          formattedResponse.sessionTemplates.map((data: any) => {
+            return {
+              serverlessName: data.jupyterSession.displayName
+            };
+          });
+      }
+      const existingSessionTemplateData = previousSessionTemplatesList ?? [];
+      //setStateAction never type issue
+      const allSessionTemplatesData: any = [
+        ...(existingSessionTemplateData as []),
+        ...transformSessionTemplateListData
+      ];
+
+      if (formattedResponse.nextPageToken) {
+        listComposersAPI(
+          formattedResponse.nextPageToken,
+          allSessionTemplatesData
+        );
+      } else {
+        let transformSessionTemplateListData = allSessionTemplatesData;
+
+        const keyLabelStructure = transformSessionTemplateListData.map(
+          (obj: { serverlessName: string }) => obj.serverlessName
+        );
+
+        setComposerList(keyLabelStructure);
+      }
+      if (formattedResponse?.error?.code) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      }
+    } catch (error) {
+      DataprocLoggingService.log(
+        'Error listing session templates',
+        LOG_LEVEL.ERROR
+      );
+      console.error('Error listing session templates', error);
+      toast.error('Failed to fetch session templates', toastifyCustomStyle);
+    }
+  };
+
+  const handleComposerSelected = (data: DropdownProps | null) => {
+    if (data) {
+      const selectedComposer = data.toString();
+      setComposerSelected(selectedComposer);
+    }
+  };
+
+  const handleOutputNotebookChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setOutputNotebook(event.target.checked);
+  };
+
+  const handleOutputHtmlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setOutputHtml(event.target.checked);
+  };
+
   const handleSelectedModeChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setSelectedMode((event.target as HTMLInputElement).value);
+  };
+
+  const handleSchedulerModeChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setScheduleMode((event.target as HTMLInputElement).value);
   };
 
   const handleClusterSelected = (data: DropdownProps | null) => {
@@ -221,12 +306,15 @@ const CreateNotebookScheduler = ({
   };
 
   useEffect(() => {
+    listComposersAPI()
     listClustersAPI();
     listSessionTemplatesAPI();
     const handleActiveChanged = async (_: any, change: any) => {
       const { oldValue } = change;
       console.log(oldValue?.title.label);
-      setInputFileSelected(oldValue?.title.label);
+      if (oldValue?.title.label) {
+        setInputFileSelected(oldValue?.title.label);
+      }
     };
 
     labShell.activeChanged.connect(handleActiveChanged);
@@ -239,7 +327,7 @@ const CreateNotebookScheduler = ({
 
   return (
     <div className="select-text-overlay-scheduler">
-      <h1 className="jp-jobs-Heading">Create Job Scheduler</h1>
+      <div className="create-job-scheduler-title">Create Job Scheduler</div>
       <div>
         <div className="create-scheduler-form-element">
           <Input
@@ -260,31 +348,32 @@ const CreateNotebookScheduler = ({
           />
         </div>
         <div className="create-scheduler-form-element">
-          {serverlessList.length === 0 ? (
+          {composerList.length === 0 ? (
             <Input
               className="input-style-scheduler"
-              value="No session templates available"
+              value="No composer data available"
               disabled={true}
             />
           ) : (
             <Autocomplete
-              options={serverlessList}
-              value={serverlessSelected}
-              onChange={(_event, val) => handleServerlessSelected(val)}
+              options={composerList}
+              value={composerSelected}
+              onChange={(_event, val) => handleComposerSelected(val)}
               renderInput={params => (
                 <TextField {...params} label="Environment" />
               )}
             />
           )}
         </div>
+        <div className="create-scheduler-label">Output formats</div>
         <div className="create-scheduler-form-element">
           <FormGroup row={true}>
             <FormControlLabel
               control={
                 <Checkbox
                   size="small"
-                  checked={emailOnFailure}
-                  onChange={handleFailureChange}
+                  checked={outputNotebook}
+                  onChange={handleOutputNotebookChange}
                 />
               }
               className="create-scheduler-label-style"
@@ -294,8 +383,8 @@ const CreateNotebookScheduler = ({
               control={
                 <Checkbox
                   size="small"
-                  checked={emailOnRetry}
-                  onChange={handleRetryChange}
+                  checked={outputHtml}
+                  onChange={handleOutputHtmlChange}
                 />
               }
               className="create-scheduler-label-style"
@@ -303,6 +392,7 @@ const CreateNotebookScheduler = ({
             />
           </FormGroup>
         </div>
+        <div className="create-scheduler-label">Parameters</div>
         <div className="create-scheduler-form-element">
           <FormControl>
             <RadioGroup
@@ -424,6 +514,32 @@ const CreateNotebookScheduler = ({
               label="Email recipients"
             />
           )}
+        </div>
+        <div className="create-scheduler-label">Schedule</div>
+        <div className="create-scheduler-form-element">
+          <FormControl>
+            <RadioGroup
+              aria-labelledby="demo-controlled-radio-buttons-group"
+              name="controlled-radio-buttons-group"
+              value={scheduleMode}
+              onChange={handleSchedulerModeChange}
+            >
+              <FormControlLabel
+                value="runNow"
+                className="create-scheduler-label-style"
+                control={<Radio size="small" />}
+                label={<Typography sx={{ fontSize: 13 }}>Run now</Typography>}
+              />
+              <FormControlLabel
+                value="runSchedule"
+                className="create-scheduler-label-style"
+                control={<Radio size="small" />}
+                label={
+                  <Typography sx={{ fontSize: 13 }}>Run on a schedule</Typography>
+                }
+              />
+            </RadioGroup>
+          </FormControl>
         </div>
       </div>
     </div>
