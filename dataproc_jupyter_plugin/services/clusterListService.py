@@ -5,7 +5,7 @@ from dataproc_jupyter_plugin.utils.constants import dataproc_url
 
 
 class ClusterListService():
-    def list_clusters(self, credentials,page_token,page_size):
+    def list_clusters(self, credentials,page_size,page_token):
         print('-----List clusters------')
         # print(self.json())
         if 'access_token' and 'project_id' and 'region_id' in credentials:
@@ -13,7 +13,7 @@ class ClusterListService():
             project_id = credentials['project_id']
             region_id = credentials['region_id']
         # print(urls)
-        api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters?pageSize={page_token}&pageToken={page_size}"
+        api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
 
         headers = {
         'Content-Type': 'application/json',

@@ -5,7 +5,7 @@ from dataproc_jupyter_plugin.utils.constants import dataproc_url
 
 
 class RuntimeListService():
-    def list_runtime(self, credentials,page_token,page_size):
+    def list_runtime(self, credentials,page_size,page_token):
         print('-----List runtime------')
         # print(self.json())
         if 'access_token' and 'project_id' and 'region_id' in credentials:

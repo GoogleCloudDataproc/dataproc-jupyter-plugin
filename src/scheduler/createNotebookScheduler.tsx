@@ -27,9 +27,8 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import { HTTP_METHOD } from '../utils/const';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import { authenticatedFetch, toastifyCustomStyle } from '../utils/utils';
+import { toastifyCustomStyle } from '../utils/utils';
 import { toast } from 'react-toastify';
 import { DropdownProps } from 'semantic-ui-react';
 import { MuiChipsInput } from 'mui-chips-input';
@@ -71,17 +70,9 @@ const CreateNotebookScheduler = ({
   ) => {
     const pageToken = nextPageToken ?? '';
     try {
-      const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
-      queryParams.append('pageToken', pageToken);
+      const serviceURL = `clusterList?pageSize=50&pageToken=${pageToken}`;
 
-      // const response = await authenticatedFetch({
-      //   uri: 'clusters',
-      //   regionIdentifier: 'regions',
-      //   method: HTTP_METHOD.GET,
-      //   queryParams: queryParams
-      // });
-      const formattedResponse: any = await requestAPI('clusterList');
+      const formattedResponse: any = await requestAPI(serviceURL);
       let transformClusterListData = [];
       if (formattedResponse && formattedResponse.clusters) {
         transformClusterListData = formattedResponse.clusters.map(
@@ -126,17 +117,9 @@ const CreateNotebookScheduler = ({
   ) => {
     const pageToken = nextPageToken ?? '';
     try {
-      const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
-      queryParams.append('pageToken', pageToken);
+      const serviceURL = `runtimeList?pageSize=50&pageToken=${pageToken}`;
 
-      const response = await authenticatedFetch({
-        uri: 'sessionTemplates',
-        regionIdentifier: 'locations',
-        method: HTTP_METHOD.GET,
-        queryParams: queryParams
-      });
-      const formattedResponse = await response.json();
+      const formattedResponse: any = await requestAPI(serviceURL);
       let transformSessionTemplateListData = [];
       if (formattedResponse && formattedResponse.sessionTemplates) {
         transformSessionTemplateListData =
