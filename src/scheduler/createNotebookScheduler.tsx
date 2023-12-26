@@ -34,7 +34,7 @@ import { DropdownProps } from 'semantic-ui-react';
 import { MuiChipsInput } from 'mui-chips-input';
 
 import { IThemeManager } from '@jupyterlab/apputils';
-import { ILabShell, JupyterLab } from '@jupyterlab/application';
+import { JupyterLab } from '@jupyterlab/application';
 import { requestAPI } from '../handler/handler';
 import LabelProperties from '../jobs/labelProperties';
 
@@ -43,12 +43,10 @@ import { INotebookModel } from '@jupyterlab/notebook';
 
 const CreateNotebookScheduler = ({
   themeManager,
-  labShell,
   app,
   context
 }: {
   themeManager: IThemeManager;
-  labShell: ILabShell;
   app: JupyterLab;
   context: DocumentRegistry.IContext<INotebookModel>;
 }): JSX.Element => {
@@ -564,7 +562,6 @@ const CreateNotebookScheduler = ({
           <div
             onClick={() => {
               if (!isSaveDisabled()) {
-                console.log('Save clicked');
                 handleCreateJobScheduler();
               }
             }}

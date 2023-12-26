@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ILabShell, JupyterLab } from '@jupyterlab/application';
+import { JupyterLab } from '@jupyterlab/application';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDisposable } from '@lumino/disposable';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -70,7 +70,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
     private readonly context: DocumentRegistry.IContext<INotebookModel>,
     private readonly app: JupyterLab,
     private readonly launcher: ILauncher,
-    private readonly labShell: ILabShell,
     private readonly themeManager: IThemeManager
   ) {
     this.isDisposed = false;
@@ -113,7 +112,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
   private onNotebookSchedulerClick = () => {
     const content = new NotebookScheduler(
       this.app as JupyterLab,
-      this.labShell,
       this.themeManager,
       this.context
     );
@@ -231,7 +229,6 @@ export class NotebookButtonExtension
   constructor(
     private app: JupyterLab,
     private launcher: ILauncher,
-    private labShell: ILabShell,
     private themeManager: IThemeManager
   ) {}
 
@@ -244,7 +241,6 @@ export class NotebookButtonExtension
       context,
       this.app,
       this.launcher,
-      this.labShell,
       this.themeManager
     );
   }
