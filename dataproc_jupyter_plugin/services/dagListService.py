@@ -22,5 +22,5 @@ class DagListService():
             resp = response.json()
             print(resp)
 
-        return response
+        return resp
     
