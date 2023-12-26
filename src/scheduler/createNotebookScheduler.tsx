@@ -180,63 +180,25 @@ const CreateNotebookScheduler = ({
     }
   };
 
-  const listComposersAPI = async (
-    nextPageToken?: string,
-    previousSessionTemplatesList?: object
-  ) => {
-    const pageToken = nextPageToken ?? '';
+  const listComposersAPI = async () => {
     try {
-      const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
-      queryParams.append('pageToken', pageToken);
-
-      const response = await authenticatedFetch({
-        uri: 'sessionTemplates',
-        regionIdentifier: 'locations',
-        method: HTTP_METHOD.GET,
-        queryParams: queryParams
+      const formattedResponse: any = await requestAPI('composer');
+      let composerEnvironmentList: string[] = [];
+      formattedResponse.forEach((data: any) => {
+        composerEnvironmentList.push(data.name);
       });
-      const formattedResponse = await response.json();
-      let transformSessionTemplateListData = [];
-      if (formattedResponse && formattedResponse.sessionTemplates) {
-        transformSessionTemplateListData =
-          formattedResponse.sessionTemplates.map((data: any) => {
-            return {
-              serverlessName: data.jupyterSession.displayName
-            };
-          });
-      }
-      const existingSessionTemplateData = previousSessionTemplatesList ?? [];
-      //setStateAction never type issue
-      const allSessionTemplatesData: any = [
-        ...(existingSessionTemplateData as []),
-        ...transformSessionTemplateListData
-      ];
 
-      if (formattedResponse.nextPageToken) {
-        listComposersAPI(
-          formattedResponse.nextPageToken,
-          allSessionTemplatesData
-        );
-      } else {
-        let transformSessionTemplateListData = allSessionTemplatesData;
-
-        const keyLabelStructure = transformSessionTemplateListData.map(
-          (obj: { serverlessName: string }) => obj.serverlessName
-        );
-
-        setComposerList(keyLabelStructure);
-      }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
+      setComposerList(composerEnvironmentList);
     } catch (error) {
       DataprocLoggingService.log(
-        'Error listing session templates',
+        'Error listing composer environment list',
         LOG_LEVEL.ERROR
       );
-      console.error('Error listing session templates', error);
-      toast.error('Failed to fetch session templates', toastifyCustomStyle);
+      console.error('Error listing composer environment list', error);
+      toast.error(
+        'Failed to fetch composer environment list',
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -310,12 +272,12 @@ const CreateNotebookScheduler = ({
   };
 
   const handleCreateJobScheduler = async () => {
-    let outputFormats = []
-    if(outputNotebook) {
-      outputFormats.push('ipynb')
+    let outputFormats = [];
+    if (outputNotebook) {
+      outputFormats.push('ipynb');
     }
-    if(outputHtml) {
-      outputFormats.push('html')
+    if (outputHtml) {
+      outputFormats.push('html');
     }
 
     const payload = {
@@ -337,7 +299,7 @@ const CreateNotebookScheduler = ({
         body: JSON.stringify(payload),
         method: 'POST'
       });
-      console.log(data)
+      console.log(data);
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
     } finally {
@@ -351,7 +313,7 @@ const CreateNotebookScheduler = ({
     listSessionTemplatesAPI();
     const handleActiveChanged = async (_: any, change: any) => {
       const { oldValue } = change;
-      if (oldValue?.title.label.includes(".ipynb")) {
+      if (oldValue?.title.label.includes('.ipynb')) {
         setInputFileSelected(oldValue?.title.label);
       }
     };
