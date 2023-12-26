@@ -80,7 +80,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       icon: iconLogs,
       onClick: this.onSparkLogsClick,
       tooltip: 'Spark Logs',
-      className: "dark-theme-logs"
+      className: 'dark-theme-logs'
     });
     // TODO: we want to use the registry to specify a rank:
     // https://jupyterlab.readthedocs.io/en/stable/extension/extension_points.html#document-widgets
@@ -90,7 +90,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       icon: iconSessionLogs,
       onClick: this.onSessionDetailsClick,
       tooltip: 'Session Details',
-      className: "dark-theme-logs" 
+      className: 'dark-theme-logs'
     });
     this.panel.toolbar.insertItem(
       1000,
@@ -99,9 +99,9 @@ class NotebookButtonExtensionPoint implements IDisposable {
     );
     this.notebookSchedulerButton = new ToolbarButton({
       icon: iconNotebookScheduler,
-      onClick: ()=>this.onNotebookSchedulerClick(),
+      onClick: () => this.onNotebookSchedulerClick(),
       tooltip: 'Notebook Scheduler',
-      className: "dark-theme-logs" 
+      className: 'dark-theme-logs'
     });
     this.panel.toolbar.insertItem(
       1000,
@@ -112,8 +112,10 @@ class NotebookButtonExtensionPoint implements IDisposable {
 
   private onNotebookSchedulerClick = () => {
     const content = new NotebookScheduler(
+      this.app as JupyterLab,
       this.labShell,
-      this.themeManager
+      this.themeManager,
+      this.context
     );
     const widget = new MainAreaWidget<NotebookScheduler>({ content });
     widget.title.label = 'Notebook Scheduler';

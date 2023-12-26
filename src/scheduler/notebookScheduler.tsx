@@ -18,31 +18,50 @@ import React from 'react';
 
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { ILabShell } from '@jupyterlab/application';
+import { ILabShell, JupyterLab } from '@jupyterlab/application';
 import CreateNotebookScheduler from './createNotebookScheduler';
+
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { INotebookModel } from '@jupyterlab/notebook';
 
 const NotebookSchedulerComponent = ({
   themeManager,
-  labShell
+  labShell,
+  app,
+  context
 }: {
   themeManager: IThemeManager;
   labShell: ILabShell;
+  app: JupyterLab;
+  context: DocumentRegistry.IContext<INotebookModel>;
 }): JSX.Element => {
   return (
     <div className="component-level">
       <CreateNotebookScheduler
         themeManager={themeManager}
         labShell={labShell}
+        app={app}
+        context={context}
       />
     </div>
   );
 };
 
 export class NotebookScheduler extends DataprocWidget {
+  app: JupyterLab;
   labShell: ILabShell;
-  constructor(labShell: ILabShell, themeManager: IThemeManager) {
+  context: DocumentRegistry.IContext<INotebookModel>;
+
+  constructor(
+    app: JupyterLab,
+    labShell: ILabShell,
+    themeManager: IThemeManager,
+    context: DocumentRegistry.IContext<INotebookModel>
+  ) {
     super(themeManager);
+    this.app = app;
     this.labShell = labShell;
+    this.context = context;
   }
 
   renderInternal(): React.JSX.Element {
@@ -50,6 +69,8 @@ export class NotebookScheduler extends DataprocWidget {
       <NotebookSchedulerComponent
         themeManager={this.themeManager}
         labShell={this.labShell}
+        app={this.app}
+        context={this.context}
       />
     );
   }

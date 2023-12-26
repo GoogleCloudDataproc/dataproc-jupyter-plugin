@@ -34,15 +34,23 @@ import { DropdownProps } from 'semantic-ui-react';
 import { MuiChipsInput } from 'mui-chips-input';
 
 import { IThemeManager } from '@jupyterlab/apputils';
-import { ILabShell } from '@jupyterlab/application';
+import { ILabShell, JupyterLab } from '@jupyterlab/application';
 import { requestAPI } from '../handler/handler';
+import LabelProperties from '../jobs/labelProperties';
+
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { INotebookModel } from '@jupyterlab/notebook';
 
 const CreateNotebookScheduler = ({
   themeManager,
-  labShell
+  labShell,
+  app,
+  context
 }: {
   themeManager: IThemeManager;
   labShell: ILabShell;
+  app: JupyterLab;
+  context: DocumentRegistry.IContext<INotebookModel>;
 }): JSX.Element => {
   const [jobNameSelected, setJobNameSelected] = useState('');
   const [inputFileSelected, setInputFileSelected] = useState('');
@@ -50,6 +58,12 @@ const CreateNotebookScheduler = ({
   const [composerSelected, setComposerSelected] = useState('');
   const [outputNotebook, setOutputNotebook] = useState(true);
   const [outputHtml, setOutputHtml] = useState(true);
+
+  const [parameterDetail, setParameterDetail] = useState(['']);
+  const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
+  const [keyValidation, setKeyValidation] = useState(-1);
+  const [valueValidation, setValueValidation] = useState(-1);
+  const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
 
   const [selectedMode, setSelectedMode] = useState('cluster');
   const [clusterList, setClusterList] = useState([{}]);
@@ -267,7 +281,7 @@ const CreateNotebookScheduler = ({
       input_filename: inputFileSelected,
       composer_environment_name: composerSelected,
       output_formats: outputFormats,
-      parameters: 'none',
+      parameters: parameterDetailUpdated,
       cluster_name: clusterSelected,
       retry_count: retryCount,
       retry_delay: retryDelay,
@@ -283,31 +297,35 @@ const CreateNotebookScheduler = ({
         method: 'POST'
       });
       console.log(data);
+      app.shell.activeWidget?.close();
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
-    } finally {
-      // setIsSaving(false);
     }
+  };
+
+  const isSaveDisabled = () => {
+    return (
+      jobNameSelected === '' ||
+      inputFileSelected === '' ||
+      composerSelected === '' ||
+      (clusterSelected === '' && serverlessSelected === '')
+    );
+  };
+
+  const handleCancelButton = async () => {
+    app.shell.activeWidget?.close();
   };
 
   useEffect(() => {
     listComposersAPI();
     listClustersAPI();
     listSessionTemplatesAPI();
-    const handleActiveChanged = async (_: any, change: any) => {
-      const { oldValue } = change;
-      if (oldValue?.title.label.includes('.ipynb')) {
-        setInputFileSelected(oldValue?.title.label);
-      }
-    };
 
-    labShell.activeChanged.connect(handleActiveChanged);
-
-    // Clean up the connection when the component is unmounted
-    return () => {
-      labShell.activeChanged.disconnect(handleActiveChanged);
-    };
-  }, [labShell]);
+    setInputFileSelected(context.path);
+    if (context.contentsModel?.name) {
+      setJobNameSelected(context.contentsModel?.name);
+    }
+  }, []);
 
   return (
     <div className="select-text-overlay-scheduler">
@@ -320,14 +338,14 @@ const CreateNotebookScheduler = ({
             onChange={e => setJobNameSelected(e.target.value)}
             type="text"
             placeholder=""
-            Label="Job name"
+            Label="Job name*"
           />
         </div>
         <div className="create-scheduler-form-element">
           <Input
             className="input-style-scheduler"
             value={inputFileSelected}
-            Label="Input file"
+            Label="Input file*"
             disabled={true}
           />
         </div>
@@ -344,7 +362,7 @@ const CreateNotebookScheduler = ({
               value={composerSelected}
               onChange={(_event, val) => handleComposerSelected(val)}
               renderInput={params => (
-                <TextField {...params} label="Environment" />
+                <TextField {...params} label="Environment*" />
               )}
             />
           )}
@@ -377,6 +395,21 @@ const CreateNotebookScheduler = ({
           </FormGroup>
         </div>
         <div className="create-scheduler-label">Parameters</div>
+        <>
+          <LabelProperties
+            labelDetail={parameterDetail}
+            setLabelDetail={setParameterDetail}
+            labelDetailUpdated={parameterDetailUpdated}
+            setLabelDetailUpdated={setParameterDetailUpdated}
+            buttonText="ADD PARAMETER"
+            keyValidation={keyValidation}
+            setKeyValidation={setKeyValidation}
+            valueValidation={valueValidation}
+            setValueValidation={setValueValidation}
+            duplicateKeyError={duplicateKeyError}
+            setDuplicateKeyError={setDuplicateKeyError}
+          />
+        </>
         <div className="create-scheduler-form-element">
           <FormControl>
             <RadioGroup
@@ -417,7 +450,7 @@ const CreateNotebookScheduler = ({
                 value={clusterSelected}
                 onChange={(_event, val) => handleClusterSelected(val)}
                 renderInput={params => (
-                  <TextField {...params} label="Cluster" />
+                  <TextField {...params} label="Cluster*" />
                 )}
               />
             ))}
@@ -434,7 +467,7 @@ const CreateNotebookScheduler = ({
                 value={serverlessSelected}
                 onChange={(_event, val) => handleServerlessSelected(val)}
                 renderInput={params => (
-                  <TextField {...params} label="Serverless" />
+                  <TextField {...params} label="Serverless*" />
                 )}
               />
             ))}
@@ -530,17 +563,15 @@ const CreateNotebookScheduler = ({
         <div className="job-button-style-parent">
           <div
             onClick={() => {
-              // if (!isSaveDisabled()) {
-              //   handleSave();
-              // }
-              console.log('Save clicked');
-              handleCreateJobScheduler();
+              if (!isSaveDisabled()) {
+                console.log('Save clicked');
+                handleCreateJobScheduler();
+              }
             }}
             className={
-              // isSaveDisabled()
-              //   ? 'submit-button-disable-style'
-              // :
-              'submit-button-style'
+              isSaveDisabled()
+                ? 'submit-button-disable-style'
+                : 'submit-button-style'
             }
             aria-label="submit Batch"
           >
@@ -549,7 +580,7 @@ const CreateNotebookScheduler = ({
           <div
             className="job-cancel-button-style"
             aria-label="cancel Batch"
-            // onClick={handleCancelButton}
+            onClick={handleCancelButton}
           >
             <div>CANCEL</div>
           </div>
