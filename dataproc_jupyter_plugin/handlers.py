@@ -273,5 +273,9 @@ def setup_handlers(web_app):
     handlers = [(route_pattern, RuntimeController)]
     web_app.add_handlers(host_pattern, handlers)
 
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "createJobScheduler")
+    handlers = [(route_pattern, ExecutorController)]
+    web_app.add_handlers(host_pattern, handlers)
+
 
 
