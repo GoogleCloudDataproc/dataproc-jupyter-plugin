@@ -354,22 +354,14 @@ const CreateNotebookScheduler = ({
           />
         </div>
         <div className="create-scheduler-form-element">
-          {composerList.length === 0 ? (
-            <Input
-              className="input-style-scheduler"
-              value="No composer data available"
-              disabled={true}
-            />
-          ) : (
-            <Autocomplete
-              options={composerList}
-              value={composerSelected}
-              onChange={(_event, val) => handleComposerSelected(val)}
-              renderInput={params => (
-                <TextField {...params} label="Environment*" />
-              )}
-            />
-          )}
+          <Autocomplete
+            options={composerList}
+            value={composerSelected}
+            onChange={(_event, val) => handleComposerSelected(val)}
+            renderInput={params => (
+              <TextField {...params} label="Environment*" />
+            )}
+          />
         </div>
         <div className="create-scheduler-label">Output formats</div>
         <div className="create-scheduler-form-element">
@@ -441,40 +433,24 @@ const CreateNotebookScheduler = ({
           </FormControl>
         </div>
         <div className="create-scheduler-form-element">
-          {selectedMode === 'cluster' &&
-            (clusterList.length === 0 ? (
-              <Input
-                className="input-style-scheduler"
-                value="No clusters available"
-                disabled={true}
-              />
-            ) : (
-              <Autocomplete
-                options={clusterList}
-                value={clusterSelected}
-                onChange={(_event, val) => handleClusterSelected(val)}
-                renderInput={params => (
-                  <TextField {...params} label="Cluster*" />
-                )}
-              />
-            ))}
-          {selectedMode === 'serverless' &&
-            (serverlessList.length === 0 ? (
-              <Input
-                className="input-style-scheduler"
-                value="No session templates available"
-                disabled={true}
-              />
-            ) : (
-              <Autocomplete
-                options={serverlessList}
-                value={serverlessSelected}
-                onChange={(_event, val) => handleServerlessSelected(val)}
-                renderInput={params => (
-                  <TextField {...params} label="Serverless*" />
-                )}
-              />
-            ))}
+          {selectedMode === 'cluster' && (
+            <Autocomplete
+              options={clusterList}
+              value={clusterSelected}
+              onChange={(_event, val) => handleClusterSelected(val)}
+              renderInput={params => <TextField {...params} label="Cluster*" />}
+            />
+          )}
+          {selectedMode === 'serverless' && (
+            <Autocomplete
+              options={serverlessList}
+              value={serverlessSelected}
+              onChange={(_event, val) => handleServerlessSelected(val)}
+              renderInput={params => (
+                <TextField {...params} label="Serverless*" />
+              )}
+            />
+          )}
         </div>
         <div className="create-scheduler-form-element">
           <Input
@@ -578,7 +554,7 @@ const CreateNotebookScheduler = ({
             }
             aria-label="submit Batch"
           >
-            <div>SAVE</div>
+            <div>CREATE</div>
           </div>
           <div
             className="job-cancel-button-style"
