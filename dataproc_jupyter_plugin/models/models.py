@@ -26,7 +26,7 @@ class DescribeJob(BaseModel):
     input_filename: str = None
     composer_environment_name: str = None
     output_formats: Optional[List[str]] = None
-    # parameters: Optional[Dict[str, str]] = None
+    parameters: Optional[List[str]] = None
     cluster_name : str = None
     retry_count: int = 2
     retry_delay: int = 5
