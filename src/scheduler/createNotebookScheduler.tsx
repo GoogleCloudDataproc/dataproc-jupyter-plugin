@@ -41,6 +41,8 @@ import LabelProperties from '../jobs/labelProperties';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { INotebookModel } from '@jupyterlab/notebook';
 
+import { v4 as uuidv4 } from 'uuid';
+
 const CreateNotebookScheduler = ({
   themeManager,
   app,
@@ -275,6 +277,8 @@ const CreateNotebookScheduler = ({
       outputFormats.push('html');
     }
 
+    let randomDagId =  uuidv4();
+
     const payload = {
       input_filename: inputFileSelected,
       composer_environment_name: composerSelected,
@@ -287,7 +291,7 @@ const CreateNotebookScheduler = ({
       email_delay: emailOnRetry,
       email: emailList,
       name: jobNameSelected,
-      dag_id: '83dfd16c-e09d-4791-a589-a1dfe5240e9c'
+      dag_id: randomDagId,
     };
     try {
       const data = await requestAPI('createJobScheduler', {
