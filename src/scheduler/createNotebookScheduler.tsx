@@ -285,6 +285,8 @@ const CreateNotebookScheduler = ({
       output_formats: outputFormats,
       parameters: parameterDetailUpdated,
       cluster_name: clusterSelected,
+      serverless_name: serverlessSelected,
+      mode_selected: selectedMode,
       retry_count: retryCount,
       retry_delay: retryDelay,
       email_failure: emailOnFailure,
@@ -293,13 +295,14 @@ const CreateNotebookScheduler = ({
       name: jobNameSelected,
       dag_id: randomDagId,
     };
+    
     try {
       const data = await requestAPI('createJobScheduler', {
         body: JSON.stringify(payload),
         method: 'POST'
       });
-      console.log(data);
       app.shell.activeWidget?.close();
+      console.log(data);
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
     }
