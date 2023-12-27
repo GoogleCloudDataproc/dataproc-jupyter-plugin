@@ -30,7 +30,6 @@ import {
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { toastifyCustomStyle } from '../utils/utils';
 import { toast } from 'react-toastify';
-import { DropdownProps } from 'semantic-ui-react';
 import { MuiChipsInput } from 'mui-chips-input';
 
 import { IThemeManager } from '@jupyterlab/apputils';
@@ -54,7 +53,7 @@ const CreateNotebookScheduler = ({
 }): JSX.Element => {
   const [jobNameSelected, setJobNameSelected] = useState('');
   const [inputFileSelected, setInputFileSelected] = useState('');
-  const [composerList, setComposerList] = useState([{}]);
+  const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelected, setComposerSelected] = useState('');
   const [outputNotebook, setOutputNotebook] = useState(true);
   const [outputHtml, setOutputHtml] = useState(true);
@@ -66,8 +65,8 @@ const CreateNotebookScheduler = ({
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
 
   const [selectedMode, setSelectedMode] = useState('cluster');
-  const [clusterList, setClusterList] = useState([{}]);
-  const [serverlessList, setServerlessList] = useState([{}]);
+  const [clusterList, setClusterList] = useState<string[]>([]);
+  const [serverlessList, setServerlessList] = useState<string[]>([]);
   const [clusterSelected, setClusterSelected] = useState('');
   const [serverlessSelected, setServerlessSelected] = useState('');
   const [retryCount, setRetryCount] = useState<number | undefined>(2);
@@ -199,7 +198,7 @@ const CreateNotebookScheduler = ({
     }
   };
 
-  const handleComposerSelected = (data: DropdownProps | null) => {
+  const handleComposerSelected = (data: string | null) => {
     if (data) {
       const selectedComposer = data.toString();
       setComposerSelected(selectedComposer);
@@ -230,14 +229,14 @@ const CreateNotebookScheduler = ({
     setScheduleMode((event.target as HTMLInputElement).value);
   };
 
-  const handleClusterSelected = (data: DropdownProps | null) => {
+  const handleClusterSelected = (data: string | null) => {
     if (data) {
       const selectedCluster = data.toString();
       setClusterSelected(selectedCluster);
     }
   };
 
-  const handleServerlessSelected = (data: DropdownProps | null) => {
+  const handleServerlessSelected = (data: string | null) => {
     if (data) {
       const selectedServerless = data.toString();
       setServerlessSelected(selectedServerless);
@@ -277,7 +276,7 @@ const CreateNotebookScheduler = ({
       outputFormats.push('html');
     }
 
-    let randomDagId =  uuidv4();
+    let randomDagId = uuidv4();
 
     const payload = {
       input_filename: inputFileSelected,
@@ -293,9 +292,9 @@ const CreateNotebookScheduler = ({
       email_delay: emailOnRetry,
       email: emailList,
       name: jobNameSelected,
-      dag_id: randomDagId,
+      dag_id: randomDagId
     };
-    
+
     try {
       const data = await requestAPI('createJobScheduler', {
         body: JSON.stringify(payload),
