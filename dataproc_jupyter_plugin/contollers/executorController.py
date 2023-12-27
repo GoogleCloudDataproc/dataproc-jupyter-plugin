@@ -10,8 +10,7 @@ class ExecutorController(APIHandler):
     @tornado.web.authenticated
     def post(self):
         input_data = self.get_json_body()
-        print(input_data)
         execute  = ExecutorService()
         credentials = handlers.get_cached_credentials(self.log)
-        execute.execute(credentials)
+        execute.execute(credentials,input_data)
 

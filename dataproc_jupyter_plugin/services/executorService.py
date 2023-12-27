@@ -58,6 +58,7 @@ class ExecutorService():
     """Default execution manager that executes notebooks"""
     @staticmethod
     def uploadToGcloud(runtime_env,dag_file,credentials):
+        print("upload dag")
         if 'region_id' in credentials:
             region = credentials['region_id']
             cmd = f"gcloud beta composer environments storage dags import --environment {runtime_env} --location {region} --source={dag_file}"
@@ -68,7 +69,7 @@ class ExecutorService():
     
     @staticmethod
     def uploadInputFileToGcs(input,gcs_dag_bucket):
-        cmd = f"gsutil cp '{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/"
+        cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
         print(process.returncode,_,output)
@@ -100,23 +101,9 @@ class ExecutorService():
             message.write(content)
 
 
-    def execute(self,credentials):
-        data = {
-            "input_filename": "Untitled.ipynb",
-            "composer_environment_name": "composer4",
-            "output_formats": ['ipynb', 'html'],
-            "parameters": None,
-            "cluster_name": "cluster-test-5",
-            "retry_count": 4,
-            "retry_delay": 10,
-            "email_failure": False,
-            "email_delay": True,
-            "email": ["test@google.com", "abc@gmail.com"],
-            "name": 'Untitled.ipynb',
-            "dag_id": '83dfd16c-e09d-4791-a589-a1dfe5240e9c'
-        }
-        job = DescribeJob(**data)
-        print(job)
+    def execute(self,credentials,input_data):
+        job = DescribeJob(**input_data)
+        print(job.dict())
         print(job.composer_environment_name)
         global job_id
         global job_name
@@ -135,7 +122,7 @@ class ExecutorService():
         else:
             self.uploadPapermillToGcs(gcs_dag_bucket)
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
-        # self.uploadInputFileToGcs(self.staging_paths["input"],gcs_dag_bucket)
+        self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket)
         self.prepareDag(job,gcs_dag_bucket,dag_file,credentials)
 
         # if job.parameters:
