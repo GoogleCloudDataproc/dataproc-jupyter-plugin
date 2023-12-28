@@ -4,11 +4,9 @@ from typing import Dict
 import requests
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 from dataproc_jupyter_plugin.models.models import DagModel, DescribeJob
-import fsspec
 import nbconvert
 import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
-from jupyter_scheduler.models import JobFeature
 import subprocess
 from jinja2 import Environment, FileSystemLoader
 import uuid
@@ -145,22 +143,7 @@ class ExecutorService():
         #         f.write(output)
         self.uploadToGcloud(job.composer_environment_name,dag_file,credentials)
 
-    def supported_features(cls) -> Dict[JobFeature, bool]:
-        return {
-            JobFeature.job_name: True,
-            JobFeature.output_formats: True,
-            JobFeature.job_definition: False,
-            JobFeature.idempotency_token: False,
-            JobFeature.tags: False,
-            JobFeature.email_notifications: False,
-            JobFeature.timeout_seconds: False,
-            JobFeature.retry_on_timeout: False,
-            JobFeature.max_retries: False,
-            JobFeature.min_retry_interval_millis: False,
-            JobFeature.output_filename_template: False,
-            JobFeature.stop_job: True,
-            JobFeature.delete_job: True,
-        }
+
 
     def validate(cls, input_path: str) -> bool:
         with open(input_path, encoding="utf-8") as f:
