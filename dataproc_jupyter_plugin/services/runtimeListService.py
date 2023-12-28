@@ -13,15 +13,18 @@ class RuntimeListService():
             project_id = credentials['project_id']
             region_id = credentials['region_id']
         # print(urls)
-        api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/locations/{region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
+        try:
+            api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/locations/{region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
 
-        headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {access_token}'
-        }
-        response = requests.get(api_endpoint,headers=headers)
-        if response.status_code == 200:
-            resp = response.json()
-            # print(resp)
+            headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {access_token}'
+            }
+            response = requests.get(api_endpoint,headers=headers)
+            if response.status_code == 200:
+                resp = response.json()
+                # print(resp)
 
-        return resp
+            return resp
+        except Exception as e:
+            return {"error": str(e)}

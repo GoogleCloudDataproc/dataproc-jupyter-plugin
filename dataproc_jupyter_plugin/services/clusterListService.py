@@ -13,15 +13,18 @@ class ClusterListService():
             project_id = credentials['project_id']
             region_id = credentials['region_id']
         # print(urls)
-        api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
-        
-        headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {access_token}'
-        }
-        response = requests.get(api_endpoint,headers=headers)
-        if response.status_code == 200:
-            resp = response.json()
-            # print(resp)
+        try:
+            api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
 
-        return resp
+            headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {access_token}'
+            }
+            response = requests.get(api_endpoint,headers=headers)
+            if response.status_code == 200:
+                resp = response.json()
+                # print(resp)
+
+            return resp
+        except Exception as e:
+            return {"error": str(e)}
