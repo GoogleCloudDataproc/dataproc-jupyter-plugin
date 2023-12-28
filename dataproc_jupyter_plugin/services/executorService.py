@@ -92,7 +92,8 @@ class ExecutorService():
             gcp_region_id = credentials['region_id']
         cmd = "gcloud config get-value account"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        owner, error = process.communicate()
+        user, error = process.communicate()
+        owner = user.split('@')[0]
         content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                   gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}",\
                                   output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}_{job.dag_id}.ipynb",owner = owner)

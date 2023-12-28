@@ -10,7 +10,7 @@ default_args = {
     'owner': '{{owner}}',
     'start_date': yesterday,
     'retries': '{{retry_count}}',
-    'retry_delay': timedelta(minutes='{{retry_delay}}'), 
+    'retry_delay': timedelta(minutes=int('{{retry_delay}}')), 
     'email': '{{email}}',  #list of all the ids passed from UI
     'email_on_failure': '{{email_failure}}',     # based on the value passed fro UI
     'email_on_retry': '{{email_delay}}',      # based on the value passed fro UI
@@ -26,9 +26,9 @@ dag = DAG(
     schedule_interval="@once",
 )
 
-if '{{mode_selected}}' == 'serverless':
-    cluster_name = ''
-    serverless_name = '{{serverless_name}}'
+# if '{{mode_selected}}' == 'serverless':
+#     cluster_name = ''
+#     serverless_name = '{{serverless_name}}'
 submit_pyspark_job = DataprocSubmitJobOperator(
     task_id='submit_pyspark_job',
     project_id='{{gcpProjectId}}',  # This parameter can be overridden by the connection
