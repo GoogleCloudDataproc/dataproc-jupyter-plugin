@@ -27,6 +27,8 @@ class DescribeJob(BaseModel):
     composer_environment_name: str = None
     output_formats: Optional[List[str]] = None
     parameters: Optional[List[str]] = None
+    selected_mode: str = None
+    serverless_name: str = None
     cluster_name : str = None
     retry_count: int = 2
     retry_delay: int = 5

@@ -26,7 +26,9 @@ dag = DAG(
     schedule_interval="@once",
 )
 
-
+if '{{mode_selected}}' == 'serverless':
+    cluster_name = ''
+    serverless_name = '{{serverless_name}}'
 submit_pyspark_job = DataprocSubmitJobOperator(
     task_id='submit_pyspark_job',
     project_id='{{gcpProjectId}}',  # This parameter can be overridden by the connection
