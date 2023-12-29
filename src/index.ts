@@ -49,6 +49,7 @@ import { IDocumentManager } from '@jupyterlab/docmanager';
 import { GCSDrive } from './gcs/gcsDrive';
 import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
 import { DataprocLoggingService } from './utils/loggingService';
+import { NotebookJobs } from './scheduler/notebookJobs';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -73,6 +74,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   activate: async (
     app: JupyterFrontEnd,
     factory: IFileBrowserFactory,
+   // context: DocumentRegistry.IContext<INotebookModel>,
     launcher: ILauncher,
     mainMenu: IMainMenu,
     labShell: ILabShell,
@@ -94,6 +96,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
     const iconServerless = new LabIcon({
       name: 'launcher:serverless-icon',
+      svgstr: serverlessIcon
+    });
+    const iconNotebookJobs = new LabIcon({
+      name: 'launcher:notebook-template-icon',
       svgstr: serverlessIcon
     });
     const iconStorage = new LabIcon({
@@ -354,7 +360,20 @@ const extension: JupyterFrontEndPlugin<void> = {
         app.shell.add(widget, 'main');
       }
     });
-
+    const createNotebookJobsComponentCommand = 'create-notebook-jobs-component';
+    commands.addCommand(createNotebookJobsComponentCommand, {
+      caption: 'Create a new Serverless Component',
+      label: 'Notebook Jobs',
+      // @ts-ignore jupyter lab icon command issue
+      icon: args => (args['isPalette'] ? null : iconNotebookJobs),
+      execute: () => {
+        const content = new NotebookJobs(app as JupyterLab,themeManager);
+        const widget = new MainAreaWidget<NotebookJobs>({ content });
+        widget.title.label = 'Notebook Scheduler';
+        widget.title.icon = iconServerless;
+        app.shell.add(widget, 'main');
+      }
+    });
     const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Cloud Dataproc Settings',
@@ -466,6 +485,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         command: createBatchesComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 2
+      });
+      launcher.add({
+        command: createNotebookJobsComponentCommand,
+        category: TITLE_LAUNCHER_CATEGORY,
+        rank: 3//it will be 4
       });
     }
 

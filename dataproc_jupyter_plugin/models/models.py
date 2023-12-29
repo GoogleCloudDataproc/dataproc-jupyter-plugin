@@ -14,9 +14,9 @@ class ComposerEnvironment(BaseModel):
     file_extensions: List[str]  # Supported input file types
     output_formats: List[str]  # Supported output formats
     metadata: Optional[Dict[str, str]]  # Optional metadata
-    compute_types: Optional[List[str]]
-    default_compute_type: Optional[str]  # Should be a member of the compute_types list
-    utc_only: Optional[bool]
+    # compute_types: Optional[List[str]]
+    # default_compute_type: Optional[str]  # Should be a member of the compute_types list
+    # utc_only: Optional[bool]
 
     def __str__(self):
         return self.json()
@@ -38,8 +38,8 @@ class DescribeJob(BaseModel):
     name: str = None
     dag_id: str = None
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 
 class DagModel:
