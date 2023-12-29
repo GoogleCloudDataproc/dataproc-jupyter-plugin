@@ -42,6 +42,9 @@ import { INotebookModel } from '@jupyterlab/notebook';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { Cron } from 'react-js-cron';
+import 'react-js-cron/dist/styles.css';
+
 const CreateNotebookScheduler = ({
   themeManager,
   app,
@@ -76,6 +79,7 @@ const CreateNotebookScheduler = ({
   const [emailList, setEmailList] = useState<string[]>([]);
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
+  const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
 
   const listClustersAPI = async (
     nextPageToken?: string,
@@ -292,6 +296,7 @@ const CreateNotebookScheduler = ({
       email_delay: emailOnRetry,
       email: emailList,
       name: jobNameSelected,
+      schedule_value: scheduleValue,
       dag_id: randomDagId
     };
 
@@ -540,6 +545,10 @@ const CreateNotebookScheduler = ({
             </RadioGroup>
           </FormControl>
         </div>
+        {scheduleMode === 'runSchedule' && (
+        <div className="create-scheduler-form-element">
+          <Cron value={scheduleValue} setValue={setScheduleValue} />
+        </div>)}
         <div className="job-button-style-parent">
           <div
             onClick={() => {
