@@ -21,8 +21,8 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   const columns = React.useMemo(
     () => [
       {
-        Header: 'Job defination name',
-        accessor: 'jobdefinationname'
+        Header: 'Notebook name',
+        accessor: 'notebookname'
       },
       {
         Header: 'Inpute files name',
@@ -130,7 +130,7 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   }, []);
   return (
     <div>
-      <div>
+        <div className="select-text-overlay-scheduler">
         <div className="create-scheduler-form-element">
           <Autocomplete
             options={composerList}
@@ -140,6 +140,7 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
               <TextField {...params} label="Environment*" />
             )}
           />
+        </div>
         </div>
         <div className="notebook-templates-list-table-parent">
           <TableData
@@ -182,7 +183,6 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
           )}
         </div>
       </div>
-    </div>
   );
 }
 export default listNotebookScheduler;

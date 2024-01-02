@@ -13,7 +13,9 @@ const NotebookJobComponent = ({
   return (
     <>
       <div className="clusters-list-overlay" role="tab">
-        <div>Notebook Scheduler</div>
+        <div className="cluster-details-title"> 
+          Notebook Job Scheduler
+        </div>
       </div>
       <div>
         <ListNotebookScheduler app={app} />
