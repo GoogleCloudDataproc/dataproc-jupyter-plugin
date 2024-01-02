@@ -70,8 +70,10 @@ const CreateNotebookScheduler = ({
   const [selectedMode, setSelectedMode] = useState('cluster');
   const [clusterList, setClusterList] = useState<string[]>([]);
   const [serverlessList, setServerlessList] = useState<string[]>([]);
+  const [serverlessDataList, setServerlessDataList] = useState<string[]>([]);
   const [clusterSelected, setClusterSelected] = useState('');
   const [serverlessSelected, setServerlessSelected] = useState('');
+  const [serverlessDataSelected, setServerlessDataSelected] = useState({});
   const [retryCount, setRetryCount] = useState<number | undefined>(2);
   const [retryDelay, setRetryDelay] = useState<number | undefined>(5);
   const [emailOnFailure, setEmailOnFailure] = useState(true);
@@ -142,7 +144,8 @@ const CreateNotebookScheduler = ({
         transformSessionTemplateListData =
           formattedResponse.sessionTemplates.map((data: any) => {
             return {
-              serverlessName: data.jupyterSession.displayName
+              serverlessName: data.jupyterSession.displayName,
+              serverlessData: data
             };
           });
       }
@@ -165,6 +168,7 @@ const CreateNotebookScheduler = ({
           (obj: { serverlessName: string }) => obj.serverlessName
         );
 
+        setServerlessDataList(transformSessionTemplateListData)
         setServerlessList(keyLabelStructure);
       }
       if (formattedResponse?.error?.code) {
@@ -243,6 +247,10 @@ const CreateNotebookScheduler = ({
   const handleServerlessSelected = (data: string | null) => {
     if (data) {
       const selectedServerless = data.toString();
+      const selectedData: any = serverlessDataList.filter((serverless: any)=>{
+        return serverless.serverlessName === selectedServerless
+      })
+      setServerlessDataSelected(selectedData[0].serverlessData)
       setServerlessSelected(selectedServerless);
     }
   };
@@ -288,7 +296,7 @@ const CreateNotebookScheduler = ({
       output_formats: outputFormats,
       parameters: parameterDetailUpdated,
       cluster_name: clusterSelected,
-      serverless_name: serverlessSelected,
+      serverless_name: serverlessDataSelected,
       mode_selected: selectedMode,
       retry_count: retryCount,
       retry_delay: retryDelay,
