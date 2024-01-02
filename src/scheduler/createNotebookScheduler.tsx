@@ -168,7 +168,7 @@ const CreateNotebookScheduler = ({
           (obj: { serverlessName: string }) => obj.serverlessName
         );
 
-        setServerlessDataList(transformSessionTemplateListData)
+        setServerlessDataList(transformSessionTemplateListData);
         setServerlessList(keyLabelStructure);
       }
       if (formattedResponse?.error?.code) {
@@ -247,10 +247,10 @@ const CreateNotebookScheduler = ({
   const handleServerlessSelected = (data: string | null) => {
     if (data) {
       const selectedServerless = data.toString();
-      const selectedData: any = serverlessDataList.filter((serverless: any)=>{
-        return serverless.serverlessName === selectedServerless
-      })
-      setServerlessDataSelected(selectedData[0].serverlessData)
+      const selectedData: any = serverlessDataList.filter((serverless: any) => {
+        return serverless.serverlessName === selectedServerless;
+      });
+      setServerlessDataSelected(selectedData[0].serverlessData);
       setServerlessSelected(selectedServerless);
     }
   };
@@ -304,7 +304,7 @@ const CreateNotebookScheduler = ({
       email_delay: emailOnRetry,
       email: emailList,
       name: jobNameSelected,
-      schedule_value: scheduleValue,
+      schedule_value: scheduleMode === 'runNow' ? '' : scheduleValue,
       dag_id: randomDagId
     };
 
@@ -554,9 +554,10 @@ const CreateNotebookScheduler = ({
           </FormControl>
         </div>
         {scheduleMode === 'runSchedule' && (
-        <div className="create-scheduler-form-element">
-          <Cron value={scheduleValue} setValue={setScheduleValue} />
-        </div>)}
+          <div className="create-scheduler-form-element">
+            <Cron value={scheduleValue} setValue={setScheduleValue} />
+          </div>
+        )}
         <div className="job-button-style-parent">
           <div
             onClick={() => {
