@@ -10,6 +10,7 @@ import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 
 const NotebookTemplatesComponent= ({
   app,
+  themeManager,
   defaultFileBrowser
 }: {
   app: JupyterLab;
@@ -60,6 +61,7 @@ const NotebookTemplatesComponent= ({
           <div>
               <ListNotebookTemplates
                app={app} 
+               themeManager={themeManager}
                defaultFileBrowser={defaultFileBrowser}/>
           </div>
         </div>

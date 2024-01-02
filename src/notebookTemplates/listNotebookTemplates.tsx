@@ -11,8 +11,9 @@ import * as path from 'path';
 import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
+import { IThemeManager } from '@jupyterlab/apputils';
 
-function ListNotebookTemplates({ app, defaultFileBrowser }: { app: JupyterFrontEnd, defaultFileBrowser: IDefaultFileBrowser }) {
+function ListNotebookTemplates({ app,themeManager, defaultFileBrowser }: { app: JupyterFrontEnd, themeManager: IThemeManager, defaultFileBrowser: IDefaultFileBrowser }) {
   const iconFilter = new LabIcon({
     name: 'launcher:filter-icon',
     svgstr: filterIcon
@@ -169,7 +170,7 @@ function ListNotebookTemplates({ app, defaultFileBrowser }: { app: JupyterFrontE
         title="Use notebook template"
         onClick={() => handleClick(data)}
       >
-        Use this template
+        Use this template  
       </div>
     );
   };

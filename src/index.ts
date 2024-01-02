@@ -32,7 +32,6 @@ import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
 import notebookTemplateIcon from '../style/icons/notebook_template_icon.svg';
-import notebookTemplateIconDark from '../style/icons/notebookTemplate_dark.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
@@ -108,10 +107,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     const iconStorage = new LabIcon({
       name: 'launcher:storage-icon',
       svgstr: storageIcon
-    });
-    const iconNotebookTemplateDark = new LabIcon({
-      name: 'launcher:notebook-template-icon-dark',
-      svgstr: notebookTemplateIconDark
     });
     const iconDpmsDark = new LabIcon({
       name: 'launcher:dpms-icon-dark',
@@ -385,16 +380,10 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconNotebookTemplate),
       execute: () => {
-        const isLightTheme = themeManager &&
-        themeManager.theme &&
-        themeManager.isLight &&
-        themeManager.isLight(themeManager.theme)
-        const notebookTemplateIconInstance = isLightTheme
-        ? iconNotebookTemplate : iconNotebookTemplateDark
         const content = new NotebookTemplates(app as JupyterLab, themeManager, defaultFileBrowser as IDefaultFileBrowser);
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'Notebook Templates';
-        widget.title.icon = notebookTemplateIconInstance;
+        widget.title.icon = iconNotebookTemplate;
         app.shell.add(widget, 'main');
       }
     });
