@@ -97,9 +97,16 @@ class ExecutorService():
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         user, error = process.communicate()
         owner = user.split('@')[0]
+        if job.schedule_value == '':
+            schedule_interval = "@once"
+        else:
+            schedule_interval = job.schedule_value
+        if job.mode_selected == 'serverless':
+            phs_cluster_path = job.environment_config.peripherals_config.spark_history_server_config.dataproc_cluster
+            print(phs_cluster_path)
         content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                   gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}",\
-                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}_{job.dag_id}.ipynb",owner = owner)
+                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}_{job.dag_id}.ipynb",owner = owner,schedule_interval=schedule_interval)
         print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:
             message.write(content)
@@ -108,7 +115,8 @@ class ExecutorService():
     def execute(self,credentials,input_data):
         job = DescribeJob(**input_data)
         print(job.dict())
-        print(job.composer_environment_name)
+        print(job.schedule_value)
+        print(job.serverless_name)
         global job_id
         global job_name
         job_id = job.dag_id
