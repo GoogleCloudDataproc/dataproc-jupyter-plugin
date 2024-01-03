@@ -30,6 +30,7 @@ class DescribeJob(BaseModel):
     selected_mode: str = None
     serverless_name: object = None
     cluster_name : str = None
+    mode_selected: str = None
     schedule_value : str = None
     retry_count: int = 2
     retry_delay: int = 5
