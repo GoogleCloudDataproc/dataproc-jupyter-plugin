@@ -23,6 +23,7 @@ import datetime
 import re
 import threading
 from jupyter_server.utils import ensure_async
+import time
 # from dataproc_jupyter_plugin.environments import EnvironmentRetrievalError
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
@@ -202,6 +203,7 @@ class UrlHandler(APIHandler):
         cloudresourcemanager_url = self.gcp_service_url('cloudresourcemanager')
         datacatalog_url = self.gcp_service_url('datacatalog')
         storage_url = self.gcp_service_url('storage', default_url='https://storage.googleapis.com/storage/v1/')
+        end_time = time.time()
         url = {
             'dataproc_url': dataproc_url,
             'compute_url': compute_url,

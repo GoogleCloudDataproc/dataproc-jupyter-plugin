@@ -23,7 +23,7 @@ dag = DAG(
     '{{name}}', 
     default_args=default_args,
     description='{{name}}',
-    schedule_interval="@once",
+    schedule_interval='{{schedule_interval}}',
 )
 
 # if '{{mode_selected}}' == 'serverless':

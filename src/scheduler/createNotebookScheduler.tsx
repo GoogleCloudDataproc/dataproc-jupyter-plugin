@@ -42,6 +42,9 @@ import { INotebookModel } from '@jupyterlab/notebook';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { Cron } from 'react-js-cron';
+import 'react-js-cron/dist/styles.css';
+
 const CreateNotebookScheduler = ({
   themeManager,
   app,
@@ -67,8 +70,10 @@ const CreateNotebookScheduler = ({
   const [selectedMode, setSelectedMode] = useState('cluster');
   const [clusterList, setClusterList] = useState<string[]>([]);
   const [serverlessList, setServerlessList] = useState<string[]>([]);
+  const [serverlessDataList, setServerlessDataList] = useState<string[]>([]);
   const [clusterSelected, setClusterSelected] = useState('');
   const [serverlessSelected, setServerlessSelected] = useState('');
+  const [serverlessDataSelected, setServerlessDataSelected] = useState({});
   const [retryCount, setRetryCount] = useState<number | undefined>(2);
   const [retryDelay, setRetryDelay] = useState<number | undefined>(5);
   const [emailOnFailure, setEmailOnFailure] = useState(true);
@@ -76,6 +81,7 @@ const CreateNotebookScheduler = ({
   const [emailList, setEmailList] = useState<string[]>([]);
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
+  const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
 
   const listClustersAPI = async (
     nextPageToken?: string,
@@ -138,7 +144,8 @@ const CreateNotebookScheduler = ({
         transformSessionTemplateListData =
           formattedResponse.sessionTemplates.map((data: any) => {
             return {
-              serverlessName: data.jupyterSession.displayName
+              serverlessName: data.jupyterSession.displayName,
+              serverlessData: data
             };
           });
       }
@@ -161,6 +168,7 @@ const CreateNotebookScheduler = ({
           (obj: { serverlessName: string }) => obj.serverlessName
         );
 
+        setServerlessDataList(transformSessionTemplateListData);
         setServerlessList(keyLabelStructure);
       }
       if (formattedResponse?.error?.code) {
@@ -239,6 +247,10 @@ const CreateNotebookScheduler = ({
   const handleServerlessSelected = (data: string | null) => {
     if (data) {
       const selectedServerless = data.toString();
+      const selectedData: any = serverlessDataList.filter((serverless: any) => {
+        return serverless.serverlessName === selectedServerless;
+      });
+      setServerlessDataSelected(selectedData[0].serverlessData);
       setServerlessSelected(selectedServerless);
     }
   };
@@ -284,7 +296,7 @@ const CreateNotebookScheduler = ({
       output_formats: outputFormats,
       parameters: parameterDetailUpdated,
       cluster_name: clusterSelected,
-      serverless_name: serverlessSelected,
+      serverless_name: serverlessDataSelected,
       mode_selected: selectedMode,
       retry_count: retryCount,
       retry_delay: retryDelay,
@@ -292,6 +304,7 @@ const CreateNotebookScheduler = ({
       email_delay: emailOnRetry,
       email: emailList,
       name: jobNameSelected,
+      schedule_value: scheduleMode === 'runNow' ? '' : scheduleValue,
       dag_id: randomDagId
     };
 
@@ -540,6 +553,11 @@ const CreateNotebookScheduler = ({
             </RadioGroup>
           </FormControl>
         </div>
+        {scheduleMode === 'runSchedule' && (
+          <div className="create-scheduler-form-element">
+            <Cron value={scheduleValue} setValue={setScheduleValue} />
+          </div>
+        )}
         <div className="job-button-style-parent">
           <div
             onClick={() => {

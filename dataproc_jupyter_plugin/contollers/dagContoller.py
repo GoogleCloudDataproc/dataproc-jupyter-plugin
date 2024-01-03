@@ -6,6 +6,7 @@ from dataproc_jupyter_plugin.services.dagListService import DagListService
 class DagController(APIHandler):
     def get(self):
         dag = DagListService()
+        composer_name = self.get_argument("composer")
         credentials = handlers.get_cached_credentials(self.log)
-        dag_list = dag.list_jobs(credentials)
+        dag_list = dag.list_jobs(credentials,composer_name)
         self.finish(json.dumps(dag_list))
