@@ -1,8 +1,8 @@
 import requests
-# 
-from dataproc_jupyter_plugin.environments import ENVIRONMENT_API
-# import dataproc_jupyter_plugin.services.executorService 
 
+from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
+
+# import dataproc_jupyter_plugin.services.executorService 
 
 
 class DagListService():
