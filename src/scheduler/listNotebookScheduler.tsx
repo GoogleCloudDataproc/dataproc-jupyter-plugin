@@ -14,7 +14,7 @@ import { Autocomplete, TextField } from '@mui/material';
 function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
-  const [composerSelected, setComposerSelected] = useState('');
+  const [composerSelected, setComposerSelected] = useState('composer4');
   const [dagList, setDagList]= useState<any[]>([]);
   const data = dagList;
 
@@ -47,6 +47,7 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     if (data) {
       const selectedComposer = data.toString();
       setComposerSelected(selectedComposer);
+      // listDagInfoAPI()
     }
   };
 
@@ -77,6 +78,7 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   {
     try {
       const serviceURL = `dagList?composer=${composerSelected}`;
+      console.log(serviceURL)
       const formattedResponse: any = await requestAPI(serviceURL);  
       let transformDagListData = [];
       if (formattedResponse && formattedResponse.dags) {
@@ -156,10 +158,13 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     );
   };
   useEffect(() => {
+    //setComposerSelected('composer4')
     listComposersAPI();
+    console.log('Composer selected on mount:', composerSelected)
   }, []);
   useEffect(() => {
     listDagInfoAPI();
+    console.log("hiii ")
   }, [composerSelected]);
   return (
     <div>
@@ -167,8 +172,12 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
         <div className="create-scheduler-form-element">
           <Autocomplete
             options={composerList}
-            value={composerSelected}
-            onChange={(_event, val) => handleComposerSelected(val)}
+            value={composerSelected }//|| 'composer4'}
+            onChange={(_event, val) =>{
+              handleComposerSelected(val)
+              //listDagInfoAPI()
+            }
+            }
             renderInput={params => (
               <TextField {...params} label="Environment*" />
             )}
@@ -188,15 +197,15 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
             fromPage="Notebook Scheduler"
           />
           <PaginationView
-                          pageSize={pageSize}
-                          setPageSize={setPageSize}
-                          pageIndex={pageIndex}
-                          allData={dagList}
-                          previousPage={previousPage}
-                          nextPage={nextPage}
-                          canPreviousPage={canPreviousPage}
-                          canNextPage={canNextPage}
-                        /> 
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            pageIndex={pageIndex}
+            allData={dagList}
+            previousPage={previousPage}
+            nextPage={nextPage}
+            canPreviousPage={canPreviousPage}
+            canNextPage={canNextPage}
+          /> 
         </div>
         <div>
           {isLoading && (
