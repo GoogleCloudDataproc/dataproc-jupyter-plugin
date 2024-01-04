@@ -1,7 +1,12 @@
 import requests
+<<<<<<< Updated upstream
 
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 
+=======
+# 
+from dataproc_jupyter_plugin.environments import ENVIRONMENT_API
+>>>>>>> Stashed changes
 # import dataproc_jupyter_plugin.services.executorService 
 
 

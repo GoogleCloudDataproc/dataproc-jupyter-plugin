@@ -33,9 +33,16 @@ def getBucket(runtime_env, credentials):
         if response.status_code == 200:
                 resp = response.json()
                 # AIRFLOW_URI =  resp.get('config', {}).get('airflowUri', '')
+                # AIRFLOW_URI =  resp.get('config', {}).get('airflowUri', '')
                 # print(AIRFLOW_URI)
                 # # AIRFLOW_URI = resp.airflowUri
                 # print(resp)
+<<<<<<< Updated upstream
+=======
+                # print(AIRFLOW_URI)
+                # # AIRFLOW_URI = resp.airflowUri
+                # print(resp)
+>>>>>>> Stashed changes
                 # # print(AIRFLOW_URI)
                 gcs_dag_path = resp.get('storageConfig', {}).get('bucket', '')
                 return gcs_dag_path
