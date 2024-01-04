@@ -44,6 +44,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
+import { KernelSpecAPI } from '@jupyterlab/services';
 
 const CreateNotebookScheduler = ({
   themeManager,
@@ -74,6 +75,8 @@ const CreateNotebookScheduler = ({
   const [clusterSelected, setClusterSelected] = useState('');
   const [serverlessSelected, setServerlessSelected] = useState('');
   const [serverlessDataSelected, setServerlessDataSelected] = useState({});
+  const [stopCluster, setStopCluster] = useState(false);
+
   const [retryCount, setRetryCount] = useState<number | undefined>(2);
   const [retryDelay, setRetryDelay] = useState<number | undefined>(5);
   const [emailOnFailure, setEmailOnFailure] = useState(true);
@@ -255,6 +258,10 @@ const CreateNotebookScheduler = ({
     }
   };
 
+  const handleStopCluster = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setStopCluster(event.target.checked);
+  };
+
   const handleRetryCount = (data: number) => {
     if (data >= 0) {
       setRetryCount(data);
@@ -333,6 +340,38 @@ const CreateNotebookScheduler = ({
     app.shell.activeWidget?.close();
   };
 
+  const getKernelDetail = async () => {
+    const kernelSpecs: any = await KernelSpecAPI.getSpecs();
+    const kernels = kernelSpecs.kernelspecs;
+    if (
+      kernels &&
+      context.sessionContext.kernelPreference.name &&
+      clusterList.length > 0 &&
+      serverlessDataList.length > 0
+    ) {
+      if (
+        kernels[
+          context.sessionContext.kernelPreference.name
+        ].resources.endpointParentResource.includes('/sessions')
+      ) {
+        const selectedData: any = serverlessDataList.filter(
+          (serverless: any) => {
+            return context.sessionContext.kernelDisplayName.includes(
+              serverless.serverlessName
+            );
+          }
+        );
+        setServerlessDataSelected(selectedData[0].serverlessData);
+        setServerlessSelected(selectedData[0].serverlessName);
+      } else {
+        const selectedData: any = clusterList.filter((cluster: string) => {
+          return context.sessionContext.kernelDisplayName.includes(cluster);
+        });
+        setClusterSelected(selectedData[0]);
+      }
+    }
+  };
+
   useEffect(() => {
     listComposersAPI();
     listClustersAPI();
@@ -343,6 +382,10 @@ const CreateNotebookScheduler = ({
       setJobNameSelected(context.contentsModel?.name);
     }
   }, []);
+
+  useEffect(() => {
+    getKernelDetail();
+  }, [serverlessDataList]);
 
   return (
     <div className="select-text-overlay-scheduler">
@@ -465,6 +508,27 @@ const CreateNotebookScheduler = ({
             />
           )}
         </div>
+        {selectedMode === 'cluster' && (
+          <div className="create-scheduler-form-element">
+            <FormGroup row={true}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={stopCluster}
+                    onChange={handleStopCluster}
+                  />
+                }
+                className="create-scheduler-label-style"
+                label={
+                  <Typography sx={{ fontSize: 13 }}>
+                    Stop the cluster
+                  </Typography>
+                }
+              />
+            </FormGroup>
+          </div>
+        )}
         <div className="create-scheduler-form-element">
           <Input
             className="input-style-scheduler"
