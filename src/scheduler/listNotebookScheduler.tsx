@@ -52,8 +52,8 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
 
   const listComposersAPI = async () => {
     try {
-      const serviceURL = `runtimeList?composer=${composerSelected}`;
-      const formattedResponse: any = await requestAPI(serviceURL);
+
+      const formattedResponse: any = await requestAPI('composer');
       let composerEnvironmentList: string[] = [];
       formattedResponse.forEach((data: any) => {
         composerEnvironmentList.push(data.name);
@@ -76,7 +76,8 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   const listDagInfoAPI = async () =>
   {
     try {
-      const formattedResponse: any = await requestAPI('dagList');  
+      const serviceURL = `dagList?composer=${composerSelected}`;
+      const formattedResponse: any = await requestAPI(serviceURL);  
       let transformDagListData = [];
       if (formattedResponse && formattedResponse.dags) {
         transformDagListData = formattedResponse.dags.map((dag:any) => {
@@ -156,8 +157,10 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   };
   useEffect(() => {
     listComposersAPI();
-    listDagInfoAPI();
   }, []);
+  useEffect(() => {
+    listDagInfoAPI();
+  }, [composerSelected]);
   return (
     <div>
         <div className="select-text-overlay-scheduler">

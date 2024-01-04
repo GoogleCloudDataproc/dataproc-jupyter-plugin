@@ -8,9 +8,5 @@ class DagController(APIHandler):
         dag = DagListService()
         composer_name = self.get_argument("composer")
         credentials = handlers.get_cached_credentials(self.log)
-<<<<<<< Updated upstream
-=======
-        composer_name = 'composer4'
->>>>>>> Stashed changes
         dag_list = dag.list_jobs(credentials,composer_name)
         self.finish(json.dumps(dag_list))

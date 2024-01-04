@@ -1,12 +1,7 @@
 import requests
-<<<<<<< Updated upstream
 
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 
-=======
-# 
-from dataproc_jupyter_plugin.environments import ENVIRONMENT_API
->>>>>>> Stashed changes
 # import dataproc_jupyter_plugin.services.executorService 
 
 
@@ -22,6 +17,7 @@ class DagListService():
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {access_token}'
         }
+        print("--------AIRFLOW----------")
         try:
             response = requests.get(api_endpoint,headers=headers)
             if response.status_code == 200:
@@ -33,6 +29,7 @@ class DagListService():
                 # # print(AIRFLOW_URI)
                 return airflow_uri
         except Exception as e:
+            print("arflow error")
             print(f"Error: {e}")
     def list_jobs(self, credentials, composer_name):
         print('-----List jobs------')
@@ -40,6 +37,7 @@ class DagListService():
         
         # print(self.json())
         airflow_uri = DagListService.getAirflowUri(composer_name,credentials)
+        print(airflow_uri)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -48,7 +46,7 @@ class DagListService():
         
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags"
-
+            print(api_endpoint)
             headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}'
