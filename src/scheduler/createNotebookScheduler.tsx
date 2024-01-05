@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Input } from '../controls/MuiWrappedInput';
 import {
   Autocomplete,
@@ -31,20 +31,17 @@ import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { toastifyCustomStyle } from '../utils/utils';
 import { toast } from 'react-toastify';
 import { MuiChipsInput } from 'mui-chips-input';
-
 import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
 import { requestAPI } from '../handler/handler';
 import LabelProperties from '../jobs/labelProperties';
-
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { INotebookModel } from '@jupyterlab/notebook';
-
 import { v4 as uuidv4 } from 'uuid';
-
 import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
 import { KernelSpecAPI } from '@jupyterlab/services';
+import tzdata from 'tzdata';
 
 const CreateNotebookScheduler = ({
   themeManager,
@@ -85,6 +82,9 @@ const CreateNotebookScheduler = ({
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
   const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
+  const [timeZoneSelected, setTimeZoneSelected] = useState('');
+
+  const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
 
   const listClustersAPI = async (
     nextPageToken?: string,
@@ -247,6 +247,13 @@ const CreateNotebookScheduler = ({
     }
   };
 
+  const handleTimeZoneSelected = (data: string | null) => {
+    if (data) {
+      const selectedTimeZone = data.toString();
+      setTimeZoneSelected(selectedTimeZone);
+    }
+  };
+
   const handleServerlessSelected = (data: string | null) => {
     if (data) {
       const selectedServerless = data.toString();
@@ -312,6 +319,8 @@ const CreateNotebookScheduler = ({
       email: emailList,
       name: jobNameSelected,
       schedule_value: scheduleMode === 'runNow' ? '' : scheduleValue,
+      stop_cluster: stopCluster,
+      time_zone: timeZoneSelected,
       dag_id: randomDagId
     };
 
@@ -522,7 +531,7 @@ const CreateNotebookScheduler = ({
                 className="create-scheduler-label-style"
                 label={
                   <Typography sx={{ fontSize: 13 }}>
-                    Stop the cluster
+                    Stop the cluster after notebook execution
                   </Typography>
                 }
               />
@@ -618,9 +627,21 @@ const CreateNotebookScheduler = ({
           </FormControl>
         </div>
         {scheduleMode === 'runSchedule' && (
-          <div className="create-scheduler-form-element">
-            <Cron value={scheduleValue} setValue={setScheduleValue} />
-          </div>
+          <>
+            <div className="create-scheduler-form-element">
+              <Cron value={scheduleValue} setValue={setScheduleValue} />
+            </div>
+            <div className="create-scheduler-form-element">
+              <Autocomplete
+                options={timezones}
+                value={timeZoneSelected}
+                onChange={(_event, val) => handleTimeZoneSelected(val)}
+                renderInput={params => (
+                  <TextField {...params} label="Time Zone" />
+                )}
+              />
+            </div>
+          </>
         )}
         <div className="job-button-style-parent">
           <div
