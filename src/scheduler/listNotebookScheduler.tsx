@@ -12,6 +12,7 @@ import { Autocomplete, TextField } from '@mui/material';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import startIcon from '../../style/icons/start_icon.svg';
+import stopIcon from '../../style/icons/stop_icon.svg';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -21,6 +22,11 @@ const iconStart = new LabIcon({
   name: 'launcher:start-icon',
   svgstr: startIcon
 });
+const iconStop = new LabIcon({
+  name: 'launcher:stop-icon',
+  svgstr: stopIcon
+});
+
 
 function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +34,7 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   const [composerSelected, setComposerSelected] = useState('composer4');
   const [dagList, setDagList]= useState<any[]>([]);
   const data = dagList;
+  const [bucketName, setBucketName]=useState("")
 
   const columns = React.useMemo(
     () => [
@@ -69,10 +76,28 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
 
   }
 
+  const handleInputFileClick = async (event: React.MouseEvent, inputPath: string) => {
+    // Prevent the default behavior of the anchor tag (e.g., navigating to a new page)
+    event.preventDefault();
+  
+    try {
+      const serviceURL = `download?dag_path=${inputPath}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+  
+      // Process the API response as needed
+      console.log('API response for InputFilename:', formattedResponse);
+    } catch (error) {
+      // Handle API call errors
+      console.error('Error making API call:', error);
+      toast.error('Failed to fetch data', toastifyCustomStyle);
+    }
+  };
+  
+
   const listComposersAPI = async () => {
     try {
       const formattedResponse: any = await requestAPI('composer');
-      console.log(formattedResponse)
+      console.log("Composerlistapi",formattedResponse)
       let composerEnvironmentList: string[] = [];
       formattedResponse.forEach((data: any) => {
         composerEnvironmentList.push(data.name);
@@ -97,12 +122,14 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     try {
       const serviceURL = `dagList?composer=${composerSelected}`;
       const formattedResponse: any = await requestAPI(serviceURL);  
+      console.log("daglistapi000", formattedResponse[0])
+      console.log("1111",formattedResponse[1])
       let transformDagListData = [];
-      if (formattedResponse && formattedResponse.dags) {
-        transformDagListData = formattedResponse.dags.map((dag:any) => {
+      if (formattedResponse && formattedResponse[0].dags) {
+        transformDagListData = formattedResponse[0].dags.map((dag:any) => {
          return {
             notebookname: dag.dag_id,
-            inputfilesname:`bucket_name/dataproc_notebooks/${dag.dag_id}/input_notebook`,
+            inputfilesname: `${dag.dag_id}.py`,
             schedule: dag.timetable_description,
             status: dag.is_active ? 'Active' : 'Paused',
           };
@@ -110,6 +137,7 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
       } 
         setDagList(transformDagListData);
         setIsLoading(false);
+        setBucketName(formattedResponse[1])
     } catch (error) {
       DataprocLoggingService.log(
         'Error listing dag Scheduler list',
@@ -142,37 +170,34 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     usePagination
   );
 
-  const renderActions = (data:any) => {
+  const renderActions = (data: any) => {
+    const isSchedulerActive = data.status === 'Active';
     return (
       <div className="actions-icon">
-         <div
+        <div
           role="button"
           className="icon-buttons-style"
-          title="start"
+          title={isSchedulerActive ? "stop" : "start"}
           onClick={() => handleUpdateScheduler()}
         >
-          <iconStart.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
+          {isSchedulerActive ? 
+          <iconStop.react 
+          tag="div" className="icon-white logo-alignment-style" /> 
+          : <iconStart.react 
+          tag="div" className="icon-white logo-alignment-style" />}
         </div>
         <div
           role="button"
           className="icon-buttons-style"
-          title="Delete "
+          title="Delete"
           onClick={() => handleDeleteScheduler()}
         >
-          <iconDelete.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
+          <iconDelete.react tag="div" className="icon-white logo-alignment-style" />
         </div>
       </div>
     );
   };
   
-  
-
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Actions') {
       return (
@@ -180,7 +205,25 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
           {renderActions(cell.row.original)}
         </td>
       );
-    } else {
+    }
+    else if (cell.column.Header === 'Input files name') {
+      console.log("cell.value",cell.value);
+      const input_path = `${bucketName}/dataproc-notebooks/${cell.value}`
+      //console.log("input path :",input_path)
+      return (
+        <td {...cell.getCellProps()} className="clusters-table-data">
+          <a
+            href={`your-link-prefix/${cell.value}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => handleInputFileClick(e, input_path)}
+          >
+            {cell.render('Cell')}
+          </a>
+        </td>
+      );
+    } 
+     else {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           {cell.render('Cell')}
@@ -190,11 +233,9 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   };
   useEffect(() => {
     listComposersAPI();
-    console.log('Composer selected on mount:', composerSelected)
   }, []);
   useEffect(() => {
     listDagInfoAPI();
-    console.log("hiii ")
   }, [composerSelected]);
   return (
     <div>
