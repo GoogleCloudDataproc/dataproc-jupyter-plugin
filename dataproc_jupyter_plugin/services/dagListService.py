@@ -1,6 +1,7 @@
 import requests
 
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
+from dataproc_jupyter_plugin.services.executorService import getBucket
 
 # import dataproc_jupyter_plugin.services.executorService 
 
@@ -17,36 +18,26 @@ class DagListService():
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {access_token}'
         }
-        print("--------AIRFLOW----------")
         try:
             response = requests.get(api_endpoint,headers=headers)
             if response.status_code == 200:
                 resp = response.json()
                 airflow_uri=  resp.get('config', {}).get('airflowUri', '')
-                print(airflow_uri)
-                # # AIRFLOW_URI = resp.airflowUri
-                # print(resp)
-                # # print(AIRFLOW_URI)
-                return airflow_uri
+                bucket = resp.get('storageConfig', {}).get('bucket', '')
+                return airflow_uri,bucket
         except Exception as e:
             print("arflow error")
             print(f"Error: {e}")
     def list_jobs(self, credentials, composer_name):
         print('-----List jobs------')
-        # print(dataproc_jupyter_plugin.services.executorService.AIRFLOW_URI)
-        
-        # print(self.json())
-        airflow_uri = DagListService.getAirflowUri(composer_name,credentials)
-        print(airflow_uri)
+        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
             region_id = credentials['region_id']
-        # environments = []
         
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags"
-            print(api_endpoint)
             headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}'
@@ -55,8 +46,9 @@ class DagListService():
             if response.status_code == 200:
                 resp = response.json()
                 print(resp)
+            # bucket = getBucket(composer_name,cr)
 
-            return resp
+            return resp,bucket
         except Exception as e:
             return {"error": str(e)}
     
