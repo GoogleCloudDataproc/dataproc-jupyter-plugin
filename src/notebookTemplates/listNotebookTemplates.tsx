@@ -13,7 +13,15 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { IThemeManager } from '@jupyterlab/apputils';
 
-function ListNotebookTemplates({ app,themeManager, defaultFileBrowser }: { app: JupyterFrontEnd, themeManager: IThemeManager, defaultFileBrowser: IDefaultFileBrowser }) {
+function ListNotebookTemplates({
+  app,
+  themeManager,
+  defaultFileBrowser
+}: {
+  app: JupyterFrontEnd;
+  themeManager: IThemeManager;
+  defaultFileBrowser: IDefaultFileBrowser;
+}) {
   const iconFilter = new LabIcon({
     name: 'launcher:filter-icon',
     svgstr: filterIcon
@@ -51,7 +59,7 @@ function ListNotebookTemplates({ app,themeManager, defaultFileBrowser }: { app: 
 
     // Define the path to the 'notebookTemplateDownload' folder within the local application directory
     const notebookTemplateDownloadFolderPath = defaultFileBrowser.model.path;
-    
+
     const urlParts = notebookUrl.split('/');
     const filePath = `${notebookTemplateDownloadFolderPath}${path.sep}${
       urlParts[urlParts.length - 1]
@@ -74,7 +82,7 @@ function ListNotebookTemplates({ app,themeManager, defaultFileBrowser }: { app: 
 
   const handleClick = async (template: any) => {
     const notebookUrl = template.url;
-    
+
     loggedFetch(notebookUrl, {
       method: 'GET',
       headers: {
@@ -170,7 +178,7 @@ function ListNotebookTemplates({ app,themeManager, defaultFileBrowser }: { app: 
         title="Use notebook template"
         onClick={() => handleClick(data)}
       >
-        Use this template  
+        Use this template
       </div>
     );
   };

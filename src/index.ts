@@ -148,18 +148,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     };
     themeManager.themeChanged.connect(onThemeChanged);
-
-   
-    // // ? new LabIcon({
-    // //     name: 'launcher:notebook-template-icon',
-    // //     svgstr: notebookTemplateIcon
-    // //   })
-    // : new LabIcon({
-    //     name: 'launcher:notebook-template-icon-dark',
-    //     svgstr: notebookTemplateIconDark
-    //   });
-
-
+    
     /**
      * Helper method for when the preview flag gets updated.  This reads the
      * previewEnabled flag and hides or shows the GCS browser or DPMS explorer

@@ -8,7 +8,7 @@ import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 
-const NotebookTemplatesComponent= ({
+const NotebookTemplatesComponent = ({
   app,
   themeManager,
   defaultFileBrowser
@@ -16,12 +16,11 @@ const NotebookTemplatesComponent= ({
   app: JupyterLab;
   themeManager: IThemeManager;
   defaultFileBrowser: IDefaultFileBrowser;
-}): JSX.Element=> {
+}): JSX.Element => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [configError, setConfigError] = useState(false);
   const [loginError, setLoginError] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
-
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
@@ -48,7 +47,7 @@ const NotebookTemplatesComponent= ({
       )}
       {loginError && (
         <div role="alert" className="login-error">
-         {LOGIN_ERROR_MESSAGE}
+          {LOGIN_ERROR_MESSAGE}
         </div>
       )}
       {configError && (
@@ -59,10 +58,11 @@ const NotebookTemplatesComponent= ({
       {loggedIn && !configError && !loginError && (
         <div className="clusters-list-component" role="tablist">
           <div>
-              <ListNotebookTemplates
-               app={app} 
-               themeManager={themeManager}
-               defaultFileBrowser={defaultFileBrowser}/>
+            <ListNotebookTemplates
+              app={app}
+              themeManager={themeManager}
+              defaultFileBrowser={defaultFileBrowser}
+            />
           </div>
         </div>
       )}
@@ -74,20 +74,24 @@ export class NotebookTemplates extends DataprocWidget {
   app: JupyterLab;
   defaultFileBrowser: IDefaultFileBrowser;
 
-  constructor(app: JupyterLab, themeManager: IThemeManager, defaultFileBrowser: IDefaultFileBrowser) {
+  constructor(
+    app: JupyterLab,
+    themeManager: IThemeManager,
+    defaultFileBrowser: IDefaultFileBrowser
+  ) {
     super(themeManager);
     this.app = app;
-    this.defaultFileBrowser = defaultFileBrowser
+    this.defaultFileBrowser = defaultFileBrowser;
   }
 
   renderInternal(): React.JSX.Element {
     return (
-      <div className='component-level'>
-      <NotebookTemplatesComponent
-        app={this.app}
-        themeManager={this.themeManager}
-        defaultFileBrowser={this.defaultFileBrowser}
-      />
+      <div className="component-level">
+        <NotebookTemplatesComponent
+          app={this.app}
+          themeManager={this.themeManager}
+          defaultFileBrowser={this.defaultFileBrowser}
+        />
       </div>
     );
   }
