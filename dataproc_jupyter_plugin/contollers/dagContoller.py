@@ -16,7 +16,7 @@ class DagController(APIHandler):
 class Download(APIHandler):
     def get(self):
         print("---------Download---------")
-        gcs_path = self.get_argument("gcsPath")
+        gcs_path = self.get_argument("dag_path")
         # path = 'gs://us-central1-composer4-fe041c11-bucket/dataproc-notebooks/testschedule1.ipynb'
         cmd = f"gsutil cp 'gs://{gcs_path}' ~/Downloads"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
