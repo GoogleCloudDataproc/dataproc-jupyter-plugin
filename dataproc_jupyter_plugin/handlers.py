@@ -30,7 +30,7 @@ from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gclou
 from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
 # from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
 from dataproc_jupyter_plugin.contollers.composerController import ComposerController
-from dataproc_jupyter_plugin.contollers.dagContoller import DagController
+from dataproc_jupyter_plugin.contollers.dagContoller import DagController, Download
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
 
@@ -131,7 +131,6 @@ def get_cached_credentials(log):
         credentials_cache = TTLCache(maxsize=1, ttl=2)
         credentials_cache['credentials'] = credentials
         return credentials
-
 
 class RouteHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
@@ -263,10 +262,6 @@ def setup_handlers(web_app):
     handlers = [(route_pattern, ComposerController)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "dagList")
-    handlers = [(route_pattern, DagController)]
-    web_app.add_handlers(host_pattern, handlers)
-
     route_pattern = url_path_join(base_url, "dataproc-plugin", "clusterList")
     handlers = [(route_pattern, ClusterController)]
     web_app.add_handlers(host_pattern, handlers)
@@ -279,5 +274,12 @@ def setup_handlers(web_app):
     handlers = [(route_pattern, ExecutorController)]
     web_app.add_handlers(host_pattern, handlers)
 
+    route_pattern_dag = url_path_join(base_url, "dataproc-plugin", "dagList")
+    route_pattern_download = url_path_join(base_url, "dataproc-plugin", "download")
+    handlers = [
+    (route_pattern_dag, DagController),
+    (route_pattern_download, Download),
+    ]
+    web_app.add_handlers(host_pattern, handlers)
 
 
