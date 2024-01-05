@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTable, usePagination } from 'react-table';
-import { ClipLoader } from 'react-spinners';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
@@ -10,6 +9,18 @@ import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { toast } from 'react-toastify';
 import { toastifyCustomStyle } from '../utils/utils';
 import { Autocomplete, TextField } from '@mui/material';
+import deleteIcon from '../../style/icons/delete_icon.svg';
+import { LabIcon } from '@jupyterlab/ui-components';
+import startIcon from '../../style/icons/start_icon.svg';
+
+const iconDelete = new LabIcon({
+  name: 'launcher:delete-icon',
+  svgstr: deleteIcon
+});  
+const iconStart = new LabIcon({
+  name: 'launcher:start-icon',
+  svgstr: startIcon
+});
 
 function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -47,14 +58,21 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     if (data) {
       const selectedComposer = data.toString();
       setComposerSelected(selectedComposer);
-      // listDagInfoAPI()
     }
   };
 
+  const handleUpdateScheduler= () =>{
+    
+  }
+
+  const handleDeleteScheduler=() =>{
+
+  }
+
   const listComposersAPI = async () => {
     try {
-
       const formattedResponse: any = await requestAPI('composer');
+      console.log(formattedResponse)
       let composerEnvironmentList: string[] = [];
       formattedResponse.forEach((data: any) => {
         composerEnvironmentList.push(data.name);
@@ -78,7 +96,6 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   {
     try {
       const serviceURL = `dagList?composer=${composerSelected}`;
-      console.log(serviceURL)
       const formattedResponse: any = await requestAPI(serviceURL);  
       let transformDagListData = [];
       if (formattedResponse && formattedResponse.dags) {
@@ -88,32 +105,11 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
             inputfilesname:`bucket_name/dataproc_notebooks/${dag.dag_id}/input_notebook`,
             schedule: dag.timetable_description,
             status: dag.is_active ? 'Active' : 'Paused',
-            // Add more properties based on your DAG data structure
           };
         });
       } 
-      // const existingDagData = previousDagList ?? [];
-      // const allDagData = [
-      //   ...(existingDagData as []),
-      //   ...transformDagListData
-      // ];
-  
-      // if (formattedResponse.nextPageToken) {
-      //   fetchDagAPI(formattedResponse.nextPageToken, allDagData);
-      // } else {
-      //   let transformDagListData = allDagData;
-  
-      //   const dagIdStructure = transformDagListData.map(
-      //     (obj) => obj.dagId
-      //   );
-  
         setDagList(transformDagListData);
         setIsLoading(false);
-      // }
-  
-      // if (formattedResponse?.error?.code) {
-      //   toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      // }
     } catch (error) {
       DataprocLoggingService.log(
         'Error listing dag Scheduler list',
@@ -133,9 +129,6 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     headerGroups,
     rows,
     prepareRow,
-    //state,
-    //preGlobalFilteredRows,
-    // setGlobalFilter,
     page,
     canPreviousPage,
     canNextPage,
@@ -146,19 +139,56 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   } = useTable(
     //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
-    //useGlobalFilter,
     usePagination
   );
 
-  const tableDataCondition = (cell: ICellProps) => {
+  const renderActions = (data:any) => {
     return (
-      <td {...cell.getCellProps()} className="notebook-scheduler-table-data">
-        {cell.render('Cell')}
-      </td>
+      <div className="actions-icon">
+         <div
+          role="button"
+          className="icon-buttons-style"
+          title="start"
+          onClick={() => handleUpdateScheduler()}
+        >
+          <iconStart.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+        <div
+          role="button"
+          className="icon-buttons-style"
+          title="Delete "
+          onClick={() => handleDeleteScheduler()}
+        >
+          <iconDelete.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+      </div>
     );
   };
+  
+  
+
+  const tableDataCondition = (cell: ICellProps) => {
+    if (cell.column.Header === 'Actions') {
+      return (
+        <td {...cell.getCellProps()} className="clusters-table-data">
+          {renderActions(cell.row.original)}
+        </td>
+      );
+    } else {
+      return (
+        <td {...cell.getCellProps()} className="clusters-table-data">
+          {cell.render('Cell')}
+        </td>
+      );
+    }
+  };
   useEffect(() => {
-    //setComposerSelected('composer4')
     listComposersAPI();
     console.log('Composer selected on mount:', composerSelected)
   }, []);
@@ -172,10 +202,9 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
         <div className="create-scheduler-form-element">
           <Autocomplete
             options={composerList}
-            value={composerSelected }//|| 'composer4'}
+            value={composerSelected}
             onChange={(_event, val) =>{
-              handleComposerSelected(val)
-              //listDagInfoAPI()
+              handleComposerSelected(val) 
             }
             }
             renderInput={params => (
@@ -206,23 +235,6 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
             canPreviousPage={canPreviousPage}
             canNextPage={canNextPage}
           /> 
-        </div>
-        <div>
-          {isLoading && (
-            <div className="spin-loader-main">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
-                size={18}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-              Loading Notebook Scheduler
-            </div>
-          )}
-          {!isLoading && (
-            <div className="no-data-style">  </div>
-          )}
         </div>
       </div>
   );
