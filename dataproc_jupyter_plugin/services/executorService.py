@@ -71,8 +71,8 @@ class ExecutorService():
             os.remove(dag_file)
     
     @staticmethod
-    def uploadInputFileToGcs(input,gcs_dag_bucket):
-        cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/"
+    def uploadInputFileToGcs(input,gcs_dag_bucket,job_name):
+        cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
         print(process.returncode,_,output)
@@ -105,8 +105,8 @@ class ExecutorService():
             phs_cluster_path = job.environment_config.peripherals_config.spark_history_server_config.dataproc_cluster
             print(phs_cluster_path)
         content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
-                                  gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}",\
-                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}_{job.dag_id}.ipynb",owner = owner,schedule_interval=schedule_interval)
+                                  gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/",\
+                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,schedule_interval=schedule_interval)
         print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:
             message.write(content)
@@ -134,7 +134,7 @@ class ExecutorService():
         else:
             self.uploadPapermillToGcs(gcs_dag_bucket)
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
-        self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket)
+        self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket, job_name)
         self.prepareDag(job,gcs_dag_bucket,dag_file,credentials)
 
         # if job.parameters:
