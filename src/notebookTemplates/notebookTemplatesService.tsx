@@ -3,7 +3,7 @@ import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
 
 interface ITemplateList {
   category: string;
-  name: string;
+  title: string;
   description: string;
   actions: React.JSX.Element;
 }
@@ -34,8 +34,8 @@ class NotebookTemplateService {
       .then((responseData: any) => {
         let transformNotebookData = responseData.map((data: ITemplateList) => {
           return {
-            name: data.name,
             category: data.category,
+            name: data.title,
             description: data.description,
             actions: renderActions(data)
           };

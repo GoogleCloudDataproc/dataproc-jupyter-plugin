@@ -29,7 +29,7 @@ interface IBatch {
   actions: JSX.Element;
 }
 interface ITemplate {
-  name: string;
+  title: string;
   category: string;
   description: string;
 }

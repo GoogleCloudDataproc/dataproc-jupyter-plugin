@@ -29,7 +29,7 @@ function ListNotebookTemplates({
 
   interface ITemplateList{
     category: string;
-    name: string;
+    title: string;
     description: string;
     actions: React.JSX.Element;
   }
