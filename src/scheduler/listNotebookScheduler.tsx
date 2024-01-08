@@ -39,12 +39,12 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   const columns = React.useMemo(
     () => [
       {
-        Header: 'Notebook name',
-        accessor: 'notebookname'
+        Header: 'Job Id',
+        accessor: 'jobid'
       },
       {
-        Header: 'Input files name',
-        accessor: 'inputfilesname'
+        Header: 'Notebook name',
+        accessor: 'notebookname'
       },
       {
         Header: 'Schedule',
@@ -122,14 +122,12 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     try {
       const serviceURL = `dagList?composer=${composerSelected}`;
       const formattedResponse: any = await requestAPI(serviceURL);  
-      console.log("daglistapi000", formattedResponse[0])
-      console.log("1111",formattedResponse[1])
       let transformDagListData = [];
       if (formattedResponse && formattedResponse[0].dags) {
         transformDagListData = formattedResponse[0].dags.map((dag:any) => {
          return {
-            notebookname: dag.dag_id,
-            inputfilesname: `${dag.dag_id}.py`,
+            jobid: dag.dag_id,
+            notebookname: `${dag.dag_id}.py`,
             schedule: dag.timetable_description,
             status: dag.is_active ? 'Active' : 'Paused',
           };
@@ -206,23 +204,21 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
         </td>
       );
     }
-    else if (cell.column.Header === 'Input files name') {
-      console.log("cell.value",cell.value);
-      const input_path = `${bucketName}/dataproc-notebooks/${cell.value}`
-      //console.log("input path :",input_path)
-      return (
-        <td {...cell.getCellProps()} className="clusters-table-data">
-          <a
-            href={`your-link-prefix/${cell.value}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => handleInputFileClick(e, input_path)}
-          >
-            {cell.render('Cell')}
-          </a>
-        </td>
-      );
-    } 
+    else if (cell.column.Header === 'Notebook name') {
+      console.log("cell.value", cell.value);
+       const input_path = `${bucketName}/dataproc-notebooks/${cell.value}`;
+       console.log("input path", input_path)
+    return (
+    <td {...cell.getCellProps()} className="clusters-table-data">
+      <button
+        className="download-button"
+        onClick={(e) => handleInputFileClick(e, input_path)}
+      >
+        Download {cell.render('Cell')}
+      </button>
+    </td>
+  );
+}
      else {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
