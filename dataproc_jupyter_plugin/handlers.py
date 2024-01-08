@@ -30,7 +30,7 @@ from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gclou
 from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
 # from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
 from dataproc_jupyter_plugin.contollers.composerController import ComposerController
-from dataproc_jupyter_plugin.contollers.dagContoller import DagController, Download
+from dataproc_jupyter_plugin.contollers.dagContoller import DagController, Delete, Download
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
 
@@ -276,9 +276,11 @@ def setup_handlers(web_app):
 
     route_pattern_dag = url_path_join(base_url, "dataproc-plugin", "dagList")
     route_pattern_download = url_path_join(base_url, "dataproc-plugin", "download")
+    route_pattern_delete = url_path_join(base_url, "dataproc-plugin", "delete")
     handlers = [
     (route_pattern_dag, DagController),
     (route_pattern_download, Download),
+    (route_pattern_delete, Delete),
     ]
     web_app.add_handlers(host_pattern, handlers)
 

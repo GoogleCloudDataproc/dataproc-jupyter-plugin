@@ -2,6 +2,7 @@ import json
 import subprocess
 from jupyter_server.base.handlers import APIHandler
 from dataproc_jupyter_plugin import handlers
+from dataproc_jupyter_plugin.services.dagDeleteService import DagDeleteService
 from dataproc_jupyter_plugin.services.dagListService import DagListService
 # from google.cloud import storage
 
@@ -26,15 +27,22 @@ class Download(APIHandler):
             self.finish({'status' : 0})
         else:
             self.finish({'status': 1})
-        # bucket_name = 'us-central1-composer4-fe041c11-bucket'
-        # source_blob_name = 'dataproc-notebooks/testschedule1.ipynb'
-        # destination_file_name = '~Downloads'
-        # storage_client = storage.Client()
+            
+class Delete(APIHandler):
+    def get(self):
+        print("---------Delete---------")
+        dag = DagDeleteService()
+        composer = self.get_argument("composer")
+        dag_id = self.get_argument("dag_id")
+        credentials = handlers.get_cached_credentials(self.log)
+        delete_response = dag.delete_job(credentials,composer, dag_id)
+        self.finish(delete_response)
+        if delete_response == 0: 
+            self.finish({'status' : 0})
+        else:
+            self.finish(json.dumps(delete_response))
+        
 
-        # bucket = storage_client.bucket(bucket_name)
-        # blob = bucket.blob(source_blob_name)
-
-        # blob.download_to_filename(destination_file_name)
 
 
         
