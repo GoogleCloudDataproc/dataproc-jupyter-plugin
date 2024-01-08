@@ -8,7 +8,6 @@ import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
 import * as path from 'path';
-// import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { IThemeManager } from '@jupyterlab/apputils';
@@ -34,7 +33,15 @@ function ListNotebookTemplates({
     description: string;
     actions: React.JSX.Element;
   }
-
+  interface INotebookTemplate {
+    category:string,
+    created_at:string,
+    description:string,
+    sub_category:string,
+    title:string
+    url:string
+  }
+  
   const [templateList, setTemplateList] = useState<ITemplateList[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const data = templateList;
@@ -60,11 +67,10 @@ function ListNotebookTemplates({
     []
   );
   const downloadNotebook = async (
-    notebookContent: any,
+    notebookContent: object,
     notebookUrl: string
   ) => {
     const contentsManager = app.serviceManager.contents;
-
     // Define the path to the 'notebookTemplateDownload' folder within the local application directory
     const notebookTemplateDownloadFolderPath = defaultFileBrowser.model.path;
 
@@ -88,7 +94,7 @@ function ListNotebookTemplates({
     });
   };
 
-  const handleClick = async (template: any) => { 
+  const handleClick = async (template: INotebookTemplate ) => { 
     await NotebookTemplateService.handleClickService(
       template,
       downloadNotebook

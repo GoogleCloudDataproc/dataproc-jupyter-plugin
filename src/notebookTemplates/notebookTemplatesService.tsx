@@ -7,7 +7,9 @@ interface ITemplateList {
   description: string;
   actions: React.JSX.Element;
 }
-
+interface INotebookTemplate {
+  url: string;
+}
 class NotebookTemplateService {
   static listNotebookTemplateAPIService = async (
     setTemplateList: (value: ITemplateList[]) => void,
@@ -27,6 +29,7 @@ class NotebookTemplateService {
           );
         }
         return response.json();
+       
       })
       .then((responseData: any) => {
         let transformNotebookData = responseData.map((data: ITemplateList) => {
@@ -45,7 +48,7 @@ class NotebookTemplateService {
         setIsLoading(false);
       });
   };
-  static handleClickService = async (template: any, downloadNotebook: any) => {
+  static handleClickService = async (template: INotebookTemplate, downloadNotebook: any) => {
     const notebookUrl = template.url;
     loggedFetch(notebookUrl, {
       method: 'GET',
