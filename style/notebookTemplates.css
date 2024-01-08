@@ -1,0 +1,25 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+
+.use-template-style {
+  display: inline-block; /* Display as inline block */
+  white-space: nowrap;
+  border: 1px solid #e0e0e0;
+  border-radius: 100px;
+  color: #3367d6;
+  margin-right: 25px;
+  cursor: pointer;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+/* Optional: Adjustments for other elements */
+.notebook-template-table-data {
+  padding-left: 15px;
+  border-bottom: 1px solid var(--jp-layout-color3);
+}
+
+.notebook-templates-list-table-parent {
+  height: 100%;
+  overflow: auto;
+}
+
