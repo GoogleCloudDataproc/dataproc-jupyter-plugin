@@ -6,12 +6,13 @@ import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
-import { ICellProps, loggedFetch } from '../utils/utils';
+import { ICellProps } from '../utils/utils';
 import * as path from 'path';
-import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
+// import { NOTEBOOK_TEMPLATES_LIST_URL } from '../utils/const';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { IThemeManager } from '@jupyterlab/apputils';
+import NotebookTemplateService from './notebookTemplatesService';
 
 function ListNotebookTemplates({
   app,
@@ -27,7 +28,14 @@ function ListNotebookTemplates({
     svgstr: filterIcon
   });
 
-  const [templateList, setTemplateList] = useState<any[]>([]);
+  interface ITemplateList{
+    category: string;
+    name: string;
+    description: string;
+    actions: React.JSX.Element;
+  }
+
+  const [templateList, setTemplateList] = useState<ITemplateList[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const data = templateList;
   const columns = React.useMemo(
@@ -80,29 +88,11 @@ function ListNotebookTemplates({
     });
   };
 
-  const handleClick = async (template: any) => {
-    const notebookUrl = template.url;
-
-    loggedFetch(notebookUrl, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/vnd.github.raw'
-      }
-    })
-      .then((response: Response) => {
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch notebook content. Status: ${response.status}`
-          );
-        }
-        return response.json();
-      })
-      .then((notebookContent: string) => {
-        downloadNotebook(notebookContent, notebookUrl);
-      })
-      .catch((err: Error) => {
-        console.error('Error fetching notebook content', err);
-      });
+  const handleClick = async (template: any) => { 
+    await NotebookTemplateService.handleClickService(
+      template,
+      downloadNotebook
+    )
   };
 
   const {
@@ -136,38 +126,13 @@ function ListNotebookTemplates({
     );
   };
 
-  const listTemplateAPI = async () => {
-    loggedFetch(NOTEBOOK_TEMPLATES_LIST_URL, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/vnd.github.raw'
-      }
-    })
-      .then((response: Response) => {
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch notebook content. Status: ${response.status}`
-          );
-        }
-        return response.json();
-      })
-      .then((responseData: any) => {
-        let transformNotebookData = responseData.map((data: any) => {
-          return {
-            name: data.title,
-            category: data.category,
-            description: data.description,
-            actions: renderActions(data)
-          };
-        });
-        setTemplateList(transformNotebookData);
-        setIsLoading(false);
-      })
-      .catch((err: Error) => {
-        console.error('Error fetching data:', err);
-        setIsLoading(false);
-      });
-  };
+  const listTemplateAPI = async () =>{
+    await NotebookTemplateService.listNotebookTemplateAPIService(
+      setTemplateList,
+      renderActions,
+      setIsLoading
+    )
+  }
 
   const renderActions = (data: any) => {
     return (
