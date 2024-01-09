@@ -31,6 +31,7 @@ from dataproc_jupyter_plugin.contollers.clusterController import ClusterControll
 # from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
 from dataproc_jupyter_plugin.contollers.composerController import ComposerController
 from dataproc_jupyter_plugin.contollers.dagContoller import DagController
+from dataproc_jupyter_plugin.contollers.dagRunController import DagRunController
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
 
@@ -265,6 +266,10 @@ def setup_handlers(web_app):
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "dagList")
     handlers = [(route_pattern, DagController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "dagRun")
+    handlers = [(route_pattern, DagRunController)]
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "clusterList")
