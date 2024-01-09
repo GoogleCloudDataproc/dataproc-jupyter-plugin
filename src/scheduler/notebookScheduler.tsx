@@ -19,10 +19,11 @@ import React from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { JupyterLab } from '@jupyterlab/application';
-import CreateNotebookScheduler from './createNotebookScheduler';
+// import CreateNotebookScheduler from './createNotebookScheduler';
 
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { INotebookModel } from '@jupyterlab/notebook';
+import ExecutionHistory from './executionHistory';
 
 const NotebookSchedulerComponent = ({
   themeManager,
@@ -35,11 +36,12 @@ const NotebookSchedulerComponent = ({
 }): JSX.Element => {
   return (
     <div className="component-level">
-      <CreateNotebookScheduler
+      {/* <CreateNotebookScheduler
         themeManager={themeManager}
         app={app}
         context={context}
-      />
+      /> */}
+      <ExecutionHistory />
     </div>
   );
 };

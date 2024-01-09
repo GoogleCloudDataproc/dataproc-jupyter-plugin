@@ -27,9 +27,11 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
 import { Batches } from './batches/batches';
+import { NotebookTemplates } from './notebookTemplates/notebookTemplates'
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
+import notebookTemplateIcon from '../style/icons/notebook_template_icon.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
@@ -40,7 +42,7 @@ import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
-import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import { IFileBrowserFactory, IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
@@ -63,6 +65,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   optional: [
     IFileBrowserFactory,
+    IDefaultFileBrowser,
     ILauncher,
     IMainMenu,
     ILabShell,
@@ -74,7 +77,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   activate: async (
     app: JupyterFrontEnd,
     factory: IFileBrowserFactory,
-   // context: DocumentRegistry.IContext<INotebookModel>,
+    defaultFileBrowser:IDefaultFileBrowser,
     launcher: ILauncher,
     mainMenu: IMainMenu,
     labShell: ILabShell,
@@ -101,6 +104,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     const iconNotebookJobs = new LabIcon({
       name: 'launcher:notebook-template-icon',
       svgstr: serverlessIcon
+    })
+    const iconNotebookTemplate = new LabIcon({
+      name: 'launcher:notebook-template-icon',
+      svgstr: notebookTemplateIcon
     });
     const iconStorage = new LabIcon({
       name: 'launcher:storage-icon',
@@ -146,7 +153,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     };
     themeManager.themeChanged.connect(onThemeChanged);
-
+    
     /**
      * Helper method for when the preview flag gets updated.  This reads the
      * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
@@ -374,6 +381,22 @@ const extension: JupyterFrontEndPlugin<void> = {
         app.shell.add(widget, 'main');
       }
     });
+
+    const createTemplateComponentCommand = 'create-template-component';
+    commands.addCommand(createTemplateComponentCommand, {
+      caption: 'Create a new Template Component',
+      label: 'Notebook Templates',
+      // @ts-ignore jupyter lab icon command issue
+      icon: args => (args['isPalette'] ? null : iconNotebookTemplate),
+      execute: () => {
+        const content = new NotebookTemplates(app as JupyterLab, themeManager, defaultFileBrowser as IDefaultFileBrowser);
+        const widget = new MainAreaWidget<NotebookTemplates>({ content });
+        widget.title.label = 'Notebook Templates';
+        widget.title.icon = iconNotebookTemplate;
+        app.shell.add(widget, 'main');
+      }
+    });
+
     const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
       label: 'Cloud Dataproc Settings',
@@ -490,6 +513,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         command: createNotebookJobsComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 3//it will be 4
+      })
+      launcher.add({
+        command: createTemplateComponentCommand,
+        category: TITLE_LAUNCHER_CATEGORY,
+        rank: 4
       });
     }
 

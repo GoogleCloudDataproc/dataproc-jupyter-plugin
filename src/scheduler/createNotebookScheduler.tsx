@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Input } from '../controls/MuiWrappedInput';
 import {
   Autocomplete,
@@ -27,23 +27,18 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import { toastifyCustomStyle } from '../utils/utils';
-import { toast } from 'react-toastify';
 import { MuiChipsInput } from 'mui-chips-input';
-
 import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import { requestAPI } from '../handler/handler';
 import LabelProperties from '../jobs/labelProperties';
-
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { INotebookModel } from '@jupyterlab/notebook';
-
 import { v4 as uuidv4 } from 'uuid';
-
 import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
+import { KernelSpecAPI } from '@jupyterlab/services';
+import tzdata from 'tzdata';
+import { SchedulerService } from './schedulerServices';
 
 const CreateNotebookScheduler = ({
   themeManager,
@@ -74,6 +69,8 @@ const CreateNotebookScheduler = ({
   const [clusterSelected, setClusterSelected] = useState('');
   const [serverlessSelected, setServerlessSelected] = useState('');
   const [serverlessDataSelected, setServerlessDataSelected] = useState({});
+  const [stopCluster, setStopCluster] = useState(false);
+
   const [retryCount, setRetryCount] = useState<number | undefined>(2);
   const [retryDelay, setRetryDelay] = useState<number | undefined>(5);
   const [emailOnFailure, setEmailOnFailure] = useState(true);
@@ -82,128 +79,23 @@ const CreateNotebookScheduler = ({
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
   const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
+  const [timeZoneSelected, setTimeZoneSelected] = useState('');
 
-  const listClustersAPI = async (
-    nextPageToken?: string,
-    previousClustersList?: object
-  ) => {
-    const pageToken = nextPageToken ?? '';
-    try {
-      const serviceURL = `clusterList?pageSize=50&pageToken=${pageToken}`;
+  const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
 
-      const formattedResponse: any = await requestAPI(serviceURL);
-      let transformClusterListData = [];
-      if (formattedResponse && formattedResponse.clusters) {
-        transformClusterListData = formattedResponse.clusters.map(
-          (data: any) => {
-            return {
-              clusterName: data.clusterName
-            };
-          }
-        );
-      }
-      const existingClusterData = previousClustersList ?? [];
-      //setStateAction never type issue
-      const allClustersData: any = [
-        ...(existingClusterData as []),
-        ...transformClusterListData
-      ];
-
-      if (formattedResponse.nextPageToken) {
-        listClustersAPI(formattedResponse.nextPageToken, allClustersData);
-      } else {
-        let transformClusterListData = allClustersData;
-
-        const keyLabelStructure = transformClusterListData.map(
-          (obj: { clusterName: string }) => obj.clusterName
-        );
-
-        setClusterList(keyLabelStructure);
-      }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-    } catch (error) {
-      DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters', toastifyCustomStyle);
-    }
+  const listClustersAPI = async () => {
+    await SchedulerService.listClustersAPIService(setClusterList);
   };
 
-  const listSessionTemplatesAPI = async (
-    nextPageToken?: string,
-    previousSessionTemplatesList?: object
-  ) => {
-    const pageToken = nextPageToken ?? '';
-    try {
-      const serviceURL = `runtimeList?pageSize=50&pageToken=${pageToken}`;
-
-      const formattedResponse: any = await requestAPI(serviceURL);
-      let transformSessionTemplateListData = [];
-      if (formattedResponse && formattedResponse.sessionTemplates) {
-        transformSessionTemplateListData =
-          formattedResponse.sessionTemplates.map((data: any) => {
-            return {
-              serverlessName: data.jupyterSession.displayName,
-              serverlessData: data
-            };
-          });
-      }
-      const existingSessionTemplateData = previousSessionTemplatesList ?? [];
-      //setStateAction never type issue
-      const allSessionTemplatesData: any = [
-        ...(existingSessionTemplateData as []),
-        ...transformSessionTemplateListData
-      ];
-
-      if (formattedResponse.nextPageToken) {
-        listSessionTemplatesAPI(
-          formattedResponse.nextPageToken,
-          allSessionTemplatesData
-        );
-      } else {
-        let transformSessionTemplateListData = allSessionTemplatesData;
-
-        const keyLabelStructure = transformSessionTemplateListData.map(
-          (obj: { serverlessName: string }) => obj.serverlessName
-        );
-
-        setServerlessDataList(transformSessionTemplateListData);
-        setServerlessList(keyLabelStructure);
-      }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-    } catch (error) {
-      DataprocLoggingService.log(
-        'Error listing session templates',
-        LOG_LEVEL.ERROR
-      );
-      console.error('Error listing session templates', error);
-      toast.error('Failed to fetch session templates', toastifyCustomStyle);
-    }
+  const listSessionTemplatesAPI = async () => {
+    await SchedulerService.listSessionTemplatesAPIService(
+      setServerlessDataList,
+      setServerlessList
+    );
   };
 
   const listComposersAPI = async () => {
-    try {
-      const formattedResponse: any = await requestAPI('composer');
-      let composerEnvironmentList: string[] = [];
-      formattedResponse.forEach((data: any) => {
-        composerEnvironmentList.push(data.name);
-      });
-
-      setComposerList(composerEnvironmentList);
-    } catch (error) {
-      DataprocLoggingService.log(
-        'Error listing composer environment list',
-        LOG_LEVEL.ERROR
-      );
-      console.error('Error listing composer environment list', error);
-      toast.error(
-        'Failed to fetch composer environment list',
-        toastifyCustomStyle
-      );
-    }
+    await SchedulerService.listComposersAPIService(setComposerList);
   };
 
   const handleComposerSelected = (data: string | null) => {
@@ -244,6 +136,13 @@ const CreateNotebookScheduler = ({
     }
   };
 
+  const handleTimeZoneSelected = (data: string | null) => {
+    if (data) {
+      const selectedTimeZone = data.toString();
+      setTimeZoneSelected(selectedTimeZone);
+    }
+  };
+
   const handleServerlessSelected = (data: string | null) => {
     if (data) {
       const selectedServerless = data.toString();
@@ -253,6 +152,10 @@ const CreateNotebookScheduler = ({
       setServerlessDataSelected(selectedData[0].serverlessData);
       setServerlessSelected(selectedServerless);
     }
+  };
+
+  const handleStopCluster = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setStopCluster(event.target.checked);
   };
 
   const handleRetryCount = (data: number) => {
@@ -305,19 +208,11 @@ const CreateNotebookScheduler = ({
       email: emailList,
       name: jobNameSelected,
       schedule_value: scheduleMode === 'runNow' ? '' : scheduleValue,
+      stop_cluster: stopCluster,
+      time_zone: timeZoneSelected,
       dag_id: randomDagId
     };
-
-    try {
-      const data = await requestAPI('createJobScheduler', {
-        body: JSON.stringify(payload),
-        method: 'POST'
-      });
-      app.shell.activeWidget?.close();
-      console.log(data);
-    } catch (reason) {
-      console.error(`Error on POST {dataToSend}.\n${reason}`);
-    }
+    await SchedulerService.createJobSchedulerService(payload, app);
   };
 
   const isSaveDisabled = () => {
@@ -333,6 +228,38 @@ const CreateNotebookScheduler = ({
     app.shell.activeWidget?.close();
   };
 
+  const getKernelDetail = async () => {
+    const kernelSpecs: any = await KernelSpecAPI.getSpecs();
+    const kernels = kernelSpecs.kernelspecs;
+    if (
+      kernels &&
+      context.sessionContext.kernelPreference.name &&
+      clusterList.length > 0 &&
+      serverlessDataList.length > 0
+    ) {
+      if (
+        kernels[
+          context.sessionContext.kernelPreference.name
+        ].resources.endpointParentResource.includes('/sessions')
+      ) {
+        const selectedData: any = serverlessDataList.filter(
+          (serverless: any) => {
+            return context.sessionContext.kernelDisplayName.includes(
+              serverless.serverlessName
+            );
+          }
+        );
+        setServerlessDataSelected(selectedData[0].serverlessData);
+        setServerlessSelected(selectedData[0].serverlessName);
+      } else {
+        const selectedData: any = clusterList.filter((cluster: string) => {
+          return context.sessionContext.kernelDisplayName.includes(cluster);
+        });
+        setClusterSelected(selectedData[0]);
+      }
+    }
+  };
+
   useEffect(() => {
     listComposersAPI();
     listClustersAPI();
@@ -343,6 +270,10 @@ const CreateNotebookScheduler = ({
       setJobNameSelected(context.contentsModel?.name);
     }
   }, []);
+
+  useEffect(() => {
+    getKernelDetail();
+  }, [serverlessDataList]);
 
   return (
     <div className="select-text-overlay-scheduler">
@@ -465,6 +396,27 @@ const CreateNotebookScheduler = ({
             />
           )}
         </div>
+        {selectedMode === 'cluster' && (
+          <div className="create-scheduler-form-element">
+            <FormGroup row={true}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={stopCluster}
+                    onChange={handleStopCluster}
+                  />
+                }
+                className="create-scheduler-label-style"
+                label={
+                  <Typography sx={{ fontSize: 13 }}>
+                    Stop the cluster after notebook execution
+                  </Typography>
+                }
+              />
+            </FormGroup>
+          </div>
+        )}
         <div className="create-scheduler-form-element">
           <Input
             className="input-style-scheduler"
@@ -554,9 +506,21 @@ const CreateNotebookScheduler = ({
           </FormControl>
         </div>
         {scheduleMode === 'runSchedule' && (
-          <div className="create-scheduler-form-element">
-            <Cron value={scheduleValue} setValue={setScheduleValue} />
-          </div>
+          <>
+            <div className="create-scheduler-form-element">
+              <Cron value={scheduleValue} setValue={setScheduleValue} />
+            </div>
+            <div className="create-scheduler-form-element">
+              <Autocomplete
+                options={timezones}
+                value={timeZoneSelected}
+                onChange={(_event, val) => handleTimeZoneSelected(val)}
+                renderInput={params => (
+                  <TextField {...params} label="Time Zone" />
+                )}
+              />
+            </div>
+          </>
         )}
         <div className="job-button-style-parent">
           <div

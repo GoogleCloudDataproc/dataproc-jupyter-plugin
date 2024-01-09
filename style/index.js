@@ -32,3 +32,4 @@ import './paginationView.css';
 import './runtimeTemplate.css';
 import './gcsBucket.css';
 import './notebookScheduler.css';
+import './notebookTemplates.css';
