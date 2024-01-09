@@ -188,4 +188,29 @@ export class SchedulerService {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
     }
   };
+  static listDagRunsListService = async (
+    composerName: string,
+    dagId: string,
+    setDagRunsList: (value: any) => void,
+    setIsLoading: (value: boolean) => void
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `dagRun?composer=${composerName}&dag_id=${dagId}`
+      );
+      console.log(data);
+      let transformDagRunListData = [];
+      transformDagRunListData = data.dag_runs.map((dagRun: any) => {
+        return {
+          state: dagRun.state,
+          date: new Date(dagRun.execution_date).toDateString(),
+          time: new Date(dagRun.execution_date).toTimeString().split(' ')[0]
+        };
+      });
+      setDagRunsList(transformDagRunListData);
+      setIsLoading(false);
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
 }

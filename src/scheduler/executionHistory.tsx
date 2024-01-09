@@ -21,7 +21,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { PickersDayProps, PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import dayjs, { Dayjs } from 'dayjs';
-import { requestAPI } from '../handler/handler';
+import ListDagRuns from './listDagRuns';
 
 const ExecutionHistory = ({
   composerName,
@@ -64,33 +64,27 @@ const ExecutionHistory = ({
     );
   };
 
-  const listDagRunsList = async () => {
-    try {
-      const data = await requestAPI(
-        `dagRun?composer=${composerName}&dag_id=${dagId}`
-      );
-      console.log(data);
-    } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
-    }
-  };
-
   useEffect(() => {
-    listDagRunsList();
   }, []);
 
   return (
-    <div className="select-text-overlay-scheduler">
+    <div className="execution-history-parent">
       <div className="create-job-scheduler-title">Execution History</div>
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <DateCalendar
-          value={value}
-          onChange={newValue => setValue(newValue)}
-          slots={{
-            day: CustomDay
-          }}
-        />
-      </LocalizationProvider>
+      <div className="execution-history-main-wrapper">
+        <div className="execution-history-left-wrapper">
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateCalendar
+              value={value}
+              onChange={newValue => setValue(newValue)}
+              slots={{
+                day: CustomDay
+              }}
+            />
+          </LocalizationProvider>
+          <ListDagRuns composerName={composerName} dagId={dagId}/>
+        </div>
+        <div className="execution-history-right-wrapper"></div>
+      </div>
     </div>
   );
 };

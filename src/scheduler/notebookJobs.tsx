@@ -16,7 +16,6 @@ const NotebookJobComponent = ({
   const [dagId, setDagId] = useState('');
 
   const handleDagIdSelection = (composerName: string, dagId: string) => {
-    console.log(composerName, dagId);
     setShowExecutionHistory(true);
     setComposerName(composerName);
     setDagId(dagId);
