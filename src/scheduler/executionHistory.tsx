@@ -23,7 +23,13 @@ import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import dayjs, { Dayjs } from 'dayjs';
 import { requestAPI } from '../handler/handler';
 
-const ExecutionHistory = (): JSX.Element => {
+const ExecutionHistory = ({
+  composerName,
+  dagId
+}: {
+  composerName: string;
+  dagId: string;
+}): JSX.Element => {
   const [value, setValue] = useState<Dayjs | null>(dayjs('2024-01-08'));
 
   const CustomDay = (props: PickersDayProps<Dayjs>) => {
@@ -61,7 +67,7 @@ const ExecutionHistory = (): JSX.Element => {
   const listDagRunsList = async () => {
     try {
       const data = await requestAPI(
-        'dagRun?composer=composer4&dag_id=airflow_monitoring'
+        `dagRun?composer=${composerName}&dag_id=${dagId}`
       );
       console.log(data);
     } catch (reason) {

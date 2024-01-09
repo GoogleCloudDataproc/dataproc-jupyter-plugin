@@ -17,7 +17,7 @@ import stopIcon from '../../style/icons/stop_icon.svg';
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
   svgstr: deleteIcon
-});  
+});
 const iconStart = new LabIcon({
   name: 'launcher:start-icon',
   svgstr: startIcon
@@ -27,14 +27,19 @@ const iconStop = new LabIcon({
   svgstr: stopIcon
 });
 
-
-function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
+function listNotebookScheduler({
+  app,
+  handleDagIdSelection
+}: {
+  app: JupyterFrontEnd;
+  handleDagIdSelection: (composerName: string, dagId: string) => void;
+}) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelected, setComposerSelected] = useState('composer4');
-  const [dagList, setDagList]= useState<any[]>([]);
+  const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
-  const [bucketName, setBucketName]=useState("")
+  const [bucketName, setBucketName] = useState('');
 
   const columns = React.useMemo(
     () => [
@@ -68,45 +73,33 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     }
   };
 
-  const handleUpdateScheduler= () =>{
-    
-  }
+  const handleUpdateScheduler = () => {};
 
-  const handleDeleteScheduler=() =>{
-
-  }
+  const handleDeleteScheduler = () => {};
 
   const handleInputFileClick = async (event: React.MouseEvent) => {
     // Prevent the default behavior of the anchor tag (e.g., navigating to a new page)
     event.preventDefault();
     const jobid = event.currentTarget.getAttribute('data-jobid');
-    console.log("jobid",jobid)
+    console.log('jobid', jobid);
     try {
-    const serviceURL = `download?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
-    console.log(serviceURL)
-    const formattedResponse: any = await requestAPI(serviceURL);
-  
+      const serviceURL = `download?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
+      console.log(serviceURL);
+      const formattedResponse: any = await requestAPI(serviceURL);
+
       // Process the API response as needed
       console.log('API response for InputFilename:', formattedResponse);
-
     } catch (error) {
-      DataprocLoggingService.log(
-        'Error in Download api',
-        LOG_LEVEL.ERROR
-      );
+      DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
       console.error('Error in Download api', error);
-      toast.error(
-        'Failed to fetch Download api',
-        toastifyCustomStyle
-      );
+      toast.error('Failed to fetch Download api', toastifyCustomStyle);
     }
   };
-  
 
   const listComposersAPI = async () => {
     try {
       const formattedResponse: any = await requestAPI('composer');
-     // console.log("Composerlistapi",formattedResponse)
+      // console.log("Composerlistapi",formattedResponse)
       let composerEnvironmentList: string[] = [];
       formattedResponse.forEach((data: any) => {
         composerEnvironmentList.push(data.name);
@@ -126,37 +119,33 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
     }
   };
 
-  const listDagInfoAPI = async () =>
-  {
+  const listDagInfoAPI = async () => {
     try {
       const serviceURL = `dagList?composer=${composerSelected}`;
-      const formattedResponse: any = await requestAPI(serviceURL);  
+      const formattedResponse: any = await requestAPI(serviceURL);
       let transformDagListData = [];
       if (formattedResponse && formattedResponse[0].dags) {
-        transformDagListData = formattedResponse[0].dags.map((dag:any) => {
-         return {
+        transformDagListData = formattedResponse[0].dags.map((dag: any) => {
+          return {
             jobid: dag.dag_id,
             notebookname: dag.dag_id,
             schedule: dag.timetable_description,
-            status: dag.is_active ? 'Active' : 'Paused',
+            status: dag.is_active ? 'Active' : 'Paused'
           };
         });
-      } 
-        setDagList(transformDagListData);
-        setIsLoading(false);
-        setBucketName(formattedResponse[1])
+      }
+      setDagList(transformDagListData);
+      setIsLoading(false);
+      setBucketName(formattedResponse[1]);
     } catch (error) {
       DataprocLoggingService.log(
         'Error listing dag Scheduler list',
         LOG_LEVEL.ERROR
       );
       console.error('Error listing dag Scheduler list', error);
-      toast.error(
-        'Failed to fetch dag Scheduler list',
-        toastifyCustomStyle
-      );
+      toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
     }
-  }
+  };
 
   const {
     getTableProps,
@@ -184,14 +173,20 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
         <div
           role="button"
           className="icon-buttons-style"
-          title={isSchedulerActive ? "stop" : "start"}
+          title={isSchedulerActive ? 'stop' : 'start'}
           onClick={() => handleUpdateScheduler()}
         >
-          {isSchedulerActive ? 
-          <iconStop.react 
-          tag="div" className="icon-white logo-alignment-style" /> 
-          : <iconStart.react 
-          tag="div" className="icon-white logo-alignment-style" />}
+          {isSchedulerActive ? (
+            <iconStop.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          ) : (
+            <iconStart.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          )}
         </div>
         <div
           role="button"
@@ -199,12 +194,15 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
           title="Delete"
           onClick={() => handleDeleteScheduler()}
         >
-          <iconDelete.react tag="div" className="icon-white logo-alignment-style" />
+          <iconDelete.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
         </div>
       </div>
     );
   };
-  
+
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Actions') {
       return (
@@ -212,24 +210,32 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
           {renderActions(cell.row.original)}
         </td>
       );
-    }
-    else if (cell.column.Header === 'Notebook name') {
+    } else if (cell.column.Header === 'Job Id') {
+      return (
+        <td
+          {...cell.getCellProps()}
+          className="clusters-table-data"
+          onClick={() => handleDagIdSelection(composerSelected, cell.value)}
+        >
+          {cell.value}
+        </td>
+      );
+    } else if (cell.column.Header === 'Notebook name') {
       //console.log("cell.value", cell.value);
-       //const input_path = `${bucketName}/dataproc-notebooks/${cell.value}`;
-       //console.log("input path", input_path)
-    return (
-    <td {...cell.getCellProps()} className="clusters-table-data">
-      <button
-        className="download-button"
-        data-jobid={cell.value}
-        onClick={(e) => handleInputFileClick(e)}
-      >
-        Download
-      </button>
-    </td>
-  );
-}
-     else {
+      //const input_path = `${bucketName}/dataproc-notebooks/${cell.value}`;
+      //console.log("input path", input_path)
+      return (
+        <td {...cell.getCellProps()} className="clusters-table-data">
+          <button
+            className="download-button"
+            data-jobid={cell.value}
+            onClick={e => handleInputFileClick(e)}
+          >
+            Download
+          </button>
+        </td>
+      );
+    } else {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           {cell.render('Cell')}
@@ -245,45 +251,44 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   }, [composerSelected]);
   return (
     <div>
-        <div className="select-text-overlay-scheduler">
+      <div className="select-text-overlay-scheduler">
         <div className="create-scheduler-form-element">
           <Autocomplete
             options={composerList}
             value={composerSelected}
-            onChange={(_event, val) =>{
-              handleComposerSelected(val) 
-            }
-            }
+            onChange={(_event, val) => {
+              handleComposerSelected(val);
+            }}
             renderInput={params => (
               <TextField {...params} label="Environment*" />
             )}
           />
         </div>
-        </div>
-        <div className="notebook-templates-list-table-parent">
-          <TableData
-            getTableProps={getTableProps}
-            headerGroups={headerGroups}
-            getTableBodyProps={getTableBodyProps}
-            isLoading={isLoading}
-            rows={rows}
-            page={page}
-            prepareRow={prepareRow}
-            tableDataCondition={tableDataCondition}
-            fromPage="Notebook Scheduler"
-          />
-          <PaginationView
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            pageIndex={pageIndex}
-            allData={dagList}
-            previousPage={previousPage}
-            nextPage={nextPage}
-            canPreviousPage={canPreviousPage}
-            canNextPage={canNextPage}
-          /> 
-        </div>
       </div>
+      <div className="notebook-templates-list-table-parent">
+        <TableData
+          getTableProps={getTableProps}
+          headerGroups={headerGroups}
+          getTableBodyProps={getTableBodyProps}
+          isLoading={isLoading}
+          rows={rows}
+          page={page}
+          prepareRow={prepareRow}
+          tableDataCondition={tableDataCondition}
+          fromPage="Notebook Scheduler"
+        />
+        <PaginationView
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          pageIndex={pageIndex}
+          allData={dagList}
+          previousPage={previousPage}
+          nextPage={nextPage}
+          canPreviousPage={canPreviousPage}
+          canNextPage={canNextPage}
+        />
+      </div>
+    </div>
   );
 }
 export default listNotebookScheduler;
