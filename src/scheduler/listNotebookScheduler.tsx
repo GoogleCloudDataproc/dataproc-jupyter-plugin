@@ -39,7 +39,8 @@ function listNotebookScheduler({
   const [composerSelected, setComposerSelected] = useState('composer4');
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
-  const [bucketName, setBucketName] = useState('');
+  const [bucketName, setBucketName] = useState('')
+  const [schedulerStatus, setSchedulerStatus] = useState('active')
 
   const columns = React.useMemo(
     () => [
@@ -73,9 +74,49 @@ function listNotebookScheduler({
     }
   };
 
-  const handleUpdateScheduler = () => {};
+  const handleUpdateScheduler = async (data: string) => {
+    console.log('data in Update', data);
+    //schedulerStatus(data.status)
+    try {
+      const serviceURL = `update?composer=${composerSelected}&dag_id=${data}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      console.log(formattedResponse);
+      console.log('before', schedulerStatus);
+      if(formattedResponse.status == '0') 
+      console.log(formattedResponse.status)
+      setSchedulerStatus("Pause");
+      console.log('after', schedulerStatus);
 
-  const handleDeleteScheduler = () => {};
+      listDagInfoAPI();
+    } catch (error) {
+      DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
+      console.error('Error in Update api', error);
+      toast.error('Failed to fetch Update api', toastifyCustomStyle);
+    }
+  };
+  const handleDeleteScheduler = async (data: string) => {
+  console.log('data in Delete', data);
+  try {
+    const serviceURL = `delete?composer=${composerSelected}&dag_id=${data}`;
+    const deleteResponse: any = await requestAPI(serviceURL);
+    console.log(deleteResponse);
+    listDagInfoAPI();
+    //if condition pending
+    toast.success(
+      `scheduler ${data} deleted successfully`,
+      toastifyCustomStyle
+    );
+  } catch (error) {
+    DataprocLoggingService.log('Error in Delete api', LOG_LEVEL.ERROR);
+    console.error('Error in Delete api', error);
+    toast.error(
+      `Failed to delete the ${data}`,
+      toastifyCustomStyle
+    );
+   
+  }
+};
+
 
   const handleInputFileClick = async (event: React.MouseEvent) => {
     // Prevent the default behavior of the anchor tag (e.g., navigating to a new page)
@@ -84,15 +125,22 @@ function listNotebookScheduler({
     console.log('jobid', jobid);
     try {
       const serviceURL = `download?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
-      console.log(serviceURL);
+      //console.log(serviceURL);
       const formattedResponse: any = await requestAPI(serviceURL);
-
-      // Process the API response as needed
-      console.log('API response for InputFilename:', formattedResponse);
+      if(formattedResponse.status === 0){
+      toast.success(
+        `${jobid} downloaded successfully`,
+        toastifyCustomStyle
+      );}
+      else{
+        toast.error(
+          `Failed to download the ${jobid}`,
+          toastifyCustomStyle
+        );
+      }
     } catch (error) {
       DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
       console.error('Error in Download api', error);
-      toast.error('Failed to fetch Download api', toastifyCustomStyle);
     }
   };
 
@@ -167,6 +215,7 @@ function listNotebookScheduler({
   );
 
   const renderActions = (data: any) => {
+    //console.log("data in render ",data)
     const isSchedulerActive = data.status === 'Active';
     return (
       <div className="actions-icon">
@@ -174,7 +223,7 @@ function listNotebookScheduler({
           role="button"
           className="icon-buttons-style"
           title={isSchedulerActive ? 'stop' : 'start'}
-          onClick={() => handleUpdateScheduler()}
+          onClick={e => handleUpdateScheduler(data.jobid)}
         >
           {isSchedulerActive ? (
             <iconStop.react
@@ -192,7 +241,7 @@ function listNotebookScheduler({
           role="button"
           className="icon-buttons-style"
           title="Delete"
-          onClick={() => handleDeleteScheduler()}
+          onClick={() => handleDeleteScheduler(data.jobid)}
         >
           <iconDelete.react
             tag="div"
@@ -221,9 +270,6 @@ function listNotebookScheduler({
         </td>
       );
     } else if (cell.column.Header === 'Notebook name') {
-      //console.log("cell.value", cell.value);
-      //const input_path = `${bucketName}/dataproc-notebooks/${cell.value}`;
-      //console.log("input path", input_path)
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           <button
