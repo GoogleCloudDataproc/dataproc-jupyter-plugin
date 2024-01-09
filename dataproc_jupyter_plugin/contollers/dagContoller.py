@@ -20,7 +20,7 @@ class Download(APIHandler):
         dag_id = self.get_argument("dag_id")
         bucket_name = self.get_argument("bucket_name")
         # path = 'gs://us-central1-composer4-fe041c11-bucket/dataproc-notebooks/testschedule1.ipynb'
-        cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input-notebooks/*' ~/Downloads"
+        cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input_notebooks/*' ~/Downloads"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
         print(process.returncode,_,output)
