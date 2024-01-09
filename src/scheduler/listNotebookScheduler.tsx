@@ -76,20 +76,29 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
 
   }
 
-  const handleInputFileClick = async (event: React.MouseEvent, inputPath: string) => {
+  const handleInputFileClick = async (event: React.MouseEvent) => {
     // Prevent the default behavior of the anchor tag (e.g., navigating to a new page)
     event.preventDefault();
-  
+    const jobid = event.currentTarget.getAttribute('data-jobid');
+    console.log("jobid",jobid)
     try {
-      const serviceURL = `download?dag_path=${inputPath}`;
-      const formattedResponse: any = await requestAPI(serviceURL);
+    const serviceURL = `download?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
+    console.log(serviceURL)
+    const formattedResponse: any = await requestAPI(serviceURL);
   
       // Process the API response as needed
       console.log('API response for InputFilename:', formattedResponse);
+
     } catch (error) {
-      // Handle API call errors
-      console.error('Error making API call:', error);
-      toast.error('Failed to fetch data', toastifyCustomStyle);
+      DataprocLoggingService.log(
+        'Error in Download api',
+        LOG_LEVEL.ERROR
+      );
+      console.error('Error in Download api', error);
+      toast.error(
+        'Failed to fetch Download api',
+        toastifyCustomStyle
+      );
     }
   };
   
@@ -97,7 +106,7 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
   const listComposersAPI = async () => {
     try {
       const formattedResponse: any = await requestAPI('composer');
-      console.log("Composerlistapi",formattedResponse)
+     // console.log("Composerlistapi",formattedResponse)
       let composerEnvironmentList: string[] = [];
       formattedResponse.forEach((data: any) => {
         composerEnvironmentList.push(data.name);
@@ -127,7 +136,7 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
         transformDagListData = formattedResponse[0].dags.map((dag:any) => {
          return {
             jobid: dag.dag_id,
-            notebookname: `${dag.dag_id}.py`,
+            notebookname: dag.dag_id,
             schedule: dag.timetable_description,
             status: dag.is_active ? 'Active' : 'Paused',
           };
@@ -205,16 +214,17 @@ function listNotebookScheduler({ app }: { app: JupyterFrontEnd }) {
       );
     }
     else if (cell.column.Header === 'Notebook name') {
-      console.log("cell.value", cell.value);
-       const input_path = `${bucketName}/dataproc-notebooks/${cell.value}`;
-       console.log("input path", input_path)
+      //console.log("cell.value", cell.value);
+       //const input_path = `${bucketName}/dataproc-notebooks/${cell.value}`;
+       //console.log("input path", input_path)
     return (
     <td {...cell.getCellProps()} className="clusters-table-data">
       <button
         className="download-button"
-        onClick={(e) => handleInputFileClick(e, input_path)}
+        data-jobid={cell.value}
+        onClick={(e) => handleInputFileClick(e)}
       >
-        Download {cell.render('Cell')}
+        Download
       </button>
     </td>
   );
