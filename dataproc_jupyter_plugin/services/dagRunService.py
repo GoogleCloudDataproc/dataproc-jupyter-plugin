@@ -12,7 +12,7 @@ class DagRunListService():
         # print(dataproc_jupyter_plugin.services.executorService.AIRFLOW_URI)
         
         # print(self.json())
-        airflow_uri = DagListService.getAirflowUri(composer_name,credentials)
+        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
