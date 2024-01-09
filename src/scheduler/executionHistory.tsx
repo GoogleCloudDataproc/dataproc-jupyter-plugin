@@ -22,13 +22,22 @@ import { PickersDayProps, PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import dayjs, { Dayjs } from 'dayjs';
 import ListDagRuns from './listDagRuns';
+import { LabIcon } from '@jupyterlab/ui-components';
+import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
+
+const iconLeftArrow = new LabIcon({
+  name: 'launcher:left-arrow-icon',
+  svgstr: LeftArrowIcon
+});
 
 const ExecutionHistory = ({
   composerName,
-  dagId
+  dagId,
+  handleBackButton
 }: {
   composerName: string;
   dagId: string;
+  handleBackButton: () => void;
 }): JSX.Element => {
   const [value, setValue] = useState<Dayjs | null>(dayjs('2024-01-08'));
 
@@ -64,12 +73,23 @@ const ExecutionHistory = ({
     );
   };
 
-  useEffect(() => {
-  }, []);
+  useEffect(() => {}, []);
 
   return (
     <div className="execution-history-parent">
-      <div className="create-job-scheduler-title">Execution History</div>
+      <div className="create-job-scheduler-title">
+        <div
+          role="button"
+          className="back-arrow-icon"
+          onClick={() => handleBackButton()}
+        >
+          <iconLeftArrow.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+        Execution History
+      </div>
       <div className="execution-history-main-wrapper">
         <div className="execution-history-left-wrapper">
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -81,7 +101,7 @@ const ExecutionHistory = ({
               }}
             />
           </LocalizationProvider>
-          <ListDagRuns composerName={composerName} dagId={dagId}/>
+          <ListDagRuns composerName={composerName} dagId={dagId} />
         </div>
         <div className="execution-history-right-wrapper"></div>
       </div>

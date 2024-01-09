@@ -21,10 +21,14 @@ const NotebookJobComponent = ({
     setDagId(dagId);
   };
 
+  const handleBackButton = () => {
+    setShowExecutionHistory(false);
+  }
+
   return (
     <>
       {showExecutionHistory ? (
-        <ExecutionHistory composerName={composerName} dagId={dagId} />
+        <ExecutionHistory composerName={composerName} dagId={dagId} handleBackButton={handleBackButton}/>
       ) : (
         <>
           <div className="clusters-list-overlay" role="tab">
