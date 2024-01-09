@@ -40,7 +40,7 @@ function listNotebookScheduler({
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
   const [bucketName, setBucketName] = useState('')
-  const [schedulerStatus, setSchedulerStatus] = useState('active')
+  //const [schedulerStatus] = useState('active')
 
   const columns = React.useMemo(
     () => [
@@ -74,20 +74,34 @@ function listNotebookScheduler({
     }
   };
 
-  const handleUpdateScheduler = async (data: string) => {
+  const handleUpdateScheduler = async (data: string, isSchedulerActive:boolean) => {
     console.log('data in Update', data);
     //schedulerStatus(data.status)
     try {
       const serviceURL = `update?composer=${composerSelected}&dag_id=${data}`;
       const formattedResponse: any = await requestAPI(serviceURL);
       console.log(formattedResponse);
-      console.log('before', schedulerStatus);
-      if(formattedResponse.status == '0') 
-      console.log(formattedResponse.status)
-      setSchedulerStatus("Pause");
-      console.log('after', schedulerStatus);
+      //console.log('before', schedulerStatus);
+      // if(formattedResponse.status == '0') 
+      // console.log(formattedResponse.status)
+      // setSchedulerStatus("Pause");
+      // console.log('after', schedulerStatus);
 
-      listDagInfoAPI();
+      setDagList(prevDagList => {
+        const updatedDagList = prevDagList.map(dag => {
+          if (dag.jobid === data) {
+            return {
+              ...dag,
+              status: isSchedulerActive ? 'Paused' : 'Active',
+            };
+          }
+          return dag;
+        });
+        console.log(updatedDagList)
+        return updatedDagList;
+     
+      });
+      //listDagInfoAPI();
     } catch (error) {
       DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
       console.error('Error in Update api', error);
@@ -223,7 +237,7 @@ function listNotebookScheduler({
           role="button"
           className="icon-buttons-style"
           title={isSchedulerActive ? 'stop' : 'start'}
-          onClick={e => handleUpdateScheduler(data.jobid)}
+          onClick={e => handleUpdateScheduler(data.jobid, isSchedulerActive)}
         >
           {isSchedulerActive ? (
             <iconStop.react
