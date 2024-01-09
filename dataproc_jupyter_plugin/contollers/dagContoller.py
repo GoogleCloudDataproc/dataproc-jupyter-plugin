@@ -2,8 +2,7 @@ import json
 import subprocess
 from jupyter_server.base.handlers import APIHandler
 from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.dagDeleteService import DagDeleteService
-from dataproc_jupyter_plugin.services.dagListService import DagListService
+from dataproc_jupyter_plugin.services.dagListService import DagListService, DagDeleteService, DagUpdateService
 # from google.cloud import storage
 
 class DagController(APIHandler):
@@ -17,9 +16,11 @@ class DagController(APIHandler):
 class Download(APIHandler):
     def get(self):
         print("---------Download---------")
-        gcs_path = self.get_argument("dag_path")
+        composer = self.get_argument("composer")
+        dag_id = self.get_argument("dag_id")
+        bucket_name = self.get_argument("bucket_name")
         # path = 'gs://us-central1-composer4-fe041c11-bucket/dataproc-notebooks/testschedule1.ipynb'
-        cmd = f"gsutil cp 'gs://{gcs_path}' ~/Downloads"
+        cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input-notebooks/' ~/Downloads"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
         print(process.returncode,_,output)
@@ -36,11 +37,23 @@ class Delete(APIHandler):
         dag_id = self.get_argument("dag_id")
         credentials = handlers.get_cached_credentials(self.log)
         delete_response = dag.delete_job(credentials,composer, dag_id)
-        self.finish(delete_response)
         if delete_response == 0: 
             self.finish({'status' : 0})
         else:
             self.finish(json.dumps(delete_response))
+
+class Update(APIHandler):
+    def get(self):
+        print("---------update---------")
+        dag = DagUpdateService()
+        composer = self.get_argument("composer")
+        dag_id = self.get_argument("dag_id")
+        credentials = handlers.get_cached_credentials(self.log)
+        update_response = dag.update_job(credentials,composer, dag_id)
+        if update_response == 0: 
+            self.finish({'status' : 0})
+        else:
+            self.finish(json.dumps(update_response))
         
 
 
