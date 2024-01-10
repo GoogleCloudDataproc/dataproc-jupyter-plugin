@@ -39,14 +39,14 @@ const ExecutionHistory = ({
   dagId: string;
   handleBackButton: () => void;
 }): JSX.Element => {
-  const [value, setValue] = useState<Dayjs | null>(dayjs('2024-01-08'));
+  const [value, setValue] = useState<Dayjs | null>(dayjs('2024-01-10'));
 
   const CustomDay = (props: PickersDayProps<Dayjs>) => {
     const { day } = props;
     const totalViewDates = day.date();
 
-    const isSuccessfulExecution = [1, 2, 15].includes(totalViewDates);
-    const isFailureExecution = [11, 12].includes(totalViewDates);
+    const isSuccessfulExecution = [9, 10].includes(totalViewDates);
+    // const isFailureExecution = [11, 12].includes(totalViewDates);
     const isSelectedExecution = [value?.date()].includes(totalViewDates);
 
     return (
@@ -54,18 +54,22 @@ const ExecutionHistory = ({
         {...props}
         style={{
           borderRadius:
-            isSuccessfulExecution || isFailureExecution || isSelectedExecution
+            isSuccessfulExecution || 
+            // isFailureExecution || 
+            isSelectedExecution
               ? '50%'
               : 'none',
           backgroundColor: isSelectedExecution
             ? '#188038'
             : isSuccessfulExecution
             ? '#34A853'
-            : isFailureExecution
-            ? '#EA3323'
+            // : isFailureExecution
+            // ? '#EA3323'
             : 'transparent',
           color:
-            isSuccessfulExecution || isFailureExecution || isSelectedExecution
+            isSuccessfulExecution || 
+            // isFailureExecution || 
+            isSelectedExecution
               ? 'white'
               : 'inherit'
         }}
