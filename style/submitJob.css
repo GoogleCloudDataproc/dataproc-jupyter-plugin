@@ -155,13 +155,6 @@
   padding-right: 6px !important;
 }
 
-a {
-  color: var(--jp-ui-font-color0) !important;
-}
-
-a:hover {
-  color: var(--jp-ui-font-color0) !important;
-}
 
 .submit-job-cluster-message {
   font-style: normal;
