@@ -39,10 +39,20 @@ const ExecutionHistory = ({
   dagId: string;
   handleBackButton: () => void;
 }): JSX.Element => {
-  const [value, setValue] = useState<Dayjs | null>(dayjs('2024-01-10'));
+  const currentDate = new Date().toISOString().split('T')[0];
+  const [value, setValue] = useState<Dayjs | null>();
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const CustomDay = (props: PickersDayProps<Dayjs>) => {
-    const { day } = props;
+    const { day, isFirstVisibleCell, isLastVisibleCell } = props;
+    if (isFirstVisibleCell) {
+      setStartDate(new Date(day.toDate()).toISOString());
+    }
+    if (isLastVisibleCell) {
+      setEndDate(new Date(day.toDate()).toISOString());
+    }
+    
     const totalViewDates = day.date();
 
     const isSuccessfulExecution = [9, 10].includes(totalViewDates);
@@ -54,8 +64,8 @@ const ExecutionHistory = ({
         {...props}
         style={{
           borderRadius:
-            isSuccessfulExecution || 
-            // isFailureExecution || 
+            isSuccessfulExecution ||
+            // isFailureExecution ||
             isSelectedExecution
               ? '50%'
               : 'none',
@@ -63,12 +73,12 @@ const ExecutionHistory = ({
             ? '#188038'
             : isSuccessfulExecution
             ? '#34A853'
-            // : isFailureExecution
-            // ? '#EA3323'
-            : 'transparent',
+            : // : isFailureExecution
+              // ? '#EA3323'
+              'transparent',
           color:
-            isSuccessfulExecution || 
-            // isFailureExecution || 
+            isSuccessfulExecution ||
+            // isFailureExecution ||
             isSelectedExecution
               ? 'white'
               : 'inherit'
@@ -98,14 +108,23 @@ const ExecutionHistory = ({
         <div className="execution-history-left-wrapper">
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateCalendar
-              value={value}
+              // value={value}
+              referenceDate={dayjs(currentDate)}
               onChange={newValue => setValue(newValue)}
               slots={{
                 day: CustomDay
               }}
+              onMonthChange={() => CustomDay}
             />
           </LocalizationProvider>
-          <ListDagRuns composerName={composerName} dagId={dagId} />
+          {startDate !== '' && endDate !== '' && (
+            <ListDagRuns
+              composerName={composerName}
+              dagId={dagId}
+              startDate={startDate}
+              endDate={endDate}
+            />
+          )}
         </div>
         <div className="execution-history-right-wrapper"></div>
       </div>

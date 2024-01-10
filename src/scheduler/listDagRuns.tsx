@@ -8,10 +8,14 @@ import { SchedulerService } from './schedulerServices';
 
 const ListDagRuns = ({
   composerName,
-  dagId
+  dagId,
+  startDate,
+  endDate
 }: {
   composerName: string;
   dagId: string;
+  startDate: string;
+  endDate: string;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,6 +70,8 @@ const ListDagRuns = ({
     await SchedulerService.listDagRunsListService(
       composerName,
       dagId,
+      startDate,
+      endDate,
       setDagRunsList,
       setIsLoading
     );
@@ -73,7 +79,7 @@ const ListDagRuns = ({
 
   useEffect(() => {
     listDagRunsList();
-  }, []);
+  }, [startDate, endDate]);
 
   return (
     <div>
