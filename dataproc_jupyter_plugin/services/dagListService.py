@@ -80,7 +80,7 @@ class DagDeleteService():
             return {"error": str(e)}
     
 class DagUpdateService():
-    def update_job(self, credentials, composer_name, dag_id):
+    def update_job(self, credentials, composer_name, dag_id, status):
         print('-----update job------')
         airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
@@ -94,7 +94,10 @@ class DagUpdateService():
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}'
             }
-            data = {"is_paused": True}
+            if(status == 'true'):
+                data = {"is_paused": False}
+            else:
+                data = {"is_paused": True}
             response = requests.patch(api_endpoint,json=data,headers=headers)
             if response.status_code == 200:
                 print(response)
