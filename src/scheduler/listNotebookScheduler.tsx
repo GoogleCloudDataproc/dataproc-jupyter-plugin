@@ -13,6 +13,7 @@ import deleteIcon from '../../style/icons/delete_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import startIcon from '../../style/icons/start_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
+import downloadIcon from '../../style/icons/download_icon.svg';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -26,6 +27,11 @@ const iconStop = new LabIcon({
   name: 'launcher:stop-icon',
   svgstr: stopIcon
 });
+
+const iconDownload =new LabIcon({
+  name:'launcher:download-icon',
+  svgstr:downloadIcon
+})
 
 function listNotebookScheduler({
   app,
@@ -101,7 +107,7 @@ function listNotebookScheduler({
         return updatedDagList;
      
       });
-      //listDagInfoAPI();
+      listDagInfoAPI();
     } catch (error) {
       DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
       console.error('Error in Update api', error);
@@ -287,11 +293,17 @@ function listNotebookScheduler({
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           <button
-            className="download-button"
-            data-jobid={cell.value}
-            onClick={e => handleInputFileClick(e)}
+          role="button"
+          className="icon-buttons-style"
+          title="Download"
+          data-jobid={cell.value}
+          onClick={e => handleInputFileClick(e)}
           >
-            Download
+            <iconDownload.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+            
+          />
           </button>
         </td>
       );
