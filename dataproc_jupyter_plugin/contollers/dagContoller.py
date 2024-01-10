@@ -50,7 +50,7 @@ class Update(APIHandler):
         dag_id = self.get_argument("dag_id")
         status = self.get_argument('status')
         credentials = handlers.get_cached_credentials(self.log)
-        update_response = dag.update_job(credentials,composer, dag_id)
+        update_response = dag.update_job(credentials,composer, dag_id,status)
         if update_response == 0: 
             self.finish({'status' : 0})
         else:
