@@ -31,7 +31,7 @@ from dataproc_jupyter_plugin.contollers.clusterController import ClusterControll
 # from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
 from dataproc_jupyter_plugin.contollers.composerController import ComposerController
 from dataproc_jupyter_plugin.contollers.dagContoller import DagController, Delete, Download, Update
-from dataproc_jupyter_plugin.contollers.dagRunController import DagRunController
+from dataproc_jupyter_plugin.contollers.dagRunController import DagRunController, DagRunTaskController
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
 
@@ -264,7 +264,11 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "dagRun")
-    handlers = [(route_pattern, DagRunController)]
+    route_pattern_dag_task = url_path_join(base_url, "dataproc-plugin", "dagRunTask")
+    handlers = [
+    (route_pattern, DagRunController),
+    (route_pattern_dag_task, DagRunTaskController)
+    ]
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "clusterList")
@@ -290,5 +294,10 @@ def setup_handlers(web_app):
     (route_pattern_patch, Update)
     ]
     web_app.add_handlers(host_pattern, handlers)
+
+
+# https://b56b51577bc548479916c7b35fb7dd23-dot-us-central1.composer.googleusercontent.com/api/v1/dags/airflow_monitoring/dagRuns/scheduled__2024-01-10T12:00:00 00:00/taskInstances
+
+# https://b56b51577bc548479916c7b35fb7dd23-dot-us-central1.composer.googleusercontent.com/api/v1/dags/airflow_monitoring/dagRuns/scheduled__2024-01-10T12:00:00+00:00/taskInstances
 
 
