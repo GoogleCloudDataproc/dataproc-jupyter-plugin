@@ -3,17 +3,18 @@ import { useTable, usePagination } from 'react-table';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
-import { requestAPI } from '../handler/handler';
+//import { requestAPI } from '../handler/handler';
 import { JupyterFrontEnd } from '@jupyterlab/application';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import { toast } from 'react-toastify';
-import { toastifyCustomStyle } from '../utils/utils';
+//import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+//import { toast } from 'react-toastify';
+//import { toastifyCustomStyle } from '../utils/utils';
 import { Autocomplete, TextField } from '@mui/material';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import startIcon from '../../style/icons/start_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import downloadIcon from '../../style/icons/download_icon.svg';
+import { SchedulerService } from './schedulerServices';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -46,6 +47,7 @@ function listNotebookScheduler({
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
   const [bucketName, setBucketName] = useState('')
+  //const [is_status_paused, setIs_status_paused]=useState(false)
   //const [schedulerStatus] = useState('active')
 
   const columns = React.useMemo(
@@ -80,139 +82,48 @@ function listNotebookScheduler({
     }
   };
 
-  const handleUpdateScheduler = async (data: string, isSchedulerActive:boolean) => {
-    console.log('data in Update', data);
-    //schedulerStatus(data.status)
-    try {
-      const serviceURL = `update?composer=${composerSelected}&dag_id=${data}`;
-      const formattedResponse: any = await requestAPI(serviceURL);
-      console.log(formattedResponse);
-      //console.log('before', schedulerStatus);
-      // if(formattedResponse.status == '0') 
-      // console.log(formattedResponse.status)
-      // setSchedulerStatus("Pause");
-      // console.log('after', schedulerStatus);
-
-      setDagList(prevDagList => {
-        const updatedDagList = prevDagList.map(dag => {
-          if (dag.jobid === data) {
-            return {
-              ...dag,
-              status: isSchedulerActive ? 'Paused' : 'Active',
-            };
-          }
-          return dag;
-        });
-        console.log(updatedDagList)
-        return updatedDagList;
+  const handleUpdateScheduler = async (dag_id: string, is_status_paused:boolean) => {
+    await SchedulerService.handleUpdateSchedulerAPIService(composerSelected,dag_id,is_status_paused,setDagList,setIsLoading,setBucketName)
+    // try {
+    //   const serviceURL = `update?composer=${composerSelected}&dag_id=${dag_id}`;
+    //   const formattedResponse: any = await requestAPI(serviceURL);
+    //   console.log(formattedResponse);
+    //   setDagList(prevDagList => {
+    //     const updatedDagList = prevDagList.map(dag => {
+    //       if (dag.jobid === data) {
+    //         return {
+    //           ...dag,
+    //           status: isSchedulerActive ? 'Paused' : 'Active',
+    //         };
+    //       }
+    //       return dag;
+    //     });
+    //     console.log(updatedDagList)
+    //     return updatedDagList;
      
-      });
-      listDagInfoAPI();
-    } catch (error) {
-      DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
-      console.error('Error in Update api', error);
-      toast.error('Failed to fetch Update api', toastifyCustomStyle);
-    }
+    //   });
+    //   listDagInfoAPI();
+    // } catch (error) {
+    //   DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
+    //   console.error('Error in Update api', error);
+    //   toast.error('Failed to fetch Update api', toastifyCustomStyle);
+    // }
   };
-  const handleDeleteScheduler = async (data: string) => {
-  console.log('data in Delete', data);
-  try {
-    const serviceURL = `delete?composer=${composerSelected}&dag_id=${data}`;
-    const deleteResponse: any = await requestAPI(serviceURL);
-    console.log(deleteResponse);
-    listDagInfoAPI();
-    //if condition pending
-    toast.success(
-      `scheduler ${data} deleted successfully`,
-      toastifyCustomStyle
-    );
-  } catch (error) {
-    DataprocLoggingService.log('Error in Delete api', LOG_LEVEL.ERROR);
-    console.error('Error in Delete api', error);
-    toast.error(
-      `Failed to delete the ${data}`,
-      toastifyCustomStyle
-    );
-   
-  }
-};
+  const handleDeleteScheduler = async (dag_id: string) => {
+    await SchedulerService.handleDeleteSchedulerAPIService(composerSelected,dag_id,setDagList,setIsLoading,setBucketName)
+  };
 
-
-  const handleInputFileClick = async (event: React.MouseEvent) => {
-    // Prevent the default behavior of the anchor tag (e.g., navigating to a new page)
-    event.preventDefault();
-    const jobid = event.currentTarget.getAttribute('data-jobid');
-    console.log('jobid', jobid);
-    try {
-      const serviceURL = `download?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
-      //console.log(serviceURL);
-      const formattedResponse: any = await requestAPI(serviceURL);
-      if(formattedResponse.status === 0){
-      toast.success(
-        `${jobid} downloaded successfully`,
-        toastifyCustomStyle
-      );}
-      else{
-        toast.error(
-          `Failed to download the ${jobid}`,
-          toastifyCustomStyle
-        );
-      }
-    } catch (error) {
-      DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
-      console.error('Error in Download api', error);
-    }
+  const handleDownloadScheduler = async (event: React.MouseEvent) => {
+    const jobid = event.currentTarget.getAttribute('data-jobid')!;
+    await SchedulerService.handleDownloadSchedulerAPIService(composerSelected,jobid,bucketName)
   };
 
   const listComposersAPI = async () => {
-    try {
-      const formattedResponse: any = await requestAPI('composer');
-      // console.log("Composerlistapi",formattedResponse)
-      let composerEnvironmentList: string[] = [];
-      formattedResponse.forEach((data: any) => {
-        composerEnvironmentList.push(data.name);
-      });
-
-      setComposerList(composerEnvironmentList);
-    } catch (error) {
-      DataprocLoggingService.log(
-        'Error listing composer environment list',
-        LOG_LEVEL.ERROR
-      );
-      console.error('Error listing composer environment list', error);
-      toast.error(
-        'Failed to fetch composer environment list',
-        toastifyCustomStyle
-      );
-    }
+    await SchedulerService.listComposersAPIService(setComposerList);
   };
 
   const listDagInfoAPI = async () => {
-    try {
-      const serviceURL = `dagList?composer=${composerSelected}`;
-      const formattedResponse: any = await requestAPI(serviceURL);
-      let transformDagListData = [];
-      if (formattedResponse && formattedResponse[0].dags) {
-        transformDagListData = formattedResponse[0].dags.map((dag: any) => {
-          return {
-            jobid: dag.dag_id,
-            notebookname: dag.dag_id,
-            schedule: dag.timetable_description,
-            status: dag.is_active ? 'Active' : 'Paused'
-          };
-        });
-      }
-      setDagList(transformDagListData);
-      setIsLoading(false);
-      setBucketName(formattedResponse[1]);
-    } catch (error) {
-      DataprocLoggingService.log(
-        'Error listing dag Scheduler list',
-        LOG_LEVEL.ERROR
-      );
-      console.error('Error listing dag Scheduler list', error);
-      toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
-    }
+    await SchedulerService.listDagInfoAPIService(setDagList,setIsLoading,setBucketName, composerSelected)
   };
 
   const {
@@ -236,25 +147,27 @@ function listNotebookScheduler({
 
   const renderActions = (data: any) => {
     //console.log("data in render ",data)
-    const isSchedulerActive = data.status === 'Active';
+    const is_status_paused = data.status === 'Paused';
+    // console.log("is_status_paused",is_status_paused)
+    //console.log("isschedulerActive in data.status in render",data.status)
     return (
       <div className="actions-icon">
         <div
           role="button"
           className="icon-buttons-style"
-          title={isSchedulerActive ? 'stop' : 'start'}
-          onClick={e => handleUpdateScheduler(data.jobid, isSchedulerActive)}
+          title={is_status_paused ? 'start' : 'stop'}
+          onClick={e => handleUpdateScheduler(data.jobid, is_status_paused)}
         >
-          {isSchedulerActive ? (
-            <iconStop.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
+          {is_status_paused ? (
+           <iconStart.react
+           tag="div"
+           className="icon-white logo-alignment-style"
+         />
           ) : (
-            <iconStart.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
+            <iconStop.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
           )}
         </div>
         <div
@@ -292,19 +205,19 @@ function listNotebookScheduler({
     } else if (cell.column.Header === 'Notebook name') {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
-          <button
+          <div
           role="button"
           className="icon-buttons-style"
           title="Download"
           data-jobid={cell.value}
-          onClick={e => handleInputFileClick(e)}
+          onClick={e => handleDownloadScheduler(e)}
           >
             <iconDownload.react
             tag="div"
             className="icon-white logo-alignment-style"
             
           />
-          </button>
+          </div>
         </td>
       );
     } else {

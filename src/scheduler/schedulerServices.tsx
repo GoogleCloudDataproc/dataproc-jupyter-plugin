@@ -213,4 +213,120 @@ export class SchedulerService {
       console.error(`Error on GET credentials.\n${reason}`);
     }
   };
+  static listDagInfoAPIService = async(
+    setDagList:(value :string[]) => void,
+    setIsLoading:(value :boolean)=>void,
+    setBucketName:(value: string)=> void,
+    composerSelected: string,
+  ) => {
+    try {
+      const serviceURL = `dagList?composer=${composerSelected}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      let transformDagListData = [];
+      if (formattedResponse && formattedResponse[0].dags) {
+        transformDagListData = formattedResponse[0].dags.map((dag: any) => {
+          return {
+            jobid: dag.dag_id,
+            notebookname: dag.dag_id,
+            schedule: dag.timetable_description,
+            status: dag.is_paused ? 'Paused' : 'Active',// suggested to implement on pause here
+            //is_status_paused: dag.is_paused ? true :false
+          };
+        });
+      }
+      console.log(" is paused", formattedResponse[0]);
+      //setIsStatusPaused();
+      setDagList(transformDagListData);
+      setIsLoading(false);
+      setBucketName(formattedResponse[1]);
+    } catch (error) {
+      DataprocLoggingService.log(
+        'Error listing dag Scheduler list',
+        LOG_LEVEL.ERROR
+      );
+      console.error('Error listing dag Scheduler list', error);
+      toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
+    }
+
+  };
+  static handleDownloadSchedulerAPIService = async(
+    composerSelected: string,
+    jobid:string,
+    bucketName:string,
+  ) => {
+    try {
+      const serviceURL = `download?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      if(formattedResponse.status === 0){
+      toast.success(
+        `${jobid} downloaded successfully`,
+        toastifyCustomStyle
+      );}
+      else{
+        toast.error(
+          `Failed to download the ${jobid}`,
+          toastifyCustomStyle
+        );
+      }
+    } catch (error) {
+      DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
+      console.error('Error in Download api', error);
+    }
+  };
+  static handleDeleteSchedulerAPIService =async (
+    composerSelected: string,
+    dag_id:string,
+    setDagList:(value :string[]) => void,
+    setIsLoading:(value :boolean)=>void,
+    setBucketName:(value: string)=> void,
+  ) => {
+    try {
+      const serviceURL = `delete?composer=${composerSelected}&dag_id=${dag_id}`;
+      const deleteResponse: any = await requestAPI(serviceURL);
+      console.log(deleteResponse);
+      await SchedulerService.listDagInfoAPIService(
+        setDagList, setIsLoading, setBucketName, composerSelected
+      );
+      //if condition pending
+      toast.success(
+        `scheduler ${dag_id} deleted successfully`,
+        toastifyCustomStyle
+      );
+    } catch (error) {
+      DataprocLoggingService.log('Error in Delete api', LOG_LEVEL.ERROR);
+      console.error('Error in Delete api', error);
+      toast.error(
+        `Failed to delete the ${dag_id}`,
+        toastifyCustomStyle
+     );
+    } 
+  }
+  static handleUpdateSchedulerAPIService=async (
+    composerSelected: string,
+    dag_id:string,
+    is_status_paused:boolean,
+    setDagList:(value :string[]) => void,
+    setIsLoading:(value :boolean)=>void,
+    setBucketName:(value: string)=> void,
+    ) => {
+    try {
+      const serviceURL = `update?composer=${composerSelected}&dag_id=${dag_id}&status=${is_status_paused}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      // if(formattedResponse && formattedResponse.status === 0){
+      console.log("status updated here",formattedResponse);
+      toast.success(
+        `scheduler ${dag_id} updated successfully`,
+        toastifyCustomStyle
+      );
+      await SchedulerService.listDagInfoAPIService(
+        setDagList, setIsLoading, setBucketName, composerSelected
+      );
+      // }
+    } catch (error) {
+      DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
+      console.error('Error in Update api', error);
+      toast.error('Failed to fetch Update api', toastifyCustomStyle);
+    }
+    
+  }
 }
