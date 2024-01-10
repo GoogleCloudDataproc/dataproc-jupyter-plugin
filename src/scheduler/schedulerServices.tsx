@@ -329,4 +329,36 @@ export class SchedulerService {
     }
     
   }
+  static listDagTaskInstancesListService = async (
+    composerName: string,
+    dagId: string,
+    dagRunId: string,
+    setDagTaskInstancesList: (value: any) => void,
+    setIsLoading: (value: boolean) => void
+  ) => {
+    setIsLoading(true)
+    try {
+      dagRunId = encodeURIComponent(dagRunId)
+      console.log(dagRunId)
+      const data: any = await requestAPI(
+        `dagRunTask?composer=${composerName}&dag_id=${dagId}&dag_run_id=${dagRunId}`
+      );
+      console.log(data);
+      let transformDagRunTaskInstanceListData = [];
+      transformDagRunTaskInstanceListData = data.task_instances.map((dagRunTask: any) => {
+        return {
+          tryNumber: dagRunTask.try_number,
+          // dagRunId: dagRunTask.dag_run_id,
+          duration: dagRunTask.duration,
+          state: dagRunTask.state,
+          date: new Date(dagRunTask.execution_date).toDateString(),
+          time: new Date(dagRunTask.execution_date).toTimeString().split(' ')[0]
+        };
+      });
+      setDagTaskInstancesList(transformDagRunTaskInstanceListData);
+      setIsLoading(false);
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
 }

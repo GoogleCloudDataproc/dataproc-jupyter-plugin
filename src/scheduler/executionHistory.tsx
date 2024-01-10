@@ -24,6 +24,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import ListDagRuns from './listDagRuns';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
+import ListDagTaskInstances from './listDagTaskInstances';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -39,6 +40,7 @@ const ExecutionHistory = ({
   dagId: string;
   handleBackButton: () => void;
 }): JSX.Element => {
+  const [dagRunId] = useState("scheduled__2024-01-10T12:00:00+00:00");
   const currentDate = new Date().toISOString().split('T')[0];
   const [value, setValue] = useState<Dayjs | null>();
   const [startDate, setStartDate] = useState('');
@@ -52,7 +54,7 @@ const ExecutionHistory = ({
     if (isLastVisibleCell) {
       setEndDate(new Date(day.toDate()).toISOString());
     }
-    
+
     const totalViewDates = day.date();
 
     const isSuccessfulExecution = [9, 10].includes(totalViewDates);
@@ -126,7 +128,13 @@ const ExecutionHistory = ({
             />
           )}
         </div>
-        <div className="execution-history-right-wrapper"></div>
+        <div className="execution-history-right-wrapper">
+          <ListDagTaskInstances
+            composerName={composerName}
+            dagId={dagId}
+            dagRunId={dagRunId}
+          />
+        </div>
       </div>
     </div>
   );
