@@ -3,11 +3,7 @@ import { useTable, usePagination } from 'react-table';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
-//import { requestAPI } from '../handler/handler';
 import { JupyterFrontEnd } from '@jupyterlab/application';
-//import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-//import { toast } from 'react-toastify';
-//import { toastifyCustomStyle } from '../utils/utils';
 import { Autocomplete, TextField } from '@mui/material';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -47,8 +43,6 @@ function listNotebookScheduler({
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
   const [bucketName, setBucketName] = useState('')
-  //const [is_status_paused, setIs_status_paused]=useState(false)
-  //const [schedulerStatus] = useState('active')
 
   const columns = React.useMemo(
     () => [
@@ -84,30 +78,6 @@ function listNotebookScheduler({
 
   const handleUpdateScheduler = async (dag_id: string, is_status_paused:boolean) => {
     await SchedulerService.handleUpdateSchedulerAPIService(composerSelected,dag_id,is_status_paused,setDagList,setIsLoading,setBucketName)
-    // try {
-    //   const serviceURL = `update?composer=${composerSelected}&dag_id=${dag_id}`;
-    //   const formattedResponse: any = await requestAPI(serviceURL);
-    //   console.log(formattedResponse);
-    //   setDagList(prevDagList => {
-    //     const updatedDagList = prevDagList.map(dag => {
-    //       if (dag.jobid === data) {
-    //         return {
-    //           ...dag,
-    //           status: isSchedulerActive ? 'Paused' : 'Active',
-    //         };
-    //       }
-    //       return dag;
-    //     });
-    //     console.log(updatedDagList)
-    //     return updatedDagList;
-     
-    //   });
-    //   listDagInfoAPI();
-    // } catch (error) {
-    //   DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
-    //   console.error('Error in Update api', error);
-    //   toast.error('Failed to fetch Update api', toastifyCustomStyle);
-    // }
   };
   const handleDeleteScheduler = async (dag_id: string) => {
     await SchedulerService.handleDeleteSchedulerAPIService(composerSelected,dag_id,setDagList,setIsLoading,setBucketName)
@@ -146,10 +116,7 @@ function listNotebookScheduler({
   );
 
   const renderActions = (data: any) => {
-    //console.log("data in render ",data)
     const is_status_paused = data.status === 'Paused';
-    // console.log("is_status_paused",is_status_paused)
-    //console.log("isschedulerActive in data.status in render",data.status)
     return (
       <div className="actions-icon">
         <div

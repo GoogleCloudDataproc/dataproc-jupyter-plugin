@@ -219,6 +219,7 @@ export class SchedulerService {
     setBucketName:(value: string)=> void,
     composerSelected: string,
   ) => {
+    setIsLoading(true)
     try {
       const serviceURL = `dagList?composer=${composerSelected}`;
       const formattedResponse: any = await requestAPI(serviceURL);
@@ -229,13 +230,10 @@ export class SchedulerService {
             jobid: dag.dag_id,
             notebookname: dag.dag_id,
             schedule: dag.timetable_description,
-            status: dag.is_paused ? 'Paused' : 'Active',// suggested to implement on pause here
-            //is_status_paused: dag.is_paused ? true :false
+            status: dag.is_paused ? 'Paused' : 'Active',
           };
         });
       }
-      console.log(" is paused", formattedResponse[0]);
-      //setIsStatusPaused();
       setDagList(transformDagListData);
       setIsLoading(false);
       setBucketName(formattedResponse[1]);
@@ -283,15 +281,15 @@ export class SchedulerService {
     try {
       const serviceURL = `delete?composer=${composerSelected}&dag_id=${dag_id}`;
       const deleteResponse: any = await requestAPI(serviceURL);
-      console.log(deleteResponse);
+      if(deleteResponse){
       await SchedulerService.listDagInfoAPIService(
         setDagList, setIsLoading, setBucketName, composerSelected
       );
-      //if condition pending
       toast.success(
         `scheduler ${dag_id} deleted successfully`,
         toastifyCustomStyle
       );
+      }
     } catch (error) {
       DataprocLoggingService.log('Error in Delete api', LOG_LEVEL.ERROR);
       console.error('Error in Delete api', error);
@@ -312,8 +310,7 @@ export class SchedulerService {
     try {
       const serviceURL = `update?composer=${composerSelected}&dag_id=${dag_id}&status=${is_status_paused}`;
       const formattedResponse: any = await requestAPI(serviceURL);
-      // if(formattedResponse && formattedResponse.status === 0){
-      console.log("status updated here",formattedResponse);
+      if(formattedResponse && formattedResponse.status === 0){
       toast.success(
         `scheduler ${dag_id} updated successfully`,
         toastifyCustomStyle
@@ -321,7 +318,7 @@ export class SchedulerService {
       await SchedulerService.listDagInfoAPIService(
         setDagList, setIsLoading, setBucketName, composerSelected
       );
-      // }
+      }
     } catch (error) {
       DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
       console.error('Error in Update api', error);
