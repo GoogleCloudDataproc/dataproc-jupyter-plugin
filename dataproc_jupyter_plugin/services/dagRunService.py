@@ -7,7 +7,7 @@ from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 
 
 class DagRunListService():
-    def list_jobs(self, credentials, composer_name, dag_id):
+    def list_jobs(self, credentials, composer_name, dag_id, start_date, end_date):
         print('-----List jobs------')
         # print(dataproc_jupyter_plugin.services.executorService.AIRFLOW_URI)
         
@@ -20,8 +20,7 @@ class DagRunListService():
         # environments = []
         
         try:
-            api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns"
-
+            api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns?execution_date_gte={start_date}&execution_date_lte={end_date}"
             headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}'

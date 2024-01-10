@@ -191,12 +191,15 @@ export class SchedulerService {
   static listDagRunsListService = async (
     composerName: string,
     dagId: string,
+    startDate: string,
+    endDate: string,
     setDagRunsList: (value: any) => void,
     setIsLoading: (value: boolean) => void
   ) => {
+    setIsLoading(true)
     try {
       const data: any = await requestAPI(
-        `dagRun?composer=${composerName}&dag_id=${dagId}`
+        `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${startDate}&end_date=${endDate}`
       );
       console.log(data);
       let transformDagRunListData = [];
