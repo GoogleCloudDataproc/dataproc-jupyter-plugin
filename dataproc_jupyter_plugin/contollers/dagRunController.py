@@ -20,7 +20,6 @@ class DagRunTaskController(APIHandler):
         composer_name = self.get_argument("composer")
         dag_id = self.get_argument("dag_id")
         dag_run_id = self.get_argument("dag_run_id")
-        print(dag_run_id)
         credentials = handlers.get_cached_credentials(self.log)
         dagRun_list = dagRun.list_jobs(credentials,composer_name,dag_id,dag_run_id)
         self.finish(json.dumps(dagRun_list))

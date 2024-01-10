@@ -295,9 +295,3 @@ def setup_handlers(web_app):
     ]
     web_app.add_handlers(host_pattern, handlers)
 
-
-# https://b56b51577bc548479916c7b35fb7dd23-dot-us-central1.composer.googleusercontent.com/api/v1/dags/airflow_monitoring/dagRuns/scheduled__2024-01-10T12:00:00 00:00/taskInstances
-
-# https://b56b51577bc548479916c7b35fb7dd23-dot-us-central1.composer.googleusercontent.com/api/v1/dags/airflow_monitoring/dagRuns/scheduled__2024-01-10T12:00:00+00:00/taskInstances
-
-

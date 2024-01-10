@@ -49,7 +49,6 @@ class DagRunTaskListService():
 
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances"
-            print(api_endpoint)
             headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}'
