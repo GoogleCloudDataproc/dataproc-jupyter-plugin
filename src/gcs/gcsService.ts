@@ -95,7 +95,7 @@ export class GcsService {
         'X-Goog-User-Project': credentials.project_id || ''
       }
     });
-    return (await response.json());
+    return (await response.json()) as storage_v1.Schema$Buckets;
   }
 
   /**
