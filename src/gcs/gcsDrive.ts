@@ -3,6 +3,9 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { GcsService } from './gcsService';
 
 import { showDialog, Dialog } from '@jupyterlab/apputils';
+import { toast } from 'react-toastify';
+import { toastifyCustomStyle } from '../utils/utils';
+import { storage_v1 } from '@googleapis/storage';
 
 // Template for an empty Directory IModel.
 const DIRECTORY_IMODEL: Contents.IModel = {
@@ -63,10 +66,13 @@ export class GCSDrive implements Contents.IDrive {
     if (!content) {
       throw 'Error Listing Buckets';
     }
+    if (content?.error?.code) {
+      toast.error(content?.error?.message, toastifyCustomStyle);
+    }
     return {
       ...DIRECTORY_IMODEL,
       content:
-        content.items?.map(bucket => ({
+        content.items?.map((bucket: storage_v1.Schema$Object) => ({
           ...DIRECTORY_IMODEL,
           path: bucket.name,
           name: bucket.name,
