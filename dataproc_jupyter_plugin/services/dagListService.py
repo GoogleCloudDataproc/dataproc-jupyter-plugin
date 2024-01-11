@@ -75,7 +75,7 @@ class DagDeleteService():
 
                 return 0
             else:
-                return resp
+                return 1
         except Exception as e:
             return {"error": str(e)}
     

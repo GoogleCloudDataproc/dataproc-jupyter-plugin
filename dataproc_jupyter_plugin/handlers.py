@@ -51,78 +51,80 @@ credentials_cache = None
 
 def get_cached_credentials(log):
     global credentials_cache
-
     try:
-        cmd = "gcloud config config-helper --format=json"
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        output, error = process.communicate()
-        if process.returncode == 0:
-            config_data = json.loads(output)
-            credentials = {
-                    'project_id': config_data['configuration']['properties']['core']['project'],
-                    'region_id': config_data['configuration']['properties']['compute']['region'],
-                    'access_token': config_data['credential']['access_token']
-                }
-
-            token_expiry = config_data['credential']['token_expiry']
-            utc_datetime = datetime.datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
-            current_utc_datetime = datetime.datetime.utcnow()
-            expiry_timedelta = utc_datetime - current_utc_datetime
-            expiry_seconds = expiry_timedelta.total_seconds()
-            if expiry_seconds > 1000:
-                ttl_seconds = 1000
-            else:
-                ttl_seconds = expiry_seconds
-            credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
-            credentials_cache['credentials'] = credentials
-            return credentials
-        else:
-            cmd = "gcloud config get-value account"
+        if credentials_cache is None or 'credentials' not in credentials_cache:
+            cmd = "gcloud config config-helper --format=json"
             process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             output, error = process.communicate()
-            if output == '':
-                cmd = "gcloud config get-value project"
-                process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                project, error = process.communicate()
-                if project == '':
-                        credentials = {
-                    'project_id': '',
-                    'region_id': '',
-                    'access_token': '',
-                    'config_error': 1,
-                    'login_error': 0
+            if process.returncode == 0:
+                config_data = json.loads(output)
+                credentials = {
+                        'project_id': config_data['configuration']['properties']['core']['project'],
+                        'region_id': config_data['configuration']['properties']['compute']['region'],
+                        'access_token': config_data['credential']['access_token']
                     }
+
+                token_expiry = config_data['credential']['token_expiry']
+                utc_datetime = datetime.datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
+                current_utc_datetime = datetime.datetime.utcnow()
+                expiry_timedelta = utc_datetime - current_utc_datetime
+                expiry_seconds = expiry_timedelta.total_seconds()
+                if expiry_seconds > 1000:
+                    ttl_seconds = 1000
                 else:
-                    cmd = "gcloud config get-value compute/region"
+                    ttl_seconds = expiry_seconds
+                credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
+                credentials_cache['credentials'] = credentials
+                return credentials
+            else:
+                cmd = "gcloud config get-value account"
+                process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                output, error = process.communicate()
+                if output == '':
+                    cmd = "gcloud config get-value project"
                     process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    region, error = process.communicate()
-                    if region == '':
-                        credentials = {
-                            'project_id': '',
-                            'region_id': '',
-                            'access_token': '',
-                            'config_error': 1,
-                            'login_error': 0
+                    project, error = process.communicate()
+                    if project == '':
+                            credentials = {
+                        'project_id': '',
+                        'region_id': '',
+                        'access_token': '',
+                        'config_error': 1,
+                        'login_error': 0
                         }
                     else:
-                        credentials = {
-                            'project_id': '',
-                            'region_id': '',
-                            'access_token': '',
-                            'config_error': 0,
-                            'login_error': 1
+                        cmd = "gcloud config get-value compute/region"
+                        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        region, error = process.communicate()
+                        if region == '':
+                            credentials = {
+                                'project_id': '',
+                                'region_id': '',
+                                'access_token': '',
+                                'config_error': 1,
+                                'login_error': 0
                             }
-            else:
-                credentials = {
-                    'project_id': '',
-                    'region_id': '',
-                    'access_token': '',
-                    'config_error': 1,
-                    'login_error': 0
-                    }
-            credentials_cache = TTLCache(maxsize=1, ttl=5)
-            credentials_cache['credentials'] = credentials
-            return credentials
+                        else:
+                            credentials = {
+                                'project_id': '',
+                                'region_id': '',
+                                'access_token': '',
+                                'config_error': 0,
+                                'login_error': 1
+                                }
+                else:
+                    credentials = {
+                        'project_id': '',
+                        'region_id': '',
+                        'access_token': '',
+                        'config_error': 1,
+                        'login_error': 0
+                        }
+                credentials_cache = TTLCache(maxsize=1, ttl=5)
+                credentials_cache['credentials'] = credentials
+                return credentials
+        else:
+            return credentials_cache['credentials']
     except Exception:
         log.exception(f"Error fetching credentials from gcloud")
         credentials = {
@@ -132,6 +134,7 @@ def get_cached_credentials(log):
         credentials_cache = TTLCache(maxsize=1, ttl=2)
         credentials_cache['credentials'] = credentials
         return credentials
+
 
 class RouteHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
@@ -152,7 +155,6 @@ class RouteHandler(APIHandler):
             self.log.exception(f"Error handling credential request")
             cached_credentials = get_cached_credentials(self.log)
             self.finish(json.dumps(cached_credentials))
-
 
 class LoginHandler(APIHandler):
     @tornado.web.authenticated
