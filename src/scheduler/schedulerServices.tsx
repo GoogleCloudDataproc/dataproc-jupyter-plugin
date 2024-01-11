@@ -193,6 +193,7 @@ export class SchedulerService {
         body: JSON.stringify(payload),
         method: 'POST'
       });
+      toast.success(`Job scheduler successfully created`, toastifyCustomStyle);
       app.shell.activeWidget?.close();
       console.log(data);
     } catch (reason) {
