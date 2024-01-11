@@ -214,6 +214,7 @@ export class SchedulerService {
       let transformDagRunListData = [];
       transformDagRunListData = data.dag_runs.map((dagRun: any) => {
         return {
+          dagRunId: dagRun.dag_run_id,
           state: dagRun.state,
           date: new Date(dagRun.execution_date).toDateString(),
           time: new Date(dagRun.execution_date).toTimeString().split(' ')[0]
@@ -349,11 +350,9 @@ export class SchedulerService {
     setIsLoading(true);
     try {
       dagRunId = encodeURIComponent(dagRunId);
-      console.log(dagRunId);
       const data: any = await requestAPI(
         `dagRunTask?composer=${composerName}&dag_id=${dagId}&dag_run_id=${dagRunId}`
       );
-      console.log(data);
       let transformDagRunTaskInstanceListData = [];
       transformDagRunTaskInstanceListData = data.task_instances.map(
         (dagRunTask: any) => {

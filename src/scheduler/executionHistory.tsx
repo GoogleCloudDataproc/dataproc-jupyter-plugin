@@ -40,13 +40,14 @@ const ExecutionHistory = ({
   dagId: string;
   handleBackButton: () => void;
 }): JSX.Element => {
-  const [dagRunId] = useState("scheduled__2024-01-10T12:00:00+00:00");
+  const [dagRunId, setDagRunId] = useState('');
   const currentDate = new Date().toISOString().split('T')[0];
   const [value, setValue] = useState<Dayjs | null>();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
   const CustomDay = (props: PickersDayProps<Dayjs>) => {
+    console.log("aaaaa", props)
     const { day, isFirstVisibleCell, isLastVisibleCell } = props;
     if (isFirstVisibleCell) {
       setStartDate(new Date(day.toDate()).toISOString());
@@ -93,10 +94,10 @@ const ExecutionHistory = ({
 
   return (
     <div className="execution-history-parent">
-      <div className="create-job-scheduler-title">
+      <div className="execution-history-title">
         <div
           role="button"
-          className="back-arrow-icon"
+          className="scheduler-back-arrow-icon"
           onClick={() => handleBackButton()}
         >
           <iconLeftArrow.react
@@ -104,7 +105,7 @@ const ExecutionHistory = ({
             className="icon-white logo-alignment-style"
           />
         </div>
-        Execution History
+        <div className="create-job-scheduler-title">Execution History</div>
       </div>
       <div className="execution-history-main-wrapper">
         <div className="execution-history-left-wrapper">
@@ -125,15 +126,18 @@ const ExecutionHistory = ({
               dagId={dagId}
               startDate={startDate}
               endDate={endDate}
+              setDagRunId={setDagRunId}
             />
           )}
         </div>
         <div className="execution-history-right-wrapper">
-          <ListDagTaskInstances
-            composerName={composerName}
-            dagId={dagId}
-            dagRunId={dagRunId}
-          />
+          {dagRunId !== '' && (
+            <ListDagTaskInstances
+              composerName={composerName}
+              dagId={dagId}
+              dagRunId={dagRunId}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -76,8 +76,7 @@ const ListDagTaskInstances = ({
     );
   };
 
-  const listDagRunsList = async () => {
-    console.log(dagRunId);
+  const listDagTaskInstancesRunsList = async () => {
     await SchedulerService.listDagTaskInstancesListService(
       composerName,
       dagId,
@@ -88,8 +87,8 @@ const ListDagTaskInstances = ({
   };
 
   useEffect(() => {
-    listDagRunsList();
-  }, []);
+    listDagTaskInstancesRunsList();
+  }, [dagRunId]);
 
   return (
     <div>
@@ -106,7 +105,7 @@ const ListDagTaskInstances = ({
                 page={page}
                 prepareRow={prepareRow}
                 tableDataCondition={tableDataCondition}
-                fromPage="Dag Runs"
+                fromPage="Dag Runs Task Instances"
               />
               {/* {dagTaskInstancesList.length > 50 && (
                 <PaginationView
@@ -133,7 +132,7 @@ const ListDagTaskInstances = ({
                   aria-label="Loading Spinner"
                   data-testid="loader"
                 />
-                Loading Dag Runs
+                Loading Dag Runs Task Instances
               </div>
             )}
             {!isLoading && (

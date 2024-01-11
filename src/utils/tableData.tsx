@@ -28,15 +28,19 @@ function TableData({
   page,
   prepareRow,
   tableDataCondition,
-  fromPage
+  fromPage,
+  setDagRunId
 }: any) {
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
 
   const displayData = page ? page : rows;
 
-  const handleRowClicked = (row: Row, index: number) => {
+  const handleRowClicked = (row: any, index: number) => {
     if (parseInt(row.id) === index) {
       setSelectedRowIndex(index);
+      if (fromPage === 'Dag Runs') {
+        setDagRunId(row?.original?.dagRunId);
+      }
     }
   };
 
@@ -61,7 +65,11 @@ function TableData({
       </thead>
       <tbody
         {...getTableBodyProps()}
-        className={fromPage === '' ? 'gcs-table-body' : 'clusters-table-body'}
+        className={
+          fromPage === 'Dag Runs'
+            ? 'dag-runs-table-body'
+            : 'clusters-table-body'
+        }
       >
         {isLoading ? (
           <div className="spin-loader">
@@ -81,10 +89,10 @@ function TableData({
               <tr
                 {...row.getRowProps()}
                 className={
-                  fromPage === ''
+                  fromPage === 'Dag Runs'
                     ? selectedRowIndex === index
-                      ? 'gcs-row-data-parent-selected'
-                      : 'gcs-row-data-parent'
+                      ? 'dag-runs-row-data-parent-selected'
+                      : 'dag-runs-row-data-parent'
                     : 'cluster-list-data-parent'
                 }
                 onClick={() => handleRowClicked(row, index)}

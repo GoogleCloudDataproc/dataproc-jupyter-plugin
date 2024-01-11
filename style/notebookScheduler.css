@@ -71,3 +71,41 @@
   height: 400px;
   overflow: auto;
 }
+
+.scheduler-back-arrow-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.dag-runs-table-body{
+  overflow-y: auto;
+  max-height: 55vh;
+}
+
+.dag-runs-row-data-parent:hover {
+  background: var(--jp-layout-color2);
+}
+
+.dag-runs-row-data-parent-selected {
+  height: 29px;
+  background: var(--jp-brand-color4);
+  color: var(--jp-brand-color1);
+}
+
+.dag-runs-row-data-parent {
+  background: var(--jp-layout-color0);
+  height: 29px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--jp-ui-font-color1);
+  cursor: pointer;
+}
+
+.execution-history-title {
+  display: flex;
+}

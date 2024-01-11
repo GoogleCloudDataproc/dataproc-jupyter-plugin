@@ -10,12 +10,14 @@ const ListDagRuns = ({
   composerName,
   dagId,
   startDate,
-  endDate
+  endDate,
+  setDagRunId
 }: {
   composerName: string;
   dagId: string;
   startDate: string;
   endDate: string;
+  setDagRunId: (value: string) => void;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,6 +99,7 @@ const ListDagRuns = ({
                 prepareRow={prepareRow}
                 tableDataCondition={tableDataCondition}
                 fromPage="Dag Runs"
+                setDagRunId={setDagRunId}
               />
               {/* {dagRunsList.length > 50 && (
                 <PaginationView
