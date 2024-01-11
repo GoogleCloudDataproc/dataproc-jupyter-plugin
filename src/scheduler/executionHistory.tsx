@@ -42,12 +42,16 @@ const ExecutionHistory = ({
 }): JSX.Element => {
   const [dagRunId, setDagRunId] = useState('');
   const currentDate = new Date().toISOString().split('T')[0];
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>();
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  const handleMonthChange = () => {
+    setDagRunId('');
+    setSelectedDate(null);
+  };
+
   const CustomDay = (props: PickersDayProps<Dayjs>) => {
-    console.log("aaaaa", props)
     const { day, isFirstVisibleCell, isLastVisibleCell } = props;
     if (isFirstVisibleCell) {
       setStartDate(new Date(day.toDate()).toISOString());
@@ -117,7 +121,7 @@ const ExecutionHistory = ({
               slots={{
                 day: CustomDay
               }}
-              onMonthChange={() => CustomDay}
+              onMonthChange={() => handleMonthChange()}
             />
           </LocalizationProvider>
           {startDate !== '' && endDate !== '' && (
@@ -127,6 +131,7 @@ const ExecutionHistory = ({
               startDate={startDate}
               endDate={endDate}
               setDagRunId={setDagRunId}
+              selectedDate={selectedDate}
             />
           )}
         </div>

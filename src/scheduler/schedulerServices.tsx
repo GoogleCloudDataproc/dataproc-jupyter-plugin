@@ -20,6 +20,7 @@ import { requestAPI } from '../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { toastifyCustomStyle } from '../utils/utils';
 import { JupyterLab } from '@jupyterlab/application';
+import { Dayjs } from 'dayjs';
 
 interface IPayload {
   input_filename: string;
@@ -203,13 +204,23 @@ export class SchedulerService {
     dagId: string,
     startDate: string,
     endDate: string,
+    selectedDate: Dayjs | null,
     setDagRunsList: (value: any) => void,
     setIsLoading: (value: boolean) => void
   ) => {
     setIsLoading(true);
+    let start_date = startDate;
+    let end_date = endDate;
+    if (selectedDate !== null) {
+      start_date = new Date(selectedDate.toDate()).toISOString();
+      const nextDate = new Date(selectedDate.toDate());
+      nextDate.setDate(selectedDate.toDate().getDate() + 1);
+      end_date = nextDate.toISOString();
+    }
+
     try {
       const data: any = await requestAPI(
-        `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${startDate}&end_date=${endDate}`
+        `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${start_date}&end_date=${end_date}`
       );
       let transformDagRunListData = [];
       transformDagRunListData = data.dag_runs.map((dagRun: any) => {

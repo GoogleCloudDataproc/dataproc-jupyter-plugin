@@ -4,19 +4,22 @@ import { ClipLoader } from 'react-spinners';
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import { SchedulerService } from './schedulerServices';
+import { Dayjs } from 'dayjs';
 
 const ListDagRuns = ({
   composerName,
   dagId,
   startDate,
   endDate,
-  setDagRunId
+  setDagRunId,
+  selectedDate
 }: {
   composerName: string;
   dagId: string;
   startDate: string;
   endDate: string;
   setDagRunId: (value: string) => void;
+  selectedDate: Dayjs | null;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +70,7 @@ const ListDagRuns = ({
       dagId,
       startDate,
       endDate,
+      selectedDate,
       setDagRunsList,
       setIsLoading
     );
@@ -74,7 +78,7 @@ const ListDagRuns = ({
 
   useEffect(() => {
     listDagRunsList();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, selectedDate]);
 
   return (
     <div>

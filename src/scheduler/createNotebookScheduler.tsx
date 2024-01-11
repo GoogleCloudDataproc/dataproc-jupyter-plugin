@@ -409,7 +409,10 @@ const CreateNotebookScheduler = ({
                 }
                 className="create-scheduler-label-style"
                 label={
-                  <Typography sx={{ fontSize: 13 }}>
+                  <Typography
+                    sx={{ fontSize: 13 }}
+                    title="Stopping cluster abruptly will impact if any other job is running on the cluster at the moment"
+                  >
                     Stop the cluster after notebook execution
                   </Typography>
                 }
