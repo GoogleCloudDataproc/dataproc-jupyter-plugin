@@ -25,10 +25,10 @@ const iconStop = new LabIcon({
   svgstr: stopIcon
 });
 
-const iconDownload =new LabIcon({
-  name:'launcher:download-icon',
-  svgstr:downloadIcon
-})
+const iconDownload = new LabIcon({
+  name: 'launcher:download-icon',
+  svgstr: downloadIcon
+});
 
 function listNotebookScheduler({
   app,
@@ -42,8 +42,7 @@ function listNotebookScheduler({
   const [composerSelected, setComposerSelected] = useState('composer4');
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
-  const [bucketName, setBucketName] = useState('')
-
+  const [bucketName, setBucketName] = useState('');
   const columns = React.useMemo(
     () => [
       {
@@ -76,16 +75,36 @@ function listNotebookScheduler({
     }
   };
 
-  const handleUpdateScheduler = async (dag_id: string, is_status_paused:boolean) => {
-    await SchedulerService.handleUpdateSchedulerAPIService(composerSelected,dag_id,is_status_paused,setDagList,setIsLoading,setBucketName)
+  const handleUpdateScheduler = async (
+    dag_id: string,
+    is_status_paused: boolean
+  ) => {
+    await SchedulerService.handleUpdateSchedulerAPIService(
+      composerSelected,
+      dag_id,
+      is_status_paused,
+      setDagList,
+      setIsLoading,
+      setBucketName
+    );
   };
   const handleDeleteScheduler = async (dag_id: string) => {
-    await SchedulerService.handleDeleteSchedulerAPIService(composerSelected,dag_id,setDagList,setIsLoading,setBucketName)
+    await SchedulerService.handleDeleteSchedulerAPIService(
+      composerSelected,
+      dag_id,
+      setDagList,
+      setIsLoading,
+      setBucketName
+    );
   };
 
   const handleDownloadScheduler = async (event: React.MouseEvent) => {
     const jobid = event.currentTarget.getAttribute('data-jobid')!;
-    await SchedulerService.handleDownloadSchedulerAPIService(composerSelected,jobid,bucketName)
+    await SchedulerService.handleDownloadSchedulerAPIService(
+      composerSelected,
+      jobid,
+      bucketName
+    );
   };
 
   const listComposersAPI = async () => {
@@ -93,7 +112,12 @@ function listNotebookScheduler({
   };
 
   const listDagInfoAPI = async () => {
-    await SchedulerService.listDagInfoAPIService(setDagList,setIsLoading,setBucketName, composerSelected)
+    await SchedulerService.listDagInfoAPIService(
+      setDagList,
+      setIsLoading,
+      setBucketName,
+      composerSelected
+    );
   };
 
   const {
@@ -126,15 +150,15 @@ function listNotebookScheduler({
           onClick={e => handleUpdateScheduler(data.jobid, is_status_paused)}
         >
           {is_status_paused ? (
-           <iconStart.react
-           tag="div"
-           className="icon-white logo-alignment-style"
-         />
+            <iconStart.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           ) : (
             <iconStop.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           )}
         </div>
         <div
@@ -173,17 +197,16 @@ function listNotebookScheduler({
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           <div
-          role="button"
-          className="icon-buttons-style"
-          title="Download"
-          data-jobid={cell.value}
-          onClick={e => handleDownloadScheduler(e)}
+            role="button"
+            className="icon-buttons-style"
+            title="Download"
+            data-jobid={cell.value}
+            onClick={e => handleDownloadScheduler(e)}
           >
             <iconDownload.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-            
-          />
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
           </div>
         </td>
       );
