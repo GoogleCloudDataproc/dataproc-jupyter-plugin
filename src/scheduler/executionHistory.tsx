@@ -42,7 +42,7 @@ const ExecutionHistory = ({
 }): JSX.Element => {
   const [dagRunId, setDagRunId] = useState('');
   const currentDate = new Date().toISOString().split('T')[0];
-  const [value, setValue] = useState<Dayjs | null>();
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -60,7 +60,7 @@ const ExecutionHistory = ({
 
     const isSuccessfulExecution = [9, 10].includes(totalViewDates);
     // const isFailureExecution = [11, 12].includes(totalViewDates);
-    const isSelectedExecution = [value?.date()].includes(totalViewDates);
+    const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates);
 
     return (
       <PickersDay
@@ -111,9 +111,9 @@ const ExecutionHistory = ({
         <div className="execution-history-left-wrapper">
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateCalendar
-              // value={value}
+              // value={selectedDate}
               referenceDate={dayjs(currentDate)}
-              onChange={newValue => setValue(newValue)}
+              onChange={newValue => setSelectedDate(newValue)}
               slots={{
                 day: CustomDay
               }}
