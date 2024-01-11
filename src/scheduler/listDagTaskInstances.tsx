@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { ClipLoader } from 'react-spinners';
 import TableData from '../utils/tableData';
-// import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
 import { SchedulerService } from './schedulerServices';
 
@@ -55,12 +54,6 @@ const ListDagTaskInstances = ({
     rows,
     prepareRow,
     page
-    // canPreviousPage,
-    // canNextPage,
-    // nextPage,
-    // previousPage,
-    // setPageSize,
-    // state: { pageIndex, pageSize }
   } = useTable(
     //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
@@ -107,18 +100,6 @@ const ListDagTaskInstances = ({
                 tableDataCondition={tableDataCondition}
                 fromPage="Dag Runs Task Instances"
               />
-              {/* {dagTaskInstancesList.length > 50 && (
-                <PaginationView
-                  pageSize={pageSize}
-                  setPageSize={setPageSize}
-                  pageIndex={pageIndex}
-                  allData={dagTaskInstancesList}
-                  previousPage={previousPage}
-                  nextPage={nextPage}
-                  canPreviousPage={canPreviousPage}
-                  canNextPage={canNextPage}
-                />
-              )} */}
             </div>
           </div>
         ) : (
