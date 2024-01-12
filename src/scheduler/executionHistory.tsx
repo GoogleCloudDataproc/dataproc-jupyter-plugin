@@ -46,6 +46,13 @@ const ExecutionHistory = ({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  const [blueListDates, setBlueListDates] = useState<string[]>([]);
+  const [greyListDates, setGreyListDates] = useState<string[]>([]);
+  const [orangeListDates, setOrangeListDates] = useState<string[]>([]);
+  const [redListDates, setRedListDates] = useState<string[]>([]);
+  const [greenListDates, setGreenListDates] = useState<string[]>([]);
+  const [darkGreenListDates, setDarkGreenListDates] = useState<string[]>([]);
+
   const handleMonthChange = () => {
     setDagRunId('');
     setSelectedDate(null);
@@ -57,15 +64,32 @@ const ExecutionHistory = ({
       setStartDate(new Date(day.toDate()).toISOString());
     }
     if (isLastVisibleCell) {
-      setEndDate(new Date(day.toDate()).toISOString());
+      const nextDate = new Date(day.toDate());
+      nextDate.setDate(day.toDate().getDate() + 1);
+      setEndDate(nextDate.toISOString());
     }
 
     const totalViewDates = day.date();
 
-    const isSuccessfulExecution = [9, 10].includes(totalViewDates);
-    const isFailureExecution = [11, 12].includes(totalViewDates);
-    const isRunningExecution = [1, 2].includes(totalViewDates);
-    const isQueuedExecution = [25, 26].includes(totalViewDates);
+    const isBlueExecution =
+      blueListDates.length > 0 &&
+      blueListDates.includes(totalViewDates.toString().padStart(2, '0'));
+    const isGreyExecution =
+      greyListDates.length > 0 &&
+      greyListDates.includes(totalViewDates.toString().padStart(2, '0'));
+    const isOrangeExecution =
+      orangeListDates.length > 0 &&
+      orangeListDates.includes(totalViewDates.toString().padStart(2, '0'));
+    const isRedExecution =
+      redListDates.length > 0 &&
+      redListDates.includes(totalViewDates.toString().padStart(2, '0'));
+    const isGreenExecution =
+      greenListDates.length > 0 &&
+      greenListDates.includes(totalViewDates.toString().padStart(2, '0'));
+    const isDarkGreenExecution =
+      darkGreenListDates.length > 0 &&
+      darkGreenListDates.includes(totalViewDates.toString().padStart(2, '0'));
+
     const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates);
 
     return (
@@ -74,32 +98,36 @@ const ExecutionHistory = ({
         style={{
           border: isSelectedExecution ? '3px solid #000000' : 'none',
           borderRadius:
-            isSuccessfulExecution ||
-            isFailureExecution ||
+            isGreenExecution ||
+            isRedExecution ||
             isSelectedExecution ||
-            isRunningExecution ||
-            isQueuedExecution
+            isBlueExecution ||
+            isGreyExecution ||
+            isBlueExecution ||
+            isDarkGreenExecution
               ? '50%'
               : 'none',
-          backgroundColor:
-            // isSelectedExecution
-            //   ? '#188038'
-            //   :
-            isSuccessfulExecution
-              ? '#34A853'
-              : isFailureExecution
-              ? '#EA3323'
-              : isRunningExecution
-              ? '#1A73E8'
-              : isQueuedExecution
-              ? '#808080'
-              : 'transparent',
+          backgroundColor: isDarkGreenExecution
+            ? '#188038'
+            : isGreenExecution
+            ? '#34A853'
+            : isOrangeExecution
+            ? '#FFA500'
+            : isRedExecution
+            ? '#EA3323'
+            : isBlueExecution
+            ? '#1A73E8'
+            : isGreyExecution
+            ? '#808080'
+            : 'transparent',
           color:
-            isSuccessfulExecution ||
-            isFailureExecution ||
+            isGreenExecution ||
+            isRedExecution ||
             isSelectedExecution ||
-            isRunningExecution ||
-            isQueuedExecution
+            isBlueExecution ||
+            isGreyExecution ||
+            isBlueExecution ||
+            isDarkGreenExecution
               ? 'white'
               : 'inherit'
         }}
@@ -145,6 +173,12 @@ const ExecutionHistory = ({
               endDate={endDate}
               setDagRunId={setDagRunId}
               selectedDate={selectedDate}
+              setBlueListDates={setBlueListDates}
+              setGreyListDates={setGreyListDates}
+              setOrangeListDates={setOrangeListDates}
+              setRedListDates={setRedListDates}
+              setGreenListDates={setGreenListDates}
+              setDarkGreenListDates={setDarkGreenListDates}
             />
           )}
         </div>

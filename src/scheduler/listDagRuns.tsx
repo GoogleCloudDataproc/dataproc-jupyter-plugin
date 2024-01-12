@@ -12,7 +12,14 @@ const ListDagRuns = ({
   startDate,
   endDate,
   setDagRunId,
-  selectedDate
+  selectedDate,
+
+  setBlueListDates,
+  setGreyListDates,
+  setOrangeListDates,
+  setRedListDates,
+  setGreenListDates,
+  setDarkGreenListDates
 }: {
   composerName: string;
   dagId: string;
@@ -20,6 +27,13 @@ const ListDagRuns = ({
   endDate: string;
   setDagRunId: (value: string) => void;
   selectedDate: Dayjs | null;
+
+  setBlueListDates: (value: string[]) => void;
+  setGreyListDates: (value: string[]) => void;
+  setOrangeListDates: (value: string[]) => void;
+  setRedListDates: (value: string[]) => void;
+  setGreenListDates: (value: string[]) => void;
+  setDarkGreenListDates: (value: string[]) => void;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,7 +86,14 @@ const ListDagRuns = ({
       endDate,
       selectedDate,
       setDagRunsList,
-      setIsLoading
+      setIsLoading,
+
+      setBlueListDates,
+      setGreyListDates,
+      setOrangeListDates,
+      setRedListDates,
+      setGreenListDates,
+      setDarkGreenListDates
     );
   };
 
