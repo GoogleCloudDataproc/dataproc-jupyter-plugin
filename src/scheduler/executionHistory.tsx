@@ -63,30 +63,43 @@ const ExecutionHistory = ({
     const totalViewDates = day.date();
 
     const isSuccessfulExecution = [9, 10].includes(totalViewDates);
-    // const isFailureExecution = [11, 12].includes(totalViewDates);
+    const isFailureExecution = [11, 12].includes(totalViewDates);
+    const isRunningExecution = [1, 2].includes(totalViewDates);
+    const isQueuedExecution = [25, 26].includes(totalViewDates);
     const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates);
 
     return (
       <PickersDay
         {...props}
         style={{
+          border: isSelectedExecution ? '3px solid #000000' : 'none',
           borderRadius:
             isSuccessfulExecution ||
-            // isFailureExecution ||
-            isSelectedExecution
+            isFailureExecution ||
+            isSelectedExecution ||
+            isRunningExecution ||
+            isQueuedExecution
               ? '50%'
               : 'none',
-          backgroundColor: isSelectedExecution
-            ? '#188038'
-            : isSuccessfulExecution
-            ? '#34A853'
-            : // : isFailureExecution
-              // ? '#EA3323'
-              'transparent',
+          backgroundColor:
+            // isSelectedExecution
+            //   ? '#188038'
+            //   :
+            isSuccessfulExecution
+              ? '#34A853'
+              : isFailureExecution
+              ? '#EA3323'
+              : isRunningExecution
+              ? '#1A73E8'
+              : isQueuedExecution
+              ? '#808080'
+              : 'transparent',
           color:
             isSuccessfulExecution ||
-            // isFailureExecution ||
-            isSelectedExecution
+            isFailureExecution ||
+            isSelectedExecution ||
+            isRunningExecution ||
+            isQueuedExecution
               ? 'white'
               : 'inherit'
         }}
