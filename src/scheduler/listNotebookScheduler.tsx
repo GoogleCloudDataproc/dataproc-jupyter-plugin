@@ -11,6 +11,7 @@ import startIcon from '../../style/icons/start_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import downloadIcon from '../../style/icons/download_icon.svg';
 import { SchedulerService } from './schedulerServices';
+import { ClipLoader } from 'react-spinners';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -240,29 +241,51 @@ function listNotebookScheduler({
           />
         </div>
       </div>
-      <div className="notebook-templates-list-table-parent">
-        <TableData
-          getTableProps={getTableProps}
-          headerGroups={headerGroups}
-          getTableBodyProps={getTableBodyProps}
-          isLoading={isLoading}
-          rows={rows}
-          page={page}
-          prepareRow={prepareRow}
-          tableDataCondition={tableDataCondition}
-          fromPage="Notebook Scheduler"
-        />
-        <PaginationView
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-          pageIndex={pageIndex}
-          allData={dagList}
-          previousPage={previousPage}
-          nextPage={nextPage}
-          canPreviousPage={canPreviousPage}
-          canNextPage={canNextPage}
-        />
-      </div>
+      {dagList.length > 0 ? (
+        <div className="notebook-templates-list-table-parent">
+          <TableData
+            getTableProps={getTableProps}
+            headerGroups={headerGroups}
+            getTableBodyProps={getTableBodyProps}
+            isLoading={isLoading}
+            rows={rows}
+            page={page}
+            prepareRow={prepareRow}
+            tableDataCondition={tableDataCondition}
+            fromPage="Notebook Scheduler"
+          />
+          {dagList.length > 50 && (
+            <PaginationView
+              pageSize={pageSize}
+              setPageSize={setPageSize}
+              pageIndex={pageIndex}
+              allData={dagList}
+              previousPage={previousPage}
+              nextPage={nextPage}
+              canPreviousPage={canPreviousPage}
+              canNextPage={canNextPage}
+            />
+          )}
+        </div>
+      ) : (
+        <div>
+          {isLoading && (
+            <div className="spin-loader-main">
+              <ClipLoader
+                color="#3367d6"
+                loading={true}
+                size={18}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+              Loading Notebook Schedulers
+            </div>
+          )}
+          {!isLoading && (
+            <div className="no-data-style">No rows to display</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
