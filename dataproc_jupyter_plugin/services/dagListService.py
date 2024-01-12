@@ -1,9 +1,8 @@
+import subprocess
 import requests
-
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 from dataproc_jupyter_plugin.services.executorService import getBucket
 
-# import dataproc_jupyter_plugin.services.executorService 
 
 
 class DagListService():
@@ -67,12 +66,11 @@ class DagDeleteService():
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}'
             }
-            response = requests.delete(api_endpoint,headers=headers)
-            if response.status_code == 200:
-                resp = response.json()
-                # print(resp)
-            # bucket = getBucket(composer_name,cr)
-
+            cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            output, _ = process.communicate()
+            print(process.returncode,_,output)
+            if process.returncode == 0:
                 return 0
             else:
                 return 1
@@ -100,11 +98,8 @@ class DagUpdateService():
                 data = {"is_paused": True}
             response = requests.patch(api_endpoint,json=data,headers=headers)
             if response.status_code == 200:
-                print(response)
-                # resp = response.json()
-                # print(resp)
-            # bucket = getBucket(composer_name,cr)
-
-                return 0
+                return 0              
+            else:
+                return 1
         except Exception as e:
             return {"error": str(e)}

@@ -1,14 +1,17 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from airflow import DAG
 from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobOperator
+from airflow.operators.python_operator import PythonOperator
+from google.cloud import dataproc_v1
+from google.api_core.client_options import ClientOptions
+import pendulum
 
 yesterday = datetime.combine(
     datetime.today() - timedelta(1),
     datetime.min.time())
-
 default_args = {
     'owner': '{{owner}}',
-    'start_date': yesterday,
+    'start_date': '{{start_date}}',
     'retries': '{{retry_count}}',
     'retry_delay': timedelta(minutes=int('{{retry_delay}}')), 
     'email': '{{email}}',  #list of all the ids passed from UI
@@ -19,6 +22,58 @@ input_notebook = '{{input_notebook}}'
 output_notebook = '{{output_notebook}}'
 notebook_args= [input_notebook, output_notebook] 
 
+def get_client_cert():
+    # code to load client certificate and private key.
+    return client_cert_bytes, client_private_key_bytes
+ 
+ 
+def sample_start_cluster():
+ 
+    options = ClientOptions(api_endpoint="{{gcpRegion}}-dataproc.googleapis.com:443",
+    client_cert_source=get_client_cert)
+ 
+    # Create a client
+    client = dataproc_v1.ClusterControllerClient(client_options=options)
+ 
+    # Initialize request argument(s)
+    request = dataproc_v1.StartClusterRequest(
+        project_id='{{gcpProjectId}}',
+        region='{{gcpRegion}}',
+        cluster_name='{{cluster_name}}',
+    )
+ 
+    # Make the request
+    operation = client.start_cluster(request=request)
+    print("Waiting for operation to complete...")
+    response = operation.result()
+ 
+    # Handle the response
+    print(response)
+
+ 
+def sample_stop_cluster():
+ 
+    options = ClientOptions(api_endpoint="{{gcpRegion}}-dataproc.googleapis.com:443",
+    client_cert_source=get_client_cert)
+ 
+    # Create a client
+    client = dataproc_v1.ClusterControllerClient(client_options=options)
+ 
+    # Initialize request argument(s)
+    request = dataproc_v1.StopClusterRequest(
+        project_id='{{gcpProjectId}}',
+        region='{{gcpRegion}}',
+        cluster_name='{{cluster_name}}',
+    )
+ 
+    # Make the request
+    operation = client.stop_cluster(request=request)
+    print("Waiting for operation to complete...")
+    response = operation.result()
+ 
+    # Handle the response
+    print(response)
+
 dag = DAG(
     '{{name}}', 
     default_args=default_args,
@@ -26,9 +81,12 @@ dag = DAG(
     schedule_interval='{{schedule_interval}}',
 )
 
-# if '{{mode_selected}}' == 'serverless':
-#     cluster_name = ''
-#     serverless_name = '{{serverless_name}}'
+start_cluster = PythonOperator(
+    task_id='start_cluster',
+    python_callable=sample_start_cluster,
+    provide_context=True,
+    dag=dag)
+
 submit_pyspark_job = DataprocSubmitJobOperator(
     task_id='submit_pyspark_job',
     project_id='{{gcpProjectId}}',  # This parameter can be overridden by the connection
@@ -44,3 +102,9 @@ submit_pyspark_job = DataprocSubmitJobOperator(
     gcp_conn_id='google_cloud_default',  # Reference to the GCP connection
     dag=dag,
 )
+if '{{stop_cluster}}' == 'True':
+    stop_cluster = PythonOperator(
+        task_id='stop_cluster',
+        python_callable=sample_stop_cluster,
+        provide_context=True,
+        dag=dag)

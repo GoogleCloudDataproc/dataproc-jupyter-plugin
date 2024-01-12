@@ -10,8 +10,9 @@ from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 import subprocess
 from jinja2 import Environment, FileSystemLoader
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import json
+import pendulum
 
 unique_id = str(uuid.uuid4().hex)
 job_id = ''
@@ -102,12 +103,21 @@ class ExecutorService():
             schedule_interval = "@once"
         else:
             schedule_interval = job.schedule_value
+        if job.time_zone == '':
+            yesterday = datetime.combine(datetime.today() - timedelta(1),datetime.min.time())
+            start_date = yesterday
+        else:
+            yesterday = pendulum.now().subtract(days=1)
+            desired_timezone = job.time_zone
+            dag_timezone = pendulum.timezone(desired_timezone)
+            start_date =  yesterday.replace(tzinfo=dag_timezone)
         if job.mode_selected == 'serverless':
             phs_cluster_path = job.environment_config.peripherals_config.spark_history_server_config.dataproc_cluster
             print(phs_cluster_path)
         content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                   gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/",\
-                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,schedule_interval=schedule_interval)
+                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
+                                  schedule_interval=schedule_interval,start_date = start_date)
         print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:
             message.write(content)
@@ -122,11 +132,7 @@ class ExecutorService():
         global job_name
         job_id = job.dag_id
         job_name = job.name
-
-        # with open(self.staging_paths["input"], encoding="utf-8") as f:
-        #     nb = nbformat.read(f, as_version=4)
-        current_timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        dag_file = f"dag_{job_name}_{current_timestamp}.py"
+        dag_file = f"dag_{job_name}.py"
         gcs_dag_bucket = getBucket(job.composer_environment_name, credentials)
         remote_file_path = "wrapper_papermill.py"
       
@@ -137,24 +143,6 @@ class ExecutorService():
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
         self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket,job_name)
         self.prepareDag(job,gcs_dag_bucket,dag_file,credentials)
-
-        # if job.parameters:
-        #     nb = add_parameters(nb, job.parameters)
-        # ep = ExecutePreprocessor(
-        #     kernel_name=nb.metadata.kernelspec["name"],
-        #     store_widget_state=True,
-        # )
-
-        # try:
-        #     ep.preprocess(nb)
-        # except CellExecutionError as e:
-        #     raise e
-        # finally:
-        # for output_format in job.output_formats:
-        #     cls = nbconvert.get_exporter(output_format)
-        #     output, resources = cls().from_notebook_node(nb)
-        #     with fsspec.open(self.staging_paths[output_format], "w", encoding="utf-8") as f:
-        #         f.write(output)
         self.uploadToGcloud(job.composer_environment_name,dag_file,credentials)
 
 
