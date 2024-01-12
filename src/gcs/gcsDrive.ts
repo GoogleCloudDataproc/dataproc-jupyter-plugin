@@ -3,6 +3,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { GcsService } from './gcsService';
 
 import { showDialog, Dialog } from '@jupyterlab/apputils';
+import { storage_v1 } from '@googleapis/storage';
 
 // Template for an empty Directory IModel.
 const DIRECTORY_IMODEL: Contents.IModel = {
@@ -54,19 +55,37 @@ export class GCSDrive implements Contents.IDrive {
    * @returns IModel directory containing all the GCS buckets for the current project.
    */
   private async getBuckets() {
+    let paragraph: HTMLElement | null;
     let searchInput = document.getElementById('filter-buckets-objects');
     //@ts-ignore
     let searchValue = searchInput.value;
     const content = await GcsService.listBuckets({
       prefix: searchValue
     });
+
+    if (content?.error?.code) {
+      if(document.getElementById('gcs-list-bucket-error')){
+        document.getElementById('gcs-list-bucket-error')?.remove()
+      }
+      const para = document.createElement('p');
+      para.id = 'gcs-list-bucket-error';
+      para.style.color = '#ff0000';
+      para.innerHTML = content?.error?.message;
+      paragraph = document.getElementById('filter-buckets-objects');
+      paragraph?.after(para);
+    } else {
+      if(document.getElementById('gcs-list-bucket-error')){
+        document.getElementById('gcs-list-bucket-error')?.remove()
+      }
+    }
+
     if (!content) {
       throw 'Error Listing Buckets';
     }
     return {
       ...DIRECTORY_IMODEL,
       content:
-        content.items?.map(bucket => ({
+        content.items?.map((bucket: storage_v1.Schema$Object) => ({
           ...DIRECTORY_IMODEL,
           path: bucket.name,
           name: bucket.name,
