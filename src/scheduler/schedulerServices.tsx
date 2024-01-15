@@ -440,6 +440,7 @@ export class SchedulerService {
         (dagRunTask: any) => {
           return {
             tryNumber: dagRunTask.try_number,
+            taskId:dagRunTask.task_id,
             // dagRunId: dagRunTask.dag_run_id,
             duration: dagRunTask.duration,
             state: dagRunTask.state,
@@ -451,18 +452,29 @@ export class SchedulerService {
         }
       );
       setDagTaskInstancesList(transformDagRunTaskInstanceListData);
-      this.listDagTaskLogsListService();
+     // this.listDagTaskLogsListService();
       setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
   };
-  static listDagTaskLogsListService = async () => {
+  static listDagTaskLogsListService = async (
+    composerName: string,
+    dagId:string,
+    dagRunId:string,
+    taskId:any,
+    tryNumber:any,
+    setLogList: (value: string) => void,
+    setIsLoading : (value: boolean) => void
+  ) => {
     try {
+      dagRunId = encodeURIComponent(dagRunId);
       const data: any = await requestAPI(
-        `dagRunTaskLogs?composer=composer4&dag_id=dag_clientcontroller_stop&dag_run_id=scheduled__2024-01-09T22:00:00%2B00:00&task_id=start_cluster&task_try_number=2`
+        `dagRunTaskLogs?composer=${composerName}&dag_id=${dagId}&dag_run_id=${dagRunId}&task_id=${taskId}&task_try_number=${tryNumber}`
       );
       console.log(data);
+      setLogList(data.content)
+      setIsLoading(false)
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }

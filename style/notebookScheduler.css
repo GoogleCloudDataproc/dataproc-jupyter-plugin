@@ -65,6 +65,8 @@
 .execution-history-right-wrapper {
   width: 60%;
   border: 1px solid var(--jp-layout-color3);
+  height: 650px;
+  overflow: auto;
 }
 
 .dag-runs-list-table-parent {
