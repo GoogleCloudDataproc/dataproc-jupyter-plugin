@@ -57,20 +57,7 @@ const ListDagTaskInstances = ({
   dagId: string;
   dagRunId: string;
 }): JSX.Element => {
-  const [dagTaskInstancesList, setDagTaskInstancesList] = useState([
-    {
-      tryNumber: 2,
-      taskId:"start_cluster",
-      date: '11-01-2023',
-      duration: '4h 22m 18s',
-    },
-    {
-      tryNumber: 1,
-      taskId:"start_cluster",
-      date: '11-02-2023',
-      duration: '22m 18s',
-    },
-  ]);
+  const [dagTaskInstancesList, setDagTaskInstancesList] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | false>(false);
   const [loglist, setLogList] = useState('')
@@ -125,7 +112,7 @@ const ListDagTaskInstances = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {dagTaskInstancesList.map((taskInstance, index) => (
+              {dagTaskInstancesList.map((taskInstance: any, index: number) => (
                 <React.Fragment key={index}>
                   <TableRow>
                   <TableCell colSpan={4}>
