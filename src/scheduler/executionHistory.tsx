@@ -55,6 +55,8 @@ const ExecutionHistory = ({
 
   const handleMonthChange = () => {
     setDagRunId('');
+    // setStartDate('');
+    // setEndDate('');
     setSelectedDate(null);
   };
 
@@ -123,7 +125,7 @@ const ExecutionHistory = ({
           color:
             isGreenExecution ||
             isRedExecution ||
-            isSelectedExecution ||
+            // isSelectedExecution ||
             isBlueExecution ||
             isGreyExecution ||
             isBlueExecution ||
@@ -135,7 +137,9 @@ const ExecutionHistory = ({
     );
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    // setSelectedDate(dayjs(currentDate))
+  }, []);
 
   return (
     <div className="execution-history-parent">
