@@ -301,7 +301,7 @@ export class SchedulerService {
         setGreenListDates(greenList);
         setDarkGreenListDates(darkGreenList);
       }
-      
+
       setDagRunsList(transformDagRunListData);
       setIsLoading(false);
     } catch (reason) {
@@ -451,7 +451,18 @@ export class SchedulerService {
         }
       );
       setDagTaskInstancesList(transformDagRunTaskInstanceListData);
+      this.listDagTaskLogsListService();
       setIsLoading(false);
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
+  static listDagTaskLogsListService = async () => {
+    try {
+      const data: any = await requestAPI(
+        `dagRunTaskLogs?composer=composer4&dag_id=dag_clientcontroller_stop&dag_run_id=scheduled__2024-01-09T22:00:00%2B00:00&task_id=start_cluster&task_try_number=2`
+      );
+      console.log(data);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
