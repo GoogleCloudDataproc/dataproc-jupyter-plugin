@@ -7,57 +7,7 @@ import {
   AccordionDetails
 } from '@mui/material';
 import { SchedulerService } from './schedulerServices';
-// import { styled } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-// import MuiAccordion, { AccordionProps } from '@mui/material/Accordion';
-// import MuiAccordionSummary, {
-//   AccordionSummaryProps,
-// } from '@mui/material/AccordionSummary';
-// import MuiAccordionDetails from '@mui/material/AccordionDetails';
-
-// const Accordion = styled((props: AccordionProps) => (
-//   <MuiAccordion disableGutters elevation={0} square {...props} />
-// ))(({ theme }) => ({
-//   border: `1px solid ${theme.palette.divider}`,
-//   '&:not(:last-child)': {
-//     borderBottom: 0,
-//   },
-//   '&::before': {
-//     display: 'none',
-//   },
-// }));
-
-// const AccordionSummary = styled((props: AccordionSummaryProps) => (
-//   <MuiAccordionSummary
-//     expandIcon={<ExpandMoreIcon sx={{ fontSize: '0.9rem' }} />}
-//     {...props}
-//   />
-// ))(({ theme }) => ({
-//   backgroundColor:
-//     theme.palette.mode === 'dark'
-//       ? 'rgba(255, 255, 255, .05)'
-//       : 'rgba(0, 0, 0, .03)',
-//   flexDirection: 'row-reverse',
-//   '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-//     order: 1,
-//     transform: 'rotate(90deg)',
-//   },
-//   '& .MuiAccordionSummary-content': {
-//     order: 0,
-//     marginLeft: theme.spacing(1),
-//   },
-// }));
-
-// const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-//   padding: theme.spacing(2),
-//   borderTop: '1px solid rgba(0, 0, 0, .125)',
-// }));
-// const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-//   padding: theme.spacing(2),
-//   height: '400px',
-//   overflow: 'auto',
-//   borderTop: '1px solid rgba(0, 0, 0, .125)',
-// }));
 
 const ListDagTaskInstances = ({
   composerName,
@@ -88,8 +38,9 @@ const ListDagTaskInstances = ({
   }, [dagRunId]);
 
   const handleChange =
-    (index: number) => (event: React.SyntheticEvent, newExpanded: boolean) => {
-      if (index === 0) {
+    (index: number, tryNumber: number) => (event: React.SyntheticEvent, newExpanded: boolean) => {
+      console.log(tryNumber, index, typeof tryNumber)
+      if (index === 0 || tryNumber === 0) {
         setExpanded(false);
       } else {
         setExpanded(newExpanded ? `${index}` : false);
@@ -98,8 +49,10 @@ const ListDagTaskInstances = ({
     };
 
   const listDagTaskLogList = async (index: any) => {
-    console.log('index', index);
-    console.log('dagtask', dagTaskInstancesList);
+    //console.log('index', index);
+    //console.log('dagtask', dagTaskInstancesList);
+    console.log(dagTaskInstancesList[index].tryNumber)
+    if (dagTaskInstancesList[index].tryNumber !== 0) { 
     await SchedulerService.listDagTaskLogsListService(
       composerName,
       dagId,
@@ -109,8 +62,9 @@ const ListDagTaskInstances = ({
       setLogList,
       setIsLoading
     );
+    }
   };
-  console.log(loglist);
+  //onsole.log(loglist);
   return (
     <div>
       {dagTaskInstancesList.length > 0 ? (
@@ -122,10 +76,10 @@ const ListDagTaskInstances = ({
                   <div key={index}>
                     <Accordion
                       expanded={expanded === `${index}`}
-                      onChange={handleChange(index)}
+                      onChange={handleChange(index, taskInstance.tryNumber)}
                     >
                       <AccordionSummary
-                        expandIcon={index === 0 ? null : <ExpandMoreIcon />}
+                        expandIcon={index === 0 || taskInstance.tryNumber === 0  ? null : <ExpandMoreIcon />}
                         aria-controls="panel2bh-content"
                         id="panel2bh-header"
                       >
