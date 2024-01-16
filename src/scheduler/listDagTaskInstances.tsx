@@ -57,34 +57,34 @@ const ListDagTaskInstances = ({
   }, [dagRunId]);
 
   const handleChange =
-    (index: number, tryNumber: number) =>
+    (index: number, tryNumber: number, clickFrom: string, iconIndex: number) =>
     (event: React.SyntheticEvent, newExpanded: boolean) => {
-      console.log(tryNumber, index, typeof tryNumber);
+      console.log(index, tryNumber, clickFrom, iconIndex);
       if (index === 0 || tryNumber === 0) {
         setExpanded(false);
       } else {
         setExpanded(newExpanded ? `${index}` : false);
-        listDagTaskLogList(index);
+        listDagTaskLogList(index, clickFrom, iconIndex);
       }
     };
 
-  const listDagTaskLogList = async (index: any) => {
-    //console.log('index', index);
-    //console.log('dagtask', dagTaskInstancesList);
-    console.log(dagTaskInstancesList[index].tryNumber);
-    if (dagTaskInstancesList[index].tryNumber !== 0) {
-      await SchedulerService.listDagTaskLogsListService(
-        composerName,
-        dagId,
-        dagRunId,
-        dagTaskInstancesList[index].taskId,
-        dagTaskInstancesList[index].tryNumber,
-        setLogList,
-        setIsLoadingLogs
-      );
-    }
+  const listDagTaskLogList = async (
+    index: any,
+    clickFrom: string,
+    iconIndex: number
+  ) => {
+    await SchedulerService.listDagTaskLogsListService(
+      composerName,
+      dagId,
+      dagRunId,
+      dagTaskInstancesList[index].taskId,
+      clickFrom === 'logoClick'
+        ? iconIndex
+        : dagTaskInstancesList[index].tryNumber,
+      setLogList,
+      setIsLoadingLogs
+    );
   };
-  //onsole.log(loglist);
   return (
     <div>
       {dagTaskInstancesList.length > 0 ? (
@@ -96,7 +96,12 @@ const ListDagTaskInstances = ({
                   <div key={index}>
                     <Accordion
                       expanded={expanded === `${index}`}
-                      onChange={handleChange(index, taskInstance.tryNumber)}
+                      onChange={handleChange(
+                        index,
+                        taskInstance.tryNumber,
+                        'expandClick',
+                        taskInstance.tryNumber
+                      )}
                     >
                       <AccordionSummary
                         expandIcon={
@@ -138,9 +143,17 @@ const ListDagTaskInstances = ({
                                       <div
                                         key={i}
                                         className="logo-alignment-style-accordion"
+                                        onClick={() =>
+                                          handleChange(
+                                            index,
+                                            taskInstance.tryNumber,
+                                            'logoClick',
+                                            i + 1
+                                          )
+                                        }
                                       >
                                         {i === taskInstance.tryNumber - 1 ? (
-                                          taskInstance.someState ===
+                                          taskInstance.state ===
                                           'failed' ? (
                                             <iconFailed.react
                                               tag="div"
@@ -179,7 +192,9 @@ const ListDagTaskInstances = ({
                       ) : (
                         <AccordionDetails>
                           {' '}
-                          <Typography>{loglist}</Typography>{' '}
+                          <Typography>
+                            <pre className="logs-content-style">{loglist}</pre>
+                          </Typography>{' '}
                         </AccordionDetails>
                       )}
                     </Accordion>

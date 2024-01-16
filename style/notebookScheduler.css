@@ -134,3 +134,8 @@
   align-items: center;
   justify-content: flex-start;
 }
+
+.logs-content-style {
+  overflow: auto;
+  height: 400px;
+}
