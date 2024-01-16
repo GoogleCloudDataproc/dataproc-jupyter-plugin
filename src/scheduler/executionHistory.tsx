@@ -60,6 +60,13 @@ const ExecutionHistory = ({
     setSelectedDate(null);
   };
 
+  const handleDateSelection = (selectedValue: any) => {
+    setDagRunId('');
+    // setStartDate('');
+    // setEndDate('');
+    setSelectedDate(selectedValue);
+  };
+
   const CustomDay = (props: PickersDayProps<Dayjs>) => {
     const { day, isFirstVisibleCell, isLastVisibleCell } = props;
     if (isFirstVisibleCell) {
@@ -162,7 +169,7 @@ const ExecutionHistory = ({
             <DateCalendar
               // value={selectedDate}
               referenceDate={dayjs(currentDate)}
-              onChange={newValue => setSelectedDate(newValue)}
+              onChange={newValue => handleDateSelection(newValue)}
               slots={{
                 day: CustomDay
               }}

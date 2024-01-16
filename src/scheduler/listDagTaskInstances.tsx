@@ -37,6 +37,7 @@ const ListDagTaskInstances = ({
 }): JSX.Element => {
   const [dagTaskInstancesList, setDagTaskInstancesList] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(true);
   const [expanded, setExpanded] = useState<string | false>(false);
   const [loglist, setLogList] = useState('');
 
@@ -52,6 +53,7 @@ const ListDagTaskInstances = ({
 
   useEffect(() => {
     listDagTaskInstancesRunsList();
+    setExpanded(false);
   }, [dagRunId]);
 
   const handleChange =
@@ -78,7 +80,7 @@ const ListDagTaskInstances = ({
         dagTaskInstancesList[index].taskId,
         dagTaskInstancesList[index].tryNumber,
         setLogList,
-        setIsLoading
+        setIsLoadingLogs
       );
     }
   };
@@ -116,10 +118,12 @@ const ListDagTaskInstances = ({
                             {taskInstance.taskId}
                           </div>
                           <div className="accordion-row-data">
-                            {taskInstance.tryNumber === 0 ? (
+                            {index === 0 ? (
+                              <div>{taskInstance.tryNumber}</div>
+                            ) : taskInstance.tryNumber === 0 ? (
                               <iconStop.react
                                 tag="div"
-                                className="icon-white logo-alignment-style"
+                                className="icon-white logo-alignment-style-accordion"
                               />
                             ) : (
                               <div className="logo-row-container">
@@ -133,7 +137,7 @@ const ListDagTaskInstances = ({
                                     logos.push(
                                       <div
                                         key={i}
-                                        className="logo-alignment-style"
+                                        className="logo-alignment-style-accordion"
                                       >
                                         {i === taskInstance.tryNumber - 1 ? (
                                           taskInstance.someState ===
@@ -167,10 +171,17 @@ const ListDagTaskInstances = ({
                           </div>
                         </div>
                       </AccordionSummary>
-                      <AccordionDetails>
-                        {' '}
-                        <Typography>{loglist}</Typography>{' '}
-                      </AccordionDetails>
+                      {isLoadingLogs ? (
+                        <div className="spin-loader-main">
+                          <CircularProgress color="primary" size={18} />
+                          Loading Dag Runs Task Logs
+                        </div>
+                      ) : (
+                        <AccordionDetails>
+                          {' '}
+                          <Typography>{loglist}</Typography>{' '}
+                        </AccordionDetails>
+                      )}
                     </Accordion>
                   </div>
                 ))}

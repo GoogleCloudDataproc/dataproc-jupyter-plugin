@@ -80,7 +80,7 @@
   margin-right: 10px;
 }
 
-.dag-runs-table-body{
+.dag-runs-table-body {
   overflow-y: auto;
   max-height: 55vh;
 }
@@ -123,4 +123,14 @@
 
 .accordion-row-data {
   width: 33%;
+}
+
+.logo-row-container {
+  display: flex;
+}
+
+.logo-alignment-style-accordion {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }

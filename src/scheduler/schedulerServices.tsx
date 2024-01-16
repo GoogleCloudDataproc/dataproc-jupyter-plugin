@@ -429,6 +429,7 @@ export class SchedulerService {
     setDagTaskInstancesList: (value: any) => void,
     setIsLoading: (value: boolean) => void
   ) => {
+    setDagTaskInstancesList([]);
     setIsLoading(true);
     try {
       dagRunId = encodeURIComponent(dagRunId);
@@ -440,8 +441,7 @@ export class SchedulerService {
         (dagRunTask: any) => {
           return {
             tryNumber: dagRunTask.try_number,
-            taskId:dagRunTask.task_id,
-            // dagRunId: dagRunTask.dag_run_id,
+            taskId: dagRunTask.task_id,
             duration: dagRunTask.duration,
             state: dagRunTask.state,
             date: new Date(dagRunTask.execution_date).toDateString(),
@@ -451,19 +451,16 @@ export class SchedulerService {
           };
         }
       );
-      let sample={
-        tryNumber: "Attempts",
-        taskId:"taskId",
-        // dagRunId: dagRunTask.dag_run_id,
-        duration: "Duration",
-        state: "State",
-        date: "Date",
-        time: "time"
-      }
-      transformDagRunTaskInstanceListData.unshift(sample)
-      console.log("sample",transformDagRunTaskInstanceListData)
+      let sample = {
+        tryNumber: 'Attempts',
+        taskId: 'Task Id',
+        duration: 'Duration',
+        state: 'State',
+        date: 'Date',
+        time: 'Time'
+      };
+      transformDagRunTaskInstanceListData.unshift(sample);
       setDagTaskInstancesList(transformDagRunTaskInstanceListData);
-     // this.listDagTaskLogsListService();
       setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
@@ -471,21 +468,22 @@ export class SchedulerService {
   };
   static listDagTaskLogsListService = async (
     composerName: string,
-    dagId:string,
-    dagRunId:string,
-    taskId:any,
-    tryNumber:any,
+    dagId: string,
+    dagRunId: string,
+    taskId: any,
+    tryNumber: any,
     setLogList: (value: string) => void,
-    setIsLoading : (value: boolean) => void
+    setIsLoadingLogs: (value: boolean) => void
   ) => {
     try {
+      setIsLoadingLogs(true);
       dagRunId = encodeURIComponent(dagRunId);
       const data: any = await requestAPI(
         `dagRunTaskLogs?composer=${composerName}&dag_id=${dagId}&dag_run_id=${dagRunId}&task_id=${taskId}&task_try_number=${tryNumber}`
       );
       console.log(data);
-      setLogList(data.content)
-      setIsLoading(false)
+      setLogList(data.content);
+      setIsLoadingLogs(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
