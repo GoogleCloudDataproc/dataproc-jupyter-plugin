@@ -116,26 +116,6 @@ const ListDagTaskInstances = ({
       {dagTaskInstancesList.length > 0 ? (
         <div>
           <div>
-            {/* <div className="header-row-span123">
-                <span   style={{
-                  width:'33%',
-                  marginLeft: '5px',
-                  fontSize: '13px',
-                  padding: '2px',}}>Attempts</span>
-                <span
-                style={{
-                  width:'33%',
-                  marginLeft: '5px',
-                  fontSize: '13px',
-                  padding: '2px',}}
-                >Start</span>
-                <span   style={{
-                  width:'33%',
-                  marginLeft: '5px',
-                  fontSize: '13px',
-                  padding: '2px',}}
-                >Duration</span>
-              </div> */}
             <div>
               {dagTaskInstancesList.length > 0 &&
                 dagTaskInstancesList.map((taskInstance: any, index: number) => (
@@ -149,10 +129,16 @@ const ListDagTaskInstances = ({
                         aria-controls="panel2bh-content"
                         id="panel2bh-header"
                       >
-                        <div>
-                          <span>{taskInstance.taskId}</span>
-                          <span>{taskInstance.tryNumber}</span>
-                          <span>{taskInstance.duration}</span>
+                        <div className={index === 0 ? "accordion-row-parent-collapsed" : "accordion-row-parent"}>
+                          <div className="accordion-row-data">
+                            {taskInstance.taskId}
+                          </div>
+                          <div className="accordion-row-data">
+                            {taskInstance.tryNumber}
+                          </div>
+                          <div className="accordion-row-data">
+                            {taskInstance.duration}
+                          </div>
                         </div>
                       </AccordionSummary>
                       <AccordionDetails>

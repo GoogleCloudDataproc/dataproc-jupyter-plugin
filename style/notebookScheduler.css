@@ -109,3 +109,18 @@
 .execution-history-title {
   display: flex;
 }
+
+.accordion-row-parent {
+  display: flex;
+  width: 100%;
+}
+
+.accordion-row-parent-collapsed {
+  display: flex;
+  width: 100%;
+  margin-right: 25px;
+}
+
+.accordion-row-data {
+  width: 33%;
+}
