@@ -8,6 +8,23 @@ import {
 } from '@mui/material';
 import { SchedulerService } from './schedulerServices';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { LabIcon } from '@jupyterlab/ui-components';
+import failedIcon from '../../style/icons/error_icon.svg';
+import successIcon from '../../style/icons/succeeded_icon.svg';
+import stopIcon from '../../style/icons/stop_icon.svg';
+
+const iconFailed = new LabIcon({
+  name: 'launcher:delete-icon',
+  svgstr: failedIcon
+});
+const iconSuccess = new LabIcon({
+  name: 'launcher:start-icon',
+  svgstr: successIcon
+});
+const iconStop = new LabIcon({
+  name: 'launcher:stop-icon',
+  svgstr: stopIcon
+});
 
 const ListDagTaskInstances = ({
   composerName,
@@ -38,8 +55,9 @@ const ListDagTaskInstances = ({
   }, [dagRunId]);
 
   const handleChange =
-    (index: number, tryNumber: number) => (event: React.SyntheticEvent, newExpanded: boolean) => {
-      console.log(tryNumber, index, typeof tryNumber)
+    (index: number, tryNumber: number) =>
+    (event: React.SyntheticEvent, newExpanded: boolean) => {
+      console.log(tryNumber, index, typeof tryNumber);
       if (index === 0 || tryNumber === 0) {
         setExpanded(false);
       } else {
@@ -51,17 +69,17 @@ const ListDagTaskInstances = ({
   const listDagTaskLogList = async (index: any) => {
     //console.log('index', index);
     //console.log('dagtask', dagTaskInstancesList);
-    console.log(dagTaskInstancesList[index].tryNumber)
-    if (dagTaskInstancesList[index].tryNumber !== 0) { 
-    await SchedulerService.listDagTaskLogsListService(
-      composerName,
-      dagId,
-      dagRunId,
-      dagTaskInstancesList[index].taskId,
-      dagTaskInstancesList[index].tryNumber,
-      setLogList,
-      setIsLoading
-    );
+    console.log(dagTaskInstancesList[index].tryNumber);
+    if (dagTaskInstancesList[index].tryNumber !== 0) {
+      await SchedulerService.listDagTaskLogsListService(
+        composerName,
+        dagId,
+        dagRunId,
+        dagTaskInstancesList[index].taskId,
+        dagTaskInstancesList[index].tryNumber,
+        setLogList,
+        setIsLoading
+      );
     }
   };
   //onsole.log(loglist);
@@ -79,17 +97,70 @@ const ListDagTaskInstances = ({
                       onChange={handleChange(index, taskInstance.tryNumber)}
                     >
                       <AccordionSummary
-                        expandIcon={index === 0 || taskInstance.tryNumber === 0  ? null : <ExpandMoreIcon />}
+                        expandIcon={
+                          index === 0 || taskInstance.tryNumber === 0 ? null : (
+                            <ExpandMoreIcon />
+                          )
+                        }
                         aria-controls="panel2bh-content"
                         id="panel2bh-header"
                       >
-                        <div className={index === 0 || taskInstance.tryNumber === 0 ? "accordion-row-parent-collapsed" : "accordion-row-parent"}>
+                        <div
+                          className={
+                            index === 0 || taskInstance.tryNumber === 0
+                              ? 'accordion-row-parent-collapsed'
+                              : 'accordion-row-parent'
+                          }
+                        >
                           <div className="accordion-row-data">
                             {taskInstance.taskId}
                           </div>
                           <div className="accordion-row-data">
-                            
-                            {taskInstance.tryNumber}
+                            {taskInstance.tryNumber === 0 ? (
+                              <iconStop.react
+                                tag="div"
+                                className="icon-white logo-alignment-style"
+                              />
+                            ) : (
+                              <div className="logo-row-container">
+                                {(() => {
+                                  const logos = [];
+                                  for (
+                                    let i = 0;
+                                    i < taskInstance.tryNumber;
+                                    i++
+                                  ) {
+                                    logos.push(
+                                      <div
+                                        key={i}
+                                        className="logo-alignment-style"
+                                      >
+                                        {i === taskInstance.tryNumber - 1 ? (
+                                          taskInstance.someState ===
+                                          'failed' ? (
+                                            <iconFailed.react
+                                              tag="div"
+                                              className="icon-white"
+                                            />
+                                          ) : (
+                                            <iconSuccess.react
+                                              tag="div"
+                                              className="icon-white"
+                                            />
+                                          )
+                                        ) : (
+                                          <iconFailed.react
+                                            tag="div"
+                                            className="icon-white"
+                                          />
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                  return logos;
+                                })()}
+                              </div>
+                            )}
                           </div>
                           <div className="accordion-row-data">
                             {taskInstance.duration}
