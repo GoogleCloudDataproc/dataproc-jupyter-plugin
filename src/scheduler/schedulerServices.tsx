@@ -451,6 +451,17 @@ export class SchedulerService {
           };
         }
       );
+      let sample={
+        tryNumber: "Attempts",
+        taskId:"taskId",
+        // dagRunId: dagRunTask.dag_run_id,
+        duration: "Duration",
+        state: "State",
+        date: "Date",
+        time: "time"
+      }
+      transformDagRunTaskInstanceListData.unshift(sample)
+      console.log("sample",transformDagRunTaskInstanceListData)
       setDagTaskInstancesList(transformDagRunTaskInstanceListData);
      // this.listDagTaskLogsListService();
       setIsLoading(false);
