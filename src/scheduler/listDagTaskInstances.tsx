@@ -83,11 +83,12 @@ const ListDagTaskInstances = ({
                         aria-controls="panel2bh-content"
                         id="panel2bh-header"
                       >
-                        <div className={index === 0 ? "accordion-row-parent-collapsed" : "accordion-row-parent"}>
+                        <div className={index === 0 || taskInstance.tryNumber === 0 ? "accordion-row-parent-collapsed" : "accordion-row-parent"}>
                           <div className="accordion-row-data">
                             {taskInstance.taskId}
                           </div>
                           <div className="accordion-row-data">
+                            
                             {taskInstance.tryNumber}
                           </div>
                           <div className="accordion-row-data">
