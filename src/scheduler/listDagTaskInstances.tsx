@@ -19,14 +19,14 @@ import React, { useEffect, useState } from 'react';
 import { Typography, CircularProgress } from '@mui/material';
 import { SchedulerService } from './schedulerServices';
 import { LabIcon } from '@jupyterlab/ui-components';
-import failedIcon from '../../style/icons/error_icon.svg';
+import errorIcon from '../../style/icons/error_icon.svg';
 import successIcon from '../../style/icons/succeeded_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import DownArrowIcon from '../../style/icons/keyboard_arrow_down.svg';
 
-const iconFailed = new LabIcon({
-  name: 'launcher:failed-icon',
-  svgstr: failedIcon
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
 });
 const iconSuccess = new LabIcon({
   name: 'launcher:start-icon',
@@ -71,8 +71,12 @@ const ListDagTaskInstances = ({
     setExpanded(false);
   }, [dagRunId]);
 
-  const handleChange = (index: number, iconIndex: number, fromClick: string) => {
-    if (`${index}` === expanded &&  fromClick === 'expandClick') {
+  const handleChange = (
+    index: number,
+    iconIndex: number,
+    fromClick: string
+  ) => {
+    if (`${index}` === expanded && fromClick === 'expandClick') {
       setExpanded(false);
     } else {
       setExpanded(`${index}`);
@@ -112,7 +116,7 @@ const ListDagTaskInstances = ({
                     {taskInstance.tryNumber === 0 ? (
                       <iconStop.react
                         tag="div"
-                        className="icon-white logo-alignment-style-accordion"
+                        className="logo-alignment-style-accordion"
                       />
                     ) : (
                       <div className="logo-row-container">
@@ -123,25 +127,18 @@ const ListDagTaskInstances = ({
                               <div
                                 key={i}
                                 className="logo-alignment-style-accordion"
-                                onClick={() => handleChange(index, i + 1, 'attemptsClick')}
+                                onClick={() =>
+                                  handleChange(index, i + 1, 'attemptsClick')
+                                }
                               >
                                 {i === taskInstance.tryNumber - 1 ? (
                                   taskInstance.state === 'failed' ? (
-                                    <iconFailed.react
-                                      tag="div"
-                                      className="icon-white"
-                                    />
+                                    <iconError.react tag="div" />
                                   ) : (
-                                    <iconSuccess.react
-                                      tag="div"
-                                      className="icon-white"
-                                    />
+                                    <iconSuccess.react tag="div" />
                                   )
                                 ) : (
-                                  <iconFailed.react
-                                    tag="div"
-                                    className="icon-white"
-                                  />
+                                  <iconError.react tag="div" />
                                 )}
                               </div>
                             );
@@ -158,7 +155,11 @@ const ListDagTaskInstances = ({
                     <div
                       className="accordion-row-data-expand-logo"
                       onClick={() =>
-                        handleChange(index, taskInstance.tryNumber, 'expandClick')
+                        handleChange(
+                          index,
+                          taskInstance.tryNumber,
+                          'expandClick'
+                        )
                       }
                     >
                       <iconDownArrow.react
