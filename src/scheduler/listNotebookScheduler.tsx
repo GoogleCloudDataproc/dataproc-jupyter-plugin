@@ -7,8 +7,8 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Autocomplete, TextField } from '@mui/material';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
-import startIcon from '../../style/icons/start_icon.svg';
-import stopIcon from '../../style/icons/stop_icon.svg';
+import playIcon from '../../style/icons/play_icon.svg';
+import pauseIcon from '../../style/icons/pause_icon.svg';
 import downloadIcon from '../../style/icons/download_icon.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
@@ -17,13 +17,13 @@ const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
   svgstr: deleteIcon
 });
-const iconStart = new LabIcon({
-  name: 'launcher:start-icon',
-  svgstr: startIcon
+const iconPlay = new LabIcon({
+  name: 'launcher:play-icon',
+  svgstr: playIcon
 });
-const iconStop = new LabIcon({
-  name: 'launcher:stop-icon',
-  svgstr: stopIcon
+const iconPause = new LabIcon({
+  name: 'launcher:pause-icon',
+  svgstr: pauseIcon
 });
 
 const iconDownload = new LabIcon({
@@ -151,12 +151,12 @@ function listNotebookScheduler({
           onClick={e => handleUpdateScheduler(data.jobid, is_status_paused)}
         >
           {is_status_paused ? (
-            <iconStart.react
+            <iconPlay.react
               tag="div"
               className="icon-white logo-alignment-style"
             />
           ) : (
-            <iconStop.react
+            <iconPause.react
               tag="div"
               className="icon-white logo-alignment-style"
             />

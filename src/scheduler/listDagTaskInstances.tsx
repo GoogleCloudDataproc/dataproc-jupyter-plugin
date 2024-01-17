@@ -8,7 +8,7 @@ import stopIcon from '../../style/icons/stop_icon.svg';
 import DownArrowIcon from '../../style/icons/keyboard_arrow_down.svg';
 
 const iconFailed = new LabIcon({
-  name: 'launcher:delete-icon',
+  name: 'launcher:failed-icon',
   svgstr: failedIcon
 });
 const iconSuccess = new LabIcon({
