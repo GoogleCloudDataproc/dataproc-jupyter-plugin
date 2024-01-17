@@ -518,15 +518,16 @@ const extension: JupyterFrontEndPlugin<void> = {
         rank: 2
       });
       launcher.add({
-        command: createNotebookJobsComponentCommand,
-        category: TITLE_LAUNCHER_CATEGORY,
-        rank: 3 //it will be 4
-      });
-      launcher.add({
         command: createTemplateComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
-        rank: 4
+        rank: 3
       });
+      launcher.add({
+        command: createNotebookJobsComponentCommand,
+        category: TITLE_LAUNCHER_CATEGORY,
+        rank: 4 
+      });
+      
     }
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
