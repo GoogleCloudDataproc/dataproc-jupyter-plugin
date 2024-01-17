@@ -54,7 +54,7 @@
 }
 
 .execution-history-left-wrapper {
-  width: 40%;
+  width: 320px;
   border: 1px solid var(--jp-layout-color3);
 }
 .execution-history-main-wrapper {
@@ -63,7 +63,7 @@
 }
 
 .execution-history-right-wrapper {
-  width: 60%;
+  width: calc(100% - 320px);
   border: 1px solid var(--jp-layout-color3);
 }
 
@@ -158,4 +158,53 @@
 
 .accordion-row-data-expand-logo {
   width: 30px;
+}
+
+.dag-runs-table-data-state-success {
+  background-color: #34A853;
+  color: var(--jp-border-color3);
+  border-radius: 22px;
+  margin: 5px  15px;
+  display: flex;
+  width: 71px;
+  text-transform: capitalize;
+  justify-content: center;
+  align-items: center;
+}
+.dag-runs-table-data-state-failure {
+  background-color: #EA3323;
+  color: var(--jp-border-color3);
+  border-radius: 22px;
+  margin: 5px 15px;
+  display: flex;
+  width: 71px;
+  text-transform: capitalize;
+  justify-content: center;
+  align-items: center;
+}
+.dag-runs-table-data-state-queued {
+  background-color: #808080;
+  color: var(--jp-border-color3);
+  border-radius: 22px;
+  margin: 5px 15px;
+  display: flex;
+  width: 71px;
+  text-transform: capitalize;
+  justify-content: center;
+  align-items: center;
+}
+.dag-runs-table-data-state-running {
+  background-color: #1A73E8;
+  color: var(--jp-border-color3);
+  border-radius: 22px;
+  margin: 5px 15px;
+  display: flex;
+  width: 71px;
+  text-transform: capitalize;
+  justify-content: center;
+  align-items: center;
+}
+
+.dag-run-state-parent {
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
