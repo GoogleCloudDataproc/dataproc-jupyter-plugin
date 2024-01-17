@@ -105,7 +105,7 @@ const ExecutionHistory = ({
       <PickersDay
         {...props}
         style={{
-          border: isSelectedExecution ? '3px solid #000000' : 'none',
+          border: isSelectedExecution ? '3px solid var(--jp-ui-font-color0)' : 'none',
           borderRadius:
             isGreenExecution ||
             isRedExecution ||
