@@ -153,6 +153,7 @@
   overflow: auto;
   height: 400px;
   margin: 10px;
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .accordion-row-data-expand-logo {

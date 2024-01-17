@@ -52,12 +52,10 @@ const ListDagTaskInstances = ({
   useEffect(() => {
     listDagTaskInstancesRunsList();
     setExpanded(false);
-    console.log(expanded);
   }, [dagRunId]);
 
-  const handleChange = (index: number, iconIndex: number) => {
-    console.log(index, expanded, iconIndex);
-    if (`${index}` === expanded) {
+  const handleChange = (index: number, iconIndex: number, fromClick: string) => {
+    if (`${index}` === expanded &&  fromClick === 'expandClick') {
       setExpanded(false);
     } else {
       setExpanded(`${index}`);
@@ -108,7 +106,7 @@ const ListDagTaskInstances = ({
                               <div
                                 key={i}
                                 className="logo-alignment-style-accordion"
-                                onClick={() => handleChange(index, i + 1)}
+                                onClick={() => handleChange(index, i + 1, 'attemptsClick')}
                               >
                                 {i === taskInstance.tryNumber - 1 ? (
                                   taskInstance.state === 'failed' ? (
@@ -143,7 +141,7 @@ const ListDagTaskInstances = ({
                     <div
                       className="accordion-row-data-expand-logo"
                       onClick={() =>
-                        handleChange(index, taskInstance.tryNumber)
+                        handleChange(index, taskInstance.tryNumber, 'expandClick')
                       }
                     >
                       <iconDownArrow.react
