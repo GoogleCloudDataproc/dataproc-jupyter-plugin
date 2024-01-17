@@ -451,15 +451,6 @@ export class SchedulerService {
           };
         }
       );
-      let sample = {
-        tryNumber: 'Attempts',
-        taskId: 'Task Id',
-        duration: 'Duration',
-        state: 'State',
-        date: 'Date',
-        time: 'Time'
-      };
-      transformDagRunTaskInstanceListData.unshift(sample);
       setDagTaskInstancesList(transformDagRunTaskInstanceListData);
       setIsLoading(false);
     } catch (reason) {

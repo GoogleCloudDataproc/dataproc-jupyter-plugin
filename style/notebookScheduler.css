@@ -113,15 +113,28 @@
 .accordion-row-parent {
   display: flex;
   width: 100%;
+  height: 30px;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
-.accordion-row-parent-collapsed {
+.accordion-row-parent-header {
+  background: rgba(0, 0, 0, 0.04);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  height: 29px;
   display: flex;
-  width: 100%;
-  margin-right: 25px;
+  justify-content: center;
+  align-items: center;
+  line-height: 18px;
+  color: var(--jp-ui-font-color0);
+  border-bottom: 1px solid var(--jp-layout-color3);
 }
 
 .accordion-row-data {
+  padding-left: 15px;
   width: 33%;
 }
 
@@ -133,9 +146,15 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  cursor: pointer;
 }
 
 .logs-content-style {
   overflow: auto;
   height: 400px;
+  margin: 10px;
+}
+
+.accordion-row-data-expand-logo {
+  width: 30px;
 }
