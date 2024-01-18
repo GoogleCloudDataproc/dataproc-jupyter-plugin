@@ -151,7 +151,7 @@
 
 .logs-content-style {
   overflow: auto;
-  height: 400px;
+  max-height: 400px;
   margin: 10px;
   border-bottom: 1px solid var(--jp-layout-color3);
 }

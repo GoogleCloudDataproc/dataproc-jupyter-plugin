@@ -76,3 +76,5 @@ export class NotebookJobs extends DataprocWidget {
     );
   }
 }
+
+export default NotebookJobComponent;

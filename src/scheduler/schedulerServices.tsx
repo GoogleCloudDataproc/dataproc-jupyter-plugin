@@ -186,7 +186,8 @@ export class SchedulerService {
   };
   static createJobSchedulerService = async (
     payload: IPayload,
-    app: JupyterLab
+    app: JupyterLab,
+    setCreateCompleted: (value: boolean) => void
   ) => {
     try {
       const data = await requestAPI('createJobScheduler', {
@@ -194,7 +195,8 @@ export class SchedulerService {
         method: 'POST'
       });
       toast.success(`Job scheduler successfully created`, toastifyCustomStyle);
-      app.shell.activeWidget?.close();
+      // app.shell.activeWidget?.close();
+      setCreateCompleted(true);
       console.log(data);
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
