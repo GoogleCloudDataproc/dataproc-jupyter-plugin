@@ -18,55 +18,6 @@
   border-bottom: 1px solid var(--jp-layout-color3);
 }
 
-.notebook-template-table-data-state-success{
-  display: inline-block;
-  padding: 0px 17px;
-  background-color: #28a745;
-  color: #fff;
-  border-radius: 22px;
-  margin-inline: 10px -23px;
-  margin: 5px 10px 5px 10px; 
-  width: 35px;
-  text-transform: capitalize;
-  text-align: center;
-}
-.notebook-template-table-data-state-failure{
-  display: inline-block;
-  padding: 0px 17px;
-  background-color: #c01c1c;
-  color: #fff;
-  border-radius: 22px;
-  margin-inline: 10px -23px;
-  margin: 5px 10px 5px 10px; 
-  width: 35px;
-  text-transform: capitalize;
-  text-align: center;
-}
-.notebook-template-table-data-state-queued{
-  display: inline-block;
-  padding: 0px 17px;
-  background-color: #565e58;
-  color: #fff;
-  border-radius: 22px;
-  margin-inline: 10px -23px;
-  margin: 5px 10px 5px 10px; 
-  width: 35px;
-  text-transform: capitalize;
-  text-align: center;
-}
-.notebook-template-table-data-state-running{
-  display: inline-block;
-  padding: 0px 17px;
-  background-color: #2b1bbc;
-  color: #fff;
-  border-radius: 22px;
-  margin-inline: 10px -23px;
-  margin: 5px 10px 5px 10px; 
-  width: 35px;
-  text-transform: capitalize;
-  text-align: center;
-}
-
 .notebook-templates-list-table-parent {
   height: 100%;
   overflow: auto;

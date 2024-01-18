@@ -19,18 +19,18 @@ import React, { useEffect, useState } from 'react';
 import { Typography, CircularProgress } from '@mui/material';
 import { SchedulerService } from './schedulerServices';
 import { LabIcon } from '@jupyterlab/ui-components';
-import errorIcon from '../../style/icons/error_icon.svg';
-import successIcon from '../../style/icons/succeeded_icon.svg';
+import dagTaskSuccessIcon from '../../style/icons/dag_task_success_icon.svg';
+import dagTaskFailedIcon from '../../style/icons/dag_task_failed_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import DownArrowIcon from '../../style/icons/keyboard_arrow_down.svg';
 
-const iconError = new LabIcon({
-  name: 'launcher:error-icon',
-  svgstr: errorIcon
+const iconDagTaskFailed = new LabIcon({
+  name: 'launcher:dag-task-failed-icon',
+  svgstr: dagTaskFailedIcon
 });
-const iconSuccess = new LabIcon({
-  name: 'launcher:start-icon',
-  svgstr: successIcon
+const iconDagTaskSuccess = new LabIcon({
+  name: 'launcher:dag-task-success-icon',
+  svgstr: dagTaskSuccessIcon
 });
 const iconStop = new LabIcon({
   name: 'launcher:stop-icon',
@@ -133,12 +133,12 @@ const ListDagTaskInstances = ({
                               >
                                 {i === taskInstance.tryNumber - 1 ? (
                                   taskInstance.state === 'failed' ? (
-                                    <iconError.react tag="div" />
+                                    <iconDagTaskFailed.react tag="div" />
                                   ) : (
-                                    <iconSuccess.react tag="div" />
+                                    <iconDagTaskSuccess.react tag="div" />
                                   )
                                 ) : (
-                                  <iconError.react tag="div" />
+                                  <iconDagTaskFailed.react tag="div" />
                                 )}
                               </div>
                             );

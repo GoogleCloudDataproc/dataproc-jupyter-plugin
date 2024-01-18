@@ -92,39 +92,47 @@ const ListDagRuns = ({
     if (cell.column.Header === 'State') {
       if (cell.value === 'success') {
         return (
-          <td
-            {...cell.getCellProps()}
-            className="notebook-template-table-data-state-success"
-          >
-            {cell.render('Cell')}
-          </td>
+          <div className="dag-run-state-parent">
+            <td
+              {...cell.getCellProps()}
+              className="dag-runs-table-data-state-success"
+            >
+              {cell.render('Cell')}
+            </td>
+          </div>
         );
       } else if (cell.value === 'failed') {
         return (
-          <td
-            {...cell.getCellProps()}
-            className="notebook-template-table-data-state-failure"
-          >
-            {cell.render('Cell')}
-          </td>
+          <div className="dag-run-state-parent">
+            <td
+              {...cell.getCellProps()}
+              className="dag-runs-table-data-state-failure"
+            >
+              {cell.render('Cell')}
+            </td>
+          </div>
         );
       } else if (cell.value === 'running') {
         return (
-          <td
-            {...cell.getCellProps()}
-            className="notebook-template-table-data-state-running"
-          >
-            {cell.render('Cell')}
-          </td>
+          <div className="dag-run-state-parent">
+            <td
+              {...cell.getCellProps()}
+              className="dag-runs-table-data-state-running"
+            >
+              {cell.render('Cell')}
+            </td>
+          </div>
         );
       } else if (cell.value === 'queued') {
         return (
-          <td
-            {...cell.getCellProps()}
-            className="notebook-template-table-data-state-queued"
-          >
-            {cell.render('Cell')}
-          </td>
+          <div className="dag-run-state-parent">
+            <td
+              {...cell.getCellProps()}
+              className="dag-runs-table-data-state-queued"
+            >
+              {cell.render('Cell')}
+            </td>
+          </div>
         );
       }
     }
