@@ -26,32 +26,49 @@ def get_client_cert():
     # code to load client certificate and private key.
     return client_cert_bytes, client_private_key_bytes
  
- 
-def sample_start_cluster():
- 
+
+def get_cluster_state_start_if_not_running():
+
     options = ClientOptions(api_endpoint="{{gcpRegion}}-dataproc.googleapis.com:443",
     client_cert_source=get_client_cert)
- 
+
     # Create a client
     client = dataproc_v1.ClusterControllerClient(client_options=options)
- 
+
     # Initialize request argument(s)
-    request = dataproc_v1.StartClusterRequest(
+    request = dataproc_v1.GetClusterRequest(
         project_id='{{gcpProjectId}}',
         region='{{gcpRegion}}',
         cluster_name='{{cluster_name}}',
     )
- 
+
     # Make the request
-    operation = client.start_cluster(request=request)
-    print("Waiting for operation to complete...")
-    response = operation.result()
- 
+    response = client.get_cluster(request=request)
+    
+   
     # Handle the response
-    print(response)
+    print(f"State is {response.status.state}")
+    if response.status.state in (6, 7):
+       print("Let's start the cluster")
+
+       request1 = dataproc_v1.StartClusterRequest(
+        project_id='{{gcpProjectId}}',
+        region='{{gcpRegion}}',
+        cluster_name='{{cluster_name}}',
+    )
+       operation = client.start_cluster(request=request1)
+       print("Waiting for operation to complete...")
+       response = operation.result()
+
+    elif response.status.state in (2, 5):
+       print("Cluster is already running")
+
+    else:
+        print("Cluster is unavailable")
+        raise Exception("API request failed")
 
  
-def sample_stop_cluster():
+def stop_cluster():
  
     options = ClientOptions(api_endpoint="{{gcpRegion}}-dataproc.googleapis.com:443",
     client_cert_source=get_client_cert)
@@ -83,7 +100,7 @@ dag = DAG(
 
 start_cluster = PythonOperator(
     task_id='start_cluster',
-    python_callable=sample_start_cluster,
+    python_callable=get_cluster_state_start_if_not_running,
     provide_context=True,
     dag=dag)
 
@@ -105,6 +122,8 @@ submit_pyspark_job = DataprocSubmitJobOperator(
 if '{{stop_cluster}}' == 'True':
     stop_cluster = PythonOperator(
         task_id='stop_cluster',
-        python_callable=sample_stop_cluster,
+        python_callable=stop_cluster,
         provide_context=True,
         dag=dag)
+    
+start_cluster >> submit_pyspark_job >> stop_cluster 
