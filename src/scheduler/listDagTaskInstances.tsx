@@ -22,7 +22,8 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import dagTaskSuccessIcon from '../../style/icons/dag_task_success_icon.svg';
 import dagTaskFailedIcon from '../../style/icons/dag_task_failed_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
-import DownArrowIcon from '../../style/icons/keyboard_arrow_down.svg';
+import expandLessIcon from '../../style/icons/expand_less.svg';
+import expandMoreIcon from '../../style/icons/expand_more.svg';
 
 const iconDagTaskFailed = new LabIcon({
   name: 'launcher:dag-task-failed-icon',
@@ -36,9 +37,13 @@ const iconStop = new LabIcon({
   name: 'launcher:stop-icon',
   svgstr: stopIcon
 });
-const iconDownArrow = new LabIcon({
-  name: 'launcher:keyboard-down-arrow-icon',
-  svgstr: DownArrowIcon
+const iconExpandLess = new LabIcon({
+  name: 'launcher:expand-less-icon',
+  svgstr: expandLessIcon
+});
+const iconExpandMore = new LabIcon({
+  name: 'launcher:expand-more-icon',
+  svgstr: expandMoreIcon
 });
 
 const ListDagTaskInstances = ({
@@ -68,7 +73,7 @@ const ListDagTaskInstances = ({
 
   useEffect(() => {
     listDagTaskInstancesRunsList();
-    setExpanded('0');
+    setExpanded(false);
   }, [dagRunId]);
 
   const handleChange = (
@@ -162,10 +167,17 @@ const ListDagTaskInstances = ({
                         )
                       }
                     >
-                      <iconDownArrow.react
-                        tag="div"
-                        className="icon-white logo-alignment-style-accordion"
-                      />
+                      {expanded === `${index}` ? (
+                        <iconExpandLess.react
+                          tag="div"
+                          className="icon-white logo-alignment-style-accordion"
+                        />
+                      ) : (
+                        <iconExpandMore.react
+                          tag="div"
+                          className="icon-white logo-alignment-style-accordion"
+                        />
+                      )}
                     </div>
                   ) : (
                     <div className="accordion-row-data-expand-logo"></div>
