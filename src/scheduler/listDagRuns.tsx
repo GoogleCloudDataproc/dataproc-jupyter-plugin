@@ -53,8 +53,10 @@ const ListDagRuns = ({
   setDarkGreenListDates: (value: string[]) => void;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState([]);
+  const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const data = dagRunsList;
+  const data =
+    dagRunsCurrentDateList.length > 0 ? dagRunsCurrentDateList : dagRunsList;
   const columns = React.useMemo(
     () => [
       {
@@ -149,7 +151,7 @@ const ListDagRuns = ({
       dagId,
       startDate,
       endDate,
-      selectedDate,
+      // selectedDate,
       setDagRunsList,
       setDagRunId,
       setIsLoading,
@@ -165,12 +167,35 @@ const ListDagRuns = ({
 
   useEffect(() => {
     listDagRunsList();
-  }, [startDate, endDate, selectedDate]);
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    if (selectedDate !== null && dagRunsList.length > 0) {
+      let currentDate = new Date(selectedDate.toDate()).toDateString();
+      let currentDateDagRunList: any = dagRunsList.filter((dagRun: any) => {
+        return dagRun.date === currentDate;
+      });
+      console.log(currentDate, dagRunsList, currentDateDagRunList);
+      if (currentDateDagRunList.length > 0) {
+        setDagRunsCurrentDateList(currentDateDagRunList);
+        setDagRunId(
+          currentDateDagRunList[currentDateDagRunList.length - 1].dagRunId
+        );
+      } else {
+        setDagRunsCurrentDateList([]);
+        setDagRunId('');
+      }
+    } else {
+      setDagRunsCurrentDateList([]);
+      setDagRunId('');
+    }
+  }, [selectedDate]);
 
   return (
     <div>
       <>
-        {dagRunsList.length > 0 ? (
+        {(dagRunsList.length > 0 && selectedDate === null) ||
+        (selectedDate !== null && dagRunsCurrentDateList.length > 0) ? (
           <div>
             <div className="dag-runs-list-table-parent">
               <TableData

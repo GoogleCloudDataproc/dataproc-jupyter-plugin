@@ -20,7 +20,7 @@ import { requestAPI } from '../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { toastifyCustomStyle } from '../utils/utils';
 import { JupyterLab } from '@jupyterlab/application';
-import { Dayjs } from 'dayjs';
+// import { Dayjs } from 'dayjs';
 
 interface IPayload {
   input_filename: string;
@@ -211,7 +211,7 @@ export class SchedulerService {
     dagId: string,
     startDate: string,
     endDate: string,
-    selectedDate: Dayjs | null,
+    // selectedDate: Dayjs | null,
     setDagRunsList: (value: any) => void,
     setDagRunId: (value: string) => void,
     setIsLoading: (value: boolean) => void,
@@ -226,12 +226,12 @@ export class SchedulerService {
     setIsLoading(true);
     let start_date = startDate;
     let end_date = endDate;
-    if (selectedDate !== null) {
-      start_date = new Date(selectedDate.toDate()).toISOString();
-      const nextDate = new Date(selectedDate.toDate());
-      nextDate.setDate(selectedDate.toDate().getDate() + 1);
-      end_date = nextDate.toISOString();
-    }
+    // if (selectedDate !== null) {
+    //   start_date = new Date(selectedDate.toDate()).toISOString();
+    //   const nextDate = new Date(selectedDate.toDate());
+    //   nextDate.setDate(selectedDate.toDate().getDate() + 1);
+    //   end_date = nextDate.toISOString();
+    // }
 
     try {
       const data: any = await requestAPI(
@@ -302,14 +302,14 @@ export class SchedulerService {
           }
         });
 
-        if (selectedDate === null) {
+        // if (selectedDate === null) {
           setBlueListDates(blueList);
           setGreyListDates(greyList);
           setOrangeListDates(orangeList);
           setRedListDates(redList);
           setGreenListDates(greenList);
           setDarkGreenListDates(darkGreenList);
-        }
+        // }
 
         setDagRunsList(transformDagRunListData);
         setDagRunId(
@@ -318,14 +318,14 @@ export class SchedulerService {
       } else {
         setDagRunsList([]);
         setDagRunId('');
-        if (selectedDate === null) {
+        // if (selectedDate === null) {
           setBlueListDates([]);
           setGreyListDates([]);
           setOrangeListDates([]);
           setRedListDates([]);
           setGreenListDates([]);
           setDarkGreenListDates([]);
-        }
+        // }
       }
       setIsLoading(false);
     } catch (reason) {
