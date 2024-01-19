@@ -170,6 +170,7 @@ const ListDagRuns = ({
   }, [startDate, endDate]);
 
   useEffect(() => {
+    console.log(selectedDate , dagRunsList)
     if (selectedDate !== null && dagRunsList.length > 0) {
       let currentDate = new Date(selectedDate.toDate()).toDateString();
       let currentDateDagRunList: any = dagRunsList.filter((dagRun: any) => {
@@ -189,7 +190,7 @@ const ListDagRuns = ({
       setDagRunsCurrentDateList([]);
       setDagRunId('');
     }
-  }, [selectedDate]);
+  }, [selectedDate, dagRunsList]);
 
   return (
     <div>

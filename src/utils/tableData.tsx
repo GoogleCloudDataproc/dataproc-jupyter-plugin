@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
 import { Cell, Row } from 'react-table';
 
@@ -44,6 +44,12 @@ function TableData({
       }
     }
   };
+
+  useEffect(() => {
+    if (fromPage === 'Dag Runs') {
+      setSelectedRowIndex(selectedDagIndex);
+    }
+  }, [selectedDagIndex]);
 
   return (
     <table {...getTableProps()} className="clusters-list-table">

@@ -147,7 +147,7 @@ const ExecutionHistory = ({
   };
 
   useEffect(() => {
-    // setSelectedDate(dayjs(currentDate))
+    setSelectedDate(dayjs(currentDate))
   }, []);
 
   return (
