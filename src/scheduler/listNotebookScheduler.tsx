@@ -68,10 +68,6 @@ function listNotebookScheduler({
         accessor: 'jobid'
       },
       {
-        Header: 'Download Notebook',
-        accessor: 'notebookname'
-      },
-      {
         Header: 'Schedule',
         accessor: 'schedule'
       },
@@ -190,6 +186,18 @@ function listNotebookScheduler({
             className="icon-white logo-alignment-style"
           />
         </div>
+        <div
+          role="button"
+          className="icon-buttons-style"
+          title="Download Notebook"
+          data-jobid={data.jobid}
+          onClick={e => handleDownloadScheduler(e)}
+        >
+          <iconDownload.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
       </div>
     );
   };
@@ -209,23 +217,6 @@ function listNotebookScheduler({
           onClick={() => handleDagIdSelection(composerSelected, cell.value)}
         >
           {cell.value}
-        </td>
-      );
-    } else if (cell.column.Header === 'Download Notebook') {
-      return (
-        <td {...cell.getCellProps()} className="clusters-table-data">
-          <div
-            role="button"
-            className="icon-buttons-style"
-            title="Download"
-            data-jobid={cell.value}
-            onClick={e => handleDownloadScheduler(e)}
-          >
-            <iconDownload.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          </div>
         </td>
       );
     } else {
