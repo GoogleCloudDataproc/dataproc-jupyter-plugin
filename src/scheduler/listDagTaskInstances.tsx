@@ -68,7 +68,7 @@ const ListDagTaskInstances = ({
 
   useEffect(() => {
     listDagTaskInstancesRunsList();
-    setExpanded(false);
+    setExpanded('0');
   }, [dagRunId]);
 
   const handleChange = (

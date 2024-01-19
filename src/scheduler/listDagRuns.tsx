@@ -151,6 +151,7 @@ const ListDagRuns = ({
       endDate,
       selectedDate,
       setDagRunsList,
+      setDagRunId,
       setIsLoading,
 
       setBlueListDates,

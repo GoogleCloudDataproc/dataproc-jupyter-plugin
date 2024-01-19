@@ -213,6 +213,7 @@ export class SchedulerService {
     endDate: string,
     selectedDate: Dayjs | null,
     setDagRunsList: (value: any) => void,
+    setDagRunId: (value: string) => void,
     setIsLoading: (value: boolean) => void,
 
     setBlueListDates: (value: string[]) => void,
@@ -309,6 +310,7 @@ export class SchedulerService {
       }
 
       setDagRunsList(transformDagRunListData);
+      setDagRunId(transformDagRunListData[transformDagRunListData.length-1].dagRunId)
       setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
