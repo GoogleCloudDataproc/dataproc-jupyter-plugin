@@ -112,11 +112,11 @@ const ExecutionHistory = ({
             isGreenExecution ||
             isRedExecution ||
             isSelectedExecution ||
-            isBlueExecution ||
+            isOrangeExecution ||
             isGreyExecution ||
             isBlueExecution ||
             isDarkGreenExecution
-              ? '50%'
+              ? '0%'
               : 'none',
           backgroundColor: isDarkGreenExecution
             ? '#188038'
@@ -135,7 +135,7 @@ const ExecutionHistory = ({
             isGreenExecution ||
             isRedExecution ||
             // isSelectedExecution ||
-            isBlueExecution ||
+            isOrangeExecution ||
             isGreyExecution ||
             isBlueExecution ||
             isDarkGreenExecution
