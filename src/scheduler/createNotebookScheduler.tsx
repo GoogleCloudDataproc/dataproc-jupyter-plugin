@@ -54,8 +54,8 @@ const CreateNotebookScheduler = ({
   const [inputFileSelected, setInputFileSelected] = useState('');
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelected, setComposerSelected] = useState('');
-  const [outputNotebook, setOutputNotebook] = useState(true);
-  const [outputHtml, setOutputHtml] = useState(true);
+  // const [outputNotebook, setOutputNotebook] = useState(true);
+  // const [outputHtml, setOutputHtml] = useState(true);
 
   const [parameterDetail, setParameterDetail] = useState(['']);
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
@@ -74,8 +74,8 @@ const CreateNotebookScheduler = ({
 
   const [retryCount, setRetryCount] = useState<number | undefined>(2);
   const [retryDelay, setRetryDelay] = useState<number | undefined>(5);
-  const [emailOnFailure, setEmailOnFailure] = useState(true);
-  const [emailOnRetry, setEmailonRetry] = useState(true);
+  const [emailOnFailure, setEmailOnFailure] = useState(false);
+  const [emailOnRetry, setEmailonRetry] = useState(false);
   const [emailList, setEmailList] = useState<string[]>([]);
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
@@ -108,17 +108,17 @@ const CreateNotebookScheduler = ({
     }
   };
 
-  const handleOutputNotebookChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setOutputNotebook(event.target.checked);
-  };
+  // const handleOutputNotebookChange = (
+  //   event: React.ChangeEvent<HTMLInputElement>
+  // ) => {
+  //   setOutputNotebook(event.target.checked);
+  // };
 
-  const handleOutputHtmlChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setOutputHtml(event.target.checked);
-  };
+  // const handleOutputHtmlChange = (
+  //   event: React.ChangeEvent<HTMLInputElement>
+  // ) => {
+  //   setOutputHtml(event.target.checked);
+  // };
 
   const handleSelectedModeChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -187,12 +187,12 @@ const CreateNotebookScheduler = ({
 
   const handleCreateJobScheduler = async () => {
     let outputFormats = [];
-    if (outputNotebook) {
+    // if (outputNotebook) {
       outputFormats.push('ipynb');
-    }
-    if (outputHtml) {
-      outputFormats.push('html');
-    }
+    // }
+    // if (outputHtml) {
+    //   outputFormats.push('html');
+    // }
 
     let randomDagId = uuidv4();
 
@@ -321,8 +321,10 @@ const CreateNotebookScheduler = ({
                   control={
                     <Checkbox
                       size="small"
-                      checked={outputNotebook}
-                      onChange={handleOutputNotebookChange}
+                      readOnly
+                      checked={true}
+                      defaultChecked={true}
+                      // onChange={handleOutputNotebookChange}
                     />
                   }
                   className="create-scheduler-label-style"
@@ -330,7 +332,7 @@ const CreateNotebookScheduler = ({
                     <Typography sx={{ fontSize: 13 }}>Notebook</Typography>
                   }
                 />
-                <FormControlLabel
+                {/* <FormControlLabel
                   control={
                     <Checkbox
                       size="small"
@@ -340,7 +342,7 @@ const CreateNotebookScheduler = ({
                   }
                   className="create-scheduler-label-style"
                   label={<Typography sx={{ fontSize: 13 }}>HTML</Typography>}
-                />
+                /> */}
               </FormGroup>
             </div>
             <div className="create-scheduler-label">Parameters</div>

@@ -64,11 +64,11 @@ function listNotebookScheduler({
   const columns = React.useMemo(
     () => [
       {
-        Header: 'Job Id',
+        Header: 'Job Name',
         accessor: 'jobid'
       },
       {
-        Header: 'Notebook name',
+        Header: 'Download Notebook',
         accessor: 'notebookname'
       },
       {
@@ -201,7 +201,7 @@ function listNotebookScheduler({
           {renderActions(cell.row.original)}
         </td>
       );
-    } else if (cell.column.Header === 'Job Id') {
+    } else if (cell.column.Header === 'Job Name') {
       return (
         <td
           {...cell.getCellProps()}
@@ -211,7 +211,7 @@ function listNotebookScheduler({
           {cell.value}
         </td>
       );
-    } else if (cell.column.Header === 'Notebook name') {
+    } else if (cell.column.Header === 'Download Notebook') {
       return (
         <td {...cell.getCellProps()} className="clusters-table-data">
           <div
