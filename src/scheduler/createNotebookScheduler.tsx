@@ -76,6 +76,7 @@ const CreateNotebookScheduler = ({
   const [retryDelay, setRetryDelay] = useState<number | undefined>(5);
   const [emailOnFailure, setEmailOnFailure] = useState(false);
   const [emailOnRetry, setEmailonRetry] = useState(false);
+  const [emailOnSuccess, setEmailOnSuccess] = useState(false);
   const [emailList, setEmailList] = useState<string[]>([]);
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
@@ -85,6 +86,7 @@ const CreateNotebookScheduler = ({
   const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
 
   const [createCompleted, setCreateCompleted] = useState(false);
+  const [creatingScheduler, setCreatingScheduler] = useState(false);
 
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
@@ -181,6 +183,10 @@ const CreateNotebookScheduler = ({
     setEmailonRetry(event.target.checked);
   };
 
+  const handleSuccessChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEmailOnSuccess(event.target.checked);
+  };
+
   const handleEmailList = (data: string[]) => {
     setEmailList(data);
   };
@@ -188,7 +194,7 @@ const CreateNotebookScheduler = ({
   const handleCreateJobScheduler = async () => {
     let outputFormats = [];
     // if (outputNotebook) {
-      outputFormats.push('ipynb');
+    outputFormats.push('ipynb');
     // }
     // if (outputHtml) {
     //   outputFormats.push('html');
@@ -208,6 +214,7 @@ const CreateNotebookScheduler = ({
       retry_delay: retryDelay,
       email_failure: emailOnFailure,
       email_delay: emailOnRetry,
+      email_success: emailOnSuccess,
       email: emailList,
       name: jobNameSelected,
       schedule_value: scheduleMode === 'runNow' ? '' : scheduleValue,
@@ -215,11 +222,17 @@ const CreateNotebookScheduler = ({
       time_zone: timeZoneSelected,
       dag_id: randomDagId
     };
-    await SchedulerService.createJobSchedulerService(payload, app, setCreateCompleted);
+    await SchedulerService.createJobSchedulerService(
+      payload,
+      app,
+      setCreateCompleted,
+      setCreatingScheduler
+    );
   };
 
   const isSaveDisabled = () => {
     return (
+      creatingScheduler ||
       jobNameSelected === '' ||
       inputFileSelected === '' ||
       composerSelected === '' ||
@@ -485,10 +498,25 @@ const CreateNotebookScheduler = ({
                     </Typography>
                   }
                 />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={emailOnSuccess}
+                      onChange={handleSuccessChange}
+                    />
+                  }
+                  className="create-scheduler-label-style"
+                  label={
+                    <Typography sx={{ fontSize: 13 }}>
+                      Email on success
+                    </Typography>
+                  }
+                />
               </FormGroup>
             </div>
             <div className="create-scheduler-form-element">
-              {(emailOnFailure || emailOnRetry) && (
+              {(emailOnFailure || emailOnRetry || emailOnSuccess) && (
                 <MuiChipsInput
                   className="select-job-style-scheduler"
                   onChange={e => handleEmailList(e)}
@@ -560,7 +588,7 @@ const CreateNotebookScheduler = ({
                 }
                 aria-label="submit Batch"
               >
-                <div>CREATE</div>
+                <div>{creatingScheduler ? 'CREATING' : 'CREATE'}</div>
               </div>
               <div
                 className="job-cancel-button-style"

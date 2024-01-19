@@ -187,8 +187,10 @@ export class SchedulerService {
   static createJobSchedulerService = async (
     payload: IPayload,
     app: JupyterLab,
-    setCreateCompleted: (value: boolean) => void
+    setCreateCompleted: (value: boolean) => void,
+    setCreatingScheduler: (value: boolean) => void
   ) => {
+    setCreatingScheduler(true);
     try {
       const data = await requestAPI('createJobScheduler', {
         body: JSON.stringify(payload),
@@ -196,9 +198,11 @@ export class SchedulerService {
       });
       toast.success(`Job scheduler successfully created`, toastifyCustomStyle);
       // app.shell.activeWidget?.close();
+      setCreatingScheduler(false);
       setCreateCompleted(true);
       console.log(data);
     } catch (reason) {
+      setCreatingScheduler(false);
       console.error(`Error on POST {dataToSend}.\n${reason}`);
     }
   };
