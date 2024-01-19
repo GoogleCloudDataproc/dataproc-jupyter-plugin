@@ -105,7 +105,9 @@ const ExecutionHistory = ({
       <PickersDay
         {...props}
         style={{
-          border: isSelectedExecution ? '3px solid var(--jp-ui-font-color0)' : 'none',
+          border: isSelectedExecution
+            ? '3px solid var(--jp-ui-font-color0)'
+            : 'none',
           borderRadius:
             isGreenExecution ||
             isRedExecution ||
@@ -161,7 +163,9 @@ const ExecutionHistory = ({
             className="icon-white logo-alignment-style"
           />
         </div>
-        <div className="create-job-scheduler-title">Execution History</div>
+        <div className="create-job-scheduler-title">
+          {dagId} - Execution History
+        </div>
       </div>
       <div className="execution-history-main-wrapper">
         <div className="execution-history-left-wrapper">
