@@ -76,6 +76,13 @@ const ListDagTaskInstances = ({
     setExpanded(false);
   }, [dagRunId]);
 
+  useEffect(() => {
+    if (dagTaskInstancesList.length > 0) {
+      setExpanded('0');
+      listDagTaskLogList('0', dagTaskInstancesList[0].tryNumber);
+    }
+  }, [dagTaskInstancesList]);
+
   const handleChange = (
     index: number,
     iconIndex: number,
@@ -107,7 +114,7 @@ const ListDagTaskInstances = ({
           <div className="accordion-row-parent-header">
             <div className="accordion-row-data">Task Id</div>
             <div className="accordion-row-data">Attempts</div>
-            <div className="accordion-row-data">Duration</div>
+            <div className="accordion-row-data">Duration (in seconds)</div>
             <div className="accordion-row-data-expand-logo"></div>
           </div>
           {dagTaskInstancesList.length > 0 &&

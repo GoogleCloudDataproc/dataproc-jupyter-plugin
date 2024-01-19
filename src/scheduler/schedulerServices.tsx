@@ -496,7 +496,6 @@ export class SchedulerService {
       const data: any = await requestAPI(
         `dagRunTaskLogs?composer=${composerName}&dag_id=${dagId}&dag_run_id=${dagRunId}&task_id=${taskId}&task_try_number=${tryNumber}`
       );
-      console.log(data);
       setLogList(data.content);
       setIsLoadingLogs(false);
     } catch (reason) {

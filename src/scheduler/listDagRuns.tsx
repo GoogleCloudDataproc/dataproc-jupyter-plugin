@@ -170,13 +170,11 @@ const ListDagRuns = ({
   }, [startDate, endDate]);
 
   useEffect(() => {
-    console.log(selectedDate , dagRunsList)
     if (selectedDate !== null && dagRunsList.length > 0) {
       let currentDate = new Date(selectedDate.toDate()).toDateString();
       let currentDateDagRunList: any = dagRunsList.filter((dagRun: any) => {
         return dagRun.date === currentDate;
       });
-      console.log(currentDate, dagRunsList, currentDateDagRunList);
       if (currentDateDagRunList.length > 0) {
         setDagRunsCurrentDateList(currentDateDagRunList);
         setDagRunId(
