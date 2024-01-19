@@ -238,79 +238,95 @@ export class SchedulerService {
         `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${start_date}&end_date=${end_date}`
       );
       let transformDagRunListData = [];
-      transformDagRunListData = data.dag_runs.map((dagRun: any) => {
-        return {
-          dagRunId: dagRun.dag_run_id,
-          filteredDate: new Date(dagRun.execution_date)
-            .toDateString()
-            .split(' ')[2],
-          state: dagRun.state,
-          date: new Date(dagRun.execution_date).toDateString(),
-          time: new Date(dagRun.execution_date).toTimeString().split(' ')[0]
-        };
-      });
 
-      // Group by date first, then by status
-      const groupedDataByDateStatus = transformDagRunListData.reduce(
-        (result: any, item: any) => {
-          const date = item.filteredDate;
-          const status = item.state;
+      if (data.dag_runs.length > 0) {
+        transformDagRunListData = data.dag_runs.map((dagRun: any) => {
+          return {
+            dagRunId: dagRun.dag_run_id,
+            filteredDate: new Date(dagRun.execution_date)
+              .toDateString()
+              .split(' ')[2],
+            state: dagRun.state,
+            date: new Date(dagRun.execution_date).toDateString(),
+            time: new Date(dagRun.execution_date).toTimeString().split(' ')[0]
+          };
+        });
 
-          if (!result[date]) {
-            result[date] = {};
+        // Group by date first, then by status
+        const groupedDataByDateStatus = transformDagRunListData.reduce(
+          (result: any, item: any) => {
+            const date = item.filteredDate;
+            const status = item.state;
+
+            if (!result[date]) {
+              result[date] = {};
+            }
+
+            if (!result[date][status]) {
+              result[date][status] = [];
+            }
+
+            result[date][status].push(item);
+
+            return result;
+          },
+          {}
+        );
+
+        let blueList: string[] = [];
+        let greyList: string[] = [];
+        let orangeList: string[] = [];
+        let redList: string[] = [];
+        let greenList: string[] = [];
+        let darkGreenList: string[] = [];
+
+        Object.keys(groupedDataByDateStatus).forEach(dateValue => {
+          if (groupedDataByDateStatus[dateValue].running) {
+            blueList.push(dateValue);
+          } else if (groupedDataByDateStatus[dateValue].queued) {
+            greyList.push(dateValue);
+          } else if (
+            groupedDataByDateStatus[dateValue].failed &&
+            groupedDataByDateStatus[dateValue].success
+          ) {
+            orangeList.push(dateValue);
+          } else if (groupedDataByDateStatus[dateValue].failed) {
+            redList.push(dateValue);
+          } else if (
+            groupedDataByDateStatus[dateValue].success &&
+            groupedDataByDateStatus[dateValue].success.length === 1
+          ) {
+            greenList.push(dateValue);
+          } else {
+            darkGreenList.push(dateValue);
           }
+        });
 
-          if (!result[date][status]) {
-            result[date][status] = [];
-          }
-
-          result[date][status].push(item);
-
-          return result;
-        },
-        {}
-      );
-
-      let blueList: string[] = [];
-      let greyList: string[] = [];
-      let orangeList: string[] = [];
-      let redList: string[] = [];
-      let greenList: string[] = [];
-      let darkGreenList: string[] = [];
-
-      Object.keys(groupedDataByDateStatus).forEach(dateValue => {
-        if (groupedDataByDateStatus[dateValue].running) {
-          blueList.push(dateValue);
-        } else if (groupedDataByDateStatus[dateValue].queued) {
-          greyList.push(dateValue);
-        } else if (
-          groupedDataByDateStatus[dateValue].failed &&
-          groupedDataByDateStatus[dateValue].success
-        ) {
-          orangeList.push(dateValue);
-        } else if (groupedDataByDateStatus[dateValue].failed) {
-          redList.push(dateValue);
-        } else if (
-          groupedDataByDateStatus[dateValue].success &&
-          groupedDataByDateStatus[dateValue].success.length === 1
-        ) {
-          greenList.push(dateValue);
-        } else {
-          darkGreenList.push(dateValue);
+        if (selectedDate === null) {
+          setBlueListDates(blueList);
+          setGreyListDates(greyList);
+          setOrangeListDates(orangeList);
+          setRedListDates(redList);
+          setGreenListDates(greenList);
+          setDarkGreenListDates(darkGreenList);
         }
-      });
 
-      if (selectedDate === null) {
-        setBlueListDates(blueList);
-        setGreyListDates(greyList);
-        setOrangeListDates(orangeList);
-        setRedListDates(redList);
-        setGreenListDates(greenList);
-        setDarkGreenListDates(darkGreenList);
+        setDagRunsList(transformDagRunListData);
+        setDagRunId(
+          transformDagRunListData[transformDagRunListData.length - 1].dagRunId
+        );
+      } else {
+        setDagRunsList([]);
+        setDagRunId('');
+        if (selectedDate === null) {
+          setBlueListDates([]);
+          setGreyListDates([]);
+          setOrangeListDates([]);
+          setRedListDates([]);
+          setGreenListDates([]);
+          setDarkGreenListDates([]);
+        }
       }
-
-      setDagRunsList(transformDagRunListData);
-      setDagRunId(transformDagRunListData[transformDagRunListData.length-1].dagRunId)
       setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
