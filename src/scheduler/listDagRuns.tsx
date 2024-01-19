@@ -209,6 +209,13 @@ const ListDagRuns = ({
                 tableDataCondition={tableDataCondition}
                 fromPage="Dag Runs"
                 setDagRunId={setDagRunId}
+                selectedDagIndex={
+                  dagRunsCurrentDateList.length > 0
+                    ? dagRunsCurrentDateList.length - 1
+                    : dagRunsList.length > 0
+                    ? dagRunsList.length - 1
+                    : -1
+                }
               />
             </div>
           </div>

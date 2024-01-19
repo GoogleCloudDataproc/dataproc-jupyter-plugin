@@ -29,9 +29,10 @@ function TableData({
   prepareRow,
   tableDataCondition,
   fromPage,
-  setDagRunId
+  setDagRunId,
+  selectedDagIndex
 }: any) {
-  const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(selectedDagIndex);
 
   const displayData = page ? page : rows;
 
