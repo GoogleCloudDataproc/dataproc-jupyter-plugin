@@ -40,6 +40,13 @@ import { KernelSpecAPI } from '@jupyterlab/services';
 import tzdata from 'tzdata';
 import { SchedulerService } from './schedulerServices';
 import NotebookJobComponent from './notebookJobs';
+import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
+import { LabIcon } from '@jupyterlab/ui-components';
+
+const iconLeftArrow = new LabIcon({
+  name: 'launcher:left-arrow-icon',
+  svgstr: LeftArrowIcon
+});
 
 const CreateNotebookScheduler = ({
   themeManager,
@@ -236,7 +243,10 @@ const CreateNotebookScheduler = ({
       jobNameSelected === '' ||
       inputFileSelected === '' ||
       composerSelected === '' ||
-      (clusterSelected === '' && serverlessSelected === '')
+      (selectedMode === 'cluster' && clusterSelected === '') ||
+      (selectedMode === 'serverless' && serverlessSelected === '') ||
+      ((emailOnFailure || emailOnRetry || emailOnSuccess) &&
+        emailList.length === 0)
     );
   };
 
@@ -296,12 +306,26 @@ const CreateNotebookScheduler = ({
       {createCompleted ? (
         <NotebookJobComponent app={app} themeManager={themeManager} />
       ) : (
-        <div className="select-text-overlay-scheduler">
-          <div className="create-job-scheduler-title">Create Job Scheduler</div>
-          <div>
+        <div>
+          <div className="cluster-details-header">
+            <div
+              role="button"
+              className="back-arrow-icon"
+              // onClick={() => handleSubmitJobBackView()}
+            >
+              <iconLeftArrow.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
+            </div>
+            <div className="create-job-scheduler-title">
+              Create Job Scheduler
+            </div>
+          </div>
+          <div className="submit-job-container">
             <div className="create-scheduler-form-element">
               <Input
-                className="create-batch-style "
+                className="create-scheduler-style"
                 value={jobNameSelected}
                 onChange={e => setJobNameSelected(e.target.value)}
                 type="text"
@@ -311,7 +335,7 @@ const CreateNotebookScheduler = ({
             </div>
             <div className="create-scheduler-form-element">
               <Input
-                className="input-style-scheduler"
+                className="create-scheduler-style"
                 value={inputFileSelected}
                 Label="Input file*"
                 disabled={true}
@@ -319,6 +343,7 @@ const CreateNotebookScheduler = ({
             </div>
             <div className="create-scheduler-form-element">
               <Autocomplete
+                className="create-scheduler-style"
                 options={composerList}
                 value={composerSelected}
                 onChange={(_event, val) => handleComposerSelected(val)}
@@ -385,7 +410,6 @@ const CreateNotebookScheduler = ({
                 >
                   <FormControlLabel
                     value="cluster"
-                    className="create-scheduler-label-style"
                     control={<Radio size="small" />}
                     label={
                       <Typography sx={{ fontSize: 13 }}>Cluster</Typography>
@@ -405,6 +429,7 @@ const CreateNotebookScheduler = ({
             <div className="create-scheduler-form-element">
               {selectedMode === 'cluster' && (
                 <Autocomplete
+                  className="create-scheduler-style"
                   options={clusterList}
                   value={clusterSelected}
                   onChange={(_event, val) => handleClusterSelected(val)}
@@ -415,6 +440,7 @@ const CreateNotebookScheduler = ({
               )}
               {selectedMode === 'serverless' && (
                 <Autocomplete
+                  className="create-scheduler-style"
                   options={serverlessList}
                   value={serverlessSelected}
                   onChange={(_event, val) => handleServerlessSelected(val)}
@@ -450,7 +476,7 @@ const CreateNotebookScheduler = ({
             )}
             <div className="create-scheduler-form-element">
               <Input
-                className="input-style-scheduler"
+                className="create-scheduler-style"
                 onChange={e => handleRetryCount(Number(e.target.value))}
                 value={retryCount}
                 Label="Retry count"
@@ -459,7 +485,7 @@ const CreateNotebookScheduler = ({
             </div>
             <div className="create-scheduler-form-element">
               <Input
-                className="input-style-scheduler"
+                className="create-scheduler-style"
                 onChange={e => handleRetryDelay(Number(e.target.value))}
                 value={retryDelay}
                 Label="Retry delay (minutes)"
@@ -518,7 +544,7 @@ const CreateNotebookScheduler = ({
             <div className="create-scheduler-form-element">
               {(emailOnFailure || emailOnRetry || emailOnSuccess) && (
                 <MuiChipsInput
-                  className="select-job-style-scheduler"
+                  className="create-scheduler-style"
                   onChange={e => handleEmailList(e)}
                   addOnBlur={true}
                   value={emailList}

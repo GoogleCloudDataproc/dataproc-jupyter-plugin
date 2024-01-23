@@ -33,24 +33,35 @@
 }
 
 .create-job-scheduler-title {
-  height: 30px;
+  padding: 0px 15px;
+  height: 48px;
   font-style: normal;
   font-weight: 400;
   font-size: 18px;
   line-height: 24px;
+
   display: flex;
   align-items: center;
   color: var(--jp-ui-font-color0);
 }
 
 .create-scheduler-label {
-  padding-top: 20px;
+  margin-top: 15px;
   font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 28px;
   display: flex;
   align-items: center;
-  color: var(--jp-ui-font-color2);
+  color: var(--jp-ui-font-color0);
+}
+
+.create-scheduler-style {
+  width: 512px;
+  height: 36px;
+  background: var(--jp-layout-color0);
+  margin-top: 10px;
+  outline: none;
 }
 
 .execution-history-left-wrapper {
@@ -161,10 +172,10 @@
 }
 
 .dag-runs-table-data-state-success {
-  background-color: #34A853;
+  background-color: #34a853;
   color: var(--jp-border-color3);
   border-radius: 22px;
-  margin: 5px  15px;
+  margin: 5px 15px;
   display: flex;
   width: 71px;
   text-transform: capitalize;
@@ -172,7 +183,7 @@
   align-items: center;
 }
 .dag-runs-table-data-state-failure {
-  background-color: #EA3323;
+  background-color: #ea3323;
   color: var(--jp-border-color3);
   border-radius: 22px;
   margin: 5px 15px;
@@ -194,7 +205,7 @@
   align-items: center;
 }
 .dag-runs-table-data-state-running {
-  background-color: #1A73E8;
+  background-color: #1a73e8;
   color: var(--jp-border-color3);
   border-radius: 22px;
   margin: 5px 15px;
