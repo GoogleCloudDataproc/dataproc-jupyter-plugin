@@ -3,6 +3,7 @@ import subprocess
 from jupyter_server.base.handlers import APIHandler
 from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.dagListService import DagListService, DagDeleteService, DagUpdateService
+from dataproc_jupyter_plugin.utils.constants import TAGS
 # from google.cloud import storage
 
 class DagController(APIHandler):
@@ -10,7 +11,7 @@ class DagController(APIHandler):
         dag = DagListService()
         composer_name = self.get_argument("composer")
         credentials = handlers.get_cached_credentials(self.log)
-        dag_list = dag.list_jobs(credentials,composer_name)
+        dag_list = dag.list_jobs(credentials,composer_name,TAGS)
         self.finish(json.dumps(dag_list))
     
 class Download(APIHandler):

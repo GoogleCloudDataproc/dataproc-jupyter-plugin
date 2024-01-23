@@ -17,6 +17,7 @@ class DagListService():
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {access_token}'
         }
+        print(api_endpoint)
         try:
             response = requests.get(api_endpoint,headers=headers)
             if response.status_code == 200:
@@ -27,7 +28,7 @@ class DagListService():
         except Exception as e:
             print("arflow error")
             print(f"Error: {e}")
-    def list_jobs(self, credentials, composer_name):
+    def list_jobs(self, credentials, composer_name, tags):
         print('-----List jobs------')
         airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
@@ -36,7 +37,7 @@ class DagListService():
             region_id = credentials['region_id']
         
         try:
-            api_endpoint = f"{airflow_uri}/api/v1/dags"
+            api_endpoint = f"{airflow_uri}/api/v1/dags?tags={tags}"
             headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}'

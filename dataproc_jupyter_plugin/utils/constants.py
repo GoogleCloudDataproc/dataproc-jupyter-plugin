@@ -2,6 +2,7 @@
 from dataproc_jupyter_plugin.services.gcpUrlService import gcp_service_url
 
 ENVIRONMENT_API = 'https://composer.googleapis.com/v1'
+TAGS = 'dataproc_jupyter_plugin'
 
 
 dataproc_url = gcp_service_url('dataproc')
