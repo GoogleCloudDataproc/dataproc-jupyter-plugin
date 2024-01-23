@@ -88,7 +88,7 @@ const CreateNotebookScheduler = ({
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
   const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
-  const [timeZoneSelected, setTimeZoneSelected] = useState('');
+  const [timeZoneSelected, setTimeZoneSelected] = useState('UTC');
 
   const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
 
@@ -311,7 +311,7 @@ const CreateNotebookScheduler = ({
             <div
               role="button"
               className="back-arrow-icon"
-               onClick={handleCancel}
+              onClick={handleCancel}
             >
               <iconLeftArrow.react
                 tag="div"
@@ -590,6 +590,7 @@ const CreateNotebookScheduler = ({
                 </div>
                 <div className="create-scheduler-form-element">
                   <Autocomplete
+                    className="create-scheduler-style"
                     options={timezones}
                     value={timeZoneSelected}
                     onChange={(_event, val) => handleTimeZoneSelected(val)}
