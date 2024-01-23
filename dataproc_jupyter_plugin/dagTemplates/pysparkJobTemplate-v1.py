@@ -68,33 +68,34 @@ def get_cluster_state_start_if_not_running():
         raise Exception("API request failed")
 
  
-def stop_cluster():
- 
-    options = ClientOptions(api_endpoint="{{gcpRegion}}-dataproc.googleapis.com:443",
-    client_cert_source=get_client_cert)
- 
-    # Create a client
-    client = dataproc_v1.ClusterControllerClient(client_options=options)
- 
-    # Initialize request argument(s)
-    request = dataproc_v1.StopClusterRequest(
-        project_id='{{gcpProjectId}}',
-        region='{{gcpRegion}}',
-        cluster_name='{{cluster_name}}',
-    )
- 
-    # Make the request
-    operation = client.stop_cluster(request=request)
-    print("Waiting for operation to complete...")
-    response = operation.result()
- 
-    # Handle the response
-    print(response)
+def stop_the_cluster():
+    if '{{stop_cluster}}' == 'True':
+        options = ClientOptions(api_endpoint="{{gcpRegion}}-dataproc.googleapis.com:443",
+        client_cert_source=get_client_cert)
+    
+        # Create a client
+        client = dataproc_v1.ClusterControllerClient(client_options=options)
+    
+        # Initialize request argument(s)
+        request = dataproc_v1.StopClusterRequest(
+            project_id='{{gcpProjectId}}',
+            region='{{gcpRegion}}',
+            cluster_name='{{cluster_name}}',
+        )
+    
+        # Make the request
+        operation = client.stop_cluster(request=request)
+        print("Waiting for operation to complete...")
+        response = operation.result()
+    
+        # Handle the response
+        print(response)
 
 dag = DAG(
     '{{name}}', 
     default_args=default_args,
     description='{{name}}',
+    tags =['dataproc_jupyter_plugin'],
     schedule_interval='{{schedule_interval}}',
 )
 
@@ -113,16 +114,17 @@ submit_pyspark_job = DataprocSubmitJobOperator(
         'placement': {'cluster_name': '{{cluster_name}}'},
         'labels': {'client': 'dataproc-jupyter-plugin'},
         'pyspark_job': {
-            'main_python_file_uri': '{{inputFilePath}}'
+            'main_python_file_uri': '{{inputFilePath}}',
+            'args' : notebook_args
         },
     },
     gcp_conn_id='google_cloud_default',  # Reference to the GCP connection
     dag=dag,
 )
-if '{{stop_cluster}}' == 'True':
-    stop_cluster = PythonOperator(
+
+stop_cluster = PythonOperator(
         task_id='stop_cluster',
-        python_callable=stop_cluster,
+        python_callable=stop_the_cluster,
         provide_context=True,
         dag=dag)
     

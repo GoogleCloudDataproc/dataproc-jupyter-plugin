@@ -33,12 +33,6 @@ def getBucket(runtime_env, credentials):
         response = requests.get(api_endpoint,headers=headers)
         if response.status_code == 200:
                 resp = response.json()
-                # AIRFLOW_URI =  resp.get('config', {}).get('airflowUri', '')
-                # AIRFLOW_URI =  resp.get('config', {}).get('airflowUri', '')
-                # print(AIRFLOW_URI)
-                # # AIRFLOW_URI = resp.airflowUri
-                # print(resp)
-                # # print(AIRFLOW_URI)
                 gcs_dag_path = resp.get('storageConfig', {}).get('bucket', '')
                 return gcs_dag_path
     except Exception as e:
@@ -115,7 +109,7 @@ class ExecutorService():
             phs_cluster_path = job.environment_config.peripherals_config.spark_history_server_config.dataproc_cluster
             print(phs_cluster_path)
         content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
-                                  gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/",\
+                                  gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
                                   output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
                                   schedule_interval=schedule_interval,start_date = start_date)
         print(content)
