@@ -250,7 +250,7 @@ const CreateNotebookScheduler = ({
     );
   };
 
-  const handleCancelButton = async () => {
+  const handleCancel = async () => {
     app.shell.activeWidget?.close();
   };
 
@@ -311,7 +311,7 @@ const CreateNotebookScheduler = ({
             <div
               role="button"
               className="back-arrow-icon"
-              // onClick={() => handleSubmitJobBackView()}
+               onClick={handleCancel}
             >
               <iconLeftArrow.react
                 tag="div"
@@ -619,7 +619,7 @@ const CreateNotebookScheduler = ({
               <div
                 className="job-cancel-button-style"
                 aria-label="cancel Batch"
-                onClick={handleCancelButton}
+                onClick={handleCancel}
               >
                 <div>CANCEL</div>
               </div>
