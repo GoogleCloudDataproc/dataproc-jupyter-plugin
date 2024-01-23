@@ -186,6 +186,12 @@ body[data-jp-theme-name='JupyterLab Dark'] .filter-section-part {
 body[data-jp-theme-name='JupyterLab Dark'] .schema-table th {
   background-color: var(--jp-layout-color2);
 }
+body[data-jp-theme-name='JupyterLab Dark'] .accordion-row-parent-header{
+  background: var(--jp-border-color3);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .logo-alignment-style-accordion path{
+  fill: var(--jp-ui-font-color1);
+}
 
 body[data-jp-theme-name='JupyterLab Dark'] .job-label-style {
   background-color: var(--jp-layout-color1);
