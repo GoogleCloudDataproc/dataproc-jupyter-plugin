@@ -57,7 +57,7 @@ function listNotebookScheduler({
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
-  const [composerSelected, setComposerSelected] = useState('');
+  const [composerSelected, setComposerSelected] = useState('composer4');
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
   const [bucketName, setBucketName] = useState('');
@@ -231,9 +231,7 @@ function listNotebookScheduler({
     listComposersAPI();
   }, []);
   useEffect(() => {
-    const sortedComposers = composerList.slice().sort();
-    setComposerSelected(sortedComposers.length > 0 ? sortedComposers[0] : '');
-    sortedComposers.length > 0 ? listDagInfoAPI() : setIsLoading(false);
+    listDagInfoAPI();
   }, [composerSelected]);
   return (
     <div>

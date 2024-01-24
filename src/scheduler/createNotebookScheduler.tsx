@@ -42,10 +42,16 @@ import { SchedulerService } from './schedulerServices';
 import NotebookJobComponent from './notebookJobs';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
+import errorIcon from '../../style/icons/error_icon.svg';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
+});
+
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
 });
 
 const CreateNotebookScheduler = ({
@@ -94,6 +100,7 @@ const CreateNotebookScheduler = ({
 
   const [createCompleted, setCreateCompleted] = useState(false);
   const [creatingScheduler, setCreatingScheduler] = useState(false);
+  const [jobNameValidation, setjobNameValidation] = useState(true);
 
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
@@ -237,6 +244,13 @@ const CreateNotebookScheduler = ({
     );
   };
 
+  const handleJobNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const isValid = value.trim() !== ''; // Check if trimmed value is not empty
+    setjobNameValidation(isValid);
+    setJobNameSelected(value);
+  };
+
   const isSaveDisabled = () => {
     return (
       creatingScheduler ||
@@ -290,11 +304,10 @@ const CreateNotebookScheduler = ({
     listComposersAPI();
     listClustersAPI();
     listSessionTemplatesAPI();
-
     setInputFileSelected(context.path);
-    if (context.contentsModel?.name) {
-      setJobNameSelected(context.contentsModel?.name);
-    }
+    console.log(context.path);
+    console.log(inputFileSelected);
+    setJobNameSelected('');
   }, []);
 
   useEffect(() => {
@@ -327,12 +340,19 @@ const CreateNotebookScheduler = ({
               <Input
                 className="create-scheduler-style"
                 value={jobNameSelected}
-                onChange={e => setJobNameSelected(e.target.value)}
+                onChange={e => handleJobNameChange(e)}
                 type="text"
                 placeholder=""
                 Label="Job name*"
               />
             </div>
+            {!jobNameValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">Name is required</div>
+              </div>
+            )}
+
             <div className="create-scheduler-form-element">
               <Input
                 className="create-scheduler-style"
