@@ -18,7 +18,6 @@ class ComposerService():
     """
 
     def list_environments(self, credentials) -> List[ComposerEnvironment]:
-        # credentials = credentials
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -55,33 +54,22 @@ class ComposerService():
             else:
                 print(f"Error: {response.status_code} - {response.text}")
 
-        except Exception as e:
-            print(f"Error: {e}")
-            try:
-                envs = subprocess.check_output(["conda", "env", "list", "--json"])
-                envs = json.loads(envs).get("envs", [])
-            except subprocess.CalledProcessError as e:
-                envs = []
-            except FileNotFoundError as e:
-                envs = []
 
-            current_python_root = sys.prefix
-            if not envs or current_python_root not in envs:
-                envs = [sys.executable]
-
-            for env in envs:
-                name = os.path.basename(env)
-                environments.append(
-                    ComposerEnvironment(
-                        name=name,
-                        label=name,
-                        description=f"Environment: {name}",
-                        file_extensions=["ipynb"],
-                        output_formats=["ipynb", "html"],
-                        metadata={"path": env},
+        except FileNotFoundError as e:
+                envs = []
+                for env in envs:
+                    name = os.path.basename(env)
+                    environments.append(
+                        ComposerEnvironment(
+                            name=name,
+                            label=name,
+                            description=f"Environment: {name}",
+                            file_extensions=["ipynb"],
+                            output_formats=["ipynb", "html"],
+                            metadata={"path": env},
+                        )
                     )
-                )
-            return environments
+                return environments
 
     def manage_environments_command(self) -> str:
         return ""
