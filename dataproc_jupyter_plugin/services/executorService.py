@@ -108,10 +108,12 @@ class ExecutorService():
         if job.mode_selected == 'serverless':
             phs_cluster_path = job.environment_config.peripherals_config.spark_history_server_config.dataproc_cluster
             print(phs_cluster_path)
+        if len(job.parameters) != 0:
+            parameters = '\n'.join(item.replace(':', ': ') for item in job.parameters)
         content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                   gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
                                   output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
-                                  schedule_interval=schedule_interval,start_date = start_date)
+                                  schedule_interval=schedule_interval,start_date = start_date,parameters=parameters)
         print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:
             message.write(content)

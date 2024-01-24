@@ -20,7 +20,10 @@ default_args = {
 }
 input_notebook = '{{input_notebook}}'
 output_notebook = '{{output_notebook}}'
-notebook_args= [input_notebook, output_notebook] 
+parameters = '''
+{{parameters}}
+'''
+notebook_args= [input_notebook, output_notebook,"--parameters", parameters] 
 
 def get_client_cert():
     # code to load client certificate and private key.
