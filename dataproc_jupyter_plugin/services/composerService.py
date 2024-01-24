@@ -32,43 +32,36 @@ class ComposerService():
         try:
             response = requests.get(api_endpoint,headers=headers)
             if response.status_code == 200:
-                resp = response.json()
-                environment = resp['environments']
-                # Extract the 'name' values from the 'environments' list
-                names = [env['name'] for env in environment]
-                # Extract the last value after the last slash for each 'name'
-                last_values = [name.split('/')[-1] for name in names]
-                for env in last_values:
-                    name = env
-                    environments.append(
-                        ComposerEnvironment(
-                            name=name,
-                            label=name,
-                            description=f"Environment: {name}",
-                            file_extensions=["ipynb"],
-                            output_formats=["ipynb", "html"],
-                            metadata={"path": env},
+                resp = response.json()    
+                if not resp:  
+                    return environments   
+                else:      
+                    environment = resp['environments']
+                    # Extract the 'name' values from the 'environments' list
+                    names = [env['name'] for env in environment]
+                    # Extract the last value after the last slash for each 'name'
+                    last_values = [name.split('/')[-1] for name in names]
+                    for env in last_values:
+                        name = env
+                        environments.append(
+                            ComposerEnvironment(
+                                name=name,
+                                label=name,
+                                description=f"Environment: {name}",
+                                file_extensions=["ipynb"],
+                                output_formats=["ipynb", "html"],
+                                metadata={"path": env},
+                            )
                         )
-                    )
-                return environments
+                    print('----------try------')
+                    print(environments)
+                    return environments
             else:
                 print(f"Error: {response.status_code} - {response.text}")
 
 
         except FileNotFoundError as e:
-                envs = []
-                for env in envs:
-                    name = os.path.basename(env)
-                    environments.append(
-                        ComposerEnvironment(
-                            name=name,
-                            label=name,
-                            description=f"Environment: {name}",
-                            file_extensions=["ipynb"],
-                            output_formats=["ipynb", "html"],
-                            metadata={"path": env},
-                        )
-                    )
+                environments = []
                 return environments
 
     def manage_environments_command(self) -> str:
