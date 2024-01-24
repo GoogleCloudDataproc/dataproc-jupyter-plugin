@@ -100,7 +100,9 @@ const CreateNotebookScheduler = ({
 
   const [createCompleted, setCreateCompleted] = useState(false);
   const [creatingScheduler, setCreatingScheduler] = useState(false);
-  const [jobNameValidation, setjobNameValidation] = useState(true);
+  const [jobNameValidation, setJobNameValidation] = useState(true);
+  const [jobNameSpecialValidation, setJobNameSpecialValidation] =
+    useState(false);
 
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
@@ -245,16 +247,23 @@ const CreateNotebookScheduler = ({
   };
 
   const handleJobNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    const isValid = value.trim() !== ''; // Check if trimmed value is not empty
-    setjobNameValidation(isValid);
-    setJobNameSelected(value);
+    event.target.value.length > 0
+      ? setJobNameValidation(true)
+      : setJobNameValidation(false);
+
+    const regexp = /^[a-zA-Z0-9-_]+$/;
+    event.target.value.search(regexp)
+      ? setJobNameSpecialValidation(true)
+      : setJobNameSpecialValidation(false);
+    setJobNameSelected(event.target.value);
   };
 
   const isSaveDisabled = () => {
     return (
       creatingScheduler ||
       jobNameSelected === '' ||
+      !jobNameValidation ||
+      jobNameSpecialValidation ||
       inputFileSelected === '' ||
       composerSelected === '' ||
       (selectedMode === 'cluster' && clusterSelected === '') ||
@@ -350,6 +359,15 @@ const CreateNotebookScheduler = ({
               <div className="error-key-parent">
                 <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Name is required</div>
+              </div>
+            )}
+            {jobNameSpecialValidation && jobNameValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Name must contain only letters, numbers, hyphens, and
+                  underscores
+                </div>
               </div>
             )}
 
@@ -573,6 +591,15 @@ const CreateNotebookScheduler = ({
                 />
               )}
             </div>
+            {(emailOnFailure || emailOnRetry || emailOnSuccess) &&
+              !emailList.length && (
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    Email recipients is required field
+                  </div>
+                </div>
+              )}
             <div className="create-scheduler-label">Schedule</div>
             <div className="create-scheduler-form-element">
               <FormControl>

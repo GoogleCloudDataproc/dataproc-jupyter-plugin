@@ -170,8 +170,18 @@ export class SchedulerService {
       formattedResponse.forEach((data: any) => {
         composerEnvironmentList.push(data.name);
       });
-      composerEnvironmentList.sort();
-      setComposerList(composerEnvironmentList);
+      console.log(formattedResponse);
+      if (formattedResponse.length === 0) {
+        // Handle the case where the list is empty
+        toast.error(
+          'No composer environment in this project and region',
+          toastifyCustomStyle
+        );
+        // handle loading false here
+      } else {
+        composerEnvironmentList.sort();
+        setComposerList(composerEnvironmentList);
+      }
     } catch (error) {
       DataprocLoggingService.log(
         'Error listing composer environment list',
