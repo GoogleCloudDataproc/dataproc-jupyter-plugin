@@ -170,7 +170,7 @@ export class SchedulerService {
       formattedResponse.forEach((data: any) => {
         composerEnvironmentList.push(data.name);
       });
-
+      composerEnvironmentList.sort();
       setComposerList(composerEnvironmentList);
     } catch (error) {
       DataprocLoggingService.log(
@@ -303,12 +303,12 @@ export class SchedulerService {
         });
 
         // if (selectedDate === null) {
-          setBlueListDates(blueList);
-          setGreyListDates(greyList);
-          setOrangeListDates(orangeList);
-          setRedListDates(redList);
-          setGreenListDates(greenList);
-          setDarkGreenListDates(darkGreenList);
+        setBlueListDates(blueList);
+        setGreyListDates(greyList);
+        setOrangeListDates(orangeList);
+        setRedListDates(redList);
+        setGreenListDates(greenList);
+        setDarkGreenListDates(darkGreenList);
         // }
 
         setDagRunsList(transformDagRunListData);
@@ -319,12 +319,12 @@ export class SchedulerService {
         setDagRunsList([]);
         setDagRunId('');
         // if (selectedDate === null) {
-          setBlueListDates([]);
-          setGreyListDates([]);
-          setOrangeListDates([]);
-          setRedListDates([]);
-          setGreenListDates([]);
-          setDarkGreenListDates([]);
+        setBlueListDates([]);
+        setGreyListDates([]);
+        setOrangeListDates([]);
+        setRedListDates([]);
+        setGreenListDates([]);
+        setDarkGreenListDates([]);
         // }
       }
       setIsLoading(false);
