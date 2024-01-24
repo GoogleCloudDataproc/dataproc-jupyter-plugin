@@ -16,8 +16,7 @@ class ComposerController(APIHandler):
             credentials = handlers.get_cached_credentials(self.log)
             environments = environments_manager.list_environments(credentials)
             output_formats = environments_manager.output_formats_mapping()
-            if len(environments) == 0:
-                raise HTTPError(404, "Not Found")
+                
         except:
             raise HTTPError(500, "Error")
 
