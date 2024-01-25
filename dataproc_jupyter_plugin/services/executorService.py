@@ -110,6 +110,8 @@ class ExecutorService():
             print(phs_cluster_path)
         if len(job.parameters) != 0:
             parameters = '\n'.join(item.replace(':', ': ') for item in job.parameters)
+        else:
+            parameters = ''
         content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                   gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
                                   output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
