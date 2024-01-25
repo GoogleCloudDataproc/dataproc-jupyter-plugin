@@ -17,7 +17,7 @@ import pendulum
 unique_id = str(uuid.uuid4().hex)
 job_id = ''
 job_name = ''
-TEMPLATES_FOLDER_PATH = "./dataproc_jupyter_plugin/dagTemplates"
+TEMPLATES_FOLDER_PATH = "dataproc_jupyter_plugin.dagTemplates"
 def getBucket(runtime_env, credentials):
     if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
