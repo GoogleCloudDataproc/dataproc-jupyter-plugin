@@ -242,7 +242,7 @@ const CreateNotebookScheduler = ({
       payload,
       app,
       setCreateCompleted,
-      setCreatingScheduler
+      setCreatingScheduler,
     );
   };
 
@@ -326,7 +326,7 @@ const CreateNotebookScheduler = ({
   return (
     <>
       {createCompleted ? (
-        <NotebookJobComponent app={app} themeManager={themeManager} />
+        <NotebookJobComponent app={app} themeManager={themeManager} composerSelectedFromCreate={composerSelected} />
       ) : (
         <div>
           <div className="cluster-details-header">

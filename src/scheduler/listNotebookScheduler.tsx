@@ -52,11 +52,13 @@ const iconDownload = new LabIcon({
 function listNotebookScheduler({
   app,
   handleDagIdSelection,
-  backButtonComposerName
+  backButtonComposerName,
+  composerSelectedFromCreate
 }: {
   app: JupyterFrontEnd;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
   backButtonComposerName: string;
+  composerSelectedFromCreate:string
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
@@ -65,9 +67,10 @@ function listNotebookScheduler({
   const data = dagList;
   const [bucketName, setBucketName] = useState('');
   const [backselectedEnvironment] = useState(backButtonComposerName);
+  const [createSelectedEnvironment] = useState(composerSelectedFromCreate)
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
-
+console.log("got it from create ", createSelectedEnvironment)
   const columns = React.useMemo(
     () => [
       {

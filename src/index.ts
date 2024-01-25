@@ -378,7 +378,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconScheduledNotebooks),
       execute: () => {
-        const content = new NotebookJobs(app as JupyterLab, themeManager);
+        const content = new NotebookJobs(app as JupyterLab, themeManager, "");
         const widget = new MainAreaWidget<NotebookJobs>({ content });
         widget.title.label = 'Scheduled Notebooks';
         widget.title.icon = iconScheduledNotebooks;
