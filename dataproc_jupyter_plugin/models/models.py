@@ -41,6 +41,7 @@ class DescribeJob(BaseModel):
     dag_id: str = None
     stop_cluster: bool = False
     time_zone: str = None
+    email_success: bool = False
 
 class DagModel:
     def __init__(self, input_filename, composer_environment_name, composer_environment_parameters,

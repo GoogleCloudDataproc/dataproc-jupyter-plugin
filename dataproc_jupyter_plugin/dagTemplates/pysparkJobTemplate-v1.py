@@ -17,6 +17,7 @@ default_args = {
     'email': '{{email}}',  #list of all the ids passed from UI
     'email_on_failure': '{{email_failure}}',     # based on the value passed fro UI
     'email_on_retry': '{{email_delay}}',      # based on the value passed fro UI
+    'email_on_success':'{{email_success}}'
 }
 input_notebook = '{{input_notebook}}'
 output_notebook = '{{output_notebook}}'
