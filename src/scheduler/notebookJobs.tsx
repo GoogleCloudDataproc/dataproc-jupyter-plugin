@@ -23,7 +23,9 @@ import ListNotebookScheduler from './listNotebookScheduler';
 import ExecutionHistory from './executionHistory';
 
 const NotebookJobComponent = ({
-  app
+  app,
+  composerSelectedFromCreate
+
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
@@ -33,10 +35,6 @@ const NotebookJobComponent = ({
   const [composerName, setComposerName] = useState('');
   const [dagId, setDagId] = useState('');
   const [backComposerName, setBackComposerName] = useState('');
-  const [composerSelcetedFromCreate, SetComposerSelcetedFromCreate] =useState ('')
-
-  SetComposerSelcetedFromCreate(composerSelcetedFromCreate);
-
   const handleDagIdSelection = (composerName: string, dagId: string) => {
     setShowExecutionHistory(true);
     setComposerName(composerName);
@@ -66,7 +64,7 @@ const NotebookJobComponent = ({
               app={app}
               handleDagIdSelection={handleDagIdSelection}
               backButtonComposerName={backComposerName}
-              composerSelectedFromCreate={composerSelcetedFromCreate}
+              composerSelectedFromCreate={composerSelectedFromCreate}
             />
           </div>
         </>
