@@ -23,7 +23,9 @@ output_notebook = '{{output_notebook}}'
 parameters = '''
 {{parameters}}
 '''
-notebook_args= [input_notebook, output_notebook,"--parameters", parameters] 
+notebook_args= [input_notebook, output_notebook] 
+if parameters.strip():  # Check if parameters is not empty or contains only whitespace
+    notebook_args.extend(["--parameters", parameters])
 
 def get_client_cert():
     # code to load client certificate and private key.
