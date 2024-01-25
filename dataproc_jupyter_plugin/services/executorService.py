@@ -17,7 +17,7 @@ import pendulum
 unique_id = str(uuid.uuid4().hex)
 job_id = ''
 job_name = ''
-TEMPLATES_FOLDER_PATH = "dataproc_jupyter_plugin.dagTemplates"
+TEMPLATES_FOLDER_PATH = "dagTemplates"
 def getBucket(runtime_env, credentials):
     if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
@@ -84,7 +84,7 @@ class ExecutorService():
     @staticmethod
     def prepareDag(job,gcs_dag_bucket,dag_file,credentials):
         DAG_TEMPLATE_V1 = "pysparkJobTemplate-v1.py"
-        environment = Environment(loader=PackageLoader(TEMPLATES_FOLDER_PATH)) 
+        environment = Environment(loader=PackageLoader('dataproc_jupyter_plugin', TEMPLATES_FOLDER_PATH))
         template = environment.get_template(DAG_TEMPLATE_V1)
         if 'project_id' and'region_id' in credentials:
             gcp_project_id = credentials['project_id']
