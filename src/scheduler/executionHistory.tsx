@@ -167,63 +167,65 @@ const ExecutionHistory = ({
   }, []);
 
   return (
-    <div className="execution-history-parent">
-      <div className="execution-history-title">
-        <div
-          role="button"
-          className="scheduler-back-arrow-icon"
-          onClick={() => handleBackButton()}
-        >
-          <iconLeftArrow.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
+    <>
+      <div>
+        <div className="cluster-details-header">
+          <div
+            role="button"
+            className="scheduler-back-arrow-icon"
+            onClick={() => handleBackButton()}
+          >
+            <iconLeftArrow.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          </div>
+          <div className="create-job-scheduler-title">
+            {dagId} - Execution History
+          </div>
         </div>
-        <div className="create-job-scheduler-title">
-          {dagId} - Execution History
+        <div className="execution-history-main-wrapper">
+          <div className="execution-history-left-wrapper">
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateCalendar
+                // value={selectedDate}
+                referenceDate={dayjs(currentDate)}
+                onChange={newValue => handleDateSelection(newValue)}
+                slots={{
+                  day: CustomDay
+                }}
+                onMonthChange={() => handleMonthChange()}
+              />
+            </LocalizationProvider>
+            {startDate !== '' && endDate !== '' && (
+              <ListDagRuns
+                composerName={composerName}
+                dagId={dagId}
+                startDate={startDate}
+                endDate={endDate}
+                setDagRunId={setDagRunId}
+                selectedDate={selectedDate}
+                setBlueListDates={setBlueListDates}
+                setGreyListDates={setGreyListDates}
+                setOrangeListDates={setOrangeListDates}
+                setRedListDates={setRedListDates}
+                setGreenListDates={setGreenListDates}
+                setDarkGreenListDates={setDarkGreenListDates}
+              />
+            )}
+          </div>
+          <div className="execution-history-right-wrapper">
+            {dagRunId !== '' && (
+              <ListDagTaskInstances
+                composerName={composerName}
+                dagId={dagId}
+                dagRunId={dagRunId}
+              />
+            )}
+          </div>
         </div>
       </div>
-      <div className="execution-history-main-wrapper">
-        <div className="execution-history-left-wrapper">
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateCalendar
-              // value={selectedDate}
-              referenceDate={dayjs(currentDate)}
-              onChange={newValue => handleDateSelection(newValue)}
-              slots={{
-                day: CustomDay
-              }}
-              onMonthChange={() => handleMonthChange()}
-            />
-          </LocalizationProvider>
-          {startDate !== '' && endDate !== '' && (
-            <ListDagRuns
-              composerName={composerName}
-              dagId={dagId}
-              startDate={startDate}
-              endDate={endDate}
-              setDagRunId={setDagRunId}
-              selectedDate={selectedDate}
-              setBlueListDates={setBlueListDates}
-              setGreyListDates={setGreyListDates}
-              setOrangeListDates={setOrangeListDates}
-              setRedListDates={setRedListDates}
-              setGreenListDates={setGreenListDates}
-              setDarkGreenListDates={setDarkGreenListDates}
-            />
-          )}
-        </div>
-        <div className="execution-history-right-wrapper">
-          {dagRunId !== '' && (
-            <ListDagTaskInstances
-              composerName={composerName}
-              dagId={dagId}
-              dagRunId={dagRunId}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
 

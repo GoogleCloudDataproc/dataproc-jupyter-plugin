@@ -31,6 +31,7 @@ const NotebookJobComponent = ({
   const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   const [composerName, setComposerName] = useState('');
   const [dagId, setDagId] = useState('');
+  const [backComposerName, setBackComposerName] = useState('');
 
   const handleDagIdSelection = (composerName: string, dagId: string) => {
     setShowExecutionHistory(true);
@@ -40,12 +41,17 @@ const NotebookJobComponent = ({
 
   const handleBackButton = () => {
     setShowExecutionHistory(false);
-  }
+    setBackComposerName(composerName);
+  };
 
   return (
     <>
       {showExecutionHistory ? (
-        <ExecutionHistory composerName={composerName} dagId={dagId} handleBackButton={handleBackButton}/>
+        <ExecutionHistory
+          composerName={composerName}
+          dagId={dagId}
+          handleBackButton={handleBackButton}
+        />
       ) : (
         <>
           <div className="clusters-list-overlay" role="tab">
@@ -55,6 +61,7 @@ const NotebookJobComponent = ({
             <ListNotebookScheduler
               app={app}
               handleDagIdSelection={handleDagIdSelection}
+              backButtonComposerName={backComposerName}
             />
           </div>
         </>
