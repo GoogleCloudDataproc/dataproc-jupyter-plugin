@@ -8,7 +8,7 @@ import nbconvert
 import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 import subprocess
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, PackageLoader
 import uuid
 from datetime import datetime, timedelta, timezone
 import json
@@ -84,7 +84,7 @@ class ExecutorService():
     @staticmethod
     def prepareDag(job,gcs_dag_bucket,dag_file,credentials):
         DAG_TEMPLATE_V1 = "pysparkJobTemplate-v1.py"
-        environment = Environment(loader=FileSystemLoader(TEMPLATES_FOLDER_PATH))
+        environment = Environment(loader=PackageLoader(TEMPLATES_FOLDER_PATH)) 
         template = environment.get_template(DAG_TEMPLATE_V1)
         if 'project_id' and'region_id' in credentials:
             gcp_project_id = credentials['project_id']
