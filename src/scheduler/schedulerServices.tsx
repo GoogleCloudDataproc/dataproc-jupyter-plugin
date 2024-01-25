@@ -170,7 +170,6 @@ export class SchedulerService {
       formattedResponse.forEach((data: any) => {
         composerEnvironmentList.push(data.name);
       });
-      console.log(formattedResponse);
       if (formattedResponse.length === 0) {
         // Handle the case where the list is empty
         toast.error(

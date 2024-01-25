@@ -582,7 +582,7 @@ const CreateNotebookScheduler = ({
             <div className="create-scheduler-form-element">
               {(emailOnFailure || emailOnRetry || emailOnSuccess) && (
                 <MuiChipsInput
-                  className="create-scheduler-style"
+                  className="select-job-style"
                   onChange={e => handleEmailList(e)}
                   addOnBlur={true}
                   value={emailList}

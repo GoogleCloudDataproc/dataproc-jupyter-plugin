@@ -139,6 +139,9 @@ function listNotebookScheduler({
 
   const listComposersAPI = async () => {
     await SchedulerService.listComposersAPIService(setComposerList);
+    if (composerList.length === 0) {
+      setIsLoading(false);
+    }
   };
 
   const listDagInfoAPI = async () => {
