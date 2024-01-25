@@ -29,6 +29,7 @@ import pauseIcon from '../../style/icons/pause_icon.svg';
 import downloadIcon from '../../style/icons/download_icon.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
+import DeletePopup from '../utils/deletePopup';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -64,6 +65,8 @@ function listNotebookScheduler({
   const data = dagList;
   const [bucketName, setBucketName] = useState('');
   const [backselectedEnvironment] = useState(backButtonComposerName);
+  const [deletePopupOpen, setDeletePopupOpen] = useState(false);
+  const [selectedDagId, setSelectedDagId] = useState('');
 
   const columns = React.useMemo(
     () => [
@@ -106,14 +109,23 @@ function listNotebookScheduler({
       setBucketName
     );
   };
-  const handleDeleteScheduler = async (dag_id: string) => {
+  const handleDeletePopUp = (dag_id: string) => {
+    setSelectedDagId(dag_id);
+    setDeletePopupOpen(true);
+  };
+  const handleCancelDelete = () => {
+    setDeletePopupOpen(false);
+  };
+
+  const handleDeleteScheduler = async () => {
     await SchedulerService.handleDeleteSchedulerAPIService(
       composerSelected,
-      dag_id,
+      selectedDagId,
       setDagList,
       setIsLoading,
       setBucketName
     );
+    setDeletePopupOpen(false);
   };
 
   const handleDownloadScheduler = async (event: React.MouseEvent) => {
@@ -183,7 +195,7 @@ function listNotebookScheduler({
           role="button"
           className="icon-buttons-style"
           title="Delete"
-          onClick={() => handleDeleteScheduler(data.jobid)}
+          onClick={() => handleDeletePopUp(data.jobid)}
         >
           <iconDelete.react
             tag="div"
@@ -294,6 +306,14 @@ function listNotebookScheduler({
               nextPage={nextPage}
               canPreviousPage={canPreviousPage}
               canNextPage={canNextPage}
+            />
+          )}
+          {deletePopupOpen && (
+            <DeletePopup
+              onCancel={() => handleCancelDelete()}
+              onDelete={() => handleDeleteScheduler()}
+              deletePopupOpen={deletePopupOpen}
+              DeleteMsg={`This will delete ' ${selectedDagId} ' and cannot be undone.`}
             />
           )}
         </div>
