@@ -53,6 +53,8 @@ def check_file_exists(bucket, file_path):
         else:
             # Handle other errors if needed
             raise Exception(f"Error checking file existence: {error.decode()}")
+    
+
 class ExecutorService():
     """Default execution manager that executes notebooks"""
     @staticmethod
@@ -83,12 +85,13 @@ class ExecutorService():
 
     @staticmethod
     def prepareDag(job,gcs_dag_bucket,dag_file,credentials):
-        DAG_TEMPLATE_V1 = "pysparkJobTemplate-v1.py"
+        DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.py"
+        DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.py"
         environment = Environment(loader=PackageLoader('dataproc_jupyter_plugin', TEMPLATES_FOLDER_PATH))
-        template = environment.get_template(DAG_TEMPLATE_V1)
-        if 'project_id' and'region_id' in credentials:
+        if 'access_token' and 'project_id' and'region_id' in credentials:
             gcp_project_id = credentials['project_id']
             gcp_region_id = credentials['region_id']
+            access_token = credentials['access_token']
         cmd = "gcloud config get-value account"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         user, error = process.communicate()
@@ -105,17 +108,25 @@ class ExecutorService():
             desired_timezone = job.time_zone
             dag_timezone = pendulum.timezone(desired_timezone)
             start_date =  yesterday.replace(tzinfo=dag_timezone)
-        if job.mode_selected == 'serverless':
-            phs_cluster_path = job.environment_config.peripherals_config.spark_history_server_config.dataproc_cluster
-            print(phs_cluster_path)
         if len(job.parameters) != 0:
             parameters = '\n'.join(item.replace(':', ': ') for item in job.parameters)
         else:
             parameters = ''
-        content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
-                                  gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
-                                  output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
-                                  schedule_interval=schedule_interval,start_date = start_date,parameters=parameters)
+        if job.selected_mode == 'cluster':
+            template = environment.get_template(DAG_TEMPLATE_CLUSTER_V1)
+            content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
+                                    gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
+                                    output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
+                                    schedule_interval=schedule_interval,start_date = start_date,parameters=parameters)
+        else:
+            template = environment.get_template(DAG_TEMPLATE_SERVERLESS_V1)
+            job_dict = job.dict()
+            phs_path = job_dict.get("serverless_name", {}).get("environmentConfig", {}).get("peripheralsConfig", {}).get("sparkHistoryServerConfig", {}).get("dataprocCluster", "")
+            content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
+                                    gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
+                                    output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
+                                    schedule_interval=schedule_interval,start_date = start_date,parameters=parameters,phs_path = phs_path)
+
         print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:
             message.write(content)
