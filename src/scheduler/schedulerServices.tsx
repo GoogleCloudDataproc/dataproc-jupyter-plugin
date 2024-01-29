@@ -27,8 +27,8 @@ interface IPayload {
   composer_environment_name: string;
   output_formats: string[];
   parameters: string[];
-  cluster_name: string;
-  serverless_name: {};
+  cluster_name?: string;
+  serverless_name?: {} | undefined;
   mode_selected: string;
   retry_count: number | undefined;
   retry_delay: number | undefined;

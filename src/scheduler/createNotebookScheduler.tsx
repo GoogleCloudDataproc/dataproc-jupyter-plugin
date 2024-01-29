@@ -103,7 +103,6 @@ const CreateNotebookScheduler = ({
   const [jobNameValidation, setJobNameValidation] = useState(true);
   const [jobNameSpecialValidation, setJobNameSpecialValidation] =
     useState(false);
-
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
   };
@@ -223,8 +222,6 @@ const CreateNotebookScheduler = ({
       composer_environment_name: composerSelected,
       output_formats: outputFormats,
       parameters: parameterDetailUpdated,
-      cluster_name: clusterSelected,
-      serverless_name: serverlessDataSelected,
       mode_selected: selectedMode,
       retry_count: retryCount,
       retry_delay: retryDelay,
@@ -236,13 +233,16 @@ const CreateNotebookScheduler = ({
       schedule_value: scheduleMode === 'runNow' ? '' : scheduleValue,
       stop_cluster: stopCluster,
       time_zone: timeZoneSelected,
-      dag_id: randomDagId
+      dag_id: randomDagId,
+      [selectedMode === 'cluster' ? 'cluster_name' : 'serverless_name']:
+        selectedMode === 'cluster' ? clusterSelected : serverlessDataSelected
     };
+
     await SchedulerService.createJobSchedulerService(
       payload,
       app,
       setCreateCompleted,
-      setCreatingScheduler,
+      setCreatingScheduler
     );
   };
 
@@ -326,7 +326,11 @@ const CreateNotebookScheduler = ({
   return (
     <>
       {createCompleted ? (
-        <NotebookJobComponent app={app} themeManager={themeManager} composerSelectedFromCreate={composerSelected} />
+        <NotebookJobComponent
+          app={app}
+          themeManager={themeManager}
+          composerSelectedFromCreate={composerSelected}
+        />
       ) : (
         <div>
           <div className="cluster-details-header">
