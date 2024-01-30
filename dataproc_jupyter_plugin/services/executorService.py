@@ -112,7 +112,7 @@ class ExecutorService():
             parameters = '\n'.join(item.replace(':', ': ') for item in job.parameters)
         else:
             parameters = ''
-        if job.selected_mode == 'cluster':
+        if job.mode_selected == 'cluster':
             template = environment.get_template(DAG_TEMPLATE_CLUSTER_V1)
             content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                     gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
