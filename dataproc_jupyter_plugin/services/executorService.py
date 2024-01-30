@@ -18,6 +18,7 @@ unique_id = str(uuid.uuid4().hex)
 job_id = ''
 job_name = ''
 TEMPLATES_FOLDER_PATH = "dagTemplates"
+ROOT_FOLDER = "dataproc_jupyter_plugin"
 def getBucket(runtime_env, credentials):
     if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
@@ -77,7 +78,7 @@ class ExecutorService():
 
     @staticmethod
     def uploadPapermillToGcs(gcs_dag_bucket):
-        cmd = f"gsutil cp '{TEMPLATES_FOLDER_PATH}/wrapper_papermill.py' gs://{gcs_dag_bucket}/dataproc-notebooks/"
+        cmd = f"gsutil cp './{ROOT_FOLDER}/{TEMPLATES_FOLDER_PATH}/wrapper_papermill.py' gs://{gcs_dag_bucket}/dataproc-notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
         print(process.returncode,_,output)
