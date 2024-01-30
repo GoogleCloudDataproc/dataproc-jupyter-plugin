@@ -279,6 +279,7 @@ function listNotebookScheduler({
   }, [createSelectedEnvironment]);
   return (
     <div>
+       <div className="scroll-comp-scheduler">
       <div className="select-text-overlay-scheduler">
         <div className="create-scheduler-form-element">
           <Autocomplete
@@ -346,6 +347,7 @@ function listNotebookScheduler({
           )}
         </div>
       )}
+    </div>
     </div>
   );
 }

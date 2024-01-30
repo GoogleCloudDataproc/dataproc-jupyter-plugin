@@ -219,3 +219,7 @@
 .dag-run-state-parent {
   border-bottom: 1px solid var(--jp-layout-color3);
 }
+.scroll-comp-scheduler {
+  overflow-y: auto;
+  max-height: 90vh;
+}
