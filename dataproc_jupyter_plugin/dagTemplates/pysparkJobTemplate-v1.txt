@@ -55,7 +55,6 @@ def get_cluster_state_start_if_not_running():
     # Handle the response
     print(f"State is {response.status.state}")
     if response.status.state in (6, 7):
-       print("Let's start the cluster")
 
        request1 = dataproc_v1.StartClusterRequest(
         project_id='{{gcpProjectId}}',
@@ -108,6 +107,7 @@ dag = DAG(
 start_cluster = PythonOperator(
     task_id='start_cluster',
     python_callable=get_cluster_state_start_if_not_running,
+    retries= 2,
     provide_context=True,
     dag=dag)
 

@@ -3,14 +3,11 @@ import os
 import subprocess
 import sys
 from typing import Dict, List
-
-
-
 import requests
 from dataproc_jupyter_plugin.models.models import ComposerEnvironment
+from dataproc_jupyter_plugin.utils.constants import ENVIRONMENT_API
 
 
-ENVIRONMENT_API = 'https://composer.googleapis.com/v1'
 class ComposerService():
     """Provides a list of Conda environments. If Conda is not
     installed or activated, it defaults to providing exclusively
@@ -53,7 +50,6 @@ class ComposerService():
                                 metadata={"path": env},
                             )
                         )
-                    print('----------try------')
                     print(environments)
                     return environments
             else:
@@ -68,7 +64,4 @@ class ComposerService():
         return ""
 
     def output_formats_mapping(self) -> Dict[str, str]:
-        return {"ipynb": "Notebook", "html": "HTML"}
-    
-    # class EnvironmentRetrievalError(Exception):
-    #     pass
+        return {"ipynb": "Notebook",}

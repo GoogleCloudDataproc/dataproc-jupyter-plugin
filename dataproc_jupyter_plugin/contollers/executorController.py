@@ -9,8 +9,11 @@ from dataproc_jupyter_plugin.services.executorService import ExecutorService
 class ExecutorController(APIHandler):
     @tornado.web.authenticated
     def post(self):
-        input_data = self.get_json_body()
-        execute  = ExecutorService()
-        credentials = handlers.get_cached_credentials(self.log)
-        execute.execute(credentials,input_data)
+        try:
+            input_data = self.get_json_body()
+            execute  = ExecutorService()
+            credentials = handlers.get_cached_credentials(self.log)
+            execute.execute(credentials,input_data)
+        except Exception as e:
+            self.finish ({"error": str(e)})
 

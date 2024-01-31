@@ -86,8 +86,8 @@ class ExecutorService():
 
     @staticmethod
     def prepareDag(job,gcs_dag_bucket,dag_file,credentials):
-        DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.py"
-        DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.py"
+        DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
+        DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.txt"
         environment = Environment(loader=PackageLoader('dataproc_jupyter_plugin', TEMPLATES_FOLDER_PATH))
         if 'access_token' and 'project_id' and'region_id' in credentials:
             gcp_project_id = credentials['project_id']

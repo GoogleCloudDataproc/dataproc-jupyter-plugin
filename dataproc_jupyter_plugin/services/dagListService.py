@@ -80,13 +80,9 @@ class DagDeleteService():
     
 class DagUpdateService():
     def update_job(self, credentials, composer_name, dag_id, status):
-        print('-----update job------')
         airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
-            project_id = credentials['project_id']
-            region_id = credentials['region_id']
-        
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}"
             headers = {
