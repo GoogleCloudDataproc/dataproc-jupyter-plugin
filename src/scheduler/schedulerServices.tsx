@@ -38,7 +38,7 @@ interface IPayload {
   name: string;
   schedule_value: string;
   stop_cluster: boolean;
-  time_zone: string;
+  time_zone?: string;
   dag_id: string;
 }
 

@@ -232,8 +232,8 @@ const CreateNotebookScheduler = ({
       name: jobNameSelected,
       schedule_value: scheduleMode === 'runNow' ? '' : scheduleValue,
       stop_cluster: stopCluster,
-      time_zone: timeZoneSelected,
       dag_id: randomDagId,
+      ...(scheduleMode !== 'runNow' && { time_zone: timeZoneSelected }),
       [selectedMode === 'cluster' ? 'cluster_name' : 'serverless_name']:
         selectedMode === 'cluster' ? clusterSelected : serverlessDataSelected
     };
