@@ -62,6 +62,6 @@ class ComposerService():
 
     def manage_environments_command(self) -> str:
         return ""
-
+    
     def output_formats_mapping(self) -> Dict[str, str]:
-        return {"ipynb": "Notebook",}
+        return {"ipynb": "Notebook", "html": "HTML"}
