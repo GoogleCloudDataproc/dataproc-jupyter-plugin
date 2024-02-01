@@ -27,7 +27,6 @@ class Download(APIHandler):
             cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input_notebooks/*' ~/Downloads"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, _ = process.communicate()
-            print(process.returncode,_,output)
             if process.returncode == 0:
                 self.finish({'status' : 0})
             else:

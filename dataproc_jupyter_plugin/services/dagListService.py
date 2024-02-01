@@ -17,7 +17,6 @@ class DagListService():
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {access_token}'
         }
-        print(api_endpoint)
         try:
             response = requests.get(api_endpoint,headers=headers)
             if response.status_code == 200:
@@ -26,15 +25,11 @@ class DagListService():
                 bucket = resp.get('storageConfig', {}).get('bucket', '')
                 return airflow_uri,bucket
         except Exception as e:
-            print("arflow error")
             print(f"Error: {e}")
     def list_jobs(self, credentials, composer_name, tags):
-        print('-----List jobs------')
         airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
-            project_id = credentials['project_id']
-            region_id = credentials['region_id']
         
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags?tags={tags}"
@@ -45,8 +40,6 @@ class DagListService():
             response = requests.get(api_endpoint,headers=headers)
             if response.status_code == 200:
                 resp = response.json()
-                print(resp)
-
             return resp,bucket
         except Exception as e:
             return {"error": str(e)}
@@ -54,7 +47,6 @@ class DagListService():
 
 class DagDeleteService():
     def delete_job(self, credentials, composer_name, dag_id):
-        print('-----delete job------')
         airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
@@ -70,7 +62,6 @@ class DagDeleteService():
             cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, _ = process.communicate()
-            print(process.returncode,_,output)
             if process.returncode == 0:
                 return 0
             else:

@@ -10,7 +10,6 @@ from requests import HTTPError
 class ComposerController(APIHandler):
     def get(self):
         """Returns names of available runtime environments and output formats mappings"""
-        print("RUNTIME")
         try:
             environments_manager = ComposerService()
             credentials = handlers.get_cached_credentials(self.log)
@@ -26,7 +25,6 @@ class ComposerController(APIHandler):
             formats = env["output_formats"]
             env["output_formats"] = [{"name": f, "label": output_formats[f]} for f in formats]
             response.append(env)
-        print(json.dumps(response))
         self.finish(json.dumps(response))
 
 
