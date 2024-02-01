@@ -10,6 +10,7 @@ from requests import HTTPError
 class ComposerController(APIHandler):
     def get(self):
         """Returns names of available runtime environments and output formats mappings"""
+        print("RUNTIME")
         try:
             environments_manager = ComposerService()
             credentials = handlers.get_cached_credentials(self.log)
