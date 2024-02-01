@@ -469,7 +469,10 @@ export class SchedulerService {
       const data: any = await requestAPI(
         `dagRunTask?composer=${composerName}&dag_id=${dagId}&dag_run_id=${dagRunId}`
       );
-      data.task_instances.sort((a:any, b:any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+      data.task_instances.sort(
+        (a: any, b: any) =>
+          new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+      );
       let transformDagRunTaskInstanceListData = [];
       transformDagRunTaskInstanceListData = data.task_instances.map(
         (dagRunTask: any) => {

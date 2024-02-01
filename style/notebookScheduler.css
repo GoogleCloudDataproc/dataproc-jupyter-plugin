@@ -221,7 +221,7 @@
 }
 .scroll-comp-scheduler {
   overflow-y: auto;
-  max-height: 90vh;
+  max-height: 100%;
 }
 
 .execution-history-header {

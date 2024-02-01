@@ -25,11 +25,10 @@ import ExecutionHistory from './executionHistory';
 const NotebookJobComponent = ({
   app,
   composerSelectedFromCreate
-
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
-  composerSelectedFromCreate:string
+  composerSelectedFromCreate: string;
 }): React.JSX.Element => {
   const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   const [composerName, setComposerName] = useState('');
@@ -55,7 +54,7 @@ const NotebookJobComponent = ({
           handleBackButton={handleBackButton}
         />
       ) : (
-        <>
+        <div className="scroll-comp-scheduler">
           <div className="clusters-list-overlay" role="tab">
             <div className="cluster-details-title">Notebook Job Scheduler</div>
           </div>
@@ -67,7 +66,7 @@ const NotebookJobComponent = ({
               composerSelectedFromCreate={composerSelectedFromCreate}
             />
           </div>
-        </>
+        </div>
       )}
     </>
   );
@@ -75,16 +74,24 @@ const NotebookJobComponent = ({
 
 export class NotebookJobs extends DataprocWidget {
   app: JupyterLab;
-  composerSelectedFromCreate :string ;
+  composerSelectedFromCreate: string;
 
-  constructor(app: JupyterLab, themeManager: IThemeManager, composerSelectedFromCreate:string) {
+  constructor(
+    app: JupyterLab,
+    themeManager: IThemeManager,
+    composerSelectedFromCreate: string
+  ) {
     super(themeManager);
     this.app = app;
-    this.composerSelectedFromCreate=composerSelectedFromCreate
+    this.composerSelectedFromCreate = composerSelectedFromCreate;
   }
   renderInternal(): React.JSX.Element {
     return (
-      <NotebookJobComponent app={this.app} themeManager={this.themeManager} composerSelectedFromCreate={this.composerSelectedFromCreate}/>
+      <NotebookJobComponent
+        app={this.app}
+        themeManager={this.themeManager}
+        composerSelectedFromCreate={this.composerSelectedFromCreate}
+      />
     );
   }
 }
