@@ -89,7 +89,8 @@ class ExecutorService():
 
     @staticmethod
     def uploadPapermillToGcs(gcs_dag_bucket):
-        cmd = f"gsutil cp './{ROOT_FOLDER}/{TEMPLATES_FOLDER_PATH}/wrapper_papermill.py' gs://{gcs_dag_bucket}/dataproc-notebooks/"
+        file_path = os.path.abspath('./{ROOT_FOLDER}/{TEMPLATES_FOLDER_PATH}/wrapper_papermill.py')
+        cmd = f"gsutil cp {file_path} gs://{gcs_dag_bucket}/dataproc-notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
 
