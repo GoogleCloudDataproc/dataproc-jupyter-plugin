@@ -22,12 +22,11 @@ from requests import HTTPError
 
 class ComposerController(APIHandler):
     def get(self):
-        """Returns names of available runtime environments and output formats mappings"""
+        """Returns names of available composer environments"""
         try:
             environments_manager = ComposerService()
             credentials = handlers.get_cached_credentials(self.log)
             environments = environments_manager.list_environments(credentials)
-            output_formats = environments_manager.output_formats_mapping()
                 
         except:
             raise HTTPError(500, "Error")
@@ -35,8 +34,6 @@ class ComposerController(APIHandler):
         response = []
         for environment in environments:
             env = environment.dict()
-            formats = env["output_formats"]
-            env["output_formats"] = [{"name": f, "label": output_formats[f]} for f in formats]
             response.append(env)
         self.finish(json.dumps(response))
 

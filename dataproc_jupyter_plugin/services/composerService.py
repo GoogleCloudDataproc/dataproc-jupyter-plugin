@@ -24,11 +24,6 @@ from dataproc_jupyter_plugin.utils.constants import ENVIRONMENT_API
 
 
 class ComposerService():
-    """Provides a list of Conda environments. If Conda is not
-    installed or activated, it defaults to providing exclusively
-    the Python executable that JupyterLab is currently running in.
-    """
-
     def list_environments(self, credentials) -> List[ComposerEnvironment]:
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
@@ -61,7 +56,6 @@ class ComposerService():
                                 label=name,
                                 description=f"Environment: {name}",
                                 file_extensions=["ipynb"],
-                                output_formats=["ipynb", "html"],
                                 metadata={"path": env},
                             )
                         )
@@ -76,6 +70,3 @@ class ComposerService():
 
     def manage_environments_command(self) -> str:
         return ""
-    
-    def output_formats_mapping(self) -> Dict[str, str]:
-        return {"ipynb": "Notebook", "html": "HTML"}

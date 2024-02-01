@@ -3,17 +3,15 @@ import uuid
 from airflow import DAG
 from airflow.providers.google.cloud.operators.dataproc import DataprocCreateBatchOperator
 
-yesterday = datetime.combine(
-    datetime.today() - timedelta(1),
-    datetime.min.time())
+
 default_args = {
     'owner': '{{owner}}',
     'start_date': '{{start_date}}',
     'retries': '{{retry_count}}',
     'retry_delay': timedelta(minutes=int('{{retry_delay}}')), 
-    'email': {{email}},  #list of all the ids passed from UI
-    'email_on_failure': '{{email_failure}}',     # based on the value passed fro UI
-    'email_on_retry': '{{email_delay}}',      # based on the value passed fro UI
+    'email': {{email}}, 
+    'email_on_failure': '{{email_failure}}',     
+    'email_on_retry': '{{email_delay}}',      
     'email_on_success':'{{email_success}}'
 }
 input_notebook = '{{input_notebook}}'
@@ -22,7 +20,8 @@ parameters = '''
 {{parameters}}
 '''
 notebook_args= [input_notebook, output_notebook] 
-if parameters.strip():  # Check if parameters is not empty or contains only whitespace
+# Check if parameters is not empty or contains only whitespace
+if parameters.strip(): 
     notebook_args.extend(["--parameters", parameters])
 
 

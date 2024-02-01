@@ -21,7 +21,7 @@ import nbconvert
 import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 import subprocess
-from jinja2 import Environment, FileSystemLoader, PackageLoader
+from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
 import uuid
 from datetime import datetime, timedelta, timezone
 import json
@@ -77,22 +77,36 @@ class ExecutorService():
             region = credentials['region_id']
             cmd = f"gcloud beta composer environments storage dags import --environment {runtime_env} --location {region} --source={dag_file}"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            output, _ = process.communicate()
+            output, error = process.communicate()
         if process.returncode == 0:
             os.remove(dag_file)
+        if process.returncode != 0:
+            raise Exception(f"Error file uploading: {error.decode()}")
     
     @staticmethod
     def uploadInputFileToGcs(input,gcs_dag_bucket,job_name):
         cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        output, _ = process.communicate()
+        output, error = process.communicate()
+        if process.returncode == 1:
+            raise Exception(f"Error file uploading: {error.decode()}")
 
     @staticmethod
     def uploadPapermillToGcs(gcs_dag_bucket):
-        file_path = os.path.abspath('./{ROOT_FOLDER}/{TEMPLATES_FOLDER_PATH}/wrapper_papermill.py')
-        cmd = f"gsutil cp {file_path} gs://{gcs_dag_bucket}/dataproc-notebooks/"
+        env = Environment(
+        loader=PackageLoader('dataproc_jupyter_plugin', 'dagTemplates'),
+        autoescape=select_autoescape(['py'])
+        )   
+        wrapper_papermill_path = env.get_template('wrapper_papermill.py').filename
+        cmd = f"gsutil cp '{wrapper_papermill_path}' gs://{gcs_dag_bucket}/dataproc-notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        output, _ = process.communicate()
+        output, error = process.communicate()
+        print(process.returncode,error,output)
+        if process.returncode == 0:
+            print(process.returncode,error,output)
+        else:
+            raise Exception(f"Error file uploading: {error.decode()}")
+
 
 
     @staticmethod
@@ -106,7 +120,7 @@ class ExecutorService():
         cmd = "gcloud config get-value account"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         user, error = process.communicate()
-        owner = user.split('@')[0]
+        owner = user.split('@')[0] #getting username from email
         if job.schedule_value == '':
             schedule_interval = "@once"
         else:

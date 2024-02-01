@@ -4,19 +4,15 @@ from airflow.providers.google.cloud.operators.dataproc import DataprocSubmitJobO
 from airflow.operators.python_operator import PythonOperator
 from google.cloud import dataproc_v1
 from google.api_core.client_options import ClientOptions
-import pendulum
 
-yesterday = datetime.combine(
-    datetime.today() - timedelta(1),
-    datetime.min.time())
 default_args = {
     'owner': '{{owner}}',
     'start_date': '{{start_date}}',
     'retries': '{{retry_count}}',
     'retry_delay': timedelta(minutes=int('{{retry_delay}}')), 
-    'email': {{email}},  #list of all the ids passed from UI
-    'email_on_failure': '{{email_failure}}',     # based on the value passed fro UI
-    'email_on_retry': '{{email_delay}}',      # based on the value passed fro UI
+    'email': {{email}}, 
+    'email_on_failure': '{{email_failure}}',     
+    'email_on_retry': '{{email_delay}}',     
     'email_on_success':'{{email_success}}'
 }
 input_notebook = '{{input_notebook}}'
@@ -25,7 +21,8 @@ parameters = '''
 {{parameters}}
 '''
 notebook_args= [input_notebook, output_notebook] 
-if parameters.strip():  # Check if parameters is not empty or contains only whitespace
+# Check if parameters is not empty or contains only whitespace
+if parameters.strip():  
     notebook_args.extend(["--parameters", parameters])
 
 def get_client_cert():
@@ -55,7 +52,7 @@ def get_cluster_state_start_if_not_running():
     # Handle the response
     print(f"State is {response.status.state}")
     if response.status.state in (6, 7):
-
+        print("Cluster is in stopped/stopping state. Starting the cluster")
        request1 = dataproc_v1.StartClusterRequest(
         project_id='{{gcpProjectId}}',
         region='{{gcpRegion}}',
@@ -64,13 +61,15 @@ def get_cluster_state_start_if_not_running():
        operation = client.start_cluster(request=request1)
        print("Waiting for operation to complete...")
        response = operation.result()
-
+       if response.status.state in (2,5):
+            print("Cluster is started succesfully")
+    
     elif response.status.state in (2, 5):
        print("Cluster is already running")
 
     else:
         print("Cluster is unavailable")
-        raise Exception("API request failed")
+        raise Exception("Cluster is unavailable")
 
  
 def stop_the_cluster():
@@ -92,6 +91,8 @@ def stop_the_cluster():
         operation = client.stop_cluster(request=request)
         print("Waiting for operation to complete...")
         response = operation.result()
+        if response.status.state in (6, 7):
+            print("Cluster is stopped succesfully")
     
         # Handle the response
         print(response)

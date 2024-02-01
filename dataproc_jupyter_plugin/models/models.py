@@ -27,7 +27,6 @@ class ComposerEnvironment(BaseModel):
     label: str
     description: str
     file_extensions: List[str]  # Supported input file types
-    output_formats: List[str]  # Supported output formats
     metadata: Optional[Dict[str, str]]  # Optional metadata
     # compute_types: Optional[List[str]]
     # default_compute_type: Optional[str]  # Should be a member of the compute_types list

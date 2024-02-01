@@ -19,7 +19,7 @@ from jupyter_server.base.handlers import APIHandler
 from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.dagListService import DagListService, DagDeleteService, DagUpdateService
 from dataproc_jupyter_plugin.utils.constants import TAGS
-# from google.cloud import storage
+
 
 class DagController(APIHandler):
     def get(self):
@@ -38,7 +38,6 @@ class Download(APIHandler):
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             bucket_name = self.get_argument("bucket_name")
-            # path = 'gs://us-central1-composer4-fe041c11-bucket/dataproc-notebooks/testschedule1.ipynb'
             cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input_notebooks/*' ~/Downloads"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, _ = process.communicate()

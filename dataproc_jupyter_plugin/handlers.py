@@ -24,11 +24,10 @@ import re
 import threading
 from jupyter_server.utils import ensure_async
 import time
-# from dataproc_jupyter_plugin.environments import EnvironmentRetrievalError
+
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
 from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
-# from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
 from dataproc_jupyter_plugin.contollers.composerController import ComposerController
 from dataproc_jupyter_plugin.contollers.dagContoller import DagController, Delete, Download, Update
 from dataproc_jupyter_plugin.contollers.dagRunController import DagRunController, DagRunTaskController, DagRunTaskLogsController
