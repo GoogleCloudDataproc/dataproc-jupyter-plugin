@@ -169,7 +169,7 @@ const ExecutionHistory = ({
   return (
     <>
       <div>
-        <div className="cluster-details-header">
+        <div className="execution-history-header">
           <div
             role="button"
             className="scheduler-back-arrow-icon"

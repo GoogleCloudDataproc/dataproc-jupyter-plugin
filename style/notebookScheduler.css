@@ -70,7 +70,6 @@
 }
 .execution-history-main-wrapper {
   display: flex;
-  margin-top: 20px;
 }
 
 .execution-history-right-wrapper {
@@ -89,6 +88,7 @@
   justify-content: center;
   cursor: pointer;
   margin-right: 10px;
+  margin-left: 10px;
 }
 
 .dag-runs-table-body {
@@ -222,4 +222,9 @@
 .scroll-comp-scheduler {
   overflow-y: auto;
   max-height: 90vh;
+}
+
+.execution-history-header {
+  height: 48px;
+  display: flex;
 }
