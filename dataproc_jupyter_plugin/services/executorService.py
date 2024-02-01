@@ -60,7 +60,6 @@ class ExecutorService():
     """Default execution manager that executes notebooks"""
     @staticmethod
     def uploadToGcloud(runtime_env,dag_file,credentials):
-        print("upload dag")
         if 'region_id' in credentials:
             region = credentials['region_id']
             cmd = f"gcloud beta composer environments storage dags import --environment {runtime_env} --location {region} --source={dag_file}"
@@ -74,14 +73,14 @@ class ExecutorService():
         cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
-        print(process.returncode,_,output)
+    
 
     @staticmethod
     def uploadPapermillToGcs(gcs_dag_bucket):
         cmd = f"gsutil cp './{ROOT_FOLDER}/{TEMPLATES_FOLDER_PATH}/wrapper_papermill.py' gs://{gcs_dag_bucket}/dataproc-notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
-        print(process.returncode,_,output)
+
 
 
     @staticmethod
@@ -135,9 +134,6 @@ class ExecutorService():
 
     def execute(self,credentials,input_data):
         job = DescribeJob(**input_data)
-        print(job.dict())
-        print(job.schedule_value)
-        print(job.serverless_name)
         global job_id
         global job_name
         job_id = job.dag_id

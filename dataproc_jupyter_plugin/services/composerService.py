@@ -50,7 +50,6 @@ class ComposerService():
                                 metadata={"path": env},
                             )
                         )
-                    print(environments)
                     return environments
             else:
                 print(f"Error: {response.status_code} - {response.text}")
