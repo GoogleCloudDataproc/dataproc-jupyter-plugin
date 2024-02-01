@@ -1,6 +1,19 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 from typing import Dict
-
 import requests
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 from dataproc_jupyter_plugin.models.models import DagModel, DescribeJob
@@ -60,7 +73,6 @@ class ExecutorService():
     """Default execution manager that executes notebooks"""
     @staticmethod
     def uploadToGcloud(runtime_env,dag_file,credentials):
-        print("upload dag")
         if 'region_id' in credentials:
             region = credentials['region_id']
             cmd = f"gcloud beta composer environments storage dags import --environment {runtime_env} --location {region} --source={dag_file}"
@@ -74,14 +86,12 @@ class ExecutorService():
         cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
-        print(process.returncode,_,output)
 
     @staticmethod
     def uploadPapermillToGcs(gcs_dag_bucket):
         cmd = f"gsutil cp './{ROOT_FOLDER}/{TEMPLATES_FOLDER_PATH}/wrapper_papermill.py' gs://{gcs_dag_bucket}/dataproc-notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, _ = process.communicate()
-        print(process.returncode,_,output)
 
 
     @staticmethod
@@ -89,10 +99,9 @@ class ExecutorService():
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
         DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.txt"
         environment = Environment(loader=PackageLoader('dataproc_jupyter_plugin', TEMPLATES_FOLDER_PATH))
-        if 'access_token' and 'project_id' and'region_id' in credentials:
+        if  'project_id' and'region_id' in credentials:
             gcp_project_id = credentials['project_id']
             gcp_region_id = credentials['region_id']
-            access_token = credentials['access_token']
         cmd = "gcloud config get-value account"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         user, error = process.communicate()
@@ -135,9 +144,6 @@ class ExecutorService():
 
     def execute(self,credentials,input_data):
         job = DescribeJob(**input_data)
-        print(job.dict())
-        print(job.schedule_value)
-        print(job.serverless_name)
         global job_id
         global job_name
         job_id = job.dag_id
