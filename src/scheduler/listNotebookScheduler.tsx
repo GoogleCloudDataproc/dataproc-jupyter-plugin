@@ -181,7 +181,7 @@ function listNotebookScheduler({
         <div
           role="button"
           className="icon-buttons-style"
-          title={is_status_paused ? 'start' : 'stop'}
+          title={is_status_paused ? 'Unpause' : 'Pause'}
           onClick={e => handleUpdateScheduler(data.jobid, is_status_paused)}
         >
           {is_status_paused ? (
@@ -327,7 +327,7 @@ function listNotebookScheduler({
               onCancel={() => handleCancelDelete()}
               onDelete={() => handleDeleteScheduler()}
               deletePopupOpen={deletePopupOpen}
-              DeleteMsg={`This will delete ' ${selectedDagId} ' and cannot be undone.`}
+              DeleteMsg={`This will delete ${selectedDagId} and cannot be undone.`}
             />
           )}
         </div>

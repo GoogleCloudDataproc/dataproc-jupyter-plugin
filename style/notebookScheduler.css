@@ -39,7 +39,6 @@
   font-weight: 400;
   font-size: 18px;
   line-height: 24px;
-
   display: flex;
   align-items: center;
   color: var(--jp-ui-font-color0);
@@ -75,6 +74,7 @@
 .execution-history-right-wrapper {
   width: calc(100% - 320px);
   border: 1px solid var(--jp-layout-color3);
+  border-left: none;
 }
 
 .dag-runs-list-table-parent {
@@ -87,8 +87,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  margin-right: 10px;
-  margin-left: 10px;
+  padding-left: 10px;
 }
 
 .dag-runs-table-body {
@@ -218,10 +217,6 @@
 
 .dag-run-state-parent {
   border-bottom: 1px solid var(--jp-layout-color3);
-}
-.scroll-comp-scheduler {
-  overflow-y: auto;
-  max-height: 100%;
 }
 
 .execution-history-header {

@@ -46,7 +46,7 @@ const NotebookJobComponent = ({
   };
 
   return (
-    <>
+    <div className="component-level">
       {showExecutionHistory ? (
         <ExecutionHistory
           composerName={composerName}
@@ -54,7 +54,7 @@ const NotebookJobComponent = ({
           handleBackButton={handleBackButton}
         />
       ) : (
-        <div className="scroll-comp-scheduler">
+        <div>
           <div className="clusters-list-overlay" role="tab">
             <div className="cluster-details-title">Notebook Job Scheduler</div>
           </div>
@@ -68,7 +68,7 @@ const NotebookJobComponent = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
