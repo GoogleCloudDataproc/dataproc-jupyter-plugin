@@ -26,17 +26,9 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import ListDagTaskInstances from './listDagTaskInstances';
 
-import Badge from '@mui/material/Badge';
-import dagTaskFailedIcon from '../../style/icons/dag_task_failed_icon.svg';
-
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
-});
-
-const iconDagTaskFailed = new LabIcon({
-  name: 'launcher:dag-task-failed-icon',
-  svgstr: dagTaskFailedIcon
 });
 
 const ExecutionHistory = ({
@@ -110,55 +102,47 @@ const ExecutionHistory = ({
     const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates);
 
     return (
-      <Badge
-        key={props.day.toString()}
-        overlap="circular"
-        badgeContent={
-          isOrangeExecution ? <iconDagTaskFailed.react tag="div" /> : undefined
-        }
-      >
-        <PickersDay
-          {...props}
-          style={{
-            border: isSelectedExecution
-              ? '3px solid var(--jp-ui-font-color0)'
+      <PickersDay
+        {...props}
+        style={{
+          border: isSelectedExecution
+            ? '3px solid var(--jp-ui-font-color0)'
+            : 'none',
+          borderRadius:
+            isGreenExecution ||
+            isRedExecution ||
+            isSelectedExecution ||
+            isOrangeExecution ||
+            isGreyExecution ||
+            isBlueExecution ||
+            isDarkGreenExecution
+              ? '0%'
               : 'none',
-            borderRadius:
-              isGreenExecution ||
-              isRedExecution ||
-              isSelectedExecution ||
-              isOrangeExecution ||
-              isGreyExecution ||
-              isBlueExecution ||
-              isDarkGreenExecution
-                ? '0%'
-                : 'none',
-            backgroundColor: isDarkGreenExecution
-              ? '#188038'
-              : isGreenExecution
-              ? '#34A853'
-              : isOrangeExecution
-              ? '#FFA500'
-              : isRedExecution
-              ? '#EA3323'
-              : isBlueExecution
-              ? '#1A73E8'
-              : isGreyExecution
-              ? '#808080'
-              : 'transparent',
-            color:
-              isGreenExecution ||
-              isRedExecution ||
-              // isSelectedExecution ||
-              isOrangeExecution ||
-              isGreyExecution ||
-              isBlueExecution ||
-              isDarkGreenExecution
-                ? 'white'
-                : 'inherit'
-          }}
-        />
-      </Badge>
+          backgroundColor: isDarkGreenExecution
+            ? '#188038'
+            : isGreenExecution
+            ? '#34A853'
+            : isOrangeExecution
+            ? '#FFA500'
+            : isRedExecution
+            ? '#EA3323'
+            : isBlueExecution
+            ? '#1A73E8'
+            : isGreyExecution
+            ? '#808080'
+            : 'transparent',
+          color:
+            isGreenExecution ||
+            isRedExecution ||
+            // isSelectedExecution ||
+            isOrangeExecution ||
+            isGreyExecution ||
+            isBlueExecution ||
+            isDarkGreenExecution
+              ? 'white'
+              : 'inherit'
+        }}
+      />
     );
   };
 
