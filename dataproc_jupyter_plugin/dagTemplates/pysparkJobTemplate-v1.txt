@@ -72,10 +72,10 @@ def get_cluster_state_start_if_not_running():
         region='{{gcpRegion}}',
         cluster_name='{{cluster_name}}',
     )
-       operation = client.start_cluster(request=request1)
-       print("Waiting for operation to complete...")
-       response = operation.result()
-       if response.status.state in (2,5):
+        operation = client.start_cluster(request=request1)
+        print("Waiting for operation to complete...")
+        response = operation.result()
+        if response.status.state in (2,5):
             print("Cluster is started succesfully")
     
     elif response.status.state in (2, 5):
