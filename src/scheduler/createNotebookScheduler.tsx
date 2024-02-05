@@ -314,8 +314,6 @@ const CreateNotebookScheduler = ({
     listClustersAPI();
     listSessionTemplatesAPI();
     setInputFileSelected(context.path);
-    console.log(context.path);
-    console.log(inputFileSelected);
     setJobNameSelected('');
   }, []);
 
