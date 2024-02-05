@@ -66,8 +66,8 @@ function listNotebookScheduler({
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
   const [bucketName, setBucketName] = useState('');
-  const [backselectedEnvironment] = useState(backButtonComposerName);
-  const [createSelectedEnvironment] = useState(composerSelectedFromCreate);
+  const backselectedEnvironment = backButtonComposerName;
+  const createSelectedEnvironment = composerSelectedFromCreate;
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
   const columns = React.useMemo(
@@ -259,28 +259,27 @@ function listNotebookScheduler({
     if (
       composerList.length > 0 &&
       backselectedEnvironment === '' &&
-      createSelectedEnvironment == ''
+      createSelectedEnvironment === ''
     ) {
       setComposerSelected(composerList[0]);
     }
-  }, [composerList]);
-
-  useEffect(() => {
-    if (backselectedEnvironment !== '') {
+    if (
+      composerList.length > 0 &&
+      backselectedEnvironment === '' &&
+      createSelectedEnvironment !== ''
+    ) {
+      setComposerSelected(createSelectedEnvironment);
+    }
+    if (composerList.length > 0 && backselectedEnvironment !== '') {
       setComposerSelected(backselectedEnvironment);
     }
-  }, [backselectedEnvironment]);
+  }, [composerList]);
 
   useEffect(() => {
     if (composerSelected !== '') {
       listDagInfoAPI();
     }
   }, [composerSelected]);
-  useEffect(() => {
-    if (createSelectedEnvironment !== '') {
-      setComposerSelected(createSelectedEnvironment);
-    }
-  }, [createSelectedEnvironment]);
   return (
     <div>
       <div className="select-text-overlay-scheduler">
