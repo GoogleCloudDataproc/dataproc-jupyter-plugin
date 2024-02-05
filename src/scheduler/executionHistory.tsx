@@ -173,6 +173,7 @@ const ExecutionHistory = ({
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DateCalendar
                 // value={selectedDate}
+                maxDate={dayjs(currentDate)}
                 referenceDate={dayjs(currentDate)}
                 onChange={newValue => handleDateSelection(newValue)}
                 slots={{
