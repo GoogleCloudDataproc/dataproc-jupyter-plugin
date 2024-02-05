@@ -18,7 +18,7 @@ from dataproc_jupyter_plugin.utils.constants import dataproc_url
 
 
 class ClusterListService():
-    def list_clusters(self, credentials,page_size,page_token):
+    def list_clusters(self, credentials,page_size,page_token,log):
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -36,4 +36,5 @@ class ClusterListService():
 
             return resp
         except Exception as e:
+            log.exception(f"Error fetching cluster list")
             return {"error": str(e)}

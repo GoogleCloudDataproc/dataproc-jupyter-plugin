@@ -16,12 +16,12 @@
 import subprocess
 import requests
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
-from dataproc_jupyter_plugin.services.executorService import getBucket
+
 
 
 
 class DagListService():
-    def getAirflowUri(composer_name, credentials):
+    def getAirflowUri(composer_name, credentials,log):
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -40,9 +40,10 @@ class DagListService():
                 bucket = resp.get('storageConfig', {}).get('bucket', '')
                 return airflow_uri,bucket
         except Exception as e:
+            log.exception(f"Error getting airflow uri: {str(e)}")
             print(f"Error: {e}")
-    def list_jobs(self, credentials, composer_name, tags):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
+    def list_jobs(self, credentials, composer_name, tags, log):
+        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
         
@@ -57,12 +58,13 @@ class DagListService():
                 resp = response.json()
             return resp,bucket
         except Exception as e:
+            log.exception(f"Error getting dag list: {str(e)}")
             return {"error": str(e)}
     
 
 class DagDeleteService():
-    def delete_job(self, credentials, composer_name, dag_id):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
+    def delete_job(self, credentials, composer_name, dag_id,log):
+        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -80,13 +82,15 @@ class DagDeleteService():
             if process.returncode == 0:
                 return 0
             else:
+                log.exception(f"Error deleting dag")
                 return 1
         except Exception as e:
+            log.exception(f"Error deleting dag: {str(e)}")
             return {"error": str(e)}
     
 class DagUpdateService():
-    def update_job(self, credentials, composer_name, dag_id, status):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
+    def update_job(self, credentials, composer_name, dag_id, status,log):
+        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
         try:
@@ -103,6 +107,8 @@ class DagUpdateService():
             if response.status_code == 200:
                 return 0              
             else:
+                log.exception(f"Error updating status")
                 return 1
         except Exception as e:
+            log.exception(f"Error updating status: {str(e)}")
             return {"error": str(e)}

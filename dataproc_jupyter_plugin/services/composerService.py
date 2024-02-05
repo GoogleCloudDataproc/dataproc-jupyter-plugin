@@ -13,10 +13,6 @@
 # limitations under the License.
 
 
-import json
-import os
-import subprocess
-import sys
 from typing import Dict, List
 import requests
 from dataproc_jupyter_plugin.models.models import ComposerEnvironment
@@ -24,7 +20,7 @@ from dataproc_jupyter_plugin.utils.constants import ENVIRONMENT_API
 
 
 class ComposerService():
-    def list_environments(self, credentials) -> List[ComposerEnvironment]:
+    def list_environments(self, credentials,log) -> List[ComposerEnvironment]:
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -61,6 +57,7 @@ class ComposerService():
                         )
                     return environments
             else:
+                log.exception(f"Error listing environments")
                 print(f"Error: {response.status_code} - {response.text}")
 
 

@@ -16,7 +16,6 @@ import json
 from jupyter_server.base.handlers import APIHandler
 from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.composerService import ComposerService
-from jupyter_server.utils import ensure_async
 from requests import HTTPError
 
 
@@ -26,10 +25,11 @@ class ComposerController(APIHandler):
         try:
             environments_manager = ComposerService()
             credentials = handlers.get_cached_credentials(self.log)
-            environments = environments_manager.list_environments(credentials)
+            environments = environments_manager.list_environments(credentials,self.log)
                 
-        except:
-            raise HTTPError(500, "Error")
+        except Exception as e:
+            self.log.exception(f"Error fetching composer environments: {str(e)}")
+            self.finish ({"error": str(e)})
 
         response = []
         for environment in environments:

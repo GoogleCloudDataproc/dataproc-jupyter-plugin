@@ -16,15 +16,12 @@ import os
 from typing import Dict
 import requests
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
-from dataproc_jupyter_plugin.models.models import DagModel, DescribeJob
-import nbconvert
+from dataproc_jupyter_plugin.models.models import  DescribeJob
 import nbformat
-from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 import subprocess
-from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
+from jinja2 import Environment,PackageLoader, select_autoescape
 import uuid
-from datetime import datetime, timedelta, timezone
-import json
+from datetime import datetime, timedelta
 import pendulum
 
 unique_id = str(uuid.uuid4().hex)
@@ -32,7 +29,7 @@ job_id = ''
 job_name = ''
 TEMPLATES_FOLDER_PATH = "dagTemplates"
 ROOT_FOLDER = "dataproc_jupyter_plugin"
-def getBucket(runtime_env, credentials):
+def getBucket(runtime_env, credentials,log):
     if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -50,49 +47,52 @@ def getBucket(runtime_env, credentials):
                 gcs_dag_path = resp.get('storageConfig', {}).get('bucket', '')
                 return gcs_dag_path
     except Exception as e:
+            log.exception(f"Error getting bucket name: {str(e)}")
             print(f"Error: {e}")
 
-def check_file_exists(bucket, file_path):
+def check_file_exists(bucket, file_path,log):
     cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     output, error = process.communicate()
-
-    # Check if the command was successful
     if process.returncode == 0:
         return True
     else:
-        # Check if the error indicates that the file doesn't exist
         if "matched no objects" in error.decode():
             return False
         else:
-            # Handle other errors if needed
+            log.exception(f"Error cheking file existence: {error.decode()}")
             raise Exception(f"Error checking file existence: {error.decode()}")
     
 
 class ExecutorService():
     """Default execution manager that executes notebooks"""
     @staticmethod
-    def uploadToGcloud(runtime_env,dag_file,credentials):
+    def uploadToGcloud(runtime_env,dag_file,credentials,log):
         if 'region_id' in credentials:
             region = credentials['region_id']
             cmd = f"gcloud beta composer environments storage dags import --environment {runtime_env} --location {region} --source={dag_file}"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, error = process.communicate()
         if process.returncode == 0:
+            log.info(f"Dag file uploaded to gcs successfully")
             os.remove(dag_file)
         if process.returncode != 0:
-            raise Exception(f"Error file uploading: {error.decode()}")
+            log.exception(f"Error uploading dag file to gcs: {error.decode()}")
+            raise Exception(f"Error uploading dag file to gcs: {error.decode()}")
     
     @staticmethod
-    def uploadInputFileToGcs(input,gcs_dag_bucket,job_name):
+    def uploadInputFileToGcs(input,gcs_dag_bucket,job_name,log):
         cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, error = process.communicate()
-        if process.returncode == 1:
-            raise Exception(f"Error file uploading: {error.decode()}")
+        if process.returncode == 0:
+            log.info(f"Input file uploaded to gcs successfully")
+        else:
+            log.exception(f"Error uploading input file to gcs: {error.decode()}")
+            raise Exception(f"Error uploading input file to gcs: {error.decode()}")
 
     @staticmethod
-    def uploadPapermillToGcs(gcs_dag_bucket):
+    def uploadPapermillToGcs(gcs_dag_bucket,log):
         env = Environment(
         loader=PackageLoader('dataproc_jupyter_plugin', 'dagTemplates'),
         autoescape=select_autoescape(['py'])
@@ -103,14 +103,17 @@ class ExecutorService():
         output, error = process.communicate()
         print(process.returncode,error,output)
         if process.returncode == 0:
+            log.info(f"Papermill file uploaded to gcs successfully")
             print(process.returncode,error,output)
         else:
-            raise Exception(f"Error file uploading: {error.decode()}")
+            log.exception(f"Error uploading papermill file to gcs: {error.decode()}")
+            raise Exception(f"Error uploading papermill file to gcs: {error.decode()}")
 
 
 
     @staticmethod
-    def prepareDag(job,gcs_dag_bucket,dag_file,credentials):
+    def prepareDag(job,gcs_dag_bucket,dag_file,credentials,log):
+        log.info(f"Generating dag file")
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
         DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.txt"
         environment = Environment(loader=PackageLoader('dataproc_jupyter_plugin', TEMPLATES_FOLDER_PATH))
@@ -157,33 +160,33 @@ class ExecutorService():
             message.write(content)
 
 
-    def execute(self,credentials,input_data):
+    def execute(self,credentials,input_data,log):
         job = DescribeJob(**input_data)
         global job_id
         global job_name
         job_id = job.dag_id
         job_name = job.name
         dag_file = f"dag_{job_name}.py"
-        gcs_dag_bucket = getBucket(job.composer_environment_name, credentials)
+        gcs_dag_bucket = getBucket(job.composer_environment_name, credentials,log)
         remote_file_path = "wrapper_papermill.py"
       
-        if check_file_exists(gcs_dag_bucket, remote_file_path):
+        if check_file_exists(gcs_dag_bucket, remote_file_path,log):
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} exists.")
         else:
-            self.uploadPapermillToGcs(gcs_dag_bucket)
+            self.uploadPapermillToGcs(gcs_dag_bucket,log)
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
-        self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket,job_name)
-        self.prepareDag(job,gcs_dag_bucket,dag_file,credentials)
-        self.uploadToGcloud(job.composer_environment_name,dag_file,credentials)
+        self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket,job_name,log)
+        self.prepareDag(job,gcs_dag_bucket,dag_file,credentials,log)
+        self.uploadToGcloud(job.composer_environment_name,dag_file,credentials,log)
 
 
 
-    def validate(cls, input_path: str) -> bool:
-        with open(input_path, encoding="utf-8") as f:
-            nb = nbformat.read(f, as_version=4)
-            try:
-                nb.metadata.kernelspec["name"]
-            except:
-                return False
-            else:
-                return True
+    # def validate(cls, input_path: str) -> bool:
+    #     with open(input_path, encoding="utf-8") as f:
+    #         nb = nbformat.read(f, as_version=4)
+    #         try:
+    #             nb.metadata.kernelspec["name"]
+    #         except:
+    #             return False
+    #         else:
+    #             return True

@@ -15,11 +15,10 @@
 
 from dataproc_jupyter_plugin.services.dagListService import DagListService
 import requests
-
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 
 class DagRunListService():
-    def list_dag_runs(self, credentials, composer_name, dag_id, start_date, end_date):
+    def list_dag_runs(self, credentials, composer_name, dag_id, start_date, end_date,log):
         airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
@@ -38,10 +37,11 @@ class DagRunListService():
 
             return resp
         except Exception as e:
+            log.exception(f"Error fetching dag run list: {str(e)}")
             return {"error": str(e)}
 
 class DagRunTaskListService():
-    def list_dag_run_task(self, credentials, composer_name, dag_id, dag_run_id):
+    def list_dag_run_task(self, credentials, composer_name, dag_id, dag_run_id,log):
         airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
@@ -57,10 +57,11 @@ class DagRunTaskListService():
 
             return resp
         except Exception as e:
+            log.exception(f"Error fetching dag run task list: {str(e)}")
             return {"error": str(e)}
         
 class DagRunTaskLogsListService():
-    def list_dag_run_task_logs(self, credentials, composer_name, dag_id, dag_run_id, task_id, task_try_number):
+    def list_dag_run_task_logs(self, credentials, composer_name, dag_id, dag_run_id, task_id, task_try_number,log):
         airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
@@ -82,5 +83,6 @@ class DagRunTaskLogsListService():
 
             return resp_to_json
         except Exception as e:
+            log.exception(f"Error fetching dag run task logs: {str(e)}")
             return {"error": str(e)}
     

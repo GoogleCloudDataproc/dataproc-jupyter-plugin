@@ -18,7 +18,7 @@ from dataproc_jupyter_plugin.utils.constants import dataproc_url
 
 
 class RuntimeListService():
-    def list_runtime(self, credentials,page_size,page_token):
+    def list_runtime(self, credentials,page_size,page_token,log):
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -36,4 +36,5 @@ class RuntimeListService():
 
             return resp
         except Exception as e:
+            log.exception(f"Error fetching runtime list: {str(e)}")
             return {"error": str(e)}

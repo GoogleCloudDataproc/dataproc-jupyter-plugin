@@ -27,9 +27,10 @@ class DagRunController(APIHandler):
             start_date = self.get_argument("start_date")
             end_date = self.get_argument("end_date")
             credentials = handlers.get_cached_credentials(self.log)
-            dagRun_list = dagRun.list_dag_runs(credentials,composer_name,dag_id,start_date,end_date)
+            dagRun_list = dagRun.list_dag_runs(credentials,composer_name,dag_id,start_date,end_date,self.log)
             self.finish(json.dumps(dagRun_list))
         except Exception as e:
+            self.log.exception(f"Error fetching dag run list {str(e)}")
             self.finish ({"error": str(e)})
 
 class DagRunTaskController(APIHandler):
@@ -40,9 +41,10 @@ class DagRunTaskController(APIHandler):
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
             credentials = handlers.get_cached_credentials(self.log)
-            dagRun_list = dagRun.list_dag_run_task(credentials,composer_name,dag_id,dag_run_id)
+            dagRun_list = dagRun.list_dag_run_task(credentials,composer_name,dag_id,dag_run_id,self.log)
             self.finish(json.dumps(dagRun_list))
         except Exception as e:
+            self.log.exception(f"Error fetching dag run tasks: {str(e)}")
             self.finish ({"error": str(e)})
 
 class DagRunTaskLogsController(APIHandler):
@@ -55,8 +57,9 @@ class DagRunTaskLogsController(APIHandler):
             task_id = self.get_argument("task_id")
             task_try_number = self.get_argument("task_try_number")
             credentials = handlers.get_cached_credentials(self.log)
-            dagRun_list = dagRun.list_dag_run_task_logs(credentials,composer_name,dag_id,dag_run_id,task_id,task_try_number)
+            dagRun_list = dagRun.list_dag_run_task_logs(credentials,composer_name,dag_id,dag_run_id,task_id,task_try_number,self.log)
             self.finish(json.dumps(dagRun_list))
         except Exception as e:
+            self.log.exception(f"Error fetching dag run task logs: {str(e)}")
             self.finish ({"error": str(e)})
 

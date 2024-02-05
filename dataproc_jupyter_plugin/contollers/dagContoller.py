@@ -27,9 +27,11 @@ class DagController(APIHandler):
             dag = DagListService()
             composer_name = self.get_argument("composer")
             credentials = handlers.get_cached_credentials(self.log)
-            dag_list = dag.list_jobs(credentials,composer_name,TAGS)
+            dag_list = dag.list_jobs(credentials,composer_name,TAGS,self.log)
             self.finish(json.dumps(dag_list))
         except Exception as e:
+            self.log.exception(f"Error fetching cluster list")
+            self.finish ({"error": str(e)})
             self.finish ({"error": str(e)})
     
 class Download(APIHandler):
@@ -44,8 +46,10 @@ class Download(APIHandler):
             if process.returncode == 0:
                 self.finish({'status' : 0})
             else:
+                self.log.exception(f"Error downloading input notebook")
                 self.finish({'status': 1})
         except Exception as e:
+            self.log.exception(f"Error downloading input notebook: {str(e)}")
             self.finish ({"error": str(e)})
             
 class Delete(APIHandler):
@@ -55,12 +59,14 @@ class Delete(APIHandler):
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             credentials = handlers.get_cached_credentials(self.log)
-            delete_response = dag.delete_job(credentials,composer, dag_id)
+            delete_response = dag.delete_job(credentials,composer, dag_id, self.log)
             if delete_response == 0: 
                 self.finish({'status' : 0})
             else:
+                self.log.exception(f"Error deleting input notebook")
                 self.finish(json.dumps(delete_response))
         except Exception as e:
+            self.log.exception(f"Error deleting input notebook: {str(e)}")
             self.finish ({"error": str(e)})
 
 class Update(APIHandler):
@@ -71,12 +77,14 @@ class Update(APIHandler):
             dag_id = self.get_argument("dag_id")
             status = self.get_argument('status')
             credentials = handlers.get_cached_credentials(self.log)
-            update_response = dag.update_job(credentials,composer, dag_id,status)
+            update_response = dag.update_job(credentials,composer, dag_id,status, self.log)
             if update_response == 0: 
                 self.finish({'status' : 0})
             else:
+                self.log.exception(f"Error updating status")
                 self.finish(json.dumps(update_response))
         except Exception as e:
+            self.log.exception(f"Error updating status: {str(e)}")
             self.finish ({"error": str(e)})
         
 

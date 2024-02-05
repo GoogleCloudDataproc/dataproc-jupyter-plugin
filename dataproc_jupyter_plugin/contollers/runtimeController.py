@@ -26,7 +26,8 @@ class RuntimeController(APIHandler):
             page_size = self.get_argument("pageSize")
             runtime = RuntimeListService()
             credentials = handlers.get_cached_credentials(self.log)
-            runtime_list = runtime.list_runtime(credentials,page_size,page_token)
+            runtime_list = runtime.list_runtime(credentials,page_size,page_token,self.log)
             self.finish(json.dumps(runtime_list))
         except Exception as e:
+            self.log.exception(f"Error fetching runtime template list: {str(e)}")
             self.finish ({"error": str(e)})

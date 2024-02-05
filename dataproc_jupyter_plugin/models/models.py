@@ -13,9 +13,8 @@
 # limitations under the License.
 
 
-import os
-from enum import Enum
-from typing import Dict, List, Optional, Union
+
+from typing import Dict, List, Optional
 from pydantic import BaseModel
 class ComposerEnvironment(BaseModel):
     """Defines a runtime context where job
@@ -57,44 +56,44 @@ class DescribeJob(BaseModel):
     time_zone: str = None
     email_success: bool = False
 
-class DagModel:
-    def __init__(self, input_filename, composer_environment_name, composer_environment_parameters,
-                 output_formats, parameters, cluster, retry_count, retry_delay,
-                 email_on_failure, email_on_delay, email_list, name, dag_id, stop_cluster, time_zone):
-        self.input_filename = input_filename
-        self.composer_environment_name = composer_environment_name
-        self.composer_environment_parameters = composer_environment_parameters
-        self.output_formats = output_formats
-        self.parameters = parameters
-        self.cluster = cluster
-        self.retry_count = retry_count
-        self.retry_delay = retry_delay
-        self.email_on_failure = email_on_failure
-        self.email_on_delay = email_on_delay
-        self.email_list = email_list
-        self.name = name
-        self.dag_id = dag_id
-        self.stop_cluster = stop_cluster
-        self.time_zone = time_zone
+# class DagModel:
+#     def __init__(self, input_filename, composer_environment_name, composer_environment_parameters,
+#                  output_formats, parameters, cluster, retry_count, retry_delay,
+#                  email_on_failure, email_on_delay, email_list, name, dag_id, stop_cluster, time_zone):
+#         self.input_filename = input_filename
+#         self.composer_environment_name = composer_environment_name
+#         self.composer_environment_parameters = composer_environment_parameters
+#         self.output_formats = output_formats
+#         self.parameters = parameters
+#         self.cluster = cluster
+#         self.retry_count = retry_count
+#         self.retry_delay = retry_delay
+#         self.email_on_failure = email_on_failure
+#         self.email_on_delay = email_on_delay
+#         self.email_list = email_list
+#         self.name = name
+#         self.dag_id = dag_id
+#         self.stop_cluster = stop_cluster
+#         self.time_zone = time_zone
 
-    def to_dict(self):
-        return {
-            "input_filename": self.input_filename,
-            "composer_environment_name": self.composer_environment_name,
-            "composer_environment_parameters": self.composer_environment_parameters,
-            "output_formats": self.output_formats,
-            "parameters": self.parameters,
-            "cluster": self.cluster,
-            "retryCount": self.retry_count,
-            "retryDelay": self.retry_delay,
-            "emailOnFailure": self.email_on_failure,
-            "emailOnDelay": self.email_on_delay,
-            "emailList": self.email_list,
-            "name": self.name,
-            "dag_id": self.dag_id,
-            "stop_cluster": self.stop_cluster, 
-            "time_zone": self.time_zone
-        }
+#     def to_dict(self):
+#         return {
+#             "input_filename": self.input_filename,
+#             "composer_environment_name": self.composer_environment_name,
+#             "composer_environment_parameters": self.composer_environment_parameters,
+#             "output_formats": self.output_formats,
+#             "parameters": self.parameters,
+#             "cluster": self.cluster,
+#             "retryCount": self.retry_count,
+#             "retryDelay": self.retry_delay,
+#             "emailOnFailure": self.email_on_failure,
+#             "emailOnDelay": self.email_on_delay,
+#             "emailList": self.email_list,
+#             "name": self.name,
+#             "dag_id": self.dag_id,
+#             "stop_cluster": self.stop_cluster, 
+#             "time_zone": self.time_zone
+#         }
 
     @classmethod
     def from_dict(cls, data):
