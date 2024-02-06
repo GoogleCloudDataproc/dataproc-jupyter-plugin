@@ -227,7 +227,21 @@ export class SchedulerService {
     setJobNameSelected?: (value: string) => void,
     setComposerSelected?: (value: string) => void,
     setScheduleMode?: (value: string) => void,
-    setScheduleValue?: (value: string) => void
+    setScheduleValue?: (value: string) => void,
+
+    setInputFileSelected?: (value: string) => void,
+    setParameterDetailUpdated?: (value: string[]) => void,
+    setSelectedMode?: (value: string) => void,
+    setClusterSelected?: (value: string) => void,
+    setServerlessDataSelected?: (value: string) => void,
+    setRetryCount?: (value: number) => void,
+    setRetryDelay?: (value: number) => void,
+    setEmailOnFailure?: (value: boolean) => void,
+    setEmailonRetry?: (value: boolean) => void,
+    setEmailOnSuccess?: (value: boolean) => void,
+    setEmailList?: (value: string[]) => void,
+    setStopCluster?: (value: boolean) => void,
+    setTimeZoneSelected?: (value: string) => void
   ) => {
     try {
       const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
@@ -239,10 +253,36 @@ export class SchedulerService {
         setComposerSelected &&
         setScheduleMode &&
         setScheduleValue &&
+        setInputFileSelected &&
+        setParameterDetailUpdated &&
+        setSelectedMode &&
+        setClusterSelected &&
+        setServerlessDataSelected &&
+        setRetryCount &&
+        setRetryDelay &&
+        setEmailOnFailure &&
+        setEmailonRetry &&
+        setEmailOnSuccess &&
+        setEmailList &&
+        setStopCluster &&
+        setTimeZoneSelected &&
         dagId !== null
       ) {
         setJobNameSelected(dagId);
         setComposerSelected(composerSelectedList);
+        setInputFileSelected(formattedResponse.input_filename);
+        setParameterDetailUpdated(formattedResponse.parameters);
+        setSelectedMode(formattedResponse.mode_selected);
+        setClusterSelected(formattedResponse.cluster_name);
+        setServerlessDataSelected(formattedResponse.serverless_name);
+        setRetryCount(formattedResponse.retry_count);
+        setRetryDelay(formattedResponse.retry_delay);
+        setEmailOnFailure(formattedResponse.email_failure);
+        setEmailonRetry(formattedResponse.email_delay);
+        setEmailOnSuccess(formattedResponse.email_success);
+        setEmailList(formattedResponse.email);
+        setStopCluster(formattedResponse.stop_cluster);
+        setTimeZoneSelected(formattedResponse.time_zone);
         setCreateCompleted(false);
         if (formattedResponse.schedule_value === '@once') {
           setScheduleMode('runNow');

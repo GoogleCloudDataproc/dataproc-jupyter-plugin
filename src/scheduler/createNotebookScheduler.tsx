@@ -333,6 +333,19 @@ const CreateNotebookScheduler = ({
           setComposerSelected={setComposerSelected}
           setScheduleMode={setScheduleMode}
           setScheduleValue={setScheduleValue}
+          setInputFileSelected={setInputFileSelected}
+          setParameterDetailUpdated={setParameterDetailUpdated}
+          setSelectedMode={setSelectedMode}
+          setClusterSelected={setClusterSelected}
+          setServerlessDataSelected={setServerlessDataSelected}
+          setRetryCount={setRetryCount}
+          setRetryDelay={setRetryDelay}
+          setEmailOnFailure={setEmailOnFailure}
+          setEmailonRetry={setEmailonRetry}
+          setEmailOnSuccess={setEmailOnSuccess}
+          setEmailList={setEmailList}
+          setStopCluster={setStopCluster}
+          setTimeZoneSelected={setTimeZoneSelected}
         />
       ) : (
         <div>

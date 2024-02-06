@@ -42,7 +42,7 @@ class DagEditService():
                             print(cluster_name)
                 payload = {
                     "input_filename": 'test.ipynb',
-                    "parameters": {'test': 'test1','test2':'val'},  
+                    "parameters": ['test:test1','test2:val'],  
                     "mode_selected": 'cluster',
                     "cluster_name":cluster_name,
                     "serverless_name":'',
