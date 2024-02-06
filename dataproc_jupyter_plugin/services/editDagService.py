@@ -42,20 +42,18 @@ class DagEditService():
                             print(cluster_name)
                 payload = {
                     "input_filename": 'test.ipynb',
-                    "composer_environment_name": 'composer3',
                     "parameters": {'test': 'test1','test2':'val'},  
                     "mode_selected": 'cluster',
                     "cluster_name":cluster_name,
                     "serverless_name":'',
                     "retry_count": 2,
                     "retry_delay": 5,
-                    "email_failure": True,
-                    "email_delay": False,
-                    "email_success": True,
+                    "email_failure": 'True',
+                    "email_delay": 'False',
+                    "email_success": 'True',
                     "email": ['test@gmail.com'],
-                    "name": dag_id,  
                     "schedule_value": '* * * * *',
-                    "stop_cluster": False,
+                    "stop_cluster": 'False',
                     "time_zone": ''
                 }
                 print(payload)
