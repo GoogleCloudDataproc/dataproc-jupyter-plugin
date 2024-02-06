@@ -328,6 +328,11 @@ const CreateNotebookScheduler = ({
           app={app}
           themeManager={themeManager}
           composerSelectedFromCreate={composerSelected}
+          setCreateCompleted={setCreateCompleted}
+          setJobNameSelected={setJobNameSelected}
+          setComposerSelected={setComposerSelected}
+          setScheduleMode={setScheduleMode}
+          setScheduleValue={setScheduleValue}
         />
       ) : (
         <div>

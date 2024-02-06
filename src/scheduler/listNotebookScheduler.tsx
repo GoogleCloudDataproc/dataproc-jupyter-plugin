@@ -27,6 +27,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import playIcon from '../../style/icons/play_icon.svg';
 import pauseIcon from '../../style/icons/pause_icon.svg';
 import downloadIcon from '../../style/icons/download_icon.svg';
+import EditIcon from '../../style/icons/edit_icon_disable.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
@@ -48,21 +49,35 @@ const iconDownload = new LabIcon({
   name: 'launcher:download-icon',
   svgstr: downloadIcon
 });
+const iconEdit = new LabIcon({
+  name: 'launcher:edit-disable-icon',
+  svgstr: EditIcon
+});
 
 function listNotebookScheduler({
   app,
   handleDagIdSelection,
   backButtonComposerName,
-  composerSelectedFromCreate
+  composerSelectedFromCreate,
+  setCreateCompleted,
+  setJobNameSelected,
+  setComposerSelected,
+  setScheduleMode,
+  setScheduleValue
 }: {
   app: JupyterFrontEnd;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
   backButtonComposerName: string;
   composerSelectedFromCreate: string;
+  setCreateCompleted?: (value: boolean) => void;
+  setJobNameSelected?: (value: string) => void;
+  setComposerSelected?: (value: string) => void;
+  setScheduleMode?: (value: string) => void;
+  setScheduleValue?: (value: string) => void;
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
-  const [composerSelected, setComposerSelected] = useState('');
+  const [composerSelectedList, setComposerSelectedList] = useState('');
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
   const [bucketName, setBucketName] = useState('');
@@ -94,7 +109,7 @@ function listNotebookScheduler({
   const handleComposerSelected = (data: string | null) => {
     if (data) {
       const selectedComposer = data.toString();
-      setComposerSelected(selectedComposer);
+      setComposerSelectedList(selectedComposer);
     }
   };
 
@@ -103,7 +118,7 @@ function listNotebookScheduler({
     is_status_paused: boolean
   ) => {
     await SchedulerService.handleUpdateSchedulerAPIService(
-      composerSelected,
+      composerSelectedList,
       dag_id,
       is_status_paused,
       setDagList,
@@ -115,13 +130,48 @@ function listNotebookScheduler({
     setSelectedDagId(dag_id);
     setDeletePopupOpen(true);
   };
+  const handleEditDags = async (event: React.MouseEvent) => {
+    const jobid = event.currentTarget.getAttribute('data-jobid');
+    const selectedDagInfo = dagList.filter(dagInfo => {
+      return dagInfo.jobid === jobid;
+    });
+    if (jobid !== null) {
+      await SchedulerService.editJobSchedulerService(bucketName, jobid);
+    }
+    if (
+      setCreateCompleted &&
+      setJobNameSelected &&
+      setComposerSelected &&
+      setScheduleMode &&
+      setScheduleValue &&
+      jobid !== null
+    ) {
+      setJobNameSelected(jobid);
+      setComposerSelected(composerSelectedList);
+      setCreateCompleted(false);
+      if (
+        selectedDagInfo[0].scheduleInterval &&
+        selectedDagInfo[0].scheduleInterval === '@once'
+      ) {
+        setScheduleMode('runNow');
+        setScheduleValue('');
+      } else if (
+        selectedDagInfo[0].scheduleInterval &&
+        selectedDagInfo[0].scheduleInterval !== '@once'
+      ) {
+        setScheduleMode('runSchedule');
+        setScheduleValue(selectedDagInfo[0].scheduleInterval);
+      }
+    }
+  };
+
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
   };
 
   const handleDeleteScheduler = async () => {
     await SchedulerService.handleDeleteSchedulerAPIService(
-      composerSelected,
+      composerSelectedList,
       selectedDagId,
       setDagList,
       setIsLoading,
@@ -133,7 +183,7 @@ function listNotebookScheduler({
   const handleDownloadScheduler = async (event: React.MouseEvent) => {
     const jobid = event.currentTarget.getAttribute('data-jobid')!;
     await SchedulerService.handleDownloadSchedulerAPIService(
-      composerSelected,
+      composerSelectedList,
       jobid,
       bucketName
     );
@@ -151,7 +201,7 @@ function listNotebookScheduler({
       setDagList,
       setIsLoading,
       setBucketName,
-      composerSelected
+      composerSelectedList
     );
   };
 
@@ -219,6 +269,18 @@ function listNotebookScheduler({
             className="icon-white logo-alignment-style"
           />
         </div>
+        <div
+          role="button"
+          className="icon-buttons-style"
+          title="Edit Notebook"
+          data-jobid={data.jobid}
+          onClick={e => handleEditDags(e)}
+        >
+          <iconEdit.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
       </div>
     );
   };
@@ -235,7 +297,7 @@ function listNotebookScheduler({
         <td
           {...cell.getCellProps()}
           className="clusters-table-data"
-          onClick={() => handleDagIdSelection(composerSelected, cell.value)}
+          onClick={() => handleDagIdSelection(composerSelectedList, cell.value)}
         >
           {cell.value}
         </td>
@@ -261,32 +323,32 @@ function listNotebookScheduler({
       backselectedEnvironment === '' &&
       createSelectedEnvironment === ''
     ) {
-      setComposerSelected(composerList[0]);
+      setComposerSelectedList(composerList[0]);
     }
     if (
       composerList.length > 0 &&
       backselectedEnvironment === '' &&
       createSelectedEnvironment !== ''
     ) {
-      setComposerSelected(createSelectedEnvironment);
+      setComposerSelectedList(createSelectedEnvironment);
     }
     if (composerList.length > 0 && backselectedEnvironment !== '') {
-      setComposerSelected(backselectedEnvironment);
+      setComposerSelectedList(backselectedEnvironment);
     }
   }, [composerList]);
 
   useEffect(() => {
-    if (composerSelected !== '') {
+    if (composerSelectedList !== '') {
       listDagInfoAPI();
     }
-  }, [composerSelected]);
+  }, [composerSelectedList]);
   return (
     <div>
       <div className="select-text-overlay-scheduler">
         <div className="create-scheduler-form-element">
           <Autocomplete
             options={composerList}
-            value={composerSelected}
+            value={composerSelectedList}
             onChange={(_event, val) => {
               handleComposerSelected(val);
             }}

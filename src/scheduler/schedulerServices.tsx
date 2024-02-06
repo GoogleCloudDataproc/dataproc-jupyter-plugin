@@ -51,6 +51,9 @@ interface ISchedulerDagData {
   dag_id: string;
   timetable_description: string;
   is_paused: string;
+  schedule_interval: null | {
+    value: string;
+  };
 }
 export class SchedulerService {
   static listClustersAPIService = async (
@@ -215,6 +218,22 @@ export class SchedulerService {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
     }
   };
+
+  static editJobSchedulerService = async (
+    bucketName: string,
+    dagId: string
+  ) => {
+    try {
+      const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
+      const formattedResponse = await requestAPI(
+        serviceURL
+      );
+      console.log(formattedResponse);
+    } catch (reason) {
+      console.error(`Error on POST {dataToSend}.\n${reason}`);
+    }
+  };
+
   static listDagRunsListService = async (
     composerName: string,
     dagId: string,
@@ -359,7 +378,8 @@ export class SchedulerService {
               jobid: dag.dag_id,
               notebookname: dag.dag_id,
               schedule: dag.timetable_description,
-              status: dag.is_paused ? 'Paused' : 'Active'
+              status: dag.is_paused ? 'Paused' : 'Active',
+              scheduleInterval: dag.schedule_interval?.value
             };
           }
         );

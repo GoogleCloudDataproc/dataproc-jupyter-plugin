@@ -24,11 +24,21 @@ import ExecutionHistory from './executionHistory';
 
 const NotebookJobComponent = ({
   app,
-  composerSelectedFromCreate
+  composerSelectedFromCreate,
+  setCreateCompleted,
+  setJobNameSelected,
+  setComposerSelected,
+  setScheduleMode,
+  setScheduleValue
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
   composerSelectedFromCreate: string;
+  setCreateCompleted?: (value: boolean) => void;
+  setJobNameSelected?: (value: string) => void;
+  setComposerSelected?: (value: string) => void;
+  setScheduleMode?: (value: string) => void;
+  setScheduleValue?: (value: string) => void;
 }): React.JSX.Element => {
   const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   const [composerName, setComposerName] = useState('');
@@ -64,6 +74,11 @@ const NotebookJobComponent = ({
               handleDagIdSelection={handleDagIdSelection}
               backButtonComposerName={backComposerName}
               composerSelectedFromCreate={composerSelectedFromCreate}
+              setCreateCompleted={setCreateCompleted}
+              setJobNameSelected={setJobNameSelected}
+              setComposerSelected={setComposerSelected}
+              setScheduleMode={setScheduleMode}
+              setScheduleValue={setScheduleValue}
             />
           </div>
         </div>
@@ -74,7 +89,7 @@ const NotebookJobComponent = ({
 
 export class NotebookJobs extends DataprocWidget {
   app: JupyterLab;
-  composerSelectedFromCreate: string;
+  composerSelectedFromCreate: string; 
 
   constructor(
     app: JupyterLab,
