@@ -54,7 +54,7 @@ class DagEditService():
                     "email_success": True,
                     "email": ['test@gmail.com'],
                     "name": dag_id,  
-                    "schedule_value": '',
+                    "schedule_value": '* * * * *',
                     "stop_cluster": False,
                     "time_zone": ''
                 }

@@ -221,14 +221,37 @@ export class SchedulerService {
 
   static editJobSchedulerService = async (
     bucketName: string,
-    dagId: string
+    dagId: string,
+    composerSelectedList: string,
+    setCreateCompleted?: (value: boolean) => void,
+    setJobNameSelected?: (value: string) => void,
+    setComposerSelected?: (value: string) => void,
+    setScheduleMode?: (value: string) => void,
+    setScheduleValue?: (value: string) => void
   ) => {
     try {
       const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
-      const formattedResponse = await requestAPI(
-        serviceURL
-      );
+      const formattedResponse: any = await requestAPI(serviceURL);
       console.log(formattedResponse);
+      if (
+        setCreateCompleted &&
+        setJobNameSelected &&
+        setComposerSelected &&
+        setScheduleMode &&
+        setScheduleValue &&
+        dagId !== null
+      ) {
+        setJobNameSelected(dagId);
+        setComposerSelected(composerSelectedList);
+        setCreateCompleted(false);
+        if (formattedResponse.schedule_value === '@once') {
+          setScheduleMode('runNow');
+          setScheduleValue('');
+        } else if (formattedResponse.schedule_value !== '@once') {
+          setScheduleMode('runSchedule');
+          setScheduleValue(formattedResponse.scheduleInterval);
+        }
+      }
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
     }

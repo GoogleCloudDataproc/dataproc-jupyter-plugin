@@ -132,36 +132,17 @@ function listNotebookScheduler({
   };
   const handleEditDags = async (event: React.MouseEvent) => {
     const jobid = event.currentTarget.getAttribute('data-jobid');
-    const selectedDagInfo = dagList.filter(dagInfo => {
-      return dagInfo.jobid === jobid;
-    });
     if (jobid !== null) {
-      await SchedulerService.editJobSchedulerService(bucketName, jobid);
-    }
-    if (
-      setCreateCompleted &&
-      setJobNameSelected &&
-      setComposerSelected &&
-      setScheduleMode &&
-      setScheduleValue &&
-      jobid !== null
-    ) {
-      setJobNameSelected(jobid);
-      setComposerSelected(composerSelectedList);
-      setCreateCompleted(false);
-      if (
-        selectedDagInfo[0].scheduleInterval &&
-        selectedDagInfo[0].scheduleInterval === '@once'
-      ) {
-        setScheduleMode('runNow');
-        setScheduleValue('');
-      } else if (
-        selectedDagInfo[0].scheduleInterval &&
-        selectedDagInfo[0].scheduleInterval !== '@once'
-      ) {
-        setScheduleMode('runSchedule');
-        setScheduleValue(selectedDagInfo[0].scheduleInterval);
-      }
+      await SchedulerService.editJobSchedulerService(
+        bucketName,
+        jobid,
+        composerSelectedList,
+        setCreateCompleted,
+        setJobNameSelected,
+        setComposerSelected,
+        setScheduleMode,
+        setScheduleValue
+      );
     }
   };
 
