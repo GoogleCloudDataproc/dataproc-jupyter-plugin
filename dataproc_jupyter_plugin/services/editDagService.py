@@ -54,7 +54,7 @@ class DagEditService():
                     "email": ['test@gmail.com'],
                     "schedule_value": '* * * * *',
                     "stop_cluster": 'False',
-                    "time_zone": ''
+                    "time_zone": 'UTC'
                 }
                 print(payload)
                 return payload
