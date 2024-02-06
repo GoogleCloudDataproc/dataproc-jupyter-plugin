@@ -31,6 +31,7 @@ from dataproc_jupyter_plugin.contollers.clusterController import ClusterControll
 from dataproc_jupyter_plugin.contollers.composerController import ComposerController
 from dataproc_jupyter_plugin.contollers.dagContoller import DagController, Delete, Download, Update
 from dataproc_jupyter_plugin.contollers.dagRunController import DagRunController, DagRunTaskController, DagRunTaskLogsController
+from dataproc_jupyter_plugin.contollers.editDagController import EditDagController
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
 
@@ -297,4 +298,10 @@ def setup_handlers(web_app):
     (route_pattern_patch, Update)
     ]
     web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "editJobScheduler")
+    handlers = [(route_pattern, EditDagController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+
 
