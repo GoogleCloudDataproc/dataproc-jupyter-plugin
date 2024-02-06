@@ -67,10 +67,10 @@ def check_file_exists(bucket, file_path,log):
 class ExecutorService():
     """Default execution manager that executes notebooks"""
     @staticmethod
-    def uploadToGcloud(runtime_env,dag_file,credentials,log):
+    def uploadToGcloud(dag_file,credentials,gcs_dag_bucket,log):
         if 'region_id' in credentials:
             region = credentials['region_id']
-            cmd = f"gcloud beta composer environments storage dags import --environment {runtime_env} --location {region} --source={dag_file}"
+            cmd = f"gsutil cp '{dag_file}' gs://{gcs_dag_bucket}/dags/"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, error = process.communicate()
         if process.returncode == 0:
@@ -177,7 +177,7 @@ class ExecutorService():
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
         self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket,job_name,log)
         self.prepareDag(job,gcs_dag_bucket,dag_file,credentials,log)
-        self.uploadToGcloud(job.composer_environment_name,dag_file,credentials,log)
+        self.uploadToGcloud(dag_file,credentials,gcs_dag_bucket,log)
 
 
 
