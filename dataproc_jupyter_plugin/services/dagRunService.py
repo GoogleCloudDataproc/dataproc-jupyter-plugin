@@ -19,7 +19,7 @@ from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 
 class DagRunListService():
     def list_dag_runs(self, credentials, composer_name, dag_id, start_date, end_date,log):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
+        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -42,7 +42,7 @@ class DagRunListService():
 
 class DagRunTaskListService():
     def list_dag_run_task(self, credentials, composer_name, dag_id, dag_run_id,log):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
+        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
         try:
@@ -62,7 +62,7 @@ class DagRunTaskListService():
         
 class DagRunTaskLogsListService():
     def list_dag_run_task_logs(self, credentials, composer_name, dag_id, dag_run_id, task_id, task_try_number,log):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials)
+        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
