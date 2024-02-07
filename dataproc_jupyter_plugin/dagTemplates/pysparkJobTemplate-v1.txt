@@ -29,6 +29,7 @@ default_args = {
     'email_on_retry': '{{email_delay}}',     
     'email_on_success':'{{email_success}}'
 }
+stop_cluster_check = '{{stop_cluster}}'
 input_notebook = '{{input_notebook}}'
 output_notebook = '{{output_notebook}}'
 parameters = '''
@@ -116,7 +117,7 @@ dag = DAG(
     default_args=default_args,
     description='{{name}}',
     tags =['dataproc_jupyter_plugin'],
-    schedule_interval='{{schedule_interval}}',
+    schedule_interval='{{schedule_interval}}'
 )
 
 start_cluster = PythonOperator(
