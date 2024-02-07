@@ -53,26 +53,15 @@ class DagEditService():
                         parameters_list = []
                         print("No match found.")
 
-
-                    # for line in f:
-                    #     if 'parameters' in line:
-                    #         # parameters = line.split('=')[-1].strip().strip("'\"")
-                    #         # parameters_lines = [line.strip() for line in parameters.split('\n') if line.strip()]
-                    #         # # Convert each line into a string in the format <key>:<value>
-                    #         # parameters_list = [line for line in parameters_lines]
-                    #         parameter_lines = [line.strip() for line in parameters.split('\n') if line.strip()]
-
-                    #         # Convert each line into a string in the format <key>:<value>
-                    #         parameters_list = [line for line in parameter_lines]
-
-                    #         print(parameters_list)
-                    #         break
-
                 with open(file_path, 'r') as f:
                     for line in f:
                         if 'email' in line:
-                            email_list = line.split(":")[-1].strip().strip("'\"").replace(',', '')
-                            # email_list = [email.strip().strip("'\"") for email in emails]  # Extract emails from the line
+                            # Extract the email string from the line
+                            email_str = line.split(":")[-1].strip().strip("'\"").replace(',', '')
+                            # Use regular expression to extract email addresses
+                            email_list = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', email_str)                          
+                            # Remove quotes from email addresses
+                            email_list = [email.strip("'\"") for email in email_list]
                             print(email_list)
                             break
                 with open(file_path, 'r') as f:
