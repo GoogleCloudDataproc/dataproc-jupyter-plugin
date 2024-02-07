@@ -63,7 +63,21 @@ function listNotebookScheduler({
   setJobNameSelected,
   setComposerSelected,
   setScheduleMode,
-  setScheduleValue
+  setScheduleValue,
+
+  setInputFileSelected,
+  setParameterDetailUpdated,
+  setSelectedMode,
+  setClusterSelected,
+  setServerlessDataSelected,
+  setRetryCount,
+  setRetryDelay,
+  setEmailOnFailure,
+  setEmailonRetry,
+  setEmailOnSuccess,
+  setEmailList,
+  setStopCluster,
+  setTimeZoneSelected
 }: {
   app: JupyterFrontEnd;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
@@ -74,6 +88,20 @@ function listNotebookScheduler({
   setComposerSelected?: (value: string) => void;
   setScheduleMode?: (value: string) => void;
   setScheduleValue?: (value: string) => void;
+
+  setInputFileSelected?: (value: string) => void;
+  setParameterDetailUpdated?: (value: string[]) => void;
+  setSelectedMode?: (value: string) => void;
+  setClusterSelected?: (value: string) => void;
+  setServerlessDataSelected?: (value: string) => void;
+  setRetryCount?: (value: number) => void;
+  setRetryDelay?: (value: number) => void;
+  setEmailOnFailure?: (value: boolean) => void;
+  setEmailonRetry?: (value: boolean) => void;
+  setEmailOnSuccess?: (value: boolean) => void;
+  setEmailList?: (value: string[]) => void;
+  setStopCluster?: (value: boolean) => void;
+  setTimeZoneSelected?: (value: string) => void;
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
@@ -141,7 +169,21 @@ function listNotebookScheduler({
         setJobNameSelected,
         setComposerSelected,
         setScheduleMode,
-        setScheduleValue
+        setScheduleValue,
+
+        setInputFileSelected,
+        setParameterDetailUpdated,
+        setSelectedMode,
+        setClusterSelected,
+        setServerlessDataSelected,
+        setRetryCount,
+        setRetryDelay,
+        setEmailOnFailure,
+        setEmailonRetry,
+        setEmailOnSuccess,
+        setEmailList,
+        setStopCluster,
+        setTimeZoneSelected
       );
     }
   };

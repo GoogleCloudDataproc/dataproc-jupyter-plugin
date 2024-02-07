@@ -29,7 +29,21 @@ const NotebookJobComponent = ({
   setJobNameSelected,
   setComposerSelected,
   setScheduleMode,
-  setScheduleValue
+  setScheduleValue,
+
+  setInputFileSelected,
+  setParameterDetailUpdated,
+  setSelectedMode,
+  setClusterSelected,
+  setServerlessDataSelected,
+  setRetryCount,
+  setRetryDelay,
+  setEmailOnFailure,
+  setEmailonRetry,
+  setEmailOnSuccess,
+  setEmailList,
+  setStopCluster,
+  setTimeZoneSelected
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
@@ -39,6 +53,20 @@ const NotebookJobComponent = ({
   setComposerSelected?: (value: string) => void;
   setScheduleMode?: (value: string) => void;
   setScheduleValue?: (value: string) => void;
+
+  setInputFileSelected?: (value: string) => void;
+  setParameterDetailUpdated?: (value: string[]) => void;
+  setSelectedMode?: (value: string) => void;
+  setClusterSelected?: (value: string) => void;
+  setServerlessDataSelected?: (value: string) => void;
+  setRetryCount?: (value: number) => void;
+  setRetryDelay?: (value: number) => void;
+  setEmailOnFailure?: (value: boolean) => void;
+  setEmailonRetry?: (value: boolean) => void;
+  setEmailOnSuccess?: (value: boolean) => void;
+  setEmailList?: (value: string[]) => void;
+  setStopCluster?: (value: boolean) => void;
+  setTimeZoneSelected?: (value: string) => void;
 }): React.JSX.Element => {
   const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   const [composerName, setComposerName] = useState('');
@@ -79,6 +107,19 @@ const NotebookJobComponent = ({
               setComposerSelected={setComposerSelected}
               setScheduleMode={setScheduleMode}
               setScheduleValue={setScheduleValue}
+              setInputFileSelected={setInputFileSelected}
+              setParameterDetailUpdated={setParameterDetailUpdated}
+              setSelectedMode={setSelectedMode}
+              setClusterSelected={setClusterSelected}
+              setServerlessDataSelected={setServerlessDataSelected}
+              setRetryCount={setRetryCount}
+              setRetryDelay={setRetryDelay}
+              setEmailOnFailure={setEmailOnFailure}
+              setEmailonRetry={setEmailonRetry}
+              setEmailOnSuccess={setEmailOnSuccess}
+              setEmailList={setEmailList}
+              setStopCluster={setStopCluster}
+              setTimeZoneSelected={setTimeZoneSelected}
             />
           </div>
         </div>
@@ -89,7 +130,7 @@ const NotebookJobComponent = ({
 
 export class NotebookJobs extends DataprocWidget {
   app: JupyterLab;
-  composerSelectedFromCreate: string; 
+  composerSelectedFromCreate: string;
 
   constructor(
     app: JupyterLab,
