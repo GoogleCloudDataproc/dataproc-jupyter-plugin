@@ -46,7 +46,7 @@ dag = DAG(
     default_args=default_args,
     description='{{name}}',
     tags =['dataproc_jupyter_plugin'],
-    schedule_interval='{{schedule_interval}}',
+    schedule_interval='{{schedule_interval}}'
 )
 
 

@@ -15,6 +15,7 @@
 
 import subprocess
 import os
+import re
 
 
 
@@ -31,6 +32,7 @@ class DagEditService():
             email_on_success= 'False'
             stop_cluster_check = 'False'
             mode_selected = 'serverless'
+            pattern = r"parameters\s*=\s*'''(.*?)'''"
             if process.returncode == 0:
                 log.info(f"Downloaded dag file")
                 downloads_path = os.path.expanduser('~/Downloads')
@@ -40,14 +42,31 @@ class DagEditService():
                         if 'input_notebook' in line:
                             input_notebook = line.split('=')[-1].strip().strip("'\"")
                             break
-                with open(file_path, 'r') as f:
-                    for line in f:
-                        if 'parameters' in line:
-                            parameters = line.split('=')[-1].strip().strip("'\"")
-                            parameters_lines = [line.strip() for line in parameters.split('\n') if line.strip()]
-                            # Convert each line into a string in the format <key>:<value>
-                            parameters_list = [line for line in parameters_lines]
-                            break
+                with open(file_path, 'r') as file:
+                    file_content = file.read()
+                    match = re.search(pattern, file_content, re.DOTALL)
+                    if match:
+                        parameters_yaml = match.group(1)
+                        parameters_list = [line.strip() for line in parameters_yaml.split('\n') if line.strip()]
+                        print(parameters_list)
+                    else:
+                        parameters_list = []
+                        print("No match found.")
+
+
+                    # for line in f:
+                    #     if 'parameters' in line:
+                    #         # parameters = line.split('=')[-1].strip().strip("'\"")
+                    #         # parameters_lines = [line.strip() for line in parameters.split('\n') if line.strip()]
+                    #         # # Convert each line into a string in the format <key>:<value>
+                    #         # parameters_list = [line for line in parameters_lines]
+                    #         parameter_lines = [line.strip() for line in parameters.split('\n') if line.strip()]
+
+                    #         # Convert each line into a string in the format <key>:<value>
+                    #         parameters_list = [line for line in parameter_lines]
+
+                    #         print(parameters_list)
+                    #         break
 
                 with open(file_path, 'r') as f:
                     for line in f:
@@ -86,7 +105,7 @@ class DagEditService():
                             stop_cluster_check = line.split('=')[-1].strip().strip("'\"")
                         elif 'serverless_name' in line:
                             serverless_name = line.split('=')[-1].strip().strip("'\"")
-                            break
+                        
 
                            
 
