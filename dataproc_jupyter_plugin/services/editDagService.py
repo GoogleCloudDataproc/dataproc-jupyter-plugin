@@ -26,31 +26,53 @@ class DagEditService():
             cmd = f"gsutil cp 'gs://{bucket_name}/dags/dag_{dag_id}.py' ~/Downloads"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, _ = process.communicate()
+            cluster_name = ''
+            serverless_name = ''
             if process.returncode == 0:
                 log.info(f"Downloaded dag file")
                 downloads_path = os.path.expanduser('~/Downloads')
                 file_path = os.path.join(downloads_path, f'dag_{dag_id}.py')
                 with open(file_path, 'r') as f:
                     for line in f:
-                        if 'project_id' in line:
-                            project_id = line.split('=')[-1].strip().strip("'\"")  # Extract project_id from the line
-                            print('--------------------download and print--------------')
-                            print(project_id)
+                        if 'input_notebook' in line:
+                            input_notebook = line.split('=')[-1].strip().strip("'\"")
+                            break
+                with open(file_path, 'r') as f:
+                    for line in f:
                         if 'cluster_name' in line:
                             cluster_name = line.split(":")[-1].strip().strip("'\"}").split("'")[0].strip()# Extract project_id from the line
                             print('--------------------download and print--------------')
                             print(cluster_name)
+                        elif 'submit_pyspark_job' in line:
+                            mode_selected = 'cluster' if 'submit_pyspark_job' in line else 'serverless'
+                            print(mode_selected)
+                        elif "'retries'" in line:
+                            retries = line.split(":")[-1].strip().strip("'\"},")
+                            retry_count = int(retries.strip("'\""))    # Extract retry_count from the line
+                        elif 'retry_delay' in line:
+                            retry_delay = int(line.split("int('")[1].split("')")[0])    # Extract retry_delay from the line
+                        elif 'email_on_failure' in line:
+                            second_part = line.split(':')[1].strip()            
+                            email_on_failure = second_part.split("'")[1]   # Extract email_failure from the line
+                        elif 'email_on_retry' in line:
+                            second_part = line.split(':')[1].strip()            
+                            email_on_retry = second_part.split("'")[1]  
+                        elif 'email_on_success' in line:
+                            second_part = line.split(':')[1].strip()            
+                            email_on_success = second_part.split("'")[1]  
+                           
+
                 payload = {
-                    "input_filename": 'test.ipynb',
-                    "parameters": {'test': 'test1','test2':'val'},  
-                    "mode_selected": 'cluster',
+                    "input_filename": input_notebook,
+                    "parameters":'[test: test1,test2:val]',  
+                    "mode_selected": mode_selected,
                     "cluster_name":cluster_name,
-                    "serverless_name":'',
-                    "retry_count": 2,
-                    "retry_delay": 5,
-                    "email_failure": 'True',
-                    "email_delay": 'False',
-                    "email_success": 'True',
+                    "serverless_name":serverless_name,
+                    "retry_count": retry_count,
+                    "retry_delay": retry_delay,
+                    "email_failure": email_on_failure,
+                    "email_delay": email_on_retry,
+                    "email_success": email_on_success,
                     "email": ['test@gmail.com'],
                     "schedule_value": '* * * * *',
                     "stop_cluster": 'False',
