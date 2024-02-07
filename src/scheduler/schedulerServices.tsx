@@ -418,7 +418,7 @@ export class SchedulerService {
           composerSelected
         );
         toast.success(
-          `scheduler ${dag_id} deleted successfully`,
+          `Scheduler ${dag_id} deleted successfully`,
           toastifyCustomStyle
         );
       }
