@@ -28,6 +28,7 @@ class DagEditService():
             output, _ = process.communicate()
             cluster_name = ''
             serverless_name = ''
+            email_on_success= 'False'
             stop_cluster_check = 'False'
             mode_selected = 'serverless'
             if process.returncode == 0:
@@ -82,8 +83,7 @@ class DagEditService():
                             schedule_interval = line.split('=')[-1].strip().strip("'\"").split(',')[0].rstrip("'\"")  # Extract schedule_interval from the line
                             print(schedule_interval)
                         elif 'stop_cluster_check' in line:
-                            second_part = line.split(':')[1].strip()            
-                            stop_cluster_check = second_part.split("'")[1] 
+                            stop_cluster_check = line.split('=')[-1].strip().strip("'\"")
                         elif 'serverless_name' in line:
                             serverless_name = line.split('=')[-1].strip().strip("'\"")
                             break
