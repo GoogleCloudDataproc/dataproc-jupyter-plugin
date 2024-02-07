@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTable, usePagination } from 'react-table';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
@@ -30,6 +30,7 @@ import downloadIcon from '../../style/icons/download_icon.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -70,6 +71,7 @@ function listNotebookScheduler({
   const createSelectedEnvironment = composerSelectedFromCreate;
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
+  const [pollingDisable] = useState(false);
   const columns = React.useMemo(
     () => [
       {
@@ -91,13 +93,23 @@ function listNotebookScheduler({
     ],
     []
   );
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const pollingDagList = async (
+    pollingFunction: () => void,
+    pollingDisable: boolean
+  ) => {
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
+  };
   const handleComposerSelected = (data: string | null) => {
     if (data) {
       const selectedComposer = data.toString();
       setComposerSelected(selectedComposer);
     }
   };
-
   const handleUpdateScheduler = async (
     dag_id: string,
     is_status_paused: boolean
@@ -140,10 +152,10 @@ function listNotebookScheduler({
   };
 
   const listComposersAPI = async () => {
-    await SchedulerService.listComposersAPIService(setComposerList);
-    if (composerList.length === 0) {
-      setIsLoading(false);
-    }
+    await SchedulerService.listComposersAPIService(
+      setComposerList,
+      setIsLoading
+    );
   };
 
   const listDagInfoAPI = async () => {
@@ -277,9 +289,20 @@ function listNotebookScheduler({
 
   useEffect(() => {
     if (composerSelected !== '') {
+      setIsLoading(true);
       listDagInfoAPI();
     }
   }, [composerSelected]);
+
+  useEffect(() => {
+    if (composerSelected !== '') {
+      pollingDagList(listDagInfoAPI, pollingDisable);
+    }
+    return () => {
+      pollingDagList(listDagInfoAPI, true);
+    };
+  }, [composerSelected]);
+
   return (
     <div>
       <div className="select-text-overlay-scheduler">
