@@ -235,7 +235,7 @@ export class SchedulerService {
     setParameterDetailUpdated?: (value: string[]) => void,
     setSelectedMode?: (value: string) => void,
     setClusterSelected?: (value: string) => void,
-    setServerlessDataSelected?: (value: string) => void,
+    setServerlessSelected?: (value: string) => void,
     setRetryCount?: (value: number) => void,
     setRetryDelay?: (value: number) => void,
     setEmailOnFailure?: (value: boolean) => void,
@@ -261,7 +261,7 @@ export class SchedulerService {
         setParameterDetailUpdated &&
         setSelectedMode &&
         setClusterSelected &&
-        setServerlessDataSelected &&
+        setServerlessSelected &&
         setRetryCount &&
         setRetryDelay &&
         setEmailOnFailure &&
@@ -279,7 +279,7 @@ export class SchedulerService {
         setParameterDetailUpdated(formattedResponse.parameters);
         setSelectedMode(formattedResponse.mode_selected);
         setClusterSelected(formattedResponse.cluster_name);
-        setServerlessDataSelected(formattedResponse.serverless_name);
+        setServerlessSelected(formattedResponse.serverless_name);
         setRetryCount(formattedResponse.retry_count);
         setRetryDelay(formattedResponse.retry_delay);
         formattedResponse.email_failure.toLowerCase() === 'true'
