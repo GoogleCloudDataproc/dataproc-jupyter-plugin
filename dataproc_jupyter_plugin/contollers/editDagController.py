@@ -14,7 +14,7 @@
 
 import json
 from jupyter_server.base.handlers import APIHandler
-# from dataproc_jupyter_plugin import handlers
+from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.editDagService import DagEditService
 from dataproc_jupyter_plugin.utils.constants import TAGS
 
@@ -24,7 +24,8 @@ class EditDagController(APIHandler):
             dag = DagEditService()
             bucket_name = self.get_argument("bucket_name")
             dag_id = self.get_argument("dag_id")
-            dag_details = dag.edit_jobs(dag_id,bucket_name,self.log)
+            credentials = handlers.get_cached_credentials(self.log)
+            dag_details = dag.edit_jobs(dag_id,bucket_name,credentials,self.log)
             self.finish(json.dumps(dag_details))
         except Exception as e:
             self.log.exception(f"Error getting dag details")

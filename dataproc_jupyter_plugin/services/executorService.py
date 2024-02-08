@@ -176,7 +176,8 @@ class ExecutorService():
         else:
             self.uploadPapermillToGcs(gcs_dag_bucket,log)
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
-        self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket,job_name,log)
+        if not job.input_filename.startswith("gs://"):
+            self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket,job_name,log)
         self.prepareDag(job,gcs_dag_bucket,dag_file,credentials,log)
         self.uploadToGcloud(dag_file,credentials,gcs_dag_bucket,log)
 
