@@ -32,7 +32,7 @@ const NotebookSchedulerComponent = ({
 }: {
   themeManager: IThemeManager;
   app: JupyterLab;
-  context: DocumentRegistry.IContext<INotebookModel>;
+  context: DocumentRegistry.IContext<INotebookModel> | string;
 }): JSX.Element => {
   return (
     <div className="component-level">
@@ -47,12 +47,12 @@ const NotebookSchedulerComponent = ({
 
 export class NotebookScheduler extends DataprocWidget {
   app: JupyterLab;
-  context: DocumentRegistry.IContext<INotebookModel>;
+  context: DocumentRegistry.IContext<INotebookModel> | string;
 
   constructor(
     app: JupyterLab,
     themeManager: IThemeManager,
-    context: DocumentRegistry.IContext<INotebookModel>
+    context: DocumentRegistry.IContext<INotebookModel> | string
   ) {
     super(themeManager);
     this.app = app;

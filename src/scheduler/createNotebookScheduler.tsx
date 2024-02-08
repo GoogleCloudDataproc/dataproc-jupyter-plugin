@@ -30,9 +30,7 @@ import {
 import { MuiChipsInput } from 'mui-chips-input';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import LabelProperties from '../jobs/labelProperties';
-import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { INotebookModel } from '@jupyterlab/notebook';
+import LabelProperties from '../jobs/labelProperties';;
 import { v4 as uuidv4 } from 'uuid';
 import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
@@ -61,7 +59,7 @@ const CreateNotebookScheduler = ({
 }: {
   themeManager: IThemeManager;
   app: JupyterLab;
-  context: DocumentRegistry.IContext<INotebookModel>;
+  context: any;
 }): JSX.Element => {
   const [jobNameSelected, setJobNameSelected] = useState('');
   const [inputFileSelected, setInputFileSelected] = useState('');
@@ -72,7 +70,7 @@ const CreateNotebookScheduler = ({
 
   const [parameterDetail, setParameterDetail] = useState(['']);
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
-  console.log(parameterDetail, parameterDetailUpdated)
+  console.log(parameterDetail, parameterDetailUpdated);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
@@ -99,7 +97,8 @@ const CreateNotebookScheduler = ({
 
   const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
 
-  const [createCompleted, setCreateCompleted] = useState(false);
+  const [createCompleted, setCreateCompleted] =
+    context !== '' ? useState(false) : useState(true);
   const [creatingScheduler, setCreatingScheduler] = useState(false);
   const [jobNameValidation, setJobNameValidation] = useState(true);
   const [jobNameSpecialValidation, setJobNameSpecialValidation] =
@@ -314,12 +313,16 @@ const CreateNotebookScheduler = ({
     listComposersAPI();
     listClustersAPI();
     listSessionTemplatesAPI();
-    setInputFileSelected(context.path);
+    if (context !== '') {
+      setInputFileSelected(context.path);
+    }
     setJobNameSelected('');
   }, []);
 
   useEffect(() => {
-    getKernelDetail();
+    if (context !== '') {
+      getKernelDetail();
+    }
   }, [serverlessDataList]);
 
   return (

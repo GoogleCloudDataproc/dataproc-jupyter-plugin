@@ -55,7 +55,7 @@ import { IDocumentManager } from '@jupyterlab/docmanager';
 import { GCSDrive } from './gcs/gcsDrive';
 import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
 import { DataprocLoggingService } from './utils/loggingService';
-import { NotebookJobs } from './scheduler/notebookJobs';
+import { NotebookScheduler } from './scheduler/notebookScheduler';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -378,8 +378,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconScheduledNotebooks),
       execute: () => {
-        const content = new NotebookJobs(app as JupyterLab, themeManager, "");
-        const widget = new MainAreaWidget<NotebookJobs>({ content });
+        const content = new NotebookScheduler(
+          app as JupyterLab,
+          themeManager,
+          ''
+        );
+        const widget = new MainAreaWidget<NotebookScheduler>({ content });
         widget.title.label = 'Scheduled Notebooks';
         widget.title.icon = iconScheduledNotebooks;
         app.shell.add(widget, 'main');
@@ -525,9 +529,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       launcher.add({
         command: createNotebookJobsComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
-        rank: 4 
+        rank: 4
       });
-      
     }
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
