@@ -116,6 +116,7 @@ function listNotebookScheduler({
   const createSelectedEnvironment = composerSelectedFromCreate;
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
+  const [editDagLoading, setEditDagLoading] = useState('');
   const columns = React.useMemo(
     () => [
       {
@@ -177,6 +178,7 @@ function listNotebookScheduler({
         bucketName,
         jobid,
         composerSelectedList,
+        setEditDagLoading,
         setCreateCompleted,
         setJobNameSelected,
         setComposerSelected,
@@ -305,18 +307,30 @@ function listNotebookScheduler({
             className="icon-white logo-alignment-style"
           />
         </div>
-        <div
-          role="button"
-          className="icon-buttons-style"
-          title="Edit Notebook"
-          data-jobid={data.jobid}
-          onClick={e => handleEditDags(e)}
-        >
-          <iconEdit.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
-        </div>
+        {data.jobid === editDagLoading ? (
+          <div className="icon-buttons-style">
+            <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={18}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+        ) : (
+          <div
+            role="button"
+            className="icon-buttons-style"
+            title="Edit Notebook"
+            data-jobid={data.jobid}
+            onClick={e => handleEditDags(e)}
+          >
+            <iconEdit.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          </div>
+        )}
       </div>
     );
   };

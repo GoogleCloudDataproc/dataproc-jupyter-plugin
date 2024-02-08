@@ -223,6 +223,7 @@ export class SchedulerService {
     bucketName: string,
     dagId: string,
     composerSelectedList: string,
+    setEditDagLoading: (value: string) => void,
     setCreateCompleted?: (value: boolean) => void,
     setJobNameSelected?: (value: string) => void,
     setComposerSelected?: (value: string) => void,
@@ -244,6 +245,7 @@ export class SchedulerService {
     setStopCluster?: (value: boolean) => void,
     setTimeZoneSelected?: (value: string) => void
   ) => {
+    setEditDagLoading(dagId);
     try {
       const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
       const formattedResponse: any = await requestAPI(serviceURL);
@@ -303,8 +305,10 @@ export class SchedulerService {
           setScheduleValue(formattedResponse.scheduleInterval);
         }
       }
+      setEditDagLoading('')
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
+      setEditDagLoading('')
     }
   };
 
