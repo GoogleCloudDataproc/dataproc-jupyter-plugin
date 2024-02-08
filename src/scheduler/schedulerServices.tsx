@@ -246,6 +246,8 @@ export class SchedulerService {
     setServerlessSelected?: (value: string) => void,
     setServerlessDataSelected?: (value: any) => void,
     serverlessDataList?: any,
+    setServerlessDataList?: (value: any) => void,
+    setServerlessList?: (value: string[]) => void,
     setRetryCount?: (value: number) => void,
     setRetryDelay?: (value: number) => void,
     setEmailOnFailure?: (value: boolean) => void,
@@ -274,6 +276,8 @@ export class SchedulerService {
         setServerlessSelected &&
         setServerlessDataSelected &&
         serverlessDataList &&
+        setServerlessDataList &&
+        setServerlessList &&
         setRetryCount &&
         setRetryDelay &&
         setEmailOnFailure &&
@@ -292,15 +296,22 @@ export class SchedulerService {
         setSelectedMode(formattedResponse.mode_selected);
         setClusterSelected(formattedResponse.cluster_name);
         setServerlessSelected(formattedResponse.serverless_name);
-        if (formattedResponse.selectedMode === 'serverless') {
-          const selectedData: any = serverlessDataList.filter(
-            (serverless: any) => {
-              return (
-                serverless.serverlessName === formattedResponse.serverless_name
-              );
-            }
+        if (formattedResponse.mode_selected === 'serverless') {
+          await this.listSessionTemplatesAPIService(
+            setServerlessDataList,
+            setServerlessList
           );
-          setServerlessDataSelected(selectedData[0].serverlessData);
+          if (serverlessDataList.length > 0) {
+            const selectedData: any = serverlessDataList.filter(
+              (serverless: any) => {
+                return (
+                  serverless.serverlessName ===
+                  formattedResponse.serverless_name
+                );
+              }
+            );
+            setServerlessDataSelected(selectedData[0].serverlessData);
+          }
         }
         setRetryCount(formattedResponse.retry_count);
         setRetryDelay(formattedResponse.retry_delay);

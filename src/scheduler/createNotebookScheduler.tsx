@@ -30,7 +30,7 @@ import {
 import { MuiChipsInput } from 'mui-chips-input';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import LabelProperties from '../jobs/labelProperties';;
+import LabelProperties from '../jobs/labelProperties';
 import { v4 as uuidv4 } from 'uuid';
 import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
@@ -345,6 +345,8 @@ const CreateNotebookScheduler = ({
           setServerlessSelected={setServerlessSelected}
           setServerlessDataSelected={setServerlessDataSelected}
           serverlessDataList={serverlessDataList}
+          setServerlessDataList={setServerlessDataList}
+          setServerlessList={setServerlessList}
           setRetryCount={setRetryCount}
           setRetryDelay={setRetryDelay}
           setEmailOnFailure={setEmailOnFailure}
