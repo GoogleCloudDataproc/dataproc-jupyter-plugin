@@ -72,6 +72,7 @@ const CreateNotebookScheduler = ({
 
   const [parameterDetail, setParameterDetail] = useState(['']);
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
+  console.log(parameterDetail, parameterDetailUpdated)
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
@@ -334,6 +335,7 @@ const CreateNotebookScheduler = ({
           setScheduleMode={setScheduleMode}
           setScheduleValue={setScheduleValue}
           setInputFileSelected={setInputFileSelected}
+          setParameterDetail={setParameterDetail}
           setParameterDetailUpdated={setParameterDetailUpdated}
           setSelectedMode={setSelectedMode}
           setClusterSelected={setClusterSelected}

@@ -32,6 +32,7 @@ const NotebookJobComponent = ({
   setScheduleValue,
 
   setInputFileSelected,
+  setParameterDetail,
   setParameterDetailUpdated,
   setSelectedMode,
   setClusterSelected,
@@ -55,6 +56,7 @@ const NotebookJobComponent = ({
   setScheduleValue?: (value: string) => void;
 
   setInputFileSelected?: (value: string) => void;
+  setParameterDetail?: (value: string[]) => void;
   setParameterDetailUpdated?: (value: string[]) => void;
   setSelectedMode?: (value: string) => void;
   setClusterSelected?: (value: string) => void;
@@ -108,6 +110,7 @@ const NotebookJobComponent = ({
               setScheduleMode={setScheduleMode}
               setScheduleValue={setScheduleValue}
               setInputFileSelected={setInputFileSelected}
+              setParameterDetail={setParameterDetail}
               setParameterDetailUpdated={setParameterDetailUpdated}
               setSelectedMode={setSelectedMode}
               setClusterSelected={setClusterSelected}

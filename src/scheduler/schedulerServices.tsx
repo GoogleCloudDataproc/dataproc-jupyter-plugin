@@ -230,6 +230,7 @@ export class SchedulerService {
     setScheduleValue?: (value: string) => void,
 
     setInputFileSelected?: (value: string) => void,
+    setParameterDetail?: (value: string[]) => void,
     setParameterDetailUpdated?: (value: string[]) => void,
     setSelectedMode?: (value: string) => void,
     setClusterSelected?: (value: string) => void,
@@ -254,6 +255,7 @@ export class SchedulerService {
         setScheduleMode &&
         setScheduleValue &&
         setInputFileSelected &&
+        setParameterDetail &&
         setParameterDetailUpdated &&
         setSelectedMode &&
         setClusterSelected &&
@@ -271,17 +273,26 @@ export class SchedulerService {
         setJobNameSelected(dagId);
         setComposerSelected(composerSelectedList);
         setInputFileSelected(formattedResponse.input_filename);
+        setParameterDetail(formattedResponse.parameters);
         setParameterDetailUpdated(formattedResponse.parameters);
         setSelectedMode(formattedResponse.mode_selected);
         setClusterSelected(formattedResponse.cluster_name);
         setServerlessDataSelected(formattedResponse.serverless_name);
         setRetryCount(formattedResponse.retry_count);
         setRetryDelay(formattedResponse.retry_delay);
-        setEmailOnFailure(formattedResponse.email_failure);
-        setEmailonRetry(formattedResponse.email_delay);
-        setEmailOnSuccess(formattedResponse.email_success);
+        formattedResponse.email_failure.toLowerCase() === 'true'
+          ? setEmailOnFailure(true)
+          : setEmailOnFailure(false);
+        formattedResponse.email_delay.toLowerCase() === 'true'
+          ? setEmailonRetry(true)
+          : setEmailonRetry(false);
+        formattedResponse.email_success.toLowerCase() === 'true'
+          ? setEmailOnSuccess(true)
+          : setEmailOnSuccess(false);
         setEmailList(formattedResponse.email);
-        setStopCluster(formattedResponse.stop_cluster);
+        formattedResponse.stop_cluster.toLowerCase() === 'true'
+          ? setStopCluster(true)
+          : setStopCluster(false);
         setTimeZoneSelected(formattedResponse.time_zone);
         setCreateCompleted(false);
         if (formattedResponse.schedule_value === '@once') {

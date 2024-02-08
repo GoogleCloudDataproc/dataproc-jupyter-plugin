@@ -31,6 +31,7 @@ import EditIcon from '../../style/icons/edit_icon_disable.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
+// import { GcsService } from '../gcs/gcsService';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -66,6 +67,7 @@ function listNotebookScheduler({
   setScheduleValue,
 
   setInputFileSelected,
+  setParameterDetail,
   setParameterDetailUpdated,
   setSelectedMode,
   setClusterSelected,
@@ -90,6 +92,7 @@ function listNotebookScheduler({
   setScheduleValue?: (value: string) => void;
 
   setInputFileSelected?: (value: string) => void;
+  setParameterDetail?: (value: string[]) => void;
   setParameterDetailUpdated?: (value: string[]) => void;
   setSelectedMode?: (value: string) => void;
   setClusterSelected?: (value: string) => void;
@@ -159,6 +162,15 @@ function listNotebookScheduler({
     setDeletePopupOpen(true);
   };
   const handleEditDags = async (event: React.MouseEvent) => {
+    // const localPath =
+    //   'us-central1-composer4-fe041c11-bucket/dataproc-notebooks/composer-test1/input_notebooks/Untitled2.ipynb';
+    // const path = GcsService.pathParser(localPath);
+    // const content = await GcsService.getFile({
+    //   path: path.path,
+    //   bucket: path.bucket,
+    //   format: 'json'
+    // });
+    // console.log(content);
     const jobid = event.currentTarget.getAttribute('data-jobid');
     if (jobid !== null) {
       await SchedulerService.editJobSchedulerService(
@@ -172,6 +184,7 @@ function listNotebookScheduler({
         setScheduleValue,
 
         setInputFileSelected,
+        setParameterDetail,
         setParameterDetailUpdated,
         setSelectedMode,
         setClusterSelected,
