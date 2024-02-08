@@ -204,14 +204,22 @@ export class SchedulerService {
   ) => {
     setCreatingScheduler(true);
     try {
-      const data = await requestAPI('createJobScheduler', {
+      const data: any = await requestAPI('createJobScheduler', {
         body: JSON.stringify(payload),
         method: 'POST'
       });
-      toast.success(`Job scheduler successfully created`, toastifyCustomStyle);
+      if (data.error) {
+        toast.error(data.error, toastifyCustomStyle);
+        setCreatingScheduler(false);
+      } else {
+        toast.success(
+          `Job scheduler successfully created`,
+          toastifyCustomStyle
+        );
+        setCreatingScheduler(false);
+        setCreateCompleted(true);
+      }
       // app.shell.activeWidget?.close();
-      setCreatingScheduler(false);
-      setCreateCompleted(true);
       console.log(data);
     } catch (reason) {
       setCreatingScheduler(false);
