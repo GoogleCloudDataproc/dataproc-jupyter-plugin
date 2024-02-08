@@ -502,8 +502,8 @@ export class SchedulerService {
     composerName: string,
     dagId: string,
     dagRunId: string,
-    taskId: any,
-    tryNumber: any,
+    taskId: string,
+    tryNumber: number,
     setLogList: (value: string) => void,
     setIsLoadingLogs: (value: boolean) => void
   ) => {
