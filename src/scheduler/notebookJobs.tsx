@@ -39,6 +39,8 @@ const NotebookJobComponent = ({
   setServerlessSelected,
   setServerlessDataSelected,
   serverlessDataList,
+  setServerlessDataList,
+  setServerlessList,
   setRetryCount,
   setRetryDelay,
   setEmailOnFailure,
@@ -65,6 +67,8 @@ const NotebookJobComponent = ({
   setServerlessSelected?: (value: string) => void;
   setServerlessDataSelected?: (value: any) => void;
   serverlessDataList?: any;
+  setServerlessDataList?: (value: any) => void;
+  setServerlessList?: (value: string[]) => void;
   setRetryCount?: (value: number) => void;
   setRetryDelay?: (value: number) => void;
   setEmailOnFailure?: (value: boolean) => void;
@@ -121,6 +125,8 @@ const NotebookJobComponent = ({
               setServerlessSelected={setServerlessSelected}
               setServerlessDataSelected={setServerlessDataSelected}
               serverlessDataList={serverlessDataList}
+              setServerlessDataList={setServerlessDataList}
+              setServerlessList={setServerlessList}
               setRetryCount={setRetryCount}
               setRetryDelay={setRetryDelay}
               setEmailOnFailure={setEmailOnFailure}
