@@ -236,6 +236,8 @@ export class SchedulerService {
     setSelectedMode?: (value: string) => void,
     setClusterSelected?: (value: string) => void,
     setServerlessSelected?: (value: string) => void,
+    setServerlessDataSelected?: (value: any) => void,
+    serverlessDataList?: any,
     setRetryCount?: (value: number) => void,
     setRetryDelay?: (value: number) => void,
     setEmailOnFailure?: (value: boolean) => void,
@@ -262,6 +264,8 @@ export class SchedulerService {
         setSelectedMode &&
         setClusterSelected &&
         setServerlessSelected &&
+        setServerlessDataSelected &&
+        serverlessDataList &&
         setRetryCount &&
         setRetryDelay &&
         setEmailOnFailure &&
@@ -280,6 +284,16 @@ export class SchedulerService {
         setSelectedMode(formattedResponse.mode_selected);
         setClusterSelected(formattedResponse.cluster_name);
         setServerlessSelected(formattedResponse.serverless_name);
+        if (formattedResponse.selectedMode === 'serverless') {
+          const selectedData: any = serverlessDataList.filter(
+            (serverless: any) => {
+              return (
+                serverless.serverlessName === formattedResponse.serverless_name
+              );
+            }
+          );
+          setServerlessDataSelected(selectedData[0].serverlessData);
+        }
         setRetryCount(formattedResponse.retry_count);
         setRetryDelay(formattedResponse.retry_delay);
         formattedResponse.email_failure.toLowerCase() === 'true'
@@ -305,10 +319,10 @@ export class SchedulerService {
           setScheduleValue(formattedResponse.scheduleInterval);
         }
       }
-      setEditDagLoading('')
+      setEditDagLoading('');
     } catch (reason) {
       console.error(`Error on POST {dataToSend}.\n${reason}`);
-      setEditDagLoading('')
+      setEditDagLoading('');
     }
   };
 

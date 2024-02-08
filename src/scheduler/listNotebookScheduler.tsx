@@ -72,6 +72,8 @@ function listNotebookScheduler({
   setSelectedMode,
   setClusterSelected,
   setServerlessSelected,
+  setServerlessDataSelected,
+  serverlessDataList,
   setRetryCount,
   setRetryDelay,
   setEmailOnFailure,
@@ -97,6 +99,8 @@ function listNotebookScheduler({
   setSelectedMode?: (value: string) => void;
   setClusterSelected?: (value: string) => void;
   setServerlessSelected?: (value: string) => void;
+  setServerlessDataSelected?: (value: any) => void;
+  serverlessDataList?: any;
   setRetryCount?: (value: number) => void;
   setRetryDelay?: (value: number) => void;
   setEmailOnFailure?: (value: boolean) => void;
@@ -191,6 +195,8 @@ function listNotebookScheduler({
         setSelectedMode,
         setClusterSelected,
         setServerlessSelected,
+        setServerlessDataSelected,
+        serverlessDataList,
         setRetryCount,
         setRetryDelay,
         setEmailOnFailure,
