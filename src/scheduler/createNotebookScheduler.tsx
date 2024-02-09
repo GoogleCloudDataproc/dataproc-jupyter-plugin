@@ -381,7 +381,7 @@ const CreateNotebookScheduler = ({
               />
             </div>
             <div className="create-job-scheduler-title">
-              Create Job Scheduler
+              Create A Scheduled Job
             </div>
           </div>
           <div className="submit-job-container">

@@ -116,7 +116,7 @@ const ExecutionHistory = ({
             isGreyExecution ||
             isBlueExecution ||
             isDarkGreenExecution
-              ? '0%'
+              ? '50%'
               : 'none',
           backgroundColor: isDarkGreenExecution
             ? '#188038'
