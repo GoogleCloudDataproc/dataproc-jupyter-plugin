@@ -165,22 +165,25 @@ export class SchedulerService {
     }
   };
   static listComposersAPIService = async (
-    setComposerList: (value: string[]) => void
+    setComposerList: (value: string[]) => void,
+    setIsLoading?: (value: boolean) => void
   ) => {
     try {
       const formattedResponse: any = await requestAPI('composer');
-      let composerEnvironmentList: string[] = [];
-      formattedResponse.forEach((data: any) => {
-        composerEnvironmentList.push(data.name);
-      });
       if (formattedResponse.length === 0) {
         // Handle the case where the list is empty
         toast.error(
           'No composer environment in this project and region',
           toastifyCustomStyle
         );
-        // handle loading false here
+        if (setIsLoading) {
+          setIsLoading(false);
+        }
       } else {
+        let composerEnvironmentList: string[] = [];
+        formattedResponse.forEach((data: any) => {
+          composerEnvironmentList.push(data.name);
+        });
         composerEnvironmentList.sort();
         setComposerList(composerEnvironmentList);
       }
@@ -477,7 +480,7 @@ export class SchedulerService {
     setBucketName: (value: string) => void,
     composerSelected: string
   ) => {
-    setIsLoading(true);
+    // setIsLoading(true);
     try {
       const serviceURL = `dagList?composer=${composerSelected}`;
       const formattedResponse: any = await requestAPI(serviceURL);
@@ -499,6 +502,7 @@ export class SchedulerService {
       setIsLoading(false);
       setBucketName(formattedResponse[1]);
     } catch (error) {
+      setIsLoading(false);
       DataprocLoggingService.log(
         'Error listing dag Scheduler list',
         LOG_LEVEL.ERROR
@@ -545,7 +549,7 @@ export class SchedulerService {
           composerSelected
         );
         toast.success(
-          `scheduler ${dag_id} deleted successfully`,
+          `Scheduler ${dag_id} deleted successfully`,
           toastifyCustomStyle
         );
       }
@@ -629,8 +633,8 @@ export class SchedulerService {
     composerName: string,
     dagId: string,
     dagRunId: string,
-    taskId: any,
-    tryNumber: any,
+    taskId: string,
+    tryNumber: number,
     setLogList: (value: string) => void,
     setIsLoadingLogs: (value: boolean) => void
   ) => {

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTable, usePagination } from 'react-table';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
@@ -31,7 +31,7 @@ import EditIcon from '../../style/icons/edit_icon_disable.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
-// import { GcsService } from '../gcs/gcsService';
+import PollingTimer from '../utils/pollingTimer';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -125,6 +125,7 @@ function listNotebookScheduler({
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
   const [editDagLoading, setEditDagLoading] = useState('');
+  const [pollingDisable] = useState(false);
   const columns = React.useMemo(
     () => [
       {
@@ -146,13 +147,23 @@ function listNotebookScheduler({
     ],
     []
   );
+  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const pollingDagList = async (
+    pollingFunction: () => void,
+    pollingDisable: boolean
+  ) => {
+    timer.current = PollingTimer(
+      pollingFunction,
+      pollingDisable,
+      timer.current
+    );
+  };
   const handleComposerSelected = (data: string | null) => {
     if (data) {
       const selectedComposer = data.toString();
       setComposerSelectedList(selectedComposer);
     }
   };
-
   const handleUpdateScheduler = async (
     dag_id: string,
     is_status_paused: boolean
@@ -171,15 +182,6 @@ function listNotebookScheduler({
     setDeletePopupOpen(true);
   };
   const handleEditDags = async (event: React.MouseEvent) => {
-    // const localPath =
-    //   'us-central1-composer4-fe041c11-bucket/dataproc-notebooks/composer-test1/input_notebooks/Untitled2.ipynb';
-    // const path = GcsService.pathParser(localPath);
-    // const content = await GcsService.getFile({
-    //   path: path.path,
-    //   bucket: path.bucket,
-    //   format: 'json'
-    // });
-    // console.log(content);
     const jobid = event.currentTarget.getAttribute('data-jobid');
     if (jobid !== null) {
       await SchedulerService.editJobSchedulerService(
@@ -240,10 +242,10 @@ function listNotebookScheduler({
   };
 
   const listComposersAPI = async () => {
-    await SchedulerService.listComposersAPIService(setComposerList);
-    if (composerList.length === 0) {
-      setIsLoading(false);
-    }
+    await SchedulerService.listComposersAPIService(
+      setComposerList,
+      setIsLoading
+    );
   };
 
   const listDagInfoAPI = async () => {
@@ -401,9 +403,20 @@ function listNotebookScheduler({
 
   useEffect(() => {
     if (composerSelectedList !== '') {
+      setIsLoading(true);
       listDagInfoAPI();
     }
   }, [composerSelectedList]);
+
+  useEffect(() => {
+    if (composerSelectedList !== '') {
+      pollingDagList(listDagInfoAPI, pollingDisable);
+    }
+    return () => {
+      pollingDagList(listDagInfoAPI, true);
+    };
+  }, [composerSelectedList]);
+
   return (
     <div>
       <div className="select-text-overlay-scheduler">

@@ -148,7 +148,7 @@ class RouteHandler(APIHandler):
                 cached_credentials = get_cached_credentials(self.log)
                 self.finish(json.dumps(cached_credentials))
             else:
-                t1 = threading.Thread(target=get_cached_credentials(self.log), args=())
+                t1 = threading.Thread(target=get_cached_credentials, args=([self.log]))
                 t1.start()
                 self.finish(json.dumps(credentials_cache['credentials']))
         except Exception:
@@ -221,7 +221,7 @@ class UrlHandler(APIHandler):
         default_url = default_url or f'https://{service_name}.googleapis.com/'
         configured_url = get_gcloud_config(f'configuration.properties.api_endpoint_overrides.{service_name}')
         url = configured_url or default_url
-        self.log.info('Service_url for service {service_name}: {url}')
+        self.log.info(f'Service_url for service {service_name}: {url}')
         return url
 
 

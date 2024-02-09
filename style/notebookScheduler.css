@@ -217,6 +217,7 @@
 
 .dag-run-state-parent {
   border-bottom: 1px solid var(--jp-layout-color3);
+  height: 24px;
 }
 
 .execution-history-header {

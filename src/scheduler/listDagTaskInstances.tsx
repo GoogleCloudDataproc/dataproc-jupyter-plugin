@@ -84,7 +84,7 @@ const ListDagTaskInstances = ({
   }, [dagTaskInstancesList]);
 
   const handleChange = (
-    index: number,
+    index: string,
     iconIndex: number,
     fromClick: string
   ) => {
@@ -96,7 +96,8 @@ const ListDagTaskInstances = ({
     }
   };
 
-  const listDagTaskLogList = async (index: any, iconIndex: number) => {
+  const listDagTaskLogList = async (index: string, iconIndex: number) => {
+    console.log('index and type', index, typeof index);
     await SchedulerService.listDagTaskLogsListService(
       composerName,
       dagId,
@@ -118,7 +119,7 @@ const ListDagTaskInstances = ({
             <div className="accordion-row-data-expand-logo"></div>
           </div>
           {dagTaskInstancesList.length > 0 &&
-            dagTaskInstancesList.map((taskInstance: any, index: number) => (
+            dagTaskInstancesList.map((taskInstance: any, index: string) => (
               <div>
                 <div className="accordion-row-parent">
                   <div className="accordion-row-data">
@@ -132,31 +133,27 @@ const ListDagTaskInstances = ({
                       />
                     ) : (
                       <div className="logo-row-container">
-                        {(() => {
-                          const logos = [];
-                          for (let i = 0; i < taskInstance.tryNumber; i++) {
-                            logos.push(
-                              <div
-                                key={i}
-                                className="logo-alignment-style-accordion"
-                                onClick={() =>
-                                  handleChange(index, i + 1, 'attemptsClick')
-                                }
-                              >
-                                {i === taskInstance.tryNumber - 1 ? (
-                                  taskInstance.state === 'failed' ? (
-                                    <iconDagTaskFailed.react tag="div" />
-                                  ) : (
-                                    <iconDagTaskSuccess.react tag="div" />
-                                  )
-                                ) : (
+                        {Array.from({ length: taskInstance.tryNumber }).map(
+                          (_, i) => (
+                            <div
+                              key={i}
+                              className="logo-alignment-style-accordion"
+                              onClick={() =>
+                                handleChange(index, i + 1, 'attemptsClick')
+                              }
+                            >
+                              {i === taskInstance.tryNumber - 1 ? (
+                                taskInstance.state === 'failed' ? (
                                   <iconDagTaskFailed.react tag="div" />
-                                )}
-                              </div>
-                            );
-                          }
-                          return logos;
-                        })()}
+                                ) : (
+                                  <iconDagTaskSuccess.react tag="div" />
+                                )
+                              ) : (
+                                <iconDagTaskFailed.react tag="div" />
+                              )}
+                            </div>
+                          )
+                        )}
                       </div>
                     )}
                   </div>
