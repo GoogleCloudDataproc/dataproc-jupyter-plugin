@@ -48,7 +48,10 @@ export class DataprocLoggingService {
   ) {
     const method = init?.method ?? 'GET';
     return this.log(
-      `${method} ${input.toString()} ${response.status} ${response.statusText} `
+      `${method} ${input.toString()} ${response.status} ${
+        response.statusText
+      } `,
+      LOG_LEVEL.DEBUG
     );
   }
 
