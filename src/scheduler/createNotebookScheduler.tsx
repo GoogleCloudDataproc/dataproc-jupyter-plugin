@@ -41,6 +41,7 @@ import NotebookJobComponent from './notebookJobs';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
+import EditIcon from '../../style/icons/edit_icon_disable.svg';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -50,6 +51,10 @@ const iconLeftArrow = new LabIcon({
 const iconError = new LabIcon({
   name: 'launcher:error-icon',
   svgstr: errorIcon
+});
+const iconEdit = new LabIcon({
+  name: 'launcher:edit-disable-icon',
+  svgstr: EditIcon
 });
 
 const CreateNotebookScheduler = ({
@@ -309,6 +314,13 @@ const CreateNotebookScheduler = ({
     }
   };
 
+  const handleEditNotebookData = async (event: React.MouseEvent) => {
+    let filePath = inputFileSelected.replace("gs://", "gs:");
+    app.commands.execute('docmanager:open', {
+      path: filePath
+    });
+  }
+
   useEffect(() => {
     listComposersAPI();
     listClustersAPI();
@@ -400,13 +412,26 @@ const CreateNotebookScheduler = ({
               </div>
             )}
 
-            <div className="create-scheduler-form-element">
+            <div className="create-scheduler-form-element-input-file">
               <Input
                 className="create-scheduler-style"
                 value={inputFileSelected}
                 Label="Input file*"
                 disabled={true}
               />
+              {context === '' && (
+                <div
+                  role="button"
+                  className="edit-notebook-style"
+                  title="Edit Notebook"
+                  onClick={e => handleEditNotebookData(e)}
+                >
+                  <iconEdit.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                </div>
+              )}
             </div>
             <div className="create-scheduler-form-element">
               <Autocomplete

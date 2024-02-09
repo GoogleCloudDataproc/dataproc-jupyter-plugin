@@ -32,6 +32,18 @@
   margin-top: 15px;
 }
 
+.create-scheduler-form-element-input-file {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.edit-notebook-style {
+  cursor: pointer;
+  margin-top: 10px;
+  padding-left: 15px;
+}
+
 .create-job-scheduler-title {
   padding: 0px 15px;
   height: 48px;

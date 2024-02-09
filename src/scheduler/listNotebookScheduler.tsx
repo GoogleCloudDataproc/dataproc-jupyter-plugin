@@ -335,7 +335,7 @@ function listNotebookScheduler({
           <div
             role="button"
             className="icon-buttons-style"
-            title="Edit Notebook"
+            title="Edit Dag"
             data-jobid={data.jobid}
             onClick={e => handleEditDags(e)}
           >
