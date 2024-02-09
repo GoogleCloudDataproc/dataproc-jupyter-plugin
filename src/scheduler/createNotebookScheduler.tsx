@@ -75,7 +75,6 @@ const CreateNotebookScheduler = ({
 
   const [parameterDetail, setParameterDetail] = useState(['']);
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
-  console.log(parameterDetail, parameterDetailUpdated);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
@@ -325,7 +324,6 @@ const CreateNotebookScheduler = ({
     listComposersAPI();
     listClustersAPI();
     listSessionTemplatesAPI();
-    console.log(context);
     if (context !== '') {
       setInputFileSelected(context.path);
     }
@@ -333,7 +331,6 @@ const CreateNotebookScheduler = ({
   }, []);
 
   useEffect(() => {
-    console.log(context);
     if (context !== '') {
       getKernelDetail();
     }

@@ -264,7 +264,6 @@ export class SchedulerService {
     try {
       const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
       const formattedResponse: any = await requestAPI(serviceURL);
-      console.log(formattedResponse);
       if (
         setCreateCompleted &&
         setJobNameSelected &&
