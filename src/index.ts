@@ -374,13 +374,13 @@ const extension: JupyterFrontEndPlugin<void> = {
     const createNotebookJobsComponentCommand = 'create-notebook-jobs-component';
     commands.addCommand(createNotebookJobsComponentCommand, {
       caption: 'Create a new Serverless Component',
-      label: 'Scheduled Notebooks',
+      label: 'Scheduled Jobs',
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconScheduledNotebooks),
       execute: () => {
         const content = new NotebookJobs(app as JupyterLab, themeManager, "");
         const widget = new MainAreaWidget<NotebookJobs>({ content });
-        widget.title.label = 'Scheduled Notebooks';
+        widget.title.label = 'Scheduled Jobs';
         widget.title.icon = iconScheduledNotebooks;
         app.shell.add(widget, 'main');
       }
