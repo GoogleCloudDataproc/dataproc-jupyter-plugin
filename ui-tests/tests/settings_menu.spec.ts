@@ -20,7 +20,7 @@ import { test, expect, galata } from '@jupyterlab/galata';
 test.describe('Settings Menu', () => {
   test('Can find settings menu', async ({ page }) => {
     await page
-      .getByLabel('main', { exact: true })
+      .getByLabel('main menu', { exact: true })
       .getByText('Settings')
       .click();
     await page.getByText('Cloud Dataproc Settings').click();
@@ -28,7 +28,7 @@ test.describe('Settings Menu', () => {
 
   test('Can change project', async ({ page }) => {
     await page
-      .getByLabel('main', { exact: true })
+      .getByLabel('main menu', { exact: true })
       .getByText('Settings')
       .click();
     await page.getByText('Cloud Dataproc Settings').click();
