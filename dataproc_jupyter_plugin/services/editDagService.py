@@ -18,8 +18,7 @@ import os
 import re
 import requests
 import urllib
-
-
+from dataproc_jupyter_plugin.utils.constants import storage_url
 
 
 
@@ -31,8 +30,7 @@ class DagEditService():
         try:
             file_path = f"dags/dag_{dag_id}.py"
             encoded_path = urllib.parse.quote(file_path, safe='')
-            api_endpoint =f"https://storage.googleapis.com/storage/v1/b/{bucket_name}/o/{encoded_path}?alt=media"
-            print(api_endpoint)
+            api_endpoint =f"{storage_url}b/{bucket_name}/o/{encoded_path}?alt=media"
             headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}',
@@ -40,8 +38,7 @@ class DagEditService():
             }
             response = requests.get(api_endpoint,headers=headers)
             if response.status_code == 200:
-                print(response)
-                print(response.content)
+                log.info("Dag file response fetched")
 
             return response.content
         except Exception as e:
@@ -71,8 +68,6 @@ class DagEditService():
                     if match:
                         parameters_yaml = match.group(1)
                         parameters_list = [line.strip() for line in parameters_yaml.split('\n') if line.strip()]
-                        print("-----from file read--------")
-                        print(parameters_list)
                     else:
                         parameters_list = []
 
@@ -84,16 +79,12 @@ class DagEditService():
                             email_list = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', email_str)                          
                             # Remove quotes from email addresses
                             email_list = [email.strip("'\"") for email in email_list]
-                            print(email_list)
                             break
                 for line in file_content.split('\n'):
                     if 'cluster_name' in line:
                         cluster_name = line.split(":")[-1].strip().strip("'\"}").split("'")[0].strip()# Extract project_id from the line
-                        print('--------------------download and print--------------')
-                        print(cluster_name)
                     elif 'submit_pyspark_job' in line:
                         mode_selected = 'cluster' 
-                        print(mode_selected)
                     elif "'retries'" in line:
                         retries = line.split(":")[-1].strip().strip("'\"},")
                         retry_count = int(retries.strip("'\""))    # Extract retry_count from the line
@@ -110,15 +101,11 @@ class DagEditService():
                         email_on_success = second_part.split("'")[1]                 
                     elif 'schedule_interval' in line:
                         schedule_interval = line.split('=')[-1].strip().strip("'\"").split(',')[0].rstrip("'\"")  # Extract schedule_interval from the line
-                        print(schedule_interval)
                     elif 'stop_cluster_check' in line:
                         stop_cluster_check = line.split('=')[-1].strip().strip("'\"")
                     elif 'serverless_name' in line:
                         serverless_name = line.split('=')[-1].strip().strip("'\"")
-                        
-
-                           
-
+                                                  
                 payload = {
                     "input_filename": input_notebook,
                     "parameters":parameters_list,  
@@ -135,7 +122,6 @@ class DagEditService():
                     "stop_cluster": stop_cluster_check,
                     "time_zone": 'UTC'
                 }
-                print(payload)
                 return payload
 
             else:

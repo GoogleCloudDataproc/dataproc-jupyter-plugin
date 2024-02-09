@@ -142,8 +142,12 @@ class ExecutorService():
             parameters = ''
         if job.mode_selected == 'cluster':
             template = environment.get_template(DAG_TEMPLATE_CLUSTER_V1)
+            if not job.input_filename.startswith("gs://"):
+                input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
+            else:
+                input_notebook = job.input_filename
             content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
-                                    gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
+                                    gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=input_notebook,\
                                     output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
                                     schedule_interval=schedule_interval,start_date = start_date,parameters=parameters)
         else:
@@ -151,8 +155,12 @@ class ExecutorService():
             job_dict = job.dict()
             phs_path = job_dict.get("serverless_name", {}).get("environmentConfig", {}).get("peripheralsConfig", {}).get("sparkHistoryServerConfig", {}).get("dataprocCluster", "")
             serverless_name = job_dict.get("serverless_name", {}).get("jupyterSession", {}).get("displayName", "")
+            if not job.input_filename.startswith("gs://"):
+                input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
+            else:
+                input_notebook = job.input_filename
             content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
-                                    gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}",\
+                                    gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=input_notebook,\
                                     output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
                                     schedule_interval=schedule_interval,start_date = start_date,parameters=parameters,phs_path = phs_path,serverless_name=serverless_name)
 
@@ -183,12 +191,4 @@ class ExecutorService():
 
 
 
-    # def validate(cls, input_path: str) -> bool:
-    #     with open(input_path, encoding="utf-8") as f:
-    #         nb = nbformat.read(f, as_version=4)
-    #         try:
-    #             nb.metadata.kernelspec["name"]
-    #         except:
-    #             return False
-    #         else:
-    #             return True
+
