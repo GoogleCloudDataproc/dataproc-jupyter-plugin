@@ -97,7 +97,6 @@ const ListDagTaskInstances = ({
   };
 
   const listDagTaskLogList = async (index: string, iconIndex: number) => {
-    console.log('index and type', index, typeof index);
     await SchedulerService.listDagTaskLogsListService(
       composerName,
       dagId,

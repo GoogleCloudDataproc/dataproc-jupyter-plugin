@@ -75,7 +75,6 @@ const CreateNotebookScheduler = ({
 
   const [parameterDetail, setParameterDetail] = useState(['']);
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
-  console.log(parameterDetail, parameterDetailUpdated);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
@@ -314,12 +313,12 @@ const CreateNotebookScheduler = ({
     }
   };
 
-  const handleEditNotebookData = async (event: React.MouseEvent) => {
-    let filePath = inputFileSelected.replace("gs://", "gs:");
+  const handleEditNotebookData = async () => {
+    let filePath = inputFileSelected.replace('gs://', 'gs:');
     app.commands.execute('docmanager:open', {
       path: filePath
     });
-  }
+  };
 
   useEffect(() => {
     listComposersAPI();
@@ -419,12 +418,12 @@ const CreateNotebookScheduler = ({
                 Label="Input file*"
                 disabled={true}
               />
-              {context === '' && (
+              {inputFileSelected.includes('gs://') && (
                 <div
                   role="button"
                   className="edit-notebook-style"
                   title="Edit Notebook"
-                  onClick={e => handleEditNotebookData(e)}
+                  onClick={handleEditNotebookData}
                 >
                   <iconEdit.react
                     tag="div"
