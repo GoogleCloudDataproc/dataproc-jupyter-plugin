@@ -105,6 +105,8 @@ class DagEditService():
                         stop_cluster_check = line.split('=')[-1].strip().strip("'\"")
                     elif 'serverless_name' in line:
                         serverless_name = line.split('=')[-1].strip().strip("'\"")
+                    elif 'time_zone' in line:
+                        time_zone = line.split('=')[-1].strip().strip("'\"")
                                                   
                 payload = {
                     "input_filename": input_notebook,
@@ -120,7 +122,7 @@ class DagEditService():
                     "email": email_list,
                     "schedule_value": schedule_interval,
                     "stop_cluster": stop_cluster_check,
-                    "time_zone": 'UTC'
+                    "time_zone": time_zone
                 }
                 return payload
 
