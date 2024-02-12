@@ -131,11 +131,13 @@ class ExecutorService():
         if job.time_zone == '':
             yesterday = datetime.combine(datetime.today() - timedelta(1),datetime.min.time())
             start_date = yesterday
+            time_zone = ''
         else:
             yesterday = pendulum.now().subtract(days=1)
             desired_timezone = job.time_zone
             dag_timezone = pendulum.timezone(desired_timezone)
             start_date =  yesterday.replace(tzinfo=dag_timezone)
+            time_zone = job.time_zone
         if len(job.parameters) != 0:
             parameters = '\n'.join(item.replace(':', ': ') for item in job.parameters)
         else:
@@ -149,7 +151,7 @@ class ExecutorService():
             content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                     gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=input_notebook,\
                                     output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
-                                    schedule_interval=schedule_interval,start_date = start_date,parameters=parameters)
+                                    schedule_interval=schedule_interval,start_date = start_date,parameters=parameters, time_zone=time_zone)
         else:
             template = environment.get_template(DAG_TEMPLATE_SERVERLESS_V1)
             job_dict = job.dict()
@@ -162,7 +164,7 @@ class ExecutorService():
             content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                     gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=input_notebook,\
                                     output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
-                                    schedule_interval=schedule_interval,start_date = start_date,parameters=parameters,phs_path = phs_path,serverless_name=serverless_name)
+                                    schedule_interval=schedule_interval,start_date = start_date,parameters=parameters,phs_path = phs_path,serverless_name=serverless_name, time_zone= time_zone)
 
         print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:

@@ -29,6 +29,7 @@ default_args = {
     'email_on_retry': '{{email_delay}}',      
     'email_on_success':'{{email_success}}'
 }
+timezone = '{{time_zone}}'
 serverless_name = '{{serverless_name}}'
 input_notebook = '{{input_notebook}}'
 output_notebook = '{{output_notebook}}'
