@@ -52,6 +52,7 @@ class DagEditService():
             email_on_success= 'False'
             stop_cluster_check = 'False'
             mode_selected = 'serverless'
+            time_zone = ''
             pattern = r"parameters\s*=\s*'''(.*?)'''"
             file_response = DagEditService.get_dag_file(credentials,dag_id,bucket_name,log)
             content_str = file_response.decode('utf-8')
