@@ -32,7 +32,7 @@ default_args = {
 timezone = '{{time_zone}}'
 stop_cluster_check = '{{stop_cluster}}'
 input_notebook = '{{input_notebook}}'
-output_notebook = '{{output_notebook}}'+
+output_notebook = '{{output_notebook}}'
 parameters = '''
 {{parameters}}
 '''
