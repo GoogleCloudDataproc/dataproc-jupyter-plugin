@@ -355,7 +355,7 @@ export class SchedulerService {
           setScheduleValue('');
         } else if (formattedResponse.schedule_value !== '@once') {
           setScheduleMode('runSchedule');
-          setScheduleValue(formattedResponse.scheduleInterval);
+          setScheduleValue(formattedResponse.schedule_value);
         }
       }
       setEditDagLoading('');
