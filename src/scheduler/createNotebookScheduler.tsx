@@ -107,6 +107,11 @@ const CreateNotebookScheduler = ({
   const [jobNameValidation, setJobNameValidation] = useState(true);
   const [jobNameSpecialValidation, setJobNameSpecialValidation] =
     useState(false);
+  const [jobNameUniqueValidation, setJobNameUniqueValidation] = useState(true);
+  const [dagList, setDagList] = useState<any[]>([]);
+  const [bucketName, setBucketName] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
   };
@@ -126,6 +131,27 @@ const CreateNotebookScheduler = ({
     if (data) {
       const selectedComposer = data.toString();
       setComposerSelected(selectedComposer);
+      if (selectedComposer) {
+        const unique = getDaglist(selectedComposer);
+        if (!unique) {
+          setJobNameUniqueValidation(true);
+        }
+      }
+    }
+  };
+  const getDaglist = async (composer: string) => {
+    try {
+      console.log(bucketName, isLoading);
+      await SchedulerService.listDagInfoAPIService(
+        setDagList,
+        setIsLoading,
+        setBucketName,
+        composer
+      );
+      return true;
+    } catch (error) {
+      console.error('Error checking job name uniqueness:', error);
+      return false;
     }
   };
 
@@ -260,6 +286,8 @@ const CreateNotebookScheduler = ({
       ? setJobNameSpecialValidation(true)
       : setJobNameSpecialValidation(false);
     setJobNameSelected(event.target.value);
+
+    setJobNameSelected(event.target.value);
   };
 
   const isSaveDisabled = () => {
@@ -268,6 +296,7 @@ const CreateNotebookScheduler = ({
       jobNameSelected === '' ||
       !jobNameValidation ||
       jobNameSpecialValidation ||
+      !jobNameUniqueValidation ||
       inputFileSelected === '' ||
       composerSelected === '' ||
       (selectedMode === 'cluster' && clusterSelected === '') ||
@@ -330,6 +359,16 @@ const CreateNotebookScheduler = ({
     setJobNameSelected('');
   }, []);
 
+  useEffect(() => {
+    console.log(dagList);
+    if (composerSelected !== '' && dagList.length > 0) {
+      const isUnique = !dagList.some(
+        dag => dag.notebookname === jobNameSelected
+      );
+      setJobNameUniqueValidation(isUnique);
+    }
+  }, [dagList, jobNameSelected, composerSelected]);
+  
   useEffect(() => {
     if (context !== '') {
       getKernelDetail();
@@ -407,6 +446,14 @@ const CreateNotebookScheduler = ({
                 <div className="error-key-missing">
                   Name must contain only letters, numbers, hyphens, and
                   underscores
+                </div>
+              </div>
+            )}
+            {!jobNameUniqueValidation && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Job name must be unique for the selected environment
                 </div>
               </div>
             )}

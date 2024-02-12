@@ -384,12 +384,12 @@ export class SchedulerService {
         transformDagRunListData = data.dag_runs.map((dagRun: any) => {
           return {
             dagRunId: dagRun.dag_run_id,
-            filteredDate: new Date(dagRun.execution_date)
+            filteredDate: new Date(dagRun.start_date)
               .toDateString()
               .split(' ')[2],
             state: dagRun.state,
-            date: new Date(dagRun.execution_date).toDateString(),
-            time: new Date(dagRun.execution_date).toTimeString().split(' ')[0]
+            date: new Date(dagRun.start_date).toDateString(),
+            time: new Date(dagRun.start_date).toTimeString().split(' ')[0]
           };
         });
 
@@ -615,8 +615,8 @@ export class SchedulerService {
             taskId: dagRunTask.task_id,
             duration: dagRunTask.duration,
             state: dagRunTask.state,
-            date: new Date(dagRunTask.execution_date).toDateString(),
-            time: new Date(dagRunTask.execution_date)
+            date: new Date(dagRunTask.start_date).toDateString(),
+            time: new Date(dagRunTask.start_date)
               .toTimeString()
               .split(' ')[0]
           };
