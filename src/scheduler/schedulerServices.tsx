@@ -230,6 +230,24 @@ export class SchedulerService {
     }
   };
 
+  static editNotebookSchedulerService = async (
+    bucketName: string,
+    dagId: string,
+    setInputNotebookFilePath: (value: string) => void,
+    setEditNotebookLoading: (value: string) => void
+  ) => {
+    setEditNotebookLoading(dagId);
+    try {
+      const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      setInputNotebookFilePath(formattedResponse.input_filename);
+      setEditNotebookLoading('');
+    } catch (reason) {
+      console.error(`Error on POST {dataToSend}.\n${reason}`);
+      setEditNotebookLoading('');
+    }
+  };
+
   static editJobSchedulerService = async (
     bucketName: string,
     dagId: string,
@@ -616,9 +634,7 @@ export class SchedulerService {
             duration: dagRunTask.duration,
             state: dagRunTask.state,
             date: new Date(dagRunTask.start_date).toDateString(),
-            time: new Date(dagRunTask.start_date)
-              .toTimeString()
-              .split(' ')[0]
+            time: new Date(dagRunTask.start_date).toTimeString().split(' ')[0]
           };
         }
       );

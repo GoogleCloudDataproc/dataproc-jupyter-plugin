@@ -97,7 +97,7 @@ const CreateNotebookScheduler = ({
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
   const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
-  const [timeZoneSelected, setTimeZoneSelected] = useState('UTC');
+  const [timeZoneSelected, setTimeZoneSelected] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
 
   const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
 
@@ -360,7 +360,6 @@ const CreateNotebookScheduler = ({
   }, []);
 
   useEffect(() => {
-    console.log(dagList);
     if (composerSelected !== '' && dagList.length > 0) {
       const isUnique = !dagList.some(
         dag => dag.notebookname === jobNameSelected

@@ -27,7 +27,8 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import playIcon from '../../style/icons/play_icon.svg';
 import pauseIcon from '../../style/icons/pause_icon.svg';
 import downloadIcon from '../../style/icons/download_icon.svg';
-import EditIcon from '../../style/icons/edit_icon_disable.svg';
+import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
+import EditIcon from '../../style/icons/edit_icon.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
@@ -50,8 +51,12 @@ const iconDownload = new LabIcon({
   name: 'launcher:download-icon',
   svgstr: downloadIcon
 });
-const iconEdit = new LabIcon({
+const iconEditDag = new LabIcon({
   name: 'launcher:edit-disable-icon',
+  svgstr: EditIconDisable
+});
+const iconEditNotebook = new LabIcon({
+  name: 'launcher:edit-icon',
   svgstr: EditIcon
 });
 
@@ -126,6 +131,8 @@ function listNotebookScheduler({
   const [selectedDagId, setSelectedDagId] = useState('');
   const [editDagLoading, setEditDagLoading] = useState('');
   const [pollingDisable] = useState(false);
+  const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
+  const [editNotebookLoading, setEditNotebookLoading] = useState('');
   const columns = React.useMemo(
     () => [
       {
@@ -180,6 +187,17 @@ function listNotebookScheduler({
   const handleDeletePopUp = (dag_id: string) => {
     setSelectedDagId(dag_id);
     setDeletePopupOpen(true);
+  };
+  const handleEditNotebook = async (event: React.MouseEvent) => {
+    const jobid = event.currentTarget.getAttribute('data-jobid');
+    if (jobid !== null) {
+      await SchedulerService.editNotebookSchedulerService(
+        bucketName,
+        jobid,
+        setInputNotebookFilePath,
+        setEditNotebookLoading
+      );
+    }
   };
   const handleEditDags = async (event: React.MouseEvent) => {
     const jobid = event.currentTarget.getAttribute('data-jobid');
@@ -339,7 +357,31 @@ function listNotebookScheduler({
             data-jobid={data.jobid}
             onClick={e => handleEditDags(e)}
           >
-            <iconEdit.react
+            <iconEditDag.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          </div>
+        )}
+        {data.jobid === editNotebookLoading ? (
+          <div className="icon-buttons-style">
+            <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={18}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+        ) : (
+          <div
+            role="button"
+            className="icon-buttons-style"
+            title="Edit Notebook"
+            data-jobid={data.jobid}
+            onClick={e => handleEditNotebook(e)}
+          >
+            <iconEditNotebook.react
               tag="div"
               className="icon-white logo-alignment-style"
             />
@@ -374,6 +416,15 @@ function listNotebookScheduler({
       );
     }
   };
+  useEffect(() => {
+    if (inputNotebookFilePath !== '') {
+      let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
+      app.commands.execute('docmanager:open', {
+        path: filePath
+      });
+    }
+  }, [inputNotebookFilePath]);
+
   useEffect(() => {
     const loadComposerListAndSelectFirst = async () => {
       await listComposersAPI();
