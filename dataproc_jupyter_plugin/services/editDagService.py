@@ -106,7 +106,7 @@ class DagEditService():
                         stop_cluster_check = line.split('=')[-1].strip().strip("'\"")
                     elif 'serverless_name' in line:
                         serverless_name = line.split('=')[-1].strip().strip("'\"")
-                    elif 'timezone' in line:
+                    elif 'time_zone' in line:
                         time_zone = line.split('=')[-1].strip().strip("'\"")
                                                   
                 payload = {
