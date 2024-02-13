@@ -135,6 +135,7 @@ function listNotebookScheduler({
   const [pollingDisable] = useState(false);
   const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
   const [editNotebookLoading, setEditNotebookLoading] = useState('');
+  const [deletingNotebook, setDeletingNotebook] = useState(false);
   const columns = React.useMemo(
     () => [
       {
@@ -243,6 +244,7 @@ function listNotebookScheduler({
   };
 
   const handleDeleteScheduler = async () => {
+    setDeletingNotebook(true);
     await SchedulerService.handleDeleteSchedulerAPIService(
       composerSelectedList,
       selectedDagId,
@@ -251,6 +253,7 @@ function listNotebookScheduler({
       setBucketName
     );
     setDeletePopupOpen(false);
+    setDeletingNotebook(false);
   };
 
   const handleDownloadScheduler = async (event: React.MouseEvent) => {
@@ -330,6 +333,7 @@ function listNotebookScheduler({
             className="icon-white logo-alignment-style"
           />
         </div>
+
         <div
           role="button"
           className="icon-buttons-style"
@@ -425,7 +429,7 @@ function listNotebookScheduler({
       app.commands.execute('docmanager:open', {
         path: filePath
       });
-      setInputNotebookFilePath('')
+      setInputNotebookFilePath('');
     }
   }, [inputNotebookFilePath]);
 
@@ -519,6 +523,7 @@ function listNotebookScheduler({
               onDelete={() => handleDeleteScheduler()}
               deletePopupOpen={deletePopupOpen}
               DeleteMsg={`This will delete ${selectedDagId} and cannot be undone.`}
+              deletingNotebook={deletingNotebook}
             />
           )}
         </div>
