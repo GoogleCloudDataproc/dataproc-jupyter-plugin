@@ -179,6 +179,12 @@ const CreateNotebookScheduler = ({
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setScheduleMode((event.target as HTMLInputElement).value);
+    if (
+      (event.target as HTMLInputElement).value === 'runSchedule' &&
+      scheduleValue === ''
+    ) {
+      setScheduleValue('30 17 * * 1-5');
+    }
   };
 
   const handleClusterSelected = (data: string | null) => {
