@@ -203,7 +203,8 @@ export class SchedulerService {
     payload: IPayload,
     app: JupyterLab,
     setCreateCompleted: (value: boolean) => void,
-    setCreatingScheduler: (value: boolean) => void
+    setCreatingScheduler: (value: boolean) => void,
+    editMode: boolean
   ) => {
     setCreatingScheduler(true);
     try {
@@ -215,10 +216,17 @@ export class SchedulerService {
         toast.error(data.error, toastifyCustomStyle);
         setCreatingScheduler(false);
       } else {
-        toast.success(
-          `Job scheduler successfully created`,
-          toastifyCustomStyle
-        );
+        if (editMode) {
+          toast.success(
+            `Job scheduler successfully updated`,
+            toastifyCustomStyle
+          );
+        } else {
+          toast.success(
+            `Job scheduler successfully created`,
+            toastifyCustomStyle
+          );
+        }
         setCreatingScheduler(false);
         setCreateCompleted(true);
       }
@@ -355,7 +363,7 @@ export class SchedulerService {
         } else {
           setTimeZoneSelected(formattedResponse.time_zone);
         }
-        setEditMode(true)
+        setEditMode(true);
         setCreateCompleted(false);
         if (formattedResponse.schedule_value === '@once') {
           setScheduleMode('runNow');

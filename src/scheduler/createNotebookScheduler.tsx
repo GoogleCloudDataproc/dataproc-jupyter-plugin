@@ -281,7 +281,8 @@ const CreateNotebookScheduler = ({
       payload,
       app,
       setCreateCompleted,
-      setCreatingScheduler
+      setCreatingScheduler,
+      editMode
     );
     setEditMode(false);
   };
