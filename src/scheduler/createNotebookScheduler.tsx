@@ -97,7 +97,9 @@ const CreateNotebookScheduler = ({
 
   const [scheduleMode, setScheduleMode] = useState('runNow');
   const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
-  const [timeZoneSelected, setTimeZoneSelected] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [timeZoneSelected, setTimeZoneSelected] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
 
   const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
 
@@ -367,7 +369,7 @@ const CreateNotebookScheduler = ({
       setJobNameUniqueValidation(isUnique);
     }
   }, [dagList, jobNameSelected, composerSelected]);
-  
+
   useEffect(() => {
     if (context !== '') {
       getKernelDetail();
@@ -418,9 +420,15 @@ const CreateNotebookScheduler = ({
                 className="icon-white logo-alignment-style"
               />
             </div>
-            <div className="create-job-scheduler-title">
-              Create A Scheduled Job
-            </div>
+            {context === '' ? (
+              <div className="create-job-scheduler-title">
+                Update A Scheduled Job
+              </div>
+            ) : (
+              <div className="create-job-scheduler-title">
+                Create A Scheduled Job
+              </div>
+            )}
           </div>
           <div className="submit-job-container">
             <div className="create-scheduler-form-element">
@@ -761,7 +769,15 @@ const CreateNotebookScheduler = ({
                 }
                 aria-label="submit Batch"
               >
-                <div>{creatingScheduler ? 'CREATING' : 'CREATE'}</div>
+                <div>
+                  {context === ''
+                    ? creatingScheduler
+                      ? 'UPDATING'
+                      : 'UPDATE'
+                    : creatingScheduler
+                    ? 'CREATING'
+                    : 'CREATE'}
+                </div>
               </div>
               <div
                 className="job-cancel-button-style"
