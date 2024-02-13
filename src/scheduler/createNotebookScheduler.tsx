@@ -796,9 +796,13 @@ const CreateNotebookScheduler = ({
                 </div>
               </div>
               <div
-                className="job-cancel-button-style"
+                className={
+                  creatingScheduler
+                    ? 'submit-button-disable-style'
+                    : 'job-cancel-button-style'
+                }
                 aria-label="cancel Batch"
-                onClick={handleCancel}
+                onClick={!creatingScheduler ? handleCancel : undefined}
               >
                 <div>CANCEL</div>
               </div>
