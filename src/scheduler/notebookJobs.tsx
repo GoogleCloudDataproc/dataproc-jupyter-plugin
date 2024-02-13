@@ -48,7 +48,8 @@ const NotebookJobComponent = ({
   setEmailOnSuccess,
   setEmailList,
   setStopCluster,
-  setTimeZoneSelected
+  setTimeZoneSelected,
+  setEditMode
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
@@ -77,6 +78,7 @@ const NotebookJobComponent = ({
   setEmailList?: (value: string[]) => void;
   setStopCluster?: (value: boolean) => void;
   setTimeZoneSelected?: (value: string) => void;
+  setEditMode?: (value: boolean) => void;
 }): React.JSX.Element => {
   const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   const [composerName, setComposerName] = useState('');
@@ -135,6 +137,7 @@ const NotebookJobComponent = ({
               setEmailList={setEmailList}
               setStopCluster={setStopCluster}
               setTimeZoneSelected={setTimeZoneSelected}
+              setEditMode={setEditMode}
             />
           </div>
         </div>

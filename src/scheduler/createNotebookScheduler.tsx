@@ -41,7 +41,7 @@ import NotebookJobComponent from './notebookJobs';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
-import EditIcon from '../../style/icons/edit_icon_disable.svg';
+// import EditIcon from '../../style/icons/edit_icon_disable.svg';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -52,10 +52,10 @@ const iconError = new LabIcon({
   name: 'launcher:error-icon',
   svgstr: errorIcon
 });
-const iconEdit = new LabIcon({
-  name: 'launcher:edit-disable-icon',
-  svgstr: EditIcon
-});
+// const iconEdit = new LabIcon({
+//   name: 'launcher:edit-disable-icon',
+//   svgstr: EditIcon
+// });
 
 const CreateNotebookScheduler = ({
   themeManager,
@@ -113,6 +113,7 @@ const CreateNotebookScheduler = ({
   const [dagList, setDagList] = useState<any[]>([]);
   const [bucketName, setBucketName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
 
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
@@ -282,6 +283,7 @@ const CreateNotebookScheduler = ({
       setCreateCompleted,
       setCreatingScheduler
     );
+    setEditMode(false);
   };
 
   const handleJobNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -302,9 +304,9 @@ const CreateNotebookScheduler = ({
     return (
       creatingScheduler ||
       jobNameSelected === '' ||
-      !jobNameValidation ||
-      jobNameSpecialValidation ||
-      !jobNameUniqueValidation ||
+      (!jobNameValidation && !editMode) ||
+      (jobNameSpecialValidation && !editMode) ||
+      (!jobNameUniqueValidation && !editMode) ||
       inputFileSelected === '' ||
       composerSelected === '' ||
       (selectedMode === 'cluster' && clusterSelected === '') ||
@@ -315,6 +317,7 @@ const CreateNotebookScheduler = ({
   };
 
   const handleCancel = async () => {
+    setCreateCompleted(false);
     app.shell.activeWidget?.close();
   };
 
@@ -350,12 +353,12 @@ const CreateNotebookScheduler = ({
     }
   };
 
-  const handleEditNotebookData = async () => {
-    let filePath = inputFileSelected.replace('gs://', 'gs:');
-    app.commands.execute('docmanager:open', {
-      path: filePath
-    });
-  };
+  // const handleEditNotebookData = async () => {
+  //   let filePath = inputFileSelected.replace('gs://', 'gs:');
+  //   app.commands.execute('docmanager:open', {
+  //     path: filePath
+  //   });
+  // };
 
   useEffect(() => {
     listComposersAPI();
@@ -412,6 +415,7 @@ const CreateNotebookScheduler = ({
           setEmailList={setEmailList}
           setStopCluster={setStopCluster}
           setTimeZoneSelected={setTimeZoneSelected}
+          setEditMode={setEditMode}
         />
       ) : (
         <div>
@@ -426,7 +430,7 @@ const CreateNotebookScheduler = ({
                 className="icon-white logo-alignment-style"
               />
             </div>
-            {context === '' ? (
+            {editMode ? (
               <div className="create-job-scheduler-title">
                 Update A Scheduled Job
               </div>
@@ -447,13 +451,13 @@ const CreateNotebookScheduler = ({
                 Label="Job name*"
               />
             </div>
-            {!jobNameValidation && (
+            {!jobNameValidation && !editMode && (
               <div className="error-key-parent">
                 <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">Name is required</div>
               </div>
             )}
-            {jobNameSpecialValidation && jobNameValidation && (
+            {jobNameSpecialValidation && jobNameValidation && !editMode && (
               <div className="error-key-parent">
                 <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">
@@ -462,7 +466,7 @@ const CreateNotebookScheduler = ({
                 </div>
               </div>
             )}
-            {!jobNameUniqueValidation && (
+            {!jobNameUniqueValidation && !editMode && (
               <div className="error-key-parent">
                 <iconError.react tag="div" className="logo-alignment-style" />
                 <div className="error-key-missing">
@@ -478,7 +482,7 @@ const CreateNotebookScheduler = ({
                 Label="Input file*"
                 disabled={true}
               />
-              {inputFileSelected.includes('gs://') && (
+              {/* {inputFileSelected.includes('gs://') && (
                 <div
                   role="button"
                   className="edit-notebook-style"
@@ -490,7 +494,7 @@ const CreateNotebookScheduler = ({
                     className="icon-white logo-alignment-style"
                   />
                 </div>
-              )}
+              )} */}
             </div>
             <div className="create-scheduler-form-element">
               <Autocomplete
@@ -776,7 +780,7 @@ const CreateNotebookScheduler = ({
                 aria-label="submit Batch"
               >
                 <div>
-                  {context === ''
+                  {editMode
                     ? creatingScheduler
                       ? 'UPDATING'
                       : 'UPDATE'

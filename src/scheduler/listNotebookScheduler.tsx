@@ -88,7 +88,8 @@ function listNotebookScheduler({
   setEmailOnSuccess,
   setEmailList,
   setStopCluster,
-  setTimeZoneSelected
+  setTimeZoneSelected,
+  setEditMode
 }: {
   app: JupyterFrontEnd;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
@@ -118,6 +119,7 @@ function listNotebookScheduler({
   setEmailList?: (value: string[]) => void;
   setStopCluster?: (value: boolean) => void;
   setTimeZoneSelected?: (value: string) => void;
+  setEditMode?: (value: boolean) => void;
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
@@ -230,7 +232,8 @@ function listNotebookScheduler({
         setEmailOnSuccess,
         setEmailList,
         setStopCluster,
-        setTimeZoneSelected
+        setTimeZoneSelected,
+        setEditMode
       );
     }
   };
@@ -422,6 +425,7 @@ function listNotebookScheduler({
       app.commands.execute('docmanager:open', {
         path: filePath
       });
+      setInputNotebookFilePath('')
     }
   }, [inputNotebookFilePath]);
 

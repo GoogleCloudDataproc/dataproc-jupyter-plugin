@@ -276,7 +276,8 @@ export class SchedulerService {
     setEmailOnSuccess?: (value: boolean) => void,
     setEmailList?: (value: string[]) => void,
     setStopCluster?: (value: boolean) => void,
-    setTimeZoneSelected?: (value: string) => void
+    setTimeZoneSelected?: (value: string) => void,
+    setEditMode?: (value: boolean) => void
   ) => {
     setEditDagLoading(dagId);
     try {
@@ -306,6 +307,7 @@ export class SchedulerService {
         setEmailList &&
         setStopCluster &&
         setTimeZoneSelected &&
+        setEditMode &&
         dagId !== null
       ) {
         setJobNameSelected(dagId);
@@ -353,7 +355,7 @@ export class SchedulerService {
         } else {
           setTimeZoneSelected(formattedResponse.time_zone);
         }
-
+        setEditMode(true)
         setCreateCompleted(false);
         if (formattedResponse.schedule_value === '@once') {
           setScheduleMode('runNow');
