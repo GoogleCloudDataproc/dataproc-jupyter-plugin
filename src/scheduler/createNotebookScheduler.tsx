@@ -449,6 +449,7 @@ const CreateNotebookScheduler = ({
                 type="text"
                 placeholder=""
                 Label="Job name*"
+                disabled={editMode}
               />
             </div>
             {!jobNameValidation && !editMode && (
@@ -505,6 +506,7 @@ const CreateNotebookScheduler = ({
                 renderInput={params => (
                   <TextField {...params} label="Environment*" />
                 )}
+                disabled={editMode}
               />
             </div>
             <div className="create-scheduler-label">Output formats</div>
