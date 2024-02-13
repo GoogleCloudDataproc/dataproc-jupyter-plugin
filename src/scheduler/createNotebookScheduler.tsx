@@ -317,8 +317,12 @@ const CreateNotebookScheduler = ({
   };
 
   const handleCancel = async () => {
-    setCreateCompleted(false);
-    app.shell.activeWidget?.close();
+    if (!editMode) {
+      setCreateCompleted(false);
+      app.shell.activeWidget?.close();
+    } else {
+      setCreateCompleted(true);
+    }
   };
 
   const getKernelDetail = async () => {
