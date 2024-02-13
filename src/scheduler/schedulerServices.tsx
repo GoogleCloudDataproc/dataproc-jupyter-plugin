@@ -348,7 +348,12 @@ export class SchedulerService {
         formattedResponse.stop_cluster.toLowerCase() === 'true'
           ? setStopCluster(true)
           : setStopCluster(false);
-        setTimeZoneSelected(formattedResponse.time_zone);
+        if (formattedResponse.time_zone === '') {
+          setTimeZoneSelected(Intl.DateTimeFormat().resolvedOptions().timeZone);
+        } else {
+          setTimeZoneSelected(formattedResponse.time_zone);
+        }
+
         setCreateCompleted(false);
         if (formattedResponse.schedule_value === '@once') {
           setScheduleMode('runNow');
