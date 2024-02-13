@@ -28,7 +28,7 @@ import playIcon from '../../style/icons/play_icon.svg';
 import pauseIcon from '../../style/icons/pause_icon.svg';
 import downloadIcon from '../../style/icons/download_icon.svg';
 import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
-import EditIcon from '../../style/icons/edit_icon.svg';
+import EditNotebookIcon from '../../style/icons/edit_notebook_icon.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
@@ -56,8 +56,8 @@ const iconEditDag = new LabIcon({
   svgstr: EditIconDisable
 });
 const iconEditNotebook = new LabIcon({
-  name: 'launcher:edit-icon',
-  svgstr: EditIcon
+  name: 'launcher:edit-notebook-icon',
+  svgstr: EditNotebookIcon
 });
 
 function listNotebookScheduler({
