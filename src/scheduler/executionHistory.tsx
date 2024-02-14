@@ -165,7 +165,7 @@ const ExecutionHistory = ({
             />
           </div>
           <div className="create-job-scheduler-title">
-            {dagId} - Execution History
+            Execution History: {dagId} 
           </div>
         </div>
         <div className="execution-history-main-wrapper">
