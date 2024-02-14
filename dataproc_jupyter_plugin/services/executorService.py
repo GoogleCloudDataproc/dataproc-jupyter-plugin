@@ -157,6 +157,8 @@ class ExecutorService():
             job_dict = job.dict()
             phs_path = job_dict.get("serverless_name", {}).get("environmentConfig", {}).get("peripheralsConfig", {}).get("sparkHistoryServerConfig", {}).get("dataprocCluster", "")
             serverless_name = job_dict.get("serverless_name", {}).get("jupyterSession", {}).get("displayName", "")
+            custom_container = job_dict.get("serverless_name", {}).get("runtimeConfig", {}).get("containerImage", "")
+            metastore_service = job_dict.get("serverless_name", {}).get("environmentConfig", {}).get("peripheralsConfig", {}).get("metastoreService", {})
             if not job.input_filename.startswith("gs://"):
                 input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
             else:
@@ -164,7 +166,8 @@ class ExecutorService():
             content = template.render(job, inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py", \
                                     gcpProjectId=gcp_project_id,gcpRegion=gcp_region_id,input_notebook=input_notebook,\
                                     output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_{job.dag_id}.ipynb",owner = owner,\
-                                    schedule_interval=schedule_interval,start_date = start_date,parameters=parameters,phs_path = phs_path,serverless_name=serverless_name, time_zone= time_zone)
+                                    schedule_interval=schedule_interval,start_date = start_date,parameters=parameters,phs_path = phs_path,serverless_name=serverless_name, time_zone= time_zone,\
+                                    custom_container = custom_container,metastore_service=metastore_service)
 
         print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:

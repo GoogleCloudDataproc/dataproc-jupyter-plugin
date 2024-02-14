@@ -29,6 +29,7 @@ default_args = {
     'email_on_retry': '{{email_delay}}',      
     'email_on_success':'{{email_success}}'
 }
+'{{custom_container}}'' 
 time_zone = '{{time_zone}}'
 serverless_name = '{{serverless_name}}'
 input_notebook = '{{input_notebook}}'
@@ -63,12 +64,21 @@ create_batch = DataprocCreateBatchOperator(
             },
             "environment_config": {
                 "peripherals_config": {
+                    {% if metastore_service %}
+                    "metastore_service": '{{metastore_service}}',
+                    {% endif %}
                     "spark_history_server_config": {
                         "dataproc_cluster": '{{phs_path}}',
                     },
                 },
             },
+            {% if custom_container %}
+            "runtime_config": {
+                "container_image": '{{custom_container}}'
+            },
+            {% endif %}
         },
         batch_id=str(uuid.uuid4()),
         dag = dag,
     )
+
