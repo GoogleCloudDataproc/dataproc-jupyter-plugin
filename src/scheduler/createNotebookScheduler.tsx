@@ -114,6 +114,7 @@ const CreateNotebookScheduler = ({
   const [bucketName, setBucketName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [dagListCall, setDagListCall] = useState(false)
 
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
@@ -143,6 +144,7 @@ const CreateNotebookScheduler = ({
     }
   };
   const getDaglist = async (composer: string) => {
+    setDagListCall(true)
     try {
       console.log(bucketName, isLoading);
       await SchedulerService.listDagInfoAPIService(
@@ -151,8 +153,10 @@ const CreateNotebookScheduler = ({
         setBucketName,
         composer
       );
+      setDagListCall(false)
       return true;
     } catch (error) {
+      setDagListCall(false)
       console.error('Error checking job name uniqueness:', error);
       return false;
     }
@@ -303,6 +307,7 @@ const CreateNotebookScheduler = ({
 
   const isSaveDisabled = () => {
     return (
+      dagListCall ||
       creatingScheduler ||
       jobNameSelected === '' ||
       (!jobNameValidation && !editMode) ||

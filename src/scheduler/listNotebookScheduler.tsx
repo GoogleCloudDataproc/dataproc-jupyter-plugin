@@ -325,18 +325,6 @@ function listNotebookScheduler({
         <div
           role="button"
           className="icon-buttons-style"
-          title="Delete"
-          onClick={() => handleDeletePopUp(data.jobid)}
-        >
-          <iconDelete.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
-        </div>
-
-        <div
-          role="button"
-          className="icon-buttons-style"
           title="Download Notebook"
           data-jobid={data.jobid}
           onClick={e => handleDownloadScheduler(e)}
@@ -394,6 +382,17 @@ function listNotebookScheduler({
             />
           </div>
         )}
+        <div
+          role="button"
+          className="icon-buttons-style"
+          title="Delete"
+          onClick={() => handleDeletePopUp(data.jobid)}
+        >
+          <iconDelete.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
       </div>
     );
   };
