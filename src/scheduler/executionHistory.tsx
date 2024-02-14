@@ -173,6 +173,7 @@ const ExecutionHistory = ({
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DateCalendar
                 // value={selectedDate}
+                minDate={dayjs().year(2024).startOf('year')}
                 maxDate={dayjs(currentDate)}
                 referenceDate={dayjs(currentDate)}
                 onChange={newValue => handleDateSelection(newValue)}
