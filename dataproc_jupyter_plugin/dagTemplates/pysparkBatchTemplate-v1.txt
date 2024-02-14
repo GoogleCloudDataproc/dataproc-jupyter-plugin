@@ -27,7 +27,7 @@ default_args = {
     'email': {{email}}, 
     'email_on_failure': '{{email_failure}}',     
     'email_on_retry': '{{email_delay}}',      
-    'email_on_success':'{{email_success}}'
+    'email_on_success':'{{email_success}}',
     'catchup': False
 }
 '{{custom_container}}'' 
