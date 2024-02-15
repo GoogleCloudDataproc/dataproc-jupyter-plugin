@@ -27,12 +27,13 @@ import time
 
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
-from dataproc_jupyter_plugin.contollers.clusterController import ClusterController
-from dataproc_jupyter_plugin.contollers.composerController import ComposerController
-from dataproc_jupyter_plugin.contollers.dagContoller import DagController, Delete, Download, Update
+from dataproc_jupyter_plugin.contollers.clusterController import  ClusterListController
+from dataproc_jupyter_plugin.contollers.composerController import ComposerListController
+from dataproc_jupyter_plugin.contollers.dagController import DagDeleteController, DagDownloadController, DagListController, DagUpdateController
 from dataproc_jupyter_plugin.contollers.dagRunController import DagRunController, DagRunTaskController, DagRunTaskLogsController
 from dataproc_jupyter_plugin.contollers.editDagController import EditDagController
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
+from dataproc_jupyter_plugin.contollers.importErrorController import ImportErrorController
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
 
 
@@ -261,8 +262,8 @@ def setup_handlers(web_app):
     handlers = [(route_pattern, LogHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "composer")
-    handlers = [(route_pattern, ComposerController)]
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "composerList")
+    handlers = [(route_pattern, ComposerListController)]
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "dagRun")
@@ -276,7 +277,7 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "clusterList")
-    handlers = [(route_pattern, ClusterController)]
+    handlers = [(route_pattern, ClusterListController)]
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern = url_path_join(base_url, "dataproc-plugin", "runtimeList")
@@ -288,14 +289,14 @@ def setup_handlers(web_app):
     web_app.add_handlers(host_pattern, handlers)
 
     route_pattern_dag = url_path_join(base_url, "dataproc-plugin", "dagList")
-    route_pattern_download = url_path_join(base_url, "dataproc-plugin", "download")
-    route_pattern_delete = url_path_join(base_url, "dataproc-plugin", "delete")
-    route_pattern_patch = url_path_join(base_url, "dataproc-plugin", "update")
+    route_pattern_download = url_path_join(base_url, "dataproc-plugin", "dagDownload")
+    route_pattern_delete = url_path_join(base_url, "dataproc-plugin", "dagDelete")
+    route_pattern_patch = url_path_join(base_url, "dataproc-plugin", "dagUpdate")
     handlers = [
-    (route_pattern_dag, DagController),
-    (route_pattern_download, Download),
-    (route_pattern_delete, Delete),
-    (route_pattern_patch, Update)
+    (route_pattern_dag, DagListController),
+    (route_pattern_download, DagDownloadController),
+    (route_pattern_delete, DagDeleteController),
+    (route_pattern_patch, DagUpdateController)
     ]
     web_app.add_handlers(host_pattern, handlers)
 

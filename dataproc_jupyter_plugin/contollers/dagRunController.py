@@ -15,10 +15,12 @@
 
 import json
 from jupyter_server.base.handlers import APIHandler
+import tornado
 from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.dagRunService import DagRunListService, DagRunTaskListService, DagRunTaskLogsListService
 
 class DagRunController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             dagRun = DagRunListService()
@@ -34,6 +36,7 @@ class DagRunController(APIHandler):
             self.finish ({"error": str(e)})
 
 class DagRunTaskController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             dagRun = DagRunTaskListService()
@@ -48,6 +51,7 @@ class DagRunTaskController(APIHandler):
             self.finish ({"error": str(e)})
 
 class DagRunTaskLogsController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             dagRun = DagRunTaskLogsListService()

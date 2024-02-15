@@ -16,12 +16,14 @@
 import json
 import subprocess
 from jupyter_server.base.handlers import APIHandler
+import tornado
 from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.dagListService import DagListService, DagDeleteService, DagUpdateService
 from dataproc_jupyter_plugin.utils.constants import TAGS
 
 
-class DagController(APIHandler):
+class DagListController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             dag = DagListService()
@@ -34,7 +36,8 @@ class DagController(APIHandler):
             self.finish ({"error": str(e)})
             self.finish ({"error": str(e)})
     
-class Download(APIHandler):
+class DagDownloadController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             composer = self.get_argument("composer")
@@ -52,7 +55,8 @@ class Download(APIHandler):
             self.log.exception(f"Error downloading input notebook: {str(e)}")
             self.finish ({"error": str(e)})
             
-class Delete(APIHandler):
+class DagDeleteController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             dag = DagDeleteService()
@@ -69,7 +73,8 @@ class Delete(APIHandler):
             self.log.exception(f"Error deleting input notebook: {str(e)}")
             self.finish ({"error": str(e)})
 
-class Update(APIHandler):
+class DagUpdateController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             dag = DagUpdateService()

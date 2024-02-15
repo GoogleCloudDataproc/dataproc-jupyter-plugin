@@ -14,12 +14,14 @@
 
 import json
 from jupyter_server.base.handlers import APIHandler
+import tornado
 from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.composerService import ComposerService
 from requests import HTTPError
 
 
-class ComposerController(APIHandler):
+class ComposerListController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         """Returns names of available composer environments"""
         try:

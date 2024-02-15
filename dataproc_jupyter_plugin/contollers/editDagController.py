@@ -14,11 +14,13 @@
 
 import json
 from jupyter_server.base.handlers import APIHandler
+import tornado
 from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.editDagService import DagEditService
 from dataproc_jupyter_plugin.utils.constants import TAGS
 
 class EditDagController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             dag = DagEditService()

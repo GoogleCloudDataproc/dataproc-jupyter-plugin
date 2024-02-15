@@ -169,7 +169,7 @@ export class SchedulerService {
     setIsLoading?: (value: boolean) => void
   ) => {
     try {
-      const formattedResponse: any = await requestAPI('composer');
+      const formattedResponse: any = await requestAPI('composerList');
       if (formattedResponse.length === 0) {
         // Handle the case where the list is empty
         toast.error(
@@ -549,7 +549,7 @@ export class SchedulerService {
     bucketName: string
   ) => {
     try {
-      const serviceURL = `download?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
+      const serviceURL = `dagDownload?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
       const formattedResponse: any = await requestAPI(serviceURL);
       if (formattedResponse.status === 0) {
         toast.success(`${jobid} downloaded successfully`, toastifyCustomStyle);
@@ -569,7 +569,7 @@ export class SchedulerService {
     setBucketName: (value: string) => void
   ) => {
     try {
-      const serviceURL = `delete?composer=${composerSelected}&dag_id=${dag_id}`;
+      const serviceURL = `dagDelete?composer=${composerSelected}&dag_id=${dag_id}`;
       const deleteResponse: IUpdateSchedulerAPIResponse = await requestAPI(
         serviceURL
       );
@@ -600,7 +600,7 @@ export class SchedulerService {
     setBucketName: (value: string) => void
   ) => {
     try {
-      const serviceURL = `update?composer=${composerSelected}&dag_id=${dag_id}&status=${is_status_paused}`;
+      const serviceURL = `dagUpdate?composer=${composerSelected}&dag_id=${dag_id}&status=${is_status_paused}`;
       const formattedResponse: IUpdateSchedulerAPIResponse = await requestAPI(
         serviceURL
       );

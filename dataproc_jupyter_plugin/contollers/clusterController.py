@@ -15,11 +15,13 @@
 
 import json
 from jupyter_server.base.handlers import APIHandler
+import tornado
 from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.clusterListService import ClusterListService
 
 
-class ClusterController(APIHandler):
+class ClusterListController(APIHandler):
+    @tornado.web.authenticated
     def get(self):
         try:
             page_token = self.get_argument("pageToken")
