@@ -293,7 +293,10 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label === 'Config Setup' ||
             newValue.title.label === 'Clusters' ||
             newValue.title.label === 'Serverless' ||
-            newValue.title.label === 'Settings') &&
+            newValue.title.label === 'Settings' ||
+            newValue.title.label === 'Notebook Templates' ||
+            newValue.title.label === 'Scheduled Jobs' ||
+            newValue.title.label === 'Notebook Scheduler') &&
           lastClusterName !== ''
         ) {
           localStorage.setItem('oldNotebookValue', lastClusterName || '');
@@ -308,7 +311,10 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label !== 'Clusters' &&
             newValue.title.label !== 'Serverless' &&
             newValue.title.label !== 'Runtime template' &&
-            newValue.title.label !== 'Settings'
+            newValue.title.label !== 'Settings' &&
+            newValue.title.label !== 'Notebook Templates' &&
+            newValue.title.label !== 'Scheduled Jobs' &&
+            newValue.title.label !== 'Notebook Scheduler'
           ) {
             let oldNotebook = localStorage.getItem('oldNotebookValue');
             localStorage.setItem('notebookValue', oldNotebook || '');
