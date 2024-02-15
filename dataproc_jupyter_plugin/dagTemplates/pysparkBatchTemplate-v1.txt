@@ -30,7 +30,6 @@ default_args = {
     'email_on_success':'{{email_success}}',
     'catchup': False
 }
-'{{custom_container}}'' 
 time_zone = '{{time_zone}}'
 serverless_name = '{{serverless_name}}'
 input_notebook = '{{input_notebook}}'
