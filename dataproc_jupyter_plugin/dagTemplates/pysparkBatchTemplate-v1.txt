@@ -27,8 +27,7 @@ default_args = {
     'email': {{email}}, 
     'email_on_failure': '{{email_failure}}',     
     'email_on_retry': '{{email_delay}}',      
-    'email_on_success':'{{email_success}}',
-    'catchup': False
+    'email_on_success':'{{email_success}}'
 }
 time_zone = '{{time_zone}}'
 serverless_name = '{{serverless_name}}'
@@ -48,7 +47,8 @@ dag = DAG(
     default_args=default_args,
     description='{{name}}',
     tags =['dataproc_jupyter_plugin'],
-    schedule_interval='{{schedule_interval}}'
+    schedule_interval='{{schedule_interval}}',
+    catchup = False
 )
 
 
