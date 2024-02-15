@@ -33,7 +33,6 @@ from dataproc_jupyter_plugin.contollers.dagController import DagDeleteController
 from dataproc_jupyter_plugin.contollers.dagRunController import DagRunController, DagRunTaskController, DagRunTaskLogsController
 from dataproc_jupyter_plugin.contollers.editDagController import EditDagController
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
-from dataproc_jupyter_plugin.contollers.importErrorController import ImportErrorController
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
 
 
