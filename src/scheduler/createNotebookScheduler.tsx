@@ -272,6 +272,7 @@ const CreateNotebookScheduler = ({
       ? setJobNameValidation(true)
       : setJobNameValidation(false);
 
+    //Regex to check job name must contain only letters, numbers, hyphens, and underscores
     const regexp = /^[a-zA-Z0-9-_]+$/;
     event.target.value.search(regexp)
       ? setJobNameSpecialValidation(true)

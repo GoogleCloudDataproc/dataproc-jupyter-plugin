@@ -229,7 +229,6 @@ export class SchedulerService {
         setCreatingScheduler(false);
         setCreateCompleted(true);
       }
-      console.log(data);
     } catch (reason) {
       setCreatingScheduler(false);
       console.error(`Error on POST {dataToSend}.\n${reason}`);
