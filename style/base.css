@@ -15,7 +15,7 @@
 }
 
 /*Changing Icon for category with image add runtime*/
-.f1hgkb35 svg[data-icon='launcher:add-runtime-icon'] {
+.favyox6  svg[data-icon='launcher:add-runtime-icon'], .f1hgkb35 svg[data-icon='launcher:add-runtime-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -25,7 +25,7 @@
 }
 
 /*Changing Icon for category with image pyspark*/
-.f1hgkb35 svg[data-icon='launcher:pyspark-logo-icon'] {
+.favyox6  svg[data-icon='launcher:pyspark-logo-icon'], .f1hgkb35 svg[data-icon='launcher:pyspark-logo-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -35,7 +35,7 @@
 }
 
 /*Changing Icon for category with image cluster*/
-.f1hgkb35 svg[data-icon='launcher:clusters-icon'] {
+.favyox6  svg[data-icon='launcher:clusters-icon'], .f1hgkb35 svg[data-icon='launcher:clusters-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -45,7 +45,7 @@
 }
 
 /*Changing Icon for category with image python*/
-.f1hgkb35 svg[data-icon='launcher:python-logo-icon'] {
+.favyox6  svg[data-icon='launcher:python-logo-icon'], .f1hgkb35 svg[data-icon='launcher:python-logo-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -55,7 +55,7 @@
 }
 
 /*Changing Icon for category with image sparkR*/
-.f1hgkb35 svg[data-icon='launcher:sparkr-logo-icon'] {
+.favyox6  svg[data-icon='launcher:sparkr-logo-icon'], .f1hgkb35 svg[data-icon='launcher:sparkr-logo-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -65,7 +65,7 @@
 }
 
 /*Changing Icon for category with image scala*/
-.f1hgkb35 svg[data-icon='launcher:scala-logo-icon'] {
+.favyox6  svg[data-icon='launcher:scala-logo-icon'], .f1hgkb35 svg[data-icon='launcher:scala-logo-icon'] {
   content-visibility: hidden;
   display: block;
   height: 32px;
@@ -185,6 +185,12 @@ body[data-jp-theme-name='JupyterLab Dark'] .filter-section-part {
 }
 body[data-jp-theme-name='JupyterLab Dark'] .schema-table th {
   background-color: var(--jp-layout-color2);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .accordion-row-parent-header{
+  background: var(--jp-border-color3);
+}
+body[data-jp-theme-name='JupyterLab Dark'] .logo-alignment-style-accordion path{
+  fill: var(--jp-ui-font-color1);
 }
 
 body[data-jp-theme-name='JupyterLab Dark'] .job-label-style {

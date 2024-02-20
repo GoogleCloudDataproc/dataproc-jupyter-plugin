@@ -27,22 +27,26 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Cluster } from './cluster/cluster';
 import { Batches } from './batches/batches';
-import { NotebookTemplates } from './notebookTemplates/notebookTemplates'
+import { NotebookTemplates } from './notebookTemplates/notebookTemplates';
 import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
 import notebookTemplateIcon from '../style/icons/notebook_template_icon.svg';
+import scheduledNotebooksIcon from '../style/icons/scheduled_notebooks_icon.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
-import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
+import { Kernel, KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
-import { IFileBrowserFactory, IDefaultFileBrowser } from '@jupyterlab/filebrowser';
+import {
+  IFileBrowserFactory,
+  IDefaultFileBrowser
+} from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
@@ -51,6 +55,7 @@ import { IDocumentManager } from '@jupyterlab/docmanager';
 import { GCSDrive } from './gcs/gcsDrive';
 import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
 import { DataprocLoggingService } from './utils/loggingService';
+import { NotebookScheduler } from './scheduler/notebookScheduler';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -76,7 +81,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   activate: async (
     app: JupyterFrontEnd,
     factory: IFileBrowserFactory,
-    defaultFileBrowser:IDefaultFileBrowser,
+    defaultFileBrowser: IDefaultFileBrowser,
     launcher: ILauncher,
     mainMenu: IMainMenu,
     labShell: ILabShell,
@@ -99,6 +104,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     const iconServerless = new LabIcon({
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
+    });
+    const iconScheduledNotebooks = new LabIcon({
+      name: 'launcher:scheduled-notebooks-icon',
+      svgstr: scheduledNotebooksIcon
     });
     const iconNotebookTemplate = new LabIcon({
       name: 'launcher:notebook-template-icon',
@@ -148,7 +157,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     };
     themeManager.themeChanged.connect(onThemeChanged);
-    
+
     /**
      * Helper method for when the preview flag gets updated.  This reads the
      * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
@@ -259,6 +268,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       } else {
         document.title = title.label;
       }
+      console.log(Kernel);
     };
     labShell.currentChanged.connect(async (_, change) => {
       await KernelAPI.listRunning();
@@ -283,7 +293,10 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label === 'Config Setup' ||
             newValue.title.label === 'Clusters' ||
             newValue.title.label === 'Serverless' ||
-            newValue.title.label === 'Settings') &&
+            newValue.title.label === 'Settings' ||
+            newValue.title.label === 'Notebook Templates' ||
+            newValue.title.label === 'Scheduled Jobs' ||
+            newValue.title.label === 'Notebook Scheduler') &&
           lastClusterName !== ''
         ) {
           localStorage.setItem('oldNotebookValue', lastClusterName || '');
@@ -298,7 +311,10 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label !== 'Clusters' &&
             newValue.title.label !== 'Serverless' &&
             newValue.title.label !== 'Runtime template' &&
-            newValue.title.label !== 'Settings'
+            newValue.title.label !== 'Settings' &&
+            newValue.title.label !== 'Notebook Templates' &&
+            newValue.title.label !== 'Scheduled Jobs' &&
+            newValue.title.label !== 'Notebook Scheduler'
           ) {
             let oldNotebook = localStorage.getItem('oldNotebookValue');
             localStorage.setItem('notebookValue', oldNotebook || '');
@@ -361,6 +377,24 @@ const extension: JupyterFrontEndPlugin<void> = {
         app.shell.add(widget, 'main');
       }
     });
+    const createNotebookJobsComponentCommand = 'create-notebook-jobs-component';
+    commands.addCommand(createNotebookJobsComponentCommand, {
+      caption: 'Create a new Serverless Component',
+      label: 'Scheduled Jobs',
+      // @ts-ignore jupyter lab icon command issue
+      icon: args => (args['isPalette'] ? null : iconScheduledNotebooks),
+      execute: () => {
+        const content = new NotebookScheduler(
+          app as JupyterLab,
+          themeManager,
+          ''
+        );
+        const widget = new MainAreaWidget<NotebookScheduler>({ content });
+        widget.title.label = 'Scheduled Jobs';
+        widget.title.icon = iconScheduledNotebooks;
+        app.shell.add(widget, 'main');
+      }
+    });
 
     const createTemplateComponentCommand = 'create-template-component';
     commands.addCommand(createTemplateComponentCommand, {
@@ -369,7 +403,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconNotebookTemplate),
       execute: () => {
-        const content = new NotebookTemplates(app as JupyterLab, themeManager, defaultFileBrowser as IDefaultFileBrowser);
+        const content = new NotebookTemplates(
+          app as JupyterLab,
+          themeManager,
+          defaultFileBrowser as IDefaultFileBrowser
+        );
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'Notebook Templates';
         widget.title.icon = iconNotebookTemplate;
@@ -493,6 +531,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         command: createTemplateComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 3
+      });
+      launcher.add({
+        command: createNotebookJobsComponentCommand,
+        category: TITLE_LAUNCHER_CATEGORY,
+        rank: 4
       });
     }
 
