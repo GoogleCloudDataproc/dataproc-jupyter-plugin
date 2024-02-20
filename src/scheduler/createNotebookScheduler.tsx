@@ -41,7 +41,6 @@ import NotebookJobComponent from './notebookJobs';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
-// import EditIcon from '../../style/icons/edit_icon_disable.svg';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -52,10 +51,6 @@ const iconError = new LabIcon({
   name: 'launcher:error-icon',
   svgstr: errorIcon
 });
-// const iconEdit = new LabIcon({
-//   name: 'launcher:edit-disable-icon',
-//   svgstr: EditIcon
-// });
 
 const CreateNotebookScheduler = ({
   themeManager,
@@ -70,8 +65,6 @@ const CreateNotebookScheduler = ({
   const [inputFileSelected, setInputFileSelected] = useState('');
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelected, setComposerSelected] = useState('');
-  // const [outputNotebook, setOutputNotebook] = useState(true);
-  // const [outputHtml, setOutputHtml] = useState(true);
 
   const [parameterDetail, setParameterDetail] = useState(['']);
   const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
@@ -114,7 +107,7 @@ const CreateNotebookScheduler = ({
   const [bucketName, setBucketName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [dagListCall, setDagListCall] = useState(false)
+  const [dagListCall, setDagListCall] = useState(false);
 
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
@@ -144,7 +137,7 @@ const CreateNotebookScheduler = ({
     }
   };
   const getDaglist = async (composer: string) => {
-    setDagListCall(true)
+    setDagListCall(true);
     try {
       console.log(bucketName, isLoading);
       await SchedulerService.listDagInfoAPIService(
@@ -153,26 +146,14 @@ const CreateNotebookScheduler = ({
         setBucketName,
         composer
       );
-      setDagListCall(false)
+      setDagListCall(false);
       return true;
     } catch (error) {
-      setDagListCall(false)
+      setDagListCall(false);
       console.error('Error checking job name uniqueness:', error);
       return false;
     }
   };
-
-  // const handleOutputNotebookChange = (
-  //   event: React.ChangeEvent<HTMLInputElement>
-  // ) => {
-  //   setOutputNotebook(event.target.checked);
-  // };
-
-  // const handleOutputHtmlChange = (
-  //   event: React.ChangeEvent<HTMLInputElement>
-  // ) => {
-  //   setOutputHtml(event.target.checked);
-  // };
 
   const handleSelectedModeChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -251,12 +232,7 @@ const CreateNotebookScheduler = ({
 
   const handleCreateJobScheduler = async () => {
     let outputFormats = [];
-    // if (outputNotebook) {
     outputFormats.push('ipynb');
-    // }
-    // if (outputHtml) {
-    //   outputFormats.push('html');
-    // }
 
     let randomDagId = uuidv4();
 
@@ -362,13 +338,6 @@ const CreateNotebookScheduler = ({
       }
     }
   };
-
-  // const handleEditNotebookData = async () => {
-  //   let filePath = inputFileSelected.replace('gs://', 'gs:');
-  //   app.commands.execute('docmanager:open', {
-  //     path: filePath
-  //   });
-  // };
 
   useEffect(() => {
     listComposersAPI();
@@ -493,19 +462,6 @@ const CreateNotebookScheduler = ({
                 Label="Input file*"
                 disabled={true}
               />
-              {/* {inputFileSelected.includes('gs://') && (
-                <div
-                  role="button"
-                  className="edit-notebook-style"
-                  title="Edit Notebook"
-                  onClick={handleEditNotebookData}
-                >
-                  <iconEdit.react
-                    tag="div"
-                    className="icon-white logo-alignment-style"
-                  />
-                </div>
-              )} */}
             </div>
             <div className="create-scheduler-form-element">
               <Autocomplete
@@ -529,7 +485,6 @@ const CreateNotebookScheduler = ({
                       readOnly
                       checked={true}
                       defaultChecked={true}
-                      // onChange={handleOutputNotebookChange}
                     />
                   }
                   className="create-scheduler-label-style"
@@ -537,17 +492,6 @@ const CreateNotebookScheduler = ({
                     <Typography sx={{ fontSize: 13 }}>Notebook</Typography>
                   }
                 />
-                {/* <FormControlLabel
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={outputHtml}
-                      onChange={handleOutputHtmlChange}
-                    />
-                  }
-                  className="create-scheduler-label-style"
-                  label={<Typography sx={{ fontSize: 13 }}>HTML</Typography>}
-                /> */}
               </FormGroup>
             </div>
             <div className="create-scheduler-label">Parameters</div>

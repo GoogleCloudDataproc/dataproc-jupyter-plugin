@@ -55,15 +55,11 @@ const ExecutionHistory = ({
 
   const handleMonthChange = () => {
     setDagRunId('');
-    // setStartDate('');
-    // setEndDate('');
     setSelectedDate(null);
   };
 
   const handleDateSelection = (selectedValue: any) => {
     setDagRunId('');
-    // setStartDate('');
-    // setEndDate('');
     setSelectedDate(selectedValue);
   };
 
@@ -134,7 +130,6 @@ const ExecutionHistory = ({
           color:
             isGreenExecution ||
             isRedExecution ||
-            // isSelectedExecution ||
             isOrangeExecution ||
             isGreyExecution ||
             isBlueExecution ||
@@ -165,14 +160,13 @@ const ExecutionHistory = ({
             />
           </div>
           <div className="create-job-scheduler-title">
-            Execution History: {dagId} 
+            Execution History: {dagId}
           </div>
         </div>
         <div className="execution-history-main-wrapper">
           <div className="execution-history-left-wrapper">
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DateCalendar
-                // value={selectedDate}
                 minDate={dayjs().year(2024).startOf('year')}
                 maxDate={dayjs(currentDate)}
                 referenceDate={dayjs(currentDate)}

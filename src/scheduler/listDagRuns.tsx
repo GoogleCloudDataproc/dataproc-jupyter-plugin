@@ -90,7 +90,6 @@ const ListDagRuns = ({
   );
 
   const tableDataCondition = (cell: ICellProps) => {
-    //add here
     if (cell.column.Header === 'State') {
       if (cell.value === 'success') {
         return (
@@ -151,7 +150,6 @@ const ListDagRuns = ({
       dagId,
       startDate,
       endDate,
-      // selectedDate,
       setDagRunsList,
       setDagRunId,
       setIsLoading,
