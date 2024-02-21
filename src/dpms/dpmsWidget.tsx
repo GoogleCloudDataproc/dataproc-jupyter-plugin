@@ -669,7 +669,7 @@ fetching database name from fully qualified name structure */
             'Error listing session details',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to fetch session details'), toastifyCustomStyle;
+          toast.error('Failed to fetch session details', toastifyCustomStyle);
         });
     }
   };
