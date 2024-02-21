@@ -16,12 +16,13 @@
 import subprocess
 import requests
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
+from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE
 
 
 
 
 class DagListService():
-    def getAirflowUri(composer_name, credentials,log):
+    def get_airflow_uri(self,composer_name, credentials,log):
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -29,7 +30,7 @@ class DagListService():
         api_endpoint = f"{ENVIRONMENT_API}/projects/{project_id}/locations/{region_id}/environments/{composer_name}"
 
         headers = {
-        'Content-Type': 'application/json',
+        'Content-Type': CONTENT_TYPE,
         'Authorization': f'Bearer {access_token}'
         }
         try:
@@ -43,14 +44,14 @@ class DagListService():
             log.exception(f"Error getting airflow uri: {str(e)}")
             print(f"Error: {e}")
     def list_jobs(self, credentials, composer_name, tags, log):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
+        airflow_uri, bucket = DagListService.get_airflow_uri(self,composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
         
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags?tags={tags}"
             headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': CONTENT_TYPE,
             'Authorization': f'Bearer {access_token}'
             }
             response = requests.get(api_endpoint,headers=headers)
@@ -64,16 +65,14 @@ class DagListService():
 
 class DagDeleteService():
     def delete_job(self, credentials, composer_name, dag_id,log):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
+        airflow_uri, bucket = DagListService.get_airflow_uri(self,composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
-            project_id = credentials['project_id']
-            region_id = credentials['region_id']
         
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}"
             headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': CONTENT_TYPE,
             'Authorization': f'Bearer {access_token}'
             }
             response = requests.delete(api_endpoint,headers=headers)
@@ -92,13 +91,13 @@ class DagDeleteService():
     
 class DagUpdateService():
     def update_job(self, credentials, composer_name, dag_id, status,log):
-        airflow_uri, bucket = DagListService.getAirflowUri(composer_name,credentials,log)
+        airflow_uri, bucket = DagListService.get_airflow_uri(self,composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}"
             headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': CONTENT_TYPE,
             'Authorization': f'Bearer {access_token}'
             }
             if(status == 'true'):
