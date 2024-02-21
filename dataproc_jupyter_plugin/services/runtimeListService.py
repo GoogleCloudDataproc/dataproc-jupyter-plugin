@@ -14,7 +14,7 @@
 
 
 import requests
-from dataproc_jupyter_plugin.utils.constants import dataproc_url
+from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataproc_url
 
 
 class RuntimeListService():
@@ -27,7 +27,7 @@ class RuntimeListService():
             api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/locations/{region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
 
             headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': CONTENT_TYPE,
             'Authorization': f'Bearer {access_token}'
             }
             response = requests.get(api_endpoint,headers=headers)

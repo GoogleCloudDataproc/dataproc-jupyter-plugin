@@ -16,7 +16,7 @@
 from typing import Dict, List
 import requests
 from dataproc_jupyter_plugin.models.models import ComposerEnvironment
-from dataproc_jupyter_plugin.utils.constants import ENVIRONMENT_API
+from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, ENVIRONMENT_API
 
 
 class ComposerService():
@@ -29,7 +29,7 @@ class ComposerService():
         api_endpoint = f"{ENVIRONMENT_API}/projects/{project_id}/locations/{region_id}/environments"
 
         headers = {
-        'Content-Type': 'application/json',
+        'Content-Type': CONTENT_TYPE,
         'Authorization': f'Bearer {access_token}'
         }
         try:
@@ -61,7 +61,7 @@ class ComposerService():
                 print(f"Error: {response.status_code} - {response.text}")
 
 
-        except FileNotFoundError as e:
+        except FileNotFoundError:
                 environments = []
                 return environments
 

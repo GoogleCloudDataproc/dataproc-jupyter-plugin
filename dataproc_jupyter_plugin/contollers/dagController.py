@@ -40,7 +40,6 @@ class DagDownloadController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             bucket_name = self.get_argument("bucket_name")
             cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input_notebooks/*' ~/Downloads"

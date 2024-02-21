@@ -22,6 +22,7 @@ import subprocess
 from jinja2 import Environment,PackageLoader, select_autoescape
 import uuid
 from datetime import datetime, timedelta
+from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, GCS
 import pendulum
 
 unique_id = str(uuid.uuid4().hex)
@@ -29,7 +30,7 @@ job_id = ''
 job_name = ''
 TEMPLATES_FOLDER_PATH = "dagTemplates"
 ROOT_FOLDER = "dataproc_jupyter_plugin"
-def getBucket(runtime_env, credentials,log):
+def get_bucket(runtime_env, credentials,log):
     if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -37,7 +38,7 @@ def getBucket(runtime_env, credentials,log):
     api_endpoint = f"{ENVIRONMENT_API}/projects/{project_id}/locations/{region_id}/environments/{runtime_env}"
 
     headers = {
-        'Content-Type': 'application/json',
+        'Content-Type': CONTENT_TYPE,
         'Authorization': f'Bearer {access_token}'
         }
     try:
@@ -61,15 +62,14 @@ def check_file_exists(bucket, file_path,log):
             return False
         else:
             log.exception(f"Error cheking file existence: {error.decode()}")
-            raise Exception(f"Error checking file existence: {error.decode()}")
+            raise FileNotFoundError(error.decode)
     
 
 class ExecutorService():
     """Default execution manager that executes notebooks"""
     @staticmethod
-    def uploadToGcloud(dag_file,credentials,gcs_dag_bucket,log):
+    def upload_dag_to_gcs(dag_file,credentials,gcs_dag_bucket,log):
         if 'region_id' in credentials:
-            region = credentials['region_id']
             cmd = f"gsutil cp '{dag_file}' gs://{gcs_dag_bucket}/dags/"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, error = process.communicate()
@@ -78,10 +78,10 @@ class ExecutorService():
             os.remove(dag_file)
         if process.returncode != 0:
             log.exception(f"Error uploading dag file to gcs: {error.decode()}")
-            raise Exception(f"Error uploading dag file to gcs: {error.decode()}")
+            raise IOError(error.decode)
     
     @staticmethod
-    def uploadInputFileToGcs(input,gcs_dag_bucket,job_name,log):
+    def upload_input_file_to_gcs(input,gcs_dag_bucket,job_name,log):
         cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         output, error = process.communicate()
@@ -89,10 +89,10 @@ class ExecutorService():
             log.info(f"Input file uploaded to gcs successfully")
         else:
             log.exception(f"Error uploading input file to gcs: {error.decode()}")
-            raise Exception(f"Error uploading input file to gcs: {error.decode()}")
+            raise IOError(error.decode)
 
     @staticmethod
-    def uploadPapermillToGcs(gcs_dag_bucket,log):
+    def upload_papermill_to_gcs(gcs_dag_bucket,log):
         env = Environment(
         loader=PackageLoader('dataproc_jupyter_plugin', 'dagTemplates'),
         autoescape=select_autoescape(['py'])
@@ -107,12 +107,12 @@ class ExecutorService():
             print(process.returncode,error,output)
         else:
             log.exception(f"Error uploading papermill file to gcs: {error.decode()}")
-            raise Exception(f"Error uploading papermill file to gcs: {error.decode()}")
+            raise IOError(error.decode)
 
 
 
     @staticmethod
-    def prepareDag(job,gcs_dag_bucket,dag_file,credentials,log):
+    def prepare_dag(job,gcs_dag_bucket,dag_file,credentials,log):
         log.info(f"Generating dag file")
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
         DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.txt"
@@ -144,7 +144,7 @@ class ExecutorService():
             parameters = ''
         if job.mode_selected == 'cluster':
             template = environment.get_template(DAG_TEMPLATE_CLUSTER_V1)
-            if not job.input_filename.startswith("gs://"):
+            if not job.input_filename.startswith(GCS):
                 input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
             else:
                 input_notebook = job.input_filename
@@ -159,7 +159,7 @@ class ExecutorService():
             serverless_name = job_dict.get("serverless_name", {}).get("jupyterSession", {}).get("displayName", "")
             custom_container = job_dict.get("serverless_name", {}).get("runtimeConfig", {}).get("containerImage", "")
             metastore_service = job_dict.get("serverless_name", {}).get("environmentConfig", {}).get("peripheralsConfig", {}).get("metastoreService", {})
-            if not job.input_filename.startswith("gs://"):
+            if not job.input_filename.startswith(GCS):
                 input_notebook=f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
             else:
                 input_notebook = job.input_filename
@@ -181,18 +181,18 @@ class ExecutorService():
         job_id = job.dag_id
         job_name = job.name
         dag_file = f"dag_{job_name}.py"
-        gcs_dag_bucket = getBucket(job.composer_environment_name, credentials,log)
+        gcs_dag_bucket = get_bucket(job.composer_environment_name, credentials,log)
         remote_file_path = "wrapper_papermill.py"
       
         if check_file_exists(gcs_dag_bucket, remote_file_path,log):
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} exists.")
         else:
-            self.uploadPapermillToGcs(gcs_dag_bucket,log)
+            self.upload_papermill_to_gcs(gcs_dag_bucket,log)
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
-        if not job.input_filename.startswith("gs://"):
-            self.uploadInputFileToGcs(job.input_filename,gcs_dag_bucket,job_name,log)
-        self.prepareDag(job,gcs_dag_bucket,dag_file,credentials,log)
-        self.uploadToGcloud(dag_file,credentials,gcs_dag_bucket,log)
+        if not job.input_filename.startswith(GCS):
+            self.upload_input_file_to_gcs(job.input_filename,gcs_dag_bucket,job_name,log)
+        self.prepare_dag(job,gcs_dag_bucket,dag_file,credentials,log)
+        self.upload_dag_to_gcs(dag_file,credentials,gcs_dag_bucket,log)
 
 
 
