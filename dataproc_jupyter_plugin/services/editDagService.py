@@ -18,12 +18,12 @@ import os
 import re
 import requests
 import urllib
-from dataproc_jupyter_plugin.utils.constants import storage_url
+from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, storage_url
 
 
 
 class DagEditService():
-    def get_dag_file(credentials, dag_id, bucket_name,log):
+    def get_dag_file(self,credentials, dag_id, bucket_name,log):
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
             project_id = credentials['project_id']
@@ -32,7 +32,7 @@ class DagEditService():
             encoded_path = urllib.parse.quote(file_path, safe='')
             api_endpoint =f"{storage_url}b/{bucket_name}/o/{encoded_path}?alt=media"
             headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': CONTENT_TYPE,
             'Authorization': f'Bearer {access_token}',
             'X-Goog-User-Project': project_id
             }
@@ -54,7 +54,7 @@ class DagEditService():
             mode_selected = 'serverless'
             time_zone = ''
             pattern = r"parameters\s*=\s*'''(.*?)'''"
-            file_response = DagEditService.get_dag_file(credentials,dag_id,bucket_name,log)
+            file_response = DagEditService.get_dag_file(self,credentials,dag_id,bucket_name,log)
             content_str = file_response.decode('utf-8')
             file_content = re.sub(r'(?<!\\)\\(?!n)', '', content_str)
 

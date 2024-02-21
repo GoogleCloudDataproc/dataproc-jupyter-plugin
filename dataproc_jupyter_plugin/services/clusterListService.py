@@ -14,7 +14,7 @@
 
 
 import requests
-from dataproc_jupyter_plugin.utils.constants import dataproc_url
+from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataproc_url
 
 
 class ClusterListService():
@@ -27,7 +27,7 @@ class ClusterListService():
             api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
 
             headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': CONTENT_TYPE,
             'Authorization': f'Bearer {access_token}'
             }
             response = requests.get(api_endpoint,headers=headers)
