@@ -271,17 +271,10 @@ function JobComponent({
               : undefined
           }
         >
-          {/* {data.status.state === ClusterStatus.STATUS_RUNNING ? (
-            <iconDelete.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          ) : ( */}
-            <iconDelete.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          {/* )} */}
+          <iconDelete.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
         </div>
       </div>
     );
