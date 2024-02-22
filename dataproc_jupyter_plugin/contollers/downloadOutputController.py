@@ -28,10 +28,10 @@ class downloadOutputController(APIHandler):
         try:
             download_dag = DownloadOutputService()
             bucket_name = self.get_argument("bucket_name")
-            dag_id = self.get_argument("dag_run_id")
+            dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
             credentials = handlers.get_cached_credentials(self.log)
-            download = download_dag.daownload_dag_output(credentials,bucket_name,dag_id,dag_run_id,self.log)
+            download = download_dag.download_dag_output(credentials,bucket_name,dag_id,dag_run_id,self.log)
             self.finish(json.dumps(download))
         except Exception as e:
             self.log.exception(f"Error download output file")

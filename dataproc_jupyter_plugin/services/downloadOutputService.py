@@ -24,7 +24,7 @@ class DownloadOutputService():
             access_token = credentials['access_token']
         try:
             credentials = google.oauth2.credentials.Credentials(access_token)
-            storage_client = storage.Client()
+            storage_client = storage.Client(credentials=credentials)
             bucket = storage_client.bucket(bucket_name)
             blob = bucket.blob(f'dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb')
             file_name = blob.name.split('/')[-1] # Extract the filename from the blob's path
