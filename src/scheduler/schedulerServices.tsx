@@ -391,20 +391,23 @@ export class SchedulerService {
     setOrangeListDates: (value: string[]) => void,
     setRedListDates: (value: string[]) => void,
     setGreenListDates: (value: string[]) => void,
-    setDarkGreenListDates: (value: string[]) => void
+    setDarkGreenListDates: (value: string[]) => void,
+    currentOffsetValue?: number,
+    previousDagRunDataList?: object
   ) => {
+    let offset = currentOffsetValue ?? 0;
     setIsLoading(true);
     let start_date = startDate;
     let end_date = endDate;
 
     try {
       const data: any = await requestAPI(
-        `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${start_date}&end_date=${end_date}`
+        `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${start_date}&end_date=${end_date}&offset=${offset}`
       );
-      let transformDagRunListData = [];
 
-      if (data.dag_runs.length > 0) {
-        transformDagRunListData = data.dag_runs.map((dagRun: any) => {
+      let transformDagRunListDataCurrent = [];
+      if (data && data.dag_runs.length > 0) {
+        transformDagRunListDataCurrent = data.dag_runs.map((dagRun: any) => {
           return {
             dagRunId: dagRun.dag_run_id,
             filteredDate: new Date(dagRun.start_date)
@@ -415,79 +418,110 @@ export class SchedulerService {
             time: new Date(dagRun.start_date).toTimeString().split(' ')[0]
           };
         });
+      }
+      const existingDagRunsListData = previousDagRunDataList ?? [];
+      //setStateAction never type issue
+      const allDagRunsListData: any = [
+        ...(existingDagRunsListData as []),
+        ...transformDagRunListDataCurrent
+      ];
 
-        // Group by date first, then by status
-        const groupedDataByDateStatus = transformDagRunListData.reduce(
-          (result: any, item: any) => {
-            const date = item.filteredDate;
-            const status = item.state;
+      if (data.dag_runs.length + offset !== data.total_entries) {
+        this.listDagRunsListService(
+          composerName,
+          dagId,
+          startDate,
+          endDate,
+          setDagRunsList,
+          setDagRunId,
+          setIsLoading,
 
-            if (!result[date]) {
-              result[date] = {};
-            }
-
-            if (!result[date][status]) {
-              result[date][status] = [];
-            }
-
-            result[date][status].push(item);
-
-            return result;
-          },
-          {}
-        );
-
-        let blueList: string[] = [];
-        let greyList: string[] = [];
-        let orangeList: string[] = [];
-        let redList: string[] = [];
-        let greenList: string[] = [];
-        let darkGreenList: string[] = [];
-
-        Object.keys(groupedDataByDateStatus).forEach(dateValue => {
-          if (groupedDataByDateStatus[dateValue].running) {
-            blueList.push(dateValue);
-          } else if (groupedDataByDateStatus[dateValue].queued) {
-            greyList.push(dateValue);
-          } else if (
-            groupedDataByDateStatus[dateValue].failed &&
-            groupedDataByDateStatus[dateValue].success
-          ) {
-            orangeList.push(dateValue);
-          } else if (groupedDataByDateStatus[dateValue].failed) {
-            redList.push(dateValue);
-          } else if (
-            groupedDataByDateStatus[dateValue].success &&
-            groupedDataByDateStatus[dateValue].success.length === 1
-          ) {
-            greenList.push(dateValue);
-          } else {
-            darkGreenList.push(dateValue);
-          }
-        });
-
-        setBlueListDates(blueList);
-        setGreyListDates(greyList);
-        setOrangeListDates(orangeList);
-        setRedListDates(redList);
-        setGreenListDates(greenList);
-        setDarkGreenListDates(darkGreenList);
-
-        setDagRunsList(transformDagRunListData);
-        setDagRunId(
-          transformDagRunListData[transformDagRunListData.length - 1].dagRunId
+          setBlueListDates,
+          setGreyListDates,
+          setOrangeListDates,
+          setRedListDates,
+          setGreenListDates,
+          setDarkGreenListDates,
+          data.dag_runs.length + offset,
+          allDagRunsListData
         );
       } else {
-        setDagRunsList([]);
-        setDagRunId('');
-        setBlueListDates([]);
-        setGreyListDates([]);
-        setOrangeListDates([]);
-        setRedListDates([]);
-        setGreenListDates([]);
-        setDarkGreenListDates([]);
+        let transformDagRunListData = allDagRunsListData;
+
+        if (transformDagRunListData.length > 0) {
+          // Group by date first, then by status
+          const groupedDataByDateStatus = transformDagRunListData.reduce(
+            (result: any, item: any) => {
+              const date = item.filteredDate;
+              const status = item.state;
+
+              if (!result[date]) {
+                result[date] = {};
+              }
+
+              if (!result[date][status]) {
+                result[date][status] = [];
+              }
+
+              result[date][status].push(item);
+
+              return result;
+            },
+            {}
+          );
+
+          let blueList: string[] = [];
+          let greyList: string[] = [];
+          let orangeList: string[] = [];
+          let redList: string[] = [];
+          let greenList: string[] = [];
+          let darkGreenList: string[] = [];
+
+          Object.keys(groupedDataByDateStatus).forEach(dateValue => {
+            if (groupedDataByDateStatus[dateValue].running) {
+              blueList.push(dateValue);
+            } else if (groupedDataByDateStatus[dateValue].queued) {
+              greyList.push(dateValue);
+            } else if (
+              groupedDataByDateStatus[dateValue].failed &&
+              groupedDataByDateStatus[dateValue].success
+            ) {
+              orangeList.push(dateValue);
+            } else if (groupedDataByDateStatus[dateValue].failed) {
+              redList.push(dateValue);
+            } else if (
+              groupedDataByDateStatus[dateValue].success &&
+              groupedDataByDateStatus[dateValue].success.length === 1
+            ) {
+              greenList.push(dateValue);
+            } else {
+              darkGreenList.push(dateValue);
+            }
+          });
+
+          setBlueListDates(blueList);
+          setGreyListDates(greyList);
+          setOrangeListDates(orangeList);
+          setRedListDates(redList);
+          setGreenListDates(greenList);
+          setDarkGreenListDates(darkGreenList);
+
+          setDagRunsList(transformDagRunListData);
+          setDagRunId(
+            transformDagRunListData[transformDagRunListData.length - 1].dagRunId
+          );
+        } else {
+          setDagRunsList([]);
+          setDagRunId('');
+          setBlueListDates([]);
+          setGreyListDates([]);
+          setOrangeListDates([]);
+          setRedListDates([]);
+          setGreenListDates([]);
+          setDarkGreenListDates([]);
+        }
+        setIsLoading(false);
       }
-      setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
