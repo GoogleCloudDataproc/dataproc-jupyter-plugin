@@ -17,6 +17,7 @@ import json
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import handlers
+from dataproc_jupyter_plugin.services.downloadOutputService import DownloadOutputService
 
 
 
@@ -25,10 +26,12 @@ class downloadOutputController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            download_dag = downloadOutputService()
-            composer_name = self.get_argument("composer")
+            download_dag = DownloadOutputService()
+            bucket_name = self.get_argument("bucket_name")
+            dag_id = self.get_argument("dag_run_id")
+            dag_run_id = self.get_argument("dag_run_id")
             credentials = handlers.get_cached_credentials(self.log)
-            download = download_dag.daownload_dag_output(credentials,composer_name,self.log)
+            download = download_dag.daownload_dag_output(credentials,bucket_name,dag_id,dag_run_id,self.log)
             self.finish(json.dumps(download))
         except Exception as e:
             self.log.exception(f"Error download output file")
