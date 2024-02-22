@@ -154,7 +154,7 @@ const ExecutionHistory = ({
 
   return (
     <>
-      <div>
+      <>
         <div className="execution-history-header">
           <div
             role="button"
@@ -211,7 +211,7 @@ const ExecutionHistory = ({
             )}
           </div>
         </div>
-      </div>
+      </>
     </>
   );
 };

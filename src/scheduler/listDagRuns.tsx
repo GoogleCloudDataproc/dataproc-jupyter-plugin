@@ -17,6 +17,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
+import { PaginationView } from '../utils/paginationView';
 import { ClipLoader } from 'react-spinners';
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
@@ -81,7 +82,13 @@ const ListDagRuns = ({
     headerGroups,
     rows,
     prepareRow,
-    page
+    page,
+    canPreviousPage,
+    canNextPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize }
   } = useTable(
     //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
@@ -215,6 +222,18 @@ const ListDagRuns = ({
                 }
               />
             </div>
+            {dagRunsCurrentDateList.length > 50 && (
+              <PaginationView
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                pageIndex={pageIndex}
+                allData={dagRunsCurrentDateList}
+                previousPage={previousPage}
+                nextPage={nextPage}
+                canPreviousPage={canPreviousPage}
+                canNextPage={canNextPage}
+              />
+            )}
           </div>
         ) : (
           <div>

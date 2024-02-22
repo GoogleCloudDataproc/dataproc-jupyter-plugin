@@ -96,7 +96,7 @@ const NotebookJobComponent = ({
   };
 
   return (
-    <div className="component-level">
+    <>
       {showExecutionHistory ? (
         <ExecutionHistory
           composerName={composerName}
@@ -142,7 +142,7 @@ const NotebookJobComponent = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

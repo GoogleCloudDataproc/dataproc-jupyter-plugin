@@ -19,13 +19,13 @@ from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE
 
 class DagRunListService():
-    def list_dag_runs(self, credentials, composer_name, dag_id, start_date, end_date,log):
+    def list_dag_runs(self, credentials, composer_name, dag_id, start_date, end_date, offset, log):
         airflow_uri, bucket = DagListService.get_airflow_uri(self,composer_name,credentials,log)
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
         
         try:
-            api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns?execution_date_gte={start_date}&execution_date_lte={end_date}"
+            api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns?execution_date_gte={start_date}&execution_date_lte={end_date}&offset={offset}"
             headers = {
             'Content-Type': CONTENT_TYPE,
             'Authorization': f'Bearer {access_token}'
