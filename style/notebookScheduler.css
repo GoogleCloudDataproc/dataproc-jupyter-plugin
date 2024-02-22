@@ -76,7 +76,7 @@
 }
 
 .execution-history-left-wrapper {
-  width: 320px;
+  width: 400px;
   border: 1px solid var(--jp-layout-color3);
 }
 .execution-history-main-wrapper {
@@ -84,13 +84,13 @@
 }
 
 .execution-history-right-wrapper {
-  width: calc(100% - 320px);
+  width: calc(100% - 400px);
   border: 1px solid var(--jp-layout-color3);
   border-left: none;
 }
 
 .dag-runs-list-table-parent {
-  height: 400px;
+  height: 375px;
   overflow: auto;
 }
 
