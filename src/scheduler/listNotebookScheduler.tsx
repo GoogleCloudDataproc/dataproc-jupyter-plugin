@@ -34,7 +34,6 @@ import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import PollingTimer from '../utils/pollingTimer';
 import ImportErrorPopup from '../utils/importErrorPopup';
-//import Button from '@mui/material/Button';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -135,7 +134,7 @@ function listNotebookScheduler({
   const [importErrorPopupOpen, setImportErrorPopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
   const [editDagLoading, setEditDagLoading] = useState('');
-  const [pollingDisable] = useState(false);
+  //const [pollingDisable] = useState(false);
   const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
   const [editNotebookLoading, setEditNotebookLoading] = useState('');
   const [deletingNotebook, setDeletingNotebook] = useState(false);
@@ -163,7 +162,7 @@ function listNotebookScheduler({
     []
   );
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const pollingDagListImportError = async (
+  const pollingDagList = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
@@ -298,7 +297,7 @@ function listNotebookScheduler({
 
   const handleImportErrorPopup = async () => {
     setImportErrorPopupOpen(true);
-    handleImportErrordata();
+    // handleImportErrordata();
   };
   const handleImportErrorClosed = async () => {
     setImportErrorPopupOpen(false);
@@ -499,32 +498,23 @@ function listNotebookScheduler({
 
   useEffect(() => {
     if (composerSelectedList !== '') {
-      pollingDagListImportError(listDagInfoAPI, pollingDisable);
-      pollingDagListImportError(handleImportErrordata, pollingDisable);
+      pollingDagList(listDagInfoAPI, false);
+      //pollingImportError(handleImportErrordata, pollingDisable);
     }
     return () => {
-      pollingDagListImportError(listDagInfoAPI, true);
-      pollingDagListImportError(handleImportErrordata, true);
+      pollingDagList(listDagInfoAPI, true);
+      //pollingImportError(handleImportErrordata, true);
     };
   }, [composerSelectedList]);
 
   // useEffect(() => {
   //   if (composerSelectedList !== '') {
-  //     pollingImportError(handleImportErrordata, pollingDisable);
+  //     pollingImportError(handleImportErrordata, false);
   //   }
   //   return () => {
   //     pollingImportError(handleImportErrordata, true);
   //   };
   // }, [composerSelectedList]);
-
-  //check this is required or not
-  // useEffect(() => {
-  //   if (importErrorData.length > 0) {
-  //     console.log('use effect');
-  //     console.log(importErrorData);
-  //     console.log(importErrorEntries);
-  //   }
-  // }, [importErrorData]);
 
   return (
     <div>
