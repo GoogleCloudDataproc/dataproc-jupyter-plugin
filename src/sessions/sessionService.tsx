@@ -239,6 +239,9 @@ export class SessionService {
           setSessionsList(transformSessionListData);
           setIsLoading(false);
         }
+      } else {
+          setSessionsList([]);
+          setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
         toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
