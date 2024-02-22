@@ -64,7 +64,7 @@ function LabelProperties({
   labelDetailUpdated used to store the temporay label details when onchange
   */
   useEffect(() => {
-    if (!labelEditMode) {
+    if (!labelEditMode && labelDetail.length > 0 && !labelDetail[0].includes(':')) {
       if (
         buttonText === 'ADD LABEL' &&
         !selectedJobClone &&
