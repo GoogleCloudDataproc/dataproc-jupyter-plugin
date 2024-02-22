@@ -33,6 +33,8 @@ import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import PollingTimer from '../utils/pollingTimer';
+import ImportErrorPopup from '../utils/importErrorPopup';
+//import Button from '@mui/material/Button';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -130,12 +132,15 @@ function listNotebookScheduler({
   const backselectedEnvironment = backButtonComposerName;
   const createSelectedEnvironment = composerSelectedFromCreate;
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
+  const [importErrorPopupOpen, setImportErrorPopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
   const [editDagLoading, setEditDagLoading] = useState('');
   const [pollingDisable] = useState(false);
   const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
   const [editNotebookLoading, setEditNotebookLoading] = useState('');
   const [deletingNotebook, setDeletingNotebook] = useState(false);
+  const [importErrorData, setImportErrorData] = useState<string[]>([]);
+  const [importErrorEntries, setImportErrorEntries] = useState<number>(0);
   const columns = React.useMemo(
     () => [
       {
@@ -158,7 +163,7 @@ function listNotebookScheduler({
     []
   );
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const pollingDagList = async (
+  const pollingDagListImportError = async (
     pollingFunction: () => void,
     pollingDisable: boolean
   ) => {
@@ -168,6 +173,16 @@ function listNotebookScheduler({
       timer.current
     );
   };
+  // const pollingImportError = async (
+  //   pollingFunction: () => void,
+  //   pollingDisable: boolean
+  // ) => {
+  //   timer.current = PollingTimer(
+  //     pollingFunction,
+  //     pollingDisable,
+  //     timer.current
+  //   );
+  // };
   const handleComposerSelected = (data: string | null) => {
     if (data) {
       const selectedComposer = data.toString();
@@ -278,6 +293,21 @@ function listNotebookScheduler({
       setIsLoading,
       setBucketName,
       composerSelectedList
+    );
+  };
+
+  const handleImportErrorPopup = async () => {
+    setImportErrorPopupOpen(true);
+    handleImportErrordata();
+  };
+  const handleImportErrorClosed = async () => {
+    setImportErrorPopupOpen(false);
+  };
+  const handleImportErrordata = async () => {
+    await SchedulerService.handleImportErrordataService(
+      composerSelectedList,
+      setImportErrorData,
+      setImportErrorEntries
     );
   };
 
@@ -463,17 +493,38 @@ function listNotebookScheduler({
     if (composerSelectedList !== '') {
       setIsLoading(true);
       listDagInfoAPI();
+      handleImportErrordata();
     }
   }, [composerSelectedList]);
 
   useEffect(() => {
     if (composerSelectedList !== '') {
-      pollingDagList(listDagInfoAPI, pollingDisable);
+      pollingDagListImportError(listDagInfoAPI, pollingDisable);
+      pollingDagListImportError(handleImportErrordata, pollingDisable);
     }
     return () => {
-      pollingDagList(listDagInfoAPI, true);
+      pollingDagListImportError(listDagInfoAPI, true);
+      pollingDagListImportError(handleImportErrordata, true);
     };
   }, [composerSelectedList]);
+
+  // useEffect(() => {
+  //   if (composerSelectedList !== '') {
+  //     pollingImportError(handleImportErrordata, pollingDisable);
+  //   }
+  //   return () => {
+  //     pollingImportError(handleImportErrordata, true);
+  //   };
+  // }, [composerSelectedList]);
+
+  //check this is required or not
+  // useEffect(() => {
+  //   if (importErrorData.length > 0) {
+  //     console.log('use effect');
+  //     console.log(importErrorData);
+  //     console.log(importErrorEntries);
+  //   }
+  // }, [importErrorData]);
 
   return (
     <div>
@@ -490,6 +541,27 @@ function listNotebookScheduler({
             )}
           />
         </div>
+        {importErrorEntries > 0 && (
+          <div className="import-error-parent">
+            <div
+              className="accordion-button"
+              role="button"
+              aria-label="Show Import Errors"
+              title="Show Import Errors"
+              onClick={handleImportErrorPopup}
+            >
+              Show Import Errors ({importErrorEntries})
+            </div>
+            {importErrorPopupOpen && (
+              <ImportErrorPopup
+                importErrorData={importErrorData}
+                importErrorEntries={importErrorEntries}
+                isOpen={importErrorPopupOpen}
+                onClose={handleImportErrorClosed}
+              />
+            )}
+          </div>
+        )}
       </div>
       {dagList.length > 0 ? (
         <div className="notebook-templates-list-table-parent">

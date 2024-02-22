@@ -1,8 +1,10 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto);
 
 .select-text-overlay-scheduler {
-  width: 512px;
+  width: 95%;
   margin: 20px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .execution-history-parent {
@@ -30,6 +32,7 @@
 
 .create-scheduler-form-element {
   margin-top: 15px;
+  width: 512px;
 }
 
 .create-scheduler-form-element-input-file {
@@ -235,4 +238,43 @@
 .execution-history-header {
   height: 48px;
   display: flex;
+}
+.accordion-section{
+  background: #f2dede;
+  margin: 10px 0px;
+}
+.accordion-title {
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* background-color: #f2dede; */
+  color: #e43921;
+}
+
+.accordion-button {
+  background-color: #f2dede;
+  color: #e43921;cursor: pointer;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.accordion-content {
+  padding: 10px;
+  color: #e43921;
+}
+
+.import-error-parent {
+  margin-top: 12px;
+}
+.filename {
+  flex: 1;
+}
+
+.timestamp {
+  margin-left: 10px;
+  margin-right: 10px;
 }
