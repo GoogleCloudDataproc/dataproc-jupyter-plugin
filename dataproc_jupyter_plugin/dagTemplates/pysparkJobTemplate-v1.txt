@@ -29,17 +29,26 @@ default_args = {
     'email_on_retry': '{{email_delay}}',     
     'email_on_success':'{{email_success}}'
 }
+
+def write_output_to_file(run_id, **kwargs):
+    output_file_path = f"{{output_notebook}}{run_id}.ipynb"
+    print(output_file_path)
+    kwargs['ti'].xcom_push(key='output_file_path', value=output_file_path)
+    return output_file_path
+    
 time_zone = '{{time_zone}}'
 stop_cluster_check = '{{stop_cluster}}'
 input_notebook = '{{input_notebook}}'
-output_notebook = '{{output_notebook}}'
+output_notebook = {% raw %}"{{ ti.xcom_pull(task_ids='write_output_to_file_task') }}"{% endraw %}
+notebook_args = [input_notebook, output_notebook]
 parameters = '''
 {{parameters}}
 '''
 notebook_args= [input_notebook, output_notebook] 
 # Check if parameters is not empty or contains only whitespace
 if parameters.strip():  
-    notebook_args.extend(["--parameters", parameters])
+     notebook_args.extend(["--parameters", parameters])
+
 
 def get_client_cert():
     # code to load client certificate and private key.
@@ -122,12 +131,21 @@ dag = DAG(
     catchup= False
 )
 
+
 start_cluster = PythonOperator(
     task_id='start_cluster',
     python_callable=get_cluster_state_start_if_not_running,
     retries= 2,
     provide_context=True,
     dag=dag)
+
+write_output_task = PythonOperator(
+    task_id='write_output_to_file_task',
+    python_callable=write_output_to_file,
+    provide_context=True,  
+    op_kwargs={'run_id': {% raw %}'{{run_id}}'{% endraw %}},  
+    dag=dag
+)
 
 submit_pyspark_job = DataprocSubmitJobOperator(
     task_id='submit_pyspark_job',
@@ -152,4 +170,5 @@ stop_cluster = PythonOperator(
         provide_context=True,
         dag=dag)
     
-start_cluster >> submit_pyspark_job >> stop_cluster 
+start_cluster >> write_output_task >> submit_pyspark_job >> stop_cluster 
+

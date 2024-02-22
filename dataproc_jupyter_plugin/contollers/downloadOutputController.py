@@ -17,19 +17,19 @@ import json
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.importErrorService import ImportErrorService
 
 
 
-class ImportErrorController(APIHandler):
+
+class downloadOutputController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            import_errors = ImportErrorService()
+            download_dag = downloadOutputService()
             composer_name = self.get_argument("composer")
             credentials = handlers.get_cached_credentials(self.log)
-            import_errors_list = import_errors.list_import_errors(credentials,composer_name,self.log)
-            self.finish(json.dumps(import_errors_list))
+            download = download_dag.daownload_dag_output(credentials,composer_name,self.log)
+            self.finish(json.dumps(download))
         except Exception as e:
-            self.log.exception(f"Error fetching import error list")
+            self.log.exception(f"Error download output file")
             self.finish ({"error": str(e)})
