@@ -15,7 +15,11 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { 
+  // useEffect,
+  //  useState 
+  } 
+   from 'react';
 import { ClipLoader } from 'react-spinners';
 import { Cell, Row } from 'react-table';
 
@@ -29,27 +33,27 @@ function TableData({
   prepareRow,
   tableDataCondition,
   fromPage,
-  setDagRunId,
-  selectedDagIndex
+  // setDagRunId,
+  // selectedDagIndex
 }: any) {
-  const [selectedRowIndex, setSelectedRowIndex] = useState(selectedDagIndex);
+  // const [selectedRowIndex, setSelectedRowIndex] = useState(selectedDagIndex);
 
   const displayData = page ? page : rows;
 
   const handleRowClicked = (row: any, index: number) => {
     if (parseInt(row.id) === index) {
-      setSelectedRowIndex(index);
-      if (fromPage === 'Dag Runs') {
-        setDagRunId(row?.original?.dagRunId);
-      }
+      // setSelectedRowIndex(index);
+      // if (fromPage === 'Dag Runs') {
+      //   setDagRunId(row?.original?.dagRunId);
+      // }
     }
   };
 
-  useEffect(() => {
-    if (fromPage === 'Dag Runs') {
-      setSelectedRowIndex(selectedDagIndex);
-    }
-  }, [selectedDagIndex]);
+  // useEffect(() => {
+  //   if (fromPage === 'Dag Runs') {
+  //     setSelectedRowIndex(selectedDagIndex);
+  //   }
+  // }, [selectedDagIndex]);
 
   return (
     <table {...getTableProps()} className="clusters-list-table">
@@ -73,9 +77,10 @@ function TableData({
       <tbody
         {...getTableBodyProps()}
         className={
-          fromPage === 'Dag Runs'
-            ? 'dag-runs-table-body'
-            : 'clusters-table-body'
+          // fromPage === 'Dag Runs'
+          //   ? 'dag-runs-table-body'
+          //   : 
+            'clusters-table-body'
         }
       >
         {isLoading ? (
@@ -96,11 +101,12 @@ function TableData({
               <tr
                 {...row.getRowProps()}
                 className={
-                  fromPage === 'Dag Runs'
-                    ? selectedRowIndex === index
-                      ? 'dag-runs-row-data-parent-selected'
-                      : 'dag-runs-row-data-parent'
-                    : 'cluster-list-data-parent'
+                  // fromPage === 'Dag Runs'
+                  //   ? selectedRowIndex === index
+                  //     ? 'dag-runs-row-data-parent-selected'
+                  //     : 'dag-runs-row-data-parent'
+                    // : 
+                    'cluster-list-data-parent'
                 }
                 onClick={() => handleRowClicked(row, index)}
               >

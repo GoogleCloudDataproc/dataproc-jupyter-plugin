@@ -23,6 +23,13 @@ import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import { SchedulerService } from './schedulerServices';
 import { Dayjs } from 'dayjs';
+import { LabIcon } from '@jupyterlab/ui-components';
+import downloadIcon from '../../style/icons/scheduler_download.svg';
+
+const iconDownload = new LabIcon({
+  name: 'launcher:download-icon',
+  svgstr: downloadIcon
+});
 
 const ListDagRuns = ({
   composerName,
@@ -37,7 +44,8 @@ const ListDagRuns = ({
   setOrangeListDates,
   setRedListDates,
   setGreenListDates,
-  setDarkGreenListDates
+  setDarkGreenListDates,
+  bucketName
 }: {
   composerName: string;
   dagId: string;
@@ -52,6 +60,7 @@ const ListDagRuns = ({
   setRedListDates: (value: string[]) => void;
   setGreenListDates: (value: string[]) => void;
   setDarkGreenListDates: (value: string[]) => void;
+  bucketName: string;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
@@ -71,6 +80,10 @@ const ListDagRuns = ({
       {
         Header: 'Time',
         accessor: 'time'
+      },
+      {
+        Header: 'Actions',
+        accessor: 'actions'
       }
     ],
     []
@@ -97,7 +110,14 @@ const ListDagRuns = ({
   );
 
   const tableDataCondition = (cell: ICellProps) => {
-    if (cell.column.Header === 'State') {
+    if (cell.column.Header === 'Actions') {
+      return (
+        <td {...cell.getCellProps()} className="clusters-table-data">
+          {renderActions(cell.row.original)}
+        </td>
+      );
+    } 
+    else if (cell.column.Header === 'State') {
       if (cell.value === 'success') {
         return (
           <div className="dag-run-state-parent">
@@ -148,6 +168,36 @@ const ListDagRuns = ({
       <td {...cell.getCellProps()} className="notebook-template-table-data">
         {cell.render('Cell')}
       </td>
+    );
+  };
+
+  const handleDownloadOutput = async (event: React.MouseEvent) => {
+    const dagRunId = event.currentTarget.getAttribute('data-dag-run-id')!;
+    console.log(dagRunId, bucketName, dagId)
+    await SchedulerService.handleDownloadOutputNotebookAPIService(
+      dagRunId,
+      bucketName,
+      dagId
+    );
+  };
+
+  const renderActions = (data: any) => {
+    console.log(data)
+    return (
+      <div className="actions-icon">
+        <div
+          role="button"
+          className="icon-buttons-style"
+          title="Download Notebook"
+          data-dag-run-id={data.dagRunId}
+          onClick={e => handleDownloadOutput(e)}
+        >
+          <iconDownload.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+      </div>
     );
   };
 
@@ -212,14 +262,14 @@ const ListDagRuns = ({
                 prepareRow={prepareRow}
                 tableDataCondition={tableDataCondition}
                 fromPage="Dag Runs"
-                setDagRunId={setDagRunId}
-                selectedDagIndex={
-                  dagRunsCurrentDateList.length > 0
-                    ? dagRunsCurrentDateList.length - 1
-                    : dagRunsList.length > 0
-                    ? dagRunsList.length - 1
-                    : -1
-                }
+                // setDagRunId={setDagRunId}
+                // selectedDagIndex={
+                //   dagRunsCurrentDateList.length > 0
+                //     ? dagRunsCurrentDateList.length - 1
+                //     : dagRunsList.length > 0
+                //     ? dagRunsList.length - 1
+                //     : -1
+                // }
               />
             </div>
             {dagRunsCurrentDateList.length > 50 && (

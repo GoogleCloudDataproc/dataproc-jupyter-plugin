@@ -34,11 +34,13 @@ const iconLeftArrow = new LabIcon({
 const ExecutionHistory = ({
   composerName,
   dagId,
-  handleBackButton
+  handleBackButton,
+  bucketName
 }: {
   composerName: string;
   dagId: string;
   handleBackButton: () => void;
+  bucketName: string;
 }): JSX.Element => {
   const [dagRunId, setDagRunId] = useState('');
   const currentDate = new Date().toLocaleDateString();
@@ -198,6 +200,7 @@ const ExecutionHistory = ({
                 setRedListDates={setRedListDates}
                 setGreenListDates={setGreenListDates}
                 setDarkGreenListDates={setDarkGreenListDates}
+                bucketName={bucketName}
               />
             )}
           </div>

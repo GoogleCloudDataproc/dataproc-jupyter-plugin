@@ -580,6 +580,24 @@ export class SchedulerService {
       console.error('Error in Download api', error);
     }
   };
+  static handleDownloadOutputNotebookAPIService = async (
+    dagRunId: string,
+    bucketName: string,
+    dagId: string
+  ) => {
+    try {
+      const serviceURL = `downloadOutput?bucket_name=${bucketName}&dag_id=${dagId}&dag_run_id=${dagRunId}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      if (formattedResponse.status === 0) {
+        toast.success(`${dagRunId} downloaded successfully`, toastifyCustomStyle);
+      } else {
+        toast.error(`Failed to download the ${dagRunId}`, toastifyCustomStyle);
+      }
+    } catch (error) {
+      DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
+      console.error('Error in Download api', error);
+    }
+  };
   static handleDeleteSchedulerAPIService = async (
     composerSelected: string,
     dag_id: string,

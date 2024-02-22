@@ -90,7 +90,9 @@ function listNotebookScheduler({
   setEmailList,
   setStopCluster,
   setTimeZoneSelected,
-  setEditMode
+  setEditMode,
+  bucketName,
+  setBucketName
 }: {
   app: JupyterFrontEnd;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
@@ -121,13 +123,15 @@ function listNotebookScheduler({
   setStopCluster?: (value: boolean) => void;
   setTimeZoneSelected?: (value: string) => void;
   setEditMode?: (value: boolean) => void;
+  bucketName: string;
+  setBucketName: (value: string) => void;
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelectedList, setComposerSelectedList] = useState('');
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
-  const [bucketName, setBucketName] = useState('');
+  // const [bucketName, setBucketName] = useState('');
   const backselectedEnvironment = backButtonComposerName;
   const createSelectedEnvironment = composerSelectedFromCreate;
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
