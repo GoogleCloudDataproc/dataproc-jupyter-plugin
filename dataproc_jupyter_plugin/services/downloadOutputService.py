@@ -19,14 +19,14 @@ import google.oauth2.credentials
  
  
 class DownloadOutputService():
-    def download_dag_output(self, credentials,composer,log):
+    def download_dag_output(self, credentials,bucket_name,dag_id,dag_run_id,log):
         if 'access_token' in credentials:
             access_token = credentials['access_token']
         try:
             credentials = google.oauth2.credentials.Credentials(access_token)
             storage_client = storage.Client()
-            bucket = storage_client.bucket('us-central1-composer4-fe041c11-bucket')
-            blob = bucket.blob(f'dataproc-output/test-runid1/output-notebooks/test-runid1_test.ipynb')
+            bucket = storage_client.bucket(bucket_name)
+            blob = bucket.blob(f'dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb')
             file_name = blob.name.split('/')[-1] # Extract the filename from the blob's path
             blob.download_to_filename(file_name)
 
