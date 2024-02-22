@@ -29,7 +29,7 @@ import { authenticatedFetch } from '../utils/utils';
 import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
-import notebookSchedulerIcon from '../../style/icons/notebook_scheduler.svg';
+import notebookSchedulerIcon from '../../style/icons/scheduler_calendar_month.svg';
 import { NotebookScheduler } from '../scheduler/notebookScheduler';
 
 const iconLogs = new LabIcon({
