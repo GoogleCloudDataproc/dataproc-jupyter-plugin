@@ -197,7 +197,7 @@ const ListDagRuns = ({
               ? 'icon-buttons-style'
               : 'icon-buttons-style-disable'
           }
-          title="Download Notebook"
+          title="Download Output"
           data-dag-run-id={data.dagRunId}
           onClick={
             data.state === 'success' ? e => handleDownloadOutput(e) : undefined
