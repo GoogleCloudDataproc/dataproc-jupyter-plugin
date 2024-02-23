@@ -34,6 +34,7 @@ import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import PollingTimer from '../utils/pollingTimer';
 import ImportErrorPopup from '../utils/importErrorPopup';
+import stopIcon from '../../style/icons/stop_icon.svg';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -59,6 +60,11 @@ const iconEditDag = new LabIcon({
 const iconEditNotebook = new LabIcon({
   name: 'launcher:edit-notebook-icon',
   svgstr: EditNotebookIcon
+});
+
+const iconStop = new LabIcon({
+  name: 'launcher:stop-icon',
+  svgstr: stopIcon
 });
 
 function listNotebookScheduler({
@@ -218,6 +224,12 @@ function listNotebookScheduler({
         setInputNotebookFilePath,
         setEditNotebookLoading
       );
+    }
+  };
+  const handleTriggerDag = async (event: React.MouseEvent) => {
+    const jobid = event.currentTarget.getAttribute('data-jobid');
+    if (jobid !== null) {
+      await SchedulerService.triggerDagService(jobid, composerSelectedList);
     }
   };
   const handleEditDags = async (event: React.MouseEvent) => {
@@ -422,6 +434,18 @@ function listNotebookScheduler({
           onClick={() => handleDeletePopUp(data.jobid)}
         >
           <iconDelete.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+        <div
+          role="button"
+          className="icon-buttons-style"
+          title="Trigger the job"
+          data-jobid={data.jobid}
+          onClick={e => handleTriggerDag(e)}
+        >
+          <iconStop.react
             tag="div"
             className="icon-white logo-alignment-style"
           />

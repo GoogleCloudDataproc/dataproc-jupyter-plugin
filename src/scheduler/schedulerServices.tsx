@@ -732,4 +732,24 @@ export class SchedulerService {
       console.error(`Error on GET credentials.\n${reason}`);
     }
   };
+
+  static triggerDagService = async (
+    dagId: string,
+    composerSelectedList: string
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `triggerDag?dag_id=${dagId}&composer=${composerSelectedList}`
+      );
+      if (data) {
+        toast.success(
+          `Scheduler ${dagId} triggeres successfully `,
+          toastifyCustomStyle
+        );
+      }
+    } catch (reason) {
+      console.error(`Error in Triggering the Dag.\n${reason}`);
+      toast.error(`Failed to Trigger ${dagId}`, toastifyCustomStyle);
+    }
+  };
 }
