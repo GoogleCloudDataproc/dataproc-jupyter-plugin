@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import subprocess
 from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE
 from google.cloud import storage
 import google.oauth2.credentials
@@ -20,17 +21,17 @@ import google.oauth2.credentials
  
 class DownloadOutputService():
     def download_dag_output(self, credentials,bucket_name,dag_id,dag_run_id,log):
-        if 'access_token' in credentials:
-            access_token = credentials['access_token']
         try:
-            credentials = google.oauth2.credentials.Credentials(access_token)
-            storage_client = storage.Client(credentials=credentials)
-            bucket = storage_client.bucket(bucket_name)
-            blob = bucket.blob(f'dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb')
-            file_name = blob.name.split('/')[-1] # Extract the filename from the blob's path
-            blob.download_to_filename(file_name)
+            cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input_notebooks/*' ~/Downloads"
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            output, _ = process.communicate()
+            if process.returncode == 0:
+                return 0
+            else:
+                self.log.exception(f"Error downloading output notebook file")
+                return 1
 
         except Exception as e:
-            log.exception(f"Error downloading output file: {str(e)}")
+            log.exception(f"Error downloading output notebook file: {str(e)}")
             return {"error": str(e)}
 
