@@ -592,8 +592,10 @@ export class SchedulerService {
   static handleDownloadOutputNotebookAPIService = async (
     dagRunId: string,
     bucketName: string,
-    dagId: string
+    dagId: string,
+    setDownloadOutputDagRunId: (value: string) => void
   ) => {
+    setDownloadOutputDagRunId(dagRunId);
     try {
       dagRunId = encodeURIComponent(dagRunId);
       const serviceURL = `downloadOutput?bucket_name=${bucketName}&dag_id=${dagId}&dag_run_id=${dagRunId}`;
@@ -610,9 +612,11 @@ export class SchedulerService {
           toastifyCustomStyle
         );
       }
+      setDownloadOutputDagRunId('');
     } catch (error) {
       DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
       console.error('Error in Download api', error);
+      setDownloadOutputDagRunId('');
     }
   };
   static handleDeleteSchedulerAPIService = async (
