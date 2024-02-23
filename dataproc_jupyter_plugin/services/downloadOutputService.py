@@ -26,10 +26,10 @@ class DownloadOutputService():
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, _ = process.communicate()
             if process.returncode == 0:
-                return 0
+                return {'status': 0}
             else:
-                self.log.exception(f"Error downloading output notebook file")
-                return 1
+                log.exception(f"Error downloading output notebook file")
+                return {'status': 1}
 
         except Exception as e:
             log.exception(f"Error downloading output notebook file: {str(e)}")
