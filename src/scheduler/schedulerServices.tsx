@@ -586,6 +586,7 @@ export class SchedulerService {
     dagId: string
   ) => {
     try {
+      dagRunId = encodeURIComponent(dagRunId);
       const serviceURL = `downloadOutput?bucket_name=${bucketName}&dag_id=${dagId}&dag_run_id=${dagRunId}`;
       const formattedResponse: any = await requestAPI(serviceURL);
       if (formattedResponse.status === 0) {
