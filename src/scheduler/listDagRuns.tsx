@@ -193,16 +193,14 @@ const ListDagRuns = ({
         <div
           role="button"
           className={
-            data.state === 'success' || data.state === 'failed'
+            data.state === 'success'
               ? 'icon-buttons-style'
               : 'icon-buttons-style-disable'
           }
           title="Download Notebook"
           data-dag-run-id={data.dagRunId}
           onClick={
-            data.state === 'success' || data.state === 'failed'
-              ? e => handleDownloadOutput(e)
-              : undefined
+            data.state === 'success' ? e => handleDownloadOutput(e) : undefined
           }
         >
           <iconDownload.react
