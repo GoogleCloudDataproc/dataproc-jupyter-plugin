@@ -9,13 +9,22 @@ import {
 import { LabIcon } from '@jupyterlab/ui-components';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
+import deleteIcon from '../../style/icons/scheduler_delete.svg';
+interface IImportErrorPopupProps {
+  importErrorData: string[];
+  importErrorEntries: number;
+  importErrorPopupOpen: boolean;
+  onClose: () => void;
+  onDelete: (dagId: string) => void;
+}
+
 export default function ImportErrorPopup({
   importErrorData,
   importErrorEntries,
-  isOpen,
-  onClose
-}: any) {
-  // change this to interface
+  importErrorPopupOpen,
+  onClose,
+  onDelete
+}: IImportErrorPopupProps) {
   const [activeIndexes, setActiveIndexes] = useState<number[]>([]);
 
   const iconExpandLess = new LabIcon({
@@ -25,6 +34,11 @@ export default function ImportErrorPopup({
   const iconExpandMore = new LabIcon({
     name: 'launcher:expand-more-icon',
     svgstr: expandMoreIcon
+  });
+
+  const iconDelete = new LabIcon({
+    name: 'launcher:delete-icon',
+    svgstr: deleteIcon
   });
 
   const formatDate = (timestamp: string) => {
@@ -52,51 +66,76 @@ export default function ImportErrorPopup({
     }
     setActiveIndexes(newActiveIndexes);
   };
+  const handleDelete = (filename: string) => {
+    const dagId = filename.substring(filename.lastIndexOf('/') + 1);
+    if (dagId) onDelete(dagId);
+  };
 
   return (
     <>
       {importErrorData && importErrorData.length > 0 ? (
         <React.Fragment>
-          <Dialog fullWidth maxWidth="lg" open={isOpen} onClose={onClose}>
+          <Dialog
+            fullWidth
+            maxWidth="xl"
+            open={importErrorPopupOpen}
+            onClose={onClose}
+          >
             <DialogTitle className="accordion-content">
-              Import Errors ({importErrorEntries})
+              Schedule Errors ({importErrorEntries})
             </DialogTitle>
             <DialogContent>
               <div className="accordion">
-                {importErrorData.map((section: any, index: number) => (
-                  <div key={index} className="accordion-section">
-                    <div
-                      className={`accordion-title ${
-                        activeIndexes.includes(index) ? 'active' : ''
-                      }`}
-                      onClick={() => toggleAccordion(index)}
-                    >
-                      <span className="filename">
-                        {section.filename.split('/').pop()}
-                      </span>
-                      <span className="timestamp">
-                        {formatDate(section.timestamp)}
-                      </span>
+                {importErrorData.map((section: any, index: number) => {
+                  return (
+                    <div key={index} className="accordion-section">
+                      <div
+                        className={`accordion-title ${
+                          activeIndexes.includes(index) ? 'active' : ''
+                        }`}
+                        onClick={() => toggleAccordion(index)}
+                      >
+                        <span className="filename">
+                          {section.filename.split('/').pop()}
+                        </span>
+                        <span className="timestamp">
+                          {formatDate(section.timestamp)}
+                        </span>
 
-                      {activeIndexes.includes(index) ? (
-                        <iconExpandLess.react
-                          tag="div"
-                          className="icon-white logo-alignment-style-accordion"
-                        />
-                      ) : (
-                        <iconExpandMore.react
-                          tag="div"
-                          className="icon-white logo-alignment-style-accordion"
-                        />
-                      )}
-                    </div>
-                    {activeIndexes.includes(index) && (
-                      <div className="accordion-content">
-                        {section.stack_trace}
+                        <div
+                          role="button"
+                          className="icon-buttons-style"
+                          title="Delete"
+                          onClick={(e: any) => {
+                            e.stopPropagation(); // Prevent accordion toggle when deleting
+                            handleDelete(section.filename);
+                          }}
+                        >
+                          <iconDelete.react
+                            tag="div"
+                            className="icon-white logo-alignment-style"
+                          />
+                        </div>
+                        {activeIndexes.includes(index) ? (
+                          <iconExpandLess.react
+                            tag="div"
+                            className="icon-white logo-alignment-style-accordion"
+                          />
+                        ) : (
+                          <iconExpandMore.react
+                            tag="div"
+                            className="icon-white logo-alignment-style-accordion"
+                          />
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                        {activeIndexes.includes(index) && (
+                          <pre className="accordion-content">
+                            {section.stack_trace}
+                          </pre>
+                        )}
+                      </div>
+                  );
+                })}
               </div>
             </DialogContent>
             <DialogActions>
@@ -105,7 +144,7 @@ export default function ImportErrorPopup({
           </Dialog>
         </React.Fragment>
       ) : (
-        <Dialog open={isOpen} onClose={onClose}>
+        <Dialog open={importErrorPopupOpen} onClose={onClose}>
           <DialogTitle>No Import Errors</DialogTitle>
           <DialogActions>
             <Button onClick={onClose}>Close</Button>

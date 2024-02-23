@@ -1,6 +1,6 @@
-import { POLLING_TIME_LIMIT} from './const';
+import { POLLING_IMPORT_ERROR} from './const';
 
-const PollingTimer = (
+const PollingImportErrorTimer = (
   pollingFunction: () => void,
   pollingDisable: boolean,
   interval: NodeJS.Timeout | undefined
@@ -8,9 +8,9 @@ const PollingTimer = (
   if (pollingDisable) {
     clearInterval(interval);
   } else {
-    interval = setInterval(pollingFunction, POLLING_TIME_LIMIT);
+    interval = setInterval(pollingFunction, POLLING_IMPORT_ERROR);
     return interval;
   }
 };
 
-export default PollingTimer ;
+export default PollingImportErrorTimer ;

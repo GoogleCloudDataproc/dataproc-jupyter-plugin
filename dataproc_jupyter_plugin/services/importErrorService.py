@@ -25,7 +25,7 @@ class ImportErrorService():
         if 'access_token' and 'project_id' and 'region_id' in credentials:
             access_token = credentials['access_token']
         try:
-            api_endpoint = f"{airflow_uri}/api/v1/importErrors?order_by=-timestamp"
+            api_endpoint = f"{airflow_uri}/api/v1/importErrors?order_by=-import_error_id"
  
             headers = {
             'Content-Type': CONTENT_TYPE,

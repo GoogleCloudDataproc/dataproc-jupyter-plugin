@@ -620,10 +620,11 @@ export class SchedulerService {
     dag_id: string,
     setDagList: (value: string[]) => void,
     setIsLoading: (value: boolean) => void,
-    setBucketName: (value: string) => void
+    setBucketName: (value: string) => void,
+    fromPage?: string | undefined
   ) => {
     try {
-      const serviceURL = `dagDelete?composer=${composerSelected}&dag_id=${dag_id}`;
+      const serviceURL = `dagDelete?composer=${composerSelected}&dag_id=${dag_id}&from_page=${fromPage}`;
       const deleteResponse: IUpdateSchedulerAPIResponse = await requestAPI(
         serviceURL
       );
@@ -760,7 +761,7 @@ export class SchedulerService {
       );
       if (data) {
         toast.success(
-          `Scheduler ${dagId} triggeres successfully `,
+          `${dagId} triggered successfully `,
           toastifyCustomStyle
         );
       }

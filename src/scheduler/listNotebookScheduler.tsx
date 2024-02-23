@@ -32,6 +32,7 @@ import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import PollingTimer from '../utils/pollingTimer';
+import PollingImportErrorTimer from '../utils/pollingImportErrorTimer';
 import ImportErrorPopup from '../utils/importErrorPopup';
 import triggerIcon from '../../style/icons/scheduler_trigger.svg';
 
@@ -175,16 +176,18 @@ function listNotebookScheduler({
       timer.current
     );
   };
-  // const pollingImportError = async (
-  //   pollingFunction: () => void,
-  //   pollingDisable: boolean
-  // ) => {
-  //   timer.current = PollingTimer(
-  //     pollingFunction,
-  //     pollingDisable,
-  //     timer.current
-  //   );
-  // };
+
+  const timerImportError = useRef<NodeJS.Timeout | undefined>(undefined);
+  const pollingImportError = async (
+    pollingFunction: () => void,
+    pollingDisable: boolean
+  ) => {
+    timerImportError.current = PollingImportErrorTimer(
+      pollingFunction,
+      pollingDisable,
+      timerImportError.current
+    );
+  };
   const handleComposerSelected = (data: string | null) => {
     if (data) {
       const selectedComposer = data.toString();
@@ -279,6 +282,18 @@ function listNotebookScheduler({
     setDeletingNotebook(false);
   };
 
+  const handleDeleteImportError = async (dagId: string) => {
+    const fromPage ="importErrorPage"
+    await SchedulerService.handleDeleteSchedulerAPIService(
+      composerSelectedList,
+      dagId,
+      setDagList,
+      setIsLoading,
+      setBucketName,
+      fromPage
+    );
+  };
+
   const listComposersAPI = async () => {
     await SchedulerService.listComposersAPIService(
       setComposerList,
@@ -351,6 +366,26 @@ function listNotebookScheduler({
             />
           )}
         </div>
+        <div
+          role="button"
+          className={
+            !is_status_paused
+              ? 'icon-buttons-style'
+              : 'icon-buttons-style-disable '
+          }
+          title={
+            !is_status_paused ? 'Trigger the job' : " Can't Trigger Paused job"
+          }
+          data-jobid={data.jobid}
+          onClick={e => {
+            !is_status_paused ? handleTriggerDag(e) : null;
+          }}
+        >
+          <iconTrigger.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
         {data.jobid === editDagLoading ? (
           <div className="icon-buttons-style">
             <ClipLoader
@@ -406,18 +441,6 @@ function listNotebookScheduler({
           onClick={() => handleDeletePopUp(data.jobid)}
         >
           <iconDelete.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
-        </div>
-        <div
-          role="button"
-          className="icon-buttons-style"
-          title="Trigger the job"
-          data-jobid={data.jobid}
-          onClick={e => handleTriggerDag(e)}
-        >
-          <iconTrigger.react
             tag="div"
             className="icon-white logo-alignment-style"
           />
@@ -507,14 +530,14 @@ function listNotebookScheduler({
     };
   }, [composerSelectedList]);
 
-  // useEffect(() => {
-  //   if (composerSelectedList !== '') {
-  //     pollingImportError(handleImportErrordata, false);
-  //   }
-  //   return () => {
-  //     pollingImportError(handleImportErrordata, true);
-  //   };
-  // }, [composerSelectedList]);
+  useEffect(() => {
+    if (composerSelectedList !== '') {
+      pollingImportError(handleImportErrordata, false);
+    }
+    return () => {
+      pollingImportError(handleImportErrordata, true);
+    };
+  }, [composerSelectedList]);
 
   return (
     <div>
@@ -540,14 +563,15 @@ function listNotebookScheduler({
               title="Show Import Errors"
               onClick={handleImportErrorPopup}
             >
-              Show Import Errors ({importErrorEntries})
+              Show Schedule Errors ({importErrorEntries})
             </div>
             {importErrorPopupOpen && (
               <ImportErrorPopup
                 importErrorData={importErrorData}
                 importErrorEntries={importErrorEntries}
-                isOpen={importErrorPopupOpen}
+                importErrorPopupOpen={importErrorPopupOpen}
                 onClose={handleImportErrorClosed}
+                onDelete={(dagId :string) =>handleDeleteImportError(dagId)}
               />
             )}
           </div>

@@ -61,8 +61,9 @@ class DagDeleteController(APIHandler):
             dag = DagDeleteService()
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
+            from_page= self.get_argument("from_page", default=None)
             credentials = handlers.get_cached_credentials(self.log)
-            delete_response = dag.delete_job(credentials,composer, dag_id, self.log)
+            delete_response = dag.delete_job(credentials,composer, dag_id,from_page, self.log)
             if delete_response == 0: 
                 self.finish({'status' : 0})
             else:
