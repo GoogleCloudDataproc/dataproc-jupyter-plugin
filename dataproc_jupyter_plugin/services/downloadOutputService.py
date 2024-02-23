@@ -20,18 +20,18 @@ import google.oauth2.credentials
  
  
 class DownloadOutputService():
-    def download_dag_output(self, credentials,bucket_name,dag_id,dag_run_id,log):
+    def download_dag_output(self,bucket_name,dag_id,dag_run_id,log):
         try:
-            cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/output_notebooks/{dag_id}_{dag_run_id}' ./"
+            cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb' ./"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, _ = process.communicate()
+            print(output, _)
             if process.returncode == 0:
                 return 0
             else:
-                self.log.exception(f"Error downloading output notebook file")
+                log.exception(f"Error downloading output notebook file")
                 return 1
 
         except Exception as e:
             log.exception(f"Error downloading output notebook file: {str(e)}")
             return {"error": str(e)}
-

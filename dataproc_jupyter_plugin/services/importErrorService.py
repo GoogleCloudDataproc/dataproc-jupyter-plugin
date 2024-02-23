@@ -34,7 +34,6 @@ class ImportErrorService():
             response = requests.get(api_endpoint,headers=headers)
             if response.status_code == 200:
                 resp = response.json()
-            print(resp)
             return resp
         except Exception as e:
             log.exception(f"Error fetching import error list: {str(e)}")
