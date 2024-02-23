@@ -589,10 +589,11 @@ export class SchedulerService {
       dagRunId = encodeURIComponent(dagRunId);
       const serviceURL = `downloadOutput?bucket_name=${bucketName}&dag_id=${dagId}&dag_run_id=${dagRunId}`;
       const formattedResponse: any = await requestAPI(serviceURL);
+      dagRunId = decodeURIComponent(dagRunId);
       if (formattedResponse.status === 0) {
-        toast.success(`${dagRunId} downloaded successfully`, toastifyCustomStyle);
+        toast.success(`${dagId}_${dagRunId} downloaded successfully`, toastifyCustomStyle);
       } else {
-        toast.error(`Failed to download the ${dagRunId}`, toastifyCustomStyle);
+        toast.error(`Failed to download the ${dagId}_${dagRunId}`, toastifyCustomStyle);
       }
     } catch (error) {
       DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
