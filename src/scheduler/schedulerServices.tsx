@@ -408,17 +408,26 @@ export class SchedulerService {
       let transformDagRunListDataCurrent = [];
       if (data && data.dag_runs.length > 0) {
         transformDagRunListDataCurrent = data.dag_runs.map((dagRun: any) => {
-          return {
-            dagRunId: dagRun.dag_run_id,
-            filteredDate: new Date(dagRun.start_date)
-              .toDateString()
-              .split(' ')[2],
-            state: dagRun.state,
-            date: new Date(dagRun.start_date).toDateString(),
-            time: new Date(dagRun.start_date).toTimeString().split(' ')[0]
-          };
+          if (dagRun.start_date !== null) {
+            return {
+              dagRunId: dagRun.dag_run_id,
+              filteredDate: new Date(dagRun.start_date)
+                .toDateString()
+                .split(' ')[2],
+              state: dagRun.state,
+              date: new Date(dagRun.start_date).toDateString(),
+              time: new Date(dagRun.start_date).toTimeString().split(' ')[0]
+            };
+          }
         });
       }
+      transformDagRunListDataCurrent = transformDagRunListDataCurrent.filter(
+        (dagRunData: any) => {
+          if (dagRunData) {
+            return dagRunData;
+          }
+        }
+      );
       const existingDagRunsListData = previousDagRunDataList ?? [];
       //setStateAction never type issue
       const allDagRunsListData: any = [
@@ -591,9 +600,15 @@ export class SchedulerService {
       const formattedResponse: any = await requestAPI(serviceURL);
       dagRunId = decodeURIComponent(dagRunId);
       if (formattedResponse.status === 0) {
-        toast.success(`${dagId}_${dagRunId} downloaded successfully`, toastifyCustomStyle);
+        toast.success(
+          `${dagId}_${dagRunId} downloaded successfully`,
+          toastifyCustomStyle
+        );
       } else {
-        toast.error(`Failed to download the ${dagId}_${dagRunId}`, toastifyCustomStyle);
+        toast.error(
+          `Failed to download the ${dagId}_${dagRunId}`,
+          toastifyCustomStyle
+        );
       }
     } catch (error) {
       DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
