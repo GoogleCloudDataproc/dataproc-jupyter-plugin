@@ -65,6 +65,7 @@ const ListDagRuns = ({
   const [dagRunsList, setDagRunsList] = useState([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
   const data =
     dagRunsCurrentDateList.length > 0 ? dagRunsCurrentDateList : dagRunsList;
   const columns = React.useMemo(
@@ -183,31 +184,46 @@ const ListDagRuns = ({
     await SchedulerService.handleDownloadOutputNotebookAPIService(
       dagRunId,
       bucketName,
-      dagId
+      dagId,
+      setDownloadOutputDagRunId,
     );
   };
 
   const renderActions = (data: any) => {
     return (
       <div className="actions-icon">
-        <div
-          role="button"
-          className={
-            data.state === 'success'
-              ? 'icon-buttons-style'
-              : 'icon-buttons-style-disable'
-          }
-          title="Download Output"
-          data-dag-run-id={data.dagRunId}
-          onClick={
-            data.state === 'success' ? e => handleDownloadOutput(e) : undefined
-          }
-        >
-          <iconDownload.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
-        </div>
+        {data.dagRunId === downloadOutputDagRunId ? (
+          <div className="icon-buttons-style">
+            <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={18}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+        ) : (
+          <div
+            role="button"
+            className={
+              data.state === 'success'
+                ? 'icon-buttons-style'
+                : 'icon-buttons-style-disable'
+            }
+            title="Download Output"
+            data-dag-run-id={data.dagRunId}
+            onClick={
+              data.state === 'success'
+                ? e => handleDownloadOutput(e)
+                : undefined
+            }
+          >
+            <iconDownload.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          </div>
+        )}
       </div>
     );
   };
