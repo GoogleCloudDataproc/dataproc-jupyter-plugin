@@ -75,12 +75,13 @@ class DagDeleteService():
             'Content-Type': CONTENT_TYPE,
             'Authorization': f'Bearer {access_token}'
             }
-            if from_page != "importErrorPage":
+            if from_page == None:
                 response = requests.delete(api_endpoint,headers=headers)
                 log.info(response)
             cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, _ = process.communicate()
+            print(output,_)
             if process.returncode == 0:
                 return 0
             else:
