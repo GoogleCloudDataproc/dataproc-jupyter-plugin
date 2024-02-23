@@ -22,7 +22,7 @@ import google.oauth2.credentials
 class DownloadOutputService():
     def download_dag_output(self, credentials,bucket_name,dag_id,dag_run_id,log):
         try:
-            cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input_notebooks/*' ~/Downloads"
+            cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/output_notebooks/{dag_id}_{dag_run_id}' ./"
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             output, _ = process.communicate()
             if process.returncode == 0:
