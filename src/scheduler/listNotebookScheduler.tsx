@@ -137,7 +137,6 @@ function listNotebookScheduler({
   const [composerSelectedList, setComposerSelectedList] = useState('');
   const [dagList, setDagList] = useState<any[]>([]);
   const data = dagList;
-  // const [bucketName, setBucketName] = useState('');
   const backselectedEnvironment = backButtonComposerName;
   const createSelectedEnvironment = composerSelectedFromCreate;
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);

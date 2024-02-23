@@ -116,14 +116,14 @@ const ListDagRuns = ({
           {renderActions(cell.row.original)}
         </td>
       );
-    } 
-    else if (cell.column.Header === 'State') {
+    } else if (cell.column.Header === 'State') {
       if (cell.value === 'success') {
         return (
           <div className="dag-run-state-parent">
             <td
               {...cell.getCellProps()}
               className="dag-runs-table-data-state-success"
+              onClick={() => handleDagRunStateClick(cell.row.original)}
             >
               {cell.render('Cell')}
             </td>
@@ -135,6 +135,7 @@ const ListDagRuns = ({
             <td
               {...cell.getCellProps()}
               className="dag-runs-table-data-state-failure"
+              onClick={() => handleDagRunStateClick(cell.row.original)}
             >
               {cell.render('Cell')}
             </td>
@@ -146,6 +147,7 @@ const ListDagRuns = ({
             <td
               {...cell.getCellProps()}
               className="dag-runs-table-data-state-running"
+              onClick={() => handleDagRunStateClick(cell.row.original)}
             >
               {cell.render('Cell')}
             </td>
@@ -157,6 +159,7 @@ const ListDagRuns = ({
             <td
               {...cell.getCellProps()}
               className="dag-runs-table-data-state-queued"
+              onClick={() => handleDagRunStateClick(cell.row.original)}
             >
               {cell.render('Cell')}
             </td>
@@ -171,9 +174,12 @@ const ListDagRuns = ({
     );
   };
 
+  const handleDagRunStateClick = (data: any) => {
+    setDagRunId(data.dagRunId);
+  };
+
   const handleDownloadOutput = async (event: React.MouseEvent) => {
     const dagRunId = event.currentTarget.getAttribute('data-dag-run-id')!;
-    console.log(dagRunId, bucketName, dagId)
     await SchedulerService.handleDownloadOutputNotebookAPIService(
       dagRunId,
       bucketName,
@@ -182,7 +188,6 @@ const ListDagRuns = ({
   };
 
   const renderActions = (data: any) => {
-    console.log(data)
     return (
       <div className="actions-icon">
         <div
@@ -262,14 +267,6 @@ const ListDagRuns = ({
                 prepareRow={prepareRow}
                 tableDataCondition={tableDataCondition}
                 fromPage="Dag Runs"
-                // setDagRunId={setDagRunId}
-                // selectedDagIndex={
-                //   dagRunsCurrentDateList.length > 0
-                //     ? dagRunsCurrentDateList.length - 1
-                //     : dagRunsList.length > 0
-                //     ? dagRunsList.length - 1
-                //     : -1
-                // }
               />
             </div>
             {dagRunsCurrentDateList.length > 50 && (

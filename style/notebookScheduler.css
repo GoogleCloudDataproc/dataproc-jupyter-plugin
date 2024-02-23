@@ -195,6 +195,7 @@
   text-transform: capitalize;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 }
 .dag-runs-table-data-state-failure {
   background-color: #ea3323;
@@ -206,6 +207,7 @@
   text-transform: capitalize;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 }
 .dag-runs-table-data-state-queued {
   background-color: #808080;
@@ -217,6 +219,7 @@
   text-transform: capitalize;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 }
 .dag-runs-table-data-state-running {
   background-color: #1a73e8;
@@ -228,6 +231,7 @@
   text-transform: capitalize;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 }
 
 .dag-run-state-parent {
