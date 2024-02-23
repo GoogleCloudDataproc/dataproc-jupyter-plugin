@@ -632,7 +632,7 @@ export class SchedulerService {
       const deleteResponse: IUpdateSchedulerAPIResponse = await requestAPI(
         serviceURL
       );
-      if (deleteResponse) {
+      if (deleteResponse.status === 0) {
         await SchedulerService.listDagInfoAPIService(
           setDagList,
           setIsLoading,
@@ -643,6 +643,8 @@ export class SchedulerService {
           `Deleted DAG with id ${dag_id}. May take a couple minutes to fully disappear`,
           toastifyCustomStyle
         );
+      } else {
+        toast.error(`Failed to delete the ${dag_id}`, toastifyCustomStyle);
       }
     } catch (error) {
       DataprocLoggingService.log('Error in Delete api', LOG_LEVEL.ERROR);

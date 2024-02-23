@@ -67,7 +67,8 @@ export default function ImportErrorPopup({
     setActiveIndexes(newActiveIndexes);
   };
   const handleDelete = (filename: string) => {
-    const dagId = filename.substring(filename.lastIndexOf('/') + 1);
+    let dagId = filename.substring(filename.lastIndexOf('/') + 1);
+    dagId = dagId.split('_')[1].split('.')[0]
     if (dagId) onDelete(dagId);
   };
 
