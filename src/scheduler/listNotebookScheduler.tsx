@@ -24,9 +24,8 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Autocomplete, TextField } from '@mui/material';
 import deleteIcon from '../../style/icons/scheduler_delete.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
-import playIcon from '../../style/icons/play_icon.svg';
+import playIcon from '../../style/icons/scheduler_play.svg';
 import pauseIcon from '../../style/icons/scheduler_pause.svg';
-import downloadIcon from '../../style/icons/scheduler_download.svg';
 import EditIconDisable from '../../style/icons/scheduler_edit_dag.svg';
 import EditNotebookIcon from '../../style/icons/scheduler_edit_calendar.svg';
 import { SchedulerService } from './schedulerServices';
@@ -34,7 +33,7 @@ import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import PollingTimer from '../utils/pollingTimer';
 import ImportErrorPopup from '../utils/importErrorPopup';
-import stopIcon from '../../style/icons/stop_icon.svg';
+import triggerIcon from '../../style/icons/scheduler_trigger.svg';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -48,11 +47,6 @@ const iconPause = new LabIcon({
   name: 'launcher:pause-icon',
   svgstr: pauseIcon
 });
-
-const iconDownload = new LabIcon({
-  name: 'launcher:download-icon',
-  svgstr: downloadIcon
-});
 const iconEditDag = new LabIcon({
   name: 'launcher:edit-disable-icon',
   svgstr: EditIconDisable
@@ -62,9 +56,9 @@ const iconEditNotebook = new LabIcon({
   svgstr: EditNotebookIcon
 });
 
-const iconStop = new LabIcon({
-  name: 'launcher:stop-icon',
-  svgstr: stopIcon
+const iconTrigger = new LabIcon({
+  name: 'launcher:trigger-icon',
+  svgstr: triggerIcon
 });
 
 function listNotebookScheduler({
@@ -285,15 +279,6 @@ function listNotebookScheduler({
     setDeletingNotebook(false);
   };
 
-  const handleDownloadScheduler = async (event: React.MouseEvent) => {
-    const jobid = event.currentTarget.getAttribute('data-jobid')!;
-    await SchedulerService.handleDownloadSchedulerAPIService(
-      composerSelectedList,
-      jobid,
-      bucketName
-    );
-  };
-
   const listComposersAPI = async () => {
     await SchedulerService.listComposersAPIService(
       setComposerList,
@@ -366,18 +351,6 @@ function listNotebookScheduler({
             />
           )}
         </div>
-        <div
-          role="button"
-          className="icon-buttons-style"
-          title="Download Notebook"
-          data-jobid={data.jobid}
-          onClick={e => handleDownloadScheduler(e)}
-        >
-          <iconDownload.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
-        </div>
         {data.jobid === editDagLoading ? (
           <div className="icon-buttons-style">
             <ClipLoader
@@ -444,7 +417,7 @@ function listNotebookScheduler({
           data-jobid={data.jobid}
           onClick={e => handleTriggerDag(e)}
         >
-          <iconStop.react
+          <iconTrigger.react
             tag="div"
             className="icon-white logo-alignment-style"
           />
