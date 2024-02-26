@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '../controls/MuiWrappedInput';
 import {
   Autocomplete,
@@ -94,7 +94,7 @@ const CreateNotebookScheduler = ({
     Intl.DateTimeFormat().resolvedOptions().timeZone
   );
 
-  const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
+  const timezones = Object.keys(tzdata.zones).sort();
 
   const [createCompleted, setCreateCompleted] =
     context !== '' ? useState(false) : useState(true);
