@@ -15,14 +15,26 @@
 import json
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
+from requests import HTTPError
 import tornado
 import subprocess
 from cachetools import TTLCache
 import datetime
 import re
 import threading
+from jupyter_server.utils import ensure_async
+import time
+
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
+from dataproc_jupyter_plugin.contollers.clusterController import  ClusterListController
+from dataproc_jupyter_plugin.contollers.composerController import ComposerListController
+from dataproc_jupyter_plugin.contollers.dagController import DagDeleteController, DagDownloadController, DagListController, DagUpdateController
+from dataproc_jupyter_plugin.contollers.dagRunController import DagRunController, DagRunTaskController, DagRunTaskLogsController
+from dataproc_jupyter_plugin.contollers.editDagController import EditDagController
+from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
+from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
+
 
 
 def update_gateway_client_url(c, log):
@@ -39,78 +51,80 @@ credentials_cache = None
 
 def get_cached_credentials(log):
     global credentials_cache
-
     try:
-        cmd = "gcloud config config-helper --format=json"
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        output, error = process.communicate()
-        if process.returncode == 0:
-            config_data = json.loads(output)
-            credentials = {
-                    'project_id': config_data['configuration']['properties']['core']['project'],
-                    'region_id': config_data['configuration']['properties']['compute']['region'],
-                    'access_token': config_data['credential']['access_token']
-                }
-
-            token_expiry = config_data['credential']['token_expiry']
-            utc_datetime = datetime.datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
-            current_utc_datetime = datetime.datetime.utcnow()
-            expiry_timedelta = utc_datetime - current_utc_datetime
-            expiry_seconds = expiry_timedelta.total_seconds()
-            if expiry_seconds > 1000:
-                ttl_seconds = 1000
-            else:
-                ttl_seconds = expiry_seconds
-            credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
-            credentials_cache['credentials'] = credentials
-            return credentials
-        else:
-            cmd = "gcloud config get-value account"
+        if credentials_cache is None or 'credentials' not in credentials_cache:
+            cmd = "gcloud config config-helper --format=json"
             process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             output, error = process.communicate()
-            if output == '':
-                cmd = "gcloud config get-value project"
-                process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                project, error = process.communicate()
-                if project == '':
-                        credentials = {
-                    'project_id': '',
-                    'region_id': '',
-                    'access_token': '',
-                    'config_error': 1,
-                    'login_error': 0
+            if process.returncode == 0:
+                config_data = json.loads(output)
+                credentials = {
+                        'project_id': config_data['configuration']['properties']['core']['project'],
+                        'region_id': config_data['configuration']['properties']['compute']['region'],
+                        'access_token': config_data['credential']['access_token']
                     }
+
+                token_expiry = config_data['credential']['token_expiry']
+                utc_datetime = datetime.datetime.strptime(token_expiry, '%Y-%m-%dT%H:%M:%SZ')
+                current_utc_datetime = datetime.datetime.utcnow()
+                expiry_timedelta = utc_datetime - current_utc_datetime
+                expiry_seconds = expiry_timedelta.total_seconds()
+                if expiry_seconds > 1000:
+                    ttl_seconds = 1000
                 else:
-                    cmd = "gcloud config get-value compute/region"
+                    ttl_seconds = expiry_seconds
+                credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
+                credentials_cache['credentials'] = credentials
+                return credentials
+            else:
+                cmd = "gcloud config get-value account"
+                process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                output, error = process.communicate()
+                if output == '':
+                    cmd = "gcloud config get-value project"
                     process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    region, error = process.communicate()
-                    if region == '':
-                        credentials = {
-                            'project_id': '',
-                            'region_id': '',
-                            'access_token': '',
-                            'config_error': 1,
-                            'login_error': 0
+                    project, error = process.communicate()
+                    if project == '':
+                            credentials = {
+                        'project_id': '',
+                        'region_id': '',
+                        'access_token': '',
+                        'config_error': 1,
+                        'login_error': 0
                         }
                     else:
-                        credentials = {
-                            'project_id': '',
-                            'region_id': '',
-                            'access_token': '',
-                            'config_error': 0,
-                            'login_error': 1
+                        cmd = "gcloud config get-value compute/region"
+                        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        region, error = process.communicate()
+                        if region == '':
+                            credentials = {
+                                'project_id': '',
+                                'region_id': '',
+                                'access_token': '',
+                                'config_error': 1,
+                                'login_error': 0
                             }
-            else:
-                credentials = {
-                    'project_id': '',
-                    'region_id': '',
-                    'access_token': '',
-                    'config_error': 1,
-                    'login_error': 0
-                    }
-            credentials_cache = TTLCache(maxsize=1, ttl=5)
-            credentials_cache['credentials'] = credentials
-            return credentials
+                        else:
+                            credentials = {
+                                'project_id': '',
+                                'region_id': '',
+                                'access_token': '',
+                                'config_error': 0,
+                                'login_error': 1
+                                }
+                else:
+                    credentials = {
+                        'project_id': '',
+                        'region_id': '',
+                        'access_token': '',
+                        'config_error': 1,
+                        'login_error': 0
+                        }
+                credentials_cache = TTLCache(maxsize=1, ttl=5)
+                credentials_cache['credentials'] = credentials
+                return credentials
+        else:
+            return credentials_cache['credentials']
     except Exception:
         log.exception(f"Error fetching credentials from gcloud")
         credentials = {
@@ -141,7 +155,6 @@ class RouteHandler(APIHandler):
             self.log.exception(f"Error handling credential request")
             cached_credentials = get_cached_credentials(self.log)
             self.finish(json.dumps(cached_credentials))
-
 
 class LoginHandler(APIHandler):
     @tornado.web.authenticated
@@ -182,9 +195,9 @@ class ConfigHandler(APIHandler):
 
 
 class UrlHandler(APIHandler):
+    url = {}
     @tornado.web.authenticated
     def get(self):
-        url = {}
         dataproc_url = self.gcp_service_url('dataproc')
         compute_url = self.gcp_service_url('compute', default_url='https://compute.googleapis.com/compute/v1')
         metastore_url = self.gcp_service_url('metastore')
@@ -211,6 +224,7 @@ class UrlHandler(APIHandler):
         return url
 
 
+        
 class LogHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
@@ -224,28 +238,71 @@ def setup_handlers(web_app):
     host_pattern = ".*$"
 
     base_url = web_app.settings["base_url"]
+    application_url = "dataproc-plugin"
+ 
 
     # Prepend the base_url so that it works in a JupyterHub setting
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "credentials")
+    route_pattern = url_path_join(base_url,  application_url, "credentials")
     handlers = [(route_pattern, RouteHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "login")
+    route_pattern = url_path_join(base_url,  application_url, "login")
     handlers = [(route_pattern, LoginHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "configuration")
+    route_pattern = url_path_join(base_url,  application_url, "configuration")
     handlers = [(route_pattern, ConfigHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "getGcpServiceUrls")
+    route_pattern = url_path_join(base_url,  application_url, "getGcpServiceUrls")
     handlers = [(route_pattern, UrlHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "log")
+    route_pattern = url_path_join(base_url,  application_url, "log")
     handlers = [(route_pattern, LogHandler)]
     web_app.add_handlers(host_pattern, handlers)
 
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "getGcpServiceUrls")
-    handlers = [(route_pattern, UrlHandler)]
+    route_pattern = url_path_join(base_url,  application_url, "composerList")
+    handlers = [(route_pattern, ComposerListController)]
     web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url,  application_url, "dagRun")
+    route_pattern_dag_task = url_path_join(base_url,  application_url, "dagRunTask")
+    route_pattern_dag_task_logs = url_path_join(base_url,  application_url, "dagRunTaskLogs")
+    handlers = [
+    (route_pattern, DagRunController),
+    (route_pattern_dag_task, DagRunTaskController),
+    (route_pattern_dag_task_logs, DagRunTaskLogsController),
+    ]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url,  application_url, "clusterList")
+    handlers = [(route_pattern, ClusterListController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url,  application_url, "runtimeList")
+    handlers = [(route_pattern, RuntimeController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url,  application_url, "createJobScheduler")
+    handlers = [(route_pattern, ExecutorController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern_dag = url_path_join(base_url,  application_url, "dagList")
+    route_pattern_download = url_path_join(base_url,  application_url, "dagDownload")
+    route_pattern_delete = url_path_join(base_url,  application_url, "dagDelete")
+    route_pattern_patch = url_path_join(base_url,  application_url, "dagUpdate")
+    handlers = [
+    (route_pattern_dag, DagListController),
+    (route_pattern_download, DagDownloadController),
+    (route_pattern_delete, DagDeleteController),
+    (route_pattern_patch, DagUpdateController)
+    ]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url,  application_url, "editJobScheduler")
+    handlers = [(route_pattern, EditDagController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+
+

@@ -29,7 +29,7 @@
   background: var(--jp-layout-color0);
   color: var(--jp-ui-font-color2);
   border: none;
-  font-family: ROBOTO;
+  font-family: 'Roboto';
   border-radius: 4px;
 }
 .submit-job-message-input {

@@ -29,8 +29,15 @@ interface IDeletePopupProps {
   onDelete: () => void;
   deletePopupOpen: boolean;
   DeleteMsg: string;
+  deletingNotebook?: boolean;
 }
-function DeletePopup({ onCancel, onDelete, deletePopupOpen, DeleteMsg }: IDeletePopupProps) {
+function DeletePopup({
+  onCancel,
+  onDelete,
+  deletePopupOpen,
+  DeleteMsg,
+  deletingNotebook
+}: IDeletePopupProps) {
   return (
     <Dialog open={deletePopupOpen} onClose={onCancel}>
       <DialogTitle>Confirm deletion</DialogTitle>
@@ -39,7 +46,11 @@ function DeletePopup({ onCancel, onDelete, deletePopupOpen, DeleteMsg }: IDelete
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
-        <Button onClick={onDelete}>Delete</Button>
+        {deletingNotebook ? (
+          <div className="submit-button-disable-style">DELETING</div>
+        ) : (
+          <Button onClick={onDelete}>Delete</Button>
+        )}
       </DialogActions>
     </Dialog>
   );
