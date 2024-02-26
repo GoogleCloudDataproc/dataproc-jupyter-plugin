@@ -104,8 +104,6 @@ const CreateNotebookScheduler = ({
     useState(false);
   const [jobNameUniqueValidation, setJobNameUniqueValidation] = useState(true);
   const [dagList, setDagList] = useState<any[]>([]);
-  const [bucketName, setBucketName] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [dagListCall, setDagListCall] = useState(false);
 
@@ -139,11 +137,8 @@ const CreateNotebookScheduler = ({
   const getDaglist = async (composer: string) => {
     setDagListCall(true);
     try {
-      console.log(bucketName, isLoading);
-      await SchedulerService.listDagInfoAPIService(
+      await SchedulerService.listDagInfoAPIServiceForCreateNotebook(
         setDagList,
-        setIsLoading,
-        setBucketName,
         composer
       );
       setDagListCall(false);
@@ -723,7 +718,7 @@ const CreateNotebookScheduler = ({
               </>
             )}
             <div className="job-button-style-parent">
-              <div
+              <button
                 onClick={() => {
                   if (!isSaveDisabled()) {
                     handleCreateJobScheduler();
@@ -734,7 +729,7 @@ const CreateNotebookScheduler = ({
                     ? 'submit-button-disable-style'
                     : 'submit-button-style'
                 }
-                aria-label="submit Batch"
+                aria-label={editMode ? ' Update Schedule' : 'Create Schedule'}
               >
                 <div>
                   {editMode
@@ -745,8 +740,8 @@ const CreateNotebookScheduler = ({
                     ? 'CREATING'
                     : 'CREATE'}
                 </div>
-              </div>
-              <div
+              </button>
+              <button
                 className={
                   creatingScheduler
                     ? 'submit-button-disable-style'
@@ -756,7 +751,7 @@ const CreateNotebookScheduler = ({
                 onClick={!creatingScheduler ? handleCancel : undefined}
               >
                 <div>CANCEL</div>
-              </div>
+              </button>
             </div>
           </div>
         </div>

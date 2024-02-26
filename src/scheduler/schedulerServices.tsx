@@ -528,6 +528,37 @@ export class SchedulerService {
       toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
     }
   };
+  static listDagInfoAPIServiceForCreateNotebook = async (
+    setDagList: (value: string[]) => void,
+    composerSelected: string
+  ) => {
+    try {
+      const serviceURL = `dagList?composer=${composerSelected}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      let transformDagListData = [];
+      if (formattedResponse && formattedResponse[0].dags) {
+        transformDagListData = formattedResponse[0].dags.map(
+          (dag: ISchedulerDagData) => {
+            return {
+              jobid: dag.dag_id,
+              notebookname: dag.dag_id,
+              schedule: dag.timetable_description,
+              status: dag.is_paused ? 'Paused' : 'Active',
+              scheduleInterval: dag.schedule_interval?.value
+            };
+          }
+        );
+      }
+      setDagList(transformDagListData);
+    } catch (error) {
+      DataprocLoggingService.log(
+        'Error listing dag Scheduler list',
+        LOG_LEVEL.ERROR
+      );
+      console.error('Error listing dag Scheduler list', error);
+      toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
+    }
+  };
   static handleDownloadSchedulerAPIService = async (
     composerSelected: string,
     jobid: string,
