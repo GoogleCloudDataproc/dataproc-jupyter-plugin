@@ -44,7 +44,6 @@ const ListDagRuns = ({
   setOrangeListDates,
   setRedListDates,
   setGreenListDates,
-  setDarkGreenListDates,
   bucketName
 }: {
   composerName: string;
@@ -59,7 +58,6 @@ const ListDagRuns = ({
   setOrangeListDates: (value: string[]) => void;
   setRedListDates: (value: string[]) => void;
   setGreenListDates: (value: string[]) => void;
-  setDarkGreenListDates: (value: string[]) => void;
   bucketName: string;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState([]);
@@ -185,7 +183,7 @@ const ListDagRuns = ({
       dagRunId,
       bucketName,
       dagId,
-      setDownloadOutputDagRunId,
+      setDownloadOutputDagRunId
     );
   };
 
@@ -242,8 +240,7 @@ const ListDagRuns = ({
       setGreyListDates,
       setOrangeListDates,
       setRedListDates,
-      setGreenListDates,
-      setDarkGreenListDates
+      setGreenListDates
     );
   };
 
