@@ -44,6 +44,13 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
 
+interface IDagList {
+  jobid:  string;
+  notebookname:  string;
+  schedule:  string;
+  scheduleInterval:string;
+}
+
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
@@ -105,7 +112,7 @@ const CreateNotebookScheduler = ({
   const [jobNameSpecialValidation, setJobNameSpecialValidation] =
     useState(false);
   const [jobNameUniqueValidation, setJobNameUniqueValidation] = useState(true);
-  const [dagList, setDagList] = useState<any[]>([]);
+  const [dagList, setDagList] = useState<IDagList[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [dagListCall, setDagListCall] = useState(false);
 
