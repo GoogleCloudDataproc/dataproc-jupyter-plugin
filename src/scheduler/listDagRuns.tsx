@@ -100,6 +100,7 @@ const ListDagRuns = ({
     nextPage,
     previousPage,
     setPageSize,
+    gotoPage,
     state: { pageIndex, pageSize }
   } = useTable(
     //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
@@ -249,6 +250,7 @@ const ListDagRuns = ({
   }, [startDate, endDate]);
 
   useEffect(() => {
+    gotoPage(0);
     if (selectedDate !== null && dagRunsList.length > 0) {
       let currentDate = new Date(selectedDate.toDate()).toDateString();
       let currentDateDagRunList: any = dagRunsList.filter((dagRun: any) => {
