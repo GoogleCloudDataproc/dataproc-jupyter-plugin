@@ -16,7 +16,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Typography, CircularProgress } from '@mui/material';
+import { Typography, CircularProgress, IconButton } from '@mui/material';
 import { SchedulerService } from './schedulerServices';
 import { LabIcon } from '@jupyterlab/ui-components';
 import dagTaskSuccessIcon from '../../style/icons/dag_task_success_icon.svg';
@@ -134,7 +134,7 @@ const ListDagTaskInstances = ({
                       <div className="logo-row-container">
                         {Array.from({ length: taskInstance.tryNumber }).map(
                           (_, i) => (
-                            <div
+                            <IconButton
                               key={i}
                               className="logo-alignment-style-accordion"
                               onClick={() =>
@@ -150,7 +150,7 @@ const ListDagTaskInstances = ({
                               ) : (
                                 <iconDagTaskFailed.react tag="div" />
                               )}
-                            </div>
+                            </IconButton>
                           )
                         )}
                       </div>

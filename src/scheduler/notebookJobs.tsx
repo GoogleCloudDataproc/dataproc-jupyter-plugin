@@ -21,6 +21,7 @@ import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
 import ListNotebookScheduler from './listNotebookScheduler';
 import ExecutionHistory from './executionHistory';
+import { scheduleMode } from '../utils/const';
 
 const NotebookJobComponent = ({
   app,
@@ -57,7 +58,7 @@ const NotebookJobComponent = ({
   setCreateCompleted?: (value: boolean) => void;
   setJobNameSelected?: (value: string) => void;
   setComposerSelected?: (value: string) => void;
-  setScheduleMode?: (value: string) => void;
+  setScheduleMode?: (value: scheduleMode) => void;
   setScheduleValue?: (value: string) => void;
 
   setInputFileSelected?: (value: string) => void;

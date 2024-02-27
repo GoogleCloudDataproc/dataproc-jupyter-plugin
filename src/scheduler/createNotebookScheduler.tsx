@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '../controls/MuiWrappedInput';
 import {
   Autocomplete,
@@ -41,6 +41,15 @@ import NotebookJobComponent from './notebookJobs';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
+import { Button } from '@mui/material';
+import { scheduleMode } from '../utils/const';
+
+interface IDagList {
+  jobid:  string;
+  notebookname:  string;
+  schedule:  string;
+  scheduleInterval:string;
+}
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -88,13 +97,13 @@ const CreateNotebookScheduler = ({
   const [emailOnSuccess, setEmailOnSuccess] = useState(false);
   const [emailList, setEmailList] = useState<string[]>([]);
 
-  const [scheduleMode, setScheduleMode] = useState('runNow');
+  const [scheduleMode, setScheduleMode] = useState<scheduleMode>('runNow');
   const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
   const [timeZoneSelected, setTimeZoneSelected] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone
   );
 
-  const timezones = useMemo(() => Object.keys(tzdata.zones).sort(), []);
+  const timezones = Object.keys(tzdata.zones).sort();
 
   const [createCompleted, setCreateCompleted] =
     context !== '' ? useState(false) : useState(true);
@@ -103,9 +112,7 @@ const CreateNotebookScheduler = ({
   const [jobNameSpecialValidation, setJobNameSpecialValidation] =
     useState(false);
   const [jobNameUniqueValidation, setJobNameUniqueValidation] = useState(true);
-  const [dagList, setDagList] = useState<any[]>([]);
-  const [bucketName, setBucketName] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [dagList, setDagList] = useState<IDagList[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [dagListCall, setDagListCall] = useState(false);
 
@@ -139,11 +146,8 @@ const CreateNotebookScheduler = ({
   const getDaglist = async (composer: string) => {
     setDagListCall(true);
     try {
-      console.log(bucketName, isLoading);
-      await SchedulerService.listDagInfoAPIService(
+      await SchedulerService.listDagInfoAPIServiceForCreateNotebook(
         setDagList,
-        setIsLoading,
-        setBucketName,
         composer
       );
       setDagListCall(false);
@@ -164,11 +168,9 @@ const CreateNotebookScheduler = ({
   const handleSchedulerModeChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setScheduleMode((event.target as HTMLInputElement).value);
-    if (
-      (event.target as HTMLInputElement).value === 'runSchedule' &&
-      scheduleValue === ''
-    ) {
+    const newValue = (event.target as HTMLInputElement).value;
+    setScheduleMode(newValue as scheduleMode);
+    if (newValue === 'runSchedule' && scheduleValue === '') {
       setScheduleValue('30 17 * * 1-5');
     }
   };
@@ -722,19 +724,16 @@ const CreateNotebookScheduler = ({
                 </div>
               </>
             )}
-            <div className="job-button-style-parent">
-              <div
+            <div className="save-overlay">
+              <Button
                 onClick={() => {
                   if (!isSaveDisabled()) {
                     handleCreateJobScheduler();
                   }
                 }}
-                className={
-                  isSaveDisabled()
-                    ? 'submit-button-disable-style'
-                    : 'submit-button-style'
-                }
-                aria-label="submit Batch"
+                variant="contained"
+                disabled={isSaveDisabled()}
+                aria-label={editMode ? ' Update Schedule' : 'Create Schedule'}
               >
                 <div>
                   {editMode
@@ -745,18 +744,15 @@ const CreateNotebookScheduler = ({
                     ? 'CREATING'
                     : 'CREATE'}
                 </div>
-              </div>
-              <div
-                className={
-                  creatingScheduler
-                    ? 'submit-button-disable-style'
-                    : 'job-cancel-button-style'
-                }
+              </Button>
+              <Button
+                variant="outlined"
+                disabled={creatingScheduler}
                 aria-label="cancel Batch"
                 onClick={!creatingScheduler ? handleCancel : undefined}
               >
                 <div>CANCEL</div>
-              </div>
+              </Button>
             </div>
           </div>
         </div>

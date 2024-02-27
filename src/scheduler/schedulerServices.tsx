@@ -20,6 +20,7 @@ import { requestAPI } from '../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { toastifyCustomStyle } from '../utils/utils';
 import { JupyterLab } from '@jupyterlab/application';
+import { scheduleMode } from '../utils/const';
 
 interface IPayload {
   input_filename: string;
@@ -54,6 +55,13 @@ interface ISchedulerDagData {
     value: string;
   };
 }
+interface IDagList {
+  jobid: string;
+  notebookname: string;
+  schedule: string;
+  scheduleInterval: string;
+}
+
 export class SchedulerService {
   static listClustersAPIService = async (
     setClusterList: (value: string[]) => void,
@@ -261,7 +269,7 @@ export class SchedulerService {
     setCreateCompleted?: (value: boolean) => void,
     setJobNameSelected?: (value: string) => void,
     setComposerSelected?: (value: string) => void,
-    setScheduleMode?: (value: string) => void,
+    setScheduleMode?: (value: scheduleMode) => void,
     setScheduleValue?: (value: string) => void,
 
     setInputFileSelected?: (value: string) => void,
@@ -493,7 +501,7 @@ export class SchedulerService {
     }
   };
   static listDagInfoAPIService = async (
-    setDagList: (value: string[]) => void,
+    setDagList: (value: IDagList[]) => void,
     setIsLoading: (value: boolean) => void,
     setBucketName: (value: string) => void,
     composerSelected: string
@@ -528,6 +536,37 @@ export class SchedulerService {
       toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
     }
   };
+  static listDagInfoAPIServiceForCreateNotebook = async (
+    setDagList: (value: IDagList[]) => void,
+    composerSelected: string
+  ) => {
+    try {
+      const serviceURL = `dagList?composer=${composerSelected}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      let transformDagListData = [];
+      if (formattedResponse && formattedResponse[0].dags) {
+        transformDagListData = formattedResponse[0].dags.map(
+          (dag: ISchedulerDagData) => {
+            return {
+              jobid: dag.dag_id,
+              notebookname: dag.dag_id,
+              schedule: dag.timetable_description,
+              status: dag.is_paused ? 'Paused' : 'Active',
+              scheduleInterval: dag.schedule_interval?.value
+            };
+          }
+        );
+      }
+      setDagList(transformDagListData);
+    } catch (error) {
+      DataprocLoggingService.log(
+        'Error listing dag Scheduler list',
+        LOG_LEVEL.ERROR
+      );
+      console.error('Error listing dag Scheduler list', error);
+      toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
+    }
+  };
   static handleDownloadSchedulerAPIService = async (
     composerSelected: string,
     jobid: string,
@@ -549,7 +588,7 @@ export class SchedulerService {
   static handleDeleteSchedulerAPIService = async (
     composerSelected: string,
     dag_id: string,
-    setDagList: (value: string[]) => void,
+    setDagList: (value: IDagList[]) => void,
     setIsLoading: (value: boolean) => void,
     setBucketName: (value: string) => void
   ) => {
@@ -580,7 +619,7 @@ export class SchedulerService {
     composerSelected: string,
     dag_id: string,
     is_status_paused: boolean,
-    setDagList: (value: string[]) => void,
+    setDagList: (value: IDagList[]) => void,
     setIsLoading: (value: boolean) => void,
     setBucketName: (value: string) => void
   ) => {
