@@ -42,6 +42,7 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Button } from '@mui/material';
+import { scheduleMode } from '../utils/const';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -89,7 +90,7 @@ const CreateNotebookScheduler = ({
   const [emailOnSuccess, setEmailOnSuccess] = useState(false);
   const [emailList, setEmailList] = useState<string[]>([]);
 
-  const [scheduleMode, setScheduleMode] = useState('runNow');
+  const [scheduleMode, setScheduleMode] = useState<scheduleMode>('runNow');
   const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
   const [timeZoneSelected, setTimeZoneSelected] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -160,11 +161,9 @@ const CreateNotebookScheduler = ({
   const handleSchedulerModeChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setScheduleMode((event.target as HTMLInputElement).value);
-    if (
-      (event.target as HTMLInputElement).value === 'runSchedule' &&
-      scheduleValue === ''
-    ) {
+    const newValue = (event.target as HTMLInputElement).value;
+    setScheduleMode(newValue as scheduleMode);
+    if (newValue === 'runSchedule' && scheduleValue === '') {
       setScheduleValue('30 17 * * 1-5');
     }
   };
@@ -740,7 +739,7 @@ const CreateNotebookScheduler = ({
                 </div>
               </Button>
               <Button
-                variant="contained"
+                variant="outlined"
                 disabled={creatingScheduler}
                 aria-label="cancel Batch"
                 onClick={!creatingScheduler ? handleCancel : undefined}

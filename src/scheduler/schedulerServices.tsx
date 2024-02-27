@@ -20,6 +20,7 @@ import { requestAPI } from '../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { toastifyCustomStyle } from '../utils/utils';
 import { JupyterLab } from '@jupyterlab/application';
+import { scheduleMode } from '../utils/const';
 
 interface IPayload {
   input_filename: string;
@@ -261,7 +262,7 @@ export class SchedulerService {
     setCreateCompleted?: (value: boolean) => void,
     setJobNameSelected?: (value: string) => void,
     setComposerSelected?: (value: string) => void,
-    setScheduleMode?: (value: string) => void,
+    setScheduleMode?: (value: scheduleMode) => void,
     setScheduleValue?: (value: string) => void,
 
     setInputFileSelected?: (value: string) => void,

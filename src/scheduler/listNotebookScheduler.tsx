@@ -33,6 +33,7 @@ import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import PollingTimer from '../utils/pollingTimer';
+import { scheduleMode } from '../utils/const';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -98,7 +99,7 @@ function listNotebookScheduler({
   setCreateCompleted?: (value: boolean) => void;
   setJobNameSelected?: (value: string) => void;
   setComposerSelected?: (value: string) => void;
-  setScheduleMode?: (value: string) => void;
+  setScheduleMode?: (value: scheduleMode) => void;
   setScheduleValue?: (value: string) => void;
 
   setInputFileSelected?: (value: string) => void;

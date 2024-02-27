@@ -24,6 +24,7 @@ import dagTaskFailedIcon from '../../style/icons/dag_task_failed_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
+import { Button } from 'semantic-ui-react';
 
 const iconDagTaskFailed = new LabIcon({
   name: 'launcher:dag-task-failed-icon',
@@ -134,7 +135,7 @@ const ListDagTaskInstances = ({
                       <div className="logo-row-container">
                         {Array.from({ length: taskInstance.tryNumber }).map(
                           (_, i) => (
-                            <div
+                            <Button
                               key={i}
                               className="logo-alignment-style-accordion"
                               onClick={() =>
@@ -150,7 +151,7 @@ const ListDagTaskInstances = ({
                               ) : (
                                 <iconDagTaskFailed.react tag="div" />
                               )}
-                            </div>
+                            </Button>
                           )
                         )}
                       </div>
