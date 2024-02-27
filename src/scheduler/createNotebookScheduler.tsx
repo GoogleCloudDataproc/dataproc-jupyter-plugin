@@ -41,6 +41,7 @@ import NotebookJobComponent from './notebookJobs';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
+import { Button } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -717,18 +718,15 @@ const CreateNotebookScheduler = ({
                 </div>
               </>
             )}
-            <div className="job-button-style-parent">
-              <button
+            <div className="save-overlay">
+              <Button
                 onClick={() => {
                   if (!isSaveDisabled()) {
                     handleCreateJobScheduler();
                   }
                 }}
-                className={
-                  isSaveDisabled()
-                    ? 'submit-button-disable-style'
-                    : 'submit-button-style'
-                }
+                variant="contained"
+                disabled={isSaveDisabled()}
                 aria-label={editMode ? ' Update Schedule' : 'Create Schedule'}
               >
                 <div>
@@ -740,18 +738,15 @@ const CreateNotebookScheduler = ({
                     ? 'CREATING'
                     : 'CREATE'}
                 </div>
-              </button>
-              <button
-                className={
-                  creatingScheduler
-                    ? 'submit-button-disable-style'
-                    : 'job-cancel-button-style'
-                }
+              </Button>
+              <Button
+                variant="contained"
+                disabled={creatingScheduler}
                 aria-label="cancel Batch"
                 onClick={!creatingScheduler ? handleCancel : undefined}
               >
                 <div>CANCEL</div>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
