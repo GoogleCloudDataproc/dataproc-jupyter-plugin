@@ -43,11 +43,23 @@ interface ICluster {
   schedulesDeletion: string;
   actions: React.ReactNode;
 }
+interface IDagList {
+  jobid: string;
+  notebookname: string;
+  schedule: string;
+  scheduleInterval: string;
+}
+
 interface IPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
   pageIndex: number;
-  allData: IBatch[] | ITemplate[]| ICluster[] | ISessionTemplateDisplay[];
+  allData:
+    | IBatch[]
+    | ITemplate[]
+    | ICluster[]
+    | ISessionTemplateDisplay[]
+    | IDagList[];
   previousPage: () => void;
   nextPage: () => void;
   canPreviousPage: boolean;
@@ -68,18 +80,18 @@ export const PaginationView = ({
     <div className="pagination-parent-view">
       <div>Rows per page: </div>
       <Select
-      className="page-size-selection"
-      value={pageSize.toString()} // Convert pageSize to string for compatibility
-      onChange={(e, { value }) => {
-        const selectedPageSize = parseInt(value as string, 10); // Parse the value to a number
-        setPageSize(selectedPageSize); // Use the parsed number as the new pageSize
-      }}
-      options={[
-        { key: '50', value: '50', text: '50' },
-        { key: '100', value: '100', text: '100' },
-        { key: '200', value: '200', text: '200' }
-      ]}
-    />
+        className="page-size-selection"
+        value={pageSize.toString()} // Convert pageSize to string for compatibility
+        onChange={(e, { value }) => {
+          const selectedPageSize = parseInt(value as string, 10); // Parse the value to a number
+          setPageSize(selectedPageSize); // Use the parsed number as the new pageSize
+        }}
+        options={[
+          { key: '50', value: '50', text: '50' },
+          { key: '100', value: '100', text: '100' },
+          { key: '200', value: '200', text: '200' }
+        ]}
+      />
       {(pageIndex + 1) * pageSize > allData.length ? (
         <div className="page-display-part">
           {pageIndex * pageSize + 1} - {allData.length} of {allData.length}

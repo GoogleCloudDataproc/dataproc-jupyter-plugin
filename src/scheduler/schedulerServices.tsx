@@ -55,6 +55,13 @@ interface ISchedulerDagData {
     value: string;
   };
 }
+interface IDagList {
+  jobid: string;
+  notebookname: string;
+  schedule: string;
+  scheduleInterval: string;
+}
+
 export class SchedulerService {
   static listClustersAPIService = async (
     setClusterList: (value: string[]) => void,
@@ -494,7 +501,7 @@ export class SchedulerService {
     }
   };
   static listDagInfoAPIService = async (
-    setDagList: (value: string[]) => void,
+    setDagList: (value: IDagList[]) => void,
     setIsLoading: (value: boolean) => void,
     setBucketName: (value: string) => void,
     composerSelected: string
@@ -530,7 +537,7 @@ export class SchedulerService {
     }
   };
   static listDagInfoAPIServiceForCreateNotebook = async (
-    setDagList: (value: string[]) => void,
+    setDagList: (value: IDagList[]) => void,
     composerSelected: string
   ) => {
     try {
@@ -581,7 +588,7 @@ export class SchedulerService {
   static handleDeleteSchedulerAPIService = async (
     composerSelected: string,
     dag_id: string,
-    setDagList: (value: string[]) => void,
+    setDagList: (value: IDagList[]) => void,
     setIsLoading: (value: boolean) => void,
     setBucketName: (value: string) => void
   ) => {
@@ -612,7 +619,7 @@ export class SchedulerService {
     composerSelected: string,
     dag_id: string,
     is_status_paused: boolean,
-    setDagList: (value: string[]) => void,
+    setDagList: (value: IDagList[]) => void,
     setIsLoading: (value: boolean) => void,
     setBucketName: (value: string) => void
   ) => {

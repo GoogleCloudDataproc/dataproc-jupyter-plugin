@@ -61,6 +61,13 @@ const iconEditNotebook = new LabIcon({
   svgstr: EditNotebookIcon
 });
 
+interface IDagList {
+  jobid: string;
+  notebookname: string;
+  schedule: string;
+  scheduleInterval: string;
+}
+
 function listNotebookScheduler({
   app,
   handleDagIdSelection,
@@ -125,7 +132,7 @@ function listNotebookScheduler({
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelectedList, setComposerSelectedList] = useState('');
-  const [dagList, setDagList] = useState<any[]>([]);
+  const [dagList, setDagList] = useState<IDagList[]>([]);
   const data = dagList;
   const [bucketName, setBucketName] = useState('');
   const backselectedEnvironment = backButtonComposerName;
