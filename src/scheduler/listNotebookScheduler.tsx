@@ -35,6 +35,7 @@ import PollingTimer from '../utils/pollingTimer';
 import PollingImportErrorTimer from '../utils/pollingImportErrorTimer';
 import ImportErrorPopup from '../utils/importErrorPopup';
 import triggerIcon from '../../style/icons/scheduler_trigger.svg';
+import { scheduleMode } from '../utils/const';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -61,6 +62,12 @@ const iconTrigger = new LabIcon({
   name: 'launcher:trigger-icon',
   svgstr: triggerIcon
 });
+interface IDagList {
+  jobid: string;
+  notebookname: string;
+  schedule: string;
+  scheduleInterval: string;
+}
 
 function listNotebookScheduler({
   app,
@@ -102,7 +109,7 @@ function listNotebookScheduler({
   setCreateCompleted?: (value: boolean) => void;
   setJobNameSelected?: (value: string) => void;
   setComposerSelected?: (value: string) => void;
-  setScheduleMode?: (value: string) => void;
+  setScheduleMode?: (value: scheduleMode) => void;
   setScheduleValue?: (value: string) => void;
 
   setInputFileSelected?: (value: string) => void;
@@ -130,7 +137,7 @@ function listNotebookScheduler({
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelectedList, setComposerSelectedList] = useState('');
-  const [dagList, setDagList] = useState<any[]>([]);
+  const [dagList, setDagList] = useState<IDagList[]>([]);
   const data = dagList;
   const backselectedEnvironment = backButtonComposerName;
   const createSelectedEnvironment = composerSelectedFromCreate;

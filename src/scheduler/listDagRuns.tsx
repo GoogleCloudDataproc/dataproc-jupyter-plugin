@@ -236,7 +236,6 @@ const ListDagRuns = ({
       setDagRunsList,
       setDagRunId,
       setIsLoading,
-
       setBlueListDates,
       setGreyListDates,
       setOrangeListDates,

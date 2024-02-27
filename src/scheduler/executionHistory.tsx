@@ -76,28 +76,28 @@ const ExecutionHistory = ({
     }
 
     const totalViewDates = day.date();
+    const formattedTotalViewDate = totalViewDates.toString().padStart(2, '0');
 
     //Color codes to highlight dates in calendar
     //Blue color code for running status
     const isBlueExecution =
       blueListDates.length > 0 &&
-      blueListDates.includes(totalViewDates.toString().padStart(2, '0'));
+      blueListDates.includes(formattedTotalViewDate);
     //Grey color code for queued status
     const isGreyExecution =
       greyListDates.length > 0 &&
-      greyListDates.includes(totalViewDates.toString().padStart(2, '0'));
+      greyListDates.includes(formattedTotalViewDate);
     //Orange color code for combination of failed and success status
     const isOrangeExecution =
       orangeListDates.length > 0 &&
-      orangeListDates.includes(totalViewDates.toString().padStart(2, '0'));
+      orangeListDates.includes(formattedTotalViewDate);
     //Red color code for only with failed status
     const isRedExecution =
-      redListDates.length > 0 &&
-      redListDates.includes(totalViewDates.toString().padStart(2, '0'));
-    //Green color code for only with success status
+      redListDates.length > 0 && redListDates.includes(formattedTotalViewDate);
+    //Green color code for only one with success status
     const isGreenExecution =
       greenListDates.length > 0 &&
-      greenListDates.includes(totalViewDates.toString().padStart(2, '0'));
+      greenListDates.includes(formattedTotalViewDate);
 
     const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates);
 
