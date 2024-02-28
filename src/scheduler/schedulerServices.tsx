@@ -669,7 +669,7 @@ export class SchedulerService {
           composerSelected
         );
         toast.success(
-          `Deleted DAG with id ${dag_id}. May take a couple minutes to fully disappear`,
+          `Deleted job ${dag_id}. It might take a few minutes to for it to be deleted from the list of jobs.`,
           toastifyCustomStyle
         );
       } else {

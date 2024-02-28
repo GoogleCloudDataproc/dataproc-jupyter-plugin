@@ -411,7 +411,7 @@ function listNotebookScheduler({
             data-jobid={data.jobid}
             onClick={e => handleEditDags(e)}
           >
-            <iconEditDag.react
+            <iconEditNotebook.react
               tag="div"
               className="icon-white logo-alignment-style"
             />
@@ -435,7 +435,7 @@ function listNotebookScheduler({
             data-jobid={data.jobid}
             onClick={e => handleEditNotebook(e)}
           >
-            <iconEditNotebook.react
+            <iconEditDag.react
               tag="div"
               className="icon-white logo-alignment-style"
             />
