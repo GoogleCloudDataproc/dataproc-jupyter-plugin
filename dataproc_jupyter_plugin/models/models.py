@@ -13,9 +13,10 @@
 # limitations under the License.
 
 
-
 from typing import Dict, List, Optional
 from pydantic import BaseModel
+
+
 class ComposerEnvironment(BaseModel):
     """Defines a runtime context where job
     execution will happen. For example, conda
@@ -30,7 +31,7 @@ class ComposerEnvironment(BaseModel):
 
     def __str__(self):
         return self.json()
-    
+
 
 class DescribeJob(BaseModel):
     input_filename: str = None
@@ -39,9 +40,9 @@ class DescribeJob(BaseModel):
     parameters: Optional[List[str]] = None
     selected_mode: str = None
     serverless_name: object = None
-    cluster_name : str = None
+    cluster_name: str = None
     mode_selected: str = None
-    schedule_value : str = None
+    schedule_value: str = None
     retry_count: int = 2
     retry_delay: int = 5
     email_failure: bool = False
