@@ -446,8 +446,7 @@ export const toastifyCustomStyle: ToastOptions<{}> = {
   hideProgressBar: true,
   autoClose: false,
   theme: 'dark',
-  position: toast.POSITION.BOTTOM_CENTER,
-  toastId: uuidv4()
+  position: toast.POSITION.BOTTOM_CENTER
 };
 export function assumeNeverHit(_: never): void {}
 export interface IBatchInfoResponse {
