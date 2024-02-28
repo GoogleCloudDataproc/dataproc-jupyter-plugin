@@ -56,10 +56,17 @@ import { GCSDrive } from './gcs/gcsDrive';
 import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
 import { DataprocLoggingService } from './utils/loggingService';
 import { NotebookScheduler } from './scheduler/notebookScheduler';
+import pythonLogo from '../third_party/icons/python_logo.svg';
+import NotebookTemplateService from './notebookTemplates/notebookTemplatesService';
+import * as path from 'path';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
+});
+const iconPythonLogo = new LabIcon({
+  name: 'launcher:python-logo-icon',
+  svgstr: pythonLogo
 });
 
 const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
@@ -328,6 +335,55 @@ const extension: JupyterFrontEndPlugin<void> = {
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
+    const downloadNotebook = async (
+      notebookContent: object,
+      notebookUrl: string
+    ) => {
+      const contentsManager = app.serviceManager.contents;
+      // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
+      const bigQueryNotebookDownloadFolderPath = defaultFileBrowser.model.path;
+
+      const urlParts = notebookUrl.split('/');
+      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
+        urlParts[urlParts.length - 1]
+      }`;
+
+      // Save the file to the workspace
+      await contentsManager.save(filePath, {
+        type: 'file',
+        format: 'text',
+        content: JSON.stringify(notebookContent)
+      });
+
+      // Refresh the file fileBrowser to reflect the new file
+      app.shell.currentWidget?.update();
+
+      app.commands.execute('docmanager:open', {
+        path: filePath
+      });
+    };
+
+    const openBigQueryNotebook = async () => {
+      const template = {
+        url: 'https://raw.githubusercontent.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/main/classification/logistic_regression/wine_quality_classification_mlr.ipynb'
+      };
+      await NotebookTemplateService.handleClickService(
+        template,
+        downloadNotebook
+      );
+    };
+
+    const createBigQueryNotebookComponentCommand =
+      'create-bigquery-notebook-component';
+    commands.addCommand(createBigQueryNotebookComponentCommand, {
+      caption: 'Bigframe On BiqQuery',
+      label: 'Bigframe On BiqQuery',
+      icon: iconPythonLogo,
+      execute: async () => {
+        await openBigQueryNotebook();
+      }
+    });
+
     const createRuntimeTemplateComponentCommand =
       'create-runtime-template-component';
     commands.addCommand(createRuntimeTemplateComponentCommand, {
@@ -433,6 +489,11 @@ const extension: JupyterFrontEndPlugin<void> = {
     let serverlessIndex = -1;
 
     if (launcher) {
+      launcher.add({
+        command: createBigQueryNotebookComponentCommand,
+        category: 'BigQuery Notebooks',
+        rank: 1
+      });
       Object.values(kernels).forEach((kernelsData, index) => {
         if (
           kernelsData?.resources.endpointParentResource &&
