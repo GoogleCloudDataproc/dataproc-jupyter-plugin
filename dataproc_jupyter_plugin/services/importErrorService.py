@@ -23,21 +23,28 @@ class ImportErrorService:
         airflow_uri, bucket = DagListService.get_airflow_uri(
             self, composer, credentials, log
         )
-        if "access_token" and "project_id" and "region_id" in credentials:
-            access_token = credentials["access_token"]
         try:
-            api_endpoint = (
-                f"{airflow_uri}/api/v1/importErrors?order_by=-import_error_id"
-            )
+            if (
+                ("access_token" in credentials)
+                and ("project_id" in credentials)
+                and ("region_id" in credentials)
+            ):
+                access_token = credentials["access_token"]
+                api_endpoint = (
+                    f"{airflow_uri}/api/v1/importErrors?order_by=-import_error_id"
+                )
 
-            headers = {
-                "Content-Type": CONTENT_TYPE,
-                "Authorization": f"Bearer {access_token}",
-            }
-            response = requests.get(api_endpoint, headers=headers)
-            if response.status_code == 200:
-                resp = response.json()
-            return resp
+                headers = {
+                    "Content-Type": CONTENT_TYPE,
+                    "Authorization": f"Bearer {access_token}",
+                }
+                response = requests.get(api_endpoint, headers=headers)
+                if response.status_code == 200:
+                    resp = response.json()
+                return resp
+            else:
+                log.exception(f"Missing required credentials")
+                raise ValueError("Missing required credentials")
         except Exception as e:
             log.exception(f"Error fetching import error list: {str(e)}")
             return {"error": str(e)}
