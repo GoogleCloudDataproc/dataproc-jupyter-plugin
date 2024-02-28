@@ -27,16 +27,14 @@ class ComposerListController(APIHandler):
         try:
             environments_manager = ComposerService()
             credentials = handlers.get_cached_credentials(self.log)
-            environments = environments_manager.list_environments(credentials,self.log)
-                
+            environments = environments_manager.list_environments(credentials, self.log)
+
         except Exception as e:
             self.log.exception(f"Error fetching composer environments: {str(e)}")
-            self.finish ({"error": str(e)})
+            self.finish({"error": str(e)})
 
         response = []
         for environment in environments:
             env = environment.dict()
             response.append(env)
         self.finish(json.dumps(response))
-
-
