@@ -20,7 +20,6 @@ from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.triggerDagService import TriggerDagService
 
 
-
 class TriggerDagController(APIHandler):
     @tornado.web.authenticated
     def get(self):
@@ -29,8 +28,8 @@ class TriggerDagController(APIHandler):
             dag_id = self.get_argument("dag_id")
             composer = self.get_argument("composer")
             credentials = handlers.get_cached_credentials(self.log)
-            trigger = trigger_dag.dag_trigger(credentials,dag_id,composer,self.log)
+            trigger = trigger_dag.dag_trigger(credentials, dag_id, composer, self.log)
             self.finish(json.dumps(trigger))
         except Exception as e:
             self.log.exception(f"Error triggering dag")
-            self.finish ({"error": str(e)})
+            self.finish({"error": str(e)})

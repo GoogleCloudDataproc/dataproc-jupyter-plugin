@@ -19,51 +19,57 @@ from dataproc_jupyter_plugin.models.models import ComposerEnvironment
 from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, ENVIRONMENT_API
 
 
-class ComposerService():
-    def list_environments(self, credentials,log) -> List[ComposerEnvironment]:
-        if 'access_token' and 'project_id' and 'region_id' in credentials:
-            access_token = credentials['access_token']
-            project_id = credentials['project_id']
-            region_id = credentials['region_id']
-        environments = []
-        api_endpoint = f"{ENVIRONMENT_API}/projects/{project_id}/locations/{region_id}/environments"
-
-        headers = {
-        'Content-Type': CONTENT_TYPE,
-        'Authorization': f'Bearer {access_token}'
-        }
+class ComposerService:
+    def list_environments(self, credentials, log) -> List[ComposerEnvironment]:
         try:
-            response = requests.get(api_endpoint,headers=headers)
-            if response.status_code == 200:
-                resp = response.json()    
-                if not resp:  
-                    return environments   
-                else:      
-                    environment = resp['environments']
-                    # Extract the 'name' values from the 'environments' list
-                    names = [env['name'] for env in environment]
-                    # Extract the last value after the last slash for each 'name'
-                    last_values = [name.split('/')[-1] for name in names]
-                    for env in last_values:
-                        name = env
-                        environments.append(
-                            ComposerEnvironment(
-                                name=name,
-                                label=name,
-                                description=f"Environment: {name}",
-                                file_extensions=["ipynb"],
-                                metadata={"path": env},
-                            )
-                        )
-                    return environments
-            else:
-                log.exception(f"Error listing environments")
-                print(f"Error: {response.status_code} - {response.text}")
+            if (
+                ("access_token" in credentials)
+                and ("project_id" in credentials)
+                and ("region_id" in credentials)
+            ):
+                access_token = credentials["access_token"]
+                project_id = credentials["project_id"]
+                region_id = credentials["region_id"]
+                environments = []
+                api_endpoint = f"{ENVIRONMENT_API}/projects/{project_id}/locations/{region_id}/environments"
 
+                headers = {
+                    "Content-Type": CONTENT_TYPE,
+                    "Authorization": f"Bearer {access_token}",
+                }
+                response = requests.get(api_endpoint, headers=headers)
+                if response.status_code == 200:
+                    resp = response.json()
+                    if not resp:
+                        return environments
+                    else:
+                        environment = resp["environments"]
+                        # Extract the 'name' values from the 'environments' list
+                        names = [env["name"] for env in environment]
+                        # Extract the last value after the last slash for each 'name'
+                        last_values = [name.split("/")[-1] for name in names]
+                        for env in last_values:
+                            name = env
+                            environments.append(
+                                ComposerEnvironment(
+                                    name=name,
+                                    label=name,
+                                    description=f"Environment: {name}",
+                                    file_extensions=["ipynb"],
+                                    metadata={"path": env},
+                                )
+                            )
+                        return environments
+                else:
+                    log.exception(f"Error listing environments")
+                    print(f"Error: {response.status_code} - {response.text}")
+            else:
+                log.exception(f"Missing required credentials")
+                raise ValueError("Missing required credentials")
 
         except FileNotFoundError:
-                environments = []
-                return environments
+            environments = []
+            return environments
 
     def manage_environments_command(self) -> str:
         return ""

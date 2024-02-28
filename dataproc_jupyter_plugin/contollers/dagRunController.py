@@ -17,7 +17,12 @@ import json
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.dagRunService import DagRunListService, DagRunTaskListService, DagRunTaskLogsListService
+from dataproc_jupyter_plugin.services.dagRunService import (
+    DagRunListService,
+    DagRunTaskListService,
+    DagRunTaskLogsListService,
+)
+
 
 class DagRunController(APIHandler):
     @tornado.web.authenticated
@@ -30,11 +35,20 @@ class DagRunController(APIHandler):
             offset = self.get_argument("offset")
             end_date = self.get_argument("end_date")
             credentials = handlers.get_cached_credentials(self.log)
-            dag_run_list = dag_run.list_dag_runs(credentials,composer_name,dag_id,start_date,end_date,offset,self.log)
+            dag_run_list = dag_run.list_dag_runs(
+                credentials,
+                composer_name,
+                dag_id,
+                start_date,
+                end_date,
+                offset,
+                self.log,
+            )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
             self.log.exception(f"Error fetching dag run list {str(e)}")
-            self.finish ({"error": str(e)})
+            self.finish({"error": str(e)})
+
 
 class DagRunTaskController(APIHandler):
     @tornado.web.authenticated
@@ -45,11 +59,14 @@ class DagRunTaskController(APIHandler):
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
             credentials = handlers.get_cached_credentials(self.log)
-            dag_run_list = dag_run.list_dag_run_task(credentials,composer_name,dag_id,dag_run_id,self.log)
+            dag_run_list = dag_run.list_dag_run_task(
+                credentials, composer_name, dag_id, dag_run_id, self.log
+            )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
             self.log.exception(f"Error fetching dag run tasks: {str(e)}")
-            self.finish ({"error": str(e)})
+            self.finish({"error": str(e)})
+
 
 class DagRunTaskLogsController(APIHandler):
     @tornado.web.authenticated
@@ -62,9 +79,16 @@ class DagRunTaskLogsController(APIHandler):
             task_id = self.get_argument("task_id")
             task_try_number = self.get_argument("task_try_number")
             credentials = handlers.get_cached_credentials(self.log)
-            dag_run_list = dag_run.list_dag_run_task_logs(credentials,composer_name,dag_id,dag_run_id,task_id,task_try_number,self.log)
+            dag_run_list = dag_run.list_dag_run_task_logs(
+                credentials,
+                composer_name,
+                dag_id,
+                dag_run_id,
+                task_id,
+                task_try_number,
+                self.log,
+            )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
             self.log.exception(f"Error fetching dag run task logs: {str(e)}")
-            self.finish ({"error": str(e)})
-
+            self.finish({"error": str(e)})

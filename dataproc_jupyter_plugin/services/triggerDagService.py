@@ -18,21 +18,22 @@ from dataproc_jupyter_plugin.services.dagListService import DagListService
 from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE
 
 
-
-class TriggerDagService():
-    def dag_trigger(self, credentials,dag_id,composer,log):
-        airflow_uri, bucket = DagListService.get_airflow_uri(self,composer,credentials,log)
-        if 'access_token' and 'project_id' and 'region_id' in credentials:
-            access_token = credentials['access_token']
+class TriggerDagService:
+    def dag_trigger(self, credentials, dag_id, composer, log):
+        airflow_uri, bucket = DagListService.get_airflow_uri(
+            self, composer, credentials, log
+        )
+        if "access_token" and "project_id" and "region_id" in credentials:
+            access_token = credentials["access_token"]
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns"
 
             headers = {
-            'Content-Type': CONTENT_TYPE,
-            'Authorization': f'Bearer {access_token}'
+                "Content-Type": CONTENT_TYPE,
+                "Authorization": f"Bearer {access_token}",
             }
             body = {"conf": {}}
-            response = requests.post(api_endpoint,headers=headers, json=body)
+            response = requests.post(api_endpoint, headers=headers, json=body)
             if response.status_code == 200:
                 resp = response.json()
 
