@@ -65,7 +65,7 @@ const iconDpms = new LabIcon({
   svgstr: dpmsIcon
 });
 const iconPythonLogo = new LabIcon({
-  name: 'launcher:python-logo-icon',
+  name: 'launcher:python-bigquery-logo-icon',
   svgstr: pythonLogo
 });
 
