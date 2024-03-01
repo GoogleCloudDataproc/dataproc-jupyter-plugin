@@ -56,15 +56,12 @@ def main():
         metavar="parameters",
         help="YAML string defining parameter values.",
     )
-    parser.add_argument(
-        "--kernel-name",
-        metavar="kernel_name",
-        help="Name of the kernel spec to use. This must be specified if the "
-        "kernel spec name on the cluster does not match the name in the input "
-        "notebook file.",
-    )
     args = parser.parse_args()
 
+    matched = re.match("gs://([^/]+)/(.+)", args.output)
+    if not matched:
+        raise ValueError('Invalid output URI: "%s"' % args.output)
+    
     # Download input notebook and params file from GCS
     # Note that papermill supports gcsfs by default, but some type of dependency
     # problem appears to prevent this from working out of the box on 2.0 images
@@ -87,8 +84,6 @@ def main():
         gcs.download_blob_to_file(args.input, f)
 
     kwargs = {}
-    if args.kernel_name:
-        kwargs["kernel_name"] = args.kernel_name
     pm.execute_notebook(
         "input.ipynb",
         "output.ipynb",
@@ -100,11 +95,6 @@ def main():
         **kwargs,
     )
 
-    # Annoyingly, the GCS client libraries don't seem to expose a helper function
-    # to extract the bucket directly, so do this by hand
-    matched = re.match("gs://([^/]+)/(.+)", args.output)
-    # if not matched:
-    #   raise ValueError('Invalid output URI: "%s"' % args.output)
     print('Writing result to "%s"' % args.output)
     bucket = gcs.get_bucket(matched.group(1))
     blob = bucket.blob(matched.group(2))
