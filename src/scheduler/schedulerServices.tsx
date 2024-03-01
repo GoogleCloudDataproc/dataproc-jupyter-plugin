@@ -70,7 +70,7 @@ export class SchedulerService {
   ) => {
     const pageToken = nextPageToken ?? '';
     try {
-      const serviceURL = `clusterList?pageSize=50&pageToken=${pageToken}`;
+      const serviceURL = `clusterList?pageSize=500&pageToken=${pageToken}`;
 
       const formattedResponse: any = await requestAPI(serviceURL);
       let transformClusterListData = [];
@@ -122,7 +122,7 @@ export class SchedulerService {
   ) => {
     const pageToken = nextPageToken ?? '';
     try {
-      const serviceURL = `runtimeList?pageSize=50&pageToken=${pageToken}`;
+      const serviceURL = `runtimeList?pageSize=500&pageToken=${pageToken}`;
 
       const formattedResponse: any = await requestAPI(serviceURL);
       let transformSessionTemplateListData = [];
