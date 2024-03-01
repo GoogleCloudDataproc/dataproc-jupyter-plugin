@@ -42,7 +42,6 @@ import {
   gcpServiceUrls
 } from './const';
 import { ToastOptions, toast } from 'react-toastify';
-// import { v4 as uuidv4 } from 'uuid';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { DataprocLoggingService } from './loggingService';
 export interface IAuthCredentials {

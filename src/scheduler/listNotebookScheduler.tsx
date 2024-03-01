@@ -145,7 +145,6 @@ function listNotebookScheduler({
   const [importErrorPopupOpen, setImportErrorPopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
   const [editDagLoading, setEditDagLoading] = useState('');
-  //const [pollingDisable] = useState(false);
   const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
   const [editNotebookLoading, setEditNotebookLoading] = useState('');
   const [deletingNotebook, setDeletingNotebook] = useState(false);
@@ -319,7 +318,6 @@ function listNotebookScheduler({
 
   const handleImportErrorPopup = async () => {
     setImportErrorPopupOpen(true);
-    // handleImportErrordata();
   };
   const handleImportErrorClosed = async () => {
     setImportErrorPopupOpen(false);
@@ -529,11 +527,9 @@ function listNotebookScheduler({
   useEffect(() => {
     if (composerSelectedList !== '') {
       pollingDagList(listDagInfoAPI, false);
-      //pollingImportError(handleImportErrordata, pollingDisable);
     }
     return () => {
       pollingDagList(listDagInfoAPI, true);
-      //pollingImportError(handleImportErrordata, true);
     };
   }, [composerSelectedList]);
 
