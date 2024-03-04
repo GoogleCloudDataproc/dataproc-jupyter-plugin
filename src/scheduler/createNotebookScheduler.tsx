@@ -45,10 +45,10 @@ import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
 
 interface IDagList {
-  jobid:  string;
-  notebookname:  string;
-  schedule:  string;
-  scheduleInterval:string;
+  jobid: string;
+  notebookname: string;
+  schedule: string;
+  scheduleInterval: string;
 }
 
 const iconLeftArrow = new LabIcon({
@@ -350,6 +350,10 @@ const CreateNotebookScheduler = ({
       setInputFileSelected(context.path);
     }
     setJobNameSelected('');
+    if (!editMode) {
+      setParameterDetail([]);
+      setParameterDetailUpdated([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -511,6 +515,7 @@ const CreateNotebookScheduler = ({
                 setValueValidation={setValueValidation}
                 duplicateKeyError={duplicateKeyError}
                 setDuplicateKeyError={setDuplicateKeyError}
+                fromPage="scheduler"
               />
             </>
             <div className="create-scheduler-form-element">
