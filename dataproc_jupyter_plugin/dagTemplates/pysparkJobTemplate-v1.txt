@@ -39,7 +39,7 @@ def write_output_to_file(run_id, **kwargs):
 time_zone = '{{time_zone}}'
 stop_cluster_check = '{{stop_cluster}}'
 input_notebook = '{{input_notebook}}'
-output_notebook = {% raw %}"{{ ti.xcom_pull(task_ids='write_output_to_file_task') }}"{% endraw %}
+output_notebook = {% raw %}"{{ ti.xcom_pull(task_ids='generate_output_file') }}"{% endraw %}
 notebook_args = [input_notebook, output_notebook]
 parameters = '''
 {{parameters}}
@@ -137,7 +137,7 @@ start_cluster = PythonOperator(
     dag=dag)
 
 write_output_task = PythonOperator(
-    task_id='write_output_to_file_task',
+    task_id='generate_output_file',
     python_callable=write_output_to_file,
     provide_context=True,  
     op_kwargs={'run_id': {% raw %}'{{run_id}}'{% endraw %}},  
