@@ -83,7 +83,6 @@ def main():
     with open("input.ipynb", "wb") as f:
         gcs.download_blob_to_file(args.input, f)
 
-    kwargs = {}
     pm.execute_notebook(
         "input.ipynb",
         "output.ipynb",
@@ -91,8 +90,7 @@ def main():
         log_output=True,
         progress_bar=False,
         stdout_file=sys.stdout,
-        parameters=params,
-        **kwargs,
+        parameters=params
     )
 
     print('Writing result to "%s"' % args.output)
