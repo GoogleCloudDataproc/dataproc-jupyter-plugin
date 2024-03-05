@@ -37,7 +37,7 @@ import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { Kernel, KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
-import { iconDisplay } from './utils/utils';
+import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
@@ -336,7 +336,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     const kernels = kernelSpecs.kernelspecs;
 
     const downloadNotebook = async (
-      notebookContent: object,
+      notebookContent: any,
       notebookUrl: string
     ) => {
       const contentsManager = app.serviceManager.contents;
@@ -347,6 +347,14 @@ const extension: JupyterFrontEndPlugin<void> = {
       const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
         urlParts[urlParts.length - 1]
       }`;
+
+      const credentials = await authApi();
+      if (credentials) {
+        notebookContent.cells[2].source[1] =
+          `PROJECT_ID = '${credentials.project_id}' \n`;
+        notebookContent.cells[2].source[2] =
+          `REGION = '${credentials.region_id}'\n`;
+      }
 
       // Save the file to the workspace
       await contentsManager.save(filePath, {
@@ -365,7 +373,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const openBigQueryNotebook = async () => {
       const template = {
-        url: 'https://raw.githubusercontent.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/main/classification/logistic_regression/wine_quality_classification_mlr.ipynb'
+        url: 'https://raw.githubusercontent.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/main/public_datasets/bigframes/bigframes_quickstart.ipynb'
       };
       await NotebookTemplateService.handleClickService(
         template,
