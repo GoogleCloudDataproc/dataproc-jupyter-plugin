@@ -41,6 +41,7 @@ jlpm build
 python -m build
 
 # install the build
+pip install kernels-mixer==0.0.7
 pip install dist/*.whl
 jupyter server extension enable dataproc_jupyter_plugin
 
@@ -56,6 +57,7 @@ cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
 python -m venv version_366
 source version_366/bin/activate
 pip install  --force-reinstall "jupyterlab==3.6.6"
+pip install kernels-mixer==0.0.7
 pip install dist/*.whl
 jupyter server extension enable dataproc_jupyter_plugin
 cd ./ui-tests-3.6.6
