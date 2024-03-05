@@ -23,6 +23,14 @@ import { ICellProps } from '../utils/utils';
 import { SchedulerService } from './schedulerServices';
 import { Dayjs } from 'dayjs';
 
+interface IDagRunList {
+  dagRunId: string;
+  filteredDate: Date;
+  state: string;
+  date: Date;
+  time: string;
+}
+
 const ListDagRuns = ({
   composerName,
   dagId,
@@ -52,7 +60,7 @@ const ListDagRuns = ({
   setGreenListDates: (value: string[]) => void;
   setDarkGreenListDates: (value: string[]) => void;
 }): JSX.Element => {
-  const [dagRunsList, setDagRunsList] = useState([]);
+  const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const data =
