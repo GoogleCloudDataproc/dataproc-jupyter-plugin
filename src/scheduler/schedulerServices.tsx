@@ -416,7 +416,6 @@ export class SchedulerService {
     dagId: string,
     startDate: string,
     endDate: string,
-    //setDagRunsList: (value: any) => void,
     setDagRunsList: (value: IDagRunList[]) => void,
     setDagRunId: (value: string) => void,
     setIsLoading: (value: boolean) => void,
