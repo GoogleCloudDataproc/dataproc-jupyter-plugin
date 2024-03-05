@@ -31,6 +31,14 @@ const iconDownload = new LabIcon({
   svgstr: downloadIcon
 });
 
+interface IDagRunList {
+  dagRunId: string;
+  filteredDate: Date;
+  state: string;
+  date: Date;
+  time: string;
+}
+
 const ListDagRuns = ({
   composerName,
   dagId,
@@ -60,7 +68,7 @@ const ListDagRuns = ({
   setGreenListDates: (value: string[]) => void;
   bucketName: string;
 }): JSX.Element => {
-  const [dagRunsList, setDagRunsList] = useState([]);
+  const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
