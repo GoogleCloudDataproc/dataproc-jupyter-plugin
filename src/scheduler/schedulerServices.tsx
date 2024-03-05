@@ -62,11 +62,29 @@ interface IDagList {
   scheduleInterval: string;
 }
 
+interface IClusterAPIResponse {
+  clusterName: string;
+  clusterUuid: string;
+  config: {};
+  labels: {};
+  metrics: {};
+  projectId: string;
+  status: {};
+  statusHistory: [];
+}
+
+interface IComposerAPIResponse {
+  name: string;
+  label: string;
+  description: string;
+  file_extensions: [];
+  metadata: {};
+}
 export class SchedulerService {
   static listClustersAPIService = async (
     setClusterList: (value: string[]) => void,
     nextPageToken?: string,
-    previousClustersList?: object
+    previousClustersList?: (value: string[]) => void
   ) => {
     const pageToken = nextPageToken ?? '';
     try {
@@ -76,7 +94,7 @@ export class SchedulerService {
       let transformClusterListData = [];
       if (formattedResponse && formattedResponse.clusters) {
         transformClusterListData = formattedResponse.clusters.map(
-          (data: any) => {
+          (data: IClusterAPIResponse) => {
             return {
               clusterName: data.clusterName
             };
@@ -188,7 +206,7 @@ export class SchedulerService {
         }
       } else {
         let composerEnvironmentList: string[] = [];
-        formattedResponse.forEach((data: any) => {
+        formattedResponse.forEach((data: IComposerAPIResponse) => {
           composerEnvironmentList.push(data.name);
         });
         composerEnvironmentList.sort();
@@ -278,9 +296,9 @@ export class SchedulerService {
     setSelectedMode?: (value: string) => void,
     setClusterSelected?: (value: string) => void,
     setServerlessSelected?: (value: string) => void,
-    setServerlessDataSelected?: (value: any) => void,
+    setServerlessDataSelected?: (value: {}) => void,
     serverlessDataList?: any,
-    setServerlessDataList?: (value: any) => void,
+    setServerlessDataList?: (value: string[]) => void,
     setServerlessList?: (value: string[]) => void,
     setRetryCount?: (value: number) => void,
     setRetryDelay?: (value: number) => void,

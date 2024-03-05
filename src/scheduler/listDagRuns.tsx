@@ -167,20 +167,17 @@ const ListDagRuns = ({
   }, [startDate, endDate]);
 
   useEffect(() => {
-    if (selectedDate !== null && dagRunsList.length > 0) {
-      let currentDate = new Date(selectedDate.toDate()).toDateString();
-      let currentDateDagRunList: any = dagRunsList.filter((dagRun: any) => {
-        return dagRun.date === currentDate;
-      });
-      if (currentDateDagRunList.length > 0) {
-        setDagRunsCurrentDateList(currentDateDagRunList);
-        setDagRunId(
-          currentDateDagRunList[currentDateDagRunList.length - 1].dagRunId
-        );
-      } else {
-        setDagRunsCurrentDateList([]);
-        setDagRunId('');
-      }
+    let currentDate = selectedDate
+      ? new Date(selectedDate.toDate()).toDateString()
+      : null;
+    let currentDateDagRunList: any = dagRunsList.filter((dagRun: any) => {
+      return dagRun.date === currentDate;
+    });
+    if (currentDateDagRunList.length > 0) {
+      setDagRunsCurrentDateList(currentDateDagRunList);
+      setDagRunId(
+        currentDateDagRunList[currentDateDagRunList.length - 1].dagRunId
+      );
     } else {
       setDagRunsCurrentDateList([]);
       setDagRunId('');
