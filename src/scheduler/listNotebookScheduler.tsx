@@ -118,9 +118,9 @@ function listNotebookScheduler({
   setSelectedMode?: (value: string) => void;
   setClusterSelected?: (value: string) => void;
   setServerlessSelected?: (value: string) => void;
-  setServerlessDataSelected?: (value: any) => void;
+  setServerlessDataSelected?: (value: {}) => void;
   serverlessDataList?: any;
-  setServerlessDataList?: (value: any) => void;
+  setServerlessDataList?: (value: string[]) => void;
   setServerlessList?: (value: string[]) => void;
   setRetryCount?: (value: number) => void;
   setRetryDelay?: (value: number) => void;
