@@ -189,7 +189,7 @@ export class GcsBrowserWidget extends Widget {
 
     let newFolder = new ToolbarButton({
       icon: iconGCSNewFolder,
-      className: 'icon-white jp-NewFolderIcon',
+      className: 'icon-white',
       onClick: this.handleFolderCreation,
       tooltip: 'New Folder'
     });

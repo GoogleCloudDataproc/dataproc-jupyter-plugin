@@ -175,8 +175,6 @@ function CreateBatch({
         const parts = historyServerValue.split('/'); //splitting to take cluster name from project/projectName/region/regionName/cluster/clusterName
         historyServer = parts[parts.length - 1];
       }
-      batchInfoResponse?.environmentConfig?.peripheralsConfig
-        ?.sparkHistoryServerConfig?.dataprocCluster;
       metastoreService =
         batchInfoResponse?.environmentConfig?.peripheralsConfig
           ?.metastoreService || 'None';
@@ -813,8 +811,7 @@ function CreateBatch({
         ...(servicesSelected !== 'None' && {
           metastoreService: servicesSelected
         }),
-        ...(clusterSelected !== '' &&
-          clusterSelected !== '' && {
+        ...(clusterSelected !== '' && {
             sparkHistoryServerConfig: {
               dataprocCluster: `projects/${projectName}/regions/${regionName}/clusters/${clusterSelected}`
             } as SparkHistoryServerConfig

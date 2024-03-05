@@ -29,6 +29,8 @@ import { authenticatedFetch } from '../utils/utils';
 import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
+import notebookSchedulerIcon from '../../style/icons/notebook_scheduler.svg';
+import { NotebookScheduler } from '../scheduler/notebookScheduler';
 
 const iconLogs = new LabIcon({
   name: 'launcher:logs-icon',
@@ -42,6 +44,10 @@ const iconServerless = new LabIcon({
   name: 'launcher:serverless-icon',
   svgstr: serverlessIcon
 });
+const iconNotebookScheduler = new LabIcon({
+  name: 'launcher:notebook-scheduler-icon',
+  svgstr: notebookSchedulerIcon
+});
 
 /**
  * A disposable class to track the toolbar widget for a single notebook.
@@ -51,6 +57,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
   isDisposed: boolean;
   private readonly sparkLogsButton: ToolbarButton;
   private readonly sessionDetailsButton: ToolbarButton;
+  private readonly notebookSchedulerButton: ToolbarButton;
   private sessionId?: string;
 
   /**
@@ -68,12 +75,11 @@ class NotebookButtonExtensionPoint implements IDisposable {
     this.isDisposed = false;
     this.context.sessionContext.sessionChanged.connect(this.onSessionChanged);
 
-
     this.sparkLogsButton = new ToolbarButton({
       icon: iconLogs,
       onClick: this.onSparkLogsClick,
       tooltip: 'Spark Logs',
-      className: "dark-theme-logs"
+      className: 'dark-theme-logs'
     });
     // TODO: we want to use the registry to specify a rank:
     // https://jupyterlab.readthedocs.io/en/stable/extension/extension_points.html#document-widgets
@@ -83,14 +89,37 @@ class NotebookButtonExtensionPoint implements IDisposable {
       icon: iconSessionLogs,
       onClick: this.onSessionDetailsClick,
       tooltip: 'Session Details',
-      className: "dark-theme-logs" 
+      className: 'dark-theme-logs'
     });
     this.panel.toolbar.insertItem(
       1000,
       'session-details',
       this.sessionDetailsButton
     );
+    this.notebookSchedulerButton = new ToolbarButton({
+      icon: iconNotebookScheduler,
+      onClick: () => this.onNotebookSchedulerClick(),
+      tooltip: 'Notebook Scheduler',
+      className: 'dark-theme-logs'
+    });
+    this.panel.toolbar.insertItem(
+      1000,
+      'notebook-scheduler',
+      this.notebookSchedulerButton
+    );
   }
+
+  private onNotebookSchedulerClick = () => {
+    const content = new NotebookScheduler(
+      this.app as JupyterLab,
+      this.themeManager,
+      this.context
+    );
+    const widget = new MainAreaWidget<NotebookScheduler>({ content });
+    widget.title.label = 'Notebook Scheduler';
+    widget.title.icon = iconNotebookScheduler;
+    this.app.shell.add(widget, 'main');
+  };
 
   private onSessionDetailsClick = () => {
     if (!this.sessionId) {

@@ -25,6 +25,8 @@ dependencies = [
     "jupyter_server>=2.7.3,<3",
     "cachetools>=4.2.4",
     "kernels-mixer>=0.0.4",
+    "pendulum>=3.0.0",
+    "pydantic~=1.10.0"
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
