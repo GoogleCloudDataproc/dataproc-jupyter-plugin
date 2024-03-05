@@ -43,12 +43,13 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
+import { scheduleValueExpression } from '../utils/const';
 
 interface IDagList {
-  jobid:  string;
-  notebookname:  string;
-  schedule:  string;
-  scheduleInterval:string;
+  jobid: string;
+  notebookname: string;
+  schedule: string;
+  scheduleInterval: string;
 }
 
 const iconLeftArrow = new LabIcon({
@@ -98,7 +99,7 @@ const CreateNotebookScheduler = ({
   const [emailList, setEmailList] = useState<string[]>([]);
 
   const [scheduleMode, setScheduleMode] = useState<scheduleMode>('runNow');
-  const [scheduleValue, setScheduleValue] = useState('30 17 * * 1-5');
+  const [scheduleValue, setScheduleValue] = useState(scheduleValueExpression);
   const [timeZoneSelected, setTimeZoneSelected] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone
   );
@@ -171,7 +172,7 @@ const CreateNotebookScheduler = ({
     const newValue = (event.target as HTMLInputElement).value;
     setScheduleMode(newValue as scheduleMode);
     if (newValue === 'runSchedule' && scheduleValue === '') {
-      setScheduleValue('30 17 * * 1-5');
+      setScheduleValue(scheduleValueExpression);
     }
   };
 
