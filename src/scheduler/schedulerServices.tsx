@@ -80,6 +80,14 @@ interface IComposerAPIResponse {
   file_extensions: [];
   metadata: {};
 }
+
+interface IDagRunList {
+  dagRunId: string;
+  filteredDate: Date;
+  state: string;
+  date: Date;
+  time: string;
+}
 export class SchedulerService {
   static listClustersAPIService = async (
     setClusterList: (value: string[]) => void,
@@ -297,7 +305,7 @@ export class SchedulerService {
     setClusterSelected?: (value: string) => void,
     setServerlessSelected?: (value: string) => void,
     setServerlessDataSelected?: (value: {}) => void,
-    serverlessDataList?: any,
+    serverlessDataList?: string[],
     setServerlessDataList?: (value: string[]) => void,
     setServerlessList?: (value: string[]) => void,
     setRetryCount?: (value: number) => void,
@@ -408,7 +416,8 @@ export class SchedulerService {
     dagId: string,
     startDate: string,
     endDate: string,
-    setDagRunsList: (value: any) => void,
+    //setDagRunsList: (value: any) => void,
+    setDagRunsList: (value: IDagRunList[]) => void,
     setDagRunId: (value: string) => void,
     setIsLoading: (value: boolean) => void,
 
