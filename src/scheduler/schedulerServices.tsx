@@ -425,103 +425,136 @@ export class SchedulerService {
     setOrangeListDates: (value: string[]) => void,
     setRedListDates: (value: string[]) => void,
     setGreenListDates: (value: string[]) => void,
-    setDarkGreenListDates: (value: string[]) => void
+    currentOffsetValue?: number,
+    previousDagRunDataList?: object
   ) => {
+    let offset = currentOffsetValue ?? 0;
     setIsLoading(true);
     let start_date = startDate;
     let end_date = endDate;
 
     try {
       const data: any = await requestAPI(
-        `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${start_date}&end_date=${end_date}`
+        `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${start_date}&end_date=${end_date}&offset=${offset}`
       );
-      let transformDagRunListData = [];
 
-      if (data.dag_runs.length > 0) {
-        transformDagRunListData = data.dag_runs.map((dagRun: any) => {
-          return {
-            dagRunId: dagRun.dag_run_id,
-            filteredDate: new Date(dagRun.start_date)
-              .toDateString()
-              .split(' ')[2],
-            state: dagRun.state,
-            date: new Date(dagRun.start_date).toDateString(),
-            time: new Date(dagRun.start_date).toTimeString().split(' ')[0]
-          };
-        });
-
-        // Group by date first, then by status
-        const groupedDataByDateStatus = transformDagRunListData.reduce(
-          (result: any, item: any) => {
-            const date = item.filteredDate;
-            const status = item.state;
-
-            if (!result[date]) {
-              result[date] = {};
-            }
-
-            if (!result[date][status]) {
-              result[date][status] = [];
-            }
-
-            result[date][status].push(item);
-
-            return result;
-          },
-          {}
-        );
-
-        let blueList: string[] = [];
-        let greyList: string[] = [];
-        let orangeList: string[] = [];
-        let redList: string[] = [];
-        let greenList: string[] = [];
-        let darkGreenList: string[] = [];
-
-        Object.keys(groupedDataByDateStatus).forEach(dateValue => {
-          if (groupedDataByDateStatus[dateValue].running) {
-            blueList.push(dateValue);
-          } else if (groupedDataByDateStatus[dateValue].queued) {
-            greyList.push(dateValue);
-          } else if (
-            groupedDataByDateStatus[dateValue].failed &&
-            groupedDataByDateStatus[dateValue].success
-          ) {
-            orangeList.push(dateValue);
-          } else if (groupedDataByDateStatus[dateValue].failed) {
-            redList.push(dateValue);
-          } else if (
-            groupedDataByDateStatus[dateValue].success &&
-            groupedDataByDateStatus[dateValue].success.length === 1
-          ) {
-            greenList.push(dateValue);
-          } else {
-            darkGreenList.push(dateValue);
+      let transformDagRunListDataCurrent = [];
+      if (data && data.dag_runs.length > 0) {
+        transformDagRunListDataCurrent = data.dag_runs.map((dagRun: any) => {
+          if (dagRun.start_date !== null) {
+            return {
+              dagRunId: dagRun.dag_run_id,
+              filteredDate: new Date(dagRun.start_date)
+                .toDateString()
+                .split(' ')[2],
+              state: dagRun.state,
+              date: new Date(dagRun.start_date).toDateString(),
+              time: new Date(dagRun.start_date).toTimeString().split(' ')[0]
+            };
           }
         });
+      }
+      transformDagRunListDataCurrent = transformDagRunListDataCurrent.filter(
+        (dagRunData: any) => {
+          if (dagRunData) {
+            return dagRunData;
+          }
+        }
+      );
+      const existingDagRunsListData = previousDagRunDataList ?? [];
+      //setStateAction never type issue
+      const allDagRunsListData: any = [
+        ...(existingDagRunsListData as []),
+        ...transformDagRunListDataCurrent
+      ];
 
-        setBlueListDates(blueList);
-        setGreyListDates(greyList);
-        setOrangeListDates(orangeList);
-        setRedListDates(redList);
-        setGreenListDates(greenList);
-        setDarkGreenListDates(darkGreenList);
+      if (data.dag_runs.length + offset !== data.total_entries) {
+        this.listDagRunsListService(
+          composerName,
+          dagId,
+          startDate,
+          endDate,
+          setDagRunsList,
+          setDagRunId,
+          setIsLoading,
 
-        setDagRunsList(transformDagRunListData);
-        setDagRunId(
-          transformDagRunListData[transformDagRunListData.length - 1].dagRunId
+          setBlueListDates,
+          setGreyListDates,
+          setOrangeListDates,
+          setRedListDates,
+          setGreenListDates,
+          data.dag_runs.length + offset,
+          allDagRunsListData
         );
       } else {
-        setDagRunsList([]);
-        setDagRunId('');
-        setBlueListDates([]);
-        setGreyListDates([]);
-        setOrangeListDates([]);
-        setRedListDates([]);
-        setGreenListDates([]);
-        setDarkGreenListDates([]);
+        let transformDagRunListData = allDagRunsListData;
+
+        if (transformDagRunListData.length > 0) {
+          // Group by date first, then by status
+          const groupedDataByDateStatus = transformDagRunListData.reduce(
+            (result: any, item: any) => {
+              const date = item.filteredDate;
+              const status = item.state;
+
+              if (!result[date]) {
+                result[date] = {};
+              }
+
+              if (!result[date][status]) {
+                result[date][status] = [];
+              }
+
+              result[date][status].push(item);
+
+              return result;
+            },
+            {}
+          );
+
+          let blueList: string[] = [];
+          let greyList: string[] = [];
+          let orangeList: string[] = [];
+          let redList: string[] = [];
+          let greenList: string[] = [];
+
+          Object.keys(groupedDataByDateStatus).forEach(dateValue => {
+            if (groupedDataByDateStatus[dateValue].running) {
+              blueList.push(dateValue);
+            } else if (groupedDataByDateStatus[dateValue].queued) {
+              greyList.push(dateValue);
+            } else if (
+              groupedDataByDateStatus[dateValue].failed &&
+              groupedDataByDateStatus[dateValue].success
+            ) {
+              orangeList.push(dateValue);
+            } else if (groupedDataByDateStatus[dateValue].failed) {
+              redList.push(dateValue);
+            } else {
+              greenList.push(dateValue);
+            }
+          });
+
+          setBlueListDates(blueList);
+          setGreyListDates(greyList);
+          setOrangeListDates(orangeList);
+          setRedListDates(redList);
+          setGreenListDates(greenList);
+
+          setDagRunsList(transformDagRunListData);
+          setDagRunId(
+            transformDagRunListData[transformDagRunListData.length - 1].dagRunId
+          );
+        } else {
+          setDagRunsList([]);
+          setDagRunId('');
+          setBlueListDates([]);
+          setGreyListDates([]);
+          setOrangeListDates([]);
+          setRedListDates([]);
+          setGreenListDates([]);
+        }
+        setIsLoading(false);
       }
-      setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
@@ -611,19 +644,50 @@ export class SchedulerService {
       console.error('Error in Download api', error);
     }
   };
+  static handleDownloadOutputNotebookAPIService = async (
+    dagRunId: string,
+    bucketName: string,
+    dagId: string,
+    setDownloadOutputDagRunId: (value: string) => void
+  ) => {
+    setDownloadOutputDagRunId(dagRunId);
+    try {
+      dagRunId = encodeURIComponent(dagRunId);
+      const serviceURL = `downloadOutput?bucket_name=${bucketName}&dag_id=${dagId}&dag_run_id=${dagRunId}`;
+      const formattedResponse: any = await requestAPI(serviceURL);
+      dagRunId = decodeURIComponent(dagRunId);
+      if (formattedResponse.status === 0) {
+        toast.success(
+          `${dagId}_${dagRunId} downloaded successfully`,
+          toastifyCustomStyle
+        );
+      } else {
+        toast.error(
+          `Failed to download the ${dagId}_${dagRunId}`,
+          toastifyCustomStyle
+        );
+      }
+      setDownloadOutputDagRunId('');
+    } catch (error) {
+      DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
+      console.error('Error in Download api', error);
+      setDownloadOutputDagRunId('');
+    }
+  };
   static handleDeleteSchedulerAPIService = async (
     composerSelected: string,
     dag_id: string,
     setDagList: (value: IDagList[]) => void,
     setIsLoading: (value: boolean) => void,
-    setBucketName: (value: string) => void
+    setBucketName: (value: string) => void,
+    fromPage?: string | undefined
   ) => {
     try {
-      const serviceURL = `dagDelete?composer=${composerSelected}&dag_id=${dag_id}`;
+      const serviceURL = `dagDelete?composer=${composerSelected}&dag_id=${dag_id}&from_page=${fromPage}`;
       const deleteResponse: IUpdateSchedulerAPIResponse = await requestAPI(
         serviceURL
       );
-      if (deleteResponse) {
+      if (deleteResponse.status === 0) {
         await SchedulerService.listDagInfoAPIService(
           setDagList,
           setIsLoading,
@@ -631,9 +695,11 @@ export class SchedulerService {
           composerSelected
         );
         toast.success(
-          `Deleted DAG with id ${dag_id}. May take a couple minutes to fully disappear`,
+          `Deleted job ${dag_id}. It might take a few minutes to for it to be deleted from the list of jobs.`,
           toastifyCustomStyle
         );
+      } else {
+        toast.error(`Failed to delete the ${dag_id}`, toastifyCustomStyle);
       }
     } catch (error) {
       DataprocLoggingService.log('Error in Delete api', LOG_LEVEL.ERROR);
@@ -728,6 +794,38 @@ export class SchedulerService {
       setIsLoadingLogs(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
+  static handleImportErrordataService = async (
+    composerSelectedList: string,
+    setImportErrorData: (value: string[]) => void,
+    setImportErrorEntries: (value: number) => void
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `importErrorsList?composer=${composerSelectedList}`
+      );
+      setImportErrorData(data.import_errors);
+      setImportErrorEntries(data.total_entries);
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
+
+  static triggerDagService = async (
+    dagId: string,
+    composerSelectedList: string
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `triggerDag?dag_id=${dagId}&composer=${composerSelectedList}`
+      );
+      if (data) {
+        toast.success(`${dagId} triggered successfully `, toastifyCustomStyle);
+      }
+    } catch (reason) {
+      console.error(`Error in Triggering the Dag.\n${reason}`);
+      toast.error(`Failed to Trigger ${dagId}`, toastifyCustomStyle);
     }
   };
 }

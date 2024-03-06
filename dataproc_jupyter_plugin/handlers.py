@@ -13,6 +13,12 @@
 # limitations under the License.
 
 import json
+from dataproc_jupyter_plugin.contollers.downloadOutputController import (
+    downloadOutputController,
+)
+from dataproc_jupyter_plugin.contollers.importErrorController import (
+    ImportErrorController,
+)
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.utils import url_path_join
 from requests import HTTPError
@@ -43,6 +49,7 @@ from dataproc_jupyter_plugin.contollers.dagRunController import (
 from dataproc_jupyter_plugin.contollers.editDagController import EditDagController
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
+from dataproc_jupyter_plugin.contollers.triggerDagController import TriggerDagController
 
 
 def update_gateway_client_url(c, log):
@@ -355,4 +362,15 @@ def setup_handlers(web_app):
 
     route_pattern = url_path_join(base_url, application_url, "editJobScheduler")
     handlers = [(route_pattern, EditDagController)]
+    web_app.add_handlers(host_pattern, handlers)
+    route_pattern = url_path_join(base_url, "dataproc-plugin", "importErrorsList")
+    handlers = [(route_pattern, ImportErrorController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, application_url, "triggerDag")
+    handlers = [(route_pattern, TriggerDagController)]
+    web_app.add_handlers(host_pattern, handlers)
+
+    route_pattern = url_path_join(base_url, application_url, "downloadOutput")
+    handlers = [(route_pattern, downloadOutputController)]
     web_app.add_handlers(host_pattern, handlers)

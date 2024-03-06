@@ -351,6 +351,10 @@ const CreateNotebookScheduler = ({
       setInputFileSelected(context.path);
     }
     setJobNameSelected('');
+    if (!editMode) {
+      setParameterDetail([]);
+      setParameterDetailUpdated([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -512,6 +516,7 @@ const CreateNotebookScheduler = ({
                 setValueValidation={setValueValidation}
                 duplicateKeyError={duplicateKeyError}
                 setDuplicateKeyError={setDuplicateKeyError}
+                fromPage="scheduler"
               />
             </>
             <div className="create-scheduler-form-element">

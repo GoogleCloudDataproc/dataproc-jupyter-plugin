@@ -17,11 +17,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
+import { PaginationView } from '../utils/paginationView';
 import { ClipLoader } from 'react-spinners';
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import { SchedulerService } from './schedulerServices';
 import { Dayjs } from 'dayjs';
+import { LabIcon } from '@jupyterlab/ui-components';
+import downloadIcon from '../../style/icons/scheduler_download.svg';
+
+const iconDownload = new LabIcon({
+  name: 'launcher:download-icon',
+  svgstr: downloadIcon
+});
 
 interface IDagRunList {
   dagRunId: string;
@@ -44,7 +52,7 @@ const ListDagRuns = ({
   setOrangeListDates,
   setRedListDates,
   setGreenListDates,
-  setDarkGreenListDates
+  bucketName
 }: {
   composerName: string;
   dagId: string;
@@ -58,11 +66,12 @@ const ListDagRuns = ({
   setOrangeListDates: (value: string[]) => void;
   setRedListDates: (value: string[]) => void;
   setGreenListDates: (value: string[]) => void;
-  setDarkGreenListDates: (value: string[]) => void;
+  bucketName: string;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
   const data =
     dagRunsCurrentDateList.length > 0 ? dagRunsCurrentDateList : dagRunsList;
   const columns = React.useMemo(
@@ -78,6 +87,10 @@ const ListDagRuns = ({
       {
         Header: 'Time',
         accessor: 'time'
+      },
+      {
+        Header: 'Actions',
+        accessor: 'actions'
       }
     ],
     []
@@ -89,7 +102,14 @@ const ListDagRuns = ({
     headerGroups,
     rows,
     prepareRow,
-    page
+    page,
+    canPreviousPage,
+    canNextPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    gotoPage,
+    state: { pageIndex, pageSize }
   } = useTable(
     //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
@@ -98,13 +118,20 @@ const ListDagRuns = ({
   );
 
   const tableDataCondition = (cell: ICellProps) => {
-    if (cell.column.Header === 'State') {
+    if (cell.column.Header === 'Actions') {
+      return (
+        <td {...cell.getCellProps()} className="clusters-table-data">
+          {renderActions(cell.row.original)}
+        </td>
+      );
+    } else if (cell.column.Header === 'State') {
       if (cell.value === 'success') {
         return (
           <div className="dag-run-state-parent">
             <td
               {...cell.getCellProps()}
               className="dag-runs-table-data-state-success"
+              onClick={() => handleDagRunStateClick(cell.row.original)}
             >
               {cell.render('Cell')}
             </td>
@@ -116,6 +143,7 @@ const ListDagRuns = ({
             <td
               {...cell.getCellProps()}
               className="dag-runs-table-data-state-failure"
+              onClick={() => handleDagRunStateClick(cell.row.original)}
             >
               {cell.render('Cell')}
             </td>
@@ -127,6 +155,7 @@ const ListDagRuns = ({
             <td
               {...cell.getCellProps()}
               className="dag-runs-table-data-state-running"
+              onClick={() => handleDagRunStateClick(cell.row.original)}
             >
               {cell.render('Cell')}
             </td>
@@ -138,6 +167,7 @@ const ListDagRuns = ({
             <td
               {...cell.getCellProps()}
               className="dag-runs-table-data-state-queued"
+              onClick={() => handleDagRunStateClick(cell.row.original)}
             >
               {cell.render('Cell')}
             </td>
@@ -149,6 +179,59 @@ const ListDagRuns = ({
       <td {...cell.getCellProps()} className="notebook-template-table-data">
         {cell.render('Cell')}
       </td>
+    );
+  };
+
+  const handleDagRunStateClick = (data: any) => {
+    setDagRunId(data.dagRunId);
+  };
+
+  const handleDownloadOutput = async (event: React.MouseEvent) => {
+    const dagRunId = event.currentTarget.getAttribute('data-dag-run-id')!;
+    await SchedulerService.handleDownloadOutputNotebookAPIService(
+      dagRunId,
+      bucketName,
+      dagId,
+      setDownloadOutputDagRunId
+    );
+  };
+
+  const renderActions = (data: any) => {
+    return (
+      <div className="actions-icon">
+        {data.dagRunId === downloadOutputDagRunId ? (
+          <div className="icon-buttons-style">
+            <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={18}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+        ) : (
+          <div
+            role="button"
+            className={
+              data.state === 'success'
+                ? 'icon-buttons-style'
+                : 'icon-buttons-style-disable'
+            }
+            title="Download Output"
+            data-dag-run-id={data.dagRunId}
+            onClick={
+              data.state === 'success'
+                ? e => handleDownloadOutput(e)
+                : undefined
+            }
+          >
+            <iconDownload.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -165,8 +248,7 @@ const ListDagRuns = ({
       setGreyListDates,
       setOrangeListDates,
       setRedListDates,
-      setGreenListDates,
-      setDarkGreenListDates
+      setGreenListDates
     );
   };
 
@@ -175,6 +257,7 @@ const ListDagRuns = ({
   }, [startDate, endDate]);
 
   useEffect(() => {
+    gotoPage(0);
     let currentDate = selectedDate
       ? new Date(selectedDate.toDate()).toDateString()
       : null;
@@ -209,16 +292,20 @@ const ListDagRuns = ({
                 prepareRow={prepareRow}
                 tableDataCondition={tableDataCondition}
                 fromPage="Dag Runs"
-                setDagRunId={setDagRunId}
-                selectedDagIndex={
-                  dagRunsCurrentDateList.length > 0
-                    ? dagRunsCurrentDateList.length - 1
-                    : dagRunsList.length > 0
-                    ? dagRunsList.length - 1
-                    : -1
-                }
               />
             </div>
+            {dagRunsCurrentDateList.length > 50 && (
+              <PaginationView
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                pageIndex={pageIndex}
+                allData={dagRunsCurrentDateList}
+                previousPage={previousPage}
+                nextPage={nextPage}
+                canPreviousPage={canPreviousPage}
+                canNextPage={canNextPage}
+              />
+            )}
           </div>
         ) : (
           <div>

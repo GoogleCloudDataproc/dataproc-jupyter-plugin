@@ -29,7 +29,7 @@ import { authenticatedFetch } from '../utils/utils';
 import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
-import notebookSchedulerIcon from '../../style/icons/notebook_scheduler.svg';
+import notebookSchedulerIcon from '../../style/icons/scheduler_calendar_month.svg';
 import { NotebookScheduler } from '../scheduler/notebookScheduler';
 
 const iconLogs = new LabIcon({
@@ -99,7 +99,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     this.notebookSchedulerButton = new ToolbarButton({
       icon: iconNotebookScheduler,
       onClick: () => this.onNotebookSchedulerClick(),
-      tooltip: 'Notebook Scheduler',
+      tooltip: 'Job Scheduler',
       className: 'dark-theme-logs'
     });
     this.panel.toolbar.insertItem(
@@ -116,7 +116,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       this.context
     );
     const widget = new MainAreaWidget<NotebookScheduler>({ content });
-    widget.title.label = 'Notebook Scheduler';
+    widget.title.label = 'Job Scheduler';
     widget.title.icon = iconNotebookScheduler;
     this.app.shell.add(widget, 'main');
   };

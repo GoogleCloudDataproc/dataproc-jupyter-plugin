@@ -32,10 +32,17 @@ class DagRunController(APIHandler):
             composer_name = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             start_date = self.get_argument("start_date")
+            offset = self.get_argument("offset")
             end_date = self.get_argument("end_date")
             credentials = handlers.get_cached_credentials(self.log)
             dag_run_list = dag_run.list_dag_runs(
-                credentials, composer_name, dag_id, start_date, end_date, self.log
+                credentials,
+                composer_name,
+                dag_id,
+                start_date,
+                end_date,
+                offset,
+                self.log,
             )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:

@@ -34,11 +34,13 @@ const iconLeftArrow = new LabIcon({
 const ExecutionHistory = ({
   composerName,
   dagId,
-  handleBackButton
+  handleBackButton,
+  bucketName
 }: {
   composerName: string;
   dagId: string;
   handleBackButton: () => void;
+  bucketName: string;
 }): JSX.Element => {
   const [dagRunId, setDagRunId] = useState('');
   const currentDate = new Date().toLocaleDateString();
@@ -51,7 +53,6 @@ const ExecutionHistory = ({
   const [orangeListDates, setOrangeListDates] = useState<string[]>([]);
   const [redListDates, setRedListDates] = useState<string[]>([]);
   const [greenListDates, setGreenListDates] = useState<string[]>([]);
-  const [darkGreenListDates, setDarkGreenListDates] = useState<string[]>([]);
 
   const handleMonthChange = () => {
     setDagRunId('');
@@ -97,10 +98,6 @@ const ExecutionHistory = ({
     const isGreenExecution =
       greenListDates.length > 0 &&
       greenListDates.includes(formattedTotalViewDate);
-    //Dark green color code for multiple with success status
-    const isDarkGreenExecution =
-      darkGreenListDates.length > 0 &&
-      darkGreenListDates.includes(formattedTotalViewDate);
 
     const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates);
 
@@ -108,39 +105,51 @@ const ExecutionHistory = ({
       <PickersDay
         {...props}
         style={{
-          border: isSelectedExecution
-            ? '3px solid var(--jp-ui-font-color0)'
-            : 'none',
+          border:
+            isSelectedExecution &&
+            !isRedExecution &&
+            !isGreenExecution &&
+            !isOrangeExecution &&
+            !isBlueExecution &&
+            !isGreyExecution
+              ? '3px solid var(--jp-ui-font-color0)'
+              : 'none',
           borderRadius:
             isGreenExecution ||
             isRedExecution ||
             isSelectedExecution ||
             isOrangeExecution ||
             isGreyExecution ||
-            isBlueExecution ||
-            isDarkGreenExecution
+            isBlueExecution
               ? '50%'
               : 'none',
-          backgroundColor: isDarkGreenExecution
-            ? '#188038'
-            : isGreenExecution
-            ? '#34A853'
+          backgroundColor: isGreenExecution
+            ? isSelectedExecution
+              ? '#2A8642'
+              : '#34A853'
             : isOrangeExecution
-            ? '#FFA500'
+            ? isSelectedExecution
+              ? '#F78702'
+              : '#FFA52C'
             : isRedExecution
-            ? '#EA3323'
+            ? isSelectedExecution
+              ? '#C4271A'
+              : '#EA3323'
             : isBlueExecution
-            ? '#1A73E8'
+            ? isSelectedExecution
+              ? '#0066b2'
+              : '#7CB9E8'
             : isGreyExecution
-            ? '#808080'
+            ? isSelectedExecution
+              ? '#808080'
+              : '#AEAEAE'
             : 'transparent',
           color:
             isGreenExecution ||
             isRedExecution ||
             isOrangeExecution ||
             isGreyExecution ||
-            isBlueExecution ||
-            isDarkGreenExecution
+            isBlueExecution
               ? 'white'
               : 'inherit'
         }}
@@ -154,7 +163,7 @@ const ExecutionHistory = ({
 
   return (
     <>
-      <div>
+      <>
         <div className="execution-history-header">
           <div
             role="button"
@@ -197,7 +206,7 @@ const ExecutionHistory = ({
                 setOrangeListDates={setOrangeListDates}
                 setRedListDates={setRedListDates}
                 setGreenListDates={setGreenListDates}
-                setDarkGreenListDates={setDarkGreenListDates}
+                bucketName={bucketName}
               />
             )}
           </div>
@@ -211,7 +220,7 @@ const ExecutionHistory = ({
             )}
           </div>
         </div>
-      </div>
+      </>
     </>
   );
 };
