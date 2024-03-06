@@ -21,7 +21,7 @@ from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE
 
 class DagRunListService:
     def list_dag_runs(
-        self, credentials, composer_name, dag_id, start_date, end_date, log
+        self, credentials, composer_name, dag_id, start_date, end_date, offset, log
     ):
         airflow_uri, bucket = DagListService.get_airflow_uri(
             self, composer_name, credentials, log
@@ -33,7 +33,7 @@ class DagRunListService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns?execution_date_gte={start_date}&execution_date_lte={end_date}"
+                api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns?execution_date_gte={start_date}&execution_date_lte={end_date}&offset={offset}"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",

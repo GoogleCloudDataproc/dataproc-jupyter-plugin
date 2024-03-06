@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ClipLoader } from 'react-spinners';
 import { Cell, Row } from 'react-table';
 
@@ -28,28 +28,9 @@ function TableData({
   page,
   prepareRow,
   tableDataCondition,
-  fromPage,
-  setDagRunId,
-  selectedDagIndex
+  fromPage
 }: any) {
-  const [selectedRowIndex, setSelectedRowIndex] = useState(selectedDagIndex);
-
   const displayData = page ? page : rows;
-
-  const handleRowClicked = (row: any, index: number) => {
-    if (parseInt(row.id) === index) {
-      setSelectedRowIndex(index);
-      if (fromPage === 'Dag Runs') {
-        setDagRunId(row?.original?.dagRunId);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (fromPage === 'Dag Runs') {
-      setSelectedRowIndex(selectedDagIndex);
-    }
-  }, [selectedDagIndex]);
 
   return (
     <table {...getTableProps()} className="clusters-list-table">
@@ -70,14 +51,7 @@ function TableData({
           </tr>
         ))}
       </thead>
-      <tbody
-        {...getTableBodyProps()}
-        className={
-          fromPage === 'Dag Runs'
-            ? 'dag-runs-table-body'
-            : 'clusters-table-body'
-        }
-      >
+      <tbody {...getTableBodyProps()} className={'clusters-table-body'}>
         {isLoading ? (
           <div className="spin-loader">
             <ClipLoader
@@ -95,14 +69,7 @@ function TableData({
             return (
               <tr
                 {...row.getRowProps()}
-                className={
-                  fromPage === 'Dag Runs'
-                    ? selectedRowIndex === index
-                      ? 'dag-runs-row-data-parent-selected'
-                      : 'dag-runs-row-data-parent'
-                    : 'cluster-list-data-parent'
-                }
-                onClick={() => handleRowClicked(row, index)}
+                className={'cluster-list-data-parent'}
               >
                 {row.cells.map((cell: Cell) => {
                   return tableDataCondition(cell);

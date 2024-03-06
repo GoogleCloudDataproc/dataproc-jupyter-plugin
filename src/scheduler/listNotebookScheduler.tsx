@@ -22,17 +22,19 @@ import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Autocomplete, TextField } from '@mui/material';
-import deleteIcon from '../../style/icons/delete_icon.svg';
+import deleteIcon from '../../style/icons/scheduler_delete.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
-import playIcon from '../../style/icons/play_icon.svg';
-import pauseIcon from '../../style/icons/pause_icon.svg';
-import downloadIcon from '../../style/icons/download_icon.svg';
-import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
-import EditNotebookIcon from '../../style/icons/edit_notebook_icon.svg';
+import playIcon from '../../style/icons/scheduler_play.svg';
+import pauseIcon from '../../style/icons/scheduler_pause.svg';
+import EditIconDisable from '../../style/icons/scheduler_edit_dag.svg';
+import EditNotebookIcon from '../../style/icons/scheduler_edit_calendar.svg';
 import { SchedulerService } from './schedulerServices';
 import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import PollingTimer from '../utils/pollingTimer';
+import PollingImportErrorTimer from '../utils/pollingImportErrorTimer';
+import ImportErrorPopup from '../utils/importErrorPopup';
+import triggerIcon from '../../style/icons/scheduler_trigger.svg';
 import { scheduleMode } from '../utils/const';
 
 const iconDelete = new LabIcon({
@@ -47,11 +49,6 @@ const iconPause = new LabIcon({
   name: 'launcher:pause-icon',
   svgstr: pauseIcon
 });
-
-const iconDownload = new LabIcon({
-  name: 'launcher:download-icon',
-  svgstr: downloadIcon
-});
 const iconEditDag = new LabIcon({
   name: 'launcher:edit-disable-icon',
   svgstr: EditIconDisable
@@ -61,6 +58,10 @@ const iconEditNotebook = new LabIcon({
   svgstr: EditNotebookIcon
 });
 
+const iconTrigger = new LabIcon({
+  name: 'launcher:trigger-icon',
+  svgstr: triggerIcon
+});
 interface IDagList {
   jobid: string;
   notebookname: string;
@@ -97,7 +98,9 @@ function listNotebookScheduler({
   setEmailList,
   setStopCluster,
   setTimeZoneSelected,
-  setEditMode
+  setEditMode,
+  bucketName,
+  setBucketName
 }: {
   app: JupyterFrontEnd;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
@@ -128,22 +131,25 @@ function listNotebookScheduler({
   setStopCluster?: (value: boolean) => void;
   setTimeZoneSelected?: (value: string) => void;
   setEditMode?: (value: boolean) => void;
+  bucketName: string;
+  setBucketName: (value: string) => void;
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelectedList, setComposerSelectedList] = useState('');
   const [dagList, setDagList] = useState<IDagList[]>([]);
   const data = dagList;
-  const [bucketName, setBucketName] = useState('');
   const backselectedEnvironment = backButtonComposerName;
   const createSelectedEnvironment = composerSelectedFromCreate;
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
+  const [importErrorPopupOpen, setImportErrorPopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
   const [editDagLoading, setEditDagLoading] = useState('');
-  const [pollingDisable] = useState(false);
   const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
   const [editNotebookLoading, setEditNotebookLoading] = useState('');
   const [deletingNotebook, setDeletingNotebook] = useState(false);
+  const [importErrorData, setImportErrorData] = useState<string[]>([]);
+  const [importErrorEntries, setImportErrorEntries] = useState<number>(0);
   const columns = React.useMemo(
     () => [
       {
@@ -174,6 +180,18 @@ function listNotebookScheduler({
       pollingFunction,
       pollingDisable,
       timer.current
+    );
+  };
+
+  const timerImportError = useRef<NodeJS.Timeout | undefined>(undefined);
+  const pollingImportError = async (
+    pollingFunction: () => void,
+    pollingDisable: boolean
+  ) => {
+    timerImportError.current = PollingImportErrorTimer(
+      pollingFunction,
+      pollingDisable,
+      timerImportError.current
     );
   };
   const handleComposerSelected = (data: string | null) => {
@@ -208,6 +226,12 @@ function listNotebookScheduler({
         setInputNotebookFilePath,
         setEditNotebookLoading
       );
+    }
+  };
+  const handleTriggerDag = async (event: React.MouseEvent) => {
+    const jobid = event.currentTarget.getAttribute('data-jobid');
+    if (jobid !== null) {
+      await SchedulerService.triggerDagService(jobid, composerSelectedList);
     }
   };
   const handleEditDags = async (event: React.MouseEvent) => {
@@ -264,12 +288,15 @@ function listNotebookScheduler({
     setDeletingNotebook(false);
   };
 
-  const handleDownloadScheduler = async (event: React.MouseEvent) => {
-    const jobid = event.currentTarget.getAttribute('data-jobid')!;
-    await SchedulerService.handleDownloadSchedulerAPIService(
+  const handleDeleteImportError = async (dagId: string) => {
+    const fromPage ="importErrorPage"
+    await SchedulerService.handleDeleteSchedulerAPIService(
       composerSelectedList,
-      jobid,
-      bucketName
+      dagId,
+      setDagList,
+      setIsLoading,
+      setBucketName,
+      fromPage
     );
   };
 
@@ -286,6 +313,20 @@ function listNotebookScheduler({
       setIsLoading,
       setBucketName,
       composerSelectedList
+    );
+  };
+
+  const handleImportErrorPopup = async () => {
+    setImportErrorPopupOpen(true);
+  };
+  const handleImportErrorClosed = async () => {
+    setImportErrorPopupOpen(false);
+  };
+  const handleImportErrordata = async () => {
+    await SchedulerService.handleImportErrordataService(
+      composerSelectedList,
+      setImportErrorData,
+      setImportErrorEntries
     );
   };
 
@@ -332,12 +373,20 @@ function listNotebookScheduler({
         </div>
         <div
           role="button"
-          className="icon-buttons-style"
-          title="Download Notebook"
+          className={
+            !is_status_paused
+              ? 'icon-buttons-style'
+              : 'icon-buttons-style-disable '
+          }
+          title={
+            !is_status_paused ? 'Trigger the job' : " Can't Trigger Paused job"
+          }
           data-jobid={data.jobid}
-          onClick={e => handleDownloadScheduler(e)}
+          onClick={e => {
+            !is_status_paused ? handleTriggerDag(e) : null;
+          }}
         >
-          <iconDownload.react
+          <iconTrigger.react
             tag="div"
             className="icon-white logo-alignment-style"
           />
@@ -360,7 +409,7 @@ function listNotebookScheduler({
             data-jobid={data.jobid}
             onClick={e => handleEditDags(e)}
           >
-            <iconEditDag.react
+            <iconEditNotebook.react
               tag="div"
               className="icon-white logo-alignment-style"
             />
@@ -384,7 +433,7 @@ function listNotebookScheduler({
             data-jobid={data.jobid}
             onClick={e => handleEditNotebook(e)}
           >
-            <iconEditNotebook.react
+            <iconEditDag.react
               tag="div"
               className="icon-white logo-alignment-style"
             />
@@ -471,15 +520,25 @@ function listNotebookScheduler({
     if (composerSelectedList !== '') {
       setIsLoading(true);
       listDagInfoAPI();
+      handleImportErrordata();
     }
   }, [composerSelectedList]);
 
   useEffect(() => {
     if (composerSelectedList !== '') {
-      pollingDagList(listDagInfoAPI, pollingDisable);
+      pollingDagList(listDagInfoAPI, false);
     }
     return () => {
       pollingDagList(listDagInfoAPI, true);
+    };
+  }, [composerSelectedList]);
+
+  useEffect(() => {
+    if (composerSelectedList !== '') {
+      pollingImportError(handleImportErrordata, false);
+    }
+    return () => {
+      pollingImportError(handleImportErrordata, true);
     };
   }, [composerSelectedList]);
 
@@ -498,6 +557,28 @@ function listNotebookScheduler({
             )}
           />
         </div>
+        {importErrorEntries > 0 && (
+          <div className="import-error-parent">
+            <div
+              className="accordion-button"
+              role="button"
+              aria-label="Show Import Errors"
+              title="Show Import Errors"
+              onClick={handleImportErrorPopup}
+            >
+              Show Schedule Errors ({importErrorEntries})
+            </div>
+            {importErrorPopupOpen && (
+              <ImportErrorPopup
+                importErrorData={importErrorData}
+                importErrorEntries={importErrorEntries}
+                importErrorPopupOpen={importErrorPopupOpen}
+                onClose={handleImportErrorClosed}
+                onDelete={(dagId :string) =>handleDeleteImportError(dagId)}
+              />
+            )}
+          </div>
+        )}
       </div>
       {dagList.length > 0 ? (
         <div className="notebook-templates-list-table-parent">

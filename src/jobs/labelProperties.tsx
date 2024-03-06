@@ -57,14 +57,15 @@ function LabelProperties({
   labelEditMode,
   selectedRuntimeClone,
   batchInfoResponse,
-  createBatch
+  createBatch,
+  fromPage
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
   useEffect(() => {
-    if (!labelEditMode && labelDetail.length > 0 && !labelDetail[0].includes(':')) {
+    if (!labelEditMode && fromPage !== 'scheduler') {
       if (
         buttonText === 'ADD LABEL' &&
         !selectedJobClone &&

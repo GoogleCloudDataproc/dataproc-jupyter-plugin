@@ -61,7 +61,7 @@ def main():
     matched = re.match("gs://([^/]+)/(.+)", args.output)
     if not matched:
         raise ValueError('Invalid output URI: "%s"' % args.output)
-    
+
     # Download input notebook and params file from GCS
     # Note that papermill supports gcsfs by default, but some type of dependency
     # problem appears to prevent this from working out of the box on 2.0 images
