@@ -126,17 +126,15 @@ const ListDagTaskInstances = ({
                   </div>
                   <div className="accordion-row-data">
                     {taskInstance.tryNumber === 0 ? (
-                      <iconStop.react
-                        tag="div"
-                        className="logo-alignment-style-accordion"
-                      />
+                      <IconButton disabled>
+                        <iconStop.react tag="div" />
+                      </IconButton>
                     ) : (
                       <div className="logo-row-container">
                         {Array.from({ length: taskInstance.tryNumber }).map(
                           (_, i) => (
                             <IconButton
                               key={i}
-                              className="logo-alignment-style-accordion"
                               onClick={() =>
                                 handleChange(index, i + 1, 'attemptsClick')
                               }
