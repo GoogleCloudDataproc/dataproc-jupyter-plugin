@@ -61,6 +61,7 @@ export const gcpServiceUrls = (async () => {
 })();
 export const VIEW_LOGS_URL = 'https://console.cloud.google.com/logs';
 export const POLLING_TIME_LIMIT = 10000;
+export const POLLING_IMPORT_ERROR = 30000;
 export const API_HEADER_CONTENT_TYPE = 'application/json';
 export enum ClusterStatus {
   STATUS_RUNNING = 'RUNNING',

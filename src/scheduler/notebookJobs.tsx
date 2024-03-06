@@ -83,6 +83,7 @@ const NotebookJobComponent = ({
 }): React.JSX.Element => {
   const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   const [composerName, setComposerName] = useState('');
+  const [bucketName, setBucketName] = useState('');
   const [dagId, setDagId] = useState('');
   const [backComposerName, setBackComposerName] = useState('');
   const handleDagIdSelection = (composerName: string, dagId: string) => {
@@ -97,12 +98,13 @@ const NotebookJobComponent = ({
   };
 
   return (
-    <div className="component-level">
+    <>
       {showExecutionHistory ? (
         <ExecutionHistory
           composerName={composerName}
           dagId={dagId}
           handleBackButton={handleBackButton}
+          bucketName={bucketName}
         />
       ) : (
         <div>
@@ -139,11 +141,13 @@ const NotebookJobComponent = ({
               setStopCluster={setStopCluster}
               setTimeZoneSelected={setTimeZoneSelected}
               setEditMode={setEditMode}
+              bucketName={bucketName}
+              setBucketName={setBucketName}
             />
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

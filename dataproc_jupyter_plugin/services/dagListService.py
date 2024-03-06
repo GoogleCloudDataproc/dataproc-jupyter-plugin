@@ -74,7 +74,7 @@ class DagListService:
 
 
 class DagDeleteService:
-    def delete_job(self, credentials, composer_name, dag_id, log):
+    def delete_job(self, credentials, composer_name, dag_id, from_page, log):
         airflow_uri, bucket = DagListService.get_airflow_uri(
             self, composer_name, credentials, log
         )
@@ -86,8 +86,9 @@ class DagDeleteService:
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",
                 }
-                response = requests.delete(api_endpoint, headers=headers)
-                log.info(response)
+                if from_page == None:
+                    response = requests.delete(api_endpoint, headers=headers)
+                    log.info(response)
                 cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
                 process = subprocess.Popen(
                     cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True

@@ -295,7 +295,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label === 'Settings' ||
             newValue.title.label === 'Notebook Templates' ||
             newValue.title.label === 'Scheduled Jobs' ||
-            newValue.title.label === 'Notebook Scheduler') &&
+            newValue.title.label === 'Job Scheduler') &&
           lastClusterName !== ''
         ) {
           localStorage.setItem('oldNotebookValue', lastClusterName || '');
@@ -313,7 +313,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label !== 'Settings' &&
             newValue.title.label !== 'Notebook Templates' &&
             newValue.title.label !== 'Scheduled Jobs' &&
-            newValue.title.label !== 'Notebook Scheduler'
+            newValue.title.label !== 'Job Scheduler'
           ) {
             let oldNotebook = localStorage.getItem('oldNotebookValue');
             localStorage.setItem('notebookValue', oldNotebook || '');
