@@ -324,24 +324,29 @@ const CreateNotebookScheduler = ({
       serverlessDataList.length > 0
     ) {
       if (
-        kernels[
-          context.sessionContext.kernelPreference.name
-        ].resources.endpointParentResource.includes('/sessions')
+        kernels[context.sessionContext.kernelPreference.name].resources
+          .endpointParentResource
       ) {
-        const selectedData: any = serverlessDataList.filter(
-          (serverless: any) => {
-            return context.sessionContext.kernelDisplayName.includes(
-              serverless.serverlessName
-            );
-          }
-        );
-        setServerlessDataSelected(selectedData[0].serverlessData);
-        setServerlessSelected(selectedData[0].serverlessName);
-      } else {
-        const selectedData: any = clusterList.filter((cluster: string) => {
-          return context.sessionContext.kernelDisplayName.includes(cluster);
-        });
-        setClusterSelected(selectedData[0]);
+        if (
+          kernels[
+            context.sessionContext.kernelPreference.name
+          ].resources.endpointParentResource.includes('/sessions')
+        ) {
+          const selectedData: any = serverlessDataList.filter(
+            (serverless: any) => {
+              return context.sessionContext.kernelDisplayName.includes(
+                serverless.serverlessName
+              );
+            }
+          );
+          setServerlessDataSelected(selectedData[0].serverlessData);
+          setServerlessSelected(selectedData[0].serverlessName);
+        } else {
+          const selectedData: any = clusterList.filter((cluster: string) => {
+            return context.sessionContext.kernelDisplayName.includes(cluster);
+          });
+          setClusterSelected(selectedData[0]);
+        }
       }
       setIsLoadingKernelDetail(false);
     }
