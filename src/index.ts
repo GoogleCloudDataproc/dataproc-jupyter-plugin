@@ -339,8 +339,23 @@ const extension: JupyterFrontEndPlugin<void> = {
       notebookUrl: string
     ) => {
       const contentsManager = app.serviceManager.contents;
+      // Get the current file browser tracker
+      const { tracker } = factory;
+      // Get the current active widget in the file browser
+      const widget = tracker.currentWidget;
+      if (!widget) {
+        console.error('No active file browser widget found.');
+        return;
+      }
+
       // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
-      const bigQueryNotebookDownloadFolderPath = defaultFileBrowser.model.path;
+      const bigQueryNotebookDownloadFolderPath = widget.model.path.includes(
+        'gs:'
+      )
+        ? ''
+        : widget.model.path;
+
+      // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
 
       const urlParts = notebookUrl.split('/');
       const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
@@ -349,10 +364,8 @@ const extension: JupyterFrontEndPlugin<void> = {
 
       const credentials = await authApi();
       if (credentials) {
-        notebookContent.cells[2].source[1] =
-          `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] =
-          `REGION = '${credentials.region_id}'\n`;
+        notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
+        notebookContent.cells[2].source[2] = `REGION = '${credentials.region_id}'\n`;
       }
 
       // Save the file to the workspace
@@ -468,7 +481,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new NotebookTemplates(
           app as JupyterLab,
           themeManager,
-          defaultFileBrowser as IDefaultFileBrowser
+          factory as IFileBrowserFactory
         );
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'Notebook Templates';
