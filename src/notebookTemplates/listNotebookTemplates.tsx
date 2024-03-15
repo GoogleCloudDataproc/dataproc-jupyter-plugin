@@ -74,7 +74,6 @@ function ListNotebookTemplates({
     const { tracker } = factory;
     // Get the current active widget in the file browser
     const widget = tracker.currentWidget;
-    console.log(widget);
     if (!widget) {
       console.error('No active file browser widget found.');
       return;
