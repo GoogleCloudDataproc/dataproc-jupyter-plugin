@@ -44,6 +44,7 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
 import { scheduleValueExpression } from '../utils/const';
+import { ClipLoader } from 'react-spinners';
 
 interface IDagList {
   jobid: string;
@@ -116,6 +117,7 @@ const CreateNotebookScheduler = ({
   const [dagList, setDagList] = useState<IDagList[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [dagListCall, setDagListCall] = useState(false);
+  const [isLoadingKernelDetail, setIsLoadingKernelDetail] = useState(false);
 
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
@@ -312,6 +314,7 @@ const CreateNotebookScheduler = ({
   };
 
   const getKernelDetail = async () => {
+    setIsLoadingKernelDetail(true);
     const kernelSpecs: any = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
     if (
@@ -321,25 +324,31 @@ const CreateNotebookScheduler = ({
       serverlessDataList.length > 0
     ) {
       if (
-        kernels[
-          context.sessionContext.kernelPreference.name
-        ].resources.endpointParentResource.includes('/sessions')
+        kernels[context.sessionContext.kernelPreference.name].resources
+          .endpointParentResource
       ) {
-        const selectedData: any = serverlessDataList.filter(
-          (serverless: any) => {
-            return context.sessionContext.kernelDisplayName.includes(
-              serverless.serverlessName
-            );
-          }
-        );
-        setServerlessDataSelected(selectedData[0].serverlessData);
-        setServerlessSelected(selectedData[0].serverlessName);
-      } else {
-        const selectedData: any = clusterList.filter((cluster: string) => {
-          return context.sessionContext.kernelDisplayName.includes(cluster);
-        });
-        setClusterSelected(selectedData[0]);
+        if (
+          kernels[
+            context.sessionContext.kernelPreference.name
+          ].resources.endpointParentResource.includes('/sessions')
+        ) {
+          const selectedData: any = serverlessDataList.filter(
+            (serverless: any) => {
+              return context.sessionContext.kernelDisplayName.includes(
+                serverless.serverlessName
+              );
+            }
+          );
+          setServerlessDataSelected(selectedData[0].serverlessData);
+          setServerlessSelected(selectedData[0].serverlessName);
+        } else {
+          const selectedData: any = clusterList.filter((cluster: string) => {
+            return context.sessionContext.kernelDisplayName.includes(cluster);
+          });
+          setClusterSelected(selectedData[0]);
+        }
       }
+      setIsLoadingKernelDetail(false);
     }
   };
 
@@ -547,7 +556,16 @@ const CreateNotebookScheduler = ({
               </FormControl>
             </div>
             <div className="create-scheduler-form-element">
-              {selectedMode === 'cluster' && (
+              {isLoadingKernelDetail && (
+                <ClipLoader
+                  color="#3367d6"
+                  loading={true}
+                  size={18}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
+              {selectedMode === 'cluster' && !isLoadingKernelDetail && (
                 <Autocomplete
                   className="create-scheduler-style"
                   options={clusterList}
@@ -558,7 +576,7 @@ const CreateNotebookScheduler = ({
                   )}
                 />
               )}
-              {selectedMode === 'serverless' && (
+              {selectedMode === 'serverless' && !isLoadingKernelDetail && (
                 <Autocomplete
                   className="create-scheduler-style"
                   options={serverlessList}

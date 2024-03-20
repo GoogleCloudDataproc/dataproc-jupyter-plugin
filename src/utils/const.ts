@@ -16,7 +16,7 @@
  */
 
 import { requestAPI } from '../handler/handler';
-export const VERSION_DETAIL = '0.1.73';
+export const VERSION_DETAIL = '0.1.75';
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
@@ -168,7 +168,7 @@ export const SPARKR = 'SparkR';
 export const PYSPARK = 'PySpark';
 export const DCU_HOURS = 3600000;
 export const GB_MONTHS = 2592000;
-export const TITLE_LAUNCHER_CATEGORY = 'Dataproc Resources';
+export const TITLE_LAUNCHER_CATEGORY = 'Google Cloud Resources';
 export const SPARK_HISTORY_SERVER = 'Spark History Server';
 export const DEFAULT_LABEL_DETAIL = 'client:dataproc-jupyter-plugin';
 export const JOB_FIELDS_EXCLUDED = ['queryList', 'properties', 'args'];
