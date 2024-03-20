@@ -37,7 +37,7 @@ import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
-import { iconDisplay } from './utils/utils';
+import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
@@ -56,10 +56,17 @@ import { GCSDrive } from './gcs/gcsDrive';
 import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
 import { DataprocLoggingService } from './utils/loggingService';
 import { NotebookScheduler } from './scheduler/notebookScheduler';
+import pythonLogo from '../third_party/icons/python_logo.svg';
+import NotebookTemplateService from './notebookTemplates/notebookTemplatesService';
+import * as path from 'path';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
+});
+const iconPythonLogo = new LabIcon({
+  name: 'launcher:python-bigquery-logo-icon',
+  svgstr: pythonLogo
 });
 
 const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
@@ -327,6 +334,76 @@ const extension: JupyterFrontEndPlugin<void> = {
     const kernelSpecs = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
 
+    const downloadNotebook = async (
+      notebookContent: any,
+      notebookUrl: string
+    ) => {
+      const contentsManager = app.serviceManager.contents;
+      // Get the current file browser tracker
+      const { tracker } = factory;
+      // Get the current active widget in the file browser
+      const widget = tracker.currentWidget;
+      if (!widget) {
+        console.error('No active file browser widget found.');
+        return;
+      }
+
+      // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
+      const bigQueryNotebookDownloadFolderPath = widget.model.path.includes(
+        'gs:'
+      )
+        ? ''
+        : widget.model.path;
+
+      // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
+
+      const urlParts = notebookUrl.split('/');
+      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
+        urlParts[urlParts.length - 1]
+      }`;
+
+      const credentials = await authApi();
+      if (credentials) {
+        notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
+        notebookContent.cells[2].source[2] = `REGION = '${credentials.region_id}'\n`;
+      }
+
+      // Save the file to the workspace
+      await contentsManager.save(filePath, {
+        type: 'file',
+        format: 'text',
+        content: JSON.stringify(notebookContent)
+      });
+
+      // Refresh the file fileBrowser to reflect the new file
+      app.shell.currentWidget?.update();
+
+      app.commands.execute('docmanager:open', {
+        path: filePath
+      });
+    };
+
+    const openBigQueryNotebook = async () => {
+      const template = {
+        url: 'https://raw.githubusercontent.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/main/public_datasets/bigframes/bigframes_quickstart.ipynb'
+      };
+      await NotebookTemplateService.handleClickService(
+        template,
+        downloadNotebook
+      );
+    };
+
+    const createBigQueryNotebookComponentCommand =
+      'create-bigquery-notebook-component';
+    commands.addCommand(createBigQueryNotebookComponentCommand, {
+      caption: 'Bigframe On BiqQuery',
+      label: 'Bigframe On BiqQuery',
+      icon: iconPythonLogo,
+      execute: async () => {
+        await openBigQueryNotebook();
+      }
+    });
+
     const createRuntimeTemplateComponentCommand =
       'create-runtime-template-component';
     commands.addCommand(createRuntimeTemplateComponentCommand, {
@@ -432,6 +509,11 @@ const extension: JupyterFrontEndPlugin<void> = {
     let serverlessIndex = -1;
 
     if (launcher) {
+      launcher.add({
+        command: createBigQueryNotebookComponentCommand,
+        category: 'BigQuery Notebooks',
+        rank: 1
+      });
       Object.values(kernels).forEach((kernelsData, index) => {
         if (
           kernelsData?.resources.endpointParentResource &&
