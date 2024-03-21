@@ -271,14 +271,14 @@ fetching database name from fully qualified name structure */
         mode: string;
         description: string;
       }) => ({
-        name: column.column,
+        name: `${column.column} (${column.type})`,
         schema: res.schema, // Include the schema object
         fullyQualifiedName: res.fullyQualifiedName,
         displayName: res.displayName,
-        column: res.column,
-        type: res.type,
-        mode: res.mode,
-        description: res.description
+        column: res.column, //no response
+        type: column.type, 
+        mode: column.mode,
+        description: res.description 
       })
     );
 
@@ -292,22 +292,24 @@ fetching database name from fully qualified name structure */
 
     databases[dbName][tableName].push(...columns);
   });
+
   const data = Object.entries(databases).map(([dbName, tables]) => ({
     id: uuidv4(),
     name: dbName,
     children: Object.entries(tables).map(([tableName, columns]) => ({
       id: uuidv4(),
       name: tableName,
-      desciption: '',
+      description: '',
       children: columns.map((column: IColumn) => ({
         id: uuidv4(),
         name: column.name,
         type: column.type,
         mode: column.mode,
-        description: column.description
+        description: column.description 
       }))
     }))
   }));
+
   data.sort((a, b) => a.name.localeCompare(b.name));
 
   data.forEach(db => {
@@ -349,6 +351,7 @@ fetching database name from fully qualified name structure */
       } else if (depth === 2 && node.parent) {
         const database = node.parent.data.name;
         const column = node.data.children;
+      
         const content = new Table(
           node.data.name,
           dataprocMetastoreServices,
@@ -786,7 +789,7 @@ fetching database name from fully qualified name structure */
 
   return (
     <div className="dpms-Wrapper">
-      <TitleComponent titleStr="Metadata Explorer" isPreview />
+      <TitleComponent titleStr="Dataset Explorer" isPreview />
       {!noDpmsInstance ? (
         <>
           <div>

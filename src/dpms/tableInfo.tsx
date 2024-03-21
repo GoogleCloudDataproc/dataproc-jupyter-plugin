@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { useTable } from 'react-table';
+import React, { useState } from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { DataprocWidget} from '../controls/DataprocWidget';
+import { DataprocWidget } from '../controls/DataprocWidget';
+import SchemaInfo from './schemaInfo';
+
 interface IColumn {
   name: string;
   type: string;
@@ -47,107 +48,75 @@ const TableInfo = ({
     'Dataproc Metastore Instance': dataprocMetastoreServices
   };
 
-  const renderColumnTable = () => {
-    const columns = React.useMemo(
-      () => [
-        {
-          Header: 'Field name',
-          accessor: 'name'
-        },
-        {
-          Header: 'Type',
-          accessor: 'type'
-        },
-        {
-          Header: 'Mode',
-          accessor: 'mode'
-        },
-        {
-          Header: 'Description',
-          accessor: 'description'
-        }
-      ],
-      []
-    );
+  type Mode = 'Details' | 'Schema' | 'Preview';
 
-    const data = React.useMemo(() => {
-      return column.map((column: IColumn) => ({
-        name: column.name,
-        type: column.type || '',
-        mode: column.mode || '',
-        description: column.description
-      }));
-    }, [column]);
+  const [selectedMode, setSelectedMode] = useState<Mode>('Details');
 
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-      // @ts-ignore  react-table 'columns' which is declared here on type 'TableOptions<IColumns>'
-      useTable({ columns, data });
+  const selectedModeChange = (mode: Mode) => {
+    setSelectedMode(mode);
+  };
 
-    return (
-      <div className="dpms-Wrapper">
-        <div className="table-container">
-          <table
-            className= 'schema-table'
-            {...getTableProps()}
-          >
-            <thead>
-              {headerGroups.map(headerGroup => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map(column => (
-                    <th {...column.getHeaderProps()}>
-                      {column.render('Header')}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody {...getTableBodyProps()}>
-              {rows.map(row => {
-                prepareRow(row);
-                return (
-                  <tr {...row.getRowProps()}>
-                    {row.cells.map((cell, index) => {
-                      return (
-                        <td
-                          className={index === 0 ? 'bold-column' : ''}
-                          {...cell.getCellProps()}
-                        >
-                          {cell.render('Cell')}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    );
+  const toggleStyleSelection = (toggleItem: string) => {
+    if (selectedMode === toggleItem) {
+      return 'selected-header';
+    } else {
+      return 'unselected-header';
+    }
   };
 
   return (
     <div className="dpms-Wrapper">
       <div className="table-info-overlay">
         <div className="title-overlay">{title}</div>
-        <div className="db-title">Table info</div>
-        <div className="table-container">
-          <table className="db-table">
-            <tbody>
-              {Object.entries(table).map(([key, value], index) => (
-                <tr
-                  key={key}
-                  className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
-                >
-                  <td className="bold-column">{key}</td>
-                  <td>{value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="clusters-list-overlay" role="tab">
+          <div
+            role="tabpanel"
+            className={toggleStyleSelection('Details')}
+            onClick={() => selectedModeChange('Details')}
+          >
+            Details
+          </div>
+          <div
+            role="tabpanel"
+            className={toggleStyleSelection('Schema')}
+            onClick={() => selectedModeChange('Schema')}
+          >
+            Schema
+          </div>
+          <div
+            role="tabpanel"
+            className={toggleStyleSelection('Preview')}
+            onClick={() => selectedModeChange('Preview')}
+          >
+            Preview
+          </div>
         </div>
-        <div className="db-title">Schema</div>
-        {renderColumnTable()}
+        {selectedMode === 'Details' && (
+          <>
+            <div className="db-title">Table info</div>
+            <div className="table-container">
+              <table className="db-table">
+                <tbody>
+                  {Object.entries(table).map(([key, value], index) => (
+                    <tr
+                      key={key}
+                      className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
+                    >
+                      <td className="bold-column">{key}</td>
+                      <td>{value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+        {selectedMode === 'Schema' && (
+          <>
+            <div className="db-title">Schema</div>
+            <SchemaInfo column={column} />
+          </>
+        )}
       </div>
     </div>
   );
