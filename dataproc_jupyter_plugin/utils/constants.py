@@ -33,4 +33,4 @@ datacatalog_url = gcp_service_url("datacatalog")
 storage_url = gcp_service_url(
     "storage", default_url="https://storage.googleapis.com/storage/v1/"
 )
-dataplex_url = gcp_service_url("dataplex", default_url="https://dataplex.googleapis.com/v1/")
+dataplex_url = gcp_service_url("dataplex", default_url="https://dataplex.googleapis.com/v1")
