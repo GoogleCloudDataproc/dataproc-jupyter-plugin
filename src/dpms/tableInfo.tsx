@@ -83,13 +83,15 @@ const TableInfo = ({
           >
             Schema
           </div>
-          <div
-            role="tabpanel"
-            className={toggleStyleSelection('Preview')}
-            onClick={() => selectedModeChange('Preview')}
-          >
-            Preview
-          </div>
+          {localStorage.getItem('notebookValue')?.includes('bigframes') && (
+            <div
+              role="tabpanel"
+              className={toggleStyleSelection('Preview')}
+              onClick={() => selectedModeChange('Preview')}
+            >
+              Preview
+            </div>
+          )}
         </div>
         {selectedMode === 'Details' && (
           <>

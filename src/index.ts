@@ -276,6 +276,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         document.title = title.label;
       }
     };
+
+
     labShell.currentChanged.connect(async (_, change) => {
       await KernelAPI.listRunning();
       const { oldValue, newValue } = change;
@@ -290,10 +292,14 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
       if (newValue) {
         // Check if the new value is an instance of NotebookPanel
-
         if (newValue instanceof NotebookPanel) {
-          newValue.title.changed.connect(onTitleChanged);
-          newValue.toolbar.update();
+          if(newValue.title.label.includes('bigframes')){
+            localStorage.setItem('notebookValue', 'bigframes')
+            loadDpmsWidget('')
+          } else {
+            newValue.title.changed.connect(onTitleChanged);
+            newValue.toolbar.update();
+          }
         } else if (
           (newValue.title.label === 'Launcher' ||
             newValue.title.label === 'Config Setup' ||

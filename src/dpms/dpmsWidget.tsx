@@ -48,6 +48,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
+import { requestAPI } from '../handler/handler';
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -164,6 +165,20 @@ const DpmsComponent = ({
         });
     }
   };
+
+  const getBigQueryColumnDetails = async (name: string) => {
+    try {
+      const data: any = await requestAPI(`bigQuerySchema?entry_name=${name}`);
+      setColumnResponse((prevResponse: IColumn[]) => [...prevResponse, data]);
+      if (data) {
+        setIsLoading(false);
+      }
+    } catch (reason) {
+      console.error(`Error in fetching big query schema.\n${reason}`);
+      toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
+    }
+  };
+
   interface ITableResponse {
     results: Array<{
       displayName: string;
@@ -256,42 +271,80 @@ const DpmsComponent = ({
     description: string;
     children: Table[];
   }
+
   const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } =
     {};
 
-  columnResponse.forEach((res: IColumn) => {
-    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
-fetching database name from fully qualified name structure */
-    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
-    const tableName = res.displayName;
-    const columns: IColumn[] = res.schema.columns.map(
-      (column: {
-        column: string;
-        type: string;
-        mode: string;
-        description: string;
-      }) => ({
-        name: `${column.column} (${column.type})`,
-        schema: res.schema, // Include the schema object
-        fullyQualifiedName: res.fullyQualifiedName,
-        displayName: res.displayName,
-        column: res.column, //no response
-        type: column.type, 
-        mode: column.mode,
-        description: res.description 
-      })
-    );
+  if (dataprocMetastoreServices !== 'bigframes') {
+    columnResponse.forEach((res: IColumn) => {
+      /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
+      fetching database name from fully qualified name structure */
+      const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
+      const tableName = res.displayName;
+      const columns: IColumn[] = res.schema.columns.map(
+        (column: {
+          column: string;
+          type: string;
+          mode: string;
+          description: string;
+        }) => ({
+          name: `${column.column} (${column.type})`,
+          schema: res.schema, // Include the schema object
+          fullyQualifiedName: res.fullyQualifiedName,
+          displayName: res.displayName,
+          column: res.column, //no response
+          type: column.type,
+          mode: column.mode,
+          description: res.description
+        })
+      );
 
-    if (!databases[dbName]) {
-      databases[dbName] = {};
-    }
+      if (!databases[dbName]) {
+        databases[dbName] = {};
+      }
 
-    if (!databases[dbName][tableName]) {
-      databases[dbName][tableName] = [];
-    }
+      if (!databases[dbName][tableName]) {
+        databases[dbName][tableName] = [];
+      }
 
-    databases[dbName][tableName].push(...columns);
-  });
+      databases[dbName][tableName].push(...columns);
+    });
+  } else {
+    columnResponse.forEach((res: any) => {
+      /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
+      fetching database name from fully qualified name structure */
+      const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
+      const tableName = res.entrySource.displayName;
+      const columnWrapper: any = Object.values(res.aspects)[1];
+      const columns: IColumn[] = columnWrapper.data.fields.map(
+        (column: {
+          name: string;
+          dataType: string;
+          mode: string;
+          description: string;
+        }) => ({
+          name: `${column.name} (${column.dataType})`,
+          schema: columnWrapper.data.fields, // Include the schema object
+          fullyQualifiedName: res.fullyQualifiedName,
+          displayName: res.entrySource.displayName,
+          column: res.column, //no response
+          type: column.dataType,
+          mode: column.mode,
+          description: res.description
+        })
+      );
+
+      if (!databases[dbName]) {
+        databases[dbName] = {};
+      }
+
+      if (!databases[dbName][tableName]) {
+        databases[dbName][tableName] = [];
+      }
+
+      databases[dbName][tableName].push(...columns);
+    });
+  }
 
   const data = Object.entries(databases).map(([dbName, tables]) => ({
     id: uuidv4(),
@@ -305,7 +358,7 @@ fetching database name from fully qualified name structure */
         name: column.name,
         type: column.type,
         mode: column.mode,
-        description: column.description 
+        description: column.description
       }))
     }))
   }));
@@ -351,7 +404,7 @@ fetching database name from fully qualified name structure */
       } else if (depth === 2 && node.parent) {
         const database = node.parent.data.name;
         const column = node.data.children;
-      
+
         const content = new Table(
           node.data.name,
           dataprocMetastoreServices,
@@ -609,6 +662,64 @@ fetching database name from fully qualified name structure */
         });
     }
   };
+
+  const getBigQueryDatasets = async () => {
+    if (notebookValue) {
+      try {
+        const data: any = await requestAPI(`bigQueryDataset`);
+
+        const filteredEntries = data.entries.filter(
+          (entry: { entryType: string }) =>
+            entry.entryType.includes('bigquery-dataset')
+        );
+        const databaseNames: string[] = [];
+        const updatedDatabaseDetails: { [key: string]: string } = {};
+        filteredEntries.forEach(
+          (entry: {
+            entrySource: { description: string; displayName: string };
+          }) => {
+            databaseNames.push(entry.entrySource.displayName);
+            const description = entry.entrySource.description || 'None';
+            updatedDatabaseDetails[entry.entrySource.description] = description;
+          }
+        );
+        setDatabaseDetails(updatedDatabaseDetails);
+        setDatabaseNames(databaseNames);
+        setTotalDatabases(databaseNames.length);
+        setApiError(false);
+        setSchemaError(false);
+
+        const filteredTableEntries = data.entries.filter(
+          (entry: { entryType: string }) =>
+            entry.entryType.includes('bigquery-table')
+        );
+        const tableNames: string[] = [];
+        const entryNames: string[] = [];
+        const updatedTableDetails: { [key: string]: string } = {};
+        filteredTableEntries.forEach(
+          (entry: {
+            entrySource: {
+              displayName: string;
+              resource: string;
+            };
+            description: string;
+          }) => {
+            tableNames.push(entry.entrySource.displayName);
+            entryNames.push(entry.entrySource.resource.split('//')[1]);
+            const description = entry.description || 'None';
+            updatedTableDetails[entry.entrySource.displayName] = description;
+          }
+        );
+        setEntries(entryNames);
+        setTableDescription(updatedTableDetails);
+        setTotalTables(tableNames.length);
+      } catch (reason) {
+        console.error(`Error in fetching datasets.\n${reason}`);
+        toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
+      }
+    }
+  };
+
   interface IClusterDetailsResponse {
     error: {
       code: number;
@@ -757,6 +868,11 @@ fetching database name from fully qualified name structure */
       const sessionVal = sessionName.slice(0, -1).join('/');
       setNotebookValue(sessionVal);
       getSessionDetails();
+    } else if (notebookVal?.includes('bigframes')) {
+      setNotebookValue('bigframes');
+      setDataprocMetastoreServices('bigframes');
+      // setNotebookValue("runtime-0000695cbc45");
+      // getSessionDetails();
     } else {
       setNoDpmsInstance(true);
     }
@@ -768,23 +884,37 @@ fetching database name from fully qualified name structure */
     };
   }, [notebookValue]);
   useEffect(() => {
-    getDatabaseDetails();
+    if (dataprocMetastoreServices === 'bigframes') {
+      getBigQueryDatasets();
+    } else {
+      getDatabaseDetails();
+    }
   }, [dataprocMetastoreServices]);
 
   useEffect(() => {
-    Promise.all(databaseNames.map(db => getTableDetails(db)))
-      .then(results => {})
-      .catch(error => {
-        console.log(error);
-      });
+    if (dataprocMetastoreServices !== 'bigframes') {
+      Promise.all(databaseNames.map(db => getTableDetails(db)))
+        .then(results => {})
+        .catch(error => {
+          console.log(error);
+        });
+    }
   }, [databaseNames]);
 
   useEffect(() => {
-    Promise.all(entries.map(entry => getColumnDetails(entry)))
-      .then(results => {})
-      .catch(error => {
-        console.log(error);
-      });
+    if (dataprocMetastoreServices !== 'bigframes') {
+      Promise.all(entries.map(entry => getColumnDetails(entry)))
+        .then(results => {})
+        .catch(error => {
+          console.log(error);
+        });
+    } else {
+      Promise.all(entries.map(entry => getBigQueryColumnDetails(entry)))
+        .then(results => {})
+        .catch(error => {
+          console.log(error);
+        });
+    }
   }, [entries]);
 
   return (
@@ -841,9 +971,13 @@ fetching database name from fully qualified name structure */
                   />
                 </div>
                 <div className="tree-container">
-                  {data.length === totalDatabases
-                    ? data[totalDatabases - 1].children.length ===
-                        totalTables && (
+                  {dataprocMetastoreServices === 'bigframes' ||
+                  data.length === totalDatabases
+                    ? ((dataprocMetastoreServices === 'bigframes' &&
+                        totalTables === data.length) ||
+                        (dataprocMetastoreServices !== 'bigframes' &&
+                          data[totalDatabases - 1].children.length ===
+                            totalTables)) && (
                         <Tree
                           className="Tree"
                           initialData={data}
