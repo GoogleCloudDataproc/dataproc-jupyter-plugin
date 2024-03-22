@@ -17,7 +17,7 @@ import json
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetService, BigQuerySchemaService
+from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetService, BigQuerySchemaService, BigQueryTableService
 
 
 
@@ -39,7 +39,8 @@ class BigquerySchemaController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            entry_name = "bigquery.googleapis.com/projects/dataproc-jupyter-extension-dev/datasets/test_dataset/tables/games_post_wide"
+           # entry_name = "bigquery.googleapis.com/projects/dataproc-jupyter-extension-dev/datasets/test_dataset/tables/games_post_wide"
+            entry_name = self.get_argument('entry_name')
             bigquery_dataset = BigQuerySchemaService()
             credentials = handlers.get_cached_credentials(self.log)
             schema_list = bigquery_dataset.list_datasets(
@@ -47,5 +48,19 @@ class BigquerySchemaController(APIHandler):
             )
             self.finish(json.dumps(schema_list))
         except Exception as e:
-            self.log.exception(f"Error fetching table schema")
+            self.log.exception(f"Error fetching schema")
+            self.finish({"error": str(e)})
+
+
+class BigqueryTableController(APIHandler):
+    @tornado.web.authenticated
+    def get(self):
+        try:
+            dataset_id = self.get_argument('dataset_id')
+            bq_table = BigQueryTableService()
+            credentials = handlers.get_cached_credentials(self.log)
+            table_info = bq_table.list_table_info(credentials,dataset_id,self.log)
+            self.finish(json.dumps(table_info))
+        except Exception as e:
+            self.log.exception(f"Error fetching table information")
             self.finish({"error": str(e)})
