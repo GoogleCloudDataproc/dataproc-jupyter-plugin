@@ -43,7 +43,7 @@ class BigquerySchemaController(APIHandler):
             entry_name = self.get_argument('entry_name')
             bigquery_dataset = BigQuerySchemaService()
             credentials = handlers.get_cached_credentials(self.log)
-            schema_list = bigquery_dataset.list_datasets(
+            schema_list = bigquery_dataset.list_schema(
                 credentials,entry_name,self.log
             )
             self.finish(json.dumps(schema_list))
