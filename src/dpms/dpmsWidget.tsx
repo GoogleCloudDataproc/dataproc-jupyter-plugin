@@ -48,7 +48,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
-import { requestAPI } from '../handler/handler';
+import { DpmsService } from './dpmsService';
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -167,16 +167,11 @@ const DpmsComponent = ({
   };
 
   const getBigQueryColumnDetails = async (name: string) => {
-    try {
-      const data: any = await requestAPI(`bigQuerySchema?entry_name=${name}`);
-      setColumnResponse((prevResponse: IColumn[]) => [...prevResponse, data]);
-      if (data) {
-        setIsLoading(false);
-      }
-    } catch (reason) {
-      console.error(`Error in fetching big query schema.\n${reason}`);
-      toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
-    }
+    await DpmsService.getBigQueryColumnDetailsAPIService(
+      name,
+      setColumnResponse,
+      setIsLoading
+    );
   };
 
   interface ITableResponse {
@@ -661,60 +656,17 @@ const DpmsComponent = ({
   };
 
   const getBigQueryDatasets = async () => {
-    if (notebookValue) {
-      try {
-        const data: any = await requestAPI(`bigQueryDataset`);
-
-        const filteredEntries = data.entries.filter(
-          (entry: { entryType: string }) =>
-            entry.entryType.includes('bigquery-dataset')
-        );
-        const databaseNames: string[] = [];
-        const updatedDatabaseDetails: { [key: string]: string } = {};
-        filteredEntries.forEach(
-          (entry: {
-            entrySource: { description: string; displayName: string };
-          }) => {
-            databaseNames.push(entry.entrySource.displayName);
-            const description = entry.entrySource.description || 'None';
-            updatedDatabaseDetails[entry.entrySource.displayName] = description;
-          }
-        );
-        setDatabaseDetails(updatedDatabaseDetails);
-        setDatabaseNames(databaseNames);
-        setTotalDatabases(databaseNames.length);
-        setApiError(false);
-        setSchemaError(false);
-
-        const filteredTableEntries = data.entries.filter(
-          (entry: { entryType: string }) =>
-            entry.entryType.includes('bigquery-table')
-        );
-        const tableNames: string[] = [];
-        const entryNames: string[] = [];
-        const updatedTableDetails: { [key: string]: string } = {};
-        filteredTableEntries.forEach(
-          (entry: {
-            entrySource: {
-              displayName: string;
-              resource: string;
-            };
-            description: string;
-          }) => {
-            tableNames.push(entry.entrySource.displayName);
-            entryNames.push(entry.entrySource.resource.split('//')[1]);
-            const description = entry.description || 'None';
-            updatedTableDetails[entry.entrySource.displayName] = description;
-          }
-        );
-        setEntries(entryNames);
-        setTableDescription(updatedTableDetails);
-        setTotalTables(tableNames.length);
-      } catch (reason) {
-        console.error(`Error in fetching datasets.\n${reason}`);
-        toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
-      }
-    }
+    await DpmsService.getBigQueryDatasetsAPIService(
+      notebookValue,
+      setDatabaseDetails,
+      setDatabaseNames,
+      setTotalDatabases,
+      setApiError,
+      setSchemaError,
+      setEntries,
+      setTableDescription,
+      setTotalTables
+    );
   };
 
   interface IClusterDetailsResponse {

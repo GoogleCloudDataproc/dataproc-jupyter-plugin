@@ -17,6 +17,26 @@
 
 import 'react-toastify/dist/ReactToastify.css';
 import { requestAPI } from '../handler/handler';
+import { toast } from 'react-toastify';
+import { toastifyCustomStyle } from '../utils/utils';
+
+interface IColumn {
+  name: string;
+  schema: {
+    columns: {
+      column: string;
+      type: string;
+      mode: string;
+      description: string;
+    }[];
+  };
+  fullyQualifiedName: string;
+  displayName: string;
+  column: string;
+  type: string;
+  mode: string;
+  description: string;
+}
 
 export class DpmsService {
   static bigQueryPreviewAPIService = async (
@@ -42,6 +62,90 @@ export class DpmsService {
       setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
+
+  static getBigQueryColumnDetailsAPIService = async (
+    name: string,
+    setColumnResponse: any,
+    setIsLoading: (value: boolean) => void
+  ) => {
+    try {
+      const data: any = await requestAPI(`bigQuerySchema?entry_name=${name}`);
+      setColumnResponse((prevResponse: IColumn[]) => [...prevResponse, data]);
+      if (data) {
+        setIsLoading(false);
+      }
+    } catch (reason) {
+      console.error(`Error in fetching big query schema.\n${reason}`);
+      toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
+    }
+  };
+
+  static getBigQueryDatasetsAPIService = async (
+    notebookValue: string,
+    setDatabaseDetails: any,
+    setDatabaseNames: (value: string[]) => void,
+    setTotalDatabases: (value: number) => void,
+    setApiError: (value: boolean) => void,
+    setSchemaError: (value: boolean) => void,
+    setEntries: (value: string[]) => void,
+    setTableDescription: any,
+    setTotalTables: (value: number) => void
+  ) => {
+    if (notebookValue) {
+      try {
+        const data: any = await requestAPI(`bigQueryDataset`);
+
+        const filteredEntries = data.entries.filter(
+          (entry: { entryType: string }) =>
+            entry.entryType.includes('bigquery-dataset')
+        );
+        const databaseNames: string[] = [];
+        const updatedDatabaseDetails: { [key: string]: string } = {};
+        filteredEntries.forEach(
+          (entry: {
+            entrySource: { description: string; displayName: string };
+          }) => {
+            databaseNames.push(entry.entrySource.displayName);
+            const description = entry.entrySource.description || 'None';
+            updatedDatabaseDetails[entry.entrySource.displayName] = description;
+          }
+        );
+        setDatabaseDetails(updatedDatabaseDetails);
+        setDatabaseNames(databaseNames);
+        setTotalDatabases(databaseNames.length);
+        setApiError(false);
+        setSchemaError(false);
+
+        const filteredTableEntries = data.entries.filter(
+          (entry: { entryType: string }) =>
+            entry.entryType.includes('bigquery-table')
+        );
+        const tableNames: string[] = [];
+        const entryNames: string[] = [];
+        const updatedTableDetails: { [key: string]: string } = {};
+        filteredTableEntries.forEach(
+          (entry: {
+            entrySource: {
+              displayName: string;
+              resource: string;
+            };
+            description: string;
+          }) => {
+            tableNames.push(entry.entrySource.displayName);
+            entryNames.push(entry.entrySource.resource.split('//')[1]);
+            const description = entry.description || 'None';
+            updatedTableDetails[entry.entrySource.displayName] = description;
+          }
+        );
+        setEntries(entryNames);
+        setTableDescription(updatedTableDetails);
+        setTotalTables(tableNames.length);
+      } catch (reason) {
+        console.error(`Error in fetching datasets.\n${reason}`);
+        toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
+      }
     }
   };
 }
