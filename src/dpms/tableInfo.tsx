@@ -19,6 +19,7 @@ import React, { useState } from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import SchemaInfo from './schemaInfo';
+import PreviewDataInfo from './previewDataInfo';
 
 interface IColumn {
   name: string;
@@ -117,6 +118,11 @@ const TableInfo = ({
           <>
             <div className="db-title">Schema</div>
             <SchemaInfo column={column} />
+          </>
+        )}
+        {selectedMode === 'Preview' && (
+          <>
+            <PreviewDataInfo column={column}/>
           </>
         )}
       </div>

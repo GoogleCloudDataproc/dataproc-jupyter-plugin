@@ -367,9 +367,9 @@ const DpmsComponent = ({
 
   data.forEach(db => {
     db.children.sort((a, b) => a.name.localeCompare(b.name));
-    db.children.forEach(table => {
-      table.children.sort((a, b) => a.name.localeCompare(b.name));
-    });
+    // db.children.forEach(table => {
+    //   table.children.sort((a, b) => a.name.localeCompare(b.name));
+    // });
   });
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
