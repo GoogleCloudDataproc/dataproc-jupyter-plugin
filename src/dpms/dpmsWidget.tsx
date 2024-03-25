@@ -680,7 +680,7 @@ const DpmsComponent = ({
           }) => {
             databaseNames.push(entry.entrySource.displayName);
             const description = entry.entrySource.description || 'None';
-            updatedDatabaseDetails[entry.entrySource.description] = description;
+            updatedDatabaseDetails[entry.entrySource.displayName] = description;
           }
         );
         setDatabaseDetails(updatedDatabaseDetails);
