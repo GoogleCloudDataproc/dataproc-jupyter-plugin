@@ -222,7 +222,7 @@
   cursor: pointer;
 }
 .dag-runs-table-data-state-running {
-  background-color: #7CB9E8;
+  background-color: #00BFA5;;
   color: var(--jp-border-color3);
   border-radius: 22px;
   margin: 5px 15px;

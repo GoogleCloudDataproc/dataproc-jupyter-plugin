@@ -425,6 +425,7 @@ export class SchedulerService {
     setOrangeListDates: (value: string[]) => void,
     setRedListDates: (value: string[]) => void,
     setGreenListDates: (value: string[]) => void,
+    setDarkGreenListDates: (value: string[]) => void,
     currentOffsetValue?: number,
     previousDagRunDataList?: object
   ) => {
@@ -483,6 +484,7 @@ export class SchedulerService {
           setOrangeListDates,
           setRedListDates,
           setGreenListDates,
+          setDarkGreenListDates,
           data.dag_runs.length + offset,
           allDagRunsListData
         );
@@ -516,6 +518,7 @@ export class SchedulerService {
           let orangeList: string[] = [];
           let redList: string[] = [];
           let greenList: string[] = [];
+          let darkGreenList: string[] = [];
 
           Object.keys(groupedDataByDateStatus).forEach(dateValue => {
             if (groupedDataByDateStatus[dateValue].running) {
@@ -529,8 +532,13 @@ export class SchedulerService {
               orangeList.push(dateValue);
             } else if (groupedDataByDateStatus[dateValue].failed) {
               redList.push(dateValue);
-            } else {
+            } else if (
+              groupedDataByDateStatus[dateValue].success &&
+              groupedDataByDateStatus[dateValue].success.length === 1
+            ) {
               greenList.push(dateValue);
+            } else {
+              darkGreenList.push(dateValue);
             }
           });
 
@@ -539,6 +547,7 @@ export class SchedulerService {
           setOrangeListDates(orangeList);
           setRedListDates(redList);
           setGreenListDates(greenList);
+          setDarkGreenListDates(darkGreenList);
 
           setDagRunsList(transformDagRunListData);
           setDagRunId(
@@ -552,6 +561,7 @@ export class SchedulerService {
           setOrangeListDates([]);
           setRedListDates([]);
           setGreenListDates([]);
+          setDarkGreenListDates([]);
         }
         setIsLoading(false);
       }
