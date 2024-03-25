@@ -59,8 +59,6 @@ class BigQuerySchemaService:
             ):
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
-                region_id = credentials["region_id"]
-                print(dataplex_url)
                 api_endpoint = f"{dataplex_url}/projects/{project_id}/locations/us/entryGroups/@bigquery/entries/{entry_name}"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
@@ -90,7 +88,6 @@ class BigQueryTableService:
             ):
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
-                print(dataplex_url)
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
@@ -108,4 +105,35 @@ class BigQueryTableService:
                 raise ValueError("Missing required credentials")
         except Exception as e:
             log.exception(f"Error fetching table information")
+            return {"error": str(e)}
+        
+
+
+class BigQueryPreviewService:
+    def bigquery_preview_data(self, credentials,dataset_id,table_id,log):
+        try:
+            if (
+                ("access_token" in credentials)
+                and ("project_id" in credentials)
+                and ("region_id" in credentials)
+            ):
+                access_token = credentials["access_token"]
+                project_id = credentials["project_id"]
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data"
+                headers = {
+                    "Content-Type": CONTENT_TYPE,
+                    "Authorization": f"Bearer {access_token}",
+                }
+                response = requests.get(api_endpoint, headers=headers)
+                if response.status_code == 200:
+                    resp = response.json()
+                    return resp
+                else:
+                    log.exception(f"Missing required credentials")
+                    raise ValueError("Missing required credentials")
+            else:
+                log.exception(f"Missing required credentials")
+                raise ValueError("Missing required credentials")
+        except Exception as e:
+            log.exception(f"Error fetching preview data")
             return {"error": str(e)}

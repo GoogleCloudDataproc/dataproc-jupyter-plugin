@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-from dataproc_jupyter_plugin.contollers.bigqueryController import BigqueryDatasetController, BigquerySchemaController, BigqueryTableController
+from dataproc_jupyter_plugin.contollers.bigqueryController import BigqueryDatasetController, BigqueryPreviewController, BigquerySchemaController, BigqueryTableController
 from dataproc_jupyter_plugin.contollers.downloadOutputController import (
     downloadOutputController,
 )
@@ -379,7 +379,10 @@ def setup_handlers(web_app):
     route_pattern_bq_dataset = url_path_join(base_url, application_url, "bigQueryDataset")
     route_pattern_bq_schema = url_path_join(base_url, application_url, "bigQuerySchema")
     route_pattern_bq_table = url_path_join(base_url, application_url, "bigQueryTable")
+    route_pattern_bq_preview = url_path_join(base_url, application_url, "bigQueryPreview")
     handlers = [(route_pattern_bq_dataset, BigqueryDatasetController),
                 (route_pattern_bq_schema, BigquerySchemaController),
-                (route_pattern_bq_table, BigqueryTableController)]
+                (route_pattern_bq_table, BigqueryTableController),
+                (route_pattern_bq_preview, BigqueryPreviewController)
+                ]
     web_app.add_handlers(host_pattern, handlers)

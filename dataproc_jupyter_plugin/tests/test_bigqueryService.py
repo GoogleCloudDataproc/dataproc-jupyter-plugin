@@ -15,26 +15,26 @@
 
 
 from unittest.mock import Mock, patch
-from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetService, BigQuerySchemaService, BigQueryTableService
+from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetService, BigQueryPreviewService, BigQuerySchemaService, BigQueryTableService
 
 
 def test_list_datasets_with_valid_credentials():
     credentials = {
-            "access_token": "dummy_token",
-            "project_id": "dummy_project_id",
-            "region_id": "dummy_region_id"
+            "access_token": "token",
+            "project_id": "project_id",
+            "region_id": "region_id"
         }
     log = Mock()
     requests = Mock()
     response = Mock()
     response.status_code = 200
-    response.json.return_value = {"dummy_key": "dummy_value"}
+    response.json.return_value = {"key": "value"}
     requests.get.return_value = response
     service = BigQueryDatasetService()
     with patch('dataproc_jupyter_plugin.services.bigqueryService.requests', requests):
         result = service.list_datasets(credentials, log)
 
-    assert result == {"dummy_key": "dummy_value"}
+    assert result == {"key": "value"}
 
 def test_list_datasets_with_missing_credentials():
     credentials = {}
@@ -47,38 +47,58 @@ def test_list_datasets_with_missing_credentials():
 
 def test_list_schema():
     credentials = {
-            "access_token": "dummy_token",
-            "project_id": "dummy_project_id",
-            "region_id": "dummy_region_id"
+            "access_token": "token",
+            "project_id": "project_id",
+            "region_id": "region_id"
         }
     log = Mock()
     requests = Mock()
     response = Mock()
     entry_name = "entry_name"
     response.status_code = 200
-    response.json.return_value = {"dummy_key": "dummy_value"}
+    response.json.return_value = {"key": "value"}
     requests.get.return_value = response
     service = BigQuerySchemaService()
     with patch('dataproc_jupyter_plugin.services.bigqueryService.requests', requests):
         result = service.list_schema(credentials, entry_name, log)
 
-    assert result == {"dummy_key": "dummy_value"}
+    assert result == {"key": "value"}
 
 def test_list_table_info():
     credentials = {
-            "access_token": "dummy_token",
-            "project_id": "dummy_project_id",
-            "region_id": "dummy_region_id"
+            "access_token": "token",
+            "project_id": "project_id",
+            "region_id": "region_id"
         }
     log = Mock()
     requests = Mock()
     response = Mock()
     dataset_id = "dataset_id"
     response.status_code = 200
-    response.json.return_value = {"dummy_key": "dummy_value"}
+    response.json.return_value = {"key": "value"}
     requests.get.return_value = response
     service = BigQueryTableService()
     with patch('dataproc_jupyter_plugin.services.bigqueryService.requests', requests):
         result = service.list_table_info(credentials, dataset_id, log)
 
-    assert result == {"dummy_key": "dummy_value"}
+    assert result == {"key": "value"}
+
+def test_preview_data():
+    credentials = {
+            "access_token": "token",
+            "project_id": "project_id",
+            "region_id": "region_id"
+        }
+    log = Mock()
+    requests = Mock()
+    response = Mock()
+    dataset_id = "dataset_id"
+    table_id = "table_id"
+    response.status_code = 200
+    response.json.return_value = {"key": "value"}
+    requests.get.return_value = response
+    service = BigQueryPreviewService()
+    with patch('dataproc_jupyter_plugin.services.bigqueryService.requests', requests):
+        result = service.bigquery_preview_data(credentials, dataset_id,table_id, log)
+
+    assert result == {"key": "value"}

@@ -17,7 +17,7 @@ import json
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetService, BigQuerySchemaService, BigQueryTableService
+from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetService, BigQueryPreviewService, BigQuerySchemaService, BigQueryTableService
 
 
 
@@ -63,4 +63,19 @@ class BigqueryTableController(APIHandler):
             self.finish(json.dumps(table_info))
         except Exception as e:
             self.log.exception(f"Error fetching table information")
+            self.finish({"error": str(e)})
+
+
+class BigqueryPreviewController(APIHandler):
+    @tornado.web.authenticated
+    def get(self):
+        try:
+            dataset_id = self.get_argument('dataset_id')
+            table_id = self.get_argument('table_id')
+            bq_preview = BigQueryPreviewService()
+            credentials = handlers.get_cached_credentials(self.log)
+            preview_data = bq_preview.bigquery_preview_data(credentials,dataset_id,table_id,self.log)
+            self.finish(json.dumps(preview_data))
+        except Exception as e:
+            self.log.exception(f"Error fetching preview data")
             self.finish({"error": str(e)})
