@@ -66,3 +66,13 @@
   max-height: 100%;
   overflow: auto;
 }
+
+.preview-data-table-parent {
+  max-height: 81vh;
+  overflow: auto;
+}
+
+.preview-table-data {
+  padding-left: 15px;
+  border-bottom: 1px solid var(--jp-layout-color3);
+}

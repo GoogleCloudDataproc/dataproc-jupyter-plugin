@@ -122,7 +122,11 @@ const TableInfo = ({
         )}
         {selectedMode === 'Preview' && (
           <>
-            <PreviewDataInfo column={column}/>
+            <PreviewDataInfo
+              column={column}
+              tableId={title}
+              dataSetId={database}
+            />
           </>
         )}
       </div>

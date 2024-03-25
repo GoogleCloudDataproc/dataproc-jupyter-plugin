@@ -21,12 +21,14 @@ import { requestAPI } from '../handler/handler';
 export class DpmsService {
   static bigQueryPreviewAPIService = async (
     columns: any,
+    tableId: string,
+    dataSetId: string,
     setIsLoading: (value: boolean) => void,
-    setSessionsList: any
+    setPreviewDataList: any
   ) => {
     try {
       const data: any = await requestAPI(
-        'bigQueryPreview?dataset_id=bike_share&table_id=bike_sharestations'
+        `bigQueryPreview?dataset_id=${dataSetId}&table_id=${tableId}`
       );
       let transformRowInfoList: any = [];
       data.rows.forEach((rowInfo: any) => {
@@ -34,11 +36,9 @@ export class DpmsService {
         rowInfo['f'].forEach((fieldInfo: any, index: number) => {
           transformRowInfo[columns[index].Header] = fieldInfo['v'];
         });
-        console.log(transformRowInfo);
         transformRowInfoList.push(transformRowInfo);
       });
-      console.log(transformRowInfoList);
-      setSessionsList(transformRowInfoList);
+      setPreviewDataList(transformRowInfoList);
       setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
