@@ -20,6 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
+import datasetIcon from '../../style/icons/dataset_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
 import columnsIcon from '../../style/icons/columns_icon.svg';
 import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
@@ -89,7 +90,10 @@ const DpmsComponent = ({
     name: 'launcher:database-icon',
     svgstr: databaseIcon
   });
-
+  const iconDataset = new LabIcon({
+    name: 'launcher:dataset-icon',
+    svgstr: datasetIcon
+  });
   const iconTable = new LabIcon({
     name: 'launcher:table-icon',
     svgstr: tableIcon
@@ -501,10 +505,17 @@ const DpmsComponent = ({
             <>
               {arrowIcon}
               <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconDatabase.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
+                {dataprocMetastoreServices === 'bigframes' ? (
+                  <iconDataset.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                ) : (
+                  <iconDatabase.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                )}
               </div>
             </>
           );
@@ -536,10 +547,17 @@ const DpmsComponent = ({
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              <iconDatabase.react
-                tag="div"
-                className="icon-white logo-alignment-style"
-              />
+              {dataprocMetastoreServices === 'bigframes' ? (
+                <iconDataset.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              ) : (
+                <iconDatabase.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              )}
             </div>
           </>
         );
