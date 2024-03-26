@@ -293,9 +293,10 @@ const extension: JupyterFrontEndPlugin<void> = {
       if (newValue) {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
-          if(newValue.title.label.includes('bigframes')){
-            localStorage.setItem('notebookValue', 'bigframes')
-            loadDpmsWidget('')
+          if (newValue.title.label.includes('bigframes')) {
+            localStorage.setItem('notebookValue', 'bigframes');
+            localStorage.setItem('oldNotebookValue', 'bigframes');
+            loadDpmsWidget('');
           } else {
             newValue.title.changed.connect(onTitleChanged);
             newValue.toolbar.update();
@@ -331,7 +332,9 @@ const extension: JupyterFrontEndPlugin<void> = {
             let oldNotebook = localStorage.getItem('oldNotebookValue');
             localStorage.setItem('notebookValue', oldNotebook || '');
             lastClusterName = localStorage.getItem('notebookValue') || '';
-            loadDpmsWidget(oldNotebook || '');
+            if (!oldNotebook?.includes('bigframes')) {
+              loadDpmsWidget(oldNotebook || '');
+            }
           }
         }
       }
