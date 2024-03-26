@@ -78,8 +78,8 @@ class BigQuerySchemaService:
             log.exception(f"Error fetching schema")
             return {"error": str(e)}
         
-class BigQueryTableService:
-    def list_table_info(self, credentials, dataset_id,log):
+class BigQueryDatasetInfoService:
+    def list_dataset_info(self, credentials, dataset_id,log):
         try:
             if (
                 ("access_token" in credentials)
@@ -89,6 +89,35 @@ class BigQueryTableService:
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
+                headers = {
+                    "Content-Type": CONTENT_TYPE,
+                    "Authorization": f"Bearer {access_token}",
+                }
+                response = requests.get(api_endpoint, headers=headers)
+                if response.status_code == 200:
+                    resp = response.json()
+                    return resp
+                else:
+                    log.exception(f"Missing required credentials")
+                    raise ValueError("Missing required credentials")
+            else:
+                log.exception(f"Missing required credentials")
+                raise ValueError("Missing required credentials")
+        except Exception as e:
+            log.exception(f"Error fetching dataset information")
+            return {"error": str(e)}
+    
+class BigQueryTableInfoService:
+    def list_table_info(self, credentials, dataset_id,table_id,log):
+        try:
+            if (
+                ("access_token" in credentials)
+                and ("project_id" in credentials)
+                and ("region_id" in credentials)
+            ):
+                access_token = credentials["access_token"]
+                project_id = credentials["project_id"]
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",
@@ -136,4 +165,33 @@ class BigQueryPreviewService:
                 raise ValueError("Missing required credentials")
         except Exception as e:
             log.exception(f"Error fetching preview data")
+            return {"error": str(e)}
+        
+class BigQueryProjectService:
+    def bigquery_projects(self, credentials,dataset_id,table_id,log):
+        try:
+            if (
+                ("access_token" in credentials)
+                and ("project_id" in credentials)
+                and ("region_id" in credentials)
+            ):
+                access_token = credentials["access_token"]
+                project_id = credentials["project_id"]
+                api_endpoint = f"https://cloudresourcemanager.googleapis.com/v1/projects"
+                headers = {
+                    "Content-Type": CONTENT_TYPE,
+                    "Authorization": f"Bearer {access_token}",
+                }
+                response = requests.get(api_endpoint, headers=headers)
+                if response.status_code == 200:
+                    resp = response.json()
+                    return resp
+                else:
+                    log.exception(f"Missing required credentials")
+                    raise ValueError("Missing required credentials")
+            else:
+                log.exception(f"Missing required credentials")
+                raise ValueError("Missing required credentials")
+        except Exception as e:
+            log.exception(f"Error fetching projects")
             return {"error": str(e)}

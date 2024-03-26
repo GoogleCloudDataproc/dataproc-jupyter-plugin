@@ -15,7 +15,7 @@
 
 
 from unittest.mock import Mock, patch
-from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetService, BigQueryPreviewService, BigQuerySchemaService, BigQueryTableService
+from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetInfoService, BigQueryDatasetService, BigQueryPreviewService, BigQuerySchemaService, BigQueryTableInfoService
 
 
 def test_list_datasets_with_valid_credentials():
@@ -64,7 +64,7 @@ def test_list_schema():
 
     assert result == {"key": "value"}
 
-def test_list_table_info():
+def test_list_dataset_info():
     credentials = {
             "access_token": "token",
             "project_id": "project_id",
@@ -77,9 +77,29 @@ def test_list_table_info():
     response.status_code = 200
     response.json.return_value = {"key": "value"}
     requests.get.return_value = response
-    service = BigQueryTableService()
+    service = BigQueryDatasetInfoService()
     with patch('dataproc_jupyter_plugin.services.bigqueryService.requests', requests):
-        result = service.list_table_info(credentials, dataset_id, log)
+        result = service.list_dataset_info(credentials, dataset_id, log)
+
+    assert result == {"key": "value"}
+
+def test_list_table_info():
+    credentials = {
+            "access_token": "token",
+            "project_id": "project_id",
+            "region_id": "region_id"
+        }
+    log = Mock()
+    requests = Mock()
+    response = Mock()
+    dataset_id = "dataset_id"
+    table_id = "table_id"
+    response.status_code = 200
+    response.json.return_value = {"key": "value"}
+    requests.get.return_value = response
+    service = BigQueryTableInfoService()
+    with patch('dataproc_jupyter_plugin.services.bigqueryService.requests', requests):
+        result = service.list_table_info(credentials, dataset_id,table_id, log)
 
     assert result == {"key": "value"}
 

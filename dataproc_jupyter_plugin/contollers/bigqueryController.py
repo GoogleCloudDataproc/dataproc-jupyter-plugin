@@ -17,7 +17,7 @@ import json
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetService, BigQueryPreviewService, BigQuerySchemaService, BigQueryTableService
+from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetInfoService, BigQueryDatasetService, BigQueryPreviewService, BigQueryProjectService, BigQuerySchemaService, BigQueryTableInfoService
 
 
 
@@ -52,14 +52,28 @@ class BigquerySchemaController(APIHandler):
             self.finish({"error": str(e)})
 
 
-class BigqueryTableController(APIHandler):
+class BigqueryDatasetInfoController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
             dataset_id = self.get_argument('dataset_id')
-            bq_table = BigQueryTableService()
+            bq_dataset = BigQueryDatasetInfoService()
             credentials = handlers.get_cached_credentials(self.log)
-            table_info = bq_table.list_table_info(credentials,dataset_id,self.log)
+            dataset_info = bq_dataset.list_dataset_info(credentials,dataset_id,self.log)
+            self.finish(json.dumps(dataset_info))
+        except Exception as e:
+            self.log.exception(f"Error fetching dataset information")
+            self.finish({"error": str(e)})
+
+class BigqueryTableInfoController(APIHandler):
+    @tornado.web.authenticated
+    def get(self):
+        try:
+            dataset_id = self.get_argument('dataset_id')
+            table_id = self.get_argument('table_id')
+            bq_table = BigQueryTableInfoService()
+            credentials = handlers.get_cached_credentials(self.log)
+            table_info = bq_table.list_table_info(credentials,dataset_id,table_id,self.log)
             self.finish(json.dumps(table_info))
         except Exception as e:
             self.log.exception(f"Error fetching table information")
@@ -78,4 +92,16 @@ class BigqueryPreviewController(APIHandler):
             self.finish(json.dumps(preview_data))
         except Exception as e:
             self.log.exception(f"Error fetching preview data")
+            self.finish({"error": str(e)})
+
+class BigqueryProjectsController(APIHandler):
+    @tornado.web.authenticated
+    def get(self):
+        try:
+            bq_preview = BigQueryProjectService()
+            credentials = handlers.get_cached_credentials(self.log)
+            preview_data = bq_preview.bigquery_preview_data(credentials,self.log)
+            self.finish(json.dumps(preview_data))
+        except Exception as e:
+            self.log.exception(f"Error fetching projects")
             self.finish({"error": str(e)})
