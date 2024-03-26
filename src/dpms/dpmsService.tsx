@@ -148,4 +148,49 @@ export class DpmsService {
       }
     }
   };
+
+  static getBigQueryDatasetInfoAPIService = async (
+    database: string,
+    setTableInfo: any,
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryDatasetInfo?dataset_id=${database}`
+      );
+      let tableInfoTemp: any = {};
+      tableInfoTemp['Case insensitive'] = data.isCaseInsensitive;
+      setTableInfo(tableInfoTemp);
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
+
+  static getBigQueryTableInfoAPIService = async (
+    title: string,
+    database: string,
+    setTableInfo: any,
+    tableInfo: any,
+    setIsLoading: (value: boolean) => void
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryTableInfo?dataset_id=${database}&table_id=${title}`
+      );
+      
+      let tableInfoTemp: any = {};
+      tableInfoTemp['Table ID'] = data.id;
+      tableInfoTemp['Created'] = data.creationTime;
+      tableInfoTemp['Last modified'] = data.lastModifiedTime;
+      tableInfoTemp['Table expiration'] = data.expirationTime;
+      tableInfoTemp['Data location'] = data.location;
+      tableInfoTemp['Default collation'] = data.defaultCollation;
+      tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
+      tableInfoTemp['Description'] = data.description;
+      tableInfoTemp['Case insensitive'] = tableInfo['Case insensitive'].toString();
+      setTableInfo(tableInfoTemp);
+      setIsLoading(false)
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
 }

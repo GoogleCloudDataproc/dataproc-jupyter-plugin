@@ -20,6 +20,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import SchemaInfo from './schemaInfo';
 import PreviewDataInfo from './previewDataInfo';
+import BigQueryTableInfo from './bigQueryTableInfo';
 
 interface IColumn {
   name: string;
@@ -94,26 +95,31 @@ const TableInfo = ({
             </div>
           )}
         </div>
-        {selectedMode === 'Details' && (
-          <>
-            <div className="db-title">Table info</div>
-            <div className="table-container">
-              <table className="db-table">
-                <tbody>
-                  {Object.entries(table).map(([key, value], index) => (
-                    <tr
-                      key={key}
-                      className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
-                    >
-                      <td className="bold-column">{key}</td>
-                      <td>{value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+        {selectedMode === 'Details' &&
+          (dataprocMetastoreServices === 'bigframes' ? (
+            <BigQueryTableInfo title={title} database={database} />
+          ) : (
+            <>
+              <div className="db-title">Table info</div>
+              <div className="table-container">
+                <table className="db-table">
+                  <tbody>
+                    {Object.entries(table).map(([key, value], index) => (
+                      <tr
+                        key={key}
+                        className={
+                          index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'
+                        }
+                      >
+                        <td className="bold-column">{key}</td>
+                        <td>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ))}
         {selectedMode === 'Schema' && (
           <>
             <div className="db-title">Schema</div>
