@@ -50,6 +50,7 @@ import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { DpmsService } from './dpmsService';
+
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -269,7 +270,7 @@ const DpmsComponent = ({
     name: string;
     type: string;
     description: string;
-    children: Table[];
+    children: any;
   }
 
   const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } =
@@ -330,7 +331,7 @@ const DpmsComponent = ({
           column: res.column, //no response
           type: column.dataType,
           mode: column.mode,
-          description: res.description
+          description: res.entrySource.description
         })
       );
 
@@ -589,7 +590,15 @@ const DpmsComponent = ({
     return (
       <div style={style}>
         {renderNodeIcon()}
-        <div role="treeitem" onClick={handleTextClick}>
+        <div
+          role="treeitem"
+          title={
+            node.data.children && node.data.children.length > 0
+              ? node.data.children[0]?.description
+              : ''
+          }
+          onClick={handleTextClick}
+        >
           {node.data.name}
         </div>
         <div className="dpms-column-type-text">{node.data.type}</div>
