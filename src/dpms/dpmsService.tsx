@@ -198,4 +198,38 @@ export class DpmsService {
       console.error(`Error on GET credentials.\n${reason}`);
     }
   };
+
+  static getBigQueryDatasetDetailsAPIService = async (
+    database: string,
+    setDatasetInfo: any,
+    setIsLoading: (value: boolean) => void
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryDatasetInfo?dataset_id=${database}`
+      );
+      let datasetInfoTemp: any = {};
+      datasetInfoTemp['Dataset ID'] = data.id;
+      datasetInfoTemp['Created'] = new Date(
+        Number(data.creationTime)
+      ).toString();
+      datasetInfoTemp['Default table expiration'] =
+        data.defaultTableExpirationMs / (1000 * 60 * 60 * 24) + ' days';
+      datasetInfoTemp['Last modified'] = new Date(
+        Number(data.lastModifiedTime)
+      ).toString();
+      datasetInfoTemp['Data location'] = data.location;
+      datasetInfoTemp['Description'] = data.description;
+      datasetInfoTemp['Default collation'] = data.defaultCollation;
+      datasetInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
+      datasetInfoTemp['Time travel window'] =
+        data.maxTimeTravelHours / 24 + ' days';
+      datasetInfoTemp['Storage billing model'] = data.storageBillingModel;
+      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive.toString();
+      setDatasetInfo(datasetInfoTemp);
+      setIsLoading(false);
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
 }
