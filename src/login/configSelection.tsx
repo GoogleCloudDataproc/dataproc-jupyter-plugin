@@ -321,7 +321,7 @@ function ConfigSelection({
           <div>
             <div className="runtime-title-section">
               <div className="runtime-title-part">
-                Serverless Runtime Templates
+                Dataproc Serverless Runtime Templates
               </div>
               <div
                 className="expand-icon"
