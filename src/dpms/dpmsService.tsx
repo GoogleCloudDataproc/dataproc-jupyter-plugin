@@ -151,7 +151,7 @@ export class DpmsService {
 
   static getBigQueryDatasetInfoAPIService = async (
     database: string,
-    setTableInfo: any,
+    setTableInfo: any
   ) => {
     try {
       const data: any = await requestAPI(
@@ -176,19 +176,24 @@ export class DpmsService {
       const data: any = await requestAPI(
         `bigQueryTableInfo?dataset_id=${database}&table_id=${title}`
       );
-      
+
       let tableInfoTemp: any = {};
       tableInfoTemp['Table ID'] = data.id;
-      tableInfoTemp['Created'] = data.creationTime;
-      tableInfoTemp['Last modified'] = data.lastModifiedTime;
-      tableInfoTemp['Table expiration'] = data.expirationTime;
+      tableInfoTemp['Created'] = new Date(Number(data.creationTime)).toString();
+      tableInfoTemp['Last modified'] = new Date(
+        Number(data.lastModifiedTime)
+      ).toString();
+      tableInfoTemp['Table expiration'] = new Date(
+        Number(data.expirationTime)
+      ).toString();
       tableInfoTemp['Data location'] = data.location;
       tableInfoTemp['Default collation'] = data.defaultCollation;
       tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
       tableInfoTemp['Description'] = data.description;
-      tableInfoTemp['Case insensitive'] = tableInfo['Case insensitive'].toString();
+      tableInfoTemp['Case insensitive'] =
+        tableInfo['Case insensitive'].toString();
       setTableInfo(tableInfoTemp);
-      setIsLoading(false)
+      setIsLoading(false);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
