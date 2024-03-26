@@ -50,7 +50,7 @@ const SchemaInfo = ({ column }: any) => {
 
   const data = React.useMemo(() => {
     return column.map((column: IColumn) => ({
-      name: column.name.split('(')[0],
+      name: column.name,
       type: column.type || '',
       mode: column.mode || '',
       description: column.description

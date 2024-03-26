@@ -267,6 +267,7 @@ const DpmsComponent = ({
   interface IDataEntry {
     id: string;
     name: string;
+    type: string;
     description: string;
     children: Table[];
   }
@@ -287,7 +288,7 @@ const DpmsComponent = ({
           mode: string;
           description: string;
         }) => ({
-          name: `${column.column} (${column.type})`,
+          name: `${column.column}`,
           schema: res.schema, // Include the schema object
           fullyQualifiedName: res.fullyQualifiedName,
           displayName: res.displayName,
@@ -322,7 +323,7 @@ const DpmsComponent = ({
           mode: string;
           description: string;
         }) => ({
-          name: `${column.name} (${column.dataType})`,
+          name: `${column.name}`,
           schema: columnWrapper.data.fields, // Include the schema object
           fullyQualifiedName: res.fullyQualifiedName,
           displayName: res.entrySource.displayName,
@@ -591,6 +592,7 @@ const DpmsComponent = ({
         <div role="treeitem" onClick={handleTextClick}>
           {node.data.name}
         </div>
+        <div className="dpms-column-type-text">{node.data.type}</div>
       </div>
     );
   };

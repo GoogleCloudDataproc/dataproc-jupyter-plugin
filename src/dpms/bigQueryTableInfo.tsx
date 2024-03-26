@@ -33,7 +33,7 @@ const BigQueryTableInfo = ({
   }, []);
 
   useEffect(() => {
-    if (tableInfo['Case insensitive'] && isLoading === true) {
+    if (tableInfo['Case insensitive'] !== undefined && isLoading === true) {
       DpmsService.getBigQueryTableInfoAPIService(
         title,
         database,
@@ -43,7 +43,7 @@ const BigQueryTableInfo = ({
       );
     }
   }, [tableInfo]);
-  
+
   return (
     <>
       {!isLoading && (

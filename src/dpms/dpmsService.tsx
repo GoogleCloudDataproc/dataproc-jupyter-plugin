@@ -179,13 +179,15 @@ export class DpmsService {
 
       let tableInfoTemp: any = {};
       tableInfoTemp['Table ID'] = data.id;
-      tableInfoTemp['Created'] = new Date(Number(data.creationTime)).toString();
-      tableInfoTemp['Last modified'] = new Date(
-        Number(data.lastModifiedTime)
-      ).toString();
-      tableInfoTemp['Table expiration'] = new Date(
-        Number(data.expirationTime)
-      ).toString();
+      tableInfoTemp['Created'] = data.creationTime
+        ? new Date(Number(data.creationTime)).toString()
+        : '';
+      tableInfoTemp['Last modified'] = data.lastModifiedTime
+        ? new Date(Number(data.lastModifiedTime)).toString()
+        : '';
+      tableInfoTemp['Table expiration'] = data.expirationTime
+        ? new Date(Number(data.expirationTime)).toString()
+        : '';
       tableInfoTemp['Data location'] = data.location;
       tableInfoTemp['Default collation'] = data.defaultCollation;
       tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
@@ -210,20 +212,23 @@ export class DpmsService {
       );
       let datasetInfoTemp: any = {};
       datasetInfoTemp['Dataset ID'] = data.id;
-      datasetInfoTemp['Created'] = new Date(
-        Number(data.creationTime)
-      ).toString();
+      datasetInfoTemp['Created'] = data.creationTime
+        ? new Date(Number(data.creationTime)).toString()
+        : '';
       datasetInfoTemp['Default table expiration'] =
-        data.defaultTableExpirationMs / (1000 * 60 * 60 * 24) + ' days';
-      datasetInfoTemp['Last modified'] = new Date(
-        Number(data.lastModifiedTime)
-      ).toString();
+        data.defaultTableExpirationMs
+          ? data.defaultTableExpirationMs / (1000 * 60 * 60 * 24) + ' days'
+          : '';
+      datasetInfoTemp['Last modified'] = data.lastModifiedTime
+        ? new Date(Number(data.lastModifiedTime)).toString()
+        : '';
       datasetInfoTemp['Data location'] = data.location;
       datasetInfoTemp['Description'] = data.description;
       datasetInfoTemp['Default collation'] = data.defaultCollation;
       datasetInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
-      datasetInfoTemp['Time travel window'] =
-        data.maxTimeTravelHours / 24 + ' days';
+      datasetInfoTemp['Time travel window'] = data.data.maxTimeTravelHours
+        ? data.maxTimeTravelHours / 24 + ' days'
+        : '';
       datasetInfoTemp['Storage billing model'] = data.storageBillingModel;
       datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive.toString();
       setDatasetInfo(datasetInfoTemp);
