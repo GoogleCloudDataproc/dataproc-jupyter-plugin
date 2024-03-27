@@ -226,7 +226,7 @@ export class DpmsService {
       datasetInfoTemp['Description'] = data.description;
       datasetInfoTemp['Default collation'] = data.defaultCollation;
       datasetInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
-      datasetInfoTemp['Time travel window'] = data.data.maxTimeTravelHours
+      datasetInfoTemp['Time travel window'] = data.maxTimeTravelHours
         ? data.maxTimeTravelHours / 24 + ' days'
         : '';
       datasetInfoTemp['Storage billing model'] = data.storageBillingModel;

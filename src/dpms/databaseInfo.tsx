@@ -66,7 +66,11 @@ const DatabaseInfo = ({
     <div>
       <div className="dpms-Wrapper">
         <div className="title-overlay">{title}</div>
-        <div className="db-title">Database info</div>
+        {dataprocMetastoreServices === 'bigframes' ? (
+          <div className="db-title">Dataset info</div>
+        ) : (
+          <div className="db-title">Database info</div>
+        )}
         {renderTable()}
       </div>
     </div>
