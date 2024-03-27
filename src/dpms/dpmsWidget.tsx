@@ -20,7 +20,6 @@ import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import databaseIcon from '../../style/icons/database_icon.svg';
-import datasetIcon from '../../style/icons/dataset_icon.svg';
 import tableIcon from '../../style/icons/table_icon.svg';
 import columnsIcon from '../../style/icons/columns_icon.svg';
 import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
@@ -49,7 +48,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
-import { DpmsService } from './dpmsService';
+import BigQueryComponent from './bigQueryWidget';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -90,10 +89,6 @@ const DpmsComponent = ({
   const iconDatabase = new LabIcon({
     name: 'launcher:database-icon',
     svgstr: databaseIcon
-  });
-  const iconDataset = new LabIcon({
-    name: 'launcher:dataset-icon',
-    svgstr: datasetIcon
   });
   const iconTable = new LabIcon({
     name: 'launcher:table-icon',
@@ -169,14 +164,6 @@ const DpmsComponent = ({
           toast.error('Error getting column details', toastifyCustomStyle);
         });
     }
-  };
-
-  const getBigQueryColumnDetails = async (name: string) => {
-    await DpmsService.getBigQueryColumnDetailsAPIService(
-      name,
-      setColumnResponse,
-      setIsLoading
-    );
   };
 
   interface ITableResponse {
@@ -276,76 +263,39 @@ const DpmsComponent = ({
   const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } =
     {};
 
-  if (dataprocMetastoreServices !== 'bigframes') {
-    columnResponse.forEach((res: IColumn) => {
-      /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
+  columnResponse.forEach((res: IColumn) => {
+    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
       fetching database name from fully qualified name structure */
-      const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
-      const tableName = res.displayName;
-      const columns: IColumn[] = res.schema.columns.map(
-        (column: {
-          column: string;
-          type: string;
-          mode: string;
-          description: string;
-        }) => ({
-          name: `${column.column}`,
-          schema: res.schema, // Include the schema object
-          fullyQualifiedName: res.fullyQualifiedName,
-          displayName: res.displayName,
-          column: res.column, //no response
-          type: column.type,
-          mode: column.mode,
-          description: res.description
-        })
-      );
+    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
+    const tableName = res.displayName;
+    const columns: IColumn[] = res.schema.columns.map(
+      (column: {
+        column: string;
+        type: string;
+        mode: string;
+        description: string;
+      }) => ({
+        name: `${column.column}`,
+        schema: res.schema, // Include the schema object
+        fullyQualifiedName: res.fullyQualifiedName,
+        displayName: res.displayName,
+        column: res.column, //no response
+        type: column.type,
+        mode: column.mode,
+        description: res.description
+      })
+    );
 
-      if (!databases[dbName]) {
-        databases[dbName] = {};
-      }
+    if (!databases[dbName]) {
+      databases[dbName] = {};
+    }
 
-      if (!databases[dbName][tableName]) {
-        databases[dbName][tableName] = [];
-      }
+    if (!databases[dbName][tableName]) {
+      databases[dbName][tableName] = [];
+    }
 
-      databases[dbName][tableName].push(...columns);
-    });
-  } else {
-    columnResponse.forEach((res: any) => {
-      /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
-      fetching database name from fully qualified name structure */
-      const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
-      const tableName = res.entrySource.displayName;
-      const columnWrapper: any = Object.values(res.aspects)[1];
-      const columns: IColumn[] = columnWrapper.data.fields.map(
-        (column: {
-          name: string;
-          dataType: string;
-          mode: string;
-          description: string;
-        }) => ({
-          name: `${column.name}`,
-          schema: columnWrapper.data.fields, // Include the schema object
-          fullyQualifiedName: res.fullyQualifiedName,
-          displayName: res.entrySource.displayName,
-          column: res.column, //no response
-          type: column.dataType,
-          mode: column.mode,
-          description: res.entrySource.description
-        })
-      );
-
-      if (!databases[dbName]) {
-        databases[dbName] = {};
-      }
-
-      if (!databases[dbName][tableName]) {
-        databases[dbName][tableName] = [];
-      }
-
-      databases[dbName][tableName].push(...columns);
-    });
-  }
+    databases[dbName][tableName].push(...columns);
+  });
 
   const data = Object.entries(databases).map(([dbName, tables]) => ({
     id: uuidv4(),
@@ -363,25 +313,6 @@ const DpmsComponent = ({
       }))
     }))
   }));
-
-  if (
-    data.length < databaseNames.length &&
-    dataprocMetastoreServices === 'bigframes'
-  ) {
-    let emptyDatabaseNames: string[] = databaseNames;
-    entries.forEach((entryName: string) => {
-      emptyDatabaseNames = emptyDatabaseNames.filter(
-        data => data !== entryName.split('/')[4]
-      );
-    });
-    emptyDatabaseNames.forEach((databaseName: string) => {
-      data.push({
-        id: uuidv4(),
-        name: databaseName,
-        children: []
-      });
-    });
-  }
 
   data.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -531,17 +462,10 @@ const DpmsComponent = ({
             <>
               {arrowIcon}
               <div role="img" className="db-icon" onClick={handleIconClick}>
-                {dataprocMetastoreServices === 'bigframes' ? (
-                  <iconDataset.react
-                    tag="div"
-                    className="icon-white logo-alignment-style"
-                  />
-                ) : (
-                  <iconDatabase.react
-                    tag="div"
-                    className="icon-white logo-alignment-style"
-                  />
-                )}
+                <iconDatabase.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
               </div>
             </>
           );
@@ -573,17 +497,10 @@ const DpmsComponent = ({
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              {dataprocMetastoreServices === 'bigframes' ? (
-                <iconDataset.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
-              ) : (
-                <iconDatabase.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
-              )}
+              <iconDatabase.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
             </div>
           </>
         );
@@ -706,20 +623,6 @@ const DpmsComponent = ({
           toast.error('Error getting database details', toastifyCustomStyle);
         });
     }
-  };
-
-  const getBigQueryDatasets = async () => {
-    await DpmsService.getBigQueryDatasetsAPIService(
-      notebookValue,
-      setDatabaseDetails,
-      setDatabaseNames,
-      setTotalDatabases,
-      setApiError,
-      setSchemaError,
-      setEntries,
-      setTableDescription,
-      setTotalTables
-    );
   };
 
   interface IClusterDetailsResponse {
@@ -870,11 +773,6 @@ const DpmsComponent = ({
       const sessionVal = sessionName.slice(0, -1).join('/');
       setNotebookValue(sessionVal);
       getSessionDetails();
-    } else if (notebookVal?.includes('bigframes')) {
-      setNotebookValue('bigframes');
-      setDataprocMetastoreServices('bigframes');
-      // setNotebookValue("runtime-0000695cbc45");
-      // getSessionDetails();
     } else {
       setNoDpmsInstance(true);
     }
@@ -886,37 +784,23 @@ const DpmsComponent = ({
     };
   }, [notebookValue]);
   useEffect(() => {
-    if (dataprocMetastoreServices === 'bigframes') {
-      getBigQueryDatasets();
-    } else {
-      getDatabaseDetails();
-    }
+    getDatabaseDetails();
   }, [dataprocMetastoreServices]);
 
   useEffect(() => {
-    if (dataprocMetastoreServices !== 'bigframes') {
-      Promise.all(databaseNames.map(db => getTableDetails(db)))
-        .then(results => {})
-        .catch(error => {
-          console.log(error);
-        });
-    }
+    Promise.all(databaseNames.map(db => getTableDetails(db)))
+      .then(results => {})
+      .catch(error => {
+        console.log(error);
+      });
   }, [databaseNames]);
 
   useEffect(() => {
-    if (dataprocMetastoreServices !== 'bigframes') {
-      Promise.all(entries.map(entry => getColumnDetails(entry)))
-        .then(results => {})
-        .catch(error => {
-          console.log(error);
-        });
-    } else {
-      Promise.all(entries.map(entry => getBigQueryColumnDetails(entry)))
-        .then(results => {})
-        .catch(error => {
-          console.log(error);
-        });
-    }
+    Promise.all(entries.map(entry => getColumnDetails(entry)))
+      .then(results => {})
+      .catch(error => {
+        console.log(error);
+      });
   }, [entries]);
 
   return (
@@ -973,13 +857,9 @@ const DpmsComponent = ({
                   />
                 </div>
                 <div className="tree-container">
-                  {dataprocMetastoreServices === 'bigframes' ||
-                  data.length === totalDatabases
-                    ? ((dataprocMetastoreServices === 'bigframes' &&
-                        totalDatabases === data.length) ||
-                        (dataprocMetastoreServices !== 'bigframes' &&
-                          data[totalDatabases - 1].children.length ===
-                            totalTables)) && (
+                  {data.length === totalDatabases
+                    ? data[totalDatabases - 1].children.length ===
+                        totalTables && (
                         <Tree
                           className="Tree"
                           initialData={data}
@@ -1034,6 +914,10 @@ export class dpmsWidget extends DataprocWidget {
   }
 
   renderInternal(): JSX.Element {
-    return <DpmsComponent app={this.app} themeManager={this.themeManager} />;
+    return localStorage.getItem('notebookValue')?.includes('bigframes') ? (
+      <BigQueryComponent app={this.app} themeManager={this.themeManager} />
+    ) : (
+      <DpmsComponent app={this.app} themeManager={this.themeManager} />
+    );
   }
 }

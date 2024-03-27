@@ -87,11 +87,9 @@ export class DpmsService {
     setDatabaseDetails: any,
     setDatabaseNames: (value: string[]) => void,
     setTotalDatabases: (value: number) => void,
-    setApiError: (value: boolean) => void,
     setSchemaError: (value: boolean) => void,
     setEntries: (value: string[]) => void,
     setTableDescription: any,
-    setTotalTables: (value: number) => void
   ) => {
     if (notebookValue) {
       try {
@@ -115,7 +113,6 @@ export class DpmsService {
         setDatabaseDetails(updatedDatabaseDetails);
         setDatabaseNames(databaseNames);
         setTotalDatabases(databaseNames.length);
-        setApiError(false);
         setSchemaError(false);
 
         const filteredTableEntries = data.entries.filter(
@@ -141,7 +138,6 @@ export class DpmsService {
         );
         setEntries(entryNames);
         setTableDescription(updatedTableDetails);
-        setTotalTables(tableNames.length);
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
         toast.error(`Failed to fetch datasets`, toastifyCustomStyle);

@@ -51,16 +51,26 @@
 }
 
 .Tree div[role='treeitem'][aria-level='1'] > div > div > div > svg {
-  margin-right: 10px;
+  margin-right: 5px;
   cursor: pointer;
 }
 
 .Tree div[role='treeitem'][aria-level='2'] > div {
   display: flex;
+  align-items: center;
+}
+
+.Tree div[role='treeitem'][aria-level='2'] > div > div > div > svg {
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.Tree div[role='treeitem'][aria-level='3'] > div {
+  display: flex;
   margin-left: 20px;
 }
 
-.Tree div[role='treeitem'][aria-level='2'] > div > div > svg {
+.Tree div[role='treeitem'][aria-level='3'] > div > div > svg {
   margin-right: 10px;
 }
 
@@ -68,7 +78,7 @@
   cursor: pointer;
 }
 
-.Tree div[role='treeitem'][aria-level='2'] > div > div:nth-last-child(2) {
+.Tree div[role='treeitem'][aria-level='3'] > div > div:nth-last-child(2) {
   cursor: context-menu !important;
 }
 
