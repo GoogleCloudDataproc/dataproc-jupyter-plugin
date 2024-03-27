@@ -89,9 +89,12 @@ create_batch = DataprocCreateBatchOperator(
                     },
                 },
             },
-            {% if custom_container %}
+            {% if version %}
             "runtime_config": {
-                "container_image": '{{custom_container}}'
+                {% if custom_container %}
+                "container_image": '{{custom_container}}',
+                {% endif %}
+                "version":'{{version}}'
             },
             {% endif %}
         },
