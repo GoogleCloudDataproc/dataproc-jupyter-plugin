@@ -25,10 +25,11 @@ class BigqueryDatasetController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
+            page_token = self.get_argument("pageToken")
             bigquery_dataset = BigQueryDatasetService()
             credentials = handlers.get_cached_credentials(self.log)
             dataset_list = bigquery_dataset.list_datasets(
-                credentials,self.log
+                credentials,page_token,self.log
             )
             self.finish(json.dumps(dataset_list))
         except Exception as e:

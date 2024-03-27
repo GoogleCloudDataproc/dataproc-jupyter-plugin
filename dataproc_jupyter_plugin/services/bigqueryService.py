@@ -18,7 +18,7 @@ from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataplex_url
 
 
 class BigQueryDatasetService:
-    def list_datasets(self, credentials, log):
+    def list_datasets(self, credentials, page_token, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -29,7 +29,7 @@ class BigQueryDatasetService:
                 project_id = credentials["project_id"]
                 region_id = credentials["region_id"]
                 print(dataplex_url)
-                api_endpoint = f"{dataplex_url}/projects/{project_id}/locations/us/entryGroups/@bigquery/entries/"
+                api_endpoint = f"{dataplex_url}/projects/{project_id}/locations/us/entryGroups/@bigquery/entries?pageToken={page_token}"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",

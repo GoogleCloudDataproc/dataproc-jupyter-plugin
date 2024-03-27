@@ -39,6 +39,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { DpmsService } from './dpmsService';
+import { authApi } from '../utils/utils';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -98,6 +99,7 @@ const BigQueryComponent = ({
     svgstr: searchIcon
   });
 
+  const [projectNameInfo, setProjectNameInfo] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
@@ -190,7 +192,7 @@ const BigQueryComponent = ({
   const data = [
     {
       id: uuidv4(),
-      name: 'Project-details',
+      name: projectNameInfo,
       children: Object.entries(databases).map(([dbName, tables]) => ({
         id: uuidv4(),
         name: dbName,
@@ -484,6 +486,10 @@ const BigQueryComponent = ({
   };
 
   const getBigQueryDatasets = async () => {
+    const credentials: any = await authApi();
+      if (credentials) {
+        setProjectNameInfo(credentials.project_id);
+      }
     await DpmsService.getBigQueryDatasetsAPIService(
       notebookValue,
       setDatabaseDetails,
@@ -578,7 +584,7 @@ const BigQueryComponent = ({
                 <div className="tree-container">
                   {data[0].children.length === totalDatabases ? (
                     <Tree
-                      className="Tree"
+                      className="dataset-tree"
                       initialData={data}
                       openByDefault={false}
                       indent={24}

@@ -860,7 +860,7 @@ const DpmsComponent = ({
                     ? data[totalDatabases - 1].children.length ===
                         totalTables && (
                         <Tree
-                          className="Tree"
+                          className="database-tree"
                           initialData={data}
                           openByDefault={false}
                           indent={24}

@@ -90,54 +90,78 @@ export class DpmsService {
     setSchemaError: (value: boolean) => void,
     setEntries: (value: string[]) => void,
     setTableDescription: any,
+    nextPageToken?: string,
+    previousDatasetList?: object
   ) => {
     if (notebookValue) {
+      const pageToken = nextPageToken ?? '';
       try {
-        const data: any = await requestAPI(`bigQueryDataset`);
+        const data: any = await requestAPI(
+          `bigQueryDataset?pageToken=${pageToken}`
+        );
 
-        const filteredEntries = data.entries.filter(
-          (entry: { entryType: string }) =>
-            entry.entryType.includes('bigquery-dataset')
-        );
-        const databaseNames: string[] = [];
-        const updatedDatabaseDetails: { [key: string]: string } = {};
-        filteredEntries.forEach(
-          (entry: {
-            entrySource: { description: string; displayName: string };
-          }) => {
-            databaseNames.push(entry.entrySource.displayName);
-            const description = entry.entrySource.description || 'None';
-            updatedDatabaseDetails[entry.entrySource.displayName] = description;
-          }
-        );
-        setDatabaseDetails(updatedDatabaseDetails);
-        setDatabaseNames(databaseNames);
-        setTotalDatabases(databaseNames.length);
-        setSchemaError(false);
+        const existingDatasetList = previousDatasetList ?? [];
+        //setStateAction never type issue
+        const allDatasetList: any = [...(existingDatasetList as []), ...data.entries];
 
-        const filteredTableEntries = data.entries.filter(
-          (entry: { entryType: string }) =>
-            entry.entryType.includes('bigquery-table')
-        );
-        const tableNames: string[] = [];
-        const entryNames: string[] = [];
-        const updatedTableDetails: { [key: string]: string } = {};
-        filteredTableEntries.forEach(
-          (entry: {
-            entrySource: {
-              displayName: string;
-              resource: string;
-              description: string;
-            };
-          }) => {
-            tableNames.push(entry.entrySource.displayName);
-            entryNames.push(entry.entrySource.resource.split('//')[1]);
-            const description = entry.entrySource.description || 'None';
-            updatedTableDetails[entry.entrySource.displayName] = description;
-          }
-        );
-        setEntries(entryNames);
-        setTableDescription(updatedTableDetails);
+        if (data.nextPageToken) {
+          this.getBigQueryDatasetsAPIService(
+            notebookValue,
+            setDatabaseDetails,
+            setDatabaseNames,
+            setTotalDatabases,
+            setSchemaError,
+            setEntries,
+            setTableDescription,
+            data.nextPageToken,
+            allDatasetList
+          );
+        } else {
+          const filteredEntries = allDatasetList.filter(
+            (entry: { entryType: string }) =>
+              entry.entryType.includes('bigquery-dataset')
+          );
+          const databaseNames: string[] = [];
+          const updatedDatabaseDetails: { [key: string]: string } = {};
+          filteredEntries.forEach(
+            (entry: {
+              entrySource: { description: string; displayName: string };
+            }) => {
+              databaseNames.push(entry.entrySource.displayName);
+              const description = entry.entrySource.description || 'None';
+              updatedDatabaseDetails[entry.entrySource.displayName] =
+                description;
+            }
+          );
+          setDatabaseDetails(updatedDatabaseDetails);
+          setDatabaseNames(databaseNames);
+          setTotalDatabases(databaseNames.length);
+          setSchemaError(false);
+
+          const filteredTableEntries = allDatasetList.filter(
+            (entry: { entryType: string }) =>
+              entry.entryType.includes('bigquery-table')
+          );
+          const tableNames: string[] = [];
+          const entryNames: string[] = [];
+          const updatedTableDetails: { [key: string]: string } = {};
+          filteredTableEntries.forEach(
+            (entry: {
+              entrySource: {
+                displayName: string;
+                resource: string;
+                description: string;
+              };
+            }) => {
+              tableNames.push(entry.entrySource.displayName);
+              entryNames.push(entry.entrySource.resource.split('//')[1]);
+              const description = entry.entrySource.description || 'None';
+              updatedTableDetails[entry.entrySource.displayName] = description;
+            }
+          );
+          setEntries(entryNames);
+          setTableDescription(updatedTableDetails);
+        }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
         toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
