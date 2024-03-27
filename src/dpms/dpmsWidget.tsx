@@ -364,6 +364,25 @@ const DpmsComponent = ({
     }))
   }));
 
+  if (
+    data.length < databaseNames.length &&
+    dataprocMetastoreServices === 'bigframes'
+  ) {
+    let emptyDatabaseNames: string[] = databaseNames;
+    entries.forEach((entryName: string) => {
+      emptyDatabaseNames = emptyDatabaseNames.filter(
+        data => data !== entryName.split('/')[4]
+      );
+    });
+    emptyDatabaseNames.forEach((databaseName: string) => {
+      data.push({
+        id: uuidv4(),
+        name: databaseName,
+        children: []
+      });
+    });
+  }
+
   data.sort((a, b) => a.name.localeCompare(b.name));
 
   data.forEach(db => {
@@ -474,10 +493,12 @@ const DpmsComponent = ({
             />
           </div>
         )
-      ) : null;
+      ) : (
+        <div style={{ paddingLeft: '29px' }}></div>
+      );
       if (searchTerm) {
-        const arrowIcon =
-          hasChildren && node.isOpen ? (
+        const arrowIcon = hasChildren ? (
+          node.isOpen ? (
             <>
               <div
                 role="treeitem"
@@ -501,7 +522,10 @@ const DpmsComponent = ({
                 className="icon-white logo-alignment-style"
               />
             </div>
-          );
+          )
+        ) : (
+          <div style={{ paddingLeft: '29px' }}></div>
+        );
         if (depth === 1) {
           return (
             <>
@@ -952,7 +976,7 @@ const DpmsComponent = ({
                   {dataprocMetastoreServices === 'bigframes' ||
                   data.length === totalDatabases
                     ? ((dataprocMetastoreServices === 'bigframes' &&
-                        totalTables === data.length) ||
+                        totalDatabases === data.length) ||
                         (dataprocMetastoreServices !== 'bigframes' &&
                           data[totalDatabases - 1].children.length ===
                             totalTables)) && (

@@ -130,12 +130,12 @@ export class DpmsService {
             entrySource: {
               displayName: string;
               resource: string;
+              description: string;
             };
-            description: string;
           }) => {
             tableNames.push(entry.entrySource.displayName);
             entryNames.push(entry.entrySource.resource.split('//')[1]);
-            const description = entry.description || 'None';
+            const description = entry.entrySource.description || 'None';
             updatedTableDetails[entry.entrySource.displayName] = description;
           }
         );
