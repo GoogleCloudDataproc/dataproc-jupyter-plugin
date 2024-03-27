@@ -53,6 +53,7 @@ const ExecutionHistory = ({
   const [orangeListDates, setOrangeListDates] = useState<string[]>([]);
   const [redListDates, setRedListDates] = useState<string[]>([]);
   const [greenListDates, setGreenListDates] = useState<string[]>([]);
+  const [darkGreenListDates, setDarkGreenListDates] = useState<string[]>([]);
 
   const handleMonthChange = () => {
     setDagRunId('');
@@ -98,59 +99,57 @@ const ExecutionHistory = ({
     const isGreenExecution =
       greenListDates.length > 0 &&
       greenListDates.includes(formattedTotalViewDate);
+    //Green color code for multiple success status
+    const isDarkGreenExecution =
+      darkGreenListDates.length > 0 &&
+      darkGreenListDates.includes(formattedTotalViewDate);
 
     const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates);
+    const currentDataExecution =
+      [dayjs(currentDate)?.date()].includes(totalViewDates) &&
+      [dayjs(currentDate)?.month()].includes(day.month());
 
     return (
       <PickersDay
         {...props}
         style={{
-          border:
-            isSelectedExecution &&
-            !isRedExecution &&
-            !isGreenExecution &&
-            !isOrangeExecution &&
-            !isBlueExecution &&
-            !isGreyExecution
-              ? '3px solid var(--jp-ui-font-color0)'
-              : 'none',
+          border: 'none',
           borderRadius:
+            isSelectedExecution ||
+            isDarkGreenExecution ||
             isGreenExecution ||
             isRedExecution ||
-            isSelectedExecution ||
             isOrangeExecution ||
             isGreyExecution ||
             isBlueExecution
               ? '50%'
               : 'none',
-          backgroundColor: isGreenExecution
-            ? isSelectedExecution
-              ? '#2A8642'
-              : '#34A853'
+          backgroundColor: isSelectedExecution
+            ? '#3B78E7'
+            : isDarkGreenExecution
+            ? '#1E6631'
+            : isGreenExecution
+            ? '#34A853'
             : isOrangeExecution
-            ? isSelectedExecution
-              ? '#F78702'
-              : '#FFA52C'
+            ? '#FFA52C'
             : isRedExecution
-            ? isSelectedExecution
-              ? '#C4271A'
-              : '#EA3323'
+            ? '#EA3323'
             : isBlueExecution
-            ? isSelectedExecution
-              ? '#0066b2'
-              : '#7CB9E8'
+            ? '#00BFA5'
             : isGreyExecution
-            ? isSelectedExecution
-              ? '#808080'
-              : '#AEAEAE'
+            ? '#AEAEAE'
             : 'transparent',
           color:
+            isSelectedExecution ||
+            isDarkGreenExecution ||
             isGreenExecution ||
             isRedExecution ||
             isOrangeExecution ||
             isGreyExecution ||
             isBlueExecution
               ? 'white'
+              : currentDataExecution
+              ? '#3367D6'
               : 'inherit'
         }}
       />
@@ -206,6 +205,7 @@ const ExecutionHistory = ({
                 setOrangeListDates={setOrangeListDates}
                 setRedListDates={setRedListDates}
                 setGreenListDates={setGreenListDates}
+                setDarkGreenListDates={setDarkGreenListDates}
                 bucketName={bucketName}
               />
             )}

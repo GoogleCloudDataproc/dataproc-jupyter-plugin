@@ -89,11 +89,16 @@ create_batch = DataprocCreateBatchOperator(
                     },
                 },
             },
-            {% if custom_container %}
+            
             "runtime_config": {
-                "container_image": '{{custom_container}}'
+                {% if custom_container %}
+                "container_image": '{{custom_container}}',
+                {% endif %}
+                {% if version %}
+                "version":'{{version}}'
+                {% endif %}
             },
-            {% endif %}
+            
         },
         batch_id=str(uuid.uuid4()),
         dag = dag,
