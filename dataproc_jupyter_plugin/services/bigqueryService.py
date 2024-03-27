@@ -148,7 +148,7 @@ class BigQueryPreviewService:
             ):
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
-                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data"
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?maxResults=20"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",
