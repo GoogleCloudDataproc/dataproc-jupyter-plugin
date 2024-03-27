@@ -318,6 +318,9 @@ const DpmsComponent = ({
 
   data.forEach(db => {
     db.children.sort((a, b) => a.name.localeCompare(b.name));
+    db.children.forEach(table => {
+      table.children.sort((a, b) => a.name.localeCompare(b.name));
+    });
   });
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -424,9 +427,7 @@ const DpmsComponent = ({
             />
           </div>
         )
-      ) : (
-        <div style={{ paddingLeft: '29px' }}></div>
-      );
+      ) : null
       if (searchTerm) {
         const arrowIcon = hasChildren ? (
           node.isOpen ? (
@@ -454,9 +455,7 @@ const DpmsComponent = ({
               />
             </div>
           )
-        ) : (
-          <div style={{ paddingLeft: '29px' }}></div>
-        );
+        ) : null
         if (depth === 1) {
           return (
             <>
