@@ -17,8 +17,8 @@ import requests
 from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataplex_url
 
 
-class BigQueryDatasetService:
-    def list_datasets(self, credentials, page_token, log):
+class BigQueryDatasetListService:
+    def list_datasets(self, credentials, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -29,7 +29,7 @@ class BigQueryDatasetService:
                 project_id = credentials["project_id"]
                 region_id = credentials["region_id"]
                 print(dataplex_url)
-                api_endpoint = f"{dataplex_url}/projects/{project_id}/locations/us/entryGroups/@bigquery/entries?pageToken={page_token}"
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",
@@ -49,8 +49,8 @@ class BigQueryDatasetService:
             return {"error": str(e)}
 
 
-class BigQuerySchemaService:
-    def list_schema(self, credentials, entry_name,log):
+class BigQueryTableListService:
+    def list_table(self, credentials, dataset_id,log):
         try:
             if (
                 ("access_token" in credentials)
@@ -59,7 +59,7 @@ class BigQuerySchemaService:
             ):
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
-                api_endpoint = f"{dataplex_url}/projects/{project_id}/locations/us/entryGroups/@bigquery/entries/{entry_name}"
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",

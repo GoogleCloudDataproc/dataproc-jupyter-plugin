@@ -17,7 +17,7 @@ import json
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetInfoService, BigQueryDatasetService, BigQueryPreviewService, BigQueryProjectService, BigQuerySchemaService, BigQueryTableInfoService
+from dataproc_jupyter_plugin.services.bigqueryService import BigQueryDatasetInfoService, BigQueryDatasetListService, BigQueryPreviewService, BigQueryProjectService, BigQueryTableInfoService, BigQueryTableListService
 
 
 
@@ -25,32 +25,47 @@ class BigqueryDatasetController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            page_token = self.get_argument("pageToken")
-            bigquery_dataset = BigQueryDatasetService()
+            # page_token = self.get_argument("pageToken")
+            bigquery_dataset = BigQueryDatasetListService()
             credentials = handlers.get_cached_credentials(self.log)
             dataset_list = bigquery_dataset.list_datasets(
-                credentials,page_token,self.log
+                credentials,self.log
             )
             self.finish(json.dumps(dataset_list))
         except Exception as e:
             self.log.exception(f"Error fetching datasets")
             self.finish({"error": str(e)})
 
-class BigquerySchemaController(APIHandler):
+class BigqueryTableController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-           # entry_name = "bigquery.googleapis.com/projects/dataproc-jupyter-extension-dev/datasets/test_dataset/tables/games_post_wide"
-            entry_name = self.get_argument('entry_name')
-            bigquery_dataset = BigQuerySchemaService()
+            dataset_id = self.get_argument("dataset_id")
+            bigquery_dataset = BigQueryTableListService()
             credentials = handlers.get_cached_credentials(self.log)
-            schema_list = bigquery_dataset.list_schema(
-                credentials,entry_name,self.log
+            table_list = bigquery_dataset.list_table(
+                credentials,dataset_id,self.log
             )
-            self.finish(json.dumps(schema_list))
+            self.finish(json.dumps(table_list))
         except Exception as e:
-            self.log.exception(f"Error fetching schema")
+            self.log.exception(f"Error fetching datasets")
             self.finish({"error": str(e)})
+
+# class BigquerySchemaController(APIHandler):
+#     @tornado.web.authenticated
+#     def get(self):
+#         try:
+#            # entry_name = "bigquery.googleapis.com/projects/dataproc-jupyter-extension-dev/datasets/test_dataset/tables/games_post_wide"
+#             entry_name = self.get_argument('entry_name')
+#             bigquery_dataset = BigQuerySchemaService()
+#             credentials = handlers.get_cached_credentials(self.log)
+#             schema_list = bigquery_dataset.list_schema(
+#                 credentials,entry_name,self.log
+#             )
+#             self.finish(json.dumps(schema_list))
+#         except Exception as e:
+#             self.log.exception(f"Error fetching schema")
+#             self.finish({"error": str(e)})
 
 
 class BigqueryDatasetInfoController(APIHandler):
