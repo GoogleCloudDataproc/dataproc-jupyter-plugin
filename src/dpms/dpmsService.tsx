@@ -66,12 +66,15 @@ export class DpmsService {
   };
 
   static getBigQueryColumnDetailsAPIService = async (
-    name: string,
+    datasetId: string,
+    tableId: string,
     setColumnResponse: any,
     setIsLoading: (value: boolean) => void
   ) => {
     try {
-      const data: any = await requestAPI(`bigQuerySchema?entry_name=${name}`);
+      const data: any = await requestAPI(
+        `bigQueryTableInfo?dataset_id=${datasetId}&table_id=${tableId}`
+      );
       setColumnResponse((prevResponse: IColumn[]) => [...prevResponse, data]);
       if (data) {
         setIsLoading(false);
@@ -102,7 +105,10 @@ export class DpmsService {
 
         const existingDatasetList = previousDatasetList ?? [];
         //setStateAction never type issue
-        const allDatasetList: any = [...(existingDatasetList as []), ...data.entries];
+        const allDatasetList: any = [
+          ...(existingDatasetList as []),
+          ...data.datasets
+        ];
 
         if (data.nextPageToken) {
           this.getBigQueryDatasetsAPIService(
@@ -117,19 +123,15 @@ export class DpmsService {
             allDatasetList
           );
         } else {
-          const filteredEntries = allDatasetList.filter(
-            (entry: { entryType: string }) =>
-              entry.entryType.includes('bigquery-dataset')
-          );
           const databaseNames: string[] = [];
           const updatedDatabaseDetails: { [key: string]: string } = {};
-          filteredEntries.forEach(
-            (entry: {
-              entrySource: { description: string; displayName: string };
+          allDatasetList.forEach(
+            (data: {
+              datasetReference: { description: string; datasetId: string };
             }) => {
-              databaseNames.push(entry.entrySource.displayName);
-              const description = entry.entrySource.description || 'None';
-              updatedDatabaseDetails[entry.entrySource.displayName] =
+              databaseNames.push(data.datasetReference.datasetId);
+              const description = data.datasetReference.description || 'None';
+              updatedDatabaseDetails[data.datasetReference.datasetId] =
                 description;
             }
           );
@@ -137,30 +139,85 @@ export class DpmsService {
           setDatabaseNames(databaseNames);
           setTotalDatabases(databaseNames.length);
           setSchemaError(false);
+        }
+      } catch (reason) {
+        console.error(`Error in fetching datasets.\n${reason}`);
+        toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
+      }
+    }
+  };
 
-          const filteredTableEntries = allDatasetList.filter(
-            (entry: { entryType: string }) =>
-              entry.entryType.includes('bigquery-table')
-          );
-          const tableNames: string[] = [];
-          const entryNames: string[] = [];
-          const updatedTableDetails: { [key: string]: string } = {};
-          filteredTableEntries.forEach(
-            (entry: {
-              entrySource: {
-                displayName: string;
-                resource: string;
-                description: string;
-              };
-            }) => {
-              tableNames.push(entry.entrySource.displayName);
-              entryNames.push(entry.entrySource.resource.split('//')[1]);
-              const description = entry.entrySource.description || 'None';
-              updatedTableDetails[entry.entrySource.displayName] = description;
-            }
-          );
-          setEntries(entryNames);
-          setTableDescription(updatedTableDetails);
+  static getBigQueryTableAPIService = async (
+    notebookValue: string,
+    datasetId: string,
+    setDatabaseDetails: any,
+    setDatabaseNames: (value: string[]) => void,
+    setEmptyDatabaseNames: any,
+    setTotalDatabases: (value: number) => void,
+    setSchemaError: (value: boolean) => void,
+    setEntries: (value: string[]) => void,
+    setTableDescription: any,
+    setDatasetTableMappingDetails: any,
+    nextPageToken?: string,
+    previousDatasetList?: object
+  ) => {
+    if (notebookValue) {
+      const pageToken = nextPageToken ?? '';
+      try {
+        const data: any = await requestAPI(
+          `bigQueryTable?dataset_id=${datasetId}&pageToken=${pageToken}`
+        );
+
+        if (data.tables) {
+          const existingDatasetList = previousDatasetList ?? [];
+          //setStateAction never type issue
+          const allDatasetList: any = [
+            ...(existingDatasetList as []),
+            ...data.tables
+          ];
+
+          if (data.nextPageToken) {
+            this.getBigQueryTableAPIService(
+              notebookValue,
+              datasetId,
+              setDatabaseDetails,
+              setDatabaseNames,
+              setEmptyDatabaseNames,
+              setTotalDatabases,
+              setSchemaError,
+              setEntries,
+              setTableDescription,
+              setDatasetTableMappingDetails,
+              data.nextPageToken,
+              allDatasetList
+            );
+          } else {
+            const tableNames: string[] = [];
+            const entryNames: string[] = [];
+            const updatedTableDetails: { [key: string]: string } = {};
+            const datasetTableMapping: { [key: string]: string } = {};
+            allDatasetList.forEach(
+              (entry: {
+                tableReference: {
+                  description: string;
+                  datasetId: string;
+                  tableId: string;
+                };
+              }) => {
+                tableNames.push(entry.tableReference.tableId);
+                entryNames.push(entry.tableReference.tableId);
+                const description = entry.tableReference.description || 'None';
+                updatedTableDetails[entry.tableReference.tableId] = description;
+                datasetTableMapping[entry.tableReference.tableId] =
+                  entry.tableReference.datasetId;
+              }
+            );
+            setEntries(entryNames);
+            setTableDescription(updatedTableDetails);
+            setDatasetTableMappingDetails(datasetTableMapping);
+          }
+        } else {
+          setEmptyDatabaseNames((prevResponse: string[]) => [...prevResponse, datasetId]);
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);

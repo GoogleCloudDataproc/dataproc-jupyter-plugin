@@ -99,7 +99,7 @@ const BigQueryComponent = ({
     svgstr: searchIcon
   });
 
-  const [projectNameInfo, setProjectNameInfo] = useState<string>('')
+  const [projectNameInfo, setProjectNameInfo] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
@@ -108,6 +108,7 @@ const BigQueryComponent = ({
   const [noDpmsInstance, setNoDpmsInstance] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
+  const [emptyDatabaseNames, setEmptyDatabaseNames] = useState<any>([]);
   const [schemaError, setSchemaError] = useState(false);
   const [totalDatabases, setTotalDatabases] = useState<number>(0);
   const [columnResponse, setColumnResponse] = useState<IColumn[]>([]);
@@ -117,10 +118,15 @@ const BigQueryComponent = ({
   const [tableDescription, setTableDescription] = useState<
     Record<string, string>
   >({});
+  const [datasetTableMappingDetails, setDatasetTableMappingDetails] = useState<
+    Record<string, string>
+  >({});
 
-  const getBigQueryColumnDetails = async (name: string) => {
+
+  const getBigQueryColumnDetails = async (tableId: string) => {
     await DpmsService.getBigQueryColumnDetailsAPIService(
-      name,
+      datasetTableMappingDetails[tableId],
+      tableId,
       setColumnResponse,
       setIsLoading
     );
@@ -157,24 +163,23 @@ const BigQueryComponent = ({
   columnResponse.forEach((res: any) => {
     /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
       fetching database name from fully qualified name structure */
-    const dbName = res.fullyQualifiedName.split('.').slice(-2, -1)[0];
-    const tableName = res.entrySource.displayName;
-    const columnWrapper: any = Object.values(res.aspects)[1];
-    const columns: IColumn[] = columnWrapper.data.fields.map(
+    const dbName = res.tableReference.datasetId;
+    const tableName = res.tableReference.tableId;
+    const columns: IColumn[] = res.schema.fields.map(
       (column: {
         name: string;
-        dataType: string;
+        type: string;
         mode: string;
         description: string;
       }) => ({
         name: `${column.name}`,
-        schema: columnWrapper.data.fields, // Include the schema object
-        fullyQualifiedName: res.fullyQualifiedName,
-        displayName: res.entrySource.displayName,
-        column: res.column, //no response
-        type: column.dataType,
+        schema: res.schema.fields, // Include the schema object
+        // fullyQualifiedName: res.fullyQualifiedName,
+        // displayName: res.entrySource.displayName,
+        // column: res.column, //no response
+        type: column.type,
         mode: column.mode,
-        description: res.entrySource.description
+        description: res.description
       })
     );
 
@@ -212,13 +217,7 @@ const BigQueryComponent = ({
     }
   ];
 
-  if (data.length < databaseNames.length) {
-    let emptyDatabaseNames: string[] = databaseNames;
-    entries.forEach((entryName: string) => {
-      emptyDatabaseNames = emptyDatabaseNames.filter(
-        data => data !== entryName.split('/')[4]
-      );
-    });
+  if (emptyDatabaseNames.length > 0) {
     emptyDatabaseNames.forEach((databaseName: string) => {
       data[0].children.push({
         id: uuidv4(),
@@ -487,9 +486,9 @@ const BigQueryComponent = ({
 
   const getBigQueryDatasets = async () => {
     const credentials: any = await authApi();
-      if (credentials) {
-        setProjectNameInfo(credentials.project_id);
-      }
+    if (credentials) {
+      setProjectNameInfo(credentials.project_id);
+    }
     await DpmsService.getBigQueryDatasetsAPIService(
       notebookValue,
       setDatabaseDetails,
@@ -498,6 +497,21 @@ const BigQueryComponent = ({
       setSchemaError,
       setEntries,
       setTableDescription
+    );
+  };
+
+  const getBigQueryTables = async (datasetId: string) => {
+    await DpmsService.getBigQueryTableAPIService(
+      notebookValue,
+      datasetId,
+      setDatabaseDetails,
+      setDatabaseNames,
+      setEmptyDatabaseNames,
+      setTotalDatabases,
+      setSchemaError,
+      setEntries,
+      setTableDescription,
+      setDatasetTableMappingDetails
     );
   };
 
@@ -516,9 +530,18 @@ const BigQueryComponent = ({
       setNotebookValue('');
     };
   }, [notebookValue]);
+
   useEffect(() => {
     getBigQueryDatasets();
   }, [dataprocMetastoreServices]);
+
+  useEffect(() => {
+    Promise.all(databaseNames.map(db => getBigQueryTables(db)))
+      .then(results => {})
+      .catch(error => {
+        console.log(error);
+      });
+  }, [databaseNames]);
 
   useEffect(() => {
     Promise.all(entries.map(entry => getBigQueryColumnDetails(entry)))
