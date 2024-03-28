@@ -76,6 +76,7 @@ function ConfigSelection({
 
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
+  const [bigQueryRegion, setBigQueryRegion] = useState<any>('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({
@@ -186,6 +187,11 @@ function ConfigSelection({
       if (credentials && credentials.project_id && credentials.region_id) {
         setProjectId(credentials.project_id);
         setRegion(credentials.region_id);
+        if(localStorage.getItem('bigQueryRegion')){
+          setBigQueryRegion(localStorage.getItem('bigQueryRegion'))
+        } else {
+          setBigQueryRegion(credentials.region_id);
+        }
         setConfigError(false);
       } else {
         setConfigError(true);
@@ -222,7 +228,7 @@ function ConfigSelection({
             <div className="settings-text">Settings</div>
           </div>
           <div className="settings-separator"></div>
-          <div className="project-header">Project Info </div>
+          <div className="project-header">Google Cloud Project Settings </div>
           <div className="config-overlay">
             <div className="config-form">
               <div className="project-overlay">
@@ -259,6 +265,17 @@ function ConfigSelection({
                 >
                   {isSaving ? 'Saving' : 'Save'}
                 </Button>
+              </div>
+              <div className="bigquery-region-header">BigQuery Settings </div>
+              <div className="region-overlay">
+                <RegionDropdown
+                  projectId={projectId}
+                  region={bigQueryRegion}
+                  onRegionChange={bigQueryRegion =>
+                    setBigQueryRegion(bigQueryRegion)
+                  }
+                  fromSection="bigQuery"
+                />
               </div>
             </div>
             <div className="user-info-card">

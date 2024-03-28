@@ -28,27 +28,52 @@ type Props = {
   region: string;
   /** Callback function for when the project ID is changed by the dropdown */
   onRegionChange: (projectId: string) => void;
+  fromSection?: string;
 };
 
 /**
  * Component to render a region selector dropdown.
  */
 export function RegionDropdown(props: Props) {
-  const { projectId, region, onRegionChange } = props;
+  const { projectId, region, onRegionChange, fromSection } = props;
   const regions = useRegion(projectId);
 
-  const regionStrList = useMemo(
+  let regionStrList = useMemo(
     () => regions.map(region => region.name),
     [regions]
   );
+
+  if (regionStrList.length > 0 && fromSection === 'bigQuery') {
+    let exceptRegions = ['us-central2', 'us-east7', 'us-west8'];
+    let bqRegionsList: string[] = [];
+    bqRegionsList = regionStrList.filter(
+      element => !exceptRegions.includes(element)
+    );
+    bqRegionsList = bqRegionsList.concat(['US', 'EU']);
+    regionStrList = bqRegionsList;
+  }
+
+  const handleRegionChange = (value: string) => {
+    onRegionChange(value);
+    if (fromSection === 'bigQuery') {
+      localStorage.setItem('bigQueryRegion', value);
+    }
+  };
+
+  console.log(regionStrList);
 
   return (
     <Autocomplete
       value={region}
       options={regionStrList}
-      onChange={(_, value) => onRegionChange(value ?? '')}
+      onChange={(_, value) => handleRegionChange(value ?? '')}
       PaperComponent={(props: PaperProps) => <Paper elevation={8} {...props} />}
-      renderInput={params => <TextField {...params} label="Region" />}
+      renderInput={params => (
+        <TextField
+          {...params}
+          label={fromSection === 'bigQuery' ? 'BigQuery Region' : 'Region'}
+        />
+      )}
     />
   );
 }

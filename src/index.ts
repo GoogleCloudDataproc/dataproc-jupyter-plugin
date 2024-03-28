@@ -277,7 +277,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     };
 
-
     labShell.currentChanged.connect(async (_, change) => {
       await KernelAPI.listRunning();
       const { oldValue, newValue } = change;
@@ -374,7 +373,13 @@ const extension: JupyterFrontEndPlugin<void> = {
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] = `REGION = '${credentials.region_id}'\n`;
+        if (localStorage.getItem('bigQueryRegion')) {
+          notebookContent.cells[2].source[2] = `REGION = '${localStorage.getItem(
+            'bigQueryRegion'
+          )}'\n`;
+        } else {
+          notebookContent.cells[2].source[2] = `REGION = '${credentials.region_id}'\n`;
+        }
       }
 
       // Save the file to the workspace

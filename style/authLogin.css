@@ -298,3 +298,11 @@
   font-size: 20px;
   color: var(--jp-ui-font-color0);
 }
+
+.bigquery-region-header {
+  padding-left: 5px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--jp-ui-font-color0);
+}
