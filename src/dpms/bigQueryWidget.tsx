@@ -641,10 +641,8 @@ const BigQueryComponent = ({
                   />
                 </div>
                 <div className="tree-container">
-                  {data[0].children.length === totalDatabases &&
-                  data[0].children[
-                    totalDatabases - emptyDatabaseNames.length - 1
-                  ].children.length === totalTables ? (
+                  {data[0].children.length === totalDatabases 
+                  ? (
                     <Tree
                       className="dataset-tree"
                       initialData={data}
