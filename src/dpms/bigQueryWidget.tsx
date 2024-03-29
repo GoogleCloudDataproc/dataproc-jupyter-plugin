@@ -133,6 +133,8 @@ const BigQueryComponent = ({
   };
 
   interface IColumn {
+    collation: string;
+    tableDescription: string;
     name: string;
     schema: {
       columns: {
@@ -171,6 +173,7 @@ const BigQueryComponent = ({
         type: string;
         mode: string;
         description: string;
+        collation: string;
       }) => ({
         name: `${column.name}`,
         schema: res.schema.fields, // Include the schema object
@@ -179,7 +182,9 @@ const BigQueryComponent = ({
         // column: res.column, //no response
         type: column.type,
         mode: column.mode,
-        description: res.description
+        collation: column.collation,
+        tableDescription: res.description,
+        description: column.description,
       })
     );
 
@@ -210,6 +215,8 @@ const BigQueryComponent = ({
             name: column.name,
             type: column.type,
             mode: column.mode,
+            collation: column.collation,
+            tableDescription: column.tableDescription,
             description: column.description
           }))
         }))
@@ -472,7 +479,7 @@ const BigQueryComponent = ({
           role="treeitem"
           title={
             node.data.children && node.data.children.length > 0
-              ? node.data.children[0]?.description
+              ? node.data.children[0]?.tableDescription
               : ''
           }
           onClick={handleTextClick}

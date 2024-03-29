@@ -410,8 +410,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     const createBigQueryNotebookComponentCommand =
       'create-bigquery-notebook-component';
     commands.addCommand(createBigQueryNotebookComponentCommand, {
-      caption: 'Bigframe On BiqQuery',
-      label: 'Bigframe On BiqQuery',
+      caption: 'BigQuery DataFrames',
+      label: 'BigQuery DataFrames',
       icon: iconPythonLogo,
       execute: async () => {
         await openBigQueryNotebook();

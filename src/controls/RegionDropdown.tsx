@@ -71,7 +71,7 @@ export function RegionDropdown(props: Props) {
       renderInput={params => (
         <TextField
           {...params}
-          label={fromSection === 'bigQuery' ? 'BigQuery Region' : 'Region'}
+          label={fromSection === 'bigQuery' ? 'BigQuery Region*' : 'Region*'}
         />
       )}
     />

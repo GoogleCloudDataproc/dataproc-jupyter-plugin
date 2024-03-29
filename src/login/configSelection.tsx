@@ -236,7 +236,7 @@ function ConfigSelection({
                   value={projectId}
                   onChange={(_, projectId) => setProjectId(projectId ?? '')}
                   fetchFunc={projectListAPI}
-                  label="Project ID"
+                  label="Project ID*"
                   // Always show the clear indicator and hide the dropdown arrow
                   // make it very clear that this is an autocomplete.
                   sx={{
@@ -255,17 +255,6 @@ function ConfigSelection({
                   onRegionChange={region => setRegion(region)}
                 />
               </div>
-              <div className="save-overlay">
-                <Button
-                  variant="contained"
-                  disabled={
-                    isSaving || projectId.length === 0 || region.length === 0
-                  }
-                  onClick={handleSave}
-                >
-                  {isSaving ? 'Saving' : 'Save'}
-                </Button>
-              </div>
               <div className="bigquery-region-header">BigQuery Settings </div>
               <div className="region-overlay">
                 <RegionDropdown
@@ -277,6 +266,17 @@ function ConfigSelection({
                   fromSection="bigQuery"
                 />
               </div>
+              <div className="save-overlay">
+                <Button
+                  variant="contained"
+                  disabled={
+                    isSaving || projectId.length === 0 || region.length === 0
+                  }
+                  onClick={handleSave}
+                >
+                  {isSaving ? 'Saving' : 'Save'}
+                </Button>
+              </div>       
             </div>
             <div className="user-info-card">
               <div className="user-overlay">

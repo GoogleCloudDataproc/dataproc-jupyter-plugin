@@ -21,6 +21,7 @@ import { DataprocWidget } from '../controls/DataprocWidget';
 import SchemaInfo from './schemaInfo';
 import PreviewDataInfo from './previewDataInfo';
 import BigQueryTableInfo from './bigQueryTableInfo';
+import BigQuerySchemaInfo from './bigQuerySchema';
 
 interface IColumn {
   name: string;
@@ -123,7 +124,11 @@ const TableInfo = ({
         {selectedMode === 'Schema' && (
           <>
             <div className="db-title">Schema</div>
-            <SchemaInfo column={column} />
+            {dataprocMetastoreServices === 'bigframes' ? (
+              <BigQuerySchemaInfo column={column} />
+            ) : (
+              <SchemaInfo column={column} />
+            )}
           </>
         )}
         {selectedMode === 'Preview' && (
