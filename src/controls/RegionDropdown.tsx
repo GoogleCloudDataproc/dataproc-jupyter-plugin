@@ -64,7 +64,9 @@ export function RegionDropdown(props: Props) {
       'azure-eastus2'
     ];
 
-    bqRegionsList = multiRegionList.concat(omniRegionList).concat(bqRegionsList);
+    bqRegionsList = multiRegionList
+      .concat(omniRegionList)
+      .concat(bqRegionsList);
     regionStrList = bqRegionsList;
 
     bigQueryRegionOptions = regionStrList.map((option: string) => {
@@ -88,13 +90,15 @@ export function RegionDropdown(props: Props) {
   };
 
   const handleRegionChange = (value: any) => {
-    onRegionChange(value.title);
-    handleBigQueryRegionSettings(value.title);
+    if (value.title) {
+      onRegionChange(value.title);
+      handleBigQueryRegionSettings(value.title);
+    }
   };
 
   return fromSection === 'bigQuery' ? (
     <Autocomplete
-      value={{title: region}}
+      value={{ title: region }}
       options={bigQueryRegionOptions}
       groupBy={(option: any) => option.categoryType}
       getOptionLabel={(option: any) => {
