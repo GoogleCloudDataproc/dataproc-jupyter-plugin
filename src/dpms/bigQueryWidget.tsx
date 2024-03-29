@@ -40,6 +40,7 @@ import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { DpmsService } from './dpmsService';
 import { authApi } from '../utils/utils';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -68,9 +69,11 @@ const calculateDepth = (node: NodeApi): number => {
 };
 const BigQueryComponent = ({
   app,
+  settingRegistry,
   themeManager
 }: {
   app: JupyterLab;
+  settingRegistry: ISettingRegistry;
   themeManager: IThemeManager;
 }): JSX.Element => {
   const iconSearchClear = new LabIcon({
@@ -522,6 +525,7 @@ const BigQueryComponent = ({
     }
     await DpmsService.getBigQueryDatasetsAPIService(
       notebookValue,
+      settingRegistry,
       setDatabaseDetails,
       setDatabaseNames,
       setTotalDatabases,
@@ -600,7 +604,7 @@ const BigQueryComponent = ({
                     data-testid="loader"
                   />
                 </div>
-                Loading databases
+                Loading datasets
               </div>
             ) : (
               <>
@@ -637,7 +641,10 @@ const BigQueryComponent = ({
                   />
                 </div>
                 <div className="tree-container">
-                  {data[0].children.length === totalDatabases ? (
+                  {data[0].children.length === totalDatabases &&
+                  data[0].children[
+                    totalDatabases - emptyDatabaseNames.length - 1
+                  ].children.length === totalTables ? (
                     <Tree
                       className="dataset-tree"
                       initialData={data}

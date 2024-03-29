@@ -19,6 +19,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { requestAPI } from '../handler/handler';
 import { toast } from 'react-toastify';
 import { toastifyCustomStyle } from '../utils/utils';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 interface IColumn {
   name: string;
@@ -87,6 +88,7 @@ export class DpmsService {
 
   static getBigQueryDatasetsAPIService = async (
     notebookValue: string,
+    settingRegistry: ISettingRegistry,
     setDatabaseDetails: any,
     setDatabaseNames: (value: string[]) => void,
     setTotalDatabases: (value: number) => void,
@@ -113,6 +115,7 @@ export class DpmsService {
         if (data.nextPageToken) {
           this.getBigQueryDatasetsAPIService(
             notebookValue,
+            settingRegistry,
             setDatabaseDetails,
             setDatabaseNames,
             setTotalDatabases,
@@ -123,22 +126,38 @@ export class DpmsService {
             allDatasetList
           );
         } else {
-          const databaseNames: string[] = [];
-          const updatedDatabaseDetails: { [key: string]: string } = {};
-          allDatasetList.forEach(
-            (data: {
-              datasetReference: { description: string; datasetId: string };
-            }) => {
-              databaseNames.push(data.datasetReference.datasetId);
-              const description = data.datasetReference.description || 'None';
-              updatedDatabaseDetails[data.datasetReference.datasetId] =
-                description;
-            }
+          const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
+          const settings = await settingRegistry.load(PLUGIN_ID);
+
+          let filterDatasetByLocation = allDatasetList;
+          filterDatasetByLocation = filterDatasetByLocation.filter(
+            (dataset: any) =>
+              dataset.location === settings.get('bqRegion')['composite']
           );
-          setDatabaseDetails(updatedDatabaseDetails);
-          setDatabaseNames(databaseNames);
-          setTotalDatabases(databaseNames.length);
-          setSchemaError(false);
+
+          if (filterDatasetByLocation.length > 0) {
+            const databaseNames: string[] = [];
+            const updatedDatabaseDetails: { [key: string]: string } = {};
+            filterDatasetByLocation.forEach(
+              (data: {
+                datasetReference: { description: string; datasetId: string };
+              }) => {
+                databaseNames.push(data.datasetReference.datasetId);
+                const description = data.datasetReference.description || 'None';
+                updatedDatabaseDetails[data.datasetReference.datasetId] =
+                  description;
+              }
+            );
+            setDatabaseDetails(updatedDatabaseDetails);
+            setDatabaseNames(databaseNames);
+            setTotalDatabases(databaseNames.length);
+            setSchemaError(false);
+          } else {
+            toast.error(
+              `No Dataset available in this region`,
+              toastifyCustomStyle
+            );
+          }
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
@@ -220,7 +239,10 @@ export class DpmsService {
             setTotalTables(tableNames.length);
           }
         } else {
-          setEmptyDatabaseNames((prevResponse: string[]) => [...prevResponse, datasetId]);
+          setEmptyDatabaseNames((prevResponse: string[]) => [
+            ...prevResponse,
+            datasetId
+          ]);
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);

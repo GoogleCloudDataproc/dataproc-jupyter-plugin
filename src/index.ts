@@ -184,7 +184,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         // Preview was enabled, (re)create DPMS and GCS.
         panelDpms = new Panel();
         panelDpms.id = 'dpms-tab';
-        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, settingRegistry as ISettingRegistry, themeManager));
         panelGcs = new Panel();
         panelGcs.id = 'GCS-bucket-tab';
         gcsDrive = new GCSDrive();
@@ -216,7 +216,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           widget.dispose();
         }
       });
-      const newWidget = new dpmsWidget(app as JupyterLab, themeManager);
+      const newWidget = new dpmsWidget(app as JupyterLab, settingRegistry as ISettingRegistry, themeManager);
       panelDpms.addWidget(newWidget);
     };
 
