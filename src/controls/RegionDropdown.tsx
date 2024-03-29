@@ -20,6 +20,7 @@ import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import { useRegion } from '../utils/regionService';
 import { Paper, PaperProps } from '@mui/material';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 type Props = {
   /** The currently selected project ID */
@@ -29,13 +30,15 @@ type Props = {
   /** Callback function for when the project ID is changed by the dropdown */
   onRegionChange: (projectId: string) => void;
   fromSection?: string;
+  settingRegistry: ISettingRegistry;
 };
 
 /**
  * Component to render a region selector dropdown.
  */
 export function RegionDropdown(props: Props) {
-  const { projectId, region, onRegionChange, fromSection } = props;
+  const { projectId, region, onRegionChange, fromSection, settingRegistry } =
+    props;
   const regions = useRegion(projectId);
 
   let regionStrList = useMemo(
@@ -43,37 +46,73 @@ export function RegionDropdown(props: Props) {
     [regions]
   );
 
+  let bigQueryRegionOptions: any = [];
+
   if (regionStrList.length > 0 && fromSection === 'bigQuery') {
     let exceptRegions = ['us-central2', 'us-east7', 'us-west8'];
     let bqRegionsList: string[] = [];
     bqRegionsList = regionStrList.filter(
       element => !exceptRegions.includes(element)
     );
-    bqRegionsList = bqRegionsList.concat(['US', 'EU']);
+
+    let multiRegionList = ['US', 'EU'];
+    let omniRegionList = [
+      'aws-us-east-1',
+      'aws-us-west-2',
+      'aws-ap-northeast-2',
+      'aws-eu-west-1',
+      'azure-eastus2'
+    ];
+
+    bqRegionsList = multiRegionList.concat(omniRegionList).concat(bqRegionsList);
     regionStrList = bqRegionsList;
+
+    bigQueryRegionOptions = regionStrList.map((option: string) => {
+      const categoryType = 'Regions';
+      let object = { title: option };
+      return {
+        categoryType: multiRegionList.includes(option)
+          ? 'Multi Regions'
+          : omniRegionList.includes(option)
+          ? 'Omni Locations'
+          : categoryType,
+        ...object
+      };
+    });
   }
 
-  const handleRegionChange = (value: string) => {
-    onRegionChange(value);
-    if (fromSection === 'bigQuery') {
-      localStorage.setItem('bigQueryRegion', value);
-    }
+  const handleBigQueryRegionSettings = async (value: string) => {
+    const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
+    const settings = await settingRegistry.load(PLUGIN_ID);
+    settings.set('bqRegion', value);
   };
 
-  console.log(regionStrList);
+  const handleRegionChange = (value: any) => {
+    onRegionChange(value.title);
+    handleBigQueryRegionSettings(value.title);
+  };
 
-  return (
+  return fromSection === 'bigQuery' ? (
     <Autocomplete
-      value={region}
-      options={regionStrList}
+      value={{title: region}}
+      options={bigQueryRegionOptions}
+      groupBy={(option: any) => option.categoryType}
+      getOptionLabel={(option: any) => {
+        return option.title ? option.title : option;
+      }}
       onChange={(_, value) => handleRegionChange(value ?? '')}
       PaperComponent={(props: PaperProps) => <Paper elevation={8} {...props} />}
       renderInput={params => (
-        <TextField
-          {...params}
-          label={fromSection === 'bigQuery' ? 'BigQuery Region*' : 'Region*'}
-        />
+        <TextField {...params} label={'BigQuery Region*'} />
       )}
+    />
+  ) : (
+    <Autocomplete
+      value={region}
+      options={regionStrList}
+      onChange={(_, value) => onRegionChange(value ?? '')}
+      PaperComponent={(props: PaperProps) => <Paper elevation={8} {...props} />}
+      renderInput={params => <TextField {...params} label={'Region*'} />}
     />
   );
 }

@@ -48,6 +48,8 @@ import { JupyterLab } from '@jupyterlab/application';
 import { ILauncher } from '@jupyterlab/launcher';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
   svgstr: expandLessIcon
@@ -61,13 +63,15 @@ interface IConfigSelectionProps {
   setConfigError: (error: boolean) => void;
   app: JupyterLab;
   launcher: ILauncher;
+  settingRegistry: ISettingRegistry;
 }
 
 function ConfigSelection({
   configError,
   setConfigError,
   app,
-  launcher
+  launcher,
+  settingRegistry
 }: IConfigSelectionProps) {
   const Iconsettings = new LabIcon({
     name: 'launcher:settings_icon',
@@ -179,7 +183,15 @@ function ConfigSelection({
     setExpandRuntimeTemplate(runTimeMode);
   };
 
+  const handleSettingsRegistry = async () => {
+    const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
+    const settings = await settingRegistry.load(PLUGIN_ID);
+    setBigQueryRegion(settings.get("bqRegion")["composite"])
+  }
+
   useEffect(() => {
+    handleSettingsRegistry();
+
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);
@@ -187,11 +199,6 @@ function ConfigSelection({
       if (credentials && credentials.project_id && credentials.region_id) {
         setProjectId(credentials.project_id);
         setRegion(credentials.region_id);
-        if(localStorage.getItem('bigQueryRegion')){
-          setBigQueryRegion(localStorage.getItem('bigQueryRegion'))
-        } else {
-          setBigQueryRegion(credentials.region_id);
-        }
         setConfigError(false);
       } else {
         setConfigError(true);
@@ -253,6 +260,7 @@ function ConfigSelection({
                   projectId={projectId}
                   region={region}
                   onRegionChange={region => setRegion(region)}
+                  settingRegistry={settingRegistry}
                 />
               </div>
               <div className="bigquery-region-header">BigQuery Settings </div>
@@ -264,6 +272,7 @@ function ConfigSelection({
                     setBigQueryRegion(bigQueryRegion)
                   }
                   fromSection="bigQuery"
+                  settingRegistry={settingRegistry}
                 />
               </div>
               <div className="save-overlay">

@@ -373,13 +373,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        if (localStorage.getItem('bigQueryRegion')) {
-          notebookContent.cells[2].source[2] = `REGION = '${localStorage.getItem(
-            'bigQueryRegion'
-          )}'\n`;
-        } else {
-          notebookContent.cells[2].source[2] = `REGION = '${credentials.region_id}'\n`;
-        }
+        notebookContent.cells[2].source[2] = `REGION = '${
+          settings.get('bqRegion')['composite']
+        }'\n`;
       }
 
       // Save the file to the workspace
@@ -511,6 +507,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new AuthLogin(
           app as JupyterLab,
           launcher as ILauncher,
+          settingRegistry as ISettingRegistry,
           themeManager
         );
         const widget = new MainAreaWidget<AuthLogin>({ content });
