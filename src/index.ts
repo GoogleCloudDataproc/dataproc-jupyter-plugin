@@ -143,10 +143,18 @@ const extension: JupyterFrontEndPlugin<void> = {
     let previewEnabled = settings.get('previewEnabled').composite as boolean;
     let panelDpms: Panel | undefined, panelGcs: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
+    // settings.changed.connect(() => {
+    //   onPreviewEnabledChanged();
+    // });
+    const currentPreviewEnabled = settings.get('previewEnabled')
+      .composite as boolean;
     settings.changed.connect(() => {
-      onPreviewEnabledChanged();
+      const previousPreviewEnabled = settings.get('previewEnabled')
+        .composite as boolean;
+      if (currentPreviewEnabled !== previousPreviewEnabled) {
+        onPreviewEnabledChanged();
+      }
     });
-
     /**
      * Handler for when the Jupyter Lab theme changes.
      */
@@ -184,7 +192,13 @@ const extension: JupyterFrontEndPlugin<void> = {
         // Preview was enabled, (re)create DPMS and GCS.
         panelDpms = new Panel();
         panelDpms.id = 'dpms-tab';
-        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, settingRegistry as ISettingRegistry, themeManager));
+        panelDpms.addWidget(
+          new dpmsWidget(
+            app as JupyterLab,
+            settingRegistry as ISettingRegistry,
+            themeManager
+          )
+        );
         panelGcs = new Panel();
         panelGcs.id = 'GCS-bucket-tab';
         gcsDrive = new GCSDrive();
@@ -216,7 +230,11 @@ const extension: JupyterFrontEndPlugin<void> = {
           widget.dispose();
         }
       });
-      const newWidget = new dpmsWidget(app as JupyterLab, settingRegistry as ISettingRegistry, themeManager);
+      const newWidget = new dpmsWidget(
+        app as JupyterLab,
+        settingRegistry as ISettingRegistry,
+        themeManager
+      );
       panelDpms.addWidget(newWidget);
     };
 
