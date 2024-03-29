@@ -111,6 +111,7 @@ const BigQueryComponent = ({
   const [emptyDatabaseNames, setEmptyDatabaseNames] = useState<any>([]);
   const [schemaError, setSchemaError] = useState(false);
   const [totalDatabases, setTotalDatabases] = useState<number>(0);
+  const [totalTables, setTotalTables] = useState<number>(0);
   const [columnResponse, setColumnResponse] = useState<IColumn[]>([]);
   const [databaseDetails, setDatabaseDetails] = useState<
     Record<string, string>
@@ -122,7 +123,6 @@ const BigQueryComponent = ({
     Record<string, string>
   >({});
 
-
   const getBigQueryColumnDetails = async (tableId: string) => {
     await DpmsService.getBigQueryColumnDetailsAPIService(
       datasetTableMappingDetails[tableId],
@@ -133,6 +133,10 @@ const BigQueryComponent = ({
   };
 
   interface IColumn {
+    dataPolicies: any;
+    policyTags: any;
+    defaultValue: any;
+    key: any;
     collation: string;
     tableDescription: string;
     name: string;
@@ -173,7 +177,11 @@ const BigQueryComponent = ({
         type: string;
         mode: string;
         description: string;
+        key: string;
         collation: string;
+        defaultValue: string;
+        policyTags: string;
+        dataPolicies: string;
       }) => ({
         name: `${column.name}`,
         schema: res.schema.fields, // Include the schema object
@@ -182,9 +190,13 @@ const BigQueryComponent = ({
         // column: res.column, //no response
         type: column.type,
         mode: column.mode,
+        key: column.key,
         collation: column.collation,
+        defaultValue: column.defaultValue,
+        policyTags: column.policyTags,
+        dataPolicies: column.dataPolicies,
         tableDescription: res.description,
-        description: column.description,
+        description: column.description
       })
     );
 
@@ -215,7 +227,11 @@ const BigQueryComponent = ({
             name: column.name,
             type: column.type,
             mode: column.mode,
+            key: column.key,
             collation: column.collation,
+            defaultValue: column.defaultValue,
+            policyTags: column.policyTags,
+            dataPolicies: column.dataPolicies,
             tableDescription: column.tableDescription,
             description: column.description
           }))
@@ -224,14 +240,22 @@ const BigQueryComponent = ({
     }
   ];
 
-  if (emptyDatabaseNames.length > 0) {
-    emptyDatabaseNames.forEach((databaseName: string) => {
-      data[0].children.push({
-        id: uuidv4(),
-        name: databaseName,
-        children: []
+  if (
+    data[0].children.length > 0 &&
+    data[0].children.length + emptyDatabaseNames.length === totalDatabases
+  ) {
+    if (
+      data[0].children[totalDatabases - emptyDatabaseNames.length - 1].children
+        .length === totalTables
+    ) {
+      emptyDatabaseNames.forEach((databaseName: string) => {
+        data[0].children.push({
+          id: uuidv4(),
+          name: databaseName,
+          children: []
+        });
       });
-    });
+    }
   }
 
   data.sort((a, b) => a.name.localeCompare(b.name));
@@ -515,6 +539,7 @@ const BigQueryComponent = ({
       setDatabaseNames,
       setEmptyDatabaseNames,
       setTotalDatabases,
+      setTotalTables,
       setSchemaError,
       setEntries,
       setTableDescription,

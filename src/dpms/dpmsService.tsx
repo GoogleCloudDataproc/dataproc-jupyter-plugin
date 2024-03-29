@@ -154,6 +154,7 @@ export class DpmsService {
     setDatabaseNames: (value: string[]) => void,
     setEmptyDatabaseNames: any,
     setTotalDatabases: (value: number) => void,
+    setTotalTables: (value: number) => void,
     setSchemaError: (value: boolean) => void,
     setEntries: (value: string[]) => void,
     setTableDescription: any,
@@ -184,6 +185,7 @@ export class DpmsService {
               setDatabaseNames,
               setEmptyDatabaseNames,
               setTotalDatabases,
+              setTotalTables,
               setSchemaError,
               setEntries,
               setTableDescription,
@@ -215,6 +217,7 @@ export class DpmsService {
             setEntries(entryNames);
             setTableDescription(updatedTableDetails);
             setDatasetTableMappingDetails(datasetTableMapping);
+            setTotalTables(tableNames.length);
           }
         } else {
           setEmptyDatabaseNames((prevResponse: string[]) => [...prevResponse, datasetId]);

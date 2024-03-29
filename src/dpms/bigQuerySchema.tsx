@@ -19,10 +19,14 @@ import React from 'react';
 import { useTable } from 'react-table';
 
 interface IColumn {
-  collation: string;
   name: string;
   type: string;
   mode: string;
+  key: string;
+  collation: string;
+  defaultValue: string;
+  policyTags: string;
+  dataPolicies: string;
   description: string;
 }
 
@@ -42,8 +46,24 @@ const BigQuerySchemaInfo = ({ column }: any) => {
         accessor: 'mode'
       },
       {
+        Header: 'Key',
+        accessor: 'key'
+      },
+      {
         Header: 'Collation',
         accessor: 'collation'
+      },
+      {
+        Header: 'Default Value',
+        accessor: 'defaultValue'
+      },
+      {
+        Header: 'Policy Tags',
+        accessor: 'policyTags '
+      },
+      {
+        Header: 'Data Policies',
+        accessor: 'dataPolicies'
       },
       {
         Header: 'Description',
@@ -58,7 +78,11 @@ const BigQuerySchemaInfo = ({ column }: any) => {
       name: column.name,
       type: column.type || '',
       mode: column.mode || '',
+      key: column.key || '',
       collation: column.collation || '',
+      defaultValue: column.defaultValue || '',
+      policyTags: column.policyTags || '',
+      dataPolicies: column.dataPolicies || '',
       description: column.description
     }));
   }, [column]);
@@ -70,7 +94,7 @@ const BigQuerySchemaInfo = ({ column }: any) => {
   return (
     <div className="dpms-Wrapper">
       <div className="table-container">
-        <table className="schema-table" {...getTableProps()}>
+        <table className="big-query-schema-table" {...getTableProps()}>
           <thead>
             {headerGroups.map(headerGroup => (
               <tr {...headerGroup.getHeaderGroupProps()}>

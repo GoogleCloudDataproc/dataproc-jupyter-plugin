@@ -193,7 +193,7 @@ body[data-jp-theme-name='JupyterLab Dark'] .color-icon path {
 body[data-jp-theme-name='JupyterLab Dark'] .filter-section-part {
   color: var(--jp-ui-font-color0);
 }
-body[data-jp-theme-name='JupyterLab Dark'] .schema-table th {
+body[data-jp-theme-name='JupyterLab Dark'] .schema-table th, body[data-jp-theme-name='JupyterLab Dark'] .big-query-schema-table th {
   background-color: var(--jp-layout-color2);
 }
 body[data-jp-theme-name='JupyterLab Dark'] .accordion-row-parent-header{
