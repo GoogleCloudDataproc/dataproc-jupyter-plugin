@@ -211,6 +211,11 @@ class ExecutorService:
                 .get("peripheralsConfig", {})
                 .get("metastoreService", {})
             )
+            version = (
+                job_dict.get("serverless_name", {})
+                .get("runtimeConfig", {})
+                .get("version", "")
+            )
             if not job.input_filename.startswith(GCS):
                 input_notebook = f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
             else:
@@ -231,6 +236,7 @@ class ExecutorService:
                 time_zone=time_zone,
                 custom_container=custom_container,
                 metastore_service=metastore_service,
+                version = version
             )
 
         print(content)
