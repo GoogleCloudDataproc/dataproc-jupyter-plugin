@@ -110,6 +110,7 @@ const BigQueryComponent = ({
   const [isLoading, setIsLoading] = useState(true);
   const [noDpmsInstance, setNoDpmsInstance] = useState(false);
   const [entries, setEntries] = useState<string[]>([]);
+  const [allTableEntries, setAllTableEntries] = useState<string[]>([]);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [emptyDatabaseNames, setEmptyDatabaseNames] = useState<any>([]);
   const [schemaError, setSchemaError] = useState(false);
@@ -266,6 +267,13 @@ const BigQueryComponent = ({
   data.forEach(db => {
     db.children.sort((a, b) => a.name.localeCompare(b.name));
   });
+
+  let totalTablesCount = 0;
+  if (data[0].children.length > 0) {
+    data[0].children.forEach((dataset: any) => {
+      totalTablesCount = dataset.children.length + totalTablesCount;
+    });
+  }
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -545,6 +553,7 @@ const BigQueryComponent = ({
       setTotalDatabases,
       setTotalTables,
       setSchemaError,
+      setAllTableEntries,
       setEntries,
       setTableDescription,
       setDatasetTableMappingDetails
@@ -641,8 +650,8 @@ const BigQueryComponent = ({
                   />
                 </div>
                 <div className="tree-container">
-                  {data[0].children.length === totalDatabases 
-                  ? (
+                  {data[0].children.length === totalDatabases &&
+                  allTableEntries.flat().length === totalTablesCount ? (
                     <Tree
                       className="dataset-tree"
                       initialData={data}
