@@ -18,7 +18,7 @@ from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataplex_url
 
 
 class BigQueryDatasetListService:
-    def list_datasets(self, credentials, log):
+    def list_datasets(self, credentials, page_token, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -29,7 +29,7 @@ class BigQueryDatasetListService:
                 project_id = credentials["project_id"]
                 region_id = credentials["region_id"]
                 print(dataplex_url)
-                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets"
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",
@@ -50,7 +50,7 @@ class BigQueryDatasetListService:
 
 
 class BigQueryTableListService:
-    def list_table(self, credentials, dataset_id,log):
+    def list_table(self, credentials, dataset_id,page_token,log):
         try:
             if (
                 ("access_token" in credentials)
@@ -59,7 +59,7 @@ class BigQueryTableListService:
             ):
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
-                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables"
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",
@@ -139,7 +139,7 @@ class BigQueryTableInfoService:
 
 
 class BigQueryPreviewService:
-    def bigquery_preview_data(self, credentials,dataset_id,table_id,log):
+    def bigquery_preview_data(self, credentials,dataset_id,table_id,page_token,log):
         try:
             if (
                 ("access_token" in credentials)
@@ -148,7 +148,7 @@ class BigQueryPreviewService:
             ):
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
-                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data"
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?pageToken={page_token}"
                 headers = {
                     "Content-Type": CONTENT_TYPE,
                     "Authorization": f"Bearer {access_token}",
