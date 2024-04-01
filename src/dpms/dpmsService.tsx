@@ -55,8 +55,6 @@ export class DpmsService {
         `bigQueryPreview?dataset_id=${dataSetId}&table_id=${tableId}&pageToken=${pageToken}`
       );
 
-      console.log(data);
-
       if (data.error) {
         toast.error(data.error, toastifyCustomStyle);
         setIsLoading(false);
