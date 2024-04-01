@@ -26,6 +26,12 @@
       "title": "Enable Preview Features",
       "description": "Whether or not preview features such as the DPMS explorer and GCS browser are enabled.",
       "default": true
+    },
+    "bqRegion": {
+      "type": "string",
+      "title": "Set the BQ Region",
+      "description": "This value will be used to configure the BQ region for the plugin",
+      "default": "US"
     }
   },
   "additionalProperties": false

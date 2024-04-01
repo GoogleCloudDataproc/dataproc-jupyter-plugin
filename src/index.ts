@@ -41,7 +41,7 @@ import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
-import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
+import { PLUGIN_ID, TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import {
   IFileBrowserFactory,
@@ -68,8 +68,6 @@ const iconPythonLogo = new LabIcon({
   name: 'launcher:python-bigquery-logo-icon',
   svgstr: pythonLogo
 });
-
-const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_ID,
@@ -146,7 +144,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     settings.changed.connect(() => {
       onPreviewEnabledChanged();
     });
-
     /**
      * Handler for when the Jupyter Lab theme changes.
      */
@@ -182,9 +179,16 @@ const extension: JupyterFrontEndPlugin<void> = {
         gcsDrive = undefined;
       } else {
         // Preview was enabled, (re)create DPMS and GCS.
+        if(!panelDpms && !panelGcs){
         panelDpms = new Panel();
         panelDpms.id = 'dpms-tab';
-        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+        panelDpms.addWidget(
+          new dpmsWidget(
+            app as JupyterLab,
+            settingRegistry as ISettingRegistry,
+            themeManager
+          )
+        );
         panelGcs = new Panel();
         panelGcs.id = 'GCS-bucket-tab';
         gcsDrive = new GCSDrive();
@@ -196,6 +200,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         onThemeChanged();
         app.shell.add(panelGcs, 'left', { rank: 1001 });
         app.shell.add(panelDpms, 'left', { rank: 1000 });
+      }
       }
     };
 
@@ -216,7 +221,11 @@ const extension: JupyterFrontEndPlugin<void> = {
           widget.dispose();
         }
       });
-      const newWidget = new dpmsWidget(app as JupyterLab, themeManager);
+      const newWidget = new dpmsWidget(
+        app as JupyterLab,
+        settingRegistry as ISettingRegistry,
+        themeManager
+      );
       panelDpms.addWidget(newWidget);
     };
 
@@ -276,6 +285,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         document.title = title.label;
       }
     };
+
     labShell.currentChanged.connect(async (_, change) => {
       await KernelAPI.listRunning();
       const { oldValue, newValue } = change;
@@ -290,10 +300,15 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
       if (newValue) {
         // Check if the new value is an instance of NotebookPanel
-
         if (newValue instanceof NotebookPanel) {
-          newValue.title.changed.connect(onTitleChanged);
-          newValue.toolbar.update();
+          if (newValue.title.label.includes('bigframes')) {
+            localStorage.setItem('notebookValue', 'bigframes');
+            localStorage.setItem('oldNotebookValue', 'bigframes');
+            loadDpmsWidget('');
+          } else {
+            newValue.title.changed.connect(onTitleChanged);
+            newValue.toolbar.update();
+          }
         } else if (
           (newValue.title.label === 'Launcher' ||
             newValue.title.label === 'Config Setup' ||
@@ -325,7 +340,9 @@ const extension: JupyterFrontEndPlugin<void> = {
             let oldNotebook = localStorage.getItem('oldNotebookValue');
             localStorage.setItem('notebookValue', oldNotebook || '');
             lastClusterName = localStorage.getItem('notebookValue') || '';
-            loadDpmsWidget(oldNotebook || '');
+            if (!oldNotebook?.includes('bigframes')) {
+              loadDpmsWidget(oldNotebook || '');
+            }
           }
         }
       }
@@ -365,7 +382,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] = `REGION = '${credentials.region_id}'\n`;
+        notebookContent.cells[2].source[2] = `REGION = '${
+          settings.get('bqRegion')['composite']
+        }'\n`;
       }
 
       // Save the file to the workspace
@@ -396,8 +415,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     const createBigQueryNotebookComponentCommand =
       'create-bigquery-notebook-component';
     commands.addCommand(createBigQueryNotebookComponentCommand, {
-      caption: 'Bigframe On BiqQuery',
-      label: 'Bigframe On BiqQuery',
+      caption: 'BigQuery DataFrames',
+      label: 'BigQuery DataFrames',
       icon: iconPythonLogo,
       execute: async () => {
         await openBigQueryNotebook();
@@ -492,11 +511,12 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
-      label: 'Cloud Dataproc Settings',
+      label: 'Google BigQuery Settings',
       execute: () => {
         const content = new AuthLogin(
           app as JupyterLab,
           launcher as ILauncher,
+          settingRegistry as ISettingRegistry,
           themeManager
         );
         const widget = new MainAreaWidget<AuthLogin>({ content });

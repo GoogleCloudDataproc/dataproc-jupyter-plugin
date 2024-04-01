@@ -27,6 +27,7 @@ import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { JupyterLab } from '@jupyterlab/application';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 // Create the LabIcon instance outside of the component
 const IconsigninGoogle = new LabIcon({
@@ -37,10 +38,12 @@ const IconsigninGoogle = new LabIcon({
 const AuthLoginComponent = ({
   app,
   launcher,
+  settingRegistry,
   themeManager
 }: {
   app: JupyterLab;
   launcher: ILauncher;
+  settingRegistry: ISettingRegistry,
   themeManager: IThemeManager;
 }): React.JSX.Element => {
   const [loginState, setLoginState] = useState(false);
@@ -94,6 +97,7 @@ const AuthLoginComponent = ({
           setConfigError={setConfigError}
           app={app}
           launcher={launcher}
+          settingRegistry={settingRegistry}
         />
       )}
       {loginError && (
@@ -129,14 +133,17 @@ const AuthLoginComponent = ({
 export class AuthLogin extends DataprocWidget {
   app: JupyterLab;
   launcher: ILauncher;
+  settingRegistry: ISettingRegistry;
 
   constructor(
     app: JupyterLab,
     launcher: ILauncher,
+    settingRegistry: ISettingRegistry,
     themeManager: IThemeManager
   ) {
     super(themeManager);
     this.app = app;
+    this.settingRegistry = settingRegistry,
     this.launcher = launcher;
   }
 
@@ -145,6 +152,7 @@ export class AuthLogin extends DataprocWidget {
       <AuthLoginComponent
         app={this.app}
         launcher={this.launcher}
+        settingRegistry={this.settingRegistry}
         themeManager={this.themeManager}
       />
     );
