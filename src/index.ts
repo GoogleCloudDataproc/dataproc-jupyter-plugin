@@ -143,17 +143,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     let previewEnabled = settings.get('previewEnabled').composite as boolean;
     let panelDpms: Panel | undefined, panelGcs: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
-    // settings.changed.connect(() => {
-    //   onPreviewEnabledChanged();
-    // });
-    const currentPreviewEnabled = settings.get('previewEnabled')
-      .composite as boolean;
     settings.changed.connect(() => {
-      const previousPreviewEnabled = settings.get('previewEnabled')
-        .composite as boolean;
-      if (currentPreviewEnabled !== previousPreviewEnabled) {
-        onPreviewEnabledChanged();
-      }
+      onPreviewEnabledChanged();
     });
     /**
      * Handler for when the Jupyter Lab theme changes.
@@ -190,6 +181,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         gcsDrive = undefined;
       } else {
         // Preview was enabled, (re)create DPMS and GCS.
+        if(!panelDpms && !panelGcs){
         panelDpms = new Panel();
         panelDpms.id = 'dpms-tab';
         panelDpms.addWidget(
@@ -210,6 +202,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         onThemeChanged();
         app.shell.add(panelGcs, 'left', { rank: 1001 });
         app.shell.add(panelDpms, 'left', { rank: 1000 });
+      }
       }
     };
 
