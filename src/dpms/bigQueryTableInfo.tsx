@@ -16,7 +16,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { DpmsService } from './dpmsService';
+import { BigQueryService } from './bigQueryService';
 import { ClipLoader } from 'react-spinners';
 
 const BigQueryTableInfo = ({
@@ -30,12 +30,12 @@ const BigQueryTableInfo = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    DpmsService.getBigQueryDatasetInfoAPIService(database, setTableInfo);
+    BigQueryService.getBigQueryDatasetInfoAPIService(database, setTableInfo);
   }, []);
 
   useEffect(() => {
     if (tableInfo['Case insensitive'] !== undefined && isLoading === true) {
-      DpmsService.getBigQueryTableInfoAPIService(
+      BigQueryService.getBigQueryTableInfoAPIService(
         title,
         database,
         setTableInfo,

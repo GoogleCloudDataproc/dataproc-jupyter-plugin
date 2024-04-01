@@ -187,3 +187,4 @@ export const NOTEBOOK_TEMPLATES_LIST_URL =
   'https://api.github.com/repos/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/contents/.ci/index.json';
 export type scheduleMode = 'runNow' | 'runSchedule';
 export const scheduleValueExpression = '30 17 * * 1-5'; //Expression for schedule Value in Scheduler Jobs
+export const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';

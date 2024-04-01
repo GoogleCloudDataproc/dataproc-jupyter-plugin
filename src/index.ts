@@ -41,7 +41,7 @@ import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
-import { TITLE_LAUNCHER_CATEGORY } from './utils/const';
+import { PLUGIN_ID, TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import {
   IFileBrowserFactory,
@@ -68,8 +68,6 @@ const iconPythonLogo = new LabIcon({
   name: 'launcher:python-bigquery-logo-icon',
   svgstr: pythonLogo
 });
-
-const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_ID,

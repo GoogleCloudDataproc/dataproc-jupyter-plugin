@@ -20,7 +20,7 @@ import { ClipLoader } from 'react-spinners';
 import { useGlobalFilter, usePagination, useTable } from 'react-table';
 import { PaginationView } from '../utils/paginationView';
 import TableData from '../utils/tableData';
-import { DpmsService } from './dpmsService';
+import { BigQueryService } from './bigQueryService';
 import { ICellProps } from '../utils/utils';
 
 const PreviewDataInfo = ({ column, tableId, dataSetId }: any) => {
@@ -39,7 +39,7 @@ const PreviewDataInfo = ({ column, tableId, dataSetId }: any) => {
   );
 
   const bigQueryPreviewAPI = async () => {
-    await DpmsService.bigQueryPreviewAPIService(
+    await BigQueryService.bigQueryPreviewAPIService(
       columns,
       tableId,
       dataSetId,

@@ -21,6 +21,7 @@ import settingsIcon from '../../style/icons/settings_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
+  PLUGIN_ID,
   USER_INFO_URL,
   VERSION_DETAIL
 } from '../utils/const';
@@ -107,6 +108,8 @@ function ConfigSelection({
           if (configStatus.includes('Failed')) {
             toast.error(configStatus, toastifyCustomStyle);
           } else {
+            const settings = await settingRegistry.load(PLUGIN_ID);
+            settings.set('bqRegion', bigQueryRegion);
             toast.success(
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
               toastifyCustomStyle
@@ -184,10 +187,9 @@ function ConfigSelection({
   };
 
   const handleSettingsRegistry = async () => {
-    const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
     const settings = await settingRegistry.load(PLUGIN_ID);
-    setBigQueryRegion(settings.get("bqRegion")["composite"])
-  }
+    setBigQueryRegion(settings.get('bqRegion')['composite']);
+  };
 
   useEffect(() => {
     handleSettingsRegistry();
@@ -260,7 +262,6 @@ function ConfigSelection({
                   projectId={projectId}
                   region={region}
                   onRegionChange={region => setRegion(region)}
-                  settingRegistry={settingRegistry}
                 />
               </div>
               <div className="bigquery-region-header">BigQuery Settings </div>
@@ -272,7 +273,6 @@ function ConfigSelection({
                     setBigQueryRegion(bigQueryRegion)
                   }
                   fromSection="bigQuery"
-                  settingRegistry={settingRegistry}
                 />
               </div>
               <div className="save-overlay">
@@ -285,7 +285,7 @@ function ConfigSelection({
                 >
                   {isSaving ? 'Saving' : 'Save'}
                 </Button>
-              </div>       
+              </div>
             </div>
             <div className="user-info-card">
               <div className="user-overlay">

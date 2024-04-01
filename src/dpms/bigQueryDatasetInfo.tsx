@@ -16,7 +16,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { DpmsService } from './dpmsService';
+import { BigQueryService } from './bigQueryService';
 import { ClipLoader } from 'react-spinners';
 
 const BigQueryDatasetInfo = ({ database }: { database: string }) => {
@@ -24,7 +24,7 @@ const BigQueryDatasetInfo = ({ database }: { database: string }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    DpmsService.getBigQueryDatasetDetailsAPIService(
+    BigQueryService.getBigQueryDatasetDetailsAPIService(
       database,
       setDatasetInfo,
       setIsLoading

@@ -20,7 +20,6 @@ import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import { useRegion } from '../utils/regionService';
 import { Paper, PaperProps } from '@mui/material';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 type Props = {
   /** The currently selected project ID */
@@ -30,15 +29,13 @@ type Props = {
   /** Callback function for when the project ID is changed by the dropdown */
   onRegionChange: (projectId: string) => void;
   fromSection?: string;
-  settingRegistry: ISettingRegistry;
 };
 
 /**
  * Component to render a region selector dropdown.
  */
 export function RegionDropdown(props: Props) {
-  const { projectId, region, onRegionChange, fromSection, settingRegistry } =
-    props;
+  const { projectId, region, onRegionChange, fromSection } = props;
   const regions = useRegion(projectId);
 
   let regionStrList = useMemo(
@@ -83,16 +80,9 @@ export function RegionDropdown(props: Props) {
     });
   }
 
-  const handleBigQueryRegionSettings = async (value: string) => {
-    const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
-    const settings = await settingRegistry.load(PLUGIN_ID);
-    settings.set('bqRegion', value);
-  };
-
   const handleRegionChange = (value: any) => {
     if (value.title) {
       onRegionChange(value.title);
-      handleBigQueryRegionSettings(value.title);
     }
   };
 

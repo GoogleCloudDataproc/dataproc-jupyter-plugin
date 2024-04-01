@@ -38,7 +38,7 @@ import { ClipLoader } from 'react-spinners';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
-import { DpmsService } from './dpmsService';
+import { BigQueryService } from './bigQueryService';
 import { authApi } from '../utils/utils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
@@ -128,7 +128,7 @@ const BigQueryComponent = ({
   >({});
 
   const getBigQueryColumnDetails = async (tableId: string) => {
-    await DpmsService.getBigQueryColumnDetailsAPIService(
+    await BigQueryService.getBigQueryColumnDetailsAPIService(
       datasetTableMappingDetails[tableId],
       tableId,
       setColumnResponse
@@ -187,10 +187,7 @@ const BigQueryComponent = ({
         dataPolicies: string;
       }) => ({
         name: `${column.name}`,
-        schema: res.schema.fields, // Include the schema object
-        // fullyQualifiedName: res.fullyQualifiedName,
-        // displayName: res.entrySource.displayName,
-        // column: res.column, //no response
+        schema: res.schema.fields,
         type: column.type,
         mode: column.mode,
         key: column.key,
@@ -530,7 +527,7 @@ const BigQueryComponent = ({
     if (credentials) {
       setProjectNameInfo(credentials.project_id);
     }
-    await DpmsService.getBigQueryDatasetsAPIService(
+    await BigQueryService.getBigQueryDatasetsAPIService(
       notebookValue,
       settingRegistry,
       setDatabaseDetails,
@@ -543,7 +540,7 @@ const BigQueryComponent = ({
   };
 
   const getBigQueryTables = async (datasetId: string) => {
-    await DpmsService.getBigQueryTableAPIService(
+    await BigQueryService.getBigQueryTableAPIService(
       notebookValue,
       datasetId,
       setDatabaseDetails,
@@ -595,11 +592,14 @@ const BigQueryComponent = ({
       });
   }, [entries]);
 
-  useEffect(()=>{
-    if(columnResponse.length> 0 && columnResponse.length === allTableEntries.flat().length){
-      setIsLoading(false)
+  useEffect(() => {
+    if (
+      columnResponse.length > 0 &&
+      columnResponse.length === allTableEntries.flat().length
+    ) {
+      setIsLoading(false);
     }
-  },[columnResponse])
+  }, [columnResponse]);
 
   return (
     <div className="dpms-Wrapper">

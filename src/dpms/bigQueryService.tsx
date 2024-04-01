@@ -20,6 +20,7 @@ import { requestAPI } from '../handler/handler';
 import { toast } from 'react-toastify';
 import { toastifyCustomStyle } from '../utils/utils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { PLUGIN_ID } from '../utils/const';
 
 interface IColumn {
   name: string;
@@ -39,7 +40,7 @@ interface IColumn {
   description: string;
 }
 
-export class DpmsService {
+export class BigQueryService {
   static bigQueryPreviewAPIService = async (
     columns: any,
     tableId: string,
@@ -152,7 +153,6 @@ export class DpmsService {
             allDatasetList
           );
         } else {
-          const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
           const settings = await settingRegistry.load(PLUGIN_ID);
 
           let filterDatasetByLocation = allDatasetList;
