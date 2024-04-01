@@ -119,6 +119,8 @@ const CreateNotebookScheduler = ({
   const [dagListCall, setDagListCall] = useState(false);
   const [isLoadingKernelDetail, setIsLoadingKernelDetail] = useState(false);
 
+  const [isBigQueryNotebook, setIsBigQueryNotebook] = useState(false);
+
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(setClusterList);
   };
@@ -358,6 +360,10 @@ const CreateNotebookScheduler = ({
     listSessionTemplatesAPI();
     if (context !== '') {
       setInputFileSelected(context.path);
+      if (context.path.toLowerCase().startsWith('bigframes')) {
+        setIsBigQueryNotebook(true);
+        setSelectedMode('serverless')
+      }
     }
     setJobNameSelected('');
     if (!editMode) {
@@ -528,33 +534,37 @@ const CreateNotebookScheduler = ({
                 fromPage="scheduler"
               />
             </>
-            <div className="create-scheduler-form-element">
-              <FormControl>
-                <RadioGroup
-                  aria-labelledby="demo-controlled-radio-buttons-group"
-                  name="controlled-radio-buttons-group"
-                  value={selectedMode}
-                  onChange={handleSelectedModeChange}
-                  row={true}
-                >
-                  <FormControlLabel
-                    value="cluster"
-                    control={<Radio size="small" />}
-                    label={
-                      <Typography sx={{ fontSize: 13 }}>Cluster</Typography>
-                    }
-                  />
-                  <FormControlLabel
-                    value="serverless"
-                    className="create-scheduler-label-style"
-                    control={<Radio size="small" />}
-                    label={
-                      <Typography sx={{ fontSize: 13 }}>Serverless</Typography>
-                    }
-                  />
-                </RadioGroup>
-              </FormControl>
-            </div>
+            {!isBigQueryNotebook && (
+              <div className="create-scheduler-form-element">
+                <FormControl>
+                  <RadioGroup
+                    aria-labelledby="demo-controlled-radio-buttons-group"
+                    name="controlled-radio-buttons-group"
+                    value={selectedMode}
+                    onChange={handleSelectedModeChange}
+                    row={true}
+                  >
+                    <FormControlLabel
+                      value="cluster"
+                      control={<Radio size="small" />}
+                      label={
+                        <Typography sx={{ fontSize: 13 }}>Cluster</Typography>
+                      }
+                    />
+                    <FormControlLabel
+                      value="serverless"
+                      className="create-scheduler-label-style"
+                      control={<Radio size="small" />}
+                      label={
+                        <Typography sx={{ fontSize: 13 }}>
+                          Serverless
+                        </Typography>
+                      }
+                    />
+                  </RadioGroup>
+                </FormControl>
+              </div>
+            )}
             <div className="create-scheduler-form-element">
               {isLoadingKernelDetail && (
                 <ClipLoader
@@ -565,17 +575,19 @@ const CreateNotebookScheduler = ({
                   data-testid="loader"
                 />
               )}
-              {selectedMode === 'cluster' && !isLoadingKernelDetail && (
-                <Autocomplete
-                  className="create-scheduler-style"
-                  options={clusterList}
-                  value={clusterSelected}
-                  onChange={(_event, val) => handleClusterSelected(val)}
-                  renderInput={params => (
-                    <TextField {...params} label="Cluster*" />
-                  )}
-                />
-              )}
+              {!isBigQueryNotebook &&
+                selectedMode === 'cluster' &&
+                !isLoadingKernelDetail && (
+                  <Autocomplete
+                    className="create-scheduler-style"
+                    options={clusterList}
+                    value={clusterSelected}
+                    onChange={(_event, val) => handleClusterSelected(val)}
+                    renderInput={params => (
+                      <TextField {...params} label="Cluster*" />
+                    )}
+                  />
+                )}
               {selectedMode === 'serverless' && !isLoadingKernelDetail && (
                 <Autocomplete
                   className="create-scheduler-style"
@@ -588,7 +600,7 @@ const CreateNotebookScheduler = ({
                 />
               )}
             </div>
-            {selectedMode === 'cluster' && (
+            {!isBigQueryNotebook && selectedMode === 'cluster' && (
               <div className="create-scheduler-form-element">
                 <FormGroup row={true}>
                   <FormControlLabel
