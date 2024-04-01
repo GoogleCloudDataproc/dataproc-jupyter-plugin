@@ -17,6 +17,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { DpmsService } from './dpmsService';
+import { ClipLoader } from 'react-spinners';
 
 const BigQueryDatasetInfo = ({ database }: { database: string }) => {
   const [datasetInfo, setDatasetInfo] = useState<any>({});
@@ -32,7 +33,20 @@ const BigQueryDatasetInfo = ({ database }: { database: string }) => {
 
   return (
     <>
-      {!isLoading && (
+      {isLoading ? (
+        <div className="database-loader">
+          <div>
+            <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={20}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+          Loading dataset details
+        </div>
+      ) : (
         <>
           <div className="table-container">
             <table className="db-table">

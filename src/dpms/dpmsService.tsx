@@ -58,7 +58,9 @@ export class DpmsService {
       if (data.error) {
         toast.error(data.error, toastifyCustomStyle);
         setIsLoading(false);
-      } else {
+      } else if (data.totalRows == 0) {
+        setIsLoading(false);
+      }else {
         const existingDatasetList = previousDatasetList ?? [];
         //setStateAction never type issue
         const allDatasetList: any = [
