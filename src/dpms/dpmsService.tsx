@@ -45,22 +45,44 @@ export class DpmsService {
     tableId: string,
     dataSetId: string,
     setIsLoading: (value: boolean) => void,
-    setPreviewDataList: any
+    setPreviewDataList: any,
+    nextPageToken?: string,
+    previousDatasetList?: object
   ) => {
     try {
+      const pageToken = nextPageToken ?? '';
       const data: any = await requestAPI(
-        `bigQueryPreview?dataset_id=${dataSetId}&table_id=${tableId}`
+        `bigQueryPreview?dataset_id=${dataSetId}&table_id=${tableId}&pageToken=${pageToken}`
       );
-      let transformRowInfoList: any = [];
-      data.rows.forEach((rowInfo: any) => {
-        let transformRowInfo: any = {};
-        rowInfo['f'].forEach((fieldInfo: any, index: number) => {
-          transformRowInfo[columns[index].Header] = fieldInfo['v'];
+      const existingDatasetList = previousDatasetList ?? [];
+      //setStateAction never type issue
+      const allDatasetList: any = [
+        ...(existingDatasetList as []),
+        ...data.rows
+      ];
+
+      if (data.pageToken) {
+        this.bigQueryPreviewAPIService(
+          columns,
+          tableId,
+          dataSetId,
+          setIsLoading,
+          setPreviewDataList,
+          data.pageToken,
+          allDatasetList
+        );
+      } else {
+        let transformRowInfoList: any = [];
+        allDatasetList.forEach((rowInfo: any) => {
+          let transformRowInfo: any = {};
+          rowInfo['f'].forEach((fieldInfo: any, index: number) => {
+            transformRowInfo[columns[index].Header] = fieldInfo['v'];
+          });
+          transformRowInfoList.push(transformRowInfo);
         });
-        transformRowInfoList.push(transformRowInfo);
-      });
-      setPreviewDataList(transformRowInfoList);
-      setIsLoading(false);
+        setPreviewDataList(transformRowInfoList);
+        setIsLoading(false);
+      }
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
