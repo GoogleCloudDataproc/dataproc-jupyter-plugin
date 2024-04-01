@@ -131,8 +131,7 @@ const BigQueryComponent = ({
     await DpmsService.getBigQueryColumnDetailsAPIService(
       datasetTableMappingDetails[tableId],
       tableId,
-      setColumnResponse,
-      setIsLoading
+      setColumnResponse
     );
   };
 
@@ -595,6 +594,12 @@ const BigQueryComponent = ({
         console.log(error);
       });
   }, [entries]);
+
+  useEffect(()=>{
+    if(columnResponse.length> 0 && columnResponse.length === allTableEntries.flat().length){
+      setIsLoading(false)
+    }
+  },[columnResponse])
 
   return (
     <div className="dpms-Wrapper">

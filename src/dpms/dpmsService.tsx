@@ -54,34 +54,42 @@ export class DpmsService {
       const data: any = await requestAPI(
         `bigQueryPreview?dataset_id=${dataSetId}&table_id=${tableId}&pageToken=${pageToken}`
       );
-      const existingDatasetList = previousDatasetList ?? [];
-      //setStateAction never type issue
-      const allDatasetList: any = [
-        ...(existingDatasetList as []),
-        ...data.rows
-      ];
 
-      if (data.pageToken) {
-        this.bigQueryPreviewAPIService(
-          columns,
-          tableId,
-          dataSetId,
-          setIsLoading,
-          setPreviewDataList,
-          data.pageToken,
-          allDatasetList
-        );
-      } else {
-        let transformRowInfoList: any = [];
-        allDatasetList.forEach((rowInfo: any) => {
-          let transformRowInfo: any = {};
-          rowInfo['f'].forEach((fieldInfo: any, index: number) => {
-            transformRowInfo[columns[index].Header] = fieldInfo['v'];
-          });
-          transformRowInfoList.push(transformRowInfo);
-        });
-        setPreviewDataList(transformRowInfoList);
+      if (data.error) {
+        toast.error(data.error, toastifyCustomStyle);
         setIsLoading(false);
+      } else if (data.totalRows == 0) {
+        setIsLoading(false);
+      }else {
+        const existingDatasetList = previousDatasetList ?? [];
+        //setStateAction never type issue
+        const allDatasetList: any = [
+          ...(existingDatasetList as []),
+          ...data.rows
+        ];
+
+        if (data.pageToken) {
+          this.bigQueryPreviewAPIService(
+            columns,
+            tableId,
+            dataSetId,
+            setIsLoading,
+            setPreviewDataList,
+            data.pageToken,
+            allDatasetList
+          );
+        } else {
+          let transformRowInfoList: any = [];
+          allDatasetList.forEach((rowInfo: any) => {
+            let transformRowInfo: any = {};
+            rowInfo['f'].forEach((fieldInfo: any, index: number) => {
+              transformRowInfo[columns[index].Header] = fieldInfo['v'];
+            });
+            transformRowInfoList.push(transformRowInfo);
+          });
+          setPreviewDataList(transformRowInfoList);
+          setIsLoading(false);
+        }
       }
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
@@ -91,17 +99,13 @@ export class DpmsService {
   static getBigQueryColumnDetailsAPIService = async (
     datasetId: string,
     tableId: string,
-    setColumnResponse: any,
-    setIsLoading: (value: boolean) => void
+    setColumnResponse: any
   ) => {
     try {
       const data: any = await requestAPI(
         `bigQueryTableInfo?dataset_id=${datasetId}&table_id=${tableId}`
       );
       setColumnResponse((prevResponse: IColumn[]) => [...prevResponse, data]);
-      if (data) {
-        setIsLoading(false);
-      }
     } catch (reason) {
       console.error(`Error in fetching big query schema.\n${reason}`);
       toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
@@ -258,7 +262,10 @@ export class DpmsService {
               }
             );
             setEntries(entryNames);
-            setAllTableEntries((prevResponse: string[]) => [...prevResponse, entryNames]);
+            setAllTableEntries((prevResponse: string[]) => [
+              ...prevResponse,
+              entryNames
+            ]);
             setTableDescription(updatedTableDetails);
             setDatasetTableMappingDetails(datasetTableMapping);
             setTotalTables(tableNames.length);
@@ -357,7 +364,9 @@ export class DpmsService {
         ? data.maxTimeTravelHours / 24 + ' days'
         : '';
       datasetInfoTemp['Storage billing model'] = data.storageBillingModel;
-      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive.toString();
+      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive
+        ? data.isCaseInsensitive.toString()
+        : '';
       setDatasetInfo(datasetInfoTemp);
       setIsLoading(false);
     } catch (reason) {

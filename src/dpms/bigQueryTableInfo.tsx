@@ -17,6 +17,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { DpmsService } from './dpmsService';
+import { ClipLoader } from 'react-spinners';
 
 const BigQueryTableInfo = ({
   title,
@@ -46,7 +47,20 @@ const BigQueryTableInfo = ({
 
   return (
     <>
-      {!isLoading && (
+      {isLoading ? (
+        <div className="database-loader">
+          <div>
+            <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={20}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+          Loading table details
+        </div>
+      ) : (
         <>
           <div className="db-title">Table info</div>
           <div className="table-container">
