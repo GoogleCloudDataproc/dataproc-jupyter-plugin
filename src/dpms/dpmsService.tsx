@@ -91,17 +91,13 @@ export class DpmsService {
   static getBigQueryColumnDetailsAPIService = async (
     datasetId: string,
     tableId: string,
-    setColumnResponse: any,
-    setIsLoading: (value: boolean) => void
+    setColumnResponse: any
   ) => {
     try {
       const data: any = await requestAPI(
         `bigQueryTableInfo?dataset_id=${datasetId}&table_id=${tableId}`
       );
       setColumnResponse((prevResponse: IColumn[]) => [...prevResponse, data]);
-      if (data) {
-        setIsLoading(false);
-      }
     } catch (reason) {
       console.error(`Error in fetching big query schema.\n${reason}`);
       toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
