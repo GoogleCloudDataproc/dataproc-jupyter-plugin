@@ -17,6 +17,15 @@ import requests
 from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataplex_url
 
 
+class ApiHeaders:
+    @staticmethod
+    def create_headers(access_token):
+        return {
+            "Content-Type": CONTENT_TYPE,
+            "Authorization": f"Bearer {access_token}",
+        }
+
+
 class BigQueryDatasetListService:
     def list_datasets(self, credentials, page_token, log):
         try:
@@ -27,13 +36,8 @@ class BigQueryDatasetListService:
             ):
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
-                region_id = credentials["region_id"]
-                print(dataplex_url)
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
-                headers = {
-                    "Content-Type": CONTENT_TYPE,
-                    "Authorization": f"Bearer {access_token}",
-                }
+                headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
                 if response.status_code == 200:
                     resp = response.json()
@@ -50,7 +54,7 @@ class BigQueryDatasetListService:
 
 
 class BigQueryTableListService:
-    def list_table(self, credentials, dataset_id,page_token,log):
+    def list_table(self, credentials, dataset_id, page_token, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -60,10 +64,7 @@ class BigQueryTableListService:
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
-                headers = {
-                    "Content-Type": CONTENT_TYPE,
-                    "Authorization": f"Bearer {access_token}",
-                }
+                headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
                 if response.status_code == 200:
                     resp = response.json()
@@ -77,9 +78,10 @@ class BigQueryTableListService:
         except Exception as e:
             log.exception(f"Error fetching schema")
             return {"error": str(e)}
-        
+
+
 class BigQueryDatasetInfoService:
-    def list_dataset_info(self, credentials, dataset_id,log):
+    def list_dataset_info(self, credentials, dataset_id, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -89,10 +91,7 @@ class BigQueryDatasetInfoService:
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
-                headers = {
-                    "Content-Type": CONTENT_TYPE,
-                    "Authorization": f"Bearer {access_token}",
-                }
+                headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
                 if response.status_code == 200:
                     resp = response.json()
@@ -106,9 +105,10 @@ class BigQueryDatasetInfoService:
         except Exception as e:
             log.exception(f"Error fetching dataset information")
             return {"error": str(e)}
-    
+
+
 class BigQueryTableInfoService:
-    def list_table_info(self, credentials, dataset_id,table_id,log):
+    def list_table_info(self, credentials, dataset_id, table_id, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -118,10 +118,7 @@ class BigQueryTableInfoService:
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
-                headers = {
-                    "Content-Type": CONTENT_TYPE,
-                    "Authorization": f"Bearer {access_token}",
-                }
+                headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
                 if response.status_code == 200:
                     resp = response.json()
@@ -135,11 +132,10 @@ class BigQueryTableInfoService:
         except Exception as e:
             log.exception(f"Error fetching table information")
             return {"error": str(e)}
-        
 
 
 class BigQueryPreviewService:
-    def bigquery_preview_data(self, credentials,dataset_id,table_id,page_token,log):
+    def bigquery_preview_data(self, credentials, dataset_id, table_id, page_token, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -149,10 +145,7 @@ class BigQueryPreviewService:
                 access_token = credentials["access_token"]
                 project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?pageToken={page_token}"
-                headers = {
-                    "Content-Type": CONTENT_TYPE,
-                    "Authorization": f"Bearer {access_token}",
-                }
+                headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
                 if response.status_code == 200:
                     resp = response.json()
@@ -166,9 +159,10 @@ class BigQueryPreviewService:
         except Exception as e:
             log.exception(f"Error fetching preview data")
             return {"error": str(e)}
-        
+
+
 class BigQueryProjectService:
-    def bigquery_projects(self, credentials,dataset_id,table_id,log):
+    def bigquery_projects(self, credentials, dataset_id, table_id, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -176,12 +170,10 @@ class BigQueryProjectService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                project_id = credentials["project_id"]
-                api_endpoint = f"https://cloudresourcemanager.googleapis.com/v1/projects"
-                headers = {
-                    "Content-Type": CONTENT_TYPE,
-                    "Authorization": f"Bearer {access_token}",
-                }
+                api_endpoint = (
+                    f"https://cloudresourcemanager.googleapis.com/v1/projects"
+                )
+                headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
                 if response.status_code == 200:
                     resp = response.json()
