@@ -197,6 +197,7 @@ export class DpmsService {
     setTotalDatabases: (value: number) => void,
     setTotalTables: (value: number) => void,
     setSchemaError: (value: boolean) => void,
+    setAllTableEntries: any,
     setEntries: (value: string[]) => void,
     setTableDescription: any,
     setDatasetTableMappingDetails: any,
@@ -228,6 +229,7 @@ export class DpmsService {
               setTotalDatabases,
               setTotalTables,
               setSchemaError,
+              setAllTableEntries,
               setEntries,
               setTableDescription,
               setDatasetTableMappingDetails,
@@ -256,6 +258,7 @@ export class DpmsService {
               }
             );
             setEntries(entryNames);
+            setAllTableEntries((prevResponse: string[]) => [...prevResponse, entryNames]);
             setTableDescription(updatedTableDetails);
             setDatasetTableMappingDetails(datasetTableMapping);
             setTotalTables(tableNames.length);
