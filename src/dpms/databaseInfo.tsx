@@ -40,7 +40,7 @@ const DatabaseInfo = ({
     return (
       <>
         {dataprocMetastoreServices === 'bigframes' ? (
-          <BigQueryDatasetInfo database={title} />
+          <BigQueryDatasetInfo dataset={title} />
         ) : (
           <div className="table-container">
             <table className="db-table">

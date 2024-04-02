@@ -336,13 +336,13 @@ export class BigQueryService {
   };
 
   static getBigQueryDatasetDetailsAPIService = async (
-    database: string,
+    dataset: string,
     setDatasetInfo: any,
     setIsLoading: (value: boolean) => void
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryDatasetInfo?dataset_id=${database}`
+        `bigQueryDatasetInfo?dataset_id=${dataset}`
       );
       let datasetInfoTemp: any = {};
       datasetInfoTemp['Dataset ID'] = data.id;

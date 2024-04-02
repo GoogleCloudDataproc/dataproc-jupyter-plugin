@@ -19,13 +19,13 @@ import React, { useEffect, useState } from 'react';
 import { BigQueryService } from './bigQueryService';
 import { ClipLoader } from 'react-spinners';
 
-const BigQueryDatasetInfo = ({ database }: { database: string }) => {
+const BigQueryDatasetInfo = ({ dataset }: { dataset: string }) => {
   const [datasetInfo, setDatasetInfo] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     BigQueryService.getBigQueryDatasetDetailsAPIService(
-      database,
+      dataset,
       setDatasetInfo,
       setIsLoading
     );
