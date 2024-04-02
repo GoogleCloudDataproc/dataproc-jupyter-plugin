@@ -61,7 +61,7 @@ export class BigQueryService {
         setIsLoading(false);
       } else if (data.totalRows == 0) {
         setIsLoading(false);
-      }else {
+      } else {
         const existingDatasetList = previousDatasetList ?? [];
         //setStateAction never type issue
         const allDatasetList: any = [
@@ -326,8 +326,9 @@ export class BigQueryService {
       tableInfoTemp['Default collation'] = data.defaultCollation;
       tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
       tableInfoTemp['Description'] = data.description;
-      tableInfoTemp['Case insensitive'] =
-        datasetInfo['Case insensitive'].toString();
+      tableInfoTemp['Case insensitive'] = datasetInfo['Case insensitive']
+        ? datasetInfo['Case insensitive'].toString()
+        : '';
       setTableInfo(tableInfoTemp);
       setIsLoading(false);
     } catch (reason) {

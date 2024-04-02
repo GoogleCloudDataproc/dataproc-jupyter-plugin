@@ -38,16 +38,6 @@ const PreviewDataInfo = ({ column, tableId, dataSetId }: any) => {
     []
   );
 
-  const bigQueryPreviewAPI = async () => {
-    await BigQueryService.bigQueryPreviewAPIService(
-      columns,
-      tableId,
-      dataSetId,
-      setIsLoading,
-      setPreviewDataList
-    );
-  };
-
   const {
     getTableProps,
     getTableBodyProps,
@@ -68,7 +58,13 @@ const PreviewDataInfo = ({ column, tableId, dataSetId }: any) => {
   );
 
   useEffect(() => {
-    bigQueryPreviewAPI();
+    BigQueryService.bigQueryPreviewAPIService(
+      columns,
+      tableId,
+      dataSetId,
+      setIsLoading,
+      setPreviewDataList
+    );
   }, []);
 
   const tableDataCondition = (cell: ICellProps) => {
