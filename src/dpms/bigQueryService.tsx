@@ -40,9 +40,14 @@ interface IColumn {
   description: string;
 }
 
+interface IPreviewColumn {
+  Header: string;
+  accessor: string;
+}
+
 export class BigQueryService {
   static bigQueryPreviewAPIService = async (
-    columns: any,
+    columns: IPreviewColumn[],
     tableId: string,
     dataSetId: string,
     setIsLoading: (value: boolean) => void,
