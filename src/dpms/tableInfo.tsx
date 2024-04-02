@@ -98,7 +98,7 @@ const TableInfo = ({
         </div>
         {selectedMode === 'Details' &&
           (dataprocMetastoreServices === 'bigframes' ? (
-            <BigQueryTableInfo title={title} database={database} />
+            <BigQueryTableInfo title={title} dataset={database} />
           ) : (
             <>
               <div className="db-title">Table info</div>

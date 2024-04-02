@@ -21,29 +21,28 @@ import { ClipLoader } from 'react-spinners';
 
 const BigQueryTableInfo = ({
   title,
-  database
+  dataset
 }: {
   title: string;
-  database: string;
+  dataset: string;
 }) => {
+  const [datasetInfo, setDatasetInfo] = useState<any>({});
   const [tableInfo, setTableInfo] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    BigQueryService.getBigQueryDatasetInfoAPIService(database, setTableInfo);
+    BigQueryService.getBigQueryDatasetInfoAPIService(dataset, setDatasetInfo);
   }, []);
 
   useEffect(() => {
-    if (tableInfo['Case insensitive'] !== undefined && isLoading === true) {
-      BigQueryService.getBigQueryTableInfoAPIService(
-        title,
-        database,
-        setTableInfo,
-        tableInfo,
-        setIsLoading
-      );
-    }
-  }, [tableInfo]);
+    BigQueryService.getBigQueryTableInfoAPIService(
+      title,
+      dataset,
+      setTableInfo,
+      datasetInfo,
+      setIsLoading
+    );
+  }, [datasetInfo]);
 
   return (
     <>

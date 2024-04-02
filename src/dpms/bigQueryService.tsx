@@ -284,16 +284,16 @@ export class BigQueryService {
   };
 
   static getBigQueryDatasetInfoAPIService = async (
-    database: string,
-    setTableInfo: any
+    dataset: string,
+    setDatasetInfo: any
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryDatasetInfo?dataset_id=${database}`
+        `bigQueryDatasetInfo?dataset_id=${dataset}`
       );
-      let tableInfoTemp: any = {};
-      tableInfoTemp['Case insensitive'] = data.isCaseInsensitive;
-      setTableInfo(tableInfoTemp);
+      let datasetInfoTemp: any = {};
+      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive;
+      setDatasetInfo(datasetInfoTemp);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
@@ -301,14 +301,14 @@ export class BigQueryService {
 
   static getBigQueryTableInfoAPIService = async (
     title: string,
-    database: string,
+    dataset: string,
     setTableInfo: any,
-    tableInfo: any,
+    datasetInfo: any,
     setIsLoading: (value: boolean) => void
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryTableInfo?dataset_id=${database}&table_id=${title}`
+        `bigQueryTableInfo?dataset_id=${dataset}&table_id=${title}`
       );
 
       let tableInfoTemp: any = {};
@@ -327,7 +327,7 @@ export class BigQueryService {
       tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
       tableInfoTemp['Description'] = data.description;
       tableInfoTemp['Case insensitive'] =
-        tableInfo['Case insensitive'].toString();
+        datasetInfo['Case insensitive'].toString();
       setTableInfo(tableInfoTemp);
       setIsLoading(false);
     } catch (reason) {
