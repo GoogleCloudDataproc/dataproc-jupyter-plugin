@@ -28,79 +28,21 @@ type Props = {
   region: string;
   /** Callback function for when the project ID is changed by the dropdown */
   onRegionChange: (projectId: string) => void;
-  fromSection?: string;
 };
 
 /**
  * Component to render a region selector dropdown.
  */
 export function RegionDropdown(props: Props) {
-  const { projectId, region, onRegionChange, fromSection } = props;
+  const { projectId, region, onRegionChange } = props;
   const regions = useRegion(projectId);
 
-  let regionStrList = useMemo(
+  const regionStrList = useMemo(
     () => regions.map(region => region.name),
     [regions]
   );
 
-  let bigQueryRegionOptions: any = [];
-
-  if (regionStrList.length > 0 && fromSection === 'bigQuery') {
-    let exceptRegions = ['us-central2', 'us-east7', 'us-west8'];
-    let bqRegionsList: string[] = [];
-    bqRegionsList = regionStrList.filter(
-      element => !exceptRegions.includes(element)
-    );
-
-    let multiRegionList = ['US', 'EU'];
-    let omniRegionList = [
-      'aws-us-east-1',
-      'aws-us-west-2',
-      'aws-ap-northeast-2',
-      'aws-eu-west-1',
-      'azure-eastus2'
-    ];
-
-    bqRegionsList = multiRegionList
-      .concat(omniRegionList)
-      .concat(bqRegionsList);
-    regionStrList = bqRegionsList;
-
-    bigQueryRegionOptions = regionStrList.map((option: string) => {
-      const categoryType = 'Regions';
-      let object = { title: option };
-      return {
-        categoryType: multiRegionList.includes(option)
-          ? 'Multi Regions'
-          : omniRegionList.includes(option)
-          ? 'Omni Locations'
-          : categoryType,
-        ...object
-      };
-    });
-  }
-
-  const handleRegionChange = (value: any) => {
-    if (value.title) {
-      onRegionChange(value.title);
-    }
-  };
-
-  return fromSection === 'bigQuery' ? (
-    <Autocomplete
-      value={{ title: region }}
-      options={bigQueryRegionOptions}
-      groupBy={(option: any) => option.categoryType}
-      getOptionLabel={(option: any) => {
-        return option.title ? option.title : option;
-      }}
-      onChange={(_, value) => handleRegionChange(value ?? '')}
-      PaperComponent={(props: PaperProps) => <Paper elevation={8} {...props} />}
-      renderInput={params => (
-        <TextField {...params} label={'BigQuery Region*'} />
-      )}
-    />
-  ) : (
+  return (
     <Autocomplete
       value={region}
       options={regionStrList}
