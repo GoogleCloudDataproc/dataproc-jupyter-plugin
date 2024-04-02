@@ -52,10 +52,7 @@ const BigQueryDatasetInfo = ({ dataset }: { dataset: string }) => {
             <table className="db-table">
               <tbody>
                 {Object.keys(datasetInfo).map((tableData, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
-                  >
+                  <tr key={index} className="tr-row">
                     <td className="bold-column">{tableData}</td>
                     <td>{datasetInfo[tableData]}</td>
                   </tr>

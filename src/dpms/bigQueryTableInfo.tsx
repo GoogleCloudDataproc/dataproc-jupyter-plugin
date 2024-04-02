@@ -67,10 +67,7 @@ const BigQueryTableInfo = ({
             <table className="db-table">
               <tbody>
                 {Object.keys(tableInfo).map((tableData, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
-                  >
+                  <tr key={index} className="tr-row">
                     <td className="bold-column">{tableData}</td>
                     <td>{tableInfo[tableData]}</td>
                   </tr>
