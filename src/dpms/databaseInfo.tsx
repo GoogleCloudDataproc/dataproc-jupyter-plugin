@@ -40,16 +40,13 @@ const DatabaseInfo = ({
     return (
       <>
         {dataprocMetastoreServices === 'bigframes' ? (
-          <BigQueryDatasetInfo database={title} />
+          <BigQueryDatasetInfo dataset={title} />
         ) : (
           <div className="table-container">
             <table className="db-table">
               <tbody>
                 {Object.entries(database).map(([key, value], index) => (
-                  <tr
-                    key={key}
-                    className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
-                  >
+                  <tr key={key} className="tr-row">
                     <td className="bold-column">{key}</td>
                     <td>{value}</td>
                   </tr>

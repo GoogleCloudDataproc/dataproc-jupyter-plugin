@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,16 +38,6 @@ const PreviewDataInfo = ({ column, tableId, dataSetId }: any) => {
     []
   );
 
-  const bigQueryPreviewAPI = async () => {
-    await BigQueryService.bigQueryPreviewAPIService(
-      columns,
-      tableId,
-      dataSetId,
-      setIsLoading,
-      setPreviewDataList
-    );
-  };
-
   const {
     getTableProps,
     getTableBodyProps,
@@ -68,7 +58,13 @@ const PreviewDataInfo = ({ column, tableId, dataSetId }: any) => {
   );
 
   useEffect(() => {
-    bigQueryPreviewAPI();
+    BigQueryService.bigQueryPreviewAPIService(
+      columns,
+      tableId,
+      dataSetId,
+      setIsLoading,
+      setPreviewDataList
+    );
   }, []);
 
   const tableDataCondition = (cell: ICellProps) => {

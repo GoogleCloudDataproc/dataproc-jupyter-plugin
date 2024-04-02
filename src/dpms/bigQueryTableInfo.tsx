@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,29 +21,30 @@ import { ClipLoader } from 'react-spinners';
 
 const BigQueryTableInfo = ({
   title,
-  database
+  dataset
 }: {
   title: string;
-  database: string;
+  dataset: string;
 }) => {
+  const [datasetInfo, setDatasetInfo] = useState<any>({});
   const [tableInfo, setTableInfo] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    BigQueryService.getBigQueryDatasetInfoAPIService(database, setTableInfo);
+    BigQueryService.getBigQueryDatasetInfoAPIService(dataset, setDatasetInfo);
   }, []);
 
   useEffect(() => {
-    if (tableInfo['Case insensitive'] !== undefined && isLoading === true) {
+    if (datasetInfo['Case insensitive'] !== undefined && isLoading === true) {
       BigQueryService.getBigQueryTableInfoAPIService(
         title,
-        database,
+        dataset,
         setTableInfo,
-        tableInfo,
+        datasetInfo,
         setIsLoading
       );
     }
-  }, [tableInfo]);
+  }, [datasetInfo]);
 
   return (
     <>
@@ -67,10 +68,7 @@ const BigQueryTableInfo = ({
             <table className="db-table">
               <tbody>
                 {Object.keys(tableInfo).map((tableData, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? 'tr-row-even' : 'tr-row-odd'}
-                  >
+                  <tr key={index} className="tr-row">
                     <td className="bold-column">{tableData}</td>
                     <td>{tableInfo[tableData]}</td>
                   </tr>

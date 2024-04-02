@@ -21,13 +21,14 @@
   font-weight: 600;
 }
 
-.tr-row-even {
+.tr-row:nth-child(odd) {
   background-color: var(--jp-layout-color2);
 }
 
-.tr-row-odd {
+.tr-row:nth-child(even) {
   background-color: var(--jp-layout-color1);
 }
+
 .db-table {
   width: 100%;
   border-collapse: collapse;

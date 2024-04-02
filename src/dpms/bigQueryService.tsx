@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,9 +40,14 @@ interface IColumn {
   description: string;
 }
 
+interface IPreviewColumn {
+  Header: string;
+  accessor: string;
+}
+
 export class BigQueryService {
   static bigQueryPreviewAPIService = async (
-    columns: any,
+    columns: IPreviewColumn[],
     tableId: string,
     dataSetId: string,
     setIsLoading: (value: boolean) => void,
@@ -61,7 +66,7 @@ export class BigQueryService {
         setIsLoading(false);
       } else if (data.totalRows == 0) {
         setIsLoading(false);
-      }else {
+      } else {
         const existingDatasetList = previousDatasetList ?? [];
         //setStateAction never type issue
         const allDatasetList: any = [
@@ -284,16 +289,16 @@ export class BigQueryService {
   };
 
   static getBigQueryDatasetInfoAPIService = async (
-    database: string,
-    setTableInfo: any
+    dataset: string,
+    setDatasetInfo: any
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryDatasetInfo?dataset_id=${database}`
+        `bigQueryDatasetInfo?dataset_id=${dataset}`
       );
-      let tableInfoTemp: any = {};
-      tableInfoTemp['Case insensitive'] = data.isCaseInsensitive;
-      setTableInfo(tableInfoTemp);
+      let datasetInfoTemp: any = {};
+      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive;
+      setDatasetInfo(datasetInfoTemp);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }
@@ -301,14 +306,14 @@ export class BigQueryService {
 
   static getBigQueryTableInfoAPIService = async (
     title: string,
-    database: string,
+    dataset: string,
     setTableInfo: any,
-    tableInfo: any,
+    datasetInfo: any,
     setIsLoading: (value: boolean) => void
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryTableInfo?dataset_id=${database}&table_id=${title}`
+        `bigQueryTableInfo?dataset_id=${dataset}&table_id=${title}`
       );
 
       let tableInfoTemp: any = {};
@@ -326,8 +331,9 @@ export class BigQueryService {
       tableInfoTemp['Default collation'] = data.defaultCollation;
       tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
       tableInfoTemp['Description'] = data.description;
-      tableInfoTemp['Case insensitive'] =
-        tableInfo['Case insensitive'].toString();
+      tableInfoTemp['Case insensitive'] = datasetInfo['Case insensitive']
+        ? datasetInfo['Case insensitive'].toString()
+        : '';
       setTableInfo(tableInfoTemp);
       setIsLoading(false);
     } catch (reason) {
@@ -336,13 +342,13 @@ export class BigQueryService {
   };
 
   static getBigQueryDatasetDetailsAPIService = async (
-    database: string,
+    dataset: string,
     setDatasetInfo: any,
     setIsLoading: (value: boolean) => void
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryDatasetInfo?dataset_id=${database}`
+        `bigQueryDatasetInfo?dataset_id=${dataset}`
       );
       let datasetInfoTemp: any = {};
       datasetInfoTemp['Dataset ID'] = data.id;

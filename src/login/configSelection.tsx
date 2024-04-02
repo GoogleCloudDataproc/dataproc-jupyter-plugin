@@ -50,6 +50,7 @@ import { ILauncher } from '@jupyterlab/launcher';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { BigQueryRegionDropdown } from '../controls/BigQueryRegionDropdown';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -266,13 +267,12 @@ function ConfigSelection({
               </div>
               <div className="bigquery-region-header">BigQuery Settings </div>
               <div className="region-overlay">
-                <RegionDropdown
+                <BigQueryRegionDropdown
                   projectId={projectId}
                   region={bigQueryRegion}
                   onRegionChange={bigQueryRegion =>
                     setBigQueryRegion(bigQueryRegion)
                   }
-                  fromSection="bigQuery"
                 />
               </div>
               <div className="save-overlay">

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,36 +26,31 @@ interface IColumn {
 }
 
 const SchemaInfo = ({ column }: any) => {
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: 'Field name',
-        accessor: 'name'
-      },
-      {
-        Header: 'Type',
-        accessor: 'type'
-      },
-      {
-        Header: 'Mode',
-        accessor: 'mode'
-      },
-      {
-        Header: 'Description',
-        accessor: 'description'
-      }
-    ],
-    []
-  );
+  const columns = [
+    {
+      Header: 'Field name',
+      accessor: 'name'
+    },
+    {
+      Header: 'Type',
+      accessor: 'type'
+    },
+    {
+      Header: 'Mode',
+      accessor: 'mode'
+    },
+    {
+      Header: 'Description',
+      accessor: 'description'
+    }
+  ];
 
-  const data = React.useMemo(() => {
-    return column.map((column: IColumn) => ({
-      name: column.name,
-      type: column.type || '',
-      mode: column.mode || '',
-      description: column.description
-    }));
-  }, [column]);
+  const data = column.map((column: IColumn) => ({
+    name: column.name,
+    type: column.type || '',
+    mode: column.mode || '',
+    description: column.description
+  }));
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     // @ts-ignore  react-table 'columns' which is declared here on type 'TableOptions<IColumns>'

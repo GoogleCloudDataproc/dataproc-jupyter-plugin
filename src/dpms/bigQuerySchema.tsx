@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,61 +31,56 @@ interface IColumn {
 }
 
 const BigQuerySchemaInfo = ({ column }: any) => {
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: 'Field name',
-        accessor: 'name'
-      },
-      {
-        Header: 'Type',
-        accessor: 'type'
-      },
-      {
-        Header: 'Mode',
-        accessor: 'mode'
-      },
-      {
-        Header: 'Key',
-        accessor: 'key'
-      },
-      {
-        Header: 'Collation',
-        accessor: 'collation'
-      },
-      {
-        Header: 'Default Value',
-        accessor: 'defaultValue'
-      },
-      {
-        Header: 'Policy Tags',
-        accessor: 'policyTags '
-      },
-      {
-        Header: 'Data Policies',
-        accessor: 'dataPolicies'
-      },
-      {
-        Header: 'Description',
-        accessor: 'description'
-      }
-    ],
-    []
-  );
+  const columns = [
+    {
+      Header: 'Field name',
+      accessor: 'name'
+    },
+    {
+      Header: 'Type',
+      accessor: 'type'
+    },
+    {
+      Header: 'Mode',
+      accessor: 'mode'
+    },
+    {
+      Header: 'Key',
+      accessor: 'key'
+    },
+    {
+      Header: 'Collation',
+      accessor: 'collation'
+    },
+    {
+      Header: 'Default Value',
+      accessor: 'defaultValue'
+    },
+    {
+      Header: 'Policy Tags',
+      accessor: 'policyTags '
+    },
+    {
+      Header: 'Data Policies',
+      accessor: 'dataPolicies'
+    },
+    {
+      Header: 'Description',
+      accessor: 'description'
+    }
+  ];
 
-  const data = React.useMemo(() => {
-    return column.map((column: IColumn) => ({
-      name: column.name,
-      type: column.type || '',
-      mode: column.mode || '',
-      key: column.key || '',
-      collation: column.collation || '',
-      defaultValue: column.defaultValue || '',
-      policyTags: column.policyTags || '',
-      dataPolicies: column.dataPolicies || '',
-      description: column.description
-    }));
-  }, [column]);
+  const data = column.map((column: IColumn) => ({
+    name: column.name,
+    type: column.type || '',
+    mode: column.mode || '',
+    key: column.key || '',
+    collation: column.collation || '',
+    defaultValue: column.defaultValue || '',
+    policyTags: column.policyTags || '',
+    dataPolicies: column.dataPolicies || '',
+    description: column.description
+  }));
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     // @ts-ignore  react-table 'columns' which is declared here on type 'TableOptions<IColumns>'
