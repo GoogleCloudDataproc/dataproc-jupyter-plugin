@@ -276,7 +276,7 @@ const ListDagRuns = ({
       setDagRunsCurrentDateList([]);
       setDagRunId('');
     }
-  }, [selectedDate, dagRunsList]);
+  }, [selectedDate]);
 
   return (
     <div>

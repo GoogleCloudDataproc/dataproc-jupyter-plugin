@@ -550,12 +550,8 @@ export class SchedulerService {
           setDarkGreenListDates(darkGreenList);
 
           setDagRunsList(transformDagRunListData);
-          setDagRunId(
-            transformDagRunListData[transformDagRunListData.length - 1].dagRunId
-          );
         } else {
           setDagRunsList([]);
-          setDagRunId('');
           setBlueListDates([]);
           setGreyListDates([]);
           setOrangeListDates([]);
