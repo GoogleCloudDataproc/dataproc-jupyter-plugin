@@ -19,19 +19,8 @@ from kernels_mixer.kernels import MixingMappingKernelManager
 from kernels_mixer.websockets import DelegatingWebsocketConnection
 
 from jupyter_server.services.sessions.sessionmanager import SessionManager
-from traitlets import Unicode
-from traitlets.config import Configurable
 
-
-from .handlers import setup_handlers, update_gateway_client_url
-
-
-class DataprocPluginConfig(Configurable):
-    log_path = Unicode(
-        "",
-        config=True,
-        help="File to log ServerApp and Dataproc Jupyter Plugin events.",
-    )
+from .handlers import setup_handlers, update_gateway_client_url, DataprocPluginConfig
 
 
 def _jupyter_labextension_paths():
@@ -68,7 +57,7 @@ def _link_jupyter_server_extension(server_app):
 
     update_gateway_client_url(c, server_app.log)
 
-    plugin_config = DataprocPluginConfig(config=server_app.config)
+    plugin_config = DataprocPluginConfig.instance(parent=server_app)
     if plugin_config.log_path != "":
         file_handler = logging.handlers.RotatingFileHandler(
             plugin_config.log_path, maxBytes=2 * 1024 * 1024, backupCount=5

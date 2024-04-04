@@ -12,27 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-from dataproc_jupyter_plugin.contollers.downloadOutputController import (
-    downloadOutputController,
-)
-from dataproc_jupyter_plugin.contollers.importErrorController import (
-    ImportErrorController,
-)
-from jupyter_server.base.handlers import APIHandler
-from jupyter_server.utils import url_path_join
-from requests import HTTPError
-import tornado
-import subprocess
-from cachetools import TTLCache
 import datetime
+import inspect
+import json
 import re
+import subprocess
 import threading
-from jupyter_server.utils import ensure_async
 import time
 
+from cachetools import TTLCache
+from jupyter_server.base.handlers import APIHandler
+from jupyter_server.utils import url_path_join
+from jupyter_server.utils import ensure_async
+from requests import HTTPError
+import tornado
+from traitlets import Bool, Unicode
+from traitlets.config import SingletonConfigurable
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
+
 from dataproc_jupyter_plugin.contollers.clusterController import ClusterListController
 from dataproc_jupyter_plugin.contollers.composerController import ComposerListController
 from dataproc_jupyter_plugin.contollers.dagController import (
@@ -46,8 +44,14 @@ from dataproc_jupyter_plugin.contollers.dagRunController import (
     DagRunTaskController,
     DagRunTaskLogsController,
 )
+from dataproc_jupyter_plugin.contollers.downloadOutputController import (
+    downloadOutputController,
+)
 from dataproc_jupyter_plugin.contollers.editDagController import EditDagController
 from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
+from dataproc_jupyter_plugin.contollers.importErrorController import (
+    ImportErrorController,
+)
 from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
 from dataproc_jupyter_plugin.contollers.triggerDagController import TriggerDagController
 
@@ -62,6 +66,46 @@ def update_gateway_client_url(c, log):
         return
     log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
     c.GatewayClient.url = kernel_gateway_url
+
+
+class DataprocPluginConfig(SingletonConfigurable):
+    log_path = Unicode(
+        "",
+        config=True,
+        help="File to log ServerApp and Dataproc Jupyter Plugin events.",
+    )
+
+    enable_bigquery_integration = Bool(
+        False,
+        config=True,
+        help="Enable integration with BigQuery in JupyterLab",
+    )
+
+
+class SettingsHandler(APIHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dataproc_plugin_config = DataprocPluginConfig.instance(
+            parent=self.application.settings["serverapp"]
+        )
+
+    @tornado.web.authenticated
+    def get(self):
+        config = self.dataproc_plugin_config
+        self.log.info(f"DataprocPluginConfig: {config.config}")
+        filtered_dictionary = {}
+        for k in config.traits():
+            v = getattr(config, k)
+            try:
+                # Some settings are not JSON serializable, so we detect that by
+                # trying to serialize each one, and then filter out the ones
+                # that cannot be serialized.
+                json.dumps(v)
+                filtered_dictionary[k] = v
+            except TypeError as er:
+                pass
+        self.log.info(f"Dataproc plugin settings: {filtered_dictionary}")
+        self.finish(json.dumps(filtered_dictionary))
 
 
 credentials_cache = None
@@ -181,7 +225,7 @@ def get_cached_credentials(log):
         return credentials
 
 
-class RouteHandler(APIHandler):
+class CredentialsHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
@@ -299,78 +343,31 @@ def setup_handlers(web_app):
     base_url = web_app.settings["base_url"]
     application_url = "dataproc-plugin"
 
-    # Prepend the base_url so that it works in a JupyterHub setting
-    route_pattern = url_path_join(base_url, application_url, "credentials")
-    handlers = [(route_pattern, RouteHandler)]
-    web_app.add_handlers(host_pattern, handlers)
+    def full_path(name):
+        return url_path_join(base_url, application_url, name)
 
-    route_pattern = url_path_join(base_url, application_url, "login")
-    handlers = [(route_pattern, LoginHandler)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "configuration")
-    handlers = [(route_pattern, ConfigHandler)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "getGcpServiceUrls")
-    handlers = [(route_pattern, UrlHandler)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "log")
-    handlers = [(route_pattern, LogHandler)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "composerList")
-    handlers = [(route_pattern, ComposerListController)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "dagRun")
-    route_pattern_dag_task = url_path_join(base_url, application_url, "dagRunTask")
-    route_pattern_dag_task_logs = url_path_join(
-        base_url, application_url, "dagRunTaskLogs"
-    )
-    handlers = [
-        (route_pattern, DagRunController),
-        (route_pattern_dag_task, DagRunTaskController),
-        (route_pattern_dag_task_logs, DagRunTaskLogsController),
-    ]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "clusterList")
-    handlers = [(route_pattern, ClusterListController)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "runtimeList")
-    handlers = [(route_pattern, RuntimeController)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "createJobScheduler")
-    handlers = [(route_pattern, ExecutorController)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern_dag = url_path_join(base_url, application_url, "dagList")
-    route_pattern_download = url_path_join(base_url, application_url, "dagDownload")
-    route_pattern_delete = url_path_join(base_url, application_url, "dagDelete")
-    route_pattern_patch = url_path_join(base_url, application_url, "dagUpdate")
-    handlers = [
-        (route_pattern_dag, DagListController),
-        (route_pattern_download, DagDownloadController),
-        (route_pattern_delete, DagDeleteController),
-        (route_pattern_patch, DagUpdateController),
-    ]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "editJobScheduler")
-    handlers = [(route_pattern, EditDagController)]
-    web_app.add_handlers(host_pattern, handlers)
-    route_pattern = url_path_join(base_url, "dataproc-plugin", "importErrorsList")
-    handlers = [(route_pattern, ImportErrorController)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "triggerDag")
-    handlers = [(route_pattern, TriggerDagController)]
-    web_app.add_handlers(host_pattern, handlers)
-
-    route_pattern = url_path_join(base_url, application_url, "downloadOutput")
-    handlers = [(route_pattern, downloadOutputController)]
+    handlersMap = {
+        "settings": SettingsHandler,
+        "credentials": CredentialsHandler,
+        "login": LoginHandler,
+        "configuration": ConfigHandler,
+        "getGcpServiceUrls": UrlHandler,
+        "log": LogHandler,
+        "composerList": ComposerListController,
+        "dagRun": DagRunController,
+        "dagRunTask": DagRunTaskController,
+        "dagRunTaskLogs": DagRunTaskLogsController,
+        "clusterList": ClusterListController,
+        "runtimeList": RuntimeController,
+        "createJobScheduler": ExecutorController,
+        "dagList": DagListController,
+        "dagDownload": DagDownloadController,
+        "dagDelete": DagDeleteController,
+        "dagUpdate": DagUpdateController,
+        "editJobScheduler": EditDagController,
+        "importErrorsList": ImportErrorController,
+        "triggerDag": TriggerDagController,
+        "downloadOutput": downloadOutputController,
+    }
+    handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)
