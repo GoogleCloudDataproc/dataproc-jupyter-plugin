@@ -154,6 +154,7 @@ export class BigQueryService {
             setTotalDatabases,
             setSchemaError,
             setEntries,
+            setIsLoading,
             setTableDescription,
             data.nextPageToken,
             allDatasetList
