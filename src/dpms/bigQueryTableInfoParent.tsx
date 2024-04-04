@@ -18,7 +18,9 @@
 import React, { useState } from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import SchemaInfo from './schemaInfo';
+import PreviewDataInfo from './previewDataInfo';
+import BigQueryTableInfo from './bigQueryTableInfo';
+import BigQuerySchemaInfo from './bigQuerySchema';
 
 interface IColumn {
   name: string;
@@ -29,26 +31,15 @@ interface IColumn {
 
 interface IDatabaseProps {
   title: string;
-  dataprocMetastoreServices: string;
   database: string;
   column: IColumn[];
-  tableDescription: Record<string, string>;
 }
-const TableInfo = ({
+const BigQueryTableInfoParent = ({
   title,
-  dataprocMetastoreServices,
   database,
-  column,
-  tableDescription
+  column
 }: IDatabaseProps): React.JSX.Element => {
-  const table = {
-    'Table name': title,
-    Description: tableDescription[title],
-    Database: database,
-    'Dataproc Metastore Instance': dataprocMetastoreServices
-  };
-
-  type Mode = 'Details' | 'Schema' 
+  type Mode = 'Details' | 'Schema' | 'Preview';
 
   const [selectedMode, setSelectedMode] = useState<Mode>('Details');
 
@@ -83,28 +74,30 @@ const TableInfo = ({
           >
             Schema
           </div>
+          <div
+            role="tabpanel"
+            className={toggleStyleSelection('Preview')}
+            onClick={() => selectedModeChange('Preview')}
+          >
+            Preview
+          </div>
         </div>
-        {selectedMode === 'Details' &&
-            <>
-              <div className="db-title">Table info</div>
-              <div className="table-container">
-                <table className="db-table">
-                  <tbody>
-                    {Object.entries(table).map(([key, value], index) => (
-                      <tr key={key} className="tr-row">
-                        <td className="bold-column">{key}</td>
-                        <td>{value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          }
+        {selectedMode === 'Details' && (
+          <BigQueryTableInfo title={title} dataset={database} />
+        )}
         {selectedMode === 'Schema' && (
           <>
             <div className="db-title">Schema</div>
-              <SchemaInfo column={column} />
+            <BigQuerySchemaInfo column={column} />
+          </>
+        )}
+        {selectedMode === 'Preview' && (
+          <>
+            <PreviewDataInfo
+              column={column}
+              tableId={title}
+              dataSetId={database}
+            />
           </>
         )}
       </div>
@@ -112,13 +105,11 @@ const TableInfo = ({
   );
 };
 
-export class Table extends DataprocWidget {
+export class BigQueryTableParent extends DataprocWidget {
   constructor(
     title: string,
-    private dataprocMetastoreServices: string,
     private database: string,
     private column: IColumn[],
-    private tableDescription: Record<string, string>,
     themeManager: IThemeManager
   ) {
     super(themeManager);
@@ -126,12 +117,10 @@ export class Table extends DataprocWidget {
 
   renderInternal(): React.JSX.Element {
     return (
-      <TableInfo
+      <BigQueryTableInfoParent
         title={this.title.label}
-        dataprocMetastoreServices={this.dataprocMetastoreServices}
         database={this.database}
         column={this.column}
-        tableDescription={this.tableDescription}
       />
     );
   }

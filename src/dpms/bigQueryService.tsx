@@ -121,13 +121,11 @@ export class BigQueryService {
   static getBigQueryDatasetsAPIService = async (
     notebookValue: string,
     settingRegistry: ISettingRegistry,
-    setDatabaseDetails: any,
     setDatabaseNames: (value: string[]) => void,
     setTotalDatabases: (value: number) => void,
     setSchemaError: (value: boolean) => void,
     setEntries: (value: string[]) => void,
     setIsLoading: (value: boolean) => void,
-    setTableDescription: any,
     nextPageToken?: string,
     previousDatasetList?: object
   ) => {
@@ -149,13 +147,11 @@ export class BigQueryService {
           this.getBigQueryDatasetsAPIService(
             notebookValue,
             settingRegistry,
-            setDatabaseDetails,
             setDatabaseNames,
             setTotalDatabases,
             setSchemaError,
             setEntries,
             setIsLoading,
-            setTableDescription,
             data.nextPageToken,
             allDatasetList
           );
@@ -181,7 +177,6 @@ export class BigQueryService {
                   description;
               }
             );
-            setDatabaseDetails(updatedDatabaseDetails);
             setDatabaseNames(databaseNames);
             setTotalDatabases(databaseNames.length);
             setSchemaError(false);
@@ -204,7 +199,6 @@ export class BigQueryService {
   static getBigQueryTableAPIService = async (
     notebookValue: string,
     datasetId: string,
-    setDatabaseDetails: any,
     setDatabaseNames: (value: string[]) => void,
     setEmptyDatabaseNames: any,
     setTotalDatabases: (value: number) => void,
@@ -212,7 +206,6 @@ export class BigQueryService {
     setSchemaError: (value: boolean) => void,
     setAllTableEntries: any,
     setEntries: (value: string[]) => void,
-    setTableDescription: any,
     setDatasetTableMappingDetails: any,
     nextPageToken?: string,
     previousDatasetList?: object
@@ -236,7 +229,6 @@ export class BigQueryService {
             this.getBigQueryTableAPIService(
               notebookValue,
               datasetId,
-              setDatabaseDetails,
               setDatabaseNames,
               setEmptyDatabaseNames,
               setTotalDatabases,
@@ -244,7 +236,6 @@ export class BigQueryService {
               setSchemaError,
               setAllTableEntries,
               setEntries,
-              setTableDescription,
               setDatasetTableMappingDetails,
               data.nextPageToken,
               allDatasetList
@@ -275,7 +266,6 @@ export class BigQueryService {
               ...prevResponse,
               entryNames
             ]);
-            setTableDescription(updatedTableDetails);
             setDatasetTableMappingDetails(datasetTableMapping);
             setTotalTables(tableNames.length);
           }
