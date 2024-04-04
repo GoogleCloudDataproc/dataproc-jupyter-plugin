@@ -29,11 +29,9 @@ import searchIcon from '../../style/icons/search_icon.svg';
 import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
 import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
 import searchClearIcon from '../../style/icons/search_clear_icon.svg';
-import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
-import { Table } from './tableInfo';
 import { ClipLoader } from 'react-spinners';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
@@ -41,6 +39,8 @@ import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { BigQueryService } from './bigQueryService';
 import { authApi } from '../utils/utils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { BigQueryDatasetParent } from './bigQueryDatasetInfoWrapper';
+import { BigQueryTableParent } from './bigQueryTableInfoWrapper';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -117,12 +117,6 @@ const BigQueryComponent = ({
   const [totalDatabases, setTotalDatabases] = useState<number>(0);
   const [totalTables, setTotalTables] = useState<number>(0);
   const [columnResponse, setColumnResponse] = useState<IColumn[]>([]);
-  const [databaseDetails, setDatabaseDetails] = useState<
-    Record<string, string>
-  >({});
-  const [tableDescription, setTableDescription] = useState<
-    Record<string, string>
-  >({});
   const [datasetTableMappingDetails, setDatasetTableMappingDetails] = useState<
     Record<string, string>
   >({});
@@ -283,13 +277,11 @@ const BigQueryComponent = ({
     const widgetTitle = node.data.name;
     if (!openedWidgets[widgetTitle]) {
       if (depth === 2) {
-        const content = new Database(
+        const content = new BigQueryDatasetParent(
           node.data.name,
-          dataprocMetastoreServices,
-          databaseDetails,
           themeManager
         );
-        const widget = new MainAreaWidget<Database>({ content });
+        const widget = new MainAreaWidget<BigQueryDatasetParent>({ content });
         const widgetId = 'node-widget-db';
         widget.id = widgetId;
         widget.title.label = node.data.name;
@@ -304,15 +296,13 @@ const BigQueryComponent = ({
         const database = node.parent.data.name;
         const column = node.data.children;
 
-        const content = new Table(
+        const content = new BigQueryTableParent(
           node.data.name,
-          dataprocMetastoreServices,
           database,
           column,
-          tableDescription,
           themeManager
         );
-        const widget = new MainAreaWidget<Table>({ content });
+        const widget = new MainAreaWidget<BigQueryTableParent>({ content });
         const widgetId = `node-widget-${uuidv4()}`;
         widget.id = widgetId;
         widget.title.label = node.data.name;
@@ -530,13 +520,11 @@ const BigQueryComponent = ({
     await BigQueryService.getBigQueryDatasetsAPIService(
       notebookValue,
       settingRegistry,
-      setDatabaseDetails,
       setDatabaseNames,
       setTotalDatabases,
       setSchemaError,
       setEntries,
       setIsLoading,
-      setTableDescription
     );
   };
 
@@ -544,7 +532,6 @@ const BigQueryComponent = ({
     await BigQueryService.getBigQueryTableAPIService(
       notebookValue,
       datasetId,
-      setDatabaseDetails,
       setDatabaseNames,
       setEmptyDatabaseNames,
       setTotalDatabases,
@@ -552,7 +539,6 @@ const BigQueryComponent = ({
       setSchemaError,
       setAllTableEntries,
       setEntries,
-      setTableDescription,
       setDatasetTableMappingDetails
     );
   };
