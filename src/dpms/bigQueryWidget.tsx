@@ -39,8 +39,8 @@ import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { BigQueryService } from './bigQueryService';
 import { authApi } from '../utils/utils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { BigQueryDatasetParent } from './bigQueryDatasetInfoParent';
-import { BigQueryTableParent } from './bigQueryTableInfoParent';
+import { BigQueryDatasetParent } from './bigQueryDatasetInfoWrapper';
+import { BigQueryTableParent } from './bigQueryTableInfoWrapper';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
