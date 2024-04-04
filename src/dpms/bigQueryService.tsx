@@ -126,6 +126,7 @@ export class BigQueryService {
     setTotalDatabases: (value: number) => void,
     setSchemaError: (value: boolean) => void,
     setEntries: (value: string[]) => void,
+    setIsLoading: (value: boolean) => void,
     setTableDescription: any,
     nextPageToken?: string,
     previousDatasetList?: object
@@ -188,11 +189,13 @@ export class BigQueryService {
               `No Dataset available in this region`,
               toastifyCustomStyle
             );
+            setIsLoading(false);
           }
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
         toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
+        setIsLoading(false);
       }
     }
   };

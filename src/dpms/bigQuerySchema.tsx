@@ -22,15 +22,15 @@ interface IColumn {
   name: string;
   type: string;
   mode: string;
-  key: string;
-  collation: string;
-  defaultValue: string;
-  policyTags: string;
-  dataPolicies: string;
-  description: string;
+  key?: string;
+  collation?: string;
+  defaultValue?: string;
+  policyTags?: string;
+  dataPolicies?: string;
+  description?: string;
 }
 
-const BigQuerySchemaInfo = ({ column }: any) => {
+const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
   const columns = [
     {
       Header: 'Field name',

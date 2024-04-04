@@ -535,6 +535,7 @@ const BigQueryComponent = ({
       setTotalDatabases,
       setSchemaError,
       setEntries,
+      setIsLoading,
       setTableDescription
     );
   };
