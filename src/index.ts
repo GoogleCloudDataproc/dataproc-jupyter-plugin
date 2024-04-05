@@ -59,6 +59,7 @@ import { NotebookScheduler } from './scheduler/notebookScheduler';
 import pythonLogo from '../third_party/icons/python_logo.svg';
 import NotebookTemplateService from './notebookTemplates/notebookTemplatesService';
 import * as path from 'path';
+import { requestAPI } from './handler/handler';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -133,7 +134,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
     });
-
+    interface SettingsResponse {
+      enable_bigquery_integration?: boolean; 
+  }
+    let bqFeature:SettingsResponse = await requestAPI('settings')
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
 
@@ -529,11 +533,13 @@ const extension: JupyterFrontEndPlugin<void> = {
     let serverlessIndex = -1;
 
     if (launcher) {
+      if (bqFeature.enable_bigquery_integration){
       launcher.add({
         command: createBigQueryNotebookComponentCommand,
         category: 'BigQuery Notebooks',
         rank: 1
       });
+    }
       Object.values(kernels).forEach((kernelsData, index) => {
         if (
           kernelsData?.resources.endpointParentResource &&
