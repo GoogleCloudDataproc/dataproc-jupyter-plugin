@@ -22,11 +22,12 @@ import time
 
 from cachetools import TTLCache
 from jupyter_server.base.handlers import APIHandler
+from jupyter_server.serverapp import ServerApp
 from jupyter_server.utils import url_path_join
 from jupyter_server.utils import ensure_async
 from requests import HTTPError
 import tornado
-from traitlets import Bool, Unicode
+from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
@@ -83,29 +84,25 @@ class DataprocPluginConfig(SingletonConfigurable):
 
 
 class SettingsHandler(APIHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.dataproc_plugin_config = DataprocPluginConfig.instance(
-            parent=self.application.settings["serverapp"]
-        )
-
     @tornado.web.authenticated
     def get(self):
-        config = self.dataproc_plugin_config
-        self.log.info(f"DataprocPluginConfig: {config.config}")
-        filtered_dictionary = {}
-        for k in config.traits():
-            v = getattr(config, k)
-            try:
-                # Some settings are not JSON serializable, so we detect that by
-                # trying to serialize each one, and then filter out the ones
-                # that cannot be serialized.
-                json.dumps(v)
-                filtered_dictionary[k] = v
-            except TypeError as er:
-                pass
-        self.log.info(f"Dataproc plugin settings: {filtered_dictionary}")
-        self.finish(json.dumps(filtered_dictionary))
+        dataproc_plugin_config = ServerApp.instance().config.DataprocPluginConfig
+        for t, v in DataprocPluginConfig.instance().traits().items():
+            # The `DataprocPluginConfig` config value will be a dictionary holding
+            # all of the settings that were explicitly set.
+            #
+            # We want the returned JSON object to also include settings where we
+            # fallback to a default value, so we add in any addition traits that
+            # we do not yet have a value for but for which a default has been defined.
+            #
+            # We explicitly filter out the `config`, `parent`, and `log` attributes
+            # that are inherited from the `SingletonConfigurable` class.
+            if t not in dataproc_plugin_config and t not in ["config", "parent", "log"]:
+                if v.default_value is not Undefined:
+                    dataproc_plugin_config[t] = v.default_value
+
+        self.log.info(f"DataprocPluginConfig: {dataproc_plugin_config}")
+        self.finish(json.dumps(dataproc_plugin_config))
 
 
 credentials_cache = None
