@@ -15,33 +15,26 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import PreviewDataInfo from './previewDataInfo';
 import BigQueryTableInfo from './bigQueryTableInfo';
 import BigQuerySchemaInfo from './bigQuerySchema';
-
-interface IColumn {
-  name: string;
-  type: string;
-  mode: string;
-  description: string;
-}
+import { BigQueryService } from './bigQueryService';
 
 interface IDatabaseProps {
   title: string;
   database: string;
-  column: IColumn[];
 }
 const BigQueryTableInfoWrapper = ({
   title,
-  database,
-  column
+  database
 }: IDatabaseProps): React.JSX.Element => {
   type Mode = 'Details' | 'Schema' | 'Preview';
 
   const [selectedMode, setSelectedMode] = useState<Mode>('Details');
+  const [schemaInfoResponse, setSchemaInfoResponse] = useState<any>()
 
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
@@ -54,6 +47,14 @@ const BigQueryTableInfoWrapper = ({
       return 'unselected-header';
     }
   };
+
+  useEffect(()=>{
+    BigQueryService.getBigQuerySchemaInfoAPIService(
+      database,
+      title,
+      setSchemaInfoResponse
+    )
+  },[])
 
   return (
     <div className="dpms-Wrapper">
@@ -88,13 +89,13 @@ const BigQueryTableInfoWrapper = ({
         {selectedMode === 'Schema' && (
           <>
             <div className="db-title">Schema</div>
-            <BigQuerySchemaInfo column={column} />
+            <BigQuerySchemaInfo column={schemaInfoResponse} />
           </>
         )}
         {selectedMode === 'Preview' && (
           <>
             <PreviewDataInfo
-              column={column}
+              column={schemaInfoResponse}
               tableId={title}
               dataSetId={database}
             />
@@ -109,7 +110,6 @@ export class BigQueryTableWrapper extends DataprocWidget {
   constructor(
     title: string,
     private database: string,
-    private column: IColumn[],
     themeManager: IThemeManager
   ) {
     super(themeManager);
@@ -120,7 +120,6 @@ export class BigQueryTableWrapper extends DataprocWidget {
       <BigQueryTableInfoWrapper
         title={this.title.label}
         database={this.database}
-        column={this.column}
       />
     );
   }

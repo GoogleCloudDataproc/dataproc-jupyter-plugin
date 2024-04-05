@@ -35,15 +35,13 @@ const BigQueryTableInfo = ({
   }, []);
 
   useEffect(() => {
-    if (datasetInfo['Case insensitive'] !== undefined && isLoading === true) {
-      BigQueryService.getBigQueryTableInfoAPIService(
-        title,
-        dataset,
-        setTableInfo,
-        datasetInfo,
-        setIsLoading
-      );
-    }
+    BigQueryService.getBigQueryTableInfoAPIService(
+      title,
+      dataset,
+      setTableInfo,
+      datasetInfo,
+      setIsLoading
+    );
   }, [datasetInfo]);
 
   return (

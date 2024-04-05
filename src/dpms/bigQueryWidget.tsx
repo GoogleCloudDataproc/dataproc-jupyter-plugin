@@ -39,8 +39,8 @@ import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { BigQueryService } from './bigQueryService';
 import { authApi } from '../utils/utils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { BigQueryDatasetParent } from './bigQueryDatasetInfoWrapper';
-import { BigQueryTableParent } from './bigQueryTableInfoWrapper';
+import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
+import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -109,49 +109,28 @@ const BigQueryComponent = ({
     useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [noDpmsInstance, setNoDpmsInstance] = useState(false);
-  const [entries, setEntries] = useState<string[]>([]);
-  const [allTableEntries, setAllTableEntries] = useState<string[]>([]);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
-  const [emptyDatabaseNames, setEmptyDatabaseNames] = useState<any>([]);
   const [schemaError, setSchemaError] = useState(false);
-  const [totalDatabases, setTotalDatabases] = useState<number>(0);
-  const [totalTables, setTotalTables] = useState<number>(0);
-  const [columnResponse, setColumnResponse] = useState<IColumn[]>([]);
-  const [datasetTableMappingDetails, setDatasetTableMappingDetails] = useState<
-    Record<string, string>
-  >({});
 
-  const getBigQueryColumnDetails = async (tableId: string) => {
+  const [dataSetResponse, setDataSetResponse] = useState<any>();
+  const [tableResponse, setTableResponse] = useState<any>();
+  const [schemaResponse, setSchemaResponse] = useState<any>();
+
+  const [treeStructureData, setTreeStructureData] = useState<any>([]);
+
+  const [currentNode, setCurrentNode] = useState<any>();
+
+  const getBigQueryColumnDetails = async (
+    tableId: string,
+    datasetId: string
+  ) => {
     await BigQueryService.getBigQueryColumnDetailsAPIService(
-      datasetTableMappingDetails[tableId],
+      datasetId,
       tableId,
-      setColumnResponse
+      setSchemaResponse
     );
   };
 
-  interface IColumn {
-    dataPolicies: any;
-    policyTags: any;
-    defaultValue: any;
-    key: any;
-    collation: string;
-    tableDescription: string;
-    name: string;
-    schema: {
-      columns: {
-        column: string;
-        type: string;
-        mode: string;
-        description: string;
-      }[];
-    };
-    fullyQualifiedName: string;
-    displayName: string;
-    column: string;
-    type: string;
-    mode: string;
-    description: string;
-  }
   interface IDataEntry {
     id: string;
     name: string;
@@ -160,110 +139,81 @@ const BigQueryComponent = ({
     children: any;
   }
 
-  const databases: { [dbName: string]: { [tableName: string]: IColumn[] } } =
-    {};
-
-  columnResponse.forEach((res: any) => {
-    /* fullyQualifiedName : dataproc_metastore:projectId.location.metastore_instance.database_name.table_name
-      fetching database name from fully qualified name structure */
-    const dbName = res.tableReference.datasetId;
-    const tableName = res.tableReference.tableId;
-    const columns: IColumn[] = res.schema.fields.map(
-      (column: {
-        name: string;
-        type: string;
-        mode: string;
-        description: string;
-        key: string;
-        collation: string;
-        defaultValue: string;
-        policyTags: string;
-        dataPolicies: string;
-      }) => ({
-        name: `${column.name}`,
-        schema: res.schema.fields,
-        type: column.type,
-        mode: column.mode,
-        key: column.key,
-        collation: column.collation,
-        defaultValue: column.defaultValue,
-        policyTags: column.policyTags,
-        dataPolicies: column.dataPolicies,
-        tableDescription: res.description,
-        description: column.description
-      })
-    );
-
-    if (!databases[dbName]) {
-      databases[dbName] = {};
-    }
-
-    if (!databases[dbName][tableName]) {
-      databases[dbName][tableName] = [];
-    }
-
-    databases[dbName][tableName].push(...columns);
-  });
-
-  const data = [
-    {
-      id: uuidv4(),
-      name: projectNameInfo,
-      children: Object.entries(databases).map(([dbName, tables]) => ({
+  const treeStructureforDatasets = () => {
+    const data = [
+      {
         id: uuidv4(),
-        name: dbName,
-        children: Object.entries(tables).map(([tableName, columns]) => ({
+        name: projectNameInfo,
+        children: databaseNames.map(datasetName => ({
           id: uuidv4(),
-          name: tableName,
-          description: '',
-          children: columns.map((column: IColumn) => ({
-            id: uuidv4(),
-            name: column.name,
-            type: column.type,
-            mode: column.mode,
-            key: column.key,
-            collation: column.collation,
-            defaultValue: column.defaultValue,
-            policyTags: column.policyTags,
-            dataPolicies: column.dataPolicies,
-            tableDescription: column.tableDescription,
-            description: column.description
-          }))
-        }))
-      }))
-    }
-  ];
-
-  if (
-    data[0].children.length > 0 &&
-    data[0].children.length + emptyDatabaseNames.length === totalDatabases
-  ) {
-    if (
-      data[0].children[totalDatabases - emptyDatabaseNames.length - 1].children
-        .length === totalTables
-    ) {
-      emptyDatabaseNames.forEach((databaseName: string) => {
-        data[0].children.push({
-          id: uuidv4(),
-          name: databaseName,
+          name: datasetName,
           children: []
-        });
-      });
-    }
-  }
+        }))
+      }
+    ];
 
-  data.sort((a, b) => a.name.localeCompare(b.name));
+    data.sort((a, b) => a.name.localeCompare(b.name));
 
-  data.forEach(db => {
-    db.children.sort((a, b) => a.name.localeCompare(b.name));
-  });
-
-  let totalTablesCount = 0;
-  if (data[0].children.length > 0) {
-    data[0].children.forEach((dataset: any) => {
-      totalTablesCount = dataset.children.length + totalTablesCount;
+    data.forEach(db => {
+      db.children.sort((a, b) => a.name.localeCompare(b.name));
     });
-  }
+
+    setTreeStructureData(data);
+  };
+
+  const treeStructureforTables = () => {
+    let tempData = [...treeStructureData];
+
+    tempData[0].children.forEach((dataset: any) => {
+      if (tableResponse.length > 0 && tableResponse[0].tableReference) {
+        if (dataset.name === tableResponse[0].tableReference.datasetId) {
+          dataset['children'] = tableResponse.map((tableDetails: any) => ({
+            id: uuidv4(),
+            name: tableDetails.tableReference.tableId,
+            children: []
+          }));
+        }
+      } else {
+        if (dataset.name === tableResponse) {
+          dataset['children'] = false;
+        }
+      }
+    });
+    setTreeStructureData(tempData);
+  };
+
+  const treeStructureforSchema = () => {
+    let tempData = [...treeStructureData];
+
+    tempData[0].children.forEach((dataset: any) => {
+      if (dataset.name === schemaResponse.tableReference.datasetId) {
+        dataset.children.forEach((table: any) => {
+          if (table.name === schemaResponse.tableReference.tableId) {
+            if (schemaResponse.schema?.fields) {
+              table['children'] = schemaResponse.schema?.fields.map(
+                (column: any) => ({
+                  id: uuidv4(),
+                  name: column.name,
+                  type: column.type,
+                  mode: column.mode,
+                  key: column.key,
+                  collation: column.collation,
+                  defaultValue: column.defaultValue,
+                  policyTags: column.policyTags,
+                  dataPolicies: column.dataPolicies,
+                  tableDescription: column.tableDescription,
+                  description: column.description
+                })
+              );
+            } else {
+              table['children'] = false;
+            }
+          }
+        });
+      }
+    });
+    setTreeStructureData(tempData);
+  };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -277,11 +227,8 @@ const BigQueryComponent = ({
     const widgetTitle = node.data.name;
     if (!openedWidgets[widgetTitle]) {
       if (depth === 2) {
-        const content = new BigQueryDatasetParent(
-          node.data.name,
-          themeManager
-        );
-        const widget = new MainAreaWidget<BigQueryDatasetParent>({ content });
+        const content = new BigQueryDatasetWrapper(node.data.name, themeManager);
+        const widget = new MainAreaWidget<BigQueryDatasetWrapper>({ content });
         const widgetId = 'node-widget-db';
         widget.id = widgetId;
         widget.title.label = node.data.name;
@@ -294,15 +241,13 @@ const BigQueryComponent = ({
         });
       } else if (depth === 3 && node.parent) {
         const database = node.parent.data.name;
-        const column = node.data.children;
-
-        const content = new BigQueryTableParent(
+        
+        const content = new BigQueryTableWrapper(
           node.data.name,
           database,
-          column,
           themeManager
         );
-        const widget = new MainAreaWidget<BigQueryTableParent>({ content });
+        const widget = new MainAreaWidget<BigQueryTableWrapper>({ content });
         const widgetId = `node-widget-${uuidv4()}`;
         widget.id = widgetId;
         widget.title.label = node.data.name;
@@ -325,7 +270,15 @@ const BigQueryComponent = ({
   };
   const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
-      node.toggle();
+      if (calculateDepth(node) === 2) {
+        setCurrentNode(node);
+        getBigQueryTables(node.data.name); 
+      } else if (calculateDepth(node) === 3 && node.parent) {
+        setCurrentNode(node);
+        getBigQueryColumnDetails(node.data.name, node.parent?.data?.name);   
+      } else {
+        node.toggle();
+      }
     };
     const handleIconClick = (event: React.MouseEvent) => {
       if (event.currentTarget.classList.contains('caret-icon')) {
@@ -338,7 +291,9 @@ const BigQueryComponent = ({
     };
     const renderNodeIcon = () => {
       const depth = calculateDepth(node);
-      const hasChildren = node.children && node.children.length > 0;
+      const hasChildren =
+        (node.children && node.children.length > 0) ||
+        (depth !== 4 && node.children);
       const arrowIcon = hasChildren ? (
         node.isOpen ? (
           <>
@@ -521,10 +476,9 @@ const BigQueryComponent = ({
       notebookValue,
       settingRegistry,
       setDatabaseNames,
-      setTotalDatabases,
+      setDataSetResponse,
       setSchemaError,
-      setEntries,
-      setIsLoading,
+      setIsLoading
     );
   };
 
@@ -533,13 +487,8 @@ const BigQueryComponent = ({
       notebookValue,
       datasetId,
       setDatabaseNames,
-      setEmptyDatabaseNames,
-      setTotalDatabases,
-      setTotalTables,
-      setSchemaError,
-      setAllTableEntries,
-      setEntries,
-      setDatasetTableMappingDetails
+      setTableResponse,
+      setSchemaError
     );
   };
 
@@ -564,29 +513,29 @@ const BigQueryComponent = ({
   }, [dataprocMetastoreServices]);
 
   useEffect(() => {
-    Promise.all(databaseNames.map(db => getBigQueryTables(db)))
-      .then(results => {})
-      .catch(error => {
-        console.log(error);
-      });
-  }, [databaseNames]);
+    treeStructureforDatasets();
+  }, [dataSetResponse]);
 
   useEffect(() => {
-    Promise.all(entries.map(entry => getBigQueryColumnDetails(entry)))
-      .then(results => {})
-      .catch(error => {
-        console.log(error);
-      });
-  }, [entries]);
+    if (tableResponse) {
+      treeStructureforTables();
+    }
+  }, [tableResponse]);
 
   useEffect(() => {
-    if (
-      columnResponse.length > 0 &&
-      columnResponse.length === allTableEntries.flat().length
-    ) {
+    if (schemaResponse) {
+      treeStructureforSchema();
+    }
+  }, [schemaResponse]);
+
+  useEffect(() => {
+    if (treeStructureData.length > 0 && treeStructureData[0].name !== '') {
       setIsLoading(false);
     }
-  }, [columnResponse]);
+    if (currentNode) {
+      currentNode?.toggle();
+    }
+  }, [treeStructureData]);
 
   return (
     <div className="dpms-Wrapper">
@@ -642,31 +591,29 @@ const BigQueryComponent = ({
                   />
                 </div>
                 <div className="tree-container">
-                  {data[0].children.length === totalDatabases &&
-                  allTableEntries.flat().length === totalTablesCount ? (
-                    <Tree
-                      className="dataset-tree"
-                      initialData={data}
-                      openByDefault={false}
-                      indent={24}
-                      width={auto}
-                      height={675}
-                      rowHeight={36}
-                      overscanCount={1}
-                      paddingTop={30}
-                      paddingBottom={10}
-                      padding={25}
-                      searchTerm={searchTerm}
-                      searchMatch={searchMatch}
-                      idAccessor={node => node.id}
-                    >
-                      {(props: NodeRendererProps<any>) => (
-                        <Node {...props} onClick={handleNodeClick} />
-                      )}
-                    </Tree>
-                  ) : (
-                    ''
-                  )}
+                  {treeStructureData.length > 0 &&
+                    treeStructureData[0].name !== '' && (
+                      <Tree
+                        className="dataset-tree"
+                        data={treeStructureData}
+                        openByDefault={false}
+                        indent={24}
+                        width={auto}
+                        height={765}
+                        rowHeight={36}
+                        overscanCount={1}
+                        paddingTop={30}
+                        paddingBottom={10}
+                        padding={25}
+                        searchTerm={searchTerm}
+                        searchMatch={searchMatch}
+                        idAccessor={(node: any) => node.id}
+                      >
+                        {(props: NodeRendererProps<any>) => (
+                          <Node {...props} onClick={handleNodeClick} />
+                        )}
+                      </Tree>
+                    )}
                 </div>
               </>
             )}
