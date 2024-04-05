@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ interface IDatabaseProps {
   database: string;
   column: IColumn[];
 }
-const BigQueryTableInfoParent = ({
+const BigQueryTableInfoWrapper = ({
   title,
   database,
   column
@@ -105,7 +105,7 @@ const BigQueryTableInfoParent = ({
   );
 };
 
-export class BigQueryTableParent extends DataprocWidget {
+export class BigQueryTableWrapper extends DataprocWidget {
   constructor(
     title: string,
     private database: string,
@@ -117,7 +117,7 @@ export class BigQueryTableParent extends DataprocWidget {
 
   renderInternal(): React.JSX.Element {
     return (
-      <BigQueryTableInfoParent
+      <BigQueryTableInfoWrapper
         title={this.title.label}
         database={this.database}
         column={this.column}
