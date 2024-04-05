@@ -15,11 +15,12 @@
 import json
 
 
-async def test_get_example(jp_fetch):
+async def test_get_settings(jp_fetch):
     # When
-    response = await jp_fetch("dataproc-plugin", "get-example")
+    response = await jp_fetch("dataproc-plugin", "settings")
 
     # Then
     assert response.code == 200
     payload = json.loads(response.body)
-    assert payload == {"data": "This is /dataproc-plugin/get-example endpoint!"}
+    assert "enable_bigquery_integration" in payload
+    assert "log_path" in payload
