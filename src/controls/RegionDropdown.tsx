@@ -48,7 +48,7 @@ export function RegionDropdown(props: Props) {
       options={regionStrList}
       onChange={(_, value) => onRegionChange(value ?? '')}
       PaperComponent={(props: PaperProps) => <Paper elevation={8} {...props} />}
-      renderInput={params => <TextField {...params} label="Region" />}
+      renderInput={params => <TextField {...params} label={'Region*'} />}
     />
   );
 }

@@ -339,7 +339,11 @@ export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel) => {
     kernelType?.name.includes('pyspark') ||
     kernelType?.resources.endpointParentResource.includes('/sessions')
   ) {
-    return iconPysparkLogo;
+    if (kernelType?.language === 'scala') {
+      return iconScalaLogo;
+    } else {
+      return iconPysparkLogo;
+    }
   } else {
     return iconPythonLogo;
   }

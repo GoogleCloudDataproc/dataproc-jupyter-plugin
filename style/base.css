@@ -14,6 +14,16 @@
   display: none;
 }
 
+/*Changing Icon for category with image add python bigquery*/
+.favyox6  svg[data-icon='launcher:python-bigquery-logo-icon'], .f1hgkb35 svg[data-icon='launcher:python-bigquery-logo-icon'] {
+  content-visibility: hidden;
+  display: block;
+  height: 32px;
+  margin: 0 auto;
+  width: 32px;
+  background-image: url('./icons/bigquery_logo.svg');
+}
+
 /*Changing Icon for category with image add runtime*/
 .favyox6  svg[data-icon='launcher:add-runtime-icon'], .f1hgkb35 svg[data-icon='launcher:add-runtime-icon'] {
   content-visibility: hidden;
@@ -183,7 +193,7 @@ body[data-jp-theme-name='JupyterLab Dark'] .color-icon path {
 body[data-jp-theme-name='JupyterLab Dark'] .filter-section-part {
   color: var(--jp-ui-font-color0);
 }
-body[data-jp-theme-name='JupyterLab Dark'] .schema-table th {
+body[data-jp-theme-name='JupyterLab Dark'] .schema-table th, body[data-jp-theme-name='JupyterLab Dark'] .big-query-schema-table th {
   background-color: var(--jp-layout-color2);
 }
 body[data-jp-theme-name='JupyterLab Dark'] .accordion-row-parent-header{

@@ -55,11 +55,6 @@ const ExecutionHistory = ({
   const [greenListDates, setGreenListDates] = useState<string[]>([]);
   const [darkGreenListDates, setDarkGreenListDates] = useState<string[]>([]);
 
-  const handleMonthChange = () => {
-    setDagRunId('');
-    setSelectedDate(null);
-  };
-
   const handleDateSelection = (selectedValue: any) => {
     setDagRunId('');
     setSelectedDate(selectedValue);
@@ -104,7 +99,7 @@ const ExecutionHistory = ({
       darkGreenListDates.length > 0 &&
       darkGreenListDates.includes(formattedTotalViewDate);
 
-    const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates);
+    const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates) && selectedDate?.month() === day?.month();
     const currentDataExecution =
       [dayjs(currentDate)?.date()].includes(totalViewDates) &&
       [dayjs(currentDate)?.month()].includes(day.month());
@@ -189,7 +184,6 @@ const ExecutionHistory = ({
                 slots={{
                   day: CustomDay
                 }}
-                onMonthChange={() => handleMonthChange()}
               />
             </LocalizationProvider>
             {startDate !== '' && endDate !== '' && (

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,42 +15,26 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import SchemaInfo from './schemaInfo';
-
-interface IColumn {
-  name: string;
-  type: string;
-  mode: string;
-  description: string;
-}
+import PreviewDataInfo from './previewDataInfo';
+import BigQueryTableInfo from './bigQueryTableInfo';
+import BigQuerySchemaInfo from './bigQuerySchema';
+import { BigQueryService } from './bigQueryService';
 
 interface IDatabaseProps {
   title: string;
-  dataprocMetastoreServices: string;
   database: string;
-  column: IColumn[];
-  tableDescription: Record<string, string>;
 }
-const TableInfo = ({
+const BigQueryTableInfoWrapper = ({
   title,
-  dataprocMetastoreServices,
-  database,
-  column,
-  tableDescription
+  database
 }: IDatabaseProps): React.JSX.Element => {
-  const table = {
-    'Table name': title,
-    Description: tableDescription[title],
-    Database: database,
-    'Dataproc Metastore Instance': dataprocMetastoreServices
-  };
-
-  type Mode = 'Details' | 'Schema' 
+  type Mode = 'Details' | 'Schema' | 'Preview';
 
   const [selectedMode, setSelectedMode] = useState<Mode>('Details');
+  const [schemaInfoResponse, setSchemaInfoResponse] = useState<any>()
 
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
@@ -63,6 +47,14 @@ const TableInfo = ({
       return 'unselected-header';
     }
   };
+
+  useEffect(()=>{
+    BigQueryService.getBigQuerySchemaInfoAPIService(
+      database,
+      title,
+      setSchemaInfoResponse
+    )
+  },[])
 
   return (
     <div className="dpms-Wrapper">
@@ -83,28 +75,30 @@ const TableInfo = ({
           >
             Schema
           </div>
+          <div
+            role="tabpanel"
+            className={toggleStyleSelection('Preview')}
+            onClick={() => selectedModeChange('Preview')}
+          >
+            Preview
+          </div>
         </div>
-        {selectedMode === 'Details' &&
-            <>
-              <div className="db-title">Table info</div>
-              <div className="table-container">
-                <table className="db-table">
-                  <tbody>
-                    {Object.entries(table).map(([key, value], index) => (
-                      <tr key={key} className="tr-row">
-                        <td className="bold-column">{key}</td>
-                        <td>{value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          }
+        {selectedMode === 'Details' && (
+          <BigQueryTableInfo title={title} dataset={database} />
+        )}
         {selectedMode === 'Schema' && (
           <>
             <div className="db-title">Schema</div>
-              <SchemaInfo column={column} />
+            <BigQuerySchemaInfo column={schemaInfoResponse} />
+          </>
+        )}
+        {selectedMode === 'Preview' && (
+          <>
+            <PreviewDataInfo
+              column={schemaInfoResponse}
+              tableId={title}
+              dataSetId={database}
+            />
           </>
         )}
       </div>
@@ -112,13 +106,10 @@ const TableInfo = ({
   );
 };
 
-export class Table extends DataprocWidget {
+export class BigQueryTableWrapper extends DataprocWidget {
   constructor(
     title: string,
-    private dataprocMetastoreServices: string,
     private database: string,
-    private column: IColumn[],
-    private tableDescription: Record<string, string>,
     themeManager: IThemeManager
   ) {
     super(themeManager);
@@ -126,12 +117,9 @@ export class Table extends DataprocWidget {
 
   renderInternal(): React.JSX.Element {
     return (
-      <TableInfo
+      <BigQueryTableInfoWrapper
         title={this.title.label}
-        dataprocMetastoreServices={this.dataprocMetastoreServices}
         database={this.database}
-        column={this.column}
-        tableDescription={this.tableDescription}
       />
     );
   }

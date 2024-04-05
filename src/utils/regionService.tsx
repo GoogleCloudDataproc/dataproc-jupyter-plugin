@@ -68,8 +68,6 @@ export function useRegion(projectId: string) {
           // so we should throw away these results.
           return;
         }
-
-        console.log(items);
         setRegions(items);
       })
       .catch((error) => {
