@@ -22,24 +22,6 @@ import { toastifyCustomStyle } from '../utils/utils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { PLUGIN_ID } from '../utils/const';
 
-interface IColumn {
-  name: string;
-  schema: {
-    columns: {
-      column: string;
-      type: string;
-      mode: string;
-      description: string;
-    }[];
-  };
-  fullyQualifiedName: string;
-  displayName: string;
-  column: string;
-  type: string;
-  mode: string;
-  description: string;
-}
-
 interface IPreviewColumn {
   Header: string;
   accessor: string;
@@ -105,13 +87,33 @@ export class BigQueryService {
   static getBigQueryColumnDetailsAPIService = async (
     datasetId: string,
     tableId: string,
-    setColumnResponse: any
+    setSchemaResponse: any
   ) => {
     try {
       const data: any = await requestAPI(
         `bigQueryTableInfo?dataset_id=${datasetId}&table_id=${tableId}`
       );
-      setColumnResponse((prevResponse: IColumn[]) => [...prevResponse, data]);
+      setSchemaResponse(data);
+    } catch (reason) {
+      console.error(`Error in fetching big query schema.\n${reason}`);
+      toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
+    }
+  };
+
+  static getBigQuerySchemaInfoAPIService = async (
+    datasetId: string,
+    tableId: string,
+    setSchemaInfoResponse: any
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryTableInfo?dataset_id=${datasetId}&table_id=${tableId}`
+      );
+      if (data.schema.fields) {
+        setSchemaInfoResponse(data.schema.fields);
+      } else {
+        setSchemaInfoResponse([]);
+      }
     } catch (reason) {
       console.error(`Error in fetching big query schema.\n${reason}`);
       toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
@@ -122,9 +124,8 @@ export class BigQueryService {
     notebookValue: string,
     settingRegistry: ISettingRegistry,
     setDatabaseNames: (value: string[]) => void,
-    setTotalDatabases: (value: number) => void,
+    setDataSetResponse: any,
     setSchemaError: (value: boolean) => void,
-    setEntries: (value: string[]) => void,
     setIsLoading: (value: boolean) => void,
     nextPageToken?: string,
     previousDatasetList?: object
@@ -148,9 +149,8 @@ export class BigQueryService {
             notebookValue,
             settingRegistry,
             setDatabaseNames,
-            setTotalDatabases,
+            setDataSetResponse,
             setSchemaError,
-            setEntries,
             setIsLoading,
             data.nextPageToken,
             allDatasetList
@@ -177,8 +177,8 @@ export class BigQueryService {
                   description;
               }
             );
+            setDataSetResponse(filterDatasetByLocation);
             setDatabaseNames(databaseNames);
-            setTotalDatabases(databaseNames.length);
             setSchemaError(false);
           } else {
             toast.error(
@@ -200,13 +200,8 @@ export class BigQueryService {
     notebookValue: string,
     datasetId: string,
     setDatabaseNames: (value: string[]) => void,
-    setEmptyDatabaseNames: any,
-    setTotalDatabases: (value: number) => void,
-    setTotalTables: (value: number) => void,
+    setTableResponse: any,
     setSchemaError: (value: boolean) => void,
-    setAllTableEntries: any,
-    setEntries: (value: string[]) => void,
-    setDatasetTableMappingDetails: any,
     nextPageToken?: string,
     previousDatasetList?: object
   ) => {
@@ -230,13 +225,8 @@ export class BigQueryService {
               notebookValue,
               datasetId,
               setDatabaseNames,
-              setEmptyDatabaseNames,
-              setTotalDatabases,
-              setTotalTables,
+              setTableResponse,
               setSchemaError,
-              setAllTableEntries,
-              setEntries,
-              setDatasetTableMappingDetails,
               data.nextPageToken,
               allDatasetList
             );
@@ -261,19 +251,10 @@ export class BigQueryService {
                   entry.tableReference.datasetId;
               }
             );
-            setEntries(entryNames);
-            setAllTableEntries((prevResponse: string[]) => [
-              ...prevResponse,
-              entryNames
-            ]);
-            setDatasetTableMappingDetails(datasetTableMapping);
-            setTotalTables(tableNames.length);
+            setTableResponse(allDatasetList);
           }
         } else {
-          setEmptyDatabaseNames((prevResponse: string[]) => [
-            ...prevResponse,
-            datasetId
-          ]);
+          setTableResponse(datasetId);
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
