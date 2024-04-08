@@ -371,7 +371,7 @@ def setup_handlers(web_app):
         "bigQueryDatasetInfo": BigqueryDatasetInfoController,
         "bigQueryTableInfo": BigqueryTableInfoController,
         "bigQueryPreview": BigqueryPreviewController,
-        "ProjectsList": BigqueryProjectsController
+        "bigQueryProjectsList": BigqueryProjectsController
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

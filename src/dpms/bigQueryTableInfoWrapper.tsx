@@ -26,10 +26,12 @@ import { BigQueryService } from './bigQueryService';
 interface IDatabaseProps {
   title: string;
   database: string;
+  projectId: string;
 }
 const BigQueryTableInfoWrapper = ({
   title,
-  database
+  database,
+  projectId
 }: IDatabaseProps): React.JSX.Element => {
   type Mode = 'Details' | 'Schema' | 'Preview';
 
@@ -52,6 +54,7 @@ const BigQueryTableInfoWrapper = ({
     BigQueryService.getBigQuerySchemaInfoAPIService(
       database,
       title,
+      projectId,
       setSchemaInfoResponse
     )
   },[])
@@ -84,7 +87,7 @@ const BigQueryTableInfoWrapper = ({
           </div>
         </div>
         {selectedMode === 'Details' && (
-          <BigQueryTableInfo title={title} dataset={database} />
+          <BigQueryTableInfo title={title} dataset={database} projectId={projectId} />
         )}
         {selectedMode === 'Schema' && (
           <>
@@ -98,6 +101,7 @@ const BigQueryTableInfoWrapper = ({
               column={schemaInfoResponse}
               tableId={title}
               dataSetId={database}
+              projectId={projectId}
             />
           </>
         )}
@@ -110,6 +114,7 @@ export class BigQueryTableWrapper extends DataprocWidget {
   constructor(
     title: string,
     private database: string,
+    private projectId: string,
     themeManager: IThemeManager
   ) {
     super(themeManager);
@@ -120,6 +125,7 @@ export class BigQueryTableWrapper extends DataprocWidget {
       <BigQueryTableInfoWrapper
         title={this.title.label}
         database={this.database}
+        projectId={this.projectId}
       />
     );
   }
