@@ -135,9 +135,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       localStorage.removeItem('notebookValue');
     });
     interface SettingsResponse {
-      enable_bigquery_integration?: boolean; 
-  }
-    let bqFeature:SettingsResponse = await requestAPI('settings')
+      enable_bigquery_integration?: boolean;
+    }
+    let bqFeature: SettingsResponse = await requestAPI('settings');
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
 
@@ -183,28 +183,28 @@ const extension: JupyterFrontEndPlugin<void> = {
         gcsDrive = undefined;
       } else {
         // Preview was enabled, (re)create DPMS and GCS.
-        if(!panelDpms && !panelGcs){
-        panelDpms = new Panel();
-        panelDpms.id = 'dpms-tab';
-        panelDpms.addWidget(
-          new dpmsWidget(
-            app as JupyterLab,
-            settingRegistry as ISettingRegistry,
-            themeManager
-          )
-        );
-        panelGcs = new Panel();
-        panelGcs.id = 'GCS-bucket-tab';
-        gcsDrive = new GCSDrive();
-        documentManager.services.contents.addDrive(gcsDrive);
-        panelGcs.addWidget(
-          new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
-        );
-        // Update the icons.
-        onThemeChanged();
-        app.shell.add(panelGcs, 'left', { rank: 1001 });
-        app.shell.add(panelDpms, 'left', { rank: 1000 });
-      }
+        if (!panelDpms && !panelGcs) {
+          panelDpms = new Panel();
+          panelDpms.id = 'dpms-tab';
+          panelDpms.addWidget(
+            new dpmsWidget(
+              app as JupyterLab,
+              settingRegistry as ISettingRegistry,
+              themeManager
+            )
+          );
+          panelGcs = new Panel();
+          panelGcs.id = 'GCS-bucket-tab';
+          gcsDrive = new GCSDrive();
+          documentManager.services.contents.addDrive(gcsDrive);
+          panelGcs.addWidget(
+            new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
+          );
+          // Update the icons.
+          onThemeChanged();
+          app.shell.add(panelGcs, 'left', { rank: 1001 });
+          app.shell.add(panelDpms, 'left', { rank: 1000 });
+        }
       }
     };
 
@@ -533,13 +533,13 @@ const extension: JupyterFrontEndPlugin<void> = {
     let serverlessIndex = -1;
 
     if (launcher) {
-      if (bqFeature.enable_bigquery_integration){
-      launcher.add({
-        command: createBigQueryNotebookComponentCommand,
-        category: 'BigQuery Notebooks',
-        rank: 1
-      });
-    }
+      if (bqFeature.enable_bigquery_integration) {
+        launcher.add({
+          command: createBigQueryNotebookComponentCommand,
+          category: 'BigQuery Notebooks',
+          rank: 1
+        });
+      }
       Object.values(kernels).forEach((kernelsData, index) => {
         if (
           kernelsData?.resources.endpointParentResource &&
@@ -650,13 +650,23 @@ const extension: JupyterFrontEndPlugin<void> = {
     // so jupyter would give us a toast container.
     // Long term we should just replace the toast calls across the plugin with
     // apputils:notify.
-    commands.execute('apputils:notify', {
-      message: 'Dataproc Jupyter Plugin Successfully Loaded',
-      type: 'success',
-      options: {
-        autoClose: 1000
-      }
-    });
+    if (bqFeature.enable_bigquery_integration) {
+      commands.execute('apputils:notify', {
+        message: 'BigQuery Plugin Successfully Loaded',
+        type: 'success',
+        options: {
+          autoClose: 1000
+        }
+      });
+    } else {
+      commands.execute('apputils:notify', {
+        message: 'Dataproc Jupyter Plugin Successfully Loaded',
+        type: 'success',
+        options: {
+          autoClose: 1000
+        }
+      });
+    }
   }
 };
 
