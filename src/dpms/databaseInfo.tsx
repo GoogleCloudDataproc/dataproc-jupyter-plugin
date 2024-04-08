@@ -18,7 +18,6 @@
 import React from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import BigQueryDatasetInfo from './bigQueryDatasetInfo';
 
 interface IDatabaseProps {
   title: string;
@@ -39,22 +38,18 @@ const DatabaseInfo = ({
   const renderTable = () => {
     return (
       <>
-        {dataprocMetastoreServices === 'bigframes' ? (
-          <BigQueryDatasetInfo dataset={title} />
-        ) : (
-          <div className="table-container">
-            <table className="db-table">
-              <tbody>
-                {Object.entries(database).map(([key, value], index) => (
-                  <tr key={key} className="tr-row">
-                    <td className="bold-column">{key}</td>
-                    <td>{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="table-container">
+          <table className="db-table">
+            <tbody>
+              {Object.entries(database).map(([key, value], index) => (
+                <tr key={key} className="tr-row">
+                  <td className="bold-column">{key}</td>
+                  <td>{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </>
     );
   };
@@ -63,11 +58,7 @@ const DatabaseInfo = ({
     <div>
       <div className="dpms-Wrapper">
         <div className="title-overlay">{title}</div>
-        {dataprocMetastoreServices === 'bigframes' ? (
-          <div className="db-title">Dataset info</div>
-        ) : (
-          <div className="db-title">Database info</div>
-        )}
+        <div className="db-title">Database info</div>
         {renderTable()}
       </div>
     </div>
