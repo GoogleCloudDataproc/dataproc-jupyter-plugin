@@ -113,7 +113,7 @@ export class BigQueryService {
       const data: any = await requestAPI(
         `bigQueryTableInfo?project_id=${projectId}&dataset_id=${datasetId}&table_id=${tableId}`
       );
-      if (data.schema.fields) {
+      if (data.schema && data.schema.fields) {
         setSchemaInfoResponse(data.schema.fields);
       } else {
         setSchemaInfoResponse([]);
