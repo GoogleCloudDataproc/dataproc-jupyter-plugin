@@ -25,16 +25,16 @@ import tableIcon from '../../style/icons/table_icon.svg';
 import columnsIcon from '../../style/icons/columns_icon.svg';
 import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
 import datasetsIcon from '../../style/icons/datasets_icon.svg';
-import searchIcon from '../../style/icons/search_icon.svg';
+// import searchIcon from '../../style/icons/search_icon.svg';
 import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
 import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
-import searchClearIcon from '../../style/icons/search_clear_icon.svg';
+// import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
 import { ClipLoader } from 'react-spinners';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { IconButton, InputAdornment, TextField } from '@mui/material';
+// import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { BigQueryService } from './bigQueryService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -75,10 +75,10 @@ const BigQueryComponent = ({
   settingRegistry: ISettingRegistry;
   themeManager: IThemeManager;
 }): JSX.Element => {
-  const iconSearchClear = new LabIcon({
-    name: 'launcher:search-clear-icon',
-    svgstr: searchClearIcon
-  });
+  // const iconSearchClear = new LabIcon({
+  //   name: 'launcher:search-clear-icon',
+  //   svgstr: searchClearIcon
+  // });
   const iconBigQueryProject = new LabIcon({
     name: 'launcher:bigquery-project-icon',
     svgstr: bigQueryProjectIcon
@@ -96,13 +96,13 @@ const BigQueryComponent = ({
     name: 'launcher:columns-icon',
     svgstr: columnsIcon
   });
-  const iconSearch = new LabIcon({
-    name: 'launcher:search-icon',
-    svgstr: searchIcon
-  });
+  // const iconSearch = new LabIcon({
+  //   name: 'launcher:search-icon',
+  //   svgstr: searchIcon
+  // });
 
   const [projectNameInfo, setProjectNameInfo] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  // const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
@@ -240,9 +240,9 @@ const BigQueryComponent = ({
     setTreeStructureData(tempData);
   };
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  };
+  // const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchTerm(event.target.value);
+  // };
   const searchMatch = (node: { data: { name: string } }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
@@ -293,9 +293,9 @@ const BigQueryComponent = ({
       openedWidgets[widgetTitle] = node.data.name;
     }
   };
-  const handleSearchClear = () => {
-    setSearchTerm('');
-  };
+  // const handleSearchClear = () => {
+  //   setSearchTerm('');
+  // };
   type NodeProps = NodeRendererProps<IDataEntry> & {
     onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
   };
@@ -370,91 +370,91 @@ const BigQueryComponent = ({
       ) : (
         <div style={{ width: '29px' }}></div>
       );
-      if (searchTerm) {
-        const arrowIcon = hasChildren ? (
-          isIconLoading && currentNode.data.name === node.data.name ? (
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
-              size={20}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
-          ) : node.isOpen ? (
-            <>
-              <div
-                role="treeitem"
-                className="caret-icon right"
-                onClick={handleIconClick}
-              >
-                <iconDownArrow.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
-              </div>
-            </>
-          ) : (
-            <div
-              role="treeitem"
-              className="caret-icon down"
-              onClick={handleIconClick}
-            >
-              <iconRightArrow.react
-                tag="div"
-                className="icon-white logo-alignment-style"
-              />
-            </div>
-          )
-        ) : (
-          <div style={{ width: '29px' }}></div>
-        );
-        if (depth === 1) {
-          return (
-            <>
-              {arrowIcon}
-              <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconBigQueryProject.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
-              </div>
-            </>
-          );
-        } else if (depth === 2) {
-          return (
-            <>
-              {arrowIcon}
-              <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconDataset.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
-              </div>
-            </>
-          );
-        } else if (depth === 3) {
-          return (
-            <>
-              {arrowIcon}
-              <div role="img" className="table-icon" onClick={handleIconClick}>
-                <iconTable.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
-              </div>
-            </>
-          );
-        }
+      // if (searchTerm) {
+      //   const arrowIcon = hasChildren ? (
+      //     isIconLoading && currentNode.data.name === node.data.name ? (
+      //       <ClipLoader
+      //         color="#3367d6"
+      //         loading={true}
+      //         size={20}
+      //         aria-label="Loading Spinner"
+      //         data-testid="loader"
+      //       />
+      //     ) : node.isOpen ? (
+      //       <>
+      //         <div
+      //           role="treeitem"
+      //           className="caret-icon right"
+      //           onClick={handleIconClick}
+      //         >
+      //           <iconDownArrow.react
+      //             tag="div"
+      //             className="icon-white logo-alignment-style"
+      //           />
+      //         </div>
+      //       </>
+      //     ) : (
+      //       <div
+      //         role="treeitem"
+      //         className="caret-icon down"
+      //         onClick={handleIconClick}
+      //       >
+      //         <iconRightArrow.react
+      //           tag="div"
+      //           className="icon-white logo-alignment-style"
+      //         />
+      //       </div>
+      //     )
+      //   ) : (
+      //     <div style={{ width: '29px' }}></div>
+      //   );
+      //   if (depth === 1) {
+      //     return (
+      //       <>
+      //         {arrowIcon}
+      //         <div role="img" className="db-icon" onClick={handleIconClick}>
+      //           <iconBigQueryProject.react
+      //             tag="div"
+      //             className="icon-white logo-alignment-style"
+      //           />
+      //         </div>
+      //       </>
+      //     );
+      //   } else if (depth === 2) {
+      //     return (
+      //       <>
+      //         {arrowIcon}
+      //         <div role="img" className="db-icon" onClick={handleIconClick}>
+      //           <iconDataset.react
+      //             tag="div"
+      //             className="icon-white logo-alignment-style"
+      //           />
+      //         </div>
+      //       </>
+      //     );
+      //   } else if (depth === 3) {
+      //     return (
+      //       <>
+      //         {arrowIcon}
+      //         <div role="img" className="table-icon" onClick={handleIconClick}>
+      //           <iconTable.react
+      //             tag="div"
+      //             className="icon-white logo-alignment-style"
+      //           />
+      //         </div>
+      //       </>
+      //     );
+      //   }
 
-        return (
-          <>
-            <iconColumns.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          </>
-        );
-      }
+      //   return (
+      //     <>
+      //       <iconColumns.react
+      //         tag="div"
+      //         className="icon-white logo-alignment-style"
+      //       />
+      //     </>
+      //   );
+      // }
       if (depth === 1) {
         return (
           <>
@@ -631,7 +631,7 @@ const BigQueryComponent = ({
               </div>
             ) : (
               <>
-                <div className="search-field">
+                {/* <div className="search-field">
                   <TextField
                     placeholder="Search your DBs and tables"
                     type="text"
@@ -662,7 +662,7 @@ const BigQueryComponent = ({
                       )
                     }}
                   />
-                </div>
+                </div> */}
                 <div className="tree-container">
                   {treeStructureData.length > 0 &&
                     treeStructureData[0].name !== '' && (
@@ -678,7 +678,7 @@ const BigQueryComponent = ({
                         paddingTop={30}
                         paddingBottom={10}
                         padding={25}
-                        searchTerm={searchTerm}
+                        // searchTerm={searchTerm}
                         searchMatch={searchMatch}
                         idAccessor={(node: any) => node.id}
                       >
