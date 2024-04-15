@@ -34,6 +34,7 @@ import {
   statusValue
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { requestAPI } from '../handler/handler';
 
 interface IClusterRenderData {
   status: { state: ClusterStatus };
@@ -80,17 +81,9 @@ export class ClusterService {
       const projectId = await getProjectId();
       setProjectId(projectId);
 
-      const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
-      queryParams.append('pageToken', pageToken);
+      const serviceURL = `clusterList?pageSize=500&pageToken=${pageToken}`;
 
-      const response = await authenticatedFetch({
-        uri: 'clusters',
-        regionIdentifier: 'regions',
-        method: HTTP_METHOD.GET,
-        queryParams: queryParams
-      });
-      const formattedResponse = await response.json();
+      const formattedResponse: any = await requestAPI(serviceURL);
       let transformClusterListData = [];
       if (formattedResponse && formattedResponse.clusters) {
         transformClusterListData = formattedResponse.clusters.map(
@@ -158,52 +151,35 @@ export class ClusterService {
     setClusterInfo: (value: IClusterDetailsResponse) => void
   ) => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       setProjectName(credentials.project_id || '');
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+
+      try {
+        const serviceURL = `clusterDetail?clusterSelected=${clusterSelected}`;
+
+        const responseResult: any = await requestAPI(serviceURL);
+        if (responseResult) {
+          if (responseResult.error && responseResult.error.code === 404) {
+            setErrorView(true);
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IClusterDetailsResponse) => {
-              if (responseResult.error && responseResult.error.code === 404) {
-                setErrorView(true);
-              }
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-              setClusterInfo(responseResult);
-              setIsLoading(false);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
+          if (responseResult?.error?.code) {
+            toast.error(responseResult?.error?.message, toastifyCustomStyle);
+          }
+          setClusterInfo(responseResult);
           setIsLoading(false);
-          console.error('Error listing clusters Details', err);
-          DataprocLoggingService.log(
-            'Error listing clusters Details',
-            LOG_LEVEL.ERROR
-          );
-          toast.error(
-            `Failed to fetch cluster details ${clusterSelected}`,
-            toastifyCustomStyle
-          );
-        });
+        }
+      } catch (err) {
+        setIsLoading(false);
+        console.error('Error listing clusters Details', err);
+        DataprocLoggingService.log(
+          'Error listing clusters Details',
+          LOG_LEVEL.ERROR
+        );
+        toast.error(
+          `Failed to fetch cluster details ${clusterSelected}`,
+          toastifyCustomStyle
+        );
+      }
     }
   };
 
@@ -213,12 +189,9 @@ export class ClusterService {
     timer: any
   ) => {
     try {
-      const response = await authenticatedFetch({
-        uri: `clusters/${selectedCluster}`,
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'regions'
-      });
-      const formattedResponse = await response.json();
+      const serviceURL = `clusterDetail?clusterSelected=${selectedCluster}`;
+
+      const formattedResponse: any = await requestAPI(serviceURL);
 
       if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
         ClusterService.startClusterApi(selectedCluster);
@@ -255,6 +228,7 @@ export class ClusterService {
       });
       const formattedResponse = await response.json();
       console.log(formattedResponse);
+      
       listClustersAPI();
       timer.current = setInterval(() => {
         statusApi(selectedCluster);

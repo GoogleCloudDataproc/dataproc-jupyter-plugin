@@ -33,7 +33,7 @@ from traitlets.config import SingletonConfigurable
 
 from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
 
-from dataproc_jupyter_plugin.contollers.clusterController import ClusterListController
+from dataproc_jupyter_plugin.contollers.clusterController import ClusterDetailController, ClusterListController
 from dataproc_jupyter_plugin.contollers.composerController import ComposerListController
 from dataproc_jupyter_plugin.contollers.dagController import (
     DagDeleteController,
@@ -356,6 +356,7 @@ def setup_handlers(web_app):
         "dagRunTask": DagRunTaskController,
         "dagRunTaskLogs": DagRunTaskLogsController,
         "clusterList": ClusterListController,
+        "clusterDetail": ClusterDetailController,
         "runtimeList": RuntimeController,
         "createJobScheduler": ExecutorController,
         "dagList": DagListController,
