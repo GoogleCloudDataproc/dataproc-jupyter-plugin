@@ -36,7 +36,7 @@ const BigQueryTableInfoWrapper = ({
   type Mode = 'Details' | 'Schema' | 'Preview';
 
   const [selectedMode, setSelectedMode] = useState<Mode>('Details');
-  const [schemaInfoResponse, setSchemaInfoResponse] = useState<any>()
+  const [schemaInfoResponse, setSchemaInfoResponse] = useState<any>();
 
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
@@ -50,14 +50,14 @@ const BigQueryTableInfoWrapper = ({
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     BigQueryService.getBigQuerySchemaInfoAPIService(
       database,
       title,
       projectId,
       setSchemaInfoResponse
-    )
-  },[])
+    );
+  }, []);
 
   return (
     <div className="dpms-Wrapper">
@@ -87,14 +87,21 @@ const BigQueryTableInfoWrapper = ({
           </div>
         </div>
         {selectedMode === 'Details' && (
-          <BigQueryTableInfo title={title} dataset={database} projectId={projectId} />
+          <BigQueryTableInfo
+            title={title}
+            dataset={database}
+            projectId={projectId}
+          />
         )}
-        {selectedMode === 'Schema' && (
-          <>
-            <div className="db-title">Schema</div>
-            <BigQuerySchemaInfo column={schemaInfoResponse} />
-          </>
-        )}
+        {selectedMode === 'Schema' &&
+          (schemaInfoResponse.length === 0 ? (
+            <div className="no-data-style">No rows to display</div>
+          ) : (
+            <>
+              <div className="db-title">Schema</div>
+              <BigQuerySchemaInfo column={schemaInfoResponse} />
+            </>
+          ))}
         {selectedMode === 'Preview' && (
           <>
             <PreviewDataInfo
