@@ -447,7 +447,7 @@ export const lastModifiedFormat = (lastModifiedDate: Date) => {
 
 export const toastifyCustomStyle: ToastOptions<{}> = {
   hideProgressBar: true,
-  autoClose: false,
+  autoClose: 600000,
   theme: 'dark',
   position: toast.POSITION.BOTTOM_CENTER
 };

@@ -22,15 +22,17 @@ import BigQueryDatasetInfo from './bigQueryDatasetInfo';
 
 interface IDatabaseProps {
   title: string;
+  projectId: string;
 }
 
 const BigQueryDatasetInfoWrapper = ({
   title,
+  projectId
 }: IDatabaseProps): React.ReactElement => {
   const renderTable = () => {
     return (
       <>
-          <BigQueryDatasetInfo dataset={title} />
+          <BigQueryDatasetInfo dataset={title} projectId={projectId} />
       </>
     );
   };
@@ -49,16 +51,19 @@ const BigQueryDatasetInfoWrapper = ({
 export class BigQueryDatasetWrapper extends DataprocWidget {
   constructor(
     title: string,
+    private projectId: string,
     themeManager: IThemeManager
   ) {
     super(themeManager);
     this.title.label = title;
+    this.projectId = projectId;
   }
 
   renderInternal(): React.ReactElement {
     return (
       <BigQueryDatasetInfoWrapper
         title={this.title.label}
+        projectId={this.projectId}
       />
     );
   }

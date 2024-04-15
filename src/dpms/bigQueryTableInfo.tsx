@@ -21,17 +21,19 @@ import { ClipLoader } from 'react-spinners';
 
 const BigQueryTableInfo = ({
   title,
-  dataset
+  dataset,
+  projectId
 }: {
   title: string;
   dataset: string;
+  projectId: string;
 }) => {
   const [datasetInfo, setDatasetInfo] = useState<any>({});
   const [tableInfo, setTableInfo] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    BigQueryService.getBigQueryDatasetInfoAPIService(dataset, setDatasetInfo);
+    BigQueryService.getBigQueryDatasetInfoAPIService(dataset, projectId, setDatasetInfo);
   }, []);
 
   useEffect(() => {
@@ -40,6 +42,7 @@ const BigQueryTableInfo = ({
       dataset,
       setTableInfo,
       datasetInfo,
+      projectId,
       setIsLoading
     );
   }, [datasetInfo]);

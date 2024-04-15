@@ -33,6 +33,7 @@ export class BigQueryService {
     tableId: string,
     dataSetId: string,
     setIsLoading: (value: boolean) => void,
+    projectId: string,
     setPreviewDataList: any,
     nextPageToken?: string,
     previousDatasetList?: object
@@ -40,7 +41,7 @@ export class BigQueryService {
     try {
       const pageToken = nextPageToken ?? '';
       const data: any = await requestAPI(
-        `bigQueryPreview?dataset_id=${dataSetId}&table_id=${tableId}&pageToken=${pageToken}`
+        `bigQueryPreview?project_id=${projectId}&dataset_id=${dataSetId}&table_id=${tableId}&pageToken=${pageToken}`
       );
 
       if (data.error) {
@@ -62,6 +63,7 @@ export class BigQueryService {
             tableId,
             dataSetId,
             setIsLoading,
+            projectId,
             setPreviewDataList,
             data.pageToken,
             allDatasetList
@@ -87,11 +89,12 @@ export class BigQueryService {
   static getBigQueryColumnDetailsAPIService = async (
     datasetId: string,
     tableId: string,
+    projectId: string,
     setSchemaResponse: any
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryTableInfo?dataset_id=${datasetId}&table_id=${tableId}`
+        `bigQueryTableInfo?project_id=${projectId}&dataset_id=${datasetId}&table_id=${tableId}`
       );
       setSchemaResponse(data);
     } catch (reason) {
@@ -103,13 +106,14 @@ export class BigQueryService {
   static getBigQuerySchemaInfoAPIService = async (
     datasetId: string,
     tableId: string,
+    projectId: string,
     setSchemaInfoResponse: any
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryTableInfo?dataset_id=${datasetId}&table_id=${tableId}`
+        `bigQueryTableInfo?project_id=${projectId}&dataset_id=${datasetId}&table_id=${tableId}`
       );
-      if (data.schema.fields) {
+      if (data.schema && data.schema.fields) {
         setSchemaInfoResponse(data.schema.fields);
       } else {
         setSchemaInfoResponse([]);
@@ -125,7 +129,9 @@ export class BigQueryService {
     settingRegistry: ISettingRegistry,
     setDatabaseNames: (value: string[]) => void,
     setDataSetResponse: any,
+    projectId: string,
     setSchemaError: (value: boolean) => void,
+    setIsIconLoading: (value: boolean) => void,
     setIsLoading: (value: boolean) => void,
     nextPageToken?: string,
     previousDatasetList?: object
@@ -134,7 +140,7 @@ export class BigQueryService {
       const pageToken = nextPageToken ?? '';
       try {
         const data: any = await requestAPI(
-          `bigQueryDataset?pageToken=${pageToken}`
+          `bigQueryDataset?project_id=${projectId}&pageToken=${pageToken}`
         );
 
         const existingDatasetList = previousDatasetList ?? [];
@@ -150,7 +156,9 @@ export class BigQueryService {
             settingRegistry,
             setDatabaseNames,
             setDataSetResponse,
+            projectId,
             setSchemaError,
+            setIsIconLoading,
             setIsLoading,
             data.nextPageToken,
             allDatasetList
@@ -180,18 +188,21 @@ export class BigQueryService {
             setDataSetResponse(filterDatasetByLocation);
             setDatabaseNames(databaseNames);
             setSchemaError(false);
+            setIsIconLoading(false);
           } else {
             toast.error(
               `No Dataset available in this region`,
               toastifyCustomStyle
             );
             setIsLoading(false);
+            setIsIconLoading(false);
           }
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
         toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
         setIsLoading(false);
+        setIsIconLoading(false);
       }
     }
   };
@@ -201,6 +212,7 @@ export class BigQueryService {
     datasetId: string,
     setDatabaseNames: (value: string[]) => void,
     setTableResponse: any,
+    projectId: string,
     setSchemaError: (value: boolean) => void,
     nextPageToken?: string,
     previousDatasetList?: object
@@ -209,7 +221,7 @@ export class BigQueryService {
       const pageToken = nextPageToken ?? '';
       try {
         const data: any = await requestAPI(
-          `bigQueryTable?dataset_id=${datasetId}&pageToken=${pageToken}`
+          `bigQueryTable?project_id=${projectId}&dataset_id=${datasetId}&pageToken=${pageToken}`
         );
 
         if (data.tables) {
@@ -226,6 +238,7 @@ export class BigQueryService {
               datasetId,
               setDatabaseNames,
               setTableResponse,
+              projectId,
               setSchemaError,
               data.nextPageToken,
               allDatasetList
@@ -265,11 +278,12 @@ export class BigQueryService {
 
   static getBigQueryDatasetInfoAPIService = async (
     dataset: string,
+    projectId: string,
     setDatasetInfo: any
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryDatasetInfo?dataset_id=${dataset}`
+        `bigQueryDatasetInfo?project_id=${projectId}&dataset_id=${dataset}`
       );
       let datasetInfoTemp: any = {};
       datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive;
@@ -284,11 +298,12 @@ export class BigQueryService {
     dataset: string,
     setTableInfo: any,
     datasetInfo: any,
+    projectId: string,
     setIsLoading: (value: boolean) => void
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryTableInfo?dataset_id=${dataset}&table_id=${title}`
+        `bigQueryTableInfo?project_id=${projectId}&dataset_id=${dataset}&table_id=${title}`
       );
 
       let tableInfoTemp: any = {};
@@ -319,11 +334,12 @@ export class BigQueryService {
   static getBigQueryDatasetDetailsAPIService = async (
     dataset: string,
     setDatasetInfo: any,
+    projectId: string,
     setIsLoading: (value: boolean) => void
   ) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryDatasetInfo?dataset_id=${dataset}`
+        `bigQueryDatasetInfo?project_id=${projectId}&dataset_id=${dataset}`
       );
       let datasetInfoTemp: any = {};
       datasetInfoTemp['Dataset ID'] = data.id;
@@ -350,6 +366,19 @@ export class BigQueryService {
         : '';
       setDatasetInfo(datasetInfoTemp);
       setIsLoading(false);
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
+
+  static getBigQueryProjectsListAPIService = async (
+    setProjectNameInfo: any
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryProjectsList`
+      );
+      setProjectNameInfo(data);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }

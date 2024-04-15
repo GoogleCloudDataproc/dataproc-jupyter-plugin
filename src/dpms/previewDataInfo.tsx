@@ -23,7 +23,7 @@ import TableData from '../utils/tableData';
 import { BigQueryService } from './bigQueryService';
 import { ICellProps } from '../utils/utils';
 
-const PreviewDataInfo = ({ column, tableId, dataSetId }: any) => {
+const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
   const [previewDataList, setPreviewDataList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -63,6 +63,7 @@ const PreviewDataInfo = ({ column, tableId, dataSetId }: any) => {
       tableId,
       dataSetId,
       setIsLoading,
+      projectId,
       setPreviewDataList
     );
   }, []);
