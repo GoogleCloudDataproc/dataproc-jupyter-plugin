@@ -17,7 +17,7 @@ import json
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.clusterListService import ClusterListService
+from dataproc_jupyter_plugin.services.clusterService import ClusterService
 
 
 class ClusterListController(APIHandler):
@@ -26,7 +26,7 @@ class ClusterListController(APIHandler):
         try:
             page_token = self.get_argument("pageToken")
             page_size = self.get_argument("pageSize")
-            cluster = ClusterListService()
+            cluster = ClusterService()
             credentials = handlers.get_cached_credentials(self.log)
             cluster_list = cluster.list_clusters(
                 credentials, page_size, page_token, self.log
@@ -42,7 +42,7 @@ class ClusterDetailController(APIHandler):
     def get(self):
         try:
             cluster_selected = self.get_argument("clusterSelected")
-            cluster = ClusterListService()
+            cluster = ClusterService()
             credentials = handlers.get_cached_credentials(self.log)
             cluster_list = cluster.get_cluster_detail(
                 credentials, cluster_selected, self.log
