@@ -414,12 +414,19 @@ export class RunTimeSerive {
       });
       const formattedResponse = await response.json();
       let transformClusterListData: string[] = [];
-      transformClusterListData = formattedResponse.clusters
-        .filter((data: { clusterName: string; status: { state: string } }) => {
-          return data.status.state === STATUS_RUNNING;
-        })
-        .map((data: { clusterName: string }) => data.clusterName);
-      setClustersList(transformClusterListData);
+      if (formattedResponse.clusters) {
+        transformClusterListData = formattedResponse.clusters
+          .filter(
+            (data: { clusterName: string; status: { state: string } }) => {
+              return data.status.state === STATUS_RUNNING;
+            }
+          )
+          .map((data: { clusterName: string }) => data.clusterName);
+        setClustersList(transformClusterListData);
+      } else {
+        toast.error('No clusters are available', toastifyCustomStyle);
+        setClustersList([])
+      }
     } catch (error) {
       console.error('Error listing clusters', error);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
