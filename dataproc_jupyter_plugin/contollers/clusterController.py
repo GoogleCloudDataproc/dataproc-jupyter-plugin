@@ -31,7 +31,6 @@ class ClusterListController(APIHandler):
             cluster_list = cluster.list_clusters(
                 credentials, page_size, page_token, self.log
             )
-            print("33333", cluster_list)
             self.finish(json.dumps(cluster_list))
         except Exception as e:
             self.log.exception(f"Error fetching cluster list")

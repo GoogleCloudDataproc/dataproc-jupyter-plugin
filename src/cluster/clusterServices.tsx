@@ -81,12 +81,12 @@ export class ClusterService {
       const projectId = await getProjectId();
       setProjectId(projectId);
 
-      const serviceURL = `clusterList?pageSize=500&pageToken=${pageToken}`;
+      const serviceURL = `clusterList?pageSize=50&pageToken=${pageToken}`;
 
       const formattedResponse: any = await requestAPI(serviceURL);
       let transformClusterListData = [];
-      if (formattedResponse && formattedResponse.clusters) {
-        transformClusterListData = formattedResponse.clusters.map(
+      if (formattedResponse) {
+        transformClusterListData = formattedResponse.map(
           (data: any) => {
             const statusVal = statusValue(data);
             // Extracting zone from zoneUri

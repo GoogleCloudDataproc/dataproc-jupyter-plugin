@@ -18,79 +18,75 @@ from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataproc_url
 
 from google.cloud import dataproc_v1 as dataproc
 import google.oauth2.credentials
+import proto
+import json
 
 
 class ClusterService:
-    # def list_clusters(self, credentials, page_size, page_token, log):
-    #     try:
-    #         if (
-    #             ("access_token" in credentials)
-    #             and ("project_id" in credentials)
-    #             and ("region_id" in credentials)
-    #         ):   
-    #             access_credentials = google.oauth2.credentials.Credentials(credentials["access_token"])
-
-    #             # Create a client
-    #             client = dataproc.ClusterControllerClient(client_options={"api_endpoint": f"us-central1-dataproc.googleapis.com:443"},credentials = access_credentials)
-
-    #             # Initialize request argument(s)
-    #             request = dataproc.ListClustersRequest(
-    #                 project_id=credentials["project_id"],
-    #                 region=credentials["region_id"],
-    #                 page_size=int(page_size),
-    #                 page_token=page_token
-    #             )
-
-    #             # Make the request
-    #             page_result = client.list_clusters(request=request)
-    #             print("1111",page_result)
-    #             # return page_result
-
-    #             clusters_list = []
-            
-    #             # Make the request
-    #             for cluster in page_result:
-    #                 print(cluster)
-    #                 # cluster_dict = {
-    #                 #             "cluster_name": cluster.cluster_name,
-    #                 #             "status": cluster.status.state,
-    #                 #         }
-    #                 clusters_list.append({cluster})
-    #             print("2222",clusters_list)
-    #             return clusters_list
-    #         else:
-    #             log.exception(f"Missing required credentials")
-    #             raise ValueError("Missing required credentials")
-    #     except Exception as e:
-    #         log.exception(f"Error fetching cluster list")
-    #         return {"error": str(e)}
-
     def list_clusters(self, credentials, page_size, page_token, log):
         try:
             if (
                 ("access_token" in credentials)
                 and ("project_id" in credentials)
                 and ("region_id" in credentials)
-            ):
-                access_token = credentials["access_token"]
-                project_id = credentials["project_id"]
-                region_id = credentials["region_id"]
-                api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
-                headers = {
-                    "Content-Type": CONTENT_TYPE,
-                    "Authorization": f"Bearer {access_token}",
-                }
-                response = requests.get(api_endpoint, headers=headers)
-                if response.status_code == 200:
-                    resp = response.json()
+            ):   
+                access_credentials = google.oauth2.credentials.Credentials(credentials["access_token"])
 
-                return resp
+                # Create a client
+                client = dataproc.ClusterControllerClient(client_options={"api_endpoint": f"us-central1-dataproc.googleapis.com:443"},credentials = access_credentials)
+
+                # Initialize request argument(s)
+                print("call params",int(page_size), page_token)
+                request = dataproc.ListClustersRequest(
+                    project_id=credentials["project_id"],
+                    page_size=int(page_size),
+                    page_token=page_token,
+                    region=credentials["region_id"],
+                )
+
+                # Make the request
+                page_result = client.list_clusters(request=request)
+
+                clusters_list = []
+            
+                # Handle the response
+                for response in page_result:
+                    clusters_list.append(json.loads(proto.Message.to_json(response)))
+
+                return clusters_list
             else:
                 log.exception(f"Missing required credentials")
                 raise ValueError("Missing required credentials")
         except Exception as e:
             log.exception(f"Error fetching cluster list")
             return {"error": str(e)}
+
+    # def list_clusters(self, credentials, page_size, page_token, log):
+    #     try:
+    #         if (
+    #             ("access_token" in credentials)
+    #             and ("project_id" in credentials)
+    #             and ("region_id" in credentials)
+    #         ):
+    #             access_token = credentials["access_token"]
+    #             project_id = credentials["project_id"]
+    #             region_id = credentials["region_id"]
+    #             api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
+    #             headers = {
+    #                 "Content-Type": CONTENT_TYPE,
+    #                 "Authorization": f"Bearer {access_token}",
+    #             }
+    #             response = requests.get(api_endpoint, headers=headers)
+    #             if response.status_code == 200:
+    #                 resp = response.json()
+
+    #             return resp
+    #         else:
+    #             log.exception(f"Missing required credentials")
+    #             raise ValueError("Missing required credentials")
+    #     except Exception as e:
+    #         log.exception(f"Error fetching cluster list")
+    #         return {"error": str(e)}
  
             
     def get_cluster_detail(self, credentials, cluster_selected, log):
@@ -99,23 +95,28 @@ class ClusterService:
                 ("access_token" in credentials)
                 and ("project_id" in credentials)
                 and ("region_id" in credentials)
-            ):
-                access_token = credentials["access_token"]
-                project_id = credentials["project_id"]
-                region_id = credentials["region_id"]
-                api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters/{cluster_selected}"
-                headers = {
-                    "Content-Type": CONTENT_TYPE,
-                    "Authorization": f"Bearer {access_token}",
-                }
-                response = requests.get(api_endpoint, headers=headers)
-                if response.status_code == 200:
-                    resp = response.json()
+            ):   
+                access_credentials = google.oauth2.credentials.Credentials(credentials["access_token"])
 
-                return resp
+                # Create a client
+                client = dataproc.ClusterControllerClient(client_options={"api_endpoint": f"us-central1-dataproc.googleapis.com:443"},credentials = access_credentials)
+
+                # Initialize request argument(s)
+                request = dataproc.GetClusterRequest(
+                    project_id=credentials["project_id"],
+                    region=credentials["region_id"],
+                    cluster_name=cluster_selected
+                )
+
+                # Make the request
+                response = client.get_cluster(request=request)
+
+                # Handle the response
+                print(response)
+                return response
             else:
                 log.exception(f"Missing required credentials")
                 raise ValueError("Missing required credentials")
         except Exception as e:
-            log.exception(f"Error fetching cluster list")
+            log.exception(f"Error fetching cluster detail")
             return {"error": str(e)}
