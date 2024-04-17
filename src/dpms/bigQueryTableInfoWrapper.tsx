@@ -93,7 +93,7 @@ const BigQueryTableInfoWrapper = ({
             projectId={projectId}
           />
         )}
-        {selectedMode === 'Schema' &&
+        {selectedMode === 'Schema' && schemaInfoResponse &&
           (schemaInfoResponse.length === 0 ? (
             <div className="no-data-style">No rows to display</div>
           ) : (
