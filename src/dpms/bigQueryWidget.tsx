@@ -263,9 +263,6 @@ const BigQueryComponent = ({
     ) {
       let data: any = [];
       searchResponse.results.forEach((searchData: any) => {
-        // if (
-        //   searchData.searchResultSubtype === 'entry.table'
-        // ) {
         let tempData = [...data];
         //first time data is empty
         if (tempData.length === 0) {
@@ -297,6 +294,7 @@ const BigQueryComponent = ({
               if (
                 projectData.name === searchData.linkedResource.split('/')[4]
               ) {
+                //To check if dataset is already exist or not
                 let datasetDataAlreadyExist = projectData['children'].filter(
                   (datasetData: any) => {
                     return (
@@ -305,6 +303,7 @@ const BigQueryComponent = ({
                     );
                   }
                 );
+                //if dataset is already exist
                 if (datasetDataAlreadyExist.length !== 0) {
                   projectData['children'].forEach((datasetData: any) => {
                     if (
@@ -321,6 +320,7 @@ const BigQueryComponent = ({
                     }
                   });
                 } else {
+                  //if dataset is not exist
                   projectData['children'].push({
                     id: uuidv4(),
                     name: searchData.linkedResource.split('/')[6],
@@ -358,71 +358,12 @@ const BigQueryComponent = ({
           }
         }
         data = tempData;
-        // }
-        // else if (
-        //   searchData.searchResultSubtype === 'entry.dataset' &&
-        //   searchData.integratedSystem === 'BIGQUERY'
-        // ) {
-        //   let tempData = [...data];
-        //   //first time data is empty
-        //   if (tempData.length === 0) {
-        //     tempData.push({
-        //       id: uuidv4(),
-        //       name: searchData.linkedResource.split('/')[4],
-        //       children: [
-        //         {
-        //           id: uuidv4(),
-        //           name: searchData.linkedResource.split('/')[6],
-        //           children: []
-        //         }
-        //       ]
-        //     });
-        //   } else {
-        //     //To check if project is already exist or not
-        //     let dataAlreadyExist = tempData.filter(projectData => {
-        //       return (
-        //         projectData.name === searchData.linkedResource.split('/')[4]
-        //       );
-        //     });
-        //     //if project is already exist
-        //     if (dataAlreadyExist.length !== 0) {
-        //       tempData.forEach(projectData => {
-        //         if (
-        //           projectData.name === searchData.linkedResource.split('/')[4]
-        //         ) {
-        //           projectData['children'].push({
-        //             id: uuidv4(),
-        //             name: searchData.linkedResource.split('/')[6],
-        //             children: []
-        //           });
-        //         }
-        //       });
-        //     } else {
-        //       //if project is not exist
-        //       tempData.push({
-        //         id: uuidv4(),
-        //         name: searchData.linkedResource.split('/')[4],
-        //         children: [
-        //           {
-        //             id: uuidv4(),
-        //             name: searchData.linkedResource.split('/')[6],
-        //             children: []
-        //           }
-        //         ]
-        //       });
-        //     }
-        //   }
-        //   data = tempData;
-        // }
       });
-
       setTreeStructureData(data);
     }
   };
 
   const handleSearch = (value: string) => {
-    console.log(value, 'yiyuguy');
-    // setSearchTerm(value);
     if (value !== '') {
       BigQueryService.getBigQuerySearchAPIService(
         value,
@@ -440,10 +381,6 @@ const BigQueryComponent = ({
     setSearchTerm(event.target.value);
     debouncedHandleSearch(event.target.value);
   };
-
-  // const searchMatch = (node: { data: { name: string } }, term: string) => {
-  //   return node.data.name.toLowerCase().includes(term.toLowerCase());
-  // };
 
   const openedWidgets: Record<string, boolean> = {};
   const handleNodeClick = (node: NodeApi) => {
@@ -892,7 +829,6 @@ const BigQueryComponent = ({
                         paddingBottom={10}
                         padding={25}
                         searchTerm={searchTerm}
-                        // searchMatch={searchMatch}
                         idAccessor={(node: any) => node.id}
                       >
                         {(props: NodeRendererProps<any>) => (
