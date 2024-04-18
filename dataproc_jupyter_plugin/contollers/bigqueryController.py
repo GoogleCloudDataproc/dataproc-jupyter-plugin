@@ -22,6 +22,7 @@ from dataproc_jupyter_plugin.services.bigqueryService import (
     BigQueryDatasetListService,
     BigQueryPreviewService,
     BigQueryProjectService,
+    BigQuerySearchService,
     BigQueryTableInfoService,
     BigQueryTableListService,
 )
@@ -127,4 +128,23 @@ class BigqueryProjectsController(APIHandler):
             self.finish(json.dumps(project_list))
         except Exception as e:
             self.log.exception(f"Error fetching projects")
+            self.finish({"error": str(e)})
+
+class BigquerySearchController(APIHandler):
+    @tornado.web.authenticated
+    def get(self):
+        try:
+            search_string = self.get_argument("search_string")
+            type = self.get_argument("type")
+            system= self.get_argument("system")
+            # search_string = "bike"
+            projects = Utilities.get_projects()
+            bq_search = BigQuerySearchService()
+            credentials = handlers.get_cached_credentials(self.log)
+            search_data = bq_search.bigquery_search(
+                credentials, search_string, type, system, projects, self.log
+            )
+            self.finish(json.dumps(search_data))
+        except Exception as e:
+            self.log.exception(f"Error fetching search data")
             self.finish({"error": str(e)})

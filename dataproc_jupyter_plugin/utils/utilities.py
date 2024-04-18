@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
  
+import json
 import subprocess
+from dataproc_jupyter_plugin.utils.constants import bq_public_dataset_project_id
  
 class Utilities:
     def capture_shell_command_output(command):
@@ -22,3 +24,10 @@ class Utilities:
         else:
             raise Exception(result.stderr.strip())
         return output
+
+
+    def get_projects():
+            project_list_cmd = "gcloud config config-helper --format=json --flatten=configuration.properties.core.project"
+            project_list = json.loads(Utilities.capture_shell_command_output(project_list_cmd))
+            project_list.append(bq_public_dataset_project_id)
+            return project_list
