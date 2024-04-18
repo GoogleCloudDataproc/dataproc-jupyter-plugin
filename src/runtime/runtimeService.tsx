@@ -424,7 +424,6 @@ export class RunTimeSerive {
           .map((data: { clusterName: string }) => data.clusterName);
         setClustersList(transformClusterListData);
       } else {
-        toast.error('No clusters are available', toastifyCustomStyle);
         setClustersList([])
       }
     } catch (error) {

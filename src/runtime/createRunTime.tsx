@@ -1307,6 +1307,7 @@ function CreateRunTime({
                   options={clustersList}
                   value={clusterSelected}
                   onChange={(_event, val) => handleClusterSelected(val)}
+                  noOptionsText="No history server clusters available"
                   renderInput={params => (
                     <TextField {...params} label="History server cluster" />
                   )}
