@@ -137,7 +137,6 @@ class BigquerySearchController(APIHandler):
             search_string = self.get_argument("search_string")
             type = self.get_argument("type")
             system= self.get_argument("system")
-            # search_string = "bike"
             projects = Utilities.get_projects()
             bq_search = BigQuerySearchService()
             credentials = handlers.get_cached_credentials(self.log)
