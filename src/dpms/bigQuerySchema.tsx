@@ -87,7 +87,7 @@ const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
     useTable({ columns, data });
 
   return (
-    <div className="dpms-Wrapper">
+    <div className="big-query-schema-wrapper">
       <div className="table-container">
         <table className="big-query-schema-table" {...getTableProps()}>
           <thead>
