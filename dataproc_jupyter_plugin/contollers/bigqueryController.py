@@ -28,6 +28,7 @@ from dataproc_jupyter_plugin.services.bigqueryService import (
 )
 from dataproc_jupyter_plugin.utils.utilities import Utilities
 from dataproc_jupyter_plugin.utils.constants import bq_public_dataset_project_id
+from google.cloud.jupyter_config import gcp_project
 
 class BigqueryDatasetController(APIHandler):
     @tornado.web.authenticated
@@ -122,9 +123,7 @@ class BigqueryProjectsController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            project_list_cmd = "gcloud config config-helper --format=json --flatten=configuration.properties.core.project"
-            project_list = json.loads(Utilities.capture_shell_command_output(project_list_cmd))
-            project_list.append(bq_public_dataset_project_id)
+            project_list = [gcp_project(), bq_public_dataset_project_id]
             self.finish(json.dumps(project_list))
         except Exception as e:
             self.log.exception(f"Error fetching projects")
@@ -137,7 +136,7 @@ class BigquerySearchController(APIHandler):
             search_string = self.get_argument("search_string")
             type = self.get_argument("type")
             system= self.get_argument("system")
-            projects = Utilities.get_projects()
+            projects = [gcp_project(), bq_public_dataset_project_id]
             bq_search = BigQuerySearchService()
             credentials = handlers.get_cached_credentials(self.log)
             search_data = bq_search.bigquery_search(

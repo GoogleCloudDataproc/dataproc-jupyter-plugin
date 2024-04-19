@@ -24,10 +24,3 @@ class Utilities:
         else:
             raise Exception(result.stderr.strip())
         return output
-
-
-    def get_projects():
-            project_list_cmd = "gcloud config config-helper --format=json --flatten=configuration.properties.core.project"
-            project_list = json.loads(Utilities.capture_shell_command_output(project_list_cmd))
-            project_list.append(bq_public_dataset_project_id)
-            return project_list
