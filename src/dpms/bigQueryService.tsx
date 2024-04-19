@@ -375,10 +375,24 @@ export class BigQueryService {
     setProjectNameInfo: any
   ) => {
     try {
-      const data: any = await requestAPI(
-        `bigQueryProjectsList`
-      );
+      const data: any = await requestAPI(`bigQueryProjectsList`);
       setProjectNameInfo(data);
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+    }
+  };
+
+  static getBigQuerySearchAPIService = async (
+    searchTerm: string,
+    setSearchLoading: (value: boolean) => void,
+    setSearchResponse: any
+  ) => {
+    setSearchLoading(true);
+    try {
+      const data: any = await requestAPI(
+        `bigQuerySearch?search_string=${searchTerm}&type=(table|dataset)&system=bigquery`
+      );
+      setSearchResponse(data);
     } catch (reason) {
       console.error(`Error on GET credentials.\n${reason}`);
     }

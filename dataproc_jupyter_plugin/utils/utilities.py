@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
  
+import json
 import subprocess
+from dataproc_jupyter_plugin.utils.constants import bq_public_dataset_project_id
  
 class Utilities:
     def capture_shell_command_output(command):
