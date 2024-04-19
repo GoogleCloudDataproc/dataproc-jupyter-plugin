@@ -375,7 +375,7 @@ const BigQueryComponent = ({
     }
   };
 
-  const debouncedHandleSearch = debounce(handleSearch, 2000);
+  const debouncedHandleSearch = debounce(handleSearch, 500);
 
   const handleSearchTerm = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);

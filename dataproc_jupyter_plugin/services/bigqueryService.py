@@ -174,19 +174,31 @@ class BigQuerySearchService:
                 'X-Goog-User-Project' : project_id
                 }
                 payload = {
-                    "query": f"name:{search_string}, system={system}, type={type}",
+                    "query": f"{search_string}, system={system}, type={type}",
                     "scope": {
                         "includeProjectIds": projects
                     },
                     "pageSize": 500
                 }
-                response = requests.post(api_endpoint, headers=headers, json=payload)
-                if response.status_code == 200:
-                    resp = response.json()
-                    return resp
+                has_next = True
+                search_result=[]
+                while has_next:
+                    response = requests.post(api_endpoint, headers=headers, json=payload)
+                    if response.status_code == 200:
+                        resp = response.json()
+                        if "results" in resp:
+                            search_result += resp["results"]
+                        if "nextPageToken" in resp:
+                            payload["pageToken"]=resp["nextPageToken"]
+                        else:
+                            has_next = False
+                    else:
+                        log.exception(f"Missing required credentials")
+                        raise ValueError("Missing required credentials")
+                if(len(search_result)==0):
+                    return {}
                 else:
-                    log.exception(f"Missing required credentials")
-                    raise ValueError("Missing required credentials")
+                    return {"results": search_result}
             else:
                 log.exception(f"Missing required credentials")
                 raise ValueError("Missing required credentials")
