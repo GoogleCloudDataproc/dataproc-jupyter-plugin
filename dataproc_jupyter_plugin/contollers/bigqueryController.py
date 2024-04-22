@@ -26,7 +26,6 @@ from dataproc_jupyter_plugin.services.bigqueryService import (
     BigQueryTableInfoService,
     BigQueryTableListService,
 )
-from dataproc_jupyter_plugin.utils.utilities import Utilities
 from dataproc_jupyter_plugin.utils.constants import bq_public_dataset_project_id
 from google.cloud.jupyter_config import gcp_project
 
