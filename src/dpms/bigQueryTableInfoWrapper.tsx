@@ -26,15 +26,17 @@ import { BigQueryService } from './bigQueryService';
 interface IDatabaseProps {
   title: string;
   database: string;
+  projectId: string;
 }
 const BigQueryTableInfoWrapper = ({
   title,
-  database
+  database,
+  projectId
 }: IDatabaseProps): React.JSX.Element => {
   type Mode = 'Details' | 'Schema' | 'Preview';
 
   const [selectedMode, setSelectedMode] = useState<Mode>('Details');
-  const [schemaInfoResponse, setSchemaInfoResponse] = useState<any>()
+  const [schemaInfoResponse, setSchemaInfoResponse] = useState<any>();
 
   const selectedModeChange = (mode: Mode) => {
     setSelectedMode(mode);
@@ -48,13 +50,14 @@ const BigQueryTableInfoWrapper = ({
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     BigQueryService.getBigQuerySchemaInfoAPIService(
       database,
       title,
+      projectId,
       setSchemaInfoResponse
-    )
-  },[])
+    );
+  }, []);
 
   return (
     <div className="dpms-Wrapper">
@@ -84,20 +87,28 @@ const BigQueryTableInfoWrapper = ({
           </div>
         </div>
         {selectedMode === 'Details' && (
-          <BigQueryTableInfo title={title} dataset={database} />
+          <BigQueryTableInfo
+            title={title}
+            dataset={database}
+            projectId={projectId}
+          />
         )}
-        {selectedMode === 'Schema' && (
-          <>
-            <div className="db-title">Schema</div>
-            <BigQuerySchemaInfo column={schemaInfoResponse} />
-          </>
-        )}
+        {selectedMode === 'Schema' && schemaInfoResponse &&
+          (schemaInfoResponse.length === 0 ? (
+            <div className="no-data-style">No rows to display</div>
+          ) : (
+            <>
+              <div className="db-title">Schema</div>
+              <BigQuerySchemaInfo column={schemaInfoResponse} />
+            </>
+          ))}
         {selectedMode === 'Preview' && (
           <>
             <PreviewDataInfo
               column={schemaInfoResponse}
               tableId={title}
               dataSetId={database}
+              projectId={projectId}
             />
           </>
         )}
@@ -110,6 +121,7 @@ export class BigQueryTableWrapper extends DataprocWidget {
   constructor(
     title: string,
     private database: string,
+    private projectId: string,
     themeManager: IThemeManager
   ) {
     super(themeManager);
@@ -120,6 +132,7 @@ export class BigQueryTableWrapper extends DataprocWidget {
       <BigQueryTableInfoWrapper
         title={this.title.label}
         database={this.database}
+        projectId={this.projectId}
       />
     );
   }

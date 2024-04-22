@@ -236,7 +236,7 @@ class ExecutorService:
                 time_zone=time_zone,
                 custom_container=custom_container,
                 metastore_service=metastore_service,
-                version = version
+                version=version,
             )
 
         print(content)

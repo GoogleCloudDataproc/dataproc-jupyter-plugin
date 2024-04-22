@@ -14,20 +14,17 @@
 
 
 import requests
-from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataplex_url
+from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, datacatalog_url
 
 
 class ApiHeaders:
     @staticmethod
     def create_headers(access_token):
-        return {
-            "Content-Type": CONTENT_TYPE,
-            "Authorization": f"Bearer {access_token}",
-        }
+        return {"Content-Type": CONTENT_TYPE, "Authorization": f"Bearer {access_token}"}
 
 
 class BigQueryDatasetListService:
-    def list_datasets(self, credentials, page_token, log):
+    def list_datasets(self, credentials, page_token, project_id, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -35,7 +32,6 @@ class BigQueryDatasetListService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
                 headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
@@ -54,7 +50,7 @@ class BigQueryDatasetListService:
 
 
 class BigQueryTableListService:
-    def list_table(self, credentials, dataset_id, page_token, log):
+    def list_table(self, credentials, dataset_id, page_token, project_id, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -62,7 +58,6 @@ class BigQueryTableListService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
                 headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
@@ -81,7 +76,7 @@ class BigQueryTableListService:
 
 
 class BigQueryDatasetInfoService:
-    def list_dataset_info(self, credentials, dataset_id, log):
+    def list_dataset_info(self, credentials, dataset_id, project_id, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -89,7 +84,6 @@ class BigQueryDatasetInfoService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
                 headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
@@ -108,7 +102,7 @@ class BigQueryDatasetInfoService:
 
 
 class BigQueryTableInfoService:
-    def list_table_info(self, credentials, dataset_id, table_id, log):
+    def list_table_info(self, credentials, dataset_id, table_id, project_id, log):
         try:
             if (
                 ("access_token" in credentials)
@@ -116,7 +110,6 @@ class BigQueryTableInfoService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
                 headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
@@ -135,7 +128,9 @@ class BigQueryTableInfoService:
 
 
 class BigQueryPreviewService:
-    def bigquery_preview_data(self, credentials, dataset_id, table_id, page_token, log):
+    def bigquery_preview_data(
+        self, credentials, dataset_id, table_id, page_token, project_id, log
+    ):
         try:
             if (
                 ("access_token" in credentials)
@@ -143,7 +138,6 @@ class BigQueryPreviewService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                project_id = credentials["project_id"]
                 api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?pageToken={page_token}"
                 headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
@@ -158,6 +152,56 @@ class BigQueryPreviewService:
                 raise ValueError("Missing required credentials")
         except Exception as e:
             log.exception(f"Error fetching preview data")
+            return {"error": str(e)}
+
+
+class BigQuerySearchService:
+    def bigquery_search(self, credentials, search_string, type, system, projects, log):
+        try:
+            if (
+                ("access_token" in credentials)
+                and ("project_id" in credentials)
+                and ("region_id" in credentials)
+            ):
+                access_token = credentials["access_token"]
+                project_id = credentials["project_id"]
+                api_endpoint = f"{datacatalog_url}v1/catalog:search"
+                headers = {
+                    "Content-Type": CONTENT_TYPE,
+                    "Authorization": f"Bearer {access_token}",
+                    "X-Goog-User-Project": project_id,
+                }
+                payload = {
+                    "query": f"{search_string}, system={system}, type={type}",
+                    "scope": {"includeProjectIds": projects},
+                    "pageSize": 500,
+                }
+                has_next = True
+                search_result = []
+                while has_next:
+                    response = requests.post(
+                        api_endpoint, headers=headers, json=payload
+                    )
+                    if response.status_code == 200:
+                        resp = response.json()
+                        if "results" in resp:
+                            search_result += resp["results"]
+                        if "nextPageToken" in resp:
+                            payload["pageToken"] = resp["nextPageToken"]
+                        else:
+                            has_next = False
+                    else:
+                        log.exception(f"Missing required credentials")
+                        raise ValueError("Missing required credentials")
+                if len(search_result) == 0:
+                    return {}
+                else:
+                    return {"results": search_result}
+            else:
+                log.exception(f"Missing required credentials")
+                raise ValueError("Missing required credentials")
+        except Exception as e:
+            log.exception(f"Error fetching search data")
             return {"error": str(e)}
 
 

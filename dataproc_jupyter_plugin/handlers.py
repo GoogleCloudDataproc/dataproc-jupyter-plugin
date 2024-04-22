@@ -21,7 +21,15 @@ import threading
 import time
 
 from cachetools import TTLCache
-from dataproc_jupyter_plugin.contollers.bigqueryController import BigqueryDatasetController, BigqueryDatasetInfoController, BigqueryPreviewController, BigqueryProjectsController, BigqueryTableController, BigqueryTableInfoController
+from dataproc_jupyter_plugin.contollers.bigqueryController import (
+    BigqueryDatasetController,
+    BigqueryDatasetInfoController,
+    BigqueryPreviewController,
+    BigqueryProjectsController,
+    BigquerySearchController,
+    BigqueryTableController,
+    BigqueryTableInfoController,
+)
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.serverapp import ServerApp
 from jupyter_server.utils import url_path_join
@@ -371,7 +379,8 @@ def setup_handlers(web_app):
         "bigQueryDatasetInfo": BigqueryDatasetInfoController,
         "bigQueryTableInfo": BigqueryTableInfoController,
         "bigQueryPreview": BigqueryPreviewController,
-        "ProjectsList": BigqueryProjectsController
+        "bigQueryProjectsList": BigqueryProjectsController,
+        "bigQuerySearch": BigquerySearchController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

@@ -1096,15 +1096,27 @@ function CreateRunTime({
                 )}
                 {selectedNetworkRadio === 'projectNetwork' &&
                   networkList.length === 0 && (
-                    <div className="create-no-list-message">
-                      No local networks are available.
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        No local networks are available.
+                      </div>
                     </div>
                   )}
                 {selectedNetworkRadio === 'projectNetwork' &&
                   networkList.length !== 0 &&
                   subNetworkList.length === 0 && (
-                    <div className="create-no-list-message">
-                      Please select a valid network and subnetwork.
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        Please select a valid network and subnetwork.
+                      </div>
                     </div>
                   )}
                 {selectedNetworkRadio === 'sharedVpc' && (
@@ -1121,8 +1133,14 @@ function CreateRunTime({
                 )}
                 {selectedNetworkRadio === 'sharedVpc' &&
                   sharedSubNetworkList.length === 0 && (
-                    <div className="create-no-list-message">
-                      No shared subnetworks are available in this region.
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        No shared subnetworks are available in this region.
+                      </div>
                     </div>
                   )}
               </div>
@@ -1289,6 +1307,7 @@ function CreateRunTime({
                   options={clustersList}
                   value={clusterSelected}
                   onChange={(_event, val) => handleClusterSelected(val)}
+                  noOptionsText="No history server clusters available"
                   renderInput={params => (
                     <TextField {...params} label="History server cluster" />
                   )}
