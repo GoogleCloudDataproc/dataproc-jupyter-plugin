@@ -130,7 +130,6 @@ export class BigQueryService {
     setDatabaseNames: (value: string[]) => void,
     setDataSetResponse: any,
     projectId: string,
-    setSchemaError: (value: boolean) => void,
     setIsIconLoading: (value: boolean) => void,
     setIsLoading: (value: boolean) => void,
     nextPageToken?: string,
@@ -157,7 +156,6 @@ export class BigQueryService {
             setDatabaseNames,
             setDataSetResponse,
             projectId,
-            setSchemaError,
             setIsIconLoading,
             setIsLoading,
             data.nextPageToken,
@@ -187,7 +185,6 @@ export class BigQueryService {
             );
             setDataSetResponse(filterDatasetByLocation);
             setDatabaseNames(databaseNames);
-            setSchemaError(false);
             setIsIconLoading(false);
           } else {
             toast.error(
@@ -213,7 +210,6 @@ export class BigQueryService {
     setDatabaseNames: (value: string[]) => void,
     setTableResponse: any,
     projectId: string,
-    setSchemaError: (value: boolean) => void,
     nextPageToken?: string,
     previousDatasetList?: object
   ) => {
@@ -239,7 +235,6 @@ export class BigQueryService {
               setDatabaseNames,
               setTableResponse,
               projectId,
-              setSchemaError,
               data.nextPageToken,
               allDatasetList
             );

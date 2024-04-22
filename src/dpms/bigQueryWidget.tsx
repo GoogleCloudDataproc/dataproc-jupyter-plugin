@@ -119,9 +119,7 @@ const BigQueryComponent = ({
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [noDpmsInstance, setNoDpmsInstance] = useState(false);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
-  const [schemaError, setSchemaError] = useState(false);
 
   const [dataSetResponse, setDataSetResponse] = useState<any>();
   const [tableResponse, setTableResponse] = useState<any>();
@@ -670,7 +668,6 @@ const BigQueryComponent = ({
       setDatabaseNames,
       setDataSetResponse,
       projectId,
-      setSchemaError,
       setIsIconLoading,
       setIsLoading
     );
@@ -686,20 +683,14 @@ const BigQueryComponent = ({
         datasetId,
         setDatabaseNames,
         setTableResponse,
-        projectId,
-        setSchemaError
+        projectId
       );
     }
   };
 
   const getActiveNotebook = () => {
-    const notebookVal = localStorage.getItem('notebookValue');
-    if (notebookVal?.includes('bigframes')) {
-      setNotebookValue('bigframes');
-      setDataprocMetastoreServices('bigframes');
-    } else {
-      setNoDpmsInstance(true);
-    }
+    setNotebookValue('bigframes');
+    setDataprocMetastoreServices('bigframes');
   };
   useEffect(() => {
     getActiveNotebook();
@@ -753,99 +744,93 @@ const BigQueryComponent = ({
   return (
     <div className="dpms-Wrapper">
       <TitleComponent titleStr="Dataset Explorer" isPreview />
-      {!noDpmsInstance ? (
-        <>
-          <div>
-            {isLoading ? (
-              <div className="database-loader">
-                <div>
-                  <ClipLoader
-                    color="#3367d6"
-                    loading={true}
-                    size={20}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                </div>
-                Loading datasets
+      <>
+        <div>
+          {isLoading ? (
+            <div className="database-loader">
+              <div>
+                <ClipLoader
+                  color="#3367d6"
+                  loading={true}
+                  size={20}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
               </div>
-            ) : (
-              <>
-                <div className="search-field">
-                  <TextField
-                    placeholder="Search your DBs and tables"
-                    type="text"
-                    variant="outlined"
-                    fullWidth
-                    size="small"
-                    onChange={handleSearchTerm}
-                    value={searchTerm}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          {!searchLoading ? (
-                            <iconSearch.react
-                              tag="div"
-                              className="icon-white logo-alignment-style"
-                            />
-                          ) : (
-                            <ClipLoader
-                              color="#3367d6"
-                              loading={true}
-                              size={20}
-                              aria-label="Loading Spinner"
-                              data-testid="loader"
-                            />
-                          )}
-                        </InputAdornment>
-                      ),
-                      endAdornment: searchTerm && (
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={handleSearchClear}
-                        >
-                          <iconSearchClear.react
+              Loading datasets
+            </div>
+          ) : (
+            <>
+              <div className="search-field">
+                <TextField
+                  placeholder="Search your DBs and tables"
+                  type="text"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  onChange={handleSearchTerm}
+                  value={searchTerm}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        {!searchLoading ? (
+                          <iconSearch.react
                             tag="div"
-                            className="icon-white logo-alignment-style search-clear-icon"
+                            className="icon-white logo-alignment-style"
                           />
-                        </IconButton>
-                      )
-                    }}
-                  />
-                </div>
-                <div className="tree-container">
-                  {treeStructureData.length > 0 &&
-                    treeStructureData[0].name !== '' && (
-                      <Tree
-                        className="dataset-tree"
-                        data={treeStructureData}
-                        openByDefault={false}
-                        indent={24}
-                        width={auto}
-                        height={765}
-                        rowHeight={36}
-                        overscanCount={1}
-                        paddingTop={30}
-                        paddingBottom={10}
-                        padding={25}
-                        searchTerm={searchTerm}
-                        idAccessor={(node: any) => node.id}
-                      >
-                        {(props: NodeRendererProps<any>) => (
-                          <Node {...props} onClick={handleNodeClick} />
+                        ) : (
+                          <ClipLoader
+                            color="#3367d6"
+                            loading={true}
+                            size={20}
+                            aria-label="Loading Spinner"
+                            data-testid="loader"
+                          />
                         )}
-                      </Tree>
-                    )}
-                </div>
-              </>
-            )}
-          </div>
-        </>
-      ) : schemaError ? (
-        <div className="dpms-error">No schema available</div>
-      ) : (
-        <div className="dpms-error">DPMS schema explorer not set up</div>
-      )}
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchTerm && (
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleSearchClear}
+                      >
+                        <iconSearchClear.react
+                          tag="div"
+                          className="icon-white logo-alignment-style search-clear-icon"
+                        />
+                      </IconButton>
+                    )
+                  }}
+                />
+              </div>
+              <div className="tree-container">
+                {treeStructureData.length > 0 &&
+                  treeStructureData[0].name !== '' && (
+                    <Tree
+                      className="dataset-tree"
+                      data={treeStructureData}
+                      openByDefault={false}
+                      indent={24}
+                      width={auto}
+                      height={765}
+                      rowHeight={36}
+                      overscanCount={1}
+                      paddingTop={30}
+                      paddingBottom={10}
+                      padding={25}
+                      searchTerm={searchTerm}
+                      idAccessor={(node: any) => node.id}
+                    >
+                      {(props: NodeRendererProps<any>) => (
+                        <Node {...props} onClick={handleNodeClick} />
+                      )}
+                    </Tree>
+                  )}
+              </div>
+            </>
+          )}
+        </div>
+      </>
     </div>
   );
 };
