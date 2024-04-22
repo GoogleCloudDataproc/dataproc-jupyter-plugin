@@ -20,10 +20,7 @@ from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, datacatalog_ur
 class ApiHeaders:
     @staticmethod
     def create_headers(access_token):
-        return {
-            "Content-Type": CONTENT_TYPE,
-            "Authorization": f"Bearer {access_token}"
-        }
+        return {"Content-Type": CONTENT_TYPE, "Authorization": f"Bearer {access_token}"}
 
 
 class BigQueryDatasetListService:
@@ -131,7 +128,9 @@ class BigQueryTableInfoService:
 
 
 class BigQueryPreviewService:
-    def bigquery_preview_data(self, credentials, dataset_id, table_id, page_token, project_id, log):
+    def bigquery_preview_data(
+        self, credentials, dataset_id, table_id, page_token, project_id, log
+    ):
         try:
             if (
                 ("access_token" in credentials)
@@ -155,6 +154,7 @@ class BigQueryPreviewService:
             log.exception(f"Error fetching preview data")
             return {"error": str(e)}
 
+
 class BigQuerySearchService:
     def bigquery_search(self, credentials, search_string, type, system, projects, log):
         try:
@@ -164,38 +164,36 @@ class BigQuerySearchService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                project_id = credentials['project_id']
-                api_endpoint = (
-                    f"{datacatalog_url}v1/catalog:search"
-                )
+                project_id = credentials["project_id"]
+                api_endpoint = f"{datacatalog_url}v1/catalog:search"
                 headers = {
-                "Content-Type": CONTENT_TYPE,
-                "Authorization": f"Bearer {access_token}",
-                'X-Goog-User-Project' : project_id
+                    "Content-Type": CONTENT_TYPE,
+                    "Authorization": f"Bearer {access_token}",
+                    "X-Goog-User-Project": project_id,
                 }
                 payload = {
                     "query": f"{search_string}, system={system}, type={type}",
-                    "scope": {
-                        "includeProjectIds": projects
-                    },
-                    "pageSize": 500
+                    "scope": {"includeProjectIds": projects},
+                    "pageSize": 500,
                 }
                 has_next = True
-                search_result=[]
+                search_result = []
                 while has_next:
-                    response = requests.post(api_endpoint, headers=headers, json=payload)
+                    response = requests.post(
+                        api_endpoint, headers=headers, json=payload
+                    )
                     if response.status_code == 200:
                         resp = response.json()
                         if "results" in resp:
                             search_result += resp["results"]
                         if "nextPageToken" in resp:
-                            payload["pageToken"]=resp["nextPageToken"]
+                            payload["pageToken"] = resp["nextPageToken"]
                         else:
                             has_next = False
                     else:
                         log.exception(f"Missing required credentials")
                         raise ValueError("Missing required credentials")
-                if(len(search_result)==0):
+                if len(search_result) == 0:
                     return {}
                 else:
                     return {"results": search_result}
@@ -205,6 +203,7 @@ class BigQuerySearchService:
         except Exception as e:
             log.exception(f"Error fetching search data")
             return {"error": str(e)}
+
 
 class BigQueryProjectService:
     def bigquery_projects(self, credentials, dataset_id, table_id, log):
@@ -232,4 +231,3 @@ class BigQueryProjectService:
         except Exception as e:
             log.exception(f"Error fetching projects")
             return {"error": str(e)}
-

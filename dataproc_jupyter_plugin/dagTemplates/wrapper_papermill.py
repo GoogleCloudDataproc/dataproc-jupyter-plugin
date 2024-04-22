@@ -90,7 +90,7 @@ def main():
         log_output=True,
         progress_bar=False,
         stdout_file=sys.stdout,
-        parameters=params
+        parameters=params,
     )
 
     print('Writing result to "%s"' % args.output)
