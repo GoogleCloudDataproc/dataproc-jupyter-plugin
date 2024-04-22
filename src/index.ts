@@ -190,6 +190,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             new dpmsWidget(
               app as JupyterLab,
               settingRegistry as ISettingRegistry,
+              bqFeature.enable_bigquery_integration as boolean,
               themeManager
             )
           );
@@ -228,6 +229,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       const newWidget = new dpmsWidget(
         app as JupyterLab,
         settingRegistry as ISettingRegistry,
+        bqFeature.enable_bigquery_integration as boolean,
         themeManager
       );
       panelDpms.addWidget(newWidget);
@@ -534,6 +536,10 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     if (launcher) {
       if (bqFeature.enable_bigquery_integration) {
+        localStorage.setItem('notebookValue', 'bigframes');
+        localStorage.setItem('oldNotebookValue', 'bigframes');
+        loadDpmsWidget('');
+
         launcher.add({
           command: createBigQueryNotebookComponentCommand,
           category: 'BigQuery Notebooks',

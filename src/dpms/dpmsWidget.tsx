@@ -911,19 +911,23 @@ const DpmsComponent = ({
 export class dpmsWidget extends DataprocWidget {
   app: JupyterLab;
   settingRegistry: ISettingRegistry;
+  enableBigqueryIntegration: boolean;
 
   constructor(
     app: JupyterLab,
     settingRegistry: ISettingRegistry,
+    enableBigqueryIntegration: boolean,
     themeManager: IThemeManager
   ) {
     super(themeManager);
     this.app = app;
     this.settingRegistry = settingRegistry;
+    this.enableBigqueryIntegration = enableBigqueryIntegration;
   }
 
   renderInternal(): JSX.Element {
-    return localStorage.getItem('notebookValue')?.includes('bigframes') ? (
+    return (this.enableBigqueryIntegration && localStorage.getItem('notebookValue') === null) ||
+      localStorage.getItem('notebookValue')?.includes('bigframes') ? (
       <BigQueryComponent
         app={this.app}
         settingRegistry={this.settingRegistry}
