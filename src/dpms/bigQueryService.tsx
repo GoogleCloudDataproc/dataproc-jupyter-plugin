@@ -187,10 +187,8 @@ export class BigQueryService {
             setDatabaseNames(databaseNames);
             setIsIconLoading(false);
           } else {
-            toast.error(
-              `No Dataset available in this region`,
-              toastifyCustomStyle
-            );
+            setDataSetResponse([]);
+            setDatabaseNames([]);
             setIsLoading(false);
             setIsIconLoading(false);
           }
