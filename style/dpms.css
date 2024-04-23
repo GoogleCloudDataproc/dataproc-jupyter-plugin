@@ -9,6 +9,15 @@
   overflow: auto;
 }
 
+.big-query-loader-style {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 5px;
+  width: 24px;
+  height: 24px;
+}
+
 .big-query-schema-wrapper {
   font-family: 'Roboto' !important;
   background: var(--jp-layout-color1);
@@ -93,6 +102,10 @@
 .dataset-tree div[role='treeitem'] > div > div:nth-last-child(2),
 .database-tree div[role='treeitem'] > div > div:nth-last-child(2) {
   cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
 }
 
 .dataset-tree
@@ -104,6 +117,10 @@
   > div
   > div:nth-last-child(2) {
   cursor: context-menu !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 50%;
 }
 
 .db-icon {
