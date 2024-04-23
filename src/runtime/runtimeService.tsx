@@ -168,9 +168,13 @@ export class RunTimeSerive {
         );
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        if (!toast.isActive('runtimeTemplateError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'runtimeTemplateError'
+          });
+        }
       }
-
       const existingRuntimeTemplatesAllData =
         previousRuntimeTemplatesAllList ?? [];
       //setStateAction never type issue
@@ -203,12 +207,17 @@ export class RunTimeSerive {
       }
     } catch (error) {
       setIsLoading(false);
-      console.error('Error listing runtime templates', error);
+      // console.error('Error listing runtime templates', error);
       DataprocLoggingService.log(
         'Error listing runtime templates',
         LOG_LEVEL.ERROR
       );
-      toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
+      if (!toast.isActive('runtimeTemplateError')) {
+        toast.error('Failed to fetch runtime templates', {
+          ...toastifyCustomStyle,
+          toastId: 'runtimeTemplateError'
+        });
+      }
     }
   };
   static displayUserInfoService = async (
@@ -424,7 +433,7 @@ export class RunTimeSerive {
           .map((data: { clusterName: string }) => data.clusterName);
         setClustersList(transformClusterListData);
       } else {
-        setClustersList([])
+        setClustersList([]);
       }
     } catch (error) {
       console.error('Error listing clusters', error);

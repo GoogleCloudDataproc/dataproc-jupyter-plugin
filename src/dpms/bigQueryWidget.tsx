@@ -41,6 +41,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 
+let height = window.innerHeight - 125;
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -820,7 +821,7 @@ const BigQueryComponent = ({
                       openByDefault={searchTerm === '' ? false : true}
                       indent={24}
                       width={auto}
-                      height={765}
+                      height={height}
                       rowHeight={36}
                       overscanCount={1}
                       paddingTop={30}
