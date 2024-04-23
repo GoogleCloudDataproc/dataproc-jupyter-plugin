@@ -9,6 +9,15 @@
   overflow: auto;
 }
 
+.big-query-loader-style {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 5px;
+  width: 24px;
+  height: 24px;
+}
+
 .big-query-schema-wrapper {
   font-family: 'Roboto' !important;
   background: var(--jp-layout-color1);

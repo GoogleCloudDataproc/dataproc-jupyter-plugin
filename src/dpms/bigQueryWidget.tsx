@@ -478,13 +478,15 @@ const BigQueryComponent = ({
         (depth !== 4 && node.children);
       const arrowIcon = hasChildren ? (
         isIconLoading && currentNode.data.name === node.data.name ? (
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
-            size={20}
-            aria-label="Loading Spinner"
-            data-testid="loader"
-          />
+          <div className="big-query-loader-style">
+            <ClipLoader
+              color="#3367d6"
+              loading={true}
+              size={16}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
         ) : node.isOpen ? (
           <>
             <div
@@ -516,13 +518,15 @@ const BigQueryComponent = ({
       if (searchTerm) {
         const arrowIcon = hasChildren ? (
           isIconLoading && currentNode.data.name === node.data.name ? (
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
-              size={20}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
+            <div className="big-query-loader-style">
+              <ClipLoader
+                color="#3367d6"
+                loading={true}
+                size={16}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            </div>
           ) : node.isOpen ? (
             <>
               <div
