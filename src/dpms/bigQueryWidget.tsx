@@ -271,13 +271,15 @@ const BigQueryComponent = ({
               {
                 id: uuidv4(),
                 name: searchData.linkedResource.split('/')[6],
-                children: [
-                  {
-                    id: uuidv4(),
-                    name: searchData.linkedResource.split('/')[8],
-                    children: []
-                  }
-                ]
+                children: searchData.linkedResource.split('/')[8]
+                  ? [
+                      {
+                        id: uuidv4(),
+                        name: searchData.linkedResource.split('/')[8],
+                        children: []
+                      }
+                    ]
+                  : []
               }
             ]
           });
@@ -310,11 +312,13 @@ const BigQueryComponent = ({
                       projectData.name ===
                         searchData.linkedResource.split('/')[4]
                     ) {
-                      datasetData['children'].push({
-                        id: uuidv4(),
-                        name: searchData.linkedResource.split('/')[8],
-                        children: []
-                      });
+                      if (searchData.linkedResource.split('/')[8]) {
+                        datasetData['children'].push({
+                          id: uuidv4(),
+                          name: searchData.linkedResource.split('/')[8],
+                          children: []
+                        });
+                      }
                     }
                   });
                 } else {
@@ -322,13 +326,15 @@ const BigQueryComponent = ({
                   projectData['children'].push({
                     id: uuidv4(),
                     name: searchData.linkedResource.split('/')[6],
-                    children: [
-                      {
-                        id: uuidv4(),
-                        name: searchData.linkedResource.split('/')[8],
-                        children: []
-                      }
-                    ]
+                    children: searchData.linkedResource.split('/')[8]
+                      ? [
+                          {
+                            id: uuidv4(),
+                            name: searchData.linkedResource.split('/')[8],
+                            children: []
+                          }
+                        ]
+                      : []
                   });
                 }
               }
@@ -343,13 +349,15 @@ const BigQueryComponent = ({
                 {
                   id: uuidv4(),
                   name: searchData.linkedResource.split('/')[6],
-                  children: [
-                    {
-                      id: uuidv4(),
-                      name: searchData.linkedResource.split('/')[8],
-                      children: []
-                    }
-                  ]
+                  children: searchData.linkedResource.split('/')[8]
+                    ? [
+                        {
+                          id: uuidv4(),
+                          name: searchData.linkedResource.split('/')[8],
+                          children: []
+                        }
+                      ]
+                    : []
                 }
               ]
             });
@@ -809,7 +817,7 @@ const BigQueryComponent = ({
                     <Tree
                       className="dataset-tree"
                       data={treeStructureData}
-                      openByDefault={false}
+                      openByDefault={searchTerm === '' ? false : true}
                       indent={24}
                       width={auto}
                       height={765}
@@ -818,7 +826,6 @@ const BigQueryComponent = ({
                       paddingTop={30}
                       paddingBottom={10}
                       padding={25}
-                      searchTerm={searchTerm}
                       idAccessor={(node: any) => node.id}
                     >
                       {(props: NodeRendererProps<any>) => (
