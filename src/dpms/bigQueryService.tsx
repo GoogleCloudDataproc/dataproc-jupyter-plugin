@@ -142,56 +142,64 @@ export class BigQueryService {
           `bigQueryDataset?project_id=${projectId}&pageToken=${pageToken}`
         );
 
-        const existingDatasetList = previousDatasetList ?? [];
-        //setStateAction never type issue
-        const allDatasetList: any = [
-          ...(existingDatasetList as []),
-          ...data.datasets
-        ];
+        if (data.datasets) {
+          const existingDatasetList = previousDatasetList ?? [];
+          //setStateAction never type issue
+          const allDatasetList: any = [
+            ...(existingDatasetList as []),
+            ...data.datasets
+          ];
 
-        if (data.nextPageToken) {
-          this.getBigQueryDatasetsAPIService(
-            notebookValue,
-            settingRegistry,
-            setDatabaseNames,
-            setDataSetResponse,
-            projectId,
-            setIsIconLoading,
-            setIsLoading,
-            data.nextPageToken,
-            allDatasetList
-          );
-        } else {
-          const settings = await settingRegistry.load(PLUGIN_ID);
-
-          let filterDatasetByLocation = allDatasetList;
-          filterDatasetByLocation = filterDatasetByLocation.filter(
-            (dataset: any) =>
-              dataset.location === settings.get('bqRegion')['composite']
-          );
-
-          if (filterDatasetByLocation.length > 0) {
-            const databaseNames: string[] = [];
-            const updatedDatabaseDetails: { [key: string]: string } = {};
-            filterDatasetByLocation.forEach(
-              (data: {
-                datasetReference: { description: string; datasetId: string };
-              }) => {
-                databaseNames.push(data.datasetReference.datasetId);
-                const description = data.datasetReference.description || 'None';
-                updatedDatabaseDetails[data.datasetReference.datasetId] =
-                  description;
-              }
+          if (data.nextPageToken) {
+            this.getBigQueryDatasetsAPIService(
+              notebookValue,
+              settingRegistry,
+              setDatabaseNames,
+              setDataSetResponse,
+              projectId,
+              setIsIconLoading,
+              setIsLoading,
+              data.nextPageToken,
+              allDatasetList
             );
-            setDataSetResponse(filterDatasetByLocation);
-            setDatabaseNames(databaseNames);
-            setIsIconLoading(false);
           } else {
-            setDataSetResponse([]);
-            setDatabaseNames([]);
-            setIsLoading(false);
-            setIsIconLoading(false);
+            const settings = await settingRegistry.load(PLUGIN_ID);
+
+            let filterDatasetByLocation = allDatasetList;
+            filterDatasetByLocation = filterDatasetByLocation.filter(
+              (dataset: any) =>
+                dataset.location === settings.get('bqRegion')['composite']
+            );
+
+            if (filterDatasetByLocation.length > 0) {
+              const databaseNames: string[] = [];
+              const updatedDatabaseDetails: { [key: string]: string } = {};
+              filterDatasetByLocation.forEach(
+                (data: {
+                  datasetReference: { description: string; datasetId: string };
+                }) => {
+                  databaseNames.push(data.datasetReference.datasetId);
+                  const description =
+                    data.datasetReference.description || 'None';
+                  updatedDatabaseDetails[data.datasetReference.datasetId] =
+                    description;
+                }
+              );
+              setDataSetResponse(filterDatasetByLocation);
+              setDatabaseNames(databaseNames);
+              setIsIconLoading(false);
+            } else {
+              setDataSetResponse([]);
+              setDatabaseNames([]);
+              setIsLoading(false);
+              setIsIconLoading(false);
+            }
           }
+        } else {
+          setDataSetResponse([]);
+          setDatabaseNames([]);
+          setIsLoading(false);
+          setIsIconLoading(false);
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
