@@ -794,7 +794,7 @@ const BigQueryComponent = ({
                           <ClipLoader
                             color="#3367d6"
                             loading={true}
-                            size={20}
+                            size={16}
                             aria-label="Loading Spinner"
                             data-testid="loader"
                           />
