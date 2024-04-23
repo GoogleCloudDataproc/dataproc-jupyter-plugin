@@ -655,11 +655,7 @@ const BigQueryComponent = ({
         {renderNodeIcon()}
         <div
           role="treeitem"
-          title={
-            node.data.children && node.data.children.length > 0
-              ? node.data.children[0]?.tableDescription
-              : ''
-          }
+          title={node.data.name}
           onClick={handleTextClick}
         >
           {node.data.name}
