@@ -151,7 +151,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     // Capture the signal
-    eventEmitter.on('toastSuccess', (message: string) => {
+    eventEmitter.on('dataprocConfigChange', (message: string) => {
       if (bqFeature.enable_bigquery_integration) {
         localStorage.setItem('notebookValue', 'bigframes');
         localStorage.setItem('oldNotebookValue', 'bigframes');

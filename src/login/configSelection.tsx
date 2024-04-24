@@ -118,7 +118,7 @@ function ConfigSelection({
             );
             // Emit signal after toast success
             eventEmitter.emit(
-              'toastSuccess',
+              'dataprocConfigChange',
               `${configStatus} - Configuration updated successfully.`
             );
           }
