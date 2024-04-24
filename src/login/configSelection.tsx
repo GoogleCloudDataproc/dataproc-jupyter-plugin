@@ -51,6 +51,7 @@ import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryRegionDropdown } from '../controls/BigQueryRegionDropdown';
+import { eventEmitter } from '../utils/signalEmitter';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -114,6 +115,11 @@ function ConfigSelection({
             toast.success(
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
               toastifyCustomStyle
+            );
+            // Emit signal after toast success
+            eventEmitter.emit(
+              'dataprocConfigChange',
+              `${configStatus} - Configuration updated successfully.`
             );
           }
         }
