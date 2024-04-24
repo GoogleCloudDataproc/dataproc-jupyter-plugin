@@ -207,7 +207,6 @@ export class RunTimeSerive {
       }
     } catch (error) {
       setIsLoading(false);
-      // console.error('Error listing runtime templates', error);
       DataprocLoggingService.log(
         'Error listing runtime templates',
         LOG_LEVEL.ERROR

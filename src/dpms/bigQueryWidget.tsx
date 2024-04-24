@@ -41,7 +41,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 
-let height = window.innerHeight - 125;
+const height = window.innerHeight - 125;
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -654,11 +654,7 @@ const BigQueryComponent = ({
     return (
       <div style={style}>
         {renderNodeIcon()}
-        <div
-          role="treeitem"
-          title={node.data.name}
-          onClick={handleTextClick}
-        >
+        <div role="treeitem" title={node.data.name} onClick={handleTextClick}>
           {node.data.name}
         </div>
         <div className="dpms-column-type-text">{node.data.type}</div>
