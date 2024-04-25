@@ -106,7 +106,10 @@ export class JobService {
         .catch((err: Error) => {
           console.error('Error to  stop job', err);
           DataprocLoggingService.log('Error to  stop job', LOG_LEVEL.ERROR);
-          toast.error(`Failed to stop job ${jobId}`, toastifyCustomStyle);
+          toast.error(
+            `Failed to stop job ${jobId} : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -140,7 +143,10 @@ export class JobService {
         .catch((err: Error) => {
           console.error('Error Deleting Job', err);
           DataprocLoggingService.log('Error Deleting Job', LOG_LEVEL.ERROR);
-          toast.error(`Failed to delete the job ${jobId}`, toastifyCustomStyle);
+          toast.error(
+            `Failed to delete the job ${jobId} : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -206,7 +212,7 @@ export class JobService {
             LOG_LEVEL.ERROR
           );
           toast.error(
-            `Failed to fetch job details ${jobSelected}`,
+            `Failed to fetch job details ${jobSelected} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -253,7 +259,7 @@ export class JobService {
           console.error('Error in updating job', err);
           DataprocLoggingService.log('Error in updating job', LOG_LEVEL.ERROR);
           toast.error(
-            `Failed to update the job ${jobSelected}`,
+            `Failed to update the job ${jobSelected} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -367,7 +373,7 @@ export class JobService {
           setIsLoading(false);
           console.error('Error listing jobs', err);
           DataprocLoggingService.log('Error listing jobs', LOG_LEVEL.ERROR);
-          toast.error('Failed to fetch jobs', toastifyCustomStyle);
+          toast.error(`Failed to fetch jobs : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -426,7 +432,7 @@ export class JobService {
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
       console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters', toastifyCustomStyle);
+      toast.error(`Failed to fetch clusters : ${error}`, toastifyCustomStyle);
     }
   };
   static submitJobService = async (
@@ -469,7 +475,7 @@ export class JobService {
       .catch((err: Error) => {
         console.error('Error submitting job', err);
         DataprocLoggingService.log('Error submitting job', LOG_LEVEL.ERROR);
-        toast.error('Failed to submit the job', toastifyCustomStyle);
+        toast.error(`Failed to submit the job : ${err}`, toastifyCustomStyle);
       });
   };
 }

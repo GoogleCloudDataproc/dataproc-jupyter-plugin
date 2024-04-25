@@ -102,7 +102,7 @@ export class RunTimeSerive {
           console.error('Error deleting session', err);
           DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
           toast.error(
-            `Failed to delete the session ${selectedRuntimeTemplateDisplayName}`,
+            `Failed to delete the session ${selectedRuntimeTemplateDisplayName} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -166,48 +166,61 @@ export class RunTimeSerive {
             };
           }
         );
+        const existingRuntimeTemplatesAllData =
+          previousRuntimeTemplatesAllList ?? [];
+        //setStateAction never type issue
+        let allRuntimeTemplatesAllData: ISessionTemplate[] = [
+          ...(existingRuntimeTemplatesAllData as []),
+          ...formattedResponse.sessionTemplates
+        ];
+
+        const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
+        //setStateAction never type issue
+        let allRuntimeTemplatesData: ISessionTemplateDisplay[] = [
+          ...(existingRuntimeTemplatesData as []),
+          ...transformRuntimeTemplatesListData
+        ];
+
+        if (formattedResponse.nextPageToken) {
+          this.listRuntimeTemplatesAPIService(
+            renderActions,
+            setIsLoading,
+            setRuntimeTemplateslist,
+            setRunTimeTemplateAllList,
+            formattedResponse.nextPageToken,
+            allRuntimeTemplatesData,
+            allRuntimeTemplatesAllData
+          );
+        } else {
+          setRunTimeTemplateAllList(allRuntimeTemplatesAllData);
+          setRuntimeTemplateslist(allRuntimeTemplatesData);
+          setIsLoading(false);
+        }
+      } else {
+        setRunTimeTemplateAllList([]);
+        setRuntimeTemplateslist([]);
+        setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
-      }
-
-      const existingRuntimeTemplatesAllData =
-        previousRuntimeTemplatesAllList ?? [];
-      //setStateAction never type issue
-      let allRuntimeTemplatesAllData: ISessionTemplate[] = [
-        ...(existingRuntimeTemplatesAllData as []),
-        ...formattedResponse.sessionTemplates
-      ];
-
-      const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
-      //setStateAction never type issue
-      let allRuntimeTemplatesData: ISessionTemplateDisplay[] = [
-        ...(existingRuntimeTemplatesData as []),
-        ...transformRuntimeTemplatesListData
-      ];
-
-      if (formattedResponse.nextPageToken) {
-        this.listRuntimeTemplatesAPIService(
-          renderActions,
-          setIsLoading,
-          setRuntimeTemplateslist,
-          setRunTimeTemplateAllList,
-          formattedResponse.nextPageToken,
-          allRuntimeTemplatesData,
-          allRuntimeTemplatesAllData
-        );
-      } else {
-        setRunTimeTemplateAllList(allRuntimeTemplatesAllData);
-        setRuntimeTemplateslist(allRuntimeTemplatesData);
-        setIsLoading(false);
+        if (!toast.isActive('runtimeTemplateError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'runtimeTemplateError'
+          });
+        }
       }
     } catch (error) {
       setIsLoading(false);
-      console.error('Error listing runtime templates', error);
       DataprocLoggingService.log(
         'Error listing runtime templates',
         LOG_LEVEL.ERROR
       );
+      if (!toast.isActive('runtimeTemplateError')) {
+        toast.error('Failed to fetch runtime templates', {
+          ...toastifyCustomStyle,
+          toastId: 'runtimeTemplateError'
+        });
+      }
       toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
     }
   };
@@ -243,7 +256,10 @@ export class RunTimeSerive {
             'Error displaying user info',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch user information : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -298,7 +314,10 @@ export class RunTimeSerive {
         'Error displaying sharedVPC subNetwork',
         LOG_LEVEL.ERROR
       );
-      toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch  sharedVPC subNetwork : ${err}`,
+        toastifyCustomStyle
+      );
     }
   };
   static runtimeSharedProjectService = async (
@@ -340,7 +359,10 @@ export class RunTimeSerive {
             'Error displaying user info',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch user information : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -424,12 +446,16 @@ export class RunTimeSerive {
           .map((data: { clusterName: string }) => data.clusterName);
         setClustersList(transformClusterListData);
       } else {
-        setClustersList([])
+        setClustersList([]);
+        setClustersList([]);
       }
     } catch (error) {
       console.error('Error listing clusters', error);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      toast.error('Failed to list the clusters', toastifyCustomStyle);
+      toast.error(
+        `Failed to list the clusters : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
   static listNetworksAPIService = async (
@@ -723,7 +749,10 @@ export class RunTimeSerive {
             'Error updating template',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to update the template', toastifyCustomStyle);
+          toast.error(
+            `Failed to update the template : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };

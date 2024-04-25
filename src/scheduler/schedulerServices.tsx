@@ -137,7 +137,7 @@ export class SchedulerService {
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
       console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters', toastifyCustomStyle);
+      toast.error(`Failed to fetch clusters : ${error}`, toastifyCustomStyle);
     }
   };
   static listSessionTemplatesAPIService = async (
@@ -194,7 +194,10 @@ export class SchedulerService {
         LOG_LEVEL.ERROR
       );
       console.error('Error listing session templates', error);
-      toast.error('Failed to fetch session templates', toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch session templates : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
   static listComposersAPIService = async (
@@ -227,7 +230,7 @@ export class SchedulerService {
       );
       console.error('Error listing composer environment list', error);
       toast.error(
-        'Failed to fetch composer environment list',
+        `Failed to fetch composer environment list : ${error}`,
         toastifyCustomStyle
       );
     }
@@ -598,7 +601,10 @@ export class SchedulerService {
         LOG_LEVEL.ERROR
       );
       console.error('Error listing dag Scheduler list', error);
-      toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch dag Scheduler list : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
   static listDagInfoAPIServiceForCreateNotebook = async (
@@ -629,7 +635,10 @@ export class SchedulerService {
         LOG_LEVEL.ERROR
       );
       console.error('Error listing dag Scheduler list', error);
-      toast.error('Failed to fetch dag Scheduler list', toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch dag Scheduler list : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
   static handleDownloadSchedulerAPIService = async (
@@ -710,7 +719,10 @@ export class SchedulerService {
     } catch (error) {
       DataprocLoggingService.log('Error in Delete api', LOG_LEVEL.ERROR);
       console.error('Error in Delete api', error);
-      toast.error(`Failed to delete the ${dag_id}`, toastifyCustomStyle);
+      toast.error(
+        `Failed to delete the ${dag_id} : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
   static handleUpdateSchedulerAPIService = async (
@@ -741,7 +753,7 @@ export class SchedulerService {
     } catch (error) {
       DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
       console.error('Error in Update api', error);
-      toast.error('Failed to fetch Update api', toastifyCustomStyle);
+      toast.error(`Failed to fetch Update api : ${error}`, toastifyCustomStyle);
     }
   };
   static listDagTaskInstancesListService = async (
@@ -831,7 +843,10 @@ export class SchedulerService {
       }
     } catch (reason) {
       console.error(`Error in Triggering the Dag.\n${reason}`);
-      toast.error(`Failed to Trigger ${dagId}`, toastifyCustomStyle);
+      toast.error(
+        `Failed to Trigger ${dagId} : ${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 }

@@ -165,7 +165,10 @@ function ConfigSelection({
             'Error displaying user info',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch user information : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };

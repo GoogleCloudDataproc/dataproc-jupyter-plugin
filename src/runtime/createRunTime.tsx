@@ -709,7 +709,10 @@ function CreateRunTime({
             'Error Creating template',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to create the template', toastifyCustomStyle);
+          toast.error(
+            `Failed to create the template : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };

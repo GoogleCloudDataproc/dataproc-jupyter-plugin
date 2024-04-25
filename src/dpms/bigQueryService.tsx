@@ -99,7 +99,7 @@ export class BigQueryService {
       setSchemaResponse(data);
     } catch (reason) {
       console.error(`Error in fetching big query schema.\n${reason}`);
-      toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
+      toast.error(`Failed to fetch big query schema : ${reason}`, toastifyCustomStyle);
     }
   };
 
@@ -120,7 +120,7 @@ export class BigQueryService {
       }
     } catch (reason) {
       console.error(`Error in fetching big query schema.\n${reason}`);
-      toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
+      toast.error(`Failed to fetch big query schema : ${reason}`, toastifyCustomStyle);
     }
   };
 
@@ -197,7 +197,7 @@ export class BigQueryService {
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
-        toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
+        toast.error(`Failed to fetch datasets : ${reason}`, toastifyCustomStyle);
         setIsLoading(false);
         setIsIconLoading(false);
       }
@@ -266,7 +266,7 @@ export class BigQueryService {
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
-        toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
+        toast.error(`Failed to fetch datasets : ${reason}`, toastifyCustomStyle);
       }
     }
   };

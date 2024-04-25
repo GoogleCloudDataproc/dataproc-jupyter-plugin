@@ -146,7 +146,7 @@ export class ClusterService {
       setIsLoading(false);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
       console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters', toastifyCustomStyle);
+      toast.error(`Failed to fetch clusters : ${error}`, toastifyCustomStyle);
     }
   };
 
@@ -200,7 +200,7 @@ export class ClusterService {
             LOG_LEVEL.ERROR
           );
           toast.error(
-            `Failed to fetch cluster details ${clusterSelected}`,
+            `Failed to fetch cluster details ${clusterSelected} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -232,7 +232,7 @@ export class ClusterService {
       console.error('Error fetching status', error);
       DataprocLoggingService.log('Error fetching status', LOG_LEVEL.ERROR);
       toast.error(
-        `Failed to fetch the status ${selectedCluster}`,
+        `Failed to fetch the status ${selectedCluster} : ${error}`,
         toastifyCustomStyle
       );
     }
@@ -270,7 +270,7 @@ export class ClusterService {
       console.error('Error restarting cluster', error);
       DataprocLoggingService.log('Error restarting cluster', LOG_LEVEL.ERROR);
       toast.error(
-        `Failed to restart the cluster ${selectedCluster}`,
+        `Failed to restart the cluster ${selectedCluster} : ${error}`,
         toastifyCustomStyle
       );
     }
@@ -356,7 +356,7 @@ export class ClusterService {
             LOG_LEVEL.ERROR
           );
           toast.error(
-            `Failed to ${operation} the cluster ${selectedcluster}`,
+            `Failed to ${operation} the cluster ${selectedcluster} : ${err}`,
             toastifyCustomStyle
           );
         });

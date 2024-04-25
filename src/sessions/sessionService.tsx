@@ -72,7 +72,7 @@ export class SessionService {
           console.error('Error deleting session', err);
           DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
           toast.error(
-            `Failed to delete the session ${selectedSession}`,
+            `Failed to delete the session ${selectedSession} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -114,7 +114,7 @@ export class SessionService {
             LOG_LEVEL.ERROR
           );
           toast.error(
-            `Failed to terminate session ${selectedSession}`,
+            `Failed to terminate session ${selectedSession} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -159,7 +159,7 @@ export class SessionService {
         LOG_LEVEL.ERROR
       );
       toast.error(
-        `Failed to fetch session details ${sessionSelected}`,
+        `Failed to fetch session details ${sessionSelected} : ${error}`,
         toastifyCustomStyle
       );
     }
@@ -240,8 +240,8 @@ export class SessionService {
           setIsLoading(false);
         }
       } else {
-          setSessionsList([]);
-          setIsLoading(false);
+        setSessionsList([]);
+        setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
         toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
@@ -251,7 +251,7 @@ export class SessionService {
       setIsLoading(false);
       console.error('Error listing Sessions', error);
       DataprocLoggingService.log('Error listing Sessions', LOG_LEVEL.ERROR);
-      toast.error('Failed to fetch sessions', toastifyCustomStyle);
+      toast.error(`Failed to fetch sessions : ${error}`, toastifyCustomStyle);
     }
   };
 }

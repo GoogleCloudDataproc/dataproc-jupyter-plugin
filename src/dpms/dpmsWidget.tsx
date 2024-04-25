@@ -162,7 +162,7 @@ const DpmsComponent = ({
             'Error getting column details',
             LOG_LEVEL.ERROR
           );
-          toast.error('Error getting column details', toastifyCustomStyle);
+          toast.error(`Error getting column details : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -232,7 +232,7 @@ const DpmsComponent = ({
             'Error getting table details',
             LOG_LEVEL.ERROR
           );
-          toast.error('Error getting table details', toastifyCustomStyle);
+          toast.error(`Error getting table details : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -620,7 +620,7 @@ const DpmsComponent = ({
             'Error getting database details',
             LOG_LEVEL.ERROR
           );
-          toast.error('Error getting database details', toastifyCustomStyle);
+          toast.error(`Error getting database details : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -688,7 +688,7 @@ const DpmsComponent = ({
             'Error listing session details',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to fetch session details', toastifyCustomStyle);
+          toast.error(`Failed to fetch session details : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -756,7 +756,7 @@ const DpmsComponent = ({
             'Error listing clusters details',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to fetch cluster details', toastifyCustomStyle);
+          toast.error(`Failed to fetch cluster details : ${err}`, toastifyCustomStyle);
         });
     }
   };

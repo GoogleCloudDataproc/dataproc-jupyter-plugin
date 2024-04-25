@@ -268,7 +268,7 @@ export class BatchService {
           );
           console.error('Error in getting Batch details', err);
           toast.error(
-            `Failed to fetch batch details ${batchSelected}`,
+            `Failed to fetch batch details ${batchSelected} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -375,7 +375,7 @@ export class BatchService {
           setIsLoading(false);
           console.error('Error listing batches', err);
           DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
-          toast.error('Failed to fetch batches', toastifyCustomStyle);
+          toast.error(`Failed to fetch batches : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -427,7 +427,10 @@ export class BatchService {
       }
     } catch (err) {
       console.error('Error displaying sharedVPC subNetwork', err);
-      toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch  sharedVPC subNetwork : ${err}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -463,7 +466,10 @@ export class BatchService {
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch user information : ${err}`,
+            toastifyCustomStyle
+          );
           DataprocLoggingService.log(
             'Error displaying user info',
             LOG_LEVEL.ERROR
@@ -949,7 +955,7 @@ export class BatchService {
       })
       .catch((err: Error) => {
         console.error('Error submitting Batch', err);
-        toast.error('Failed to submit the Batch', toastifyCustomStyle);
+        toast.error(`Failed to submit the Batch : ${err}`, toastifyCustomStyle);
         DataprocLoggingService.log('Error submitting Batch', LOG_LEVEL.ERROR);
       });
   };
@@ -981,7 +987,10 @@ export class BatchService {
     } catch (error) {
       console.error('Error listing clusters', error);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      toast.error('Failed to list the clusters', toastifyCustomStyle);
+      toast.error(
+        `Failed to list the clusters : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
 }
