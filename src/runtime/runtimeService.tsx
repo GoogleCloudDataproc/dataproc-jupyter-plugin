@@ -351,7 +351,6 @@ export class RunTimeSerive {
             .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
-          console.error('Error displaying user info', err);
           DataprocLoggingService.log(
             'Error displaying user info',
             LOG_LEVEL.ERROR

@@ -265,7 +265,6 @@ export class BatchService {
             'Error in getting Batch details',
             LOG_LEVEL.ERROR
           );
-          console.error('Error in getting Batch details', err);
           toast.error(
             `Failed to fetch batch details ${batchSelected} : ${err}`,
             toastifyCustomStyle
@@ -372,7 +371,6 @@ export class BatchService {
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error listing batches', err);
           DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
           if (!toast.isActive('batchListingError')) {
             toast.error(`Failed to fetch batches : ${err}`, {
@@ -430,7 +428,6 @@ export class BatchService {
         toast.error(responseResult?.error?.message, toastifyCustomStyle);
       }
     } catch (err) {
-      console.error('Error displaying sharedVPC subNetwork', err);
       toast.error(
         `Failed to fetch  sharedVPC subNetwork : ${err}`,
         toastifyCustomStyle
@@ -469,7 +466,6 @@ export class BatchService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error('Error displaying user info', err);
           toast.error(
             `Failed to fetch user information : ${err}`,
             toastifyCustomStyle
