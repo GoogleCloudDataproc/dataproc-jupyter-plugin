@@ -220,10 +220,6 @@ export class RunTimeSerive {
           toastId: 'runtimeTemplateError'
         });
       }
-      toast.error(
-        `Failed to fetch runtime templates : ${error}`,
-        toastifyCustomStyle
-      );
     }
   };
   static displayUserInfoService = async (
