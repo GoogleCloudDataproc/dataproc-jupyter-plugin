@@ -337,10 +337,21 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label === 'Job Scheduler') &&
           lastClusterName !== ''
         ) {
-          localStorage.setItem('oldNotebookValue', lastClusterName || '');
-          localStorage.removeItem('notebookValue');
-          lastClusterName = '';
-          loadDpmsWidget('');
+          if (bqFeature.enable_bigquery_integration) {
+            if (
+              localStorage.getItem('oldNotebookValue') !== 'bigframes' ||
+              localStorage.getItem('notebookValue') !== 'bigframes'
+            ) {
+              localStorage.setItem('notebookValue', 'bigframes');
+              localStorage.setItem('oldNotebookValue', 'bigframes');
+              loadDpmsWidget('');
+            }
+          } else {
+            localStorage.setItem('oldNotebookValue', lastClusterName || '');
+            localStorage.removeItem('notebookValue');
+            lastClusterName = '';
+            loadDpmsWidget('');
+          }
         } else {
           if (
             lastClusterName === '' &&

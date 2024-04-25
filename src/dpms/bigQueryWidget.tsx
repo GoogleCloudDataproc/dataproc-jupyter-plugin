@@ -654,7 +654,7 @@ const BigQueryComponent = ({
     return (
       <div style={style}>
         {renderNodeIcon()}
-        <div role="treeitem" title={node.data.name} onClick={handleTextClick}>
+        <div role="treeitem" onClick={handleTextClick}>
           {node.data.name}
         </div>
         <div className="dpms-column-type-text">{node.data.type}</div>
