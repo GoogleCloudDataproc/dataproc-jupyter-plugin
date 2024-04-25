@@ -145,7 +145,6 @@ export class ClusterService {
     } catch (error) {
       setIsLoading(false);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      console.error('Error listing clusters', error);
       if (!toast.isActive('clusterListingError')) {
         toast.error(`Failed to fetch clusters : ${error}`, {
           ...toastifyCustomStyle,
@@ -199,7 +198,6 @@ export class ClusterService {
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error listing clusters Details', err);
           DataprocLoggingService.log(
             'Error listing clusters Details',
             LOG_LEVEL.ERROR
@@ -234,7 +232,6 @@ export class ClusterService {
       }
       listClustersAPI();
     } catch (error) {
-      console.error('Error fetching status', error);
       DataprocLoggingService.log('Error fetching status', LOG_LEVEL.ERROR);
       toast.error(
         `Failed to fetch the status ${selectedCluster} : ${error}`,
@@ -272,7 +269,6 @@ export class ClusterService {
 
       setRestartEnabled(false);
     } catch (error) {
-      console.error('Error restarting cluster', error);
       DataprocLoggingService.log('Error restarting cluster', LOG_LEVEL.ERROR);
       toast.error(
         `Failed to restart the cluster ${selectedCluster} : ${error}`,
@@ -316,8 +312,8 @@ export class ClusterService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error('Error deleting cluster', err);
           DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
+          toast.error(`Error deleting cluster : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -355,7 +351,6 @@ export class ClusterService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error(`Error ${operation} cluster`, err);
           DataprocLoggingService.log(
             `Error ${operation} cluster`,
             LOG_LEVEL.ERROR

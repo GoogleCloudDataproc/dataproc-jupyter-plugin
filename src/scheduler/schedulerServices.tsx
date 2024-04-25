@@ -136,7 +136,6 @@ export class SchedulerService {
       }
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      console.error('Error listing clusters', error);
       if (!toast.isActive('clusterError')) {
         toast.error(`Failed to fetch clusters : ${error}`, {
           ...toastifyCustomStyle,
@@ -198,7 +197,6 @@ export class SchedulerService {
         'Error listing session templates',
         LOG_LEVEL.ERROR
       );
-      console.error('Error listing session templates', error);
       if (!toast.isActive('sessionTemplateError')) {
         toast.error(`Failed to fetch session templates : ${error}`, {
           ...toastifyCustomStyle,
@@ -235,7 +233,6 @@ export class SchedulerService {
         'Error listing composer environment list',
         LOG_LEVEL.ERROR
       );
-      console.error('Error listing composer environment list', error);
       toast.error(
         `Failed to fetch composer environment list : ${error}`,
         toastifyCustomStyle
@@ -275,7 +272,11 @@ export class SchedulerService {
       }
     } catch (reason) {
       setCreatingScheduler(false);
-      console.error(`Error on POST {dataToSend}.\n${reason}`);
+      toast.error(
+        `Error on POST {dataToSend}.\n${reason}`,
+        toastifyCustomStyle
+      );
+
     }
   };
 
@@ -292,8 +293,11 @@ export class SchedulerService {
       setInputNotebookFilePath(formattedResponse.input_filename);
       setEditNotebookLoading('');
     } catch (reason) {
-      console.error(`Error on POST {dataToSend}.\n${reason}`);
       setEditNotebookLoading('');
+      toast.error(
+        `Error on POST {dataToSend}.\n${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -416,8 +420,11 @@ export class SchedulerService {
       }
       setEditDagLoading('');
     } catch (reason) {
-      console.error(`Error on POST {dataToSend}.\n${reason}`);
       setEditDagLoading('');
+      toast.error(
+        `Error on POST {dataToSend}.\n${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -572,7 +579,10 @@ export class SchedulerService {
         setIsLoading(false);
       }
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(
+        `Error on GET credentials..\n${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
   static listDagInfoAPIService = async (
@@ -607,7 +617,6 @@ export class SchedulerService {
         'Error listing dag Scheduler list',
         LOG_LEVEL.ERROR
       );
-      console.error('Error listing dag Scheduler list', error);
       toast.error(
         `Failed to fetch dag Scheduler list : ${error}`,
         toastifyCustomStyle
@@ -641,7 +650,6 @@ export class SchedulerService {
         'Error listing dag Scheduler list',
         LOG_LEVEL.ERROR
       );
-      console.error('Error listing dag Scheduler list', error);
       toast.error(
         `Failed to fetch dag Scheduler list : ${error}`,
         toastifyCustomStyle
@@ -663,7 +671,11 @@ export class SchedulerService {
       }
     } catch (error) {
       DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
-      console.error('Error in Download api', error);
+      toast.error(
+        `Error in Download api : ${error}`,
+        toastifyCustomStyle
+      );
+      
     }
   };
   static handleDownloadOutputNotebookAPIService = async (
@@ -692,7 +704,10 @@ export class SchedulerService {
       setDownloadOutputDagRunId('');
     } catch (error) {
       DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
-      console.error('Error in Download api', error);
+      toast.error(
+        `Error in Download api : ${error}`,
+        toastifyCustomStyle
+      );
       setDownloadOutputDagRunId('');
     }
   };
@@ -725,7 +740,6 @@ export class SchedulerService {
       }
     } catch (error) {
       DataprocLoggingService.log('Error in Delete api', LOG_LEVEL.ERROR);
-      console.error('Error in Delete api', error);
       toast.error(
         `Failed to delete the ${dag_id} : ${error}`,
         toastifyCustomStyle
@@ -759,7 +773,6 @@ export class SchedulerService {
       }
     } catch (error) {
       DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
-      console.error('Error in Update api', error);
       toast.error(`Failed to fetch Update api : ${error}`, toastifyCustomStyle);
     }
   };
@@ -797,7 +810,7 @@ export class SchedulerService {
       setDagTaskInstancesList(transformDagRunTaskInstanceListData);
       setIsLoading(false);
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(`Error on GET credentials.\n${reason}`, toastifyCustomStyle);
     }
   };
   static listDagTaskLogsListService = async (
@@ -818,7 +831,7 @@ export class SchedulerService {
       setLogList(data.content);
       setIsLoadingLogs(false);
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(`Error on GET credentials.\n${reason}`, toastifyCustomStyle);
     }
   };
   static handleImportErrordataService = async (
@@ -833,7 +846,7 @@ export class SchedulerService {
       setImportErrorData(data.import_errors);
       setImportErrorEntries(data.total_entries);
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(`Error on GET credentials.\n${reason}`, toastifyCustomStyle);
     }
   };
 
@@ -849,7 +862,6 @@ export class SchedulerService {
         toast.success(`${dagId} triggered successfully `, toastifyCustomStyle);
       }
     } catch (reason) {
-      console.error(`Error in Triggering the Dag.\n${reason}`);
       toast.error(
         `Failed to Trigger ${dagId} : ${reason}`,
         toastifyCustomStyle

@@ -99,7 +99,6 @@ export class RunTimeSerive {
           }
         })
         .catch((err: Error) => {
-          console.error('Error deleting session', err);
           DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to delete the session ${selectedRuntimeTemplateDisplayName} : ${err}`,
@@ -221,7 +220,10 @@ export class RunTimeSerive {
           toastId: 'runtimeTemplateError'
         });
       }
-      toast.error('Failed to fetch runtime templates', toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch runtime templates : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
   static displayUserInfoService = async (
@@ -248,10 +250,9 @@ export class RunTimeSerive {
                 );
               }
             })
-            .catch((e: Error) => console.log(e));
+            .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
-          console.error('Error displaying user info', err);
           DataprocLoggingService.log(
             'Error displaying user info',
             LOG_LEVEL.ERROR
@@ -351,7 +352,7 @@ export class RunTimeSerive {
                 );
               }
             })
-            .catch((e: Error) => console.log(e));
+            .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
           console.error('Error displaying user info', err);
@@ -410,7 +411,7 @@ export class RunTimeSerive {
             })
 
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         })
         .catch((err: Error) => {
@@ -419,7 +420,7 @@ export class RunTimeSerive {
             'Error selecting Network',
             LOG_LEVEL.ERROR
           );
-          console.error('Error selecting Network', err);
+          toast.error(`Error selecting Network : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -449,7 +450,6 @@ export class RunTimeSerive {
         setClustersList([]);
       }
     } catch (error) {
-      console.error('Error listing clusters', error);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
       toast.error(
         `Failed to list the clusters : ${error}`,
@@ -485,6 +485,7 @@ export class RunTimeSerive {
     } catch (error) {
       DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
       console.error('Error listing Networks', error);
+      toast.error(`Error listing Networks : ${error}`, toastifyCustomStyle);
     }
   };
   static listMetaStoreAPIService = async (
@@ -552,14 +553,14 @@ export class RunTimeSerive {
               }
             )
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
               setIsLoadingService(false);
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing services', err);
           DataprocLoggingService.log('Error listing services', LOG_LEVEL.ERROR);
           setIsLoadingService(false);
+          toast.error(`Error listing services : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -623,17 +624,17 @@ export class RunTimeSerive {
                   })
 
                   .catch(e => {
-                    console.log(e);
+                    console.error(e);
                   });
               }
             )
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing regions', err);
           DataprocLoggingService.log('Error listing regions', LOG_LEVEL.ERROR);
+          toast.error(`Error listing regions : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -688,14 +689,17 @@ export class RunTimeSerive {
               }
             )
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing subNetworks', err);
           DataprocLoggingService.log(
             'Error listing subNetworks',
             LOG_LEVEL.ERROR
+          );
+          toast.error(
+            `Error listing subNetworks : ${err}`,
+            toastifyCustomStyle
           );
         });
     }
@@ -743,7 +747,6 @@ export class RunTimeSerive {
           }
         })
         .catch((err: Error) => {
-          console.error('Error updating template', err);
           DataprocLoggingService.log(
             'Error updating template',
             LOG_LEVEL.ERROR

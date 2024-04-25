@@ -69,7 +69,6 @@ export class SessionService {
           }
         })
         .catch((err: Error) => {
-          console.error('Error deleting session', err);
           DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to delete the session ${selectedSession} : ${err}`,
@@ -108,7 +107,6 @@ export class SessionService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error('Error terminating session', err);
           DataprocLoggingService.log(
             'Error terminating session',
             LOG_LEVEL.ERROR
@@ -153,7 +151,6 @@ export class SessionService {
       }
     } catch (error) {
       setIsLoading(false);
-      console.error('Error loading session details', error);
       DataprocLoggingService.log(
         'Error loading session details',
         LOG_LEVEL.ERROR
@@ -249,7 +246,6 @@ export class SessionService {
       }
     } catch (error) {
       setIsLoading(false);
-      console.error('Error listing Sessions', error);
       DataprocLoggingService.log('Error listing Sessions', LOG_LEVEL.ERROR);
       if (!toast.isActive('sessionError')) {
         toast.error(`Failed to fetch sessions : ${error}`, {

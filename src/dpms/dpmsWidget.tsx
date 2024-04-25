@@ -153,16 +153,18 @@ const DpmsComponent = ({
               }
             })
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         })
         .catch((err: Error) => {
-          console.error('Error getting column details', err);
           DataprocLoggingService.log(
             'Error getting column details',
             LOG_LEVEL.ERROR
           );
-          toast.error(`Error getting column details : ${err}`, toastifyCustomStyle);
+          toast.error(
+            `Error getting column details : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -220,19 +222,21 @@ const DpmsComponent = ({
               setTotalTables(tableNames.length);
             })
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
               if (totalDatabases !== undefined) {
                 setTotalDatabases(totalDatabases - 1 || 0);
               }
             });
         })
         .catch((err: Error) => {
-          console.error('Error getting table details', err);
           DataprocLoggingService.log(
             'Error getting table details',
             LOG_LEVEL.ERROR
           );
-          toast.error(`Error getting table details : ${err}`, toastifyCustomStyle);
+          toast.error(
+            `Error getting table details : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -611,16 +615,18 @@ const DpmsComponent = ({
               }
             })
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         })
         .catch((err: Error) => {
-          console.error('Error getting database details', err);
           DataprocLoggingService.log(
             'Error getting database details',
             LOG_LEVEL.ERROR
           );
-          toast.error(`Error getting database details : ${err}`, toastifyCustomStyle);
+          toast.error(
+            `Error getting database details : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -678,17 +684,19 @@ const DpmsComponent = ({
               }
             })
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error listing session details', err);
           DataprocLoggingService.log(
             'Error listing session details',
             LOG_LEVEL.ERROR
           );
-          toast.error(`Failed to fetch session details : ${err}`, toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch session details : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -746,17 +754,19 @@ const DpmsComponent = ({
               }
             })
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error listing clusters details', err);
           DataprocLoggingService.log(
             'Error listing clusters details',
             LOG_LEVEL.ERROR
           );
-          toast.error(`Failed to fetch cluster details : ${err}`, toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch cluster details : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -926,7 +936,8 @@ export class dpmsWidget extends DataprocWidget {
   }
 
   renderInternal(): JSX.Element {
-    return (this.enableBigqueryIntegration && localStorage.getItem('notebookValue') === null) ||
+    return (this.enableBigqueryIntegration &&
+      localStorage.getItem('notebookValue') === null) ||
       localStorage.getItem('notebookValue')?.includes('bigframes') ? (
       <BigQueryComponent
         app={this.app}

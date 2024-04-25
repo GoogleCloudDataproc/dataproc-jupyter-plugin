@@ -101,10 +101,9 @@ export class JobService {
                 );
               }
             })
-            .catch((e: Error) => console.log(e));
+            .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
-          console.error('Error to  stop job', err);
           DataprocLoggingService.log('Error to  stop job', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to stop job ${jobId} : ${err}`,
@@ -138,10 +137,9 @@ export class JobService {
                 toastifyCustomStyle
               );
             })
-            .catch((e: Error) => console.log(e));
+            .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
-          console.error('Error Deleting Job', err);
           DataprocLoggingService.log('Error Deleting Job', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to delete the job ${jobId} : ${err}`,
@@ -206,7 +204,6 @@ export class JobService {
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error in getting job details', err);
           DataprocLoggingService.log(
             'Error in getting job details',
             LOG_LEVEL.ERROR
@@ -256,7 +253,6 @@ export class JobService {
             .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
-          console.error('Error in updating job', err);
           DataprocLoggingService.log('Error in updating job', LOG_LEVEL.ERROR);
           toast.error(
             `Failed to update the job ${jobSelected} : ${err}`,
@@ -365,13 +361,11 @@ export class JobService {
               }
             })
             .catch((e: Error) => {
-              console.error(e);
               setIsLoading(false);
             });
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error listing jobs', err);
           DataprocLoggingService.log('Error listing jobs', LOG_LEVEL.ERROR);
           if (!toast.isActive('jobError')) {
             toast.error(`Failed to fetch jobs : ${err}`, {
@@ -436,7 +430,6 @@ export class JobService {
       }
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      console.error('Error listing clusters', error);
       if (!toast.isActive('clusterError')) {
         toast.error(`Failed to fetch clusters : ${error}`, {
           ...toastifyCustomStyle,
@@ -474,7 +467,7 @@ export class JobService {
               );
             })
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         } else {
           const errorResponse = await response.json();
@@ -483,7 +476,6 @@ export class JobService {
         }
       })
       .catch((err: Error) => {
-        console.error('Error submitting job', err);
         DataprocLoggingService.log('Error submitting job', LOG_LEVEL.ERROR);
         toast.error(`Failed to submit the job : ${err}`, toastifyCustomStyle);
       });
