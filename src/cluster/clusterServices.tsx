@@ -146,7 +146,12 @@ export class ClusterService {
       setIsLoading(false);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
       console.error('Error listing clusters', error);
-      toast.error(`Failed to fetch clusters : ${error}`, toastifyCustomStyle);
+      if (!toast.isActive('clusterListingError')) {
+        toast.error(`Failed to fetch clusters : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'clusterListingError'
+        });
+      }
     }
   };
 

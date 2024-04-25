@@ -447,7 +447,6 @@ export class RunTimeSerive {
         setClustersList(transformClusterListData);
       } else {
         setClustersList([]);
-        setClustersList([]);
       }
     } catch (error) {
       console.error('Error listing clusters', error);

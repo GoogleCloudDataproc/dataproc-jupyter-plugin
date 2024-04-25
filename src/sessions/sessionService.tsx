@@ -251,7 +251,12 @@ export class SessionService {
       setIsLoading(false);
       console.error('Error listing Sessions', error);
       DataprocLoggingService.log('Error listing Sessions', LOG_LEVEL.ERROR);
-      toast.error(`Failed to fetch sessions : ${error}`, toastifyCustomStyle);
+      if (!toast.isActive('sessionError')) {
+        toast.error(`Failed to fetch sessions : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'sessionError'
+        });
+      }
     }
   };
 }

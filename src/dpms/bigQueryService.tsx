@@ -266,7 +266,12 @@ export class BigQueryService {
         }
       } catch (reason) {
         console.error(`Error in fetching datasets.\n${reason}`);
-        toast.error(`Failed to fetch datasets : ${reason}`, toastifyCustomStyle);
+        if (!toast.isActive('datasetError')) {
+          toast.error(`Failed to fetch datasets : ${reason}`, {
+            ...toastifyCustomStyle,
+            toastId: 'datasetError'
+          });
+        }
       }
     }
   };

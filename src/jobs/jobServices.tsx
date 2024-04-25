@@ -373,7 +373,12 @@ export class JobService {
           setIsLoading(false);
           console.error('Error listing jobs', err);
           DataprocLoggingService.log('Error listing jobs', LOG_LEVEL.ERROR);
-          toast.error(`Failed to fetch jobs : ${err}`, toastifyCustomStyle);
+          if (!toast.isActive('jobError')) {
+            toast.error(`Failed to fetch jobs : ${err}`, {
+              ...toastifyCustomStyle,
+              toastId: 'jobError'
+            });
+          }
         });
     }
   };
@@ -432,7 +437,12 @@ export class JobService {
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
       console.error('Error listing clusters', error);
-      toast.error(`Failed to fetch clusters : ${error}`, toastifyCustomStyle);
+      if (!toast.isActive('clusterError')) {
+        toast.error(`Failed to fetch clusters : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'clusterError'
+        });
+      }
     }
   };
   static submitJobService = async (

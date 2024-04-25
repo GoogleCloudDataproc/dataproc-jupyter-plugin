@@ -375,7 +375,12 @@ export class BatchService {
           setIsLoading(false);
           console.error('Error listing batches', err);
           DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
-          toast.error(`Failed to fetch batches : ${err}`, toastifyCustomStyle);
+          if (!toast.isActive('batchListingError')) {
+            toast.error(`Failed to fetch batches : ${err}`, {
+              ...toastifyCustomStyle,
+              toastId: 'batchListingError'
+            });
+          }
         });
     }
   };

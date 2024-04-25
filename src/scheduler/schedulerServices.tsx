@@ -137,7 +137,12 @@ export class SchedulerService {
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
       console.error('Error listing clusters', error);
-      toast.error(`Failed to fetch clusters : ${error}`, toastifyCustomStyle);
+      if (!toast.isActive('clusterError')) {
+        toast.error(`Failed to fetch clusters : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'clusterError'
+        });
+      }
     }
   };
   static listSessionTemplatesAPIService = async (
@@ -194,10 +199,12 @@ export class SchedulerService {
         LOG_LEVEL.ERROR
       );
       console.error('Error listing session templates', error);
-      toast.error(
-        `Failed to fetch session templates : ${error}`,
-        toastifyCustomStyle
-      );
+      if (!toast.isActive('sessionTemplateError')) {
+        toast.error(`Failed to fetch session templates : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'sessionTemplateError'
+        });
+      }
     }
   };
   static listComposersAPIService = async (
