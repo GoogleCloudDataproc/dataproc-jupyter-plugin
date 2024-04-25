@@ -51,6 +51,7 @@ import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryRegionDropdown } from '../controls/BigQueryRegionDropdown';
+import { eventEmitter } from '../utils/signalEmitter';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -115,11 +116,19 @@ function ConfigSelection({
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
               toastifyCustomStyle
             );
+            // Emit signal after toast success
+            eventEmitter.emit(
+              'dataprocConfigChange',
+              `${configStatus} - Configuration updated successfully.`
+            );
           }
         }
       }
     } catch (reason) {
-      console.error(`Error on POST {dataToSend}.\n${reason}`);
+      toast.error(
+        `Error on POST {dataToSend}.\n${reason}`,
+        toastifyCustomStyle
+      );
     } finally {
       setIsSaving(false);
     }
@@ -156,16 +165,18 @@ function ConfigSelection({
                 setIsLoadingUser(false);
               }
             })
-            .catch((e: Error) => console.log(e));
+            .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
           setIsLoadingUser(false);
-          console.error('Error displaying user info', err);
           DataprocLoggingService.log(
             'Error displaying user info',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch user information : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };

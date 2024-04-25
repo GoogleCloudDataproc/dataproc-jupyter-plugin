@@ -60,6 +60,7 @@ import pythonLogo from '../third_party/icons/python_logo.svg';
 import NotebookTemplateService from './notebookTemplates/notebookTemplatesService';
 import * as path from 'path';
 import { requestAPI } from './handler/handler';
+import { eventEmitter } from './utils/signalEmitter';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -148,6 +149,16 @@ const extension: JupyterFrontEndPlugin<void> = {
     settings.changed.connect(() => {
       onPreviewEnabledChanged();
     });
+
+    // Capture the signal
+    eventEmitter.on('dataprocConfigChange', (message: string) => {
+      if (bqFeature.enable_bigquery_integration) {
+        localStorage.setItem('notebookValue', 'bigframes');
+        localStorage.setItem('oldNotebookValue', 'bigframes');
+        loadDpmsWidget('');
+      }
+    });
+    
     /**
      * Handler for when the Jupyter Lab theme changes.
      */

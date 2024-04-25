@@ -82,7 +82,10 @@ export class BigQueryService {
         }
       }
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(
+        `Error in calling BigQuery Preview API : ${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -98,8 +101,10 @@ export class BigQueryService {
       );
       setSchemaResponse(data);
     } catch (reason) {
-      console.error(`Error in fetching big query schema.\n${reason}`);
-      toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch big query schema : ${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -119,8 +124,10 @@ export class BigQueryService {
         setSchemaInfoResponse([]);
       }
     } catch (reason) {
-      console.error(`Error in fetching big query schema.\n${reason}`);
-      toast.error(`Failed to fetch big query schema`, toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch big query schema : ${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -142,62 +149,70 @@ export class BigQueryService {
           `bigQueryDataset?project_id=${projectId}&pageToken=${pageToken}`
         );
 
-        const existingDatasetList = previousDatasetList ?? [];
-        //setStateAction never type issue
-        const allDatasetList: any = [
-          ...(existingDatasetList as []),
-          ...data.datasets
-        ];
+        if (data.datasets) {
+          const existingDatasetList = previousDatasetList ?? [];
+          //setStateAction never type issue
+          const allDatasetList: any = [
+            ...(existingDatasetList as []),
+            ...data.datasets
+          ];
 
-        if (data.nextPageToken) {
-          this.getBigQueryDatasetsAPIService(
-            notebookValue,
-            settingRegistry,
-            setDatabaseNames,
-            setDataSetResponse,
-            projectId,
-            setIsIconLoading,
-            setIsLoading,
-            data.nextPageToken,
-            allDatasetList
-          );
-        } else {
-          const settings = await settingRegistry.load(PLUGIN_ID);
-
-          let filterDatasetByLocation = allDatasetList;
-          filterDatasetByLocation = filterDatasetByLocation.filter(
-            (dataset: any) =>
-              dataset.location === settings.get('bqRegion')['composite']
-          );
-
-          if (filterDatasetByLocation.length > 0) {
-            const databaseNames: string[] = [];
-            const updatedDatabaseDetails: { [key: string]: string } = {};
-            filterDatasetByLocation.forEach(
-              (data: {
-                datasetReference: { description: string; datasetId: string };
-              }) => {
-                databaseNames.push(data.datasetReference.datasetId);
-                const description = data.datasetReference.description || 'None';
-                updatedDatabaseDetails[data.datasetReference.datasetId] =
-                  description;
-              }
+          if (data.nextPageToken) {
+            this.getBigQueryDatasetsAPIService(
+              notebookValue,
+              settingRegistry,
+              setDatabaseNames,
+              setDataSetResponse,
+              projectId,
+              setIsIconLoading,
+              setIsLoading,
+              data.nextPageToken,
+              allDatasetList
             );
-            setDataSetResponse(filterDatasetByLocation);
-            setDatabaseNames(databaseNames);
-            setIsIconLoading(false);
           } else {
-            toast.error(
-              `No Dataset available in this region`,
-              toastifyCustomStyle
+            const settings = await settingRegistry.load(PLUGIN_ID);
+
+            let filterDatasetByLocation = allDatasetList;
+            filterDatasetByLocation = filterDatasetByLocation.filter(
+              (dataset: any) =>
+                dataset.location === settings.get('bqRegion')['composite']
             );
-            setIsLoading(false);
-            setIsIconLoading(false);
+
+            if (filterDatasetByLocation.length > 0) {
+              const databaseNames: string[] = [];
+              const updatedDatabaseDetails: { [key: string]: string } = {};
+              filterDatasetByLocation.forEach(
+                (data: {
+                  datasetReference: { description: string; datasetId: string };
+                }) => {
+                  databaseNames.push(data.datasetReference.datasetId);
+                  const description =
+                    data.datasetReference.description || 'None';
+                  updatedDatabaseDetails[data.datasetReference.datasetId] =
+                    description;
+                }
+              );
+              setDataSetResponse(filterDatasetByLocation);
+              setDatabaseNames(databaseNames);
+              setIsIconLoading(false);
+            } else {
+              setDataSetResponse([]);
+              setDatabaseNames([]);
+              setIsLoading(false);
+              setIsIconLoading(false);
+            }
           }
+        } else {
+          setDataSetResponse([]);
+          setDatabaseNames([]);
+          setIsLoading(false);
+          setIsIconLoading(false);
         }
       } catch (reason) {
-        console.error(`Error in fetching datasets.\n${reason}`);
-        toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
+        toast.error(
+          `Failed to fetch datasets : ${reason}`,
+          toastifyCustomStyle
+        );
         setIsLoading(false);
         setIsIconLoading(false);
       }
@@ -265,8 +280,12 @@ export class BigQueryService {
           setTableResponse(datasetId);
         }
       } catch (reason) {
-        console.error(`Error in fetching datasets.\n${reason}`);
-        toast.error(`Failed to fetch datasets`, toastifyCustomStyle);
+        if (!toast.isActive('datasetError')) {
+          toast.error(`Failed to fetch datasets : ${reason}`, {
+            ...toastifyCustomStyle,
+            toastId: 'datasetError'
+          });
+        }
       }
     }
   };
@@ -284,7 +303,10 @@ export class BigQueryService {
       datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive;
       setDatasetInfo(datasetInfoTemp);
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(
+        `Error in calling BigQurey Dataset API : ${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -322,7 +344,10 @@ export class BigQueryService {
       setTableInfo(tableInfoTemp);
       setIsLoading(false);
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(
+        `Error in calling BigQurey Table API : ${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -362,7 +387,10 @@ export class BigQueryService {
       setDatasetInfo(datasetInfoTemp);
       setIsLoading(false);
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(
+        `Error in calling BigQurey Dataset Details API : ${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -373,7 +401,7 @@ export class BigQueryService {
       const data: any = await requestAPI(`bigQueryProjectsList`);
       setProjectNameInfo(data);
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(`Error on GET credentials.\n${reason}`, toastifyCustomStyle);
     }
   };
 
@@ -389,7 +417,10 @@ export class BigQueryService {
       );
       setSearchResponse(data);
     } catch (reason) {
-      console.error(`Error on GET credentials.\n${reason}`);
+      toast.error(
+        `Error in calling BigQurey Project List API : ${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 }
