@@ -276,7 +276,6 @@ export class SchedulerService {
         `Error on POST {dataToSend}.\n${reason}`,
         toastifyCustomStyle
       );
-
     }
   };
 
@@ -579,10 +578,7 @@ export class SchedulerService {
         setIsLoading(false);
       }
     } catch (reason) {
-      toast.error(
-        `Error on GET credentials..\n${reason}`,
-        toastifyCustomStyle
-      );
+      toast.error(`Error on GET credentials..\n${reason}`, toastifyCustomStyle);
     }
   };
   static listDagInfoAPIService = async (
@@ -671,11 +667,7 @@ export class SchedulerService {
       }
     } catch (error) {
       DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
-      toast.error(
-        `Error in Download api : ${error}`,
-        toastifyCustomStyle
-      );
-      
+      toast.error(`Error in Download api : ${error}`, toastifyCustomStyle);
     }
   };
   static handleDownloadOutputNotebookAPIService = async (
@@ -704,10 +696,7 @@ export class SchedulerService {
       setDownloadOutputDagRunId('');
     } catch (error) {
       DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
-      toast.error(
-        `Error in Download api : ${error}`,
-        toastifyCustomStyle
-      );
+      toast.error(`Error in Download api : ${error}`, toastifyCustomStyle);
       setDownloadOutputDagRunId('');
     }
   };

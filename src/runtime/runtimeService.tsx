@@ -480,7 +480,6 @@ export class RunTimeSerive {
       setNetworkSelected(transformedNetworkList[0]);
     } catch (error) {
       DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-      console.error('Error listing Networks', error);
       toast.error(`Error listing Networks : ${error}`, toastifyCustomStyle);
     }
   };
