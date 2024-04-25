@@ -30,6 +30,8 @@ interface IColumn {
   description?: string;
 }
 
+const height = window.innerHeight - 250;
+
 const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
   const columns = [
     {
@@ -87,8 +89,8 @@ const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
     useTable({ columns, data });
 
   return (
-    <div className="big-query-schema-wrapper">
-      <div className="table-container">
+    <div className="big-query-schema-wrapper" style={{height: height}}>
+      <div className="big-query-schema-table-container">
         <table className="big-query-schema-table" {...getTableProps()}>
           <thead>
             {headerGroups.map(headerGroup => (
