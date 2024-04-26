@@ -106,12 +106,13 @@ class BigqueryPreviewController(APIHandler):
         try:
             dataset_id = self.get_argument("dataset_id")
             table_id = self.get_argument("table_id")
-            page_token = self.get_argument("pageToken")
+            max_results = self.get_argument("max_results")
+            start_index = self.get_argument("start_index")
             project_id = self.get_argument("project_id")
             bq_preview = BigQueryPreviewService()
             credentials = handlers.get_cached_credentials(self.log)
             preview_data = bq_preview.bigquery_preview_data(
-                credentials, dataset_id, table_id, page_token, project_id, self.log
+                credentials, dataset_id, table_id, max_results, start_index, project_id, self.log
             )
             self.finish(json.dumps(preview_data))
         except Exception as e:
