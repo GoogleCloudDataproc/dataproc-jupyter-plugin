@@ -23,6 +23,7 @@ import TableData from '../utils/tableData';
 import { BigQueryService } from './bigQueryService';
 import { ICellProps } from '../utils/utils';
 
+const previewHeight = window.innerHeight - 180;
 const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
   const [previewDataList, setPreviewDataList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,8 +80,11 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
   return (
     <div>
       {previewDataList.length > 0 ? (
-        <div>
-          <div className="preview-data-table-parent">
+        <div className="big-query-schema-wrapper">
+          <div
+            className="preview-data-table-parent"
+            style={{ height: previewHeight }}
+          >
             <TableData
               getTableProps={getTableProps}
               headerGroups={headerGroups}
