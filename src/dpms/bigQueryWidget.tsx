@@ -654,7 +654,7 @@ const BigQueryComponent = ({
     return (
       <div style={style}>
         {renderNodeIcon()}
-        <div role="treeitem" title={node.data.name} onClick={handleTextClick}>
+        <div role="treeitem" onClick={handleTextClick}>
           {node.data.name}
         </div>
         <div className="dpms-column-type-text">{node.data.type}</div>
@@ -768,7 +768,7 @@ const BigQueryComponent = ({
             <>
               <div className="search-field">
                 <TextField
-                  placeholder="Search your DBs and tables"
+                  placeholder="Enter your keyword to search"
                   type="text"
                   variant="outlined"
                   fullWidth

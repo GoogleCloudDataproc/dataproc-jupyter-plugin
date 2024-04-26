@@ -23,7 +23,7 @@
   background: var(--jp-layout-color1);
   display: block;
   box-sizing: border-box;
-  height: 73vh;
+  margin: 0 20px;
   overflow: auto;
 }
 
