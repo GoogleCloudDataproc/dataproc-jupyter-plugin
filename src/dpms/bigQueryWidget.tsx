@@ -768,7 +768,7 @@ const BigQueryComponent = ({
             <>
               <div className="search-field">
                 <TextField
-                  placeholder="Search your DBs and tables"
+                  placeholder="Enter your keyword to search"
                   type="text"
                   variant="outlined"
                   fullWidth
