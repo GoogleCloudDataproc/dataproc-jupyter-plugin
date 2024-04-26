@@ -80,7 +80,7 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
   return (
     <div>
       {previewDataList.length > 0 ? (
-        <div className="big-query-schema-wrapper">
+        <div>
           <div
             className="preview-data-table-parent"
             style={{ height: previewHeight }}
