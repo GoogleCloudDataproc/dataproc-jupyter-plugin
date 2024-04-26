@@ -125,7 +125,10 @@ function ConfigSelection({
         }
       }
     } catch (reason) {
-      console.error(`Error on POST {dataToSend}.\n${reason}`);
+      toast.error(
+        `Error on POST {dataToSend}.\n${reason}`,
+        toastifyCustomStyle
+      );
     } finally {
       setIsSaving(false);
     }
@@ -162,16 +165,18 @@ function ConfigSelection({
                 setIsLoadingUser(false);
               }
             })
-            .catch((e: Error) => console.log(e));
+            .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
           setIsLoadingUser(false);
-          console.error('Error displaying user info', err);
           DataprocLoggingService.log(
             'Error displaying user info',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch user information : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };

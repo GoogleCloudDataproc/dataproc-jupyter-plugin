@@ -199,10 +199,9 @@ export class BatchService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error('Error deleting batches', err);
           DataprocLoggingService.log('Error deleting batches', LOG_LEVEL.ERROR);
           toast.error(
-            `Failed to delete the batch ${selectedBatch}`,
+            `Failed to delete the batch ${selectedBatch} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -266,9 +265,8 @@ export class BatchService {
             'Error in getting Batch details',
             LOG_LEVEL.ERROR
           );
-          console.error('Error in getting Batch details', err);
           toast.error(
-            `Failed to fetch batch details ${batchSelected}`,
+            `Failed to fetch batch details ${batchSelected} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -373,9 +371,13 @@ export class BatchService {
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error listing batches', err);
           DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
-          toast.error('Failed to fetch batches', toastifyCustomStyle);
+          if (!toast.isActive('batchListingError')) {
+            toast.error(`Failed to fetch batches : ${err}`, {
+              ...toastifyCustomStyle,
+              toastId: 'batchListingError'
+            });
+          }
         });
     }
   };
@@ -426,8 +428,10 @@ export class BatchService {
         toast.error(responseResult?.error?.message, toastifyCustomStyle);
       }
     } catch (err) {
-      console.error('Error displaying sharedVPC subNetwork', err);
-      toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch  sharedVPC subNetwork : ${err}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -462,8 +466,10 @@ export class BatchService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch user information : ${err}`,
+            toastifyCustomStyle
+          );
           DataprocLoggingService.log(
             'Error displaying user info',
             LOG_LEVEL.ERROR
@@ -521,7 +527,7 @@ export class BatchService {
             'Error selecting Network',
             LOG_LEVEL.ERROR
           );
-          console.error('Error selecting Network', err);
+          toast.error(`Error selecting Network : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -580,8 +586,8 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
           DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+          toast.error(`Error listing Networks : ${err}`), toastifyCustomStyle;
         });
     }
   };
@@ -630,8 +636,8 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
           DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+          toast.error(`Error listing Networks : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -684,8 +690,8 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
           DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+          toast.error(`Error listing Networks : ${err}`), toastifyCustomStyle;
         });
     }
   };
@@ -745,10 +751,13 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing subNetworks', err);
           DataprocLoggingService.log(
             'Error listing subNetworks',
             LOG_LEVEL.ERROR
+          );
+          toast.error(
+            `Error listing subNetworks : ${err}`,
+            toastifyCustomStyle
           );
         });
     }
@@ -825,9 +834,9 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing services', err);
           setIsLoadingService(false);
           DataprocLoggingService.log('Error listing services', LOG_LEVEL.ERROR);
+          toast.error(`Error listing services : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -899,8 +908,8 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing regions', err);
           DataprocLoggingService.log('Error listing regions', LOG_LEVEL.ERROR);
+          toast.error(`Error listing regions : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -948,8 +957,7 @@ export class BatchService {
         }
       })
       .catch((err: Error) => {
-        console.error('Error submitting Batch', err);
-        toast.error('Failed to submit the Batch', toastifyCustomStyle);
+        toast.error(`Failed to submit the Batch : ${err}`, toastifyCustomStyle);
         DataprocLoggingService.log('Error submitting Batch', LOG_LEVEL.ERROR);
       });
   };
@@ -979,9 +987,11 @@ export class BatchService {
         setClustersList([]);
       }
     } catch (error) {
-      console.error('Error listing clusters', error);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      toast.error('Failed to list the clusters', toastifyCustomStyle);
+      toast.error(
+        `Failed to list the clusters : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
 }
