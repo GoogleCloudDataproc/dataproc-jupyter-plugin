@@ -43,6 +43,7 @@ from google.cloud.jupyter_config.config import (
     gcp_credentials,
     gcp_kernel_gateway_url,
     gcp_project,
+    gcp_project_number,
     gcp_region,
     get_gcloud_config,
     run_gcloud_subcommand,
@@ -73,16 +74,37 @@ from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeControll
 from dataproc_jupyter_plugin.contollers.triggerDagController import TriggerDagController
 
 
-def update_gateway_client_url(c, log):
+_region_not_set_error = '''GCP region not set in gcloud.
+
+You must configure either the `compute/region` or `dataproc/region` setting
+before you can use the Dataproc Jupyter Plugin.
+'''
+
+_project_number_not_set_error = '''GCP project number not set in gcloud.
+
+You must configure the `core/project` setting in gcloud to a project that you
+have viewer permission on before you can use the Dataproc Jupyter Plugin.
+'''
+
+
+def configure_gateway_client_url(c, log):
     try:
+        if not gcp_region():
+            log.error(_region_not_set_error)
+            return False
+        if not gcp_project_number():
+            log.error(_project_number_not_set_error)
+            return False
+
         kernel_gateway_url = gcp_kernel_gateway_url()
+        log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
+        c.GatewayClient.url = kernel_gateway_url
+        return True
     except subprocess.SubprocessError as e:
-        log.warning(
+        log.error(
             f"Error constructing the kernel gateway URL; configure your project, region, and credentials using gcloud: {e}"
         )
-        return
-    log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
-    c.GatewayClient.url = kernel_gateway_url
+        return False
 
 
 class DataprocPluginConfig(SingletonConfigurable):
@@ -129,6 +151,7 @@ class CredentialsHandler(APIHandler):
     def get(self):
         credentials = {
             "project_id": "",
+            "project_number": 0,
             "region_id": "",
             "access_token": "",
             "config_error": 0,
@@ -139,11 +162,18 @@ class CredentialsHandler(APIHandler):
             credentials["region_id"] = gcp_region()
             credentials["config_error"] = 0
             credentials["access_token"] = gcp_credentials()
+            credentials["project_number"] = gcp_project_number()
         except Exception as ex:
             self.log.exception(f"Error fetching credentials from gcloud")
             credentials["config_error"] = 1
-            if not credentials["access_token"]:
-                credentials["login_error"] = 1
+        if not credentials["access_token"] or not credentials["project_number"]:
+            # These will only be set if the user is logged in to gcloud with
+            # an account that has the appropriate permissions on the configured
+            # project.
+            #
+            # As such, we treat them being missing as a signal that there is
+            # a problem with how the user is logged in to gcloud.
+            credentials["login_error"] = 1
         self.finish(json.dumps(credentials))
 
 
