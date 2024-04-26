@@ -55,7 +55,10 @@ export class BigQueryService {
         data.rows.forEach((rowInfo: any) => {
           let transformRowInfo: any = {};
           rowInfo['f'].forEach((fieldInfo: any, index: number) => {
-            transformRowInfo[columns[index].Header] = fieldInfo['v'];
+            transformRowInfo[columns[index].Header] =
+              typeof fieldInfo['v'] === 'object'
+                ? JSON.stringify(fieldInfo['v'])
+                : fieldInfo['v'];
           });
           transformRowInfoList.push(transformRowInfo);
         });
