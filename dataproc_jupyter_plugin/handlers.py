@@ -20,7 +20,6 @@ import subprocess
 import threading
 import time
 
-from cachetools import TTLCache
 from dataproc_jupyter_plugin.contollers.bigqueryController import (
     BigqueryDatasetController,
     BigqueryDatasetInfoController,
@@ -39,7 +38,15 @@ import tornado
 from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
-from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
+from google.cloud.jupyter_config.config import (
+    clear_gcloud_cache,
+    gcp_credentials,
+    gcp_kernel_gateway_url,
+    gcp_project,
+    gcp_region,
+    get_gcloud_config,
+    run_gcloud_subcommand,
+)
 
 from dataproc_jupyter_plugin.contollers.clusterController import ClusterListController
 from dataproc_jupyter_plugin.contollers.composerController import ComposerListController
@@ -114,143 +121,30 @@ class SettingsHandler(APIHandler):
         self.finish(json.dumps(dataproc_plugin_config))
 
 
-credentials_cache = None
-
-
-def get_cached_credentials(log):
-    global credentials_cache
-    try:
-        if credentials_cache is None or "credentials" not in credentials_cache:
-            cmd = "gcloud config config-helper --format=json"
-            process = subprocess.Popen(
-                cmd,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            output, error = process.communicate()
-            if process.returncode == 0:
-                config_data = json.loads(output)
-                credentials = {
-                    "project_id": config_data["configuration"]["properties"]["core"][
-                        "project"
-                    ],
-                    "region_id": config_data["configuration"]["properties"]["compute"][
-                        "region"
-                    ],
-                    "access_token": config_data["credential"]["access_token"],
-                }
-
-                token_expiry = config_data["credential"]["token_expiry"]
-                utc_datetime = datetime.datetime.strptime(
-                    token_expiry, "%Y-%m-%dT%H:%M:%SZ"
-                )
-                current_utc_datetime = datetime.datetime.utcnow()
-                expiry_timedelta = utc_datetime - current_utc_datetime
-                expiry_seconds = expiry_timedelta.total_seconds()
-                if expiry_seconds > 1000:
-                    ttl_seconds = 1000
-                else:
-                    ttl_seconds = expiry_seconds
-                credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
-                credentials_cache["credentials"] = credentials
-                return credentials
-            else:
-                cmd = "gcloud config get-value account"
-                process = subprocess.Popen(
-                    cmd,
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                )
-                output, error = process.communicate()
-                if output == "":
-                    cmd = "gcloud config get-value project"
-                    process = subprocess.Popen(
-                        cmd,
-                        shell=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                    )
-                    project, error = process.communicate()
-                    if project == "":
-                        credentials = {
-                            "project_id": "",
-                            "region_id": "",
-                            "access_token": "",
-                            "config_error": 1,
-                            "login_error": 0,
-                        }
-                    else:
-                        cmd = "gcloud config get-value compute/region"
-                        process = subprocess.Popen(
-                            cmd,
-                            shell=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            text=True,
-                        )
-                        region, error = process.communicate()
-                        if region == "":
-                            credentials = {
-                                "project_id": "",
-                                "region_id": "",
-                                "access_token": "",
-                                "config_error": 1,
-                                "login_error": 0,
-                            }
-                        else:
-                            credentials = {
-                                "project_id": "",
-                                "region_id": "",
-                                "access_token": "",
-                                "config_error": 0,
-                                "login_error": 1,
-                            }
-                else:
-                    credentials = {
-                        "project_id": "",
-                        "region_id": "",
-                        "access_token": "",
-                        "config_error": 1,
-                        "login_error": 0,
-                    }
-                credentials_cache = TTLCache(maxsize=1, ttl=5)
-                credentials_cache["credentials"] = credentials
-                return credentials
-        else:
-            return credentials_cache["credentials"]
-    except Exception:
-        log.exception(f"Error fetching credentials from gcloud")
-        credentials = {"access_token": "", "config_error": 1}
-        credentials_cache = TTLCache(maxsize=1, ttl=2)
-        credentials_cache["credentials"] = credentials
-        return credentials
-
-
 class CredentialsHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
-    credentials_cache = None
-
     @tornado.web.authenticated
     def get(self):
+        credentials = {
+            "project_id": "",
+            "region_id": "",
+            "access_token": "",
+            "config_error": 0,
+            "login_error": 0,
+        }
         try:
-            if credentials_cache is None or "credentials" not in credentials_cache:
-                cached_credentials = get_cached_credentials(self.log)
-                self.finish(json.dumps(cached_credentials))
-            else:
-                t1 = threading.Thread(target=get_cached_credentials, args=([self.log]))
-                t1.start()
-                self.finish(json.dumps(credentials_cache["credentials"]))
-        except Exception:
-            self.log.exception(f"Error handling credential request")
-            cached_credentials = get_cached_credentials(self.log)
-            self.finish(json.dumps(cached_credentials))
+            credentials["project_id"] = gcp_project()
+            credentials["region_id"] = gcp_region()
+            credentials["config_error"] = 0
+            credentials["access_token"] = gcp_credentials()
+        except Exception as ex:
+            self.log.exception(f"Error fetching credentials from gcloud")
+            credentials["config_error"] = 1
+            if not credentials["access_token"]:
+                credentials["login_error"] = 1
+        self.finish(json.dumps(credentials))
 
 
 class LoginHandler(APIHandler):
@@ -272,28 +166,16 @@ class ConfigHandler(APIHandler):
     @tornado.web.authenticated
     def post(self):
         ERROR_MESSAGE = "Project and region update "
-        global credentials_cache
         input_data = self.get_json_body()
         project_id = input_data["projectId"]
         region = input_data["region"]
-        cmd = "gcloud config set project " + project_id
-        project_set = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        output, _ = project_set.communicate()
-        if project_set.returncode == 0:
-            cmd = "gcloud config set compute/region " + region
-            region_set = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-            )
-            output, _ = region_set.communicate()
-            if region_set.returncode == 0:
-                credentials_cache = None
-                update_gateway_client_url(self.config, self.log)
-                self.finish({"config": ERROR_MESSAGE + "successful"})
-            else:
-                self.finish({"config": ERROR_MESSAGE + "failed"})
-        else:
+        try:
+            run_gcloud_subcommand(f"config set project {project_id}")
+            run_gcloud_subcommand(f"config set dataproc/region {region}")
+            clear_gcloud_cache()
+            update_gateway_client_url(self.config, self.log)
+            self.finish({"config": ERROR_MESSAGE + "successful"})
+        except subprocess.CalledProcessError as er:
             self.finish({"config": ERROR_MESSAGE + "failed"})
 
 
