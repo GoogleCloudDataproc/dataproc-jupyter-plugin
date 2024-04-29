@@ -63,7 +63,7 @@ import NotebookTemplateService from './notebookTemplates/notebookTemplatesServic
 import * as path from 'path';
 import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
-import { bigQueryWidget } from './dpms/bigQueryWidget';
+import { BigQueryWidget } from './dpms/bigQueryWidget';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -221,7 +221,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             panelDatasetExplorer = new Panel();
             panelDatasetExplorer.id = 'dataset-explorer-tab';
             panelDatasetExplorer.addWidget(
-              new bigQueryWidget(
+              new BigQueryWidget(
                 app as JupyterLab,
                 settingRegistry as ISettingRegistry,
                 bqFeature.enable_bigquery_integration as boolean,
@@ -277,7 +277,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           widget.dispose();
         }
       });
-      const newWidget = new bigQueryWidget(
+      const newWidget = new BigQueryWidget(
         app as JupyterLab,
         settingRegistry as ISettingRegistry,
         bqFeature.enable_bigquery_integration as boolean,

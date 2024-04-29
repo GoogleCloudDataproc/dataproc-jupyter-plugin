@@ -836,7 +836,7 @@ const BigQueryComponent = ({
   );
 };
 
-export class bigQueryWidget extends DataprocWidget {
+export class BigQueryWidget extends DataprocWidget {
   app: JupyterLab;
   settingRegistry: ISettingRegistry;
   enableBigqueryIntegration: boolean;
