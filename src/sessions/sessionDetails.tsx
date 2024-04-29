@@ -50,11 +50,11 @@ import {
   SUBNETWORK_LABEL
 } from '../utils/const';
 import { elapsedTime, jobTimeFormat } from '../utils/utils';
-import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import { SessionService } from './sessionService';
 import PollingTimer from '../utils/pollingTimer';
 import { JupyterLab } from '@jupyterlab/application';
+import { CircularProgress } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -306,9 +306,7 @@ function SessionDetails({
                       sessionInfo.state === STATUS_TERMINATING ||
                       sessionInfo.state === STATUS_DELETING) && (
                       <div>
-                        <ClipLoader
-                          color="#3367d6"
-                          loading={true}
+                        <CircularProgress
                           size={15}
                           aria-label="Loading Spinner"
                           data-testid="loader"
@@ -532,9 +530,7 @@ function SessionDetails({
         <>
           {isLoading && (
             <div className="spin-loader-main">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

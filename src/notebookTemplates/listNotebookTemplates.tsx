@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
-import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
@@ -12,6 +11,7 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { IThemeManager } from '@jupyterlab/apputils';
 import NotebookTemplateService from './notebookTemplatesService';
+import { CircularProgress } from '@mui/material';
 
 function ListNotebookTemplates({
   app,
@@ -220,9 +220,7 @@ function ListNotebookTemplates({
           <div>
             {isLoading && (
               <div className="spin-loader-main">
-                <ClipLoader
-                  color="#3367d6"
-                  loading={true}
+                <CircularProgress
                   size={18}
                   aria-label="Loading Spinner"
                   data-testid="loader"

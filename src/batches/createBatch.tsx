@@ -40,12 +40,16 @@ import {
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi } from '../utils/utils';
-import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
-import { Autocomplete, Radio, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  CircularProgress,
+  Radio,
+  TextField
+} from '@mui/material';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
@@ -1598,8 +1602,7 @@ function CreateBatch({
               <div className="create-batch-network">
                 {isloadingNetwork ? (
                   <div className="metastore-loader">
-                    <ClipLoader
-                      loading={true}
+                    <CircularProgress
                       size={25}
                       aria-label="Loading Spinner"
                       data-testid="loader"
@@ -1855,8 +1858,7 @@ function CreateBatch({
           <div className="select-text-overlay">
             {isLoadingService ? (
               <div className="metastore-loader">
-                <ClipLoader
-                  loading={true}
+                <CircularProgress
                   size={25}
                   aria-label="Loading Spinner"
                   data-testid="loader"

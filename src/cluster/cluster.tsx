@@ -16,13 +16,13 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
 import JobComponent from '../jobs/jobs';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
 import { DataprocWidget } from '../controls/DataprocWidget';
+import { CircularProgress } from '@mui/material';
 
 const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
@@ -63,9 +63,7 @@ const ClusterComponent = (): React.JSX.Element => {
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
+          <CircularProgress
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"

@@ -18,13 +18,13 @@
 import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { PaginationView } from '../utils/paginationView';
-import { ClipLoader } from 'react-spinners';
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import { SchedulerService } from './schedulerServices';
 import { Dayjs } from 'dayjs';
 import { LabIcon } from '@jupyterlab/ui-components';
 import downloadIcon from '../../style/icons/scheduler_download.svg';
+import { CircularProgress } from '@mui/material';
 
 const iconDownload = new LabIcon({
   name: 'launcher:download-icon',
@@ -203,9 +203,7 @@ const ListDagRuns = ({
       <div className="actions-icon">
         {data.dagRunId === downloadOutputDagRunId ? (
           <div className="icon-buttons-style">
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
               size={18}
               aria-label="Loading Spinner"
               data-testid="loader"
@@ -314,9 +312,7 @@ const ListDagRuns = ({
           <div>
             {isLoading && (
               <div className="spin-loader-main">
-                <ClipLoader
-                  color="#3367d6"
-                  loading={true}
+                <CircularProgress
                   size={18}
                   aria-label="Loading Spinner"
                   data-testid="loader"

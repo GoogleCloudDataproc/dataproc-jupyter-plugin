@@ -41,11 +41,15 @@ import {
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { Table } from './tableInfo';
-import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { IconButton, InputAdornment, TextField } from '@mui/material';
+import {
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  TextField
+} from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 
@@ -820,9 +824,7 @@ const DpmsComponent = ({
             {isLoading ? (
               <div className="database-loader">
                 <div>
-                  <ClipLoader
-                    color="#3367d6"
-                    loading={true}
+                  <CircularProgress
                     size={20}
                     aria-label="Loading Spinner"
                     data-testid="loader"

@@ -18,7 +18,9 @@
 import React from 'react';
 import { ISessionTemplateDisplay } from './listRuntimeTemplateInterface';
 import { Select } from '../controls/MuiWrappedSelect';
-
+import { LabIcon } from '@jupyterlab/ui-components';
+import PreviousIcon from '../../style/icons/previous_page.svg';
+import NextIcon from '../../style/icons/next_page.svg';
 interface IBatch {
   batchID: string;
   status: string;
@@ -65,6 +67,14 @@ interface IPaginationViewProps {
   canPreviousPage: boolean;
   canNextPage: boolean;
 }
+const iconPrevious = new LabIcon({
+  name: 'launcher:previous-icon',
+  svgstr: PreviousIcon
+});
+const iconNext = new LabIcon({
+  name: 'launcher:next-icon',
+  svgstr: NextIcon
+});
 
 export const PaginationView = ({
   pageSize,
@@ -109,7 +119,7 @@ export const PaginationView = ({
         }
         onClick={() => previousPage()}
       >
-        {'<'}
+        <iconPrevious.react tag="div" className="logo-alignment-style" />
       </div>
       <div
         role="button"
@@ -118,7 +128,7 @@ export const PaginationView = ({
           !canNextPage ? 'page-move-button disabled' : 'page-move-button'
         }
       >
-        {'>'}
+        <iconNext.react tag="div" className="logo-alignment-style" />
       </div>
     </div>
   );

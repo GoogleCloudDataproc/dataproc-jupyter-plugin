@@ -17,9 +17,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { BigQueryService } from './bigQueryService';
-import { ClipLoader } from 'react-spinners';
+import { CircularProgress } from '@mui/material';
 
-const BigQueryDatasetInfo = ({ dataset, projectId }: { dataset: string, projectId: string }) => {
+const BigQueryDatasetInfo = ({
+  dataset,
+  projectId
+}: {
+  dataset: string;
+  projectId: string;
+}) => {
   const [datasetInfo, setDatasetInfo] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,9 +43,7 @@ const BigQueryDatasetInfo = ({ dataset, projectId }: { dataset: string, projectI
       {isLoading ? (
         <div className="database-loader">
           <div>
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
               size={20}
               aria-label="Loading Spinner"
               data-testid="loader"
