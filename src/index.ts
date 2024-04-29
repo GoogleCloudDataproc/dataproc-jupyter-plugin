@@ -40,6 +40,7 @@ import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
 import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
+import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { PLUGIN_ID, TITLE_LAUNCHER_CATEGORY } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
@@ -48,6 +49,7 @@ import {
   IDefaultFileBrowser
 } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
+import datasetExplorerIconDark from '../style/icons/dataset_explorer_dark_icon.svg';
 import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -61,10 +63,15 @@ import NotebookTemplateService from './notebookTemplates/notebookTemplatesServic
 import * as path from 'path';
 import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
+import { bigQueryWidget } from './dpms/bigQueryWidget';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
+});
+const iconDatasetExplorer = new LabIcon({
+  name: 'launcher:dataset-explorer-icon',
+  svgstr: datasetExplorerIcon
 });
 const iconPythonLogo = new LabIcon({
   name: 'launcher:python-bigquery-logo-icon',
@@ -128,6 +135,10 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:dpms-icon-dark',
       svgstr: dpmsIconDark
     });
+    const iconDatasetExplorerDark = new LabIcon({
+      name: 'launcher:dataset-explorer-icon-dark',
+      svgstr: datasetExplorerIconDark
+    });
     const iconStorageDark = new LabIcon({
       name: 'launcher:storage-icon-dark',
       svgstr: storageIconDark
@@ -144,7 +155,9 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // The current value of whether or not preview features are enabled.
     let previewEnabled = settings.get('previewEnabled').composite as boolean;
-    let panelDpms: Panel | undefined, panelGcs: Panel | undefined;
+    let panelDpms: Panel | undefined,
+      panelGcs: Panel | undefined,
+      panelDatasetExplorer: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
     settings.changed.connect(() => {
       onPreviewEnabledChanged();
@@ -153,12 +166,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', (message: string) => {
       if (bqFeature.enable_bigquery_integration) {
-        localStorage.setItem('notebookValue', 'bigframes');
-        localStorage.setItem('oldNotebookValue', 'bigframes');
-        loadDpmsWidget('');
+        loadBigQueryWidget('');
       }
     });
-    
+
     /**
      * Handler for when the Jupyter Lab theme changes.
      */
@@ -169,9 +180,15 @@ const extension: JupyterFrontEndPlugin<void> = {
         : true;
       if (isLightTheme) {
         panelDpms.title.icon = iconDpms;
+        if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
+          panelDatasetExplorer.title.icon = iconDatasetExplorer;
+        }
         panelGcs.title.icon = iconStorage;
       } else {
         panelDpms.title.icon = iconDpmsDark;
+        if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
+          panelDatasetExplorer.title.icon = iconDatasetExplorerDark;
+        }
         panelGcs.title.icon = iconStorageDark;
       }
     };
@@ -187,9 +204,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       if (!previewEnabled) {
         // Preview was disabled, tear everything down.
         panelDpms?.dispose();
+        panelDatasetExplorer?.dispose();
         panelGcs?.dispose();
         gcsDrive?.dispose();
         panelDpms = undefined;
+        panelDatasetExplorer = undefined;
         panelGcs = undefined;
         gcsDrive = undefined;
       } else {
@@ -197,14 +216,19 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (!panelDpms && !panelGcs) {
           panelDpms = new Panel();
           panelDpms.id = 'dpms-tab';
-          panelDpms.addWidget(
-            new dpmsWidget(
-              app as JupyterLab,
-              settingRegistry as ISettingRegistry,
-              bqFeature.enable_bigquery_integration as boolean,
-              themeManager
-            )
-          );
+          panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+          if (bqFeature.enable_bigquery_integration && !panelDatasetExplorer) {
+            panelDatasetExplorer = new Panel();
+            panelDatasetExplorer.id = 'dataset-explorer-tab';
+            panelDatasetExplorer.addWidget(
+              new bigQueryWidget(
+                app as JupyterLab,
+                settingRegistry as ISettingRegistry,
+                bqFeature.enable_bigquery_integration as boolean,
+                themeManager
+              )
+            );
+          }
           panelGcs = new Panel();
           panelGcs.id = 'GCS-bucket-tab';
           gcsDrive = new GCSDrive();
@@ -214,7 +238,10 @@ const extension: JupyterFrontEndPlugin<void> = {
           );
           // Update the icons.
           onThemeChanged();
-          app.shell.add(panelGcs, 'left', { rank: 1001 });
+          app.shell.add(panelGcs, 'left', { rank: 1002 });
+          if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
+            app.shell.add(panelDatasetExplorer, 'left', { rank: 1001 });
+          }
           app.shell.add(panelDpms, 'left', { rank: 1000 });
         }
       }
@@ -237,13 +264,26 @@ const extension: JupyterFrontEndPlugin<void> = {
           widget.dispose();
         }
       });
-      const newWidget = new dpmsWidget(
+      const newWidget = new dpmsWidget(app as JupyterLab, themeManager);
+      panelDpms.addWidget(newWidget);
+    };
+
+    const loadBigQueryWidget = (value: string) => {
+      // If DPMS is not enabled, no-op.
+      if (!panelDatasetExplorer) return;
+      const existingWidgets = panelDatasetExplorer.widgets;
+      existingWidgets.forEach(widget => {
+        if (widget instanceof dpmsWidget) {
+          widget.dispose();
+        }
+      });
+      const newWidget = new bigQueryWidget(
         app as JupyterLab,
         settingRegistry as ISettingRegistry,
         bqFeature.enable_bigquery_integration as boolean,
         themeManager
       );
-      panelDpms.addWidget(newWidget);
+      panelDatasetExplorer.addWidget(newWidget);
     };
 
     let lastClusterName = localStorage.getItem('notebookValue') || '';
@@ -318,14 +358,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       if (newValue) {
         // Check if the new value is an instance of NotebookPanel
         if (newValue instanceof NotebookPanel) {
-          if (newValue.title.label.includes('bigframes')) {
-            localStorage.setItem('notebookValue', 'bigframes');
-            localStorage.setItem('oldNotebookValue', 'bigframes');
-            loadDpmsWidget('');
-          } else {
-            newValue.title.changed.connect(onTitleChanged);
-            newValue.toolbar.update();
-          }
+          newValue.title.changed.connect(onTitleChanged);
+          newValue.toolbar.update();
         } else if (
           (newValue.title.label === 'Launcher' ||
             newValue.title.label === 'Config Setup' ||
@@ -337,21 +371,10 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label === 'Job Scheduler') &&
           lastClusterName !== ''
         ) {
-          if (bqFeature.enable_bigquery_integration) {
-            if (
-              localStorage.getItem('oldNotebookValue') !== 'bigframes' ||
-              localStorage.getItem('notebookValue') !== 'bigframes'
-            ) {
-              localStorage.setItem('notebookValue', 'bigframes');
-              localStorage.setItem('oldNotebookValue', 'bigframes');
-              loadDpmsWidget('');
-            }
-          } else {
-            localStorage.setItem('oldNotebookValue', lastClusterName || '');
-            localStorage.removeItem('notebookValue');
-            lastClusterName = '';
-            loadDpmsWidget('');
-          }
+          localStorage.setItem('oldNotebookValue', lastClusterName || '');
+          localStorage.removeItem('notebookValue');
+          lastClusterName = '';
+          loadDpmsWidget('');
         } else {
           if (
             lastClusterName === '' &&
@@ -368,9 +391,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             let oldNotebook = localStorage.getItem('oldNotebookValue');
             localStorage.setItem('notebookValue', oldNotebook || '');
             lastClusterName = localStorage.getItem('notebookValue') || '';
-            if (!oldNotebook?.includes('bigframes')) {
-              loadDpmsWidget(oldNotebook || '');
-            }
+            loadDpmsWidget(oldNotebook || '');
           }
         }
       }
@@ -558,9 +579,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     if (launcher) {
       if (bqFeature.enable_bigquery_integration) {
-        localStorage.setItem('notebookValue', 'bigframes');
-        localStorage.setItem('oldNotebookValue', 'bigframes');
-        loadDpmsWidget('');
+        loadBigQueryWidget('');
 
         launcher.add({
           command: createBigQueryNotebookComponentCommand,

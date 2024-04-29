@@ -40,6 +40,7 @@ import { BigQueryService } from './bigQueryService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
+import { DataprocWidget } from '../controls/DataprocWidget';
 
 const height = window.innerHeight - 125;
 const iconDatasets = new LabIcon({
@@ -839,4 +840,30 @@ const BigQueryComponent = ({
   );
 };
 
-export default BigQueryComponent;
+export class bigQueryWidget extends DataprocWidget {
+  app: JupyterLab;
+  settingRegistry: ISettingRegistry;
+  enableBigqueryIntegration: boolean;
+
+  constructor(
+    app: JupyterLab,
+    settingRegistry: ISettingRegistry,
+    enableBigqueryIntegration: boolean,
+    themeManager: IThemeManager
+  ) {
+    super(themeManager);
+    this.app = app;
+    this.settingRegistry = settingRegistry;
+    this.enableBigqueryIntegration = enableBigqueryIntegration;
+  }
+
+  renderInternal(): JSX.Element {
+    return (
+      <BigQueryComponent
+        app={this.app}
+        settingRegistry={this.settingRegistry}
+        themeManager={this.themeManager}
+      />
+    );
+  }
+}

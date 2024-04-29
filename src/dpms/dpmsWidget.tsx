@@ -48,8 +48,6 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
-import BigQueryComponent from './bigQueryWidget';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -920,32 +918,16 @@ const DpmsComponent = ({
 
 export class dpmsWidget extends DataprocWidget {
   app: JupyterLab;
-  settingRegistry: ISettingRegistry;
-  enableBigqueryIntegration: boolean;
 
   constructor(
     app: JupyterLab,
-    settingRegistry: ISettingRegistry,
-    enableBigqueryIntegration: boolean,
     themeManager: IThemeManager
   ) {
     super(themeManager);
     this.app = app;
-    this.settingRegistry = settingRegistry;
-    this.enableBigqueryIntegration = enableBigqueryIntegration;
   }
 
   renderInternal(): JSX.Element {
-    return (this.enableBigqueryIntegration &&
-      localStorage.getItem('notebookValue') === null) ||
-      localStorage.getItem('notebookValue')?.includes('bigframes') ? (
-      <BigQueryComponent
-        app={this.app}
-        settingRegistry={this.settingRegistry}
-        themeManager={this.themeManager}
-      />
-    ) : (
-      <DpmsComponent app={this.app} themeManager={this.themeManager} />
-    );
+    return <DpmsComponent app={this.app} themeManager={this.themeManager} />;
   }
 }
