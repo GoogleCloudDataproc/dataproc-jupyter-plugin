@@ -45,8 +45,9 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
+import refreshDatasetIcon from '../../style/icons/refresh_icon.svg';
 
-const height = window.innerHeight - 125;
+const height = window.innerHeight - 160;
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -62,6 +63,10 @@ const iconRightArrow = new LabIcon({
 const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
+});
+const iconRefreshDatasetExplorer = new LabIcon({
+  name: 'launcher:refresh-dataset-explorer-icon',
+  svgstr: refreshDatasetIcon
 });
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
@@ -765,6 +770,18 @@ const BigQueryComponent = ({
             </div>
           ) : (
             <>
+              <div className="dataset-explorer-refresh-container">
+                <div
+                  onClick={() => getBigQueryProjects()}
+                  aria-label="dataset-explorer-refresh"
+                  className="dataset-explorer-refresh"
+                >
+                  <iconRefreshDatasetExplorer.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                </div>
+              </div>
               <div className="search-field">
                 <TextField
                   placeholder="Enter your keyword to search"

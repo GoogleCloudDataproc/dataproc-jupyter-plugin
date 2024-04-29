@@ -27,6 +27,19 @@
   overflow: auto;
 }
 
+.dataset-explorer-refresh-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 13px;
+  margin-top: 21px;
+  padding-left: 13px;
+}
+
+.dataset-explorer-refresh {
+  cursor: pointer;
+}
+
 .dpms-title {
   line-height: 20px;
   width: 150px;
