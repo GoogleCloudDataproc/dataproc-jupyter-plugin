@@ -16,12 +16,12 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
 import { useGlobalFilter, usePagination, useTable } from 'react-table';
 import TableData from '../utils/tableData';
 import { BigQueryService } from './bigQueryService';
 import { ICellProps } from '../utils/utils';
 import { PreviewPaginationView } from '../utils/previewPaginationView';
+import { CircularProgress } from '@mui/material';
 
 const previewHeight = window.innerHeight - 180;
 const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
@@ -85,7 +85,7 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
   };
 
   const handlePageChange = (newPageIndex: number) => {
-    setPageIndex(newPageIndex); 
+    setPageIndex(newPageIndex);
   };
 
   return (
@@ -126,9 +126,7 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
         <div>
           {isLoading && (
             <div className="spin-loader-main">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

@@ -17,7 +17,6 @@
 
 import { LabIcon } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
 import { useGlobalFilter, usePagination, useTable } from 'react-table';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
@@ -44,6 +43,7 @@ import { SessionService } from './sessionService';
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import SessionDetails from './sessionDetails';
+import { CircularProgress } from '@mui/material';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -275,9 +275,7 @@ function ListSessions() {
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_TERMINATING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={15}
                 aria-label="Loading Spinner"
                 data-testid="loader"
@@ -368,9 +366,7 @@ function ListSessions() {
         <div>
           {isLoading && (
             <div className="spin-loader-main">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

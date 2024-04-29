@@ -19,6 +19,7 @@ import { Input } from '../controls/MuiWrappedInput';
 import {
   Autocomplete,
   Checkbox,
+  CircularProgress,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -44,7 +45,6 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
 import { scheduleValueExpression } from '../utils/const';
-import { ClipLoader } from 'react-spinners';
 
 interface IDagList {
   jobid: string;
@@ -362,7 +362,7 @@ const CreateNotebookScheduler = ({
       setInputFileSelected(context.path);
       if (context.path.toLowerCase().startsWith('bigframes')) {
         setIsBigQueryNotebook(true);
-        setSelectedMode('serverless')
+        setSelectedMode('serverless');
       }
     }
     setJobNameSelected('');
@@ -567,9 +567,7 @@ const CreateNotebookScheduler = ({
             )}
             <div className="create-scheduler-form-element">
               {isLoadingKernelDetail && (
-                <ClipLoader
-                  color="#3367d6"
-                  loading={true}
+                <CircularProgress
                   size={18}
                   aria-label="Loading Spinner"
                   data-testid="loader"

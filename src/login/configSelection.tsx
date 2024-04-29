@@ -31,15 +31,13 @@ import {
   toastifyCustomStyle,
   loggedFetch
 } from '../utils/utils';
-import { requestAPI } from '../handler/handler';
-import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
-import { Button } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import { RegionDropdown } from '../controls/RegionDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
@@ -52,6 +50,7 @@ import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryRegionDropdown } from '../controls/BigQueryRegionDropdown';
 import { eventEmitter } from '../utils/signalEmitter';
+import { requestAPI } from '../handler/handler';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -223,9 +222,7 @@ function ConfigSelection({
     <div>
       {isLoadingUser && !configError ? (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
+          <CircularProgress
             size={20}
             aria-label="Loading Spinner"
             data-testid="loader"

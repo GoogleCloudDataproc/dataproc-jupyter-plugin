@@ -39,12 +39,12 @@ import {
   STATUS_STOPPED,
   STATUS_STOPPING
 } from '../utils/const';
-import ClipLoader from 'react-spinners/ClipLoader';
 import ViewLogs from '../utils/viewLogs';
 import DeletePopup from '../utils/deletePopup';
 import SubmitJob from '../jobs/submitJob';
 import PollingTimer from '../utils/pollingTimer';
 import { JobService } from '../jobs/jobServices';
+import { CircularProgress } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -373,9 +373,7 @@ function ClusterDetails({
                           clusterInfo.status.state === STATUS_STOPPING ||
                           clusterInfo.status.state === STATUS_DELETING) && (
                           <div>
-                            <ClipLoader
-                              color="#3367d6"
-                              loading={true}
+                            <CircularProgress
                               size={15}
                               aria-label="Loading Spinner"
                               data-testid="loader"
@@ -408,9 +406,7 @@ function ClusterDetails({
             <>
               {isLoading && (
                 <div className="spin-loader-main">
-                  <ClipLoader
-                    color="#3367d6"
-                    loading={true}
+                  <CircularProgress
                     size={18}
                     aria-label="Loading Spinner"
                     data-testid="loader"

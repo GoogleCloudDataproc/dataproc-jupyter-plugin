@@ -16,7 +16,6 @@
  */
 
 import React from 'react';
-import { ClipLoader } from 'react-spinners';
 import {
   STATUS_CREATING,
   STATUS_DELETING,
@@ -34,6 +33,7 @@ import stopIcon from '../../style/icons/stop_icon.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
+import { CircularProgress } from '@mui/material';
 
 export const statusDisplay = (statusMsg: string) => {
   const iconClusterRunning = new LabIcon({
@@ -73,9 +73,7 @@ export const statusDisplay = (statusMsg: string) => {
         statusMsg === STATUS_STOPPING ||
         statusMsg === STATUS_PENDING ||
         statusMsg === STATUS_DELETING) && (
-        <ClipLoader
-          color="#3367d6"
-          loading={true}
+        <CircularProgress
           size={15}
           aria-label="Loading Spinner"
           data-testid="loader"

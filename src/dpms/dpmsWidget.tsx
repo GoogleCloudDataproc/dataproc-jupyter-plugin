@@ -41,15 +41,17 @@ import {
 } from '../utils/const';
 import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { Table } from './tableInfo';
-import { ClipLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { IconButton, InputAdornment, TextField } from '@mui/material';
+import {
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  TextField
+} from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
-import BigQueryComponent from './bigQueryWidget';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -822,9 +824,7 @@ const DpmsComponent = ({
             {isLoading ? (
               <div className="database-loader">
                 <div>
-                  <ClipLoader
-                    color="#3367d6"
-                    loading={true}
+                  <CircularProgress
                     size={20}
                     aria-label="Loading Spinner"
                     data-testid="loader"
@@ -920,32 +920,16 @@ const DpmsComponent = ({
 
 export class dpmsWidget extends DataprocWidget {
   app: JupyterLab;
-  settingRegistry: ISettingRegistry;
-  enableBigqueryIntegration: boolean;
 
   constructor(
     app: JupyterLab,
-    settingRegistry: ISettingRegistry,
-    enableBigqueryIntegration: boolean,
     themeManager: IThemeManager
   ) {
     super(themeManager);
     this.app = app;
-    this.settingRegistry = settingRegistry;
-    this.enableBigqueryIntegration = enableBigqueryIntegration;
   }
 
   renderInternal(): JSX.Element {
-    return (this.enableBigqueryIntegration &&
-      localStorage.getItem('notebookValue') === null) ||
-      localStorage.getItem('notebookValue')?.includes('bigframes') ? (
-      <BigQueryComponent
-        app={this.app}
-        settingRegistry={this.settingRegistry}
-        themeManager={this.themeManager}
-      />
-    ) : (
-      <DpmsComponent app={this.app} themeManager={this.themeManager} />
-    );
+    return <DpmsComponent app={this.app} themeManager={this.themeManager} />;
   }
 }

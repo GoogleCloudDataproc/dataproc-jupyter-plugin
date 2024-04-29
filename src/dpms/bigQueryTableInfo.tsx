@@ -17,7 +17,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { BigQueryService } from './bigQueryService';
-import { ClipLoader } from 'react-spinners';
+import { CircularProgress } from '@mui/material';
 
 const BigQueryTableInfo = ({
   title,
@@ -33,7 +33,11 @@ const BigQueryTableInfo = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    BigQueryService.getBigQueryDatasetInfoAPIService(dataset, projectId, setDatasetInfo);
+    BigQueryService.getBigQueryDatasetInfoAPIService(
+      dataset,
+      projectId,
+      setDatasetInfo
+    );
   }, []);
 
   useEffect(() => {
@@ -52,9 +56,7 @@ const BigQueryTableInfo = ({
       {isLoading ? (
         <div className="database-loader">
           <div>
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
               size={20}
               aria-label="Loading Spinner"
               data-testid="loader"

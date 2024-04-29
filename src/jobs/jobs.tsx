@@ -40,7 +40,6 @@ import {
   STATUS_STOPPING,
   STATUS_SUCCESS
 } from '../utils/const';
-import ClipLoader from 'react-spinners/ClipLoader';
 import SubmitJob from './submitJob';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
@@ -48,6 +47,7 @@ import DeletePopup from '../utils/deletePopup';
 import { JobService } from './jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
+import { CircularProgress } from '@mui/material';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -334,9 +334,7 @@ function JobComponent({
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={15}
                 aria-label="Loading Spinner"
                 data-testid="loader"
@@ -498,9 +496,7 @@ function JobComponent({
             <div>
               {isLoading && (
                 <div className="spin-loader-main">
-                  <ClipLoader
-                    color="#3367d6"
-                    loading={true}
+                  <CircularProgress
                     size={20}
                     aria-label="Loading Spinner"
                     data-testid="loader"

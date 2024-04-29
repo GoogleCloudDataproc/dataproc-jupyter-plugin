@@ -17,6 +17,9 @@
 
 import React from 'react';
 import { Select } from '../controls/MuiWrappedSelect';
+import { LabIcon } from '@jupyterlab/ui-components';
+import PreviousIcon from '../../style/icons/previous_page.svg';
+import NextIcon from '../../style/icons/next_page.svg';
 
 interface IPreviewPaginationViewProps {
   pageSize: number;
@@ -27,6 +30,14 @@ interface IPreviewPaginationViewProps {
   canNextPage: boolean;
   onPageChange: (newPageIndex: number) => void;
 }
+const iconPrevious = new LabIcon({
+  name: 'launcher:previous-icon',
+  svgstr: PreviousIcon
+});
+const iconNext = new LabIcon({
+  name: 'launcher:next-icon',
+  svgstr: NextIcon
+});
 
 export const PreviewPaginationView = ({
   pageSize,
@@ -83,7 +94,7 @@ export const PreviewPaginationView = ({
           onPageChange(newPageIndex);
         }}
       >
-        {'<'}
+        <iconPrevious.react tag="div" className="logo-alignment-style" />
       </div>
 
       <div
@@ -96,7 +107,7 @@ export const PreviewPaginationView = ({
           !canNextPage ? 'page-move-button disabled' : 'page-move-button'
         }
       >
-        {'>'}
+        <iconNext.react tag="div" className="logo-alignment-style" />
       </div>
 
       <div

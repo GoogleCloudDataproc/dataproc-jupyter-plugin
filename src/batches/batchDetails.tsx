@@ -21,7 +21,6 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
 import ViewLogs from '../utils/viewLogs';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
-import { ClipLoader } from 'react-spinners';
 import {
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
@@ -56,6 +55,7 @@ import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';
 import CreateBatch from './createBatch';
 import errorIcon from '../../style/icons/error_icon.svg';
+import { CircularProgress } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -238,10 +238,8 @@ function BatchDetails({
     <div>
       {batchInfoResponse.uuid === '' && isLoading && (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
-            size={18}
+          <CircularProgress
+            size={15}
             aria-label="Loading Spinner"
             data-testid="loader"
           />

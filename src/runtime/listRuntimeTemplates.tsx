@@ -20,7 +20,6 @@ import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
-import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
@@ -33,6 +32,7 @@ import {
   ISessionTemplate,
   ISessionTemplateDisplay
 } from '../utils/listRuntimeTemplateInterface';
+import { CircularProgress } from '@mui/material';
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
   svgstr: filterIcon
@@ -342,9 +342,7 @@ function ListRuntimeTemplates({
         <div>
           {isLoading && (
             <div className="spin-loader-runtime">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

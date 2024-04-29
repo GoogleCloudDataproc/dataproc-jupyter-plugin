@@ -23,7 +23,6 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
-import { ClipLoader } from 'react-spinners';
 import GlobalFilter from '../utils/globalFilter';
 import {
   BatchStatus,
@@ -45,6 +44,7 @@ import BatchDetails from './batchDetails';
 import CreateBatch from './createBatch';
 
 import deleteIcon from '../../style/icons/delete_icon.svg';
+import { CircularProgress } from '@mui/material';
 
 const iconSubmitJob = new LabIcon({
   name: 'launcher:submit-job-icon',
@@ -203,9 +203,7 @@ function ListBatches({ setLoggedIn }: any) {
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={15}
                 aria-label="Loading Spinner"
                 data-testid="loader"
@@ -413,9 +411,7 @@ function ListBatches({ setLoggedIn }: any) {
             <div>
               {isLoading && (
                 <div className="spin-loader-main">
-                  <ClipLoader
-                    color="#3367d6"
-                    loading={true}
+                  <CircularProgress
                     size={18}
                     aria-label="Loading Spinner"
                     data-testid="loader"
