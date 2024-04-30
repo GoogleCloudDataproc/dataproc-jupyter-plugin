@@ -20,7 +20,10 @@ import { Select } from '../controls/MuiWrappedSelect';
 import { LabIcon } from '@jupyterlab/ui-components';
 import PreviousIcon from '../../style/icons/previous_page.svg';
 import NextIcon from '../../style/icons/next_page.svg';
-
+import FirstPageIcon from '@mui/icons-material/FirstPage';
+import LastPageIcon from '@mui/icons-material/LastPage';
+// import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+// import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 interface IPreviewPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
@@ -74,14 +77,14 @@ export const PreviewPaginationView = ({
       <div
         role="button"
         className={
-          !canPreviousPage ? 'page-move-button disabled' : 'page-move-button'
+          !canPreviousPage ? 'page-move-button-preview disabled' : 'page-move-button-preview'
         }
         onClick={() => {
           const newPageIndex = 0;
           onPageChange(newPageIndex);
         }}
       >
-        {'<<'}
+        <FirstPageIcon className="logo-alignment-style" />
       </div>
 
       <div
@@ -117,10 +120,10 @@ export const PreviewPaginationView = ({
           onPageChange(newPageIndex);
         }}
         className={
-          !canNextPage ? 'page-move-button disabled' : 'page-move-button'
+          !canNextPage ? 'page-move-button-preview disabled' : 'page-move-button-preview'
         }
       >
-        {'>>'}
+         <LastPageIcon  className="logo-alignment-style" />
       </div>
     </div>
   );
