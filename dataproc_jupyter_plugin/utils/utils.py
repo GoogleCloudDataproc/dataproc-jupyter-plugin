@@ -21,6 +21,7 @@ from google.cloud.jupyter_config.config import (
     gcp_project,
     gcp_project_number,
     gcp_region,
+    get_gcloud_config
 )
 
 credentials_cache = None
@@ -42,37 +43,23 @@ class GetCachedCredentials:
                 credentials["config_error"] = 0
                 credentials["access_token"] = gcp_credentials()
                 credentials["project_number"] = gcp_project_number()
-                cmd = "gcloud config config-helper --format=json"
-                process = subprocess.Popen(
-                    cmd,
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
+                token_expiry = get_gcloud_config('credential.token_expiry')
+                utc_datetime = datetime.datetime.strptime(
+                    token_expiry, "%Y-%m-%dT%H:%M:%SZ"
                 )
-                output, error = process.communicate()
-                if process.returncode == 0:
-                    config_data = json.loads(output)
-
-                    token_expiry = config_data["credential"]["token_expiry"]
-                    utc_datetime = datetime.datetime.strptime(
-                        token_expiry, "%Y-%m-%dT%H:%M:%SZ"
-                    )
-                    current_utc_datetime = datetime.datetime.utcnow()
-                    expiry_timedelta = utc_datetime - current_utc_datetime
-                    expiry_seconds = expiry_timedelta.total_seconds()
-                    if expiry_seconds > 1000:
-                        ttl_seconds = 1000
-                    else:
-                        ttl_seconds = expiry_seconds
-                    credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
-                    credentials_cache["credentials"] = credentials
-                    return credentials
+                current_utc_datetime = datetime.datetime.utcnow()
+                expiry_timedelta = utc_datetime - current_utc_datetime
+                expiry_seconds = expiry_timedelta.total_seconds()
+                if expiry_seconds > 1000:
+                    ttl_seconds = 1000
                 else:
-                    return credentials
+                    ttl_seconds = expiry_seconds
+                credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
+                credentials_cache["credentials"] = credentials
+                return credentials
             else:
                 return credentials_cache["credentials"]
         except Exception as ex:
-            self.log.exception(f"Error fetching credentials from gcloud")
+            self.log.exception(f"Error fetching credentials from gcloud ", ex)
             credentials["config_error"] = 1
             return credentials
