@@ -14,9 +14,9 @@
 
 
 import json
+from dataproc_jupyter_plugin.utils.utils import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.importErrorService import ImportErrorService
 
 
@@ -26,7 +26,7 @@ class ImportErrorController(APIHandler):
         try:
             import_errors = ImportErrorService()
             composer_name = self.get_argument("composer")
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             import_errors_list = import_errors.list_import_errors(
                 credentials, composer_name, self.log
             )

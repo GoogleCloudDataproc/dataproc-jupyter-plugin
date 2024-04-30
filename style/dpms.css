@@ -30,10 +30,7 @@
 .dataset-explorer-refresh-container {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding-right: 13px;
-  margin-top: 21px;
-  padding-left: 13px;
+  justify-content: space-between;
 }
 
 .dataset-explorer-refresh {

@@ -119,7 +119,7 @@ export const PaginationView = ({
         }
         onClick={() => previousPage()}
       >
-        <iconPrevious.react tag="div" className="logo-alignment-style" />
+        <iconPrevious.react tag="div" className="icon-white logo-alignment-style" />
       </div>
       <div
         role="button"
@@ -128,7 +128,7 @@ export const PaginationView = ({
           !canNextPage ? 'page-move-button disabled' : 'page-move-button'
         }
       >
-        <iconNext.react tag="div" className="logo-alignment-style" />
+        <iconNext.react tag="div" className="icon-white logo-alignment-style" />
       </div>
     </div>
   );

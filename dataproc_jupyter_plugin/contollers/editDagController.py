@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import json
+from dataproc_jupyter_plugin.utils.utils import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.editDagService import DagEditService
 from dataproc_jupyter_plugin.utils.constants import TAGS
 
@@ -27,7 +27,7 @@ class EditDagController(APIHandler):
             dag = DagEditService()
             bucket_name = self.get_argument("bucket_name")
             dag_id = self.get_argument("dag_id")
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dag_details = dag.edit_jobs(dag_id, bucket_name, credentials, self.log)
             self.finish(json.dumps(dag_details))
         except Exception as e:

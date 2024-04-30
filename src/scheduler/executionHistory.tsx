@@ -25,6 +25,7 @@ import ListDagRuns from './listDagRuns';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import ListDagTaskInstances from './listDagTaskInstances';
+import { CircularProgress } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -47,7 +48,7 @@ const ExecutionHistory = ({
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-
+  const [isLoading, setIsLoading] = useState(true);
   const [blueListDates, setBlueListDates] = useState<string[]>([]);
   const [greyListDates, setGreyListDates] = useState<string[]>([]);
   const [orangeListDates, setOrangeListDates] = useState<string[]>([]);
@@ -99,7 +100,9 @@ const ExecutionHistory = ({
       darkGreenListDates.length > 0 &&
       darkGreenListDates.includes(formattedTotalViewDate);
 
-    const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates) && selectedDate?.month() === day?.month();
+    const isSelectedExecution =
+      [selectedDate?.date()].includes(totalViewDates) &&
+      selectedDate?.month() === day?.month();
     const currentDataExecution =
       [dayjs(currentDate)?.date()].includes(totalViewDates) &&
       [dayjs(currentDate)?.month()].includes(day.month());
@@ -176,6 +179,16 @@ const ExecutionHistory = ({
         <div className="execution-history-main-wrapper">
           <div className="execution-history-left-wrapper">
             <LocalizationProvider dateAdapter={AdapterDayjs}>
+              {isLoading && (
+                <div className="spin-loader-main-calender">
+                  <CircularProgress
+                    size={18}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  />
+                  Calender refreshing
+                </div>
+              )}
               <DateCalendar
                 minDate={dayjs().year(2024).startOf('year')}
                 maxDate={dayjs(currentDate)}
@@ -201,6 +214,8 @@ const ExecutionHistory = ({
                 setGreenListDates={setGreenListDates}
                 setDarkGreenListDates={setDarkGreenListDates}
                 bucketName={bucketName}
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
               />
             )}
           </div>
