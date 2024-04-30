@@ -12,18 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime, timedelta
 import os
+import subprocess
 from typing import Dict
+import uuid
+
+from google.cloud.jupyter_config.config import gcp_account
+from jinja2 import Environment, PackageLoader, select_autoescape
+import nbformat
+import pendulum
 import requests
+
 from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
 from dataproc_jupyter_plugin.models.models import DescribeJob
-import nbformat
-import subprocess
-from jinja2 import Environment, PackageLoader, select_autoescape
-import uuid
-from datetime import datetime, timedelta
 from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, GCS
-import pendulum
 
 unique_id = str(uuid.uuid4().hex)
 job_id = ""
@@ -140,11 +143,7 @@ class ExecutorService:
         if ("project_id" in credentials) and ("region_id" in credentials):
             gcp_project_id = credentials["project_id"]
             gcp_region_id = credentials["region_id"]
-        cmd = "gcloud config get-value account"
-        process = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-        )
-        user, error = process.communicate()
+        user = gcp_account()
         owner = user.split("@")[0]  # getting username from email
         if job.schedule_value == "":
             schedule_interval = "@once"
