@@ -75,7 +75,6 @@ const ListDagRuns = ({
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
-  // const [isLoading, setIsLoading] = useState(true);
   const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
   const data =
     dagRunsCurrentDateList.length > 0 ? dagRunsCurrentDateList : dagRunsList;
@@ -290,7 +289,6 @@ const ListDagRuns = ({
                 getTableProps={getTableProps}
                 headerGroups={headerGroups}
                 getTableBodyProps={getTableBodyProps}
-                // isLoading={isLoading}
                 rows={rows}
                 page={page}
                 prepareRow={prepareRow}
