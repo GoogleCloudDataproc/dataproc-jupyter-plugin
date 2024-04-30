@@ -46,14 +46,15 @@ const ListDagRuns = ({
   endDate,
   setDagRunId,
   selectedDate,
-
   setBlueListDates,
   setGreyListDates,
   setOrangeListDates,
   setRedListDates,
   setGreenListDates,
   setDarkGreenListDates,
-  bucketName
+  bucketName,
+  setIsLoading,
+  isLoading
 }: {
   composerName: string;
   dagId: string;
@@ -69,10 +70,12 @@ const ListDagRuns = ({
   setGreenListDates: (value: string[]) => void;
   setDarkGreenListDates: (value: string[]) => void;
   bucketName: string;
+  setIsLoading: (value: boolean) => void;
+  isLoading: boolean;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
   const data =
     dagRunsCurrentDateList.length > 0 ? dagRunsCurrentDateList : dagRunsList;
@@ -287,7 +290,7 @@ const ListDagRuns = ({
                 getTableProps={getTableProps}
                 headerGroups={headerGroups}
                 getTableBodyProps={getTableBodyProps}
-                isLoading={isLoading}
+                // isLoading={isLoading}
                 rows={rows}
                 page={page}
                 prepareRow={prepareRow}
@@ -310,17 +313,7 @@ const ListDagRuns = ({
           </div>
         ) : (
           <div>
-            {isLoading && (
-              <div className="spin-loader-main">
-                <CircularProgress
-                  size={18}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-                Loading Dag Runs
-              </div>
-            )}
-            {!isLoading && (
+            {dagRunsCurrentDateList.length === 0 && (
               <div className="no-data-style">No rows to display</div>
             )}
           </div>

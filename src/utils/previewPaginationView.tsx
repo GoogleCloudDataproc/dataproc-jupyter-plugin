@@ -22,8 +22,7 @@ import PreviousIcon from '../../style/icons/previous_page.svg';
 import NextIcon from '../../style/icons/next_page.svg';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import LastPageIcon from '@mui/icons-material/LastPage';
-// import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-// import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+
 interface IPreviewPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
