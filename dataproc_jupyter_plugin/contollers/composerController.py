@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import json
+from dataproc_jupyter_plugin.utils.utils import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.composerService import ComposerService
 from requests import HTTPError
 
@@ -26,7 +26,7 @@ class ComposerListController(APIHandler):
         """Returns names of available composer environments"""
         try:
             environments_manager = ComposerService()
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             environments = environments_manager.list_environments(credentials, self.log)
 
         except Exception as e:

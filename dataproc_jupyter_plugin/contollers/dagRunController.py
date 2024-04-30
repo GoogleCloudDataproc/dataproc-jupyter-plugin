@@ -14,9 +14,9 @@
 
 
 import json
+from dataproc_jupyter_plugin.utils.utils import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.dagRunService import (
     DagRunListService,
     DagRunTaskListService,
@@ -34,7 +34,7 @@ class DagRunController(APIHandler):
             start_date = self.get_argument("start_date")
             offset = self.get_argument("offset")
             end_date = self.get_argument("end_date")
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dag_run_list = dag_run.list_dag_runs(
                 credentials,
                 composer_name,
@@ -58,7 +58,7 @@ class DagRunTaskController(APIHandler):
             composer_name = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dag_run_list = dag_run.list_dag_run_task(
                 credentials, composer_name, dag_id, dag_run_id, self.log
             )
@@ -78,7 +78,7 @@ class DagRunTaskLogsController(APIHandler):
             dag_run_id = self.get_argument("dag_run_id")
             task_id = self.get_argument("task_id")
             task_try_number = self.get_argument("task_try_number")
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dag_run_list = dag_run.list_dag_run_task_logs(
                 credentials,
                 composer_name,

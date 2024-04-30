@@ -15,9 +15,9 @@
 
 import json
 import subprocess
+from dataproc_jupyter_plugin.utils.utils import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.dagListService import (
     DagListService,
     DagDeleteService,
@@ -32,7 +32,7 @@ class DagListController(APIHandler):
         try:
             dag = DagListService()
             composer_name = self.get_argument("composer")
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dag_list = dag.list_jobs(credentials, composer_name, TAGS, self.log)
             self.finish(json.dumps(dag_list))
         except Exception as e:
@@ -70,7 +70,7 @@ class DagDeleteController(APIHandler):
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             from_page = self.get_argument("from_page", default=None)
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             delete_response = dag.delete_job(
                 credentials, composer, dag_id, from_page, self.log
             )
@@ -92,7 +92,7 @@ class DagUpdateController(APIHandler):
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             status = self.get_argument("status")
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             update_response = dag.update_job(
                 credentials, composer, dag_id, status, self.log
             )

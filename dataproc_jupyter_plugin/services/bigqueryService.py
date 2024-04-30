@@ -129,7 +129,14 @@ class BigQueryTableInfoService:
 
 class BigQueryPreviewService:
     def bigquery_preview_data(
-        self, credentials, dataset_id, table_id, max_results, start_index, project_id, log
+        self,
+        credentials,
+        dataset_id,
+        table_id,
+        max_results,
+        start_index,
+        project_id,
+        log,
     ):
         try:
             if (
