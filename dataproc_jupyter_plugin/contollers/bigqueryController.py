@@ -14,7 +14,7 @@
 
 
 import json
-from dataproc_jupyter_plugin.utils.utils import GetCachedCredentials
+
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.bigqueryService import (
@@ -28,6 +28,9 @@ from dataproc_jupyter_plugin.services.bigqueryService import (
 )
 from dataproc_jupyter_plugin.utils.constants import bq_public_dataset_project_id
 from google.cloud.jupyter_config import gcp_project
+from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+
+
 
 
 class BigqueryDatasetController(APIHandler):
