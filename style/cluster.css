@@ -118,8 +118,9 @@
   align-items: center;
   margin: 20%;
 }
-.spin-loader-custom-style{
-margin-right: 5px;
+
+.spin-loader-custom-style {
+  margin-right: 5px;
 }
 
 .spin-loader-main-calender {
