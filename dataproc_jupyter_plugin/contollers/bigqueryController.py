@@ -31,8 +31,6 @@ from google.cloud.jupyter_config import gcp_project
 from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
 
 
-
-
 class BigqueryDatasetController(APIHandler):
     @tornado.web.authenticated
     def get(self):

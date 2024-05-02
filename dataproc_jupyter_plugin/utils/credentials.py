@@ -17,8 +17,9 @@ from google.cloud.jupyter_config.config import (
     gcp_credentials,
     gcp_project,
     gcp_project_number,
-    gcp_region
+    gcp_region,
 )
+
 
 class GetCachedCredentials:
     def get_cached_credentials(self):
