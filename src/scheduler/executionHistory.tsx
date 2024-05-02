@@ -25,7 +25,7 @@ import ListDagRuns from './listDagRuns';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import ListDagTaskInstances from './listDagTaskInstances';
-import { CircularProgress } from '@mui/material';
+import { Box, LinearProgress } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -181,12 +181,9 @@ const ExecutionHistory = ({
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               {isLoading && (
                 <div className="spin-loader-main-calender">
-                  <CircularProgress
-                    size={18}
-                    aria-label="Loading Spinner"
-                    data-testid="loader"
-                  />
-                  Calender refreshing
+                  <Box sx={{ width: '100%' }}>
+                    <LinearProgress />
+                  </Box>
                 </div>
               )}
               <DateCalendar
