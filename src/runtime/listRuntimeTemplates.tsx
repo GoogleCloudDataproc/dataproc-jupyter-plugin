@@ -343,6 +343,7 @@ function ListRuntimeTemplates({
           {isLoading && (
             <div className="spin-loader-runtime">
               <CircularProgress
+                className = "spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

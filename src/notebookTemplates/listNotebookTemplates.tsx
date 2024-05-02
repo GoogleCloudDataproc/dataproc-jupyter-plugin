@@ -221,6 +221,7 @@ function ListNotebookTemplates({
             {isLoading && (
               <div className="spin-loader-main">
                 <CircularProgress
+                  className = "spin-loader-custom-style"
                   size={18}
                   aria-label="Loading Spinner"
                   data-testid="loader"

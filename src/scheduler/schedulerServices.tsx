@@ -449,8 +449,13 @@ export class SchedulerService {
     setIsLoading(true);
     let start_date = startDate;
     let end_date = endDate;
-
-    try {
+    setBlueListDates([]);
+    setGreyListDates([]);
+    setOrangeListDates([]);
+    setRedListDates([]);
+    setGreenListDates([]);
+    setDarkGreenListDates([]);
+    try {     
       const data: any = await requestAPI(
         `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${start_date}&end_date=${end_date}&offset=${offset}`
       );

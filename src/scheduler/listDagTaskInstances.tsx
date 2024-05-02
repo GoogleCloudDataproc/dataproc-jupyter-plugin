@@ -187,7 +187,11 @@ const ListDagTaskInstances = ({
 
                 {isLoadingLogs && expanded === `${index}` ? (
                   <div className="spin-loader-main">
-                    <CircularProgress color="primary" size={18} />
+                    <CircularProgress
+                      className="spin-loader-custom-style"
+                      color="primary"
+                      size={18}
+                    />
                     Loading Dag Runs Task Logs
                   </div>
                 ) : (
@@ -207,7 +211,11 @@ const ListDagTaskInstances = ({
         <div>
           {isLoading ? (
             <div className="spin-loader-main">
-              <CircularProgress color="primary" size={18} />
+              <CircularProgress
+                className="spin-loader-custom-style"
+                color="primary"
+                size={18}
+              />
               Loading Dag Runs Task Instances
             </div>
           ) : (
