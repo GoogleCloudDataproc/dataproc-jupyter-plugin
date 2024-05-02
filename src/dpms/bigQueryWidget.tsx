@@ -149,6 +149,7 @@ const BigQueryComponent = ({
         datasetId,
         tableId,
         projectId,
+        setIsIconLoading,
         setSchemaResponse
       );
     }
@@ -456,9 +457,11 @@ const BigQueryComponent = ({
         getBigQueryDatasets(node.data.name);
       } else if (calculateDepth(node) === 2 && !node.isOpen) {
         setCurrentNode(node);
+        setIsIconLoading(true);
         getBigQueryTables(node.data.name, node.parent?.data?.name);
       } else if (calculateDepth(node) === 3 && node.parent && !node.isOpen) {
         setCurrentNode(node);
+        setIsIconLoading(true);
         getBigQueryColumnDetails(
           node.data.name,
           node.parent?.data?.name,
@@ -689,7 +692,8 @@ const BigQueryComponent = ({
         datasetId,
         setDatabaseNames,
         setTableResponse,
-        projectId
+        projectId,
+        setIsIconLoading
       );
     }
   };

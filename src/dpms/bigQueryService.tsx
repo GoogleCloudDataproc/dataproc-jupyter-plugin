@@ -78,6 +78,7 @@ export class BigQueryService {
     datasetId: string,
     tableId: string,
     projectId: string,
+    setIsIconLoading: (value: boolean) => void,
     setSchemaResponse: any
   ) => {
     try {
@@ -85,11 +86,13 @@ export class BigQueryService {
         `bigQueryTableInfo?project_id=${projectId}&dataset_id=${datasetId}&table_id=${tableId}`
       );
       setSchemaResponse(data);
+      setIsIconLoading(false);
     } catch (reason) {
       toast.error(
         `Failed to fetch big query schema : ${reason}`,
         toastifyCustomStyle
       );
+      setIsIconLoading(false);
     }
   };
 
@@ -210,6 +213,7 @@ export class BigQueryService {
     setDatabaseNames: (value: string[]) => void,
     setTableResponse: any,
     projectId: string,
+    setIsIconLoading: (value: boolean) => void,
     nextPageToken?: string,
     previousDatasetList?: object
   ) => {
@@ -235,6 +239,7 @@ export class BigQueryService {
               setDatabaseNames,
               setTableResponse,
               projectId,
+              setIsIconLoading,
               data.nextPageToken,
               allDatasetList
             );
@@ -260,12 +265,15 @@ export class BigQueryService {
               }
             );
             setTableResponse(allDatasetList);
+            setIsIconLoading(false);
           }
         } else {
           setTableResponse(datasetId);
+          setIsIconLoading(false);
         }
       } catch (reason) {
         if (!toast.isActive('datasetError')) {
+          setIsIconLoading(false);
           toast.error(`Failed to fetch datasets : ${reason}`, {
             ...toastifyCustomStyle,
             toastId: 'datasetError'
