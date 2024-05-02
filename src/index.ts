@@ -216,10 +216,12 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (!panelDpms && !panelGcs) {
           panelDpms = new Panel();
           panelDpms.id = 'dpms-tab';
+          panelDpms.title.caption = 'Dataset Explorer - DPMS';
           panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
           if (bqFeature.enable_bigquery_integration && !panelDatasetExplorer) {
             panelDatasetExplorer = new Panel();
             panelDatasetExplorer.id = 'dataset-explorer-tab';
+            panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
             panelDatasetExplorer.addWidget(
               new BigQueryWidget(
                 app as JupyterLab,
@@ -231,6 +233,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           }
           panelGcs = new Panel();
           panelGcs.id = 'GCS-bucket-tab';
+          panelGcs.title.caption = 'Google Cloud Storage';
           gcsDrive = new GCSDrive();
           documentManager.services.contents.addDrive(gcsDrive);
           panelGcs.addWidget(
