@@ -239,6 +239,7 @@ function BatchDetails({
       {batchInfoResponse.uuid === '' && isLoading && (
         <div className="spin-loader-main">
           <CircularProgress
+            className = "spin-loader-custom-style"
             size={15}
             aria-label="Loading Spinner"
             data-testid="loader"

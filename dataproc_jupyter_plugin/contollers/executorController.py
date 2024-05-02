@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from dataproc_jupyter_plugin.utils.utils import GetCachedCredentials
+from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.executorService import ExecutorService
