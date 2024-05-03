@@ -179,14 +179,13 @@ const ExecutionHistory = ({
         <div className="execution-history-main-wrapper">
           <div className="execution-history-left-wrapper">
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-              {isLoading && (
+              {isLoading ? (
                 <div className="spin-loader-main-calender">
                   <Box sx={{ width: '100%' }}>
                     <LinearProgress />
                   </Box>
                 </div>
-              )}
-              {!isLoading && (
+              ) : (
                 <div
                   className="spin-loader-main-calender"
                   style={{ height: '4px' }}
