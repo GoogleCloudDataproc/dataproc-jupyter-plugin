@@ -243,9 +243,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           onThemeChanged();
           app.shell.add(panelGcs, 'left', { rank: 1002 });
           if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
-            app.shell.add(panelDatasetExplorer, 'left', { rank: 1001 });
+            app.shell.add(panelDatasetExplorer, 'left', { rank: 1000 });
           }
-          app.shell.add(panelDpms, 'left', { rank: 1000 });
+          app.shell.add(panelDpms, 'left', { rank: 1001 });
         }
       }
     };

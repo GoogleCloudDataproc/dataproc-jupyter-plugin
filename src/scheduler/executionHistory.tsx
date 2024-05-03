@@ -186,6 +186,12 @@ const ExecutionHistory = ({
                   </Box>
                 </div>
               )}
+              {!isLoading && (
+                <div
+                  className="spin-loader-main-calender"
+                  style={{ height: '4px' }}
+                ></div>
+              )}
               <DateCalendar
                 minDate={dayjs().year(2024).startOf('year')}
                 maxDate={dayjs(currentDate)}
