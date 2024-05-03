@@ -658,10 +658,10 @@ const BigQueryComponent = ({
     return (
       <div style={style}>
         {renderNodeIcon()}
-        <div role="treeitem" onClick={handleTextClick}>
+        <div role="treeitem" title={node.data.name} onClick={handleTextClick}>
           {node.data.name}
         </div>
-        <div className="dpms-column-type-text">{node.data.type}</div>
+        <div title={node?.data?.type} className="dpms-column-type-text">{node.data.type}</div>
       </div>
     );
   };
