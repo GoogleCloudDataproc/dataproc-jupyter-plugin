@@ -25,7 +25,7 @@ import { Dayjs } from 'dayjs';
 import { LabIcon } from '@jupyterlab/ui-components';
 import downloadIcon from '../../style/icons/scheduler_download.svg';
 import { CircularProgress } from '@mui/material';
-
+const listDagRunHeight= window.innerHeight-485;
 const iconDownload = new LabIcon({
   name: 'launcher:download-icon',
   svgstr: downloadIcon
@@ -284,7 +284,7 @@ const ListDagRuns = ({
         {(dagRunsList.length > 0 && selectedDate === null) ||
         (selectedDate !== null && dagRunsCurrentDateList.length > 0) ? (
           <div>
-            <div className="dag-runs-list-table-parent">
+            <div className="dag-runs-list-table-parent" style={{maxHeight:listDagRunHeight}}>
               <TableData
                 getTableProps={getTableProps}
                 headerGroups={headerGroups}

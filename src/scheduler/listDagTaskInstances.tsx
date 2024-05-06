@@ -24,7 +24,7 @@ import dagTaskFailedIcon from '../../style/icons/dag_task_failed_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
-
+const height = window.innerHeight - 320;
 const iconDagTaskFailed = new LabIcon({
   name: 'launcher:dag-task-failed-icon',
   svgstr: dagTaskFailedIcon
@@ -199,7 +199,12 @@ const ListDagTaskInstances = ({
                     <div>
                       {' '}
                       <Typography>
-                        <pre className="logs-content-style">{loglist}</pre>
+                        <pre
+                          className="logs-content-style"
+                          style={{ maxHeight: height }}
+                        >
+                          {loglist}
+                        </pre>
                       </Typography>{' '}
                     </div>
                   )

@@ -18,7 +18,7 @@
 import { CircularProgress } from '@mui/material';
 import React from 'react';
 import { Cell, Row } from 'react-table';
-
+const listDagRunHeight = window.innerHeight - 505;
 function TableData({
   getTableProps,
   headerGroups,
@@ -51,11 +51,15 @@ function TableData({
           </tr>
         ))}
       </thead>
-      <tbody {...getTableBodyProps()} className={'clusters-table-body'}>
+      <tbody
+        {...getTableBodyProps()}
+        className={'clusters-table-body'}
+        style={fromPage === 'Dag Runs' ? { maxHeight: listDagRunHeight } : null}
+      >
         {isLoading ? (
           <div className="spin-loader">
             <CircularProgress
-              className = "spin-loader-custom-style"
+              className="spin-loader-custom-style"
               size={18}
               aria-label="Loading Spinner"
               data-testid="loader"
