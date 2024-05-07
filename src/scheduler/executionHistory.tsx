@@ -27,6 +27,7 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import ListDagTaskInstances from './listDagTaskInstances';
 import { Box, LinearProgress } from '@mui/material';
 
+const height = window.innerHeight - 145;
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
@@ -176,7 +177,10 @@ const ExecutionHistory = ({
             Execution History: {dagId}
           </div>
         </div>
-        <div className="execution-history-main-wrapper">
+        <div
+          className="execution-history-main-wrapper"
+          style={{ height: height }}
+        >
           <div className="execution-history-left-wrapper">
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               {isLoading ? (
