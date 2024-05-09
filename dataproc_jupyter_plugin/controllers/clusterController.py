@@ -12,29 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import json
-from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin.services.composerService import ComposerService
-from requests import HTTPError
+from dataproc_jupyter_plugin.services.clusterListService import ClusterListService
 
 
-class ComposerListController(APIHandler):
+class ClusterListController(APIHandler):
     @tornado.web.authenticated
     def get(self):
-        """Returns names of available composer environments"""
         try:
-            environments_manager = ComposerService()
+            page_token = self.get_argument("pageToken")
+            page_size = self.get_argument("pageSize")
+            cluster = ClusterListService()
             credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            environments = environments_manager.list_environments(credentials, self.log)
-
+            cluster_list = cluster.list_clusters(
+                credentials, page_size, page_token, self.log
+            )
+            self.finish(json.dumps(cluster_list))
         except Exception as e:
-            self.log.exception(f"Error fetching composer environments: {str(e)}")
+            self.log.exception(f"Error fetching cluster list")
             self.finish({"error": str(e)})
-
-        response = []
-        for environment in environments:
-            env = environment.dict()
-            response.append(env)
-        self.finish(json.dumps(response))

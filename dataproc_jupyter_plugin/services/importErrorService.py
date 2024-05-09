@@ -15,7 +15,7 @@
 
 import requests
 from dataproc_jupyter_plugin.services.dagListService import DagListService
-from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE
+from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE
 
 
 class ImportErrorService:

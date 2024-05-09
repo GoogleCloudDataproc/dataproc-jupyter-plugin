@@ -14,24 +14,22 @@
 
 
 import json
-from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin.services.clusterListService import ClusterListService
+from dataproc_jupyter_plugin.services.triggerDagService import TriggerDagService
 
 
-class ClusterListController(APIHandler):
+class TriggerDagController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            page_token = self.get_argument("pageToken")
-            page_size = self.get_argument("pageSize")
-            cluster = ClusterListService()
+            trigger_dag = TriggerDagService()
+            dag_id = self.get_argument("dag_id")
+            composer = self.get_argument("composer")
             credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            cluster_list = cluster.list_clusters(
-                credentials, page_size, page_token, self.log
-            )
-            self.finish(json.dumps(cluster_list))
+            trigger = trigger_dag.dag_trigger(credentials, dag_id, composer, self.log)
+            self.finish(json.dumps(trigger))
         except Exception as e:
-            self.log.exception(f"Error fetching cluster list")
+            self.log.exception(f"Error triggering dag")
             self.finish({"error": str(e)})

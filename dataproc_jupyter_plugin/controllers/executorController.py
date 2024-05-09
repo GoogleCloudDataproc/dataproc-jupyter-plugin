@@ -12,24 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin.services.editDagService import DagEditService
-from dataproc_jupyter_plugin.utils.constants import TAGS
+from dataproc_jupyter_plugin.services.executorService import ExecutorService
 
 
-class EditDagController(APIHandler):
+class ExecutorController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    def post(self):
         try:
-            dag = DagEditService()
-            bucket_name = self.get_argument("bucket_name")
-            dag_id = self.get_argument("dag_id")
+            input_data = self.get_json_body()
+            execute = ExecutorService()
             credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            dag_details = dag.edit_jobs(dag_id, bucket_name, credentials, self.log)
-            self.finish(json.dumps(dag_details))
+            execute.execute(credentials, input_data, self.log)
         except Exception as e:
-            self.log.exception(f"Error getting dag details")
+            self.log.exception(f"Error creating dag schedule: {str(e)}")
             self.finish({"error": str(e)})

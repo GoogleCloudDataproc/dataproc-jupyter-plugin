@@ -12,24 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import json
-from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin.services.triggerDagService import TriggerDagService
+from dataproc_jupyter_plugin.services.composerService import ComposerService
+from requests import HTTPError
 
 
-class TriggerDagController(APIHandler):
+class ComposerListController(APIHandler):
     @tornado.web.authenticated
     def get(self):
+        """Returns names of available composer environments"""
         try:
-            trigger_dag = TriggerDagService()
-            dag_id = self.get_argument("dag_id")
-            composer = self.get_argument("composer")
+            environments_manager = ComposerService()
             credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            trigger = trigger_dag.dag_trigger(credentials, dag_id, composer, self.log)
-            self.finish(json.dumps(trigger))
+            environments = environments_manager.list_environments(credentials, self.log)
+
         except Exception as e:
-            self.log.exception(f"Error triggering dag")
+            self.log.exception(f"Error fetching composer environments: {str(e)}")
             self.finish({"error": str(e)})
+
+        response = []
+        for environment in environments:
+            env = environment.dict()
+            response.append(env)
+        self.finish(json.dumps(response))

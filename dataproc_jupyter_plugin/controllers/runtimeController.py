@@ -14,23 +14,24 @@
 
 
 import json
-from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin.services.importErrorService import ImportErrorService
+from dataproc_jupyter_plugin.services.runtimeListService import RuntimeListService
 
 
-class ImportErrorController(APIHandler):
+class RuntimeController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            import_errors = ImportErrorService()
-            composer_name = self.get_argument("composer")
+            page_token = self.get_argument("pageToken")
+            page_size = self.get_argument("pageSize")
+            runtime = RuntimeListService()
             credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            import_errors_list = import_errors.list_import_errors(
-                credentials, composer_name, self.log
+            runtime_list = runtime.list_runtime(
+                credentials, page_size, page_token, self.log
             )
-            self.finish(json.dumps(import_errors_list))
+            self.finish(json.dumps(runtime_list))
         except Exception as e:
-            self.log.exception(f"Error fetching import error list")
+            self.log.exception(f"Error fetching runtime template list: {str(e)}")
             self.finish({"error": str(e)})

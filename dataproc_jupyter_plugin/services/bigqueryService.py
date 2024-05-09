@@ -14,7 +14,7 @@
 
 
 import requests
-from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, datacatalog_url
+from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE, datacatalog_url
 
 
 class ApiHeaders:

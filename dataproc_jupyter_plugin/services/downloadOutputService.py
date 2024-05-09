@@ -14,7 +14,7 @@
 
 
 import subprocess
-from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE
+from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE
 
 
 class DownloadOutputService:

@@ -12,26 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import json
-from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin.services.runtimeListService import RuntimeListService
+from dataproc_jupyter_plugin.services.editDagService import DagEditService
+from dataproc_jupyter_plugin.commons.constants import TAGS
 
 
-class RuntimeController(APIHandler):
+class EditDagController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            page_token = self.get_argument("pageToken")
-            page_size = self.get_argument("pageSize")
-            runtime = RuntimeListService()
+            dag = DagEditService()
+            bucket_name = self.get_argument("bucket_name")
+            dag_id = self.get_argument("dag_id")
             credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            runtime_list = runtime.list_runtime(
-                credentials, page_size, page_token, self.log
-            )
-            self.finish(json.dumps(runtime_list))
+            dag_details = dag.edit_jobs(dag_id, bucket_name, credentials, self.log)
+            self.finish(json.dumps(dag_details))
         except Exception as e:
-            self.log.exception(f"Error fetching runtime template list: {str(e)}")
+            self.log.exception(f"Error getting dag details")
             self.finish({"error": str(e)})

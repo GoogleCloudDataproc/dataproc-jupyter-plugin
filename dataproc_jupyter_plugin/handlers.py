@@ -20,7 +20,7 @@ import subprocess
 import threading
 import time
 
-from dataproc_jupyter_plugin.contollers.bigqueryController import (
+from dataproc_jupyter_plugin.controllers.bigqueryController import (
     BigqueryDatasetController,
     BigqueryDatasetInfoController,
     BigqueryPreviewController,
@@ -49,29 +49,29 @@ from google.cloud.jupyter_config.config import (
     run_gcloud_subcommand,
 )
 
-from dataproc_jupyter_plugin.contollers.clusterController import ClusterListController
-from dataproc_jupyter_plugin.contollers.composerController import ComposerListController
-from dataproc_jupyter_plugin.contollers.dagController import (
+from dataproc_jupyter_plugin.controllers.clusterController import ClusterListController
+from dataproc_jupyter_plugin.controllers.composerController import ComposerListController
+from dataproc_jupyter_plugin.controllers.dagController import (
     DagDeleteController,
     DagDownloadController,
     DagListController,
     DagUpdateController,
 )
-from dataproc_jupyter_plugin.contollers.dagRunController import (
+from dataproc_jupyter_plugin.controllers.dagRunController import (
     DagRunController,
     DagRunTaskController,
     DagRunTaskLogsController,
 )
-from dataproc_jupyter_plugin.contollers.downloadOutputController import (
+from dataproc_jupyter_plugin.controllers.downloadOutputController import (
     downloadOutputController,
 )
-from dataproc_jupyter_plugin.contollers.editDagController import EditDagController
-from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
-from dataproc_jupyter_plugin.contollers.importErrorController import (
+from dataproc_jupyter_plugin.controllers.editDagController import EditDagController
+from dataproc_jupyter_plugin.controllers.executorController import ExecutorController
+from dataproc_jupyter_plugin.controllers.importErrorController import (
     ImportErrorController,
 )
-from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
-from dataproc_jupyter_plugin.contollers.triggerDagController import TriggerDagController
+from dataproc_jupyter_plugin.controllers.runtimeController import RuntimeController
+from dataproc_jupyter_plugin.controllers.triggerDagController import TriggerDagController
 
 
 _region_not_set_error = '''GCP region not set in gcloud.
