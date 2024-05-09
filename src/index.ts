@@ -63,7 +63,7 @@ import NotebookTemplateService from './notebookTemplates/notebookTemplatesServic
 import * as path from 'path';
 import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
-import { BigQueryWidget } from './dpms/bigQueryWidget';
+import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
