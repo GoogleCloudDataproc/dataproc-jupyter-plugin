@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import json
-from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.editDagService import DagEditService
-from dataproc_jupyter_plugin.utils.constants import TAGS
+from dataproc_jupyter_plugin.commons.constants import TAGS
 
 
 class EditDagController(APIHandler):

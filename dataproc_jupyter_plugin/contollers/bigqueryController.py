@@ -26,9 +26,9 @@ from dataproc_jupyter_plugin.services.bigqueryService import (
     BigQueryTableInfoService,
     BigQueryTableListService,
 )
-from dataproc_jupyter_plugin.utils.constants import bq_public_dataset_project_id
+from dataproc_jupyter_plugin.commons.constants import bq_public_dataset_project_id
 from google.cloud.jupyter_config import gcp_project
-from dataproc_jupyter_plugin.utils.credentials import GetCachedCredentials
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 
 
 class BigqueryDatasetController(APIHandler):
