@@ -16,9 +16,10 @@
  */
 
 import { CircularProgress } from '@mui/material';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Cell, Row } from 'react-table';
-const listDagRunHeight = window.innerHeight - 505;
+import { handleDebounce } from './utils';
+
 function TableData({
   getTableProps,
   headerGroups,
@@ -30,6 +31,26 @@ function TableData({
   tableDataCondition,
   fromPage
 }: any) {
+  const [listDagRunHeight, setListDagRunHeight] = useState(window.innerHeight - 505);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 505;
+    setListDagRunHeight(updateHeight);
+  }
+
+   // Debounce the handleUpdateHeight function
+   const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+   // Add event listener for window resize using useEffect
+   useEffect(() => {
+     window.addEventListener('resize', debouncedHandleUpdateHeight);
+ 
+     // Cleanup function to remove event listener on component unmount
+     return () => {
+       window.removeEventListener('resize', debouncedHandleUpdateHeight);
+     };
+   }, []);
+  
   const displayData = page ? page : rows;
 
   return (

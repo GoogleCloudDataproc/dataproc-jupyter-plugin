@@ -26,8 +26,8 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import ListDagTaskInstances from './listDagTaskInstances';
 import { Box, LinearProgress } from '@mui/material';
+import { handleDebounce } from '../utils/utils';
 
-const height = window.innerHeight - 145;
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
@@ -56,6 +56,26 @@ const ExecutionHistory = ({
   const [redListDates, setRedListDates] = useState<string[]>([]);
   const [greenListDates, setGreenListDates] = useState<string[]>([]);
   const [darkGreenListDates, setDarkGreenListDates] = useState<string[]>([]);
+
+  const [height, setHeight] = useState(window.innerHeight - 145);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 145;
+    setHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
 
   const handleDateSelection = (selectedValue: any) => {
     setDagRunId('');

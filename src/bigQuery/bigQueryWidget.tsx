@@ -45,8 +45,8 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
+import { handleDebounce } from '../utils/utils';
 
-const height = window.innerHeight - 125;
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -138,6 +138,26 @@ const BigQueryComponent = ({
 
   const [searchResponse, setSearchResponse] = useState<any>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+
+  const [height, setHeight] = useState(window.innerHeight - 125);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 125;
+    setHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
 
   const getBigQueryColumnDetails = async (
     tableId: string,
@@ -661,7 +681,9 @@ const BigQueryComponent = ({
         <div role="treeitem" title={node.data.name} onClick={handleTextClick}>
           {node.data.name}
         </div>
-        <div title={node?.data?.type} className="dpms-column-type-text">{node.data.type}</div>
+        <div title={node?.data?.type} className="dpms-column-type-text">
+          {node.data.type}
+        </div>
       </div>
     );
   };
@@ -753,14 +775,18 @@ const BigQueryComponent = ({
 
   return (
     <div className="dpms-Wrapper">
-      <TitleComponent titleStr="Dataset Explorer" isPreview getBigQueryProjects={getBigQueryProjects}/>
+      <TitleComponent
+        titleStr="Dataset Explorer"
+        isPreview
+        getBigQueryProjects={getBigQueryProjects}
+      />
       <>
         <div>
           {isLoading ? (
             <div className="database-loader">
               <div>
                 <CircularProgress
-                  className = "spin-loader-custom-style"
+                  className="spin-loader-custom-style"
                   size={20}
                   aria-label="Loading Spinner"
                   data-testid="loader"
