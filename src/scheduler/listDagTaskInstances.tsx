@@ -24,7 +24,8 @@ import dagTaskFailedIcon from '../../style/icons/dag_task_failed_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
-const height = window.innerHeight - 320;
+import { handleDebounce } from '../utils/utils';
+
 const iconDagTaskFailed = new LabIcon({
   name: 'launcher:dag-task-failed-icon',
   svgstr: dagTaskFailedIcon
@@ -60,6 +61,26 @@ const ListDagTaskInstances = ({
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [expanded, setExpanded] = useState<string | false>(false);
   const [loglist, setLogList] = useState('');
+
+  const [height, setHeight] = useState(window.innerHeight - 320);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 320;
+    setHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
 
   const listDagTaskInstancesRunsList = async () => {
     await SchedulerService.listDagTaskInstancesListService(

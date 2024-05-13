@@ -19,17 +19,36 @@ import React, { useEffect, useState } from 'react';
 import { useGlobalFilter, usePagination, useTable } from 'react-table';
 import TableData from '../utils/tableData';
 import { BigQueryService } from './bigQueryService';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, handleDebounce } from '../utils/utils';
 import { PreviewPaginationView } from '../utils/previewPaginationView';
 import { CircularProgress } from '@mui/material';
 
-const previewHeight = window.innerHeight - 180;
 const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
   const [previewDataList, setPreviewDataList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalRowSize, setTotalRowSize] = useState('');
 
   const [pageIndex, setPageIndex] = useState(0);
+
+  const [previewHeight, setPreviewHeight] = useState(window.innerHeight - 180);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 180;
+    setPreviewHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
 
   const data = previewDataList;
 
@@ -127,7 +146,7 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
           {isLoading && (
             <div className="spin-loader-main">
               <CircularProgress
-                className = "spin-loader-custom-style"
+                className="spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

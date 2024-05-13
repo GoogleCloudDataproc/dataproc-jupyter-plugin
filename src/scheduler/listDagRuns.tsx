@@ -19,13 +19,13 @@ import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { PaginationView } from '../utils/paginationView';
 import TableData from '../utils/tableData';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, handleDebounce } from '../utils/utils';
 import { SchedulerService } from './schedulerServices';
 import { Dayjs } from 'dayjs';
 import { LabIcon } from '@jupyterlab/ui-components';
 import downloadIcon from '../../style/icons/scheduler_download.svg';
 import { CircularProgress } from '@mui/material';
-const listDagRunHeight= window.innerHeight-485;
+
 const iconDownload = new LabIcon({
   name: 'launcher:download-icon',
   svgstr: downloadIcon
@@ -76,6 +76,28 @@ const ListDagRuns = ({
   const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
   const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
+  const [listDagRunHeight, setListDagRunHeight] = useState(
+    window.innerHeight - 485
+  );
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 485;
+    setListDagRunHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
+
   const data =
     dagRunsCurrentDateList.length > 0 ? dagRunsCurrentDateList : dagRunsList;
   const columns = React.useMemo(
@@ -284,7 +306,10 @@ const ListDagRuns = ({
         {(dagRunsList.length > 0 && selectedDate === null) ||
         (selectedDate !== null && dagRunsCurrentDateList.length > 0) ? (
           <div>
-            <div className="dag-runs-list-table-parent" style={{maxHeight:listDagRunHeight}}>
+            <div
+              className="dag-runs-list-table-parent"
+              style={{ maxHeight: listDagRunHeight }}
+            >
               <TableData
                 getTableProps={getTableProps}
                 headerGroups={headerGroups}

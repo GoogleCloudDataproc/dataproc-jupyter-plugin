@@ -503,3 +503,13 @@ export interface IBatchInfoResponse {
   }[];
   stateTime: string;
 }
+
+export const handleDebounce = (func: any, delay: number) => {
+  let timeoutId: any;
+  return function (...args: any) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};

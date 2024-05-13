@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTable } from 'react-table';
+import { handleDebounce } from '../utils/utils';
 
 interface IColumn {
   name: string;
@@ -30,9 +31,27 @@ interface IColumn {
   description?: string;
 }
 
-const height = window.innerHeight - 250;
-
 const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
+  const [height, setHeight] = useState(window.innerHeight - 250);
+
+  function handleUpdateHeight() {
+    const updateHeight = window.innerHeight - 250;
+    setHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
+
   const columns = [
     {
       Header: 'Field name',
@@ -89,7 +108,7 @@ const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
     useTable({ columns, data });
 
   return (
-    <div className="big-query-schema-wrapper" style={{height: height}}>
+    <div className="big-query-schema-wrapper" style={{ height: height }}>
       <div className="big-query-schema-table-container">
         <table className="big-query-schema-table" {...getTableProps()}>
           <thead>
