@@ -16,7 +16,7 @@
  */
 
 import { requestAPI } from '../handler/handler';
-export const VERSION_DETAIL = '0.1.76';
+export const VERSION_DETAIL = '0.1.77';
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
