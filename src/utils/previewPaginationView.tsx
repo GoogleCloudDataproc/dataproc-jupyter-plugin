@@ -68,15 +68,23 @@ export const PreviewPaginationView = ({
         ]}
       />
 
-      <div className="page-display-part">
-        {pageIndex * pageSize + 1} - {(pageIndex + 1) * pageSize} of{' '}
-        {totalRowSize}
-      </div>
+      {(pageIndex + 1) * pageSize > Number(totalRowSize) ? (
+        <div className="page-display-part">
+          {pageIndex * pageSize + 1} - {totalRowSize} of {totalRowSize}
+        </div>
+      ) : (
+        <div className="page-display-part">
+          {pageIndex * pageSize + 1} - {(pageIndex + 1) * pageSize} of{' '}
+          {totalRowSize}
+        </div>
+      )}
 
       <div
         role="button"
         className={
-          !canPreviousPage ? 'page-move-button-preview disabled' : 'page-move-button-preview'
+          !canPreviousPage
+            ? 'page-move-button-preview disabled'
+            : 'page-move-button-preview'
         }
         onClick={() => {
           const newPageIndex = 0;
@@ -96,7 +104,10 @@ export const PreviewPaginationView = ({
           onPageChange(newPageIndex);
         }}
       >
-        <iconPrevious.react tag="div" className="icon-white logo-alignment-style" />
+        <iconPrevious.react
+          tag="div"
+          className="icon-white logo-alignment-style"
+        />
       </div>
 
       <div
@@ -115,14 +126,18 @@ export const PreviewPaginationView = ({
       <div
         role="button"
         onClick={() => {
-          const newPageIndex = Math.floor(Number(totalRowSize) / pageSize);
+          const newPageIndex = Math.floor(
+            (Number(totalRowSize) - 1) / pageSize
+          );
           onPageChange(newPageIndex);
         }}
         className={
-          !canNextPage ? 'page-move-button-preview disabled' : 'page-move-button-preview'
+          !canNextPage
+            ? 'page-move-button-preview disabled'
+            : 'page-move-button-preview'
         }
       >
-         <LastPageIcon  className="logo-alignment-style" />
+        <LastPageIcon className="logo-alignment-style" />
       </div>
     </div>
   );

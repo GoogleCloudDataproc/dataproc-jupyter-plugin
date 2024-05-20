@@ -79,6 +79,7 @@ const ListDagRuns = ({
   const [listDagRunHeight, setListDagRunHeight] = useState(
     window.innerHeight - 485
   );
+  const [initialLoad, setInitialLoad] = useState(true);
 
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 485;
@@ -276,12 +277,7 @@ const ListDagRuns = ({
       setDarkGreenListDates
     );
   };
-
-  useEffect(() => {
-    listDagRunsList();
-  }, [startDate, endDate]);
-
-  useEffect(() => {
+  const handleSelectedDateChange = () => {
     gotoPage(0);
     let currentDate = selectedDate
       ? new Date(selectedDate.toDate()).toDateString()
@@ -298,7 +294,22 @@ const ListDagRuns = ({
       setDagRunsCurrentDateList([]);
       setDagRunId('');
     }
+  };
+
+  useEffect(() => {
+    listDagRunsList();
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    handleSelectedDateChange();
   }, [selectedDate]);
+
+  useEffect(() => {
+    if (initialLoad && dagRunsList.length > 0) {
+      handleSelectedDateChange();
+      setInitialLoad(false);
+    }
+  }, [dagRunsList]);
 
   return (
     <div>
