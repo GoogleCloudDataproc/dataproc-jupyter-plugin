@@ -583,7 +583,12 @@ export class SchedulerService {
         setIsLoading(false);
       }
     } catch (reason) {
-      toast.error(`Error on GET credentials..\n${reason}`, toastifyCustomStyle);
+      if (!toast.isActive('credentialsError')) {
+        toast.error(`Error on GET credentials..\n${reason}`, {
+          ...toastifyCustomStyle,
+          toastId: 'credentialsError'
+        });
+      }
     }
   };
   static listDagInfoAPIService = async (
@@ -618,10 +623,12 @@ export class SchedulerService {
         'Error listing dag Scheduler list',
         LOG_LEVEL.ERROR
       );
-      toast.error(
-        `Failed to fetch dag Scheduler list : ${error}`,
-        toastifyCustomStyle
-      );
+      if (!toast.isActive('dagListError')) {
+        toast.error(`Failed to fetch clusters : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'clusterError'
+        });
+      }
     }
   };
   static listDagInfoAPIServiceForCreateNotebook = async (
@@ -651,10 +658,12 @@ export class SchedulerService {
         'Error listing dag Scheduler list',
         LOG_LEVEL.ERROR
       );
-      toast.error(
-        `Failed to fetch dag Scheduler list : ${error}`,
-        toastifyCustomStyle
-      );
+      if (!toast.isActive('dagListError')) {
+        toast.error(`Failed to fetch clusters : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'clusterError'
+        });
+      }
     }
   };
   static handleDownloadSchedulerAPIService = async (
@@ -804,7 +813,12 @@ export class SchedulerService {
       setDagTaskInstancesList(transformDagRunTaskInstanceListData);
       setIsLoading(false);
     } catch (reason) {
-      toast.error(`Error on GET credentials.\n${reason}`, toastifyCustomStyle);
+      if (!toast.isActive('credentialsError')) {
+        toast.error(`Error on GET credentials..\n${reason}`, {
+          ...toastifyCustomStyle,
+          toastId: 'credentialsError'
+        });
+      }
     }
   };
   static listDagTaskLogsListService = async (
@@ -825,7 +839,12 @@ export class SchedulerService {
       setLogList(data.content);
       setIsLoadingLogs(false);
     } catch (reason) {
-      toast.error(`Error on GET credentials.\n${reason}`, toastifyCustomStyle);
+      if (!toast.isActive('credentialsError')) {
+        toast.error(`Error on GET credentials..\n${reason}`, {
+          ...toastifyCustomStyle,
+          toastId: 'credentialsError'
+        });
+      }
     }
   };
   static handleImportErrordataService = async (
@@ -840,7 +859,12 @@ export class SchedulerService {
       setImportErrorData(data.import_errors);
       setImportErrorEntries(data.total_entries);
     } catch (reason) {
-      toast.error(`Error on GET credentials.\n${reason}`, toastifyCustomStyle);
+      if (!toast.isActive('credentialsError')) {
+        toast.error(`Error on GET credentials..\n${reason}`, {
+          ...toastifyCustomStyle,
+          toastId: 'credentialsError'
+        });
+      }
     }
   };
 
