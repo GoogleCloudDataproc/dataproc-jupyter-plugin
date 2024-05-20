@@ -17,45 +17,64 @@
 
 import React, { useEffect, useState } from 'react';
 import { BigQueryService } from './bigQueryService';
-import { ClipLoader } from 'react-spinners';
+import { CircularProgress } from '@mui/material';
 
-const BigQueryDatasetInfo = ({ dataset, projectId }: { dataset: string, projectId: string }) => {
+const BigQueryTableInfo = ({
+  title,
+  dataset,
+  projectId
+}: {
+  title: string;
+  dataset: string;
+  projectId: string;
+}) => {
   const [datasetInfo, setDatasetInfo] = useState<any>({});
+  const [tableInfo, setTableInfo] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    BigQueryService.getBigQueryDatasetDetailsAPIService(
+    BigQueryService.getBigQueryDatasetInfoAPIService(
       dataset,
-      setDatasetInfo,
+      projectId,
+      setDatasetInfo
+    );
+  }, []);
+
+  useEffect(() => {
+    BigQueryService.getBigQueryTableInfoAPIService(
+      title,
+      dataset,
+      setTableInfo,
+      datasetInfo,
       projectId,
       setIsLoading
     );
-  }, []);
+  }, [datasetInfo]);
 
   return (
     <>
       {isLoading ? (
         <div className="database-loader">
           <div>
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
+              className = "spin-loader-custom-style"
               size={20}
               aria-label="Loading Spinner"
               data-testid="loader"
             />
           </div>
-          Loading dataset details
+          Loading table details
         </div>
       ) : (
         <>
+          <div className="db-title">Table info</div>
           <div className="table-container">
             <table className="db-table">
               <tbody>
-                {Object.keys(datasetInfo).map((tableData, index) => (
+                {Object.keys(tableInfo).map((tableData, index) => (
                   <tr key={index} className="tr-row">
                     <td className="bold-column">{tableData}</td>
-                    <td>{datasetInfo[tableData]}</td>
+                    <td>{tableInfo[tableData]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -67,4 +86,4 @@ const BigQueryDatasetInfo = ({ dataset, projectId }: { dataset: string, projectI
   );
 };
 
-export default BigQueryDatasetInfo;
+export default BigQueryTableInfo;

@@ -22,12 +22,12 @@ import { requestAPI } from '../handler/handler';
 import ConfigSelection from './configSelection';
 import { LOGIN_STATE, STATUS_SUCCESS } from '../utils/const';
 import { checkConfig } from '../utils/utils';
-import { ClipLoader } from 'react-spinners';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { JupyterLab } from '@jupyterlab/application';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { CircularProgress } from '@mui/material';
 
 // Create the LabIcon instance outside of the component
 const IconsigninGoogle = new LabIcon({
@@ -43,7 +43,7 @@ const AuthLoginComponent = ({
 }: {
   app: JupyterLab;
   launcher: ILauncher;
-  settingRegistry: ISettingRegistry,
+  settingRegistry: ISettingRegistry;
   themeManager: IThemeManager;
 }): React.JSX.Element => {
   const [loginState, setLoginState] = useState(false);
@@ -81,9 +81,8 @@ const AuthLoginComponent = ({
     <div className="component-level">
       {configLoading && !loginState && !configError && !loginError && (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
+          <CircularProgress
+            className = "spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -143,8 +142,7 @@ export class AuthLogin extends DataprocWidget {
   ) {
     super(themeManager);
     this.app = app;
-    this.settingRegistry = settingRegistry,
-    this.launcher = launcher;
+    (this.settingRegistry = settingRegistry), (this.launcher = launcher);
   }
 
   renderInternal(): React.JSX.Element {

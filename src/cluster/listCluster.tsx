@@ -23,7 +23,6 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
-import { ClipLoader } from 'react-spinners';
 import {
   CREATE_CLUSTER_URL,
   ClusterStatus,
@@ -48,6 +47,7 @@ import startDisableIcon from '../../style/icons/start_icon_disable.svg';
 import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { ClusterService } from './clusterServices';
+import { CircularProgress } from '@mui/material';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -387,9 +387,7 @@ function ListCluster({
               cell.value === STATUS_STARTING ||
               cell.value === STATUS_STOPPING ||
               cell.value === STATUS_DELETING) && (
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={15}
                 aria-label="Loading Spinner"
                 data-testid="loader"
@@ -502,9 +500,8 @@ function ListCluster({
         <div>
           {isLoading && (
             <div className="spin-loader-main">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
+                className = "spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

@@ -14,24 +14,22 @@
 
 
 import json
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.runtimeListService import RuntimeListService
+from dataproc_jupyter_plugin.services.triggerDagService import TriggerDagService
 
 
-class RuntimeController(APIHandler):
+class TriggerDagController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            page_token = self.get_argument("pageToken")
-            page_size = self.get_argument("pageSize")
-            runtime = RuntimeListService()
-            credentials = handlers.get_cached_credentials(self.log)
-            runtime_list = runtime.list_runtime(
-                credentials, page_size, page_token, self.log
-            )
-            self.finish(json.dumps(runtime_list))
+            trigger_dag = TriggerDagService()
+            dag_id = self.get_argument("dag_id")
+            composer = self.get_argument("composer")
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            trigger = trigger_dag.dag_trigger(credentials, dag_id, composer, self.log)
+            self.finish(json.dumps(trigger))
         except Exception as e:
-            self.log.exception(f"Error fetching runtime template list: {str(e)}")
+            self.log.exception(f"Error triggering dag")
             self.finish({"error": str(e)})

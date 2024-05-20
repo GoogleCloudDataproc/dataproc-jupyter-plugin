@@ -17,7 +17,7 @@ import os
 import re
 import requests
 import urllib
-from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, storage_url
+from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE, storage_url
 
 
 class DagEditService:

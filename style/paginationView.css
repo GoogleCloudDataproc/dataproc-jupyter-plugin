@@ -10,6 +10,14 @@
   color: var(--jp-ui-font-color0);
 }
 
+.page-move-button-preview {
+  padding: 0px 15px;
+  font-size: 25px;
+  cursor: pointer;
+  color: var(--jp-ui-font-color0);
+  display: flex;
+}
+
 .page-size-selection {
   border: none;
   margin-left: 5px;

@@ -16,16 +16,39 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ClipLoader } from 'react-spinners';
 import { useGlobalFilter, usePagination, useTable } from 'react-table';
-import { PaginationView } from '../utils/paginationView';
 import TableData from '../utils/tableData';
 import { BigQueryService } from './bigQueryService';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, handleDebounce } from '../utils/utils';
+import { PreviewPaginationView } from '../utils/previewPaginationView';
+import { CircularProgress } from '@mui/material';
 
 const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
   const [previewDataList, setPreviewDataList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalRowSize, setTotalRowSize] = useState('');
+
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const [previewHeight, setPreviewHeight] = useState(window.innerHeight - 180);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 180;
+    setPreviewHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
 
   const data = previewDataList;
 
@@ -45,14 +68,15 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
     rows,
     prepareRow,
     page,
-    canPreviousPage,
-    canNextPage,
-    nextPage,
-    previousPage,
     setPageSize,
-    state: { pageIndex, pageSize }
+    state: { pageSize }
   } = useTable(
-    { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
+    {
+      columns,
+      data,
+      autoResetPage: false,
+      initialState: { pageSize: 50, pageIndex: 0 }
+    },
     useGlobalFilter,
     usePagination
   );
@@ -64,9 +88,12 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
       dataSetId,
       setIsLoading,
       projectId,
+      pageSize,
+      pageIndex,
+      setTotalRowSize,
       setPreviewDataList
     );
-  }, []);
+  }, [pageSize, pageIndex]);
 
   const tableDataCondition = (cell: ICellProps) => {
     return (
@@ -76,11 +103,18 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
     );
   };
 
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+  };
+
   return (
     <div>
       {previewDataList.length > 0 ? (
         <div>
-          <div className="preview-data-table-parent">
+          <div
+            className="preview-data-table-parent"
+            style={{ height: previewHeight }}
+          >
             <TableData
               getTableProps={getTableProps}
               headerGroups={headerGroups}
@@ -92,16 +126,17 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
               tableDataCondition={tableDataCondition}
               fromPage="Preview"
             />
-            {previewDataList.length > 50 && (
-              <PaginationView
+            {Number(totalRowSize) >= 50 && (
+              <PreviewPaginationView
                 pageSize={pageSize}
                 setPageSize={setPageSize}
                 pageIndex={pageIndex}
-                allData={previewDataList}
-                previousPage={previousPage}
-                nextPage={nextPage}
-                canPreviousPage={canPreviousPage}
-                canNextPage={canNextPage}
+                totalRowSize={totalRowSize}
+                canPreviousPage={pageIndex !== 0}
+                canNextPage={
+                  pageIndex !== Math.floor(Number(totalRowSize) / pageSize)
+                }
+                onPageChange={handlePageChange}
               />
             )}
           </div>
@@ -110,9 +145,8 @@ const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
         <div>
           {isLoading && (
             <div className="spin-loader-main">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
+                className="spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

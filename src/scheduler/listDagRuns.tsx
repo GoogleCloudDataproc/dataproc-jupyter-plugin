@@ -18,13 +18,13 @@
 import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { PaginationView } from '../utils/paginationView';
-import { ClipLoader } from 'react-spinners';
 import TableData from '../utils/tableData';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, handleDebounce } from '../utils/utils';
 import { SchedulerService } from './schedulerServices';
 import { Dayjs } from 'dayjs';
 import { LabIcon } from '@jupyterlab/ui-components';
 import downloadIcon from '../../style/icons/scheduler_download.svg';
+import { CircularProgress } from '@mui/material';
 
 const iconDownload = new LabIcon({
   name: 'launcher:download-icon',
@@ -46,14 +46,15 @@ const ListDagRuns = ({
   endDate,
   setDagRunId,
   selectedDate,
-
   setBlueListDates,
   setGreyListDates,
   setOrangeListDates,
   setRedListDates,
   setGreenListDates,
   setDarkGreenListDates,
-  bucketName
+  bucketName,
+  setIsLoading,
+  isLoading
 }: {
   composerName: string;
   dagId: string;
@@ -69,11 +70,35 @@ const ListDagRuns = ({
   setGreenListDates: (value: string[]) => void;
   setDarkGreenListDates: (value: string[]) => void;
   bucketName: string;
+  setIsLoading: (value: boolean) => void;
+  isLoading: boolean;
 }): JSX.Element => {
   const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
   const [dagRunsCurrentDateList, setDagRunsCurrentDateList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
+  const [listDagRunHeight, setListDagRunHeight] = useState(
+    window.innerHeight - 485
+  );
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 485;
+    setListDagRunHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
+
   const data =
     dagRunsCurrentDateList.length > 0 ? dagRunsCurrentDateList : dagRunsList;
   const columns = React.useMemo(
@@ -203,9 +228,7 @@ const ListDagRuns = ({
       <div className="actions-icon">
         {data.dagRunId === downloadOutputDagRunId ? (
           <div className="icon-buttons-style">
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
               size={18}
               aria-label="Loading Spinner"
               data-testid="loader"
@@ -254,12 +277,7 @@ const ListDagRuns = ({
       setDarkGreenListDates
     );
   };
-
-  useEffect(() => {
-    listDagRunsList();
-  }, [startDate, endDate]);
-
-  useEffect(() => {
+  const handleSelectedDateChange = () => {
     gotoPage(0);
     let currentDate = selectedDate
       ? new Date(selectedDate.toDate()).toDateString()
@@ -276,7 +294,22 @@ const ListDagRuns = ({
       setDagRunsCurrentDateList([]);
       setDagRunId('');
     }
+  };
+
+  useEffect(() => {
+    listDagRunsList();
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    handleSelectedDateChange();
   }, [selectedDate]);
+
+  useEffect(() => {
+    if (initialLoad && dagRunsList.length > 0) {
+      handleSelectedDateChange();
+      setInitialLoad(false);
+    }
+  }, [dagRunsList]);
 
   return (
     <div>
@@ -284,12 +317,14 @@ const ListDagRuns = ({
         {(dagRunsList.length > 0 && selectedDate === null) ||
         (selectedDate !== null && dagRunsCurrentDateList.length > 0) ? (
           <div>
-            <div className="dag-runs-list-table-parent">
+            <div
+              className="dag-runs-list-table-parent"
+              style={{ maxHeight: listDagRunHeight }}
+            >
               <TableData
                 getTableProps={getTableProps}
                 headerGroups={headerGroups}
                 getTableBodyProps={getTableBodyProps}
-                isLoading={isLoading}
                 rows={rows}
                 page={page}
                 prepareRow={prepareRow}
@@ -312,19 +347,7 @@ const ListDagRuns = ({
           </div>
         ) : (
           <div>
-            {isLoading && (
-              <div className="spin-loader-main">
-                <ClipLoader
-                  color="#3367d6"
-                  loading={true}
-                  size={18}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-                Loading Dag Runs
-              </div>
-            )}
-            {!isLoading && (
+            {dagRunsCurrentDateList.length === 0 && (
               <div className="no-data-style">No rows to display</div>
             )}
           </div>

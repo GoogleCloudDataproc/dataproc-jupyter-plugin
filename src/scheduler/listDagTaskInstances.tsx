@@ -24,6 +24,7 @@ import dagTaskFailedIcon from '../../style/icons/dag_task_failed_icon.svg';
 import stopIcon from '../../style/icons/stop_icon.svg';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
+import { handleDebounce } from '../utils/utils';
 
 const iconDagTaskFailed = new LabIcon({
   name: 'launcher:dag-task-failed-icon',
@@ -60,6 +61,26 @@ const ListDagTaskInstances = ({
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [expanded, setExpanded] = useState<string | false>(false);
   const [loglist, setLogList] = useState('');
+
+  const [height, setHeight] = useState(window.innerHeight - 320);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 320;
+    setHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
 
   const listDagTaskInstancesRunsList = async () => {
     await SchedulerService.listDagTaskInstancesListService(
@@ -187,7 +208,11 @@ const ListDagTaskInstances = ({
 
                 {isLoadingLogs && expanded === `${index}` ? (
                   <div className="spin-loader-main">
-                    <CircularProgress color="primary" size={18} />
+                    <CircularProgress
+                      className="spin-loader-custom-style"
+                      color="primary"
+                      size={18}
+                    />
                     Loading Dag Runs Task Logs
                   </div>
                 ) : (
@@ -195,7 +220,12 @@ const ListDagTaskInstances = ({
                     <div>
                       {' '}
                       <Typography>
-                        <pre className="logs-content-style">{loglist}</pre>
+                        <pre
+                          className="logs-content-style"
+                          style={{ maxHeight: height }}
+                        >
+                          {loglist}
+                        </pre>
                       </Typography>{' '}
                     </div>
                   )
@@ -207,7 +237,11 @@ const ListDagTaskInstances = ({
         <div>
           {isLoading ? (
             <div className="spin-loader-main">
-              <CircularProgress color="primary" size={18} />
+              <CircularProgress
+                className="spin-loader-custom-style"
+                color="primary"
+                size={18}
+              />
               Loading Dag Runs Task Instances
             </div>
           ) : (

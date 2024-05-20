@@ -93,7 +93,8 @@ const BigQueryTableInfoWrapper = ({
             projectId={projectId}
           />
         )}
-        {selectedMode === 'Schema' && schemaInfoResponse &&
+        {selectedMode === 'Schema' &&
+          schemaInfoResponse &&
           (schemaInfoResponse.length === 0 ? (
             <div className="no-data-style">No rows to display</div>
           ) : (
@@ -102,16 +103,18 @@ const BigQueryTableInfoWrapper = ({
               <BigQuerySchemaInfo column={schemaInfoResponse} />
             </>
           ))}
-        {selectedMode === 'Preview' && (
-          <>
-            <PreviewDataInfo
-              column={schemaInfoResponse}
-              tableId={title}
-              dataSetId={database}
-              projectId={projectId}
-            />
-          </>
-        )}
+        {selectedMode === 'Preview' &&
+          schemaInfoResponse &&
+          schemaInfoResponse.length > 0 && (
+            <>
+              <PreviewDataInfo
+                column={schemaInfoResponse}
+                tableId={title}
+                dataSetId={database}
+                projectId={projectId}
+              />
+            </>
+          )}
       </div>
     </div>
   );

@@ -40,7 +40,6 @@ import {
   loggedFetch,
   checkConfig
 } from '../utils/utils';
-import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
@@ -54,7 +53,12 @@ import { DropdownProps } from 'semantic-ui-react';
 
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
-import { Autocomplete, Radio, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  CircularProgress,
+  Radio,
+  TextField
+} from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { MuiChipsInput } from 'mui-chips-input';
 import { RunTimeSerive } from './runtimeService';
@@ -845,14 +849,13 @@ function CreateRunTime({
     <div>
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
+          <CircularProgress
+            className = "spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
           />
-          Loading RunTime
+          Loading Runtime
         </div>
       )}
 
@@ -1062,8 +1065,7 @@ function CreateRunTime({
                   <div className="create-batch-network">
                     {isloadingNetwork ? (
                       <div className="metastore-loader">
-                        <ClipLoader
-                          loading={true}
+                        <CircularProgress
                           size={25}
                           aria-label="Loading Spinner"
                           data-testid="loader"
@@ -1198,8 +1200,7 @@ function CreateRunTime({
               <div className="select-text-overlay">
                 {isLoadingService ? (
                   <div className="metastore-loader">
-                    <ClipLoader
-                      loading={true}
+                    <CircularProgress
                       size={25}
                       aria-label="Loading Spinner"
                       data-testid="loader"

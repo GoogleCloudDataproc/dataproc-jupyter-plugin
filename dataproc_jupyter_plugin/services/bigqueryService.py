@@ -14,7 +14,7 @@
 
 
 import requests
-from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, datacatalog_url
+from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE, datacatalog_url
 
 
 class ApiHeaders:
@@ -129,7 +129,14 @@ class BigQueryTableInfoService:
 
 class BigQueryPreviewService:
     def bigquery_preview_data(
-        self, credentials, dataset_id, table_id, page_token, project_id, log
+        self,
+        credentials,
+        dataset_id,
+        table_id,
+        max_results,
+        start_index,
+        project_id,
+        log,
     ):
         try:
             if (
@@ -138,7 +145,7 @@ class BigQueryPreviewService:
                 and ("region_id" in credentials)
             ):
                 access_token = credentials["access_token"]
-                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?pageToken={page_token}"
+                api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?maxResults={max_results}&startIndex={start_index}"
                 headers = ApiHeaders.create_headers(access_token)
                 response = requests.get(api_endpoint, headers=headers)
                 if response.status_code == 200:

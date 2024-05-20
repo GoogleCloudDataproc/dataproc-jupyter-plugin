@@ -93,7 +93,6 @@
 }
 
 .dag-runs-list-table-parent {
-  height: 375px;
   overflow: auto;
 }
 
@@ -176,7 +175,6 @@
 
 .logs-content-style {
   overflow: auto;
-  max-height: 400px;
   margin: 10px;
   border-bottom: 1px solid var(--jp-layout-color3);
 }

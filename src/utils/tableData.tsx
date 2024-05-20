@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { ClipLoader } from 'react-spinners';
+import { CircularProgress } from '@mui/material';
+import React, { useEffect, useState } from 'react';
 import { Cell, Row } from 'react-table';
+import { handleDebounce } from './utils';
 
 function TableData({
   getTableProps,
@@ -30,6 +31,26 @@ function TableData({
   tableDataCondition,
   fromPage
 }: any) {
+  const [listDagRunHeight, setListDagRunHeight] = useState(window.innerHeight - 505);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 505;
+    setListDagRunHeight(updateHeight);
+  }
+
+   // Debounce the handleUpdateHeight function
+   const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+   // Add event listener for window resize using useEffect
+   useEffect(() => {
+     window.addEventListener('resize', debouncedHandleUpdateHeight);
+ 
+     // Cleanup function to remove event listener on component unmount
+     return () => {
+       window.removeEventListener('resize', debouncedHandleUpdateHeight);
+     };
+   }, []);
+  
   const displayData = page ? page : rows;
 
   return (
@@ -51,12 +72,15 @@ function TableData({
           </tr>
         ))}
       </thead>
-      <tbody {...getTableBodyProps()} className={'clusters-table-body'}>
+      <tbody
+        {...getTableBodyProps()}
+        className={'clusters-table-body'}
+        style={fromPage === 'Dag Runs' ? { maxHeight: listDagRunHeight } : null}
+      >
         {isLoading ? (
           <div className="spin-loader">
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
+              className="spin-loader-custom-style"
               size={18}
               aria-label="Loading Spinner"
               data-testid="loader"
@@ -67,10 +91,7 @@ function TableData({
           displayData.map((row: Row, index: number) => {
             prepareRow(row);
             return (
-              <tr
-                {...row.getRowProps()}
-                className={'cluster-list-data-parent'}
-              >
+              <tr {...row.getRowProps()} className={'cluster-list-data-parent'}>
                 {row.cells.map((cell: Cell) => {
                   return tableDataCondition(cell);
                 })}

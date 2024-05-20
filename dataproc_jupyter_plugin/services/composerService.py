@@ -16,7 +16,7 @@
 from typing import Dict, List
 import requests
 from dataproc_jupyter_plugin.models.models import ComposerEnvironment
-from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, ENVIRONMENT_API
+from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE, ENVIRONMENT_API
 
 
 class ComposerService:

@@ -14,7 +14,7 @@
 
 
 import requests
-from dataproc_jupyter_plugin.utils.constants import CONTENT_TYPE, dataproc_url
+from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE, dataproc_url
 
 
 class RuntimeListService:

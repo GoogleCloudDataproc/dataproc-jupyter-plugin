@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,56 +16,21 @@
  */
 
 import React from 'react';
-import { ISessionTemplateDisplay } from './listRuntimeTemplateInterface';
 import { Select } from '../controls/MuiWrappedSelect';
 import { LabIcon } from '@jupyterlab/ui-components';
 import PreviousIcon from '../../style/icons/previous_page.svg';
 import NextIcon from '../../style/icons/next_page.svg';
-interface IBatch {
-  batchID: string;
-  status: string;
-  location: string;
-  creationTime: string;
-  elapsedTime: string;
-  type: string | undefined;
-  actions: JSX.Element;
-}
-interface ITemplate {
-  title: string;
-  category: string;
-  description: string;
-}
-interface ICluster {
-  clusterName: string;
-  status: string;
-  clusterImage: string;
-  region: string;
-  zone: string;
-  totalWorkersNode: string;
-  schedulesDeletion: string;
-  actions: React.ReactNode;
-}
-interface IDagList {
-  jobid: string;
-  notebookname: string;
-  schedule: string;
-  scheduleInterval: string;
-}
+import FirstPageIcon from '@mui/icons-material/FirstPage';
+import LastPageIcon from '@mui/icons-material/LastPage';
 
-interface IPaginationViewProps {
+interface IPreviewPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
   pageIndex: number;
-  allData:
-    | IBatch[]
-    | ITemplate[]
-    | ICluster[]
-    | ISessionTemplateDisplay[]
-    | IDagList[];
-  previousPage: () => void;
-  nextPage: () => void;
+  totalRowSize?: string;
   canPreviousPage: boolean;
   canNextPage: boolean;
+  onPageChange: (newPageIndex: number) => void;
 }
 const iconPrevious = new LabIcon({
   name: 'launcher:previous-icon',
@@ -76,16 +41,15 @@ const iconNext = new LabIcon({
   svgstr: NextIcon
 });
 
-export const PaginationView = ({
+export const PreviewPaginationView = ({
   pageSize,
   setPageSize,
   pageIndex,
-  allData,
-  previousPage,
-  nextPage,
+  totalRowSize,
   canPreviousPage,
-  canNextPage
-}: IPaginationViewProps) => {
+  canNextPage,
+  onPageChange
+}: IPreviewPaginationViewProps) => {
   return (
     <div className="pagination-parent-view">
       <div>Rows per page: </div>
@@ -95,6 +59,7 @@ export const PaginationView = ({
         onChange={(e, { value }) => {
           const selectedPageSize = parseInt(value as string, 10); // Parse the value to a number
           setPageSize(selectedPageSize); // Use the parsed number as the new pageSize
+          onPageChange(0);
         }}
         options={[
           { key: '50', value: '50', text: '50' },
@@ -102,33 +67,77 @@ export const PaginationView = ({
           { key: '200', value: '200', text: '200' }
         ]}
       />
-      {(pageIndex + 1) * pageSize > allData.length ? (
+
+      {(pageIndex + 1) * pageSize > Number(totalRowSize) ? (
         <div className="page-display-part">
-          {pageIndex * pageSize + 1} - {allData.length} of {allData.length}
+          {pageIndex * pageSize + 1} - {totalRowSize} of {totalRowSize}
         </div>
       ) : (
         <div className="page-display-part">
           {pageIndex * pageSize + 1} - {(pageIndex + 1) * pageSize} of{' '}
-          {allData.length}
+          {totalRowSize}
         </div>
       )}
+
+      <div
+        role="button"
+        className={
+          !canPreviousPage
+            ? 'page-move-button-preview disabled'
+            : 'page-move-button-preview'
+        }
+        onClick={() => {
+          const newPageIndex = 0;
+          onPageChange(newPageIndex);
+        }}
+      >
+        <FirstPageIcon className="logo-alignment-style" />
+      </div>
+
       <div
         role="button"
         className={
           !canPreviousPage ? 'page-move-button disabled' : 'page-move-button'
         }
-        onClick={() => previousPage()}
+        onClick={() => {
+          const newPageIndex = pageIndex - 1;
+          onPageChange(newPageIndex);
+        }}
       >
-        <iconPrevious.react tag="div" className="icon-white logo-alignment-style" />
+        <iconPrevious.react
+          tag="div"
+          className="icon-white logo-alignment-style"
+        />
       </div>
+
       <div
         role="button"
-        onClick={() => nextPage()}
+        onClick={() => {
+          const newPageIndex = pageIndex + 1;
+          onPageChange(newPageIndex);
+        }}
         className={
           !canNextPage ? 'page-move-button disabled' : 'page-move-button'
         }
       >
         <iconNext.react tag="div" className="icon-white logo-alignment-style" />
+      </div>
+
+      <div
+        role="button"
+        onClick={() => {
+          const newPageIndex = Math.floor(
+            (Number(totalRowSize) - 1) / pageSize
+          );
+          onPageChange(newPageIndex);
+        }}
+        className={
+          !canNextPage
+            ? 'page-move-button-preview disabled'
+            : 'page-move-button-preview'
+        }
+      >
+        <LastPageIcon className="logo-alignment-style" />
       </div>
     </div>
   );

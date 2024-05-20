@@ -32,16 +32,21 @@ import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
-import { ClipLoader } from 'react-spinners';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { IconButton, InputAdornment, TextField } from '@mui/material';
+import {
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  TextField
+} from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { BigQueryService } from './bigQueryService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
+import { DataprocWidget } from '../controls/DataprocWidget';
+import { handleDebounce } from '../utils/utils';
 
-const height = window.innerHeight - 125;
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
   svgstr: datasetsIcon
@@ -134,6 +139,26 @@ const BigQueryComponent = ({
   const [searchResponse, setSearchResponse] = useState<any>([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
+  const [height, setHeight] = useState(window.innerHeight - 125);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 125;
+    setHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
+
   const getBigQueryColumnDetails = async (
     tableId: string,
     datasetId: string,
@@ -144,6 +169,7 @@ const BigQueryComponent = ({
         datasetId,
         tableId,
         projectId,
+        setIsIconLoading,
         setSchemaResponse
       );
     }
@@ -451,9 +477,11 @@ const BigQueryComponent = ({
         getBigQueryDatasets(node.data.name);
       } else if (calculateDepth(node) === 2 && !node.isOpen) {
         setCurrentNode(node);
+        setIsIconLoading(true);
         getBigQueryTables(node.data.name, node.parent?.data?.name);
       } else if (calculateDepth(node) === 3 && node.parent && !node.isOpen) {
         setCurrentNode(node);
+        setIsIconLoading(true);
         getBigQueryColumnDetails(
           node.data.name,
           node.parent?.data?.name,
@@ -480,9 +508,7 @@ const BigQueryComponent = ({
       const arrowIcon = hasChildren ? (
         isIconLoading && currentNode.data.name === node.data.name ? (
           <div className="big-query-loader-style">
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
               size={16}
               aria-label="Loading Spinner"
               data-testid="loader"
@@ -520,9 +546,7 @@ const BigQueryComponent = ({
         const arrowIcon = hasChildren ? (
           isIconLoading && currentNode.data.name === node.data.name ? (
             <div className="big-query-loader-style">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
                 size={16}
                 aria-label="Loading Spinner"
                 data-testid="loader"
@@ -657,7 +681,9 @@ const BigQueryComponent = ({
         <div role="treeitem" title={node.data.name} onClick={handleTextClick}>
           {node.data.name}
         </div>
-        <div className="dpms-column-type-text">{node.data.type}</div>
+        <div title={node?.data?.type} className="dpms-column-type-text">
+          {node.data.type}
+        </div>
       </div>
     );
   };
@@ -688,7 +714,8 @@ const BigQueryComponent = ({
         datasetId,
         setDatabaseNames,
         setTableResponse,
-        projectId
+        projectId,
+        setIsIconLoading
       );
     }
   };
@@ -748,15 +775,18 @@ const BigQueryComponent = ({
 
   return (
     <div className="dpms-Wrapper">
-      <TitleComponent titleStr="Dataset Explorer" isPreview />
+      <TitleComponent
+        titleStr="Dataset Explorer"
+        isPreview
+        getBigQueryProjects={getBigQueryProjects}
+      />
       <>
         <div>
           {isLoading ? (
             <div className="database-loader">
               <div>
-                <ClipLoader
-                  color="#3367d6"
-                  loading={true}
+                <CircularProgress
+                  className="spin-loader-custom-style"
                   size={20}
                   aria-label="Loading Spinner"
                   data-testid="loader"
@@ -768,7 +798,7 @@ const BigQueryComponent = ({
             <>
               <div className="search-field">
                 <TextField
-                  placeholder="Search your DBs and tables"
+                  placeholder="Enter your keyword to search"
                   type="text"
                   variant="outlined"
                   fullWidth
@@ -784,9 +814,7 @@ const BigQueryComponent = ({
                             className="icon-white logo-alignment-style"
                           />
                         ) : (
-                          <ClipLoader
-                            color="#3367d6"
-                            loading={true}
+                          <CircularProgress
                             size={16}
                             aria-label="Loading Spinner"
                             data-testid="loader"
@@ -839,4 +867,30 @@ const BigQueryComponent = ({
   );
 };
 
-export default BigQueryComponent;
+export class BigQueryWidget extends DataprocWidget {
+  app: JupyterLab;
+  settingRegistry: ISettingRegistry;
+  enableBigqueryIntegration: boolean;
+
+  constructor(
+    app: JupyterLab,
+    settingRegistry: ISettingRegistry,
+    enableBigqueryIntegration: boolean,
+    themeManager: IThemeManager
+  ) {
+    super(themeManager);
+    this.app = app;
+    this.settingRegistry = settingRegistry;
+    this.enableBigqueryIntegration = enableBigqueryIntegration;
+  }
+
+  renderInternal(): JSX.Element {
+    return (
+      <BigQueryComponent
+        app={this.app}
+        settingRegistry={this.settingRegistry}
+        themeManager={this.themeManager}
+      />
+    );
+  }
+}

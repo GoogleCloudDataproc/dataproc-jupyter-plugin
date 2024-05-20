@@ -31,15 +31,13 @@ import {
   toastifyCustomStyle,
   loggedFetch
 } from '../utils/utils';
-import { requestAPI } from '../handler/handler';
-import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
-import { Button } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import { RegionDropdown } from '../controls/RegionDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
@@ -52,6 +50,7 @@ import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryRegionDropdown } from '../controls/BigQueryRegionDropdown';
 import { eventEmitter } from '../utils/signalEmitter';
+import { requestAPI } from '../handler/handler';
 
 const iconExpandLess = new LabIcon({
   name: 'launcher:expand-less-icon',
@@ -81,6 +80,7 @@ function ConfigSelection({
     svgstr: settingsIcon
   });
 
+  const [bigQueryFeatureEnable, setbigQueryFeatureEnable] = useState(false);
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
   const [bigQueryRegion, setBigQueryRegion] = useState<any>('');
@@ -110,8 +110,10 @@ function ConfigSelection({
           if (configStatus.includes('Failed')) {
             toast.error(configStatus, toastifyCustomStyle);
           } else {
-            const settings = await settingRegistry.load(PLUGIN_ID);
-            settings.set('bqRegion', bigQueryRegion);
+            if (bigQueryFeatureEnable) {
+              const settings = await settingRegistry.load(PLUGIN_ID);
+              settings.set('bqRegion', bigQueryRegion);
+            }
             toast.success(
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
               toastifyCustomStyle
@@ -203,8 +205,20 @@ function ConfigSelection({
     setBigQueryRegion(settings.get('bqRegion')['composite']);
   };
 
+  const handleBigQueryFeature = async () => {
+    interface SettingsResponse {
+      enable_bigquery_integration?: boolean;
+    }
+    let bqFeature: SettingsResponse = await requestAPI('settings');
+
+    if (bqFeature.enable_bigquery_integration) {
+      setbigQueryFeatureEnable(true);
+    }
+  };
+
   useEffect(() => {
     handleSettingsRegistry();
+    handleBigQueryFeature();
 
     authApi().then(credentials => {
       displayUserInfo(credentials);
@@ -223,9 +237,8 @@ function ConfigSelection({
     <div>
       {isLoadingUser && !configError ? (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
+          <CircularProgress
+            className="spin-loader-custom-style"
             size={20}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -276,16 +289,22 @@ function ConfigSelection({
                   onRegionChange={region => setRegion(region)}
                 />
               </div>
-              <div className="bigquery-region-header">BigQuery Settings </div>
-              <div className="region-overlay">
-                <BigQueryRegionDropdown
-                  projectId={projectId}
-                  region={bigQueryRegion}
-                  onRegionChange={bigQueryRegion =>
-                    setBigQueryRegion(bigQueryRegion)
-                  }
-                />
-              </div>
+              {bigQueryFeatureEnable && (
+                <>
+                  <div className="bigquery-region-header">
+                    BigQuery Settings{' '}
+                  </div>
+                  <div className="region-overlay">
+                    <BigQueryRegionDropdown
+                      projectId={projectId}
+                      region={bigQueryRegion}
+                      onRegionChange={bigQueryRegion =>
+                        setBigQueryRegion(bigQueryRegion)
+                      }
+                    />
+                  </div>
+                </>
+              )}
               <div className="save-overlay">
                 <Button
                   variant="contained"

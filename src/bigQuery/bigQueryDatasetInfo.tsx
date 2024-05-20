@@ -17,61 +17,50 @@
 
 import React, { useEffect, useState } from 'react';
 import { BigQueryService } from './bigQueryService';
-import { ClipLoader } from 'react-spinners';
+import { CircularProgress } from '@mui/material';
 
-const BigQueryTableInfo = ({
-  title,
+const BigQueryDatasetInfo = ({
   dataset,
   projectId
 }: {
-  title: string;
   dataset: string;
   projectId: string;
 }) => {
   const [datasetInfo, setDatasetInfo] = useState<any>({});
-  const [tableInfo, setTableInfo] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    BigQueryService.getBigQueryDatasetInfoAPIService(dataset, projectId, setDatasetInfo);
-  }, []);
-
-  useEffect(() => {
-    BigQueryService.getBigQueryTableInfoAPIService(
-      title,
+    BigQueryService.getBigQueryDatasetDetailsAPIService(
       dataset,
-      setTableInfo,
-      datasetInfo,
+      setDatasetInfo,
       projectId,
       setIsLoading
     );
-  }, [datasetInfo]);
+  }, []);
 
   return (
     <>
       {isLoading ? (
         <div className="database-loader">
           <div>
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
+              className = "spin-loader-custom-style"
               size={20}
               aria-label="Loading Spinner"
               data-testid="loader"
             />
           </div>
-          Loading table details
+          Loading dataset details
         </div>
       ) : (
         <>
-          <div className="db-title">Table info</div>
           <div className="table-container">
             <table className="db-table">
               <tbody>
-                {Object.keys(tableInfo).map((tableData, index) => (
+                {Object.keys(datasetInfo).map((tableData, index) => (
                   <tr key={index} className="tr-row">
                     <td className="bold-column">{tableData}</td>
-                    <td>{tableInfo[tableData]}</td>
+                    <td>{datasetInfo[tableData]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -83,4 +72,4 @@ const BigQueryTableInfo = ({
   );
 };
 
-export default BigQueryTableInfo;
+export default BigQueryDatasetInfo;

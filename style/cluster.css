@@ -119,6 +119,16 @@
   margin: 20%;
 }
 
+.spin-loader-custom-style {
+  margin-right: 5px;
+}
+
+.spin-loader-main-calender {
+  display: flex;
+  max-height: 100%;
+  justify-content: center;
+  align-items: center;
+}
 .filter-cluster-overlay {
   height: 42px;
   padding-left: 15px;

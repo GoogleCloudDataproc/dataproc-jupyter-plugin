@@ -13,20 +13,25 @@
 # limitations under the License.
 
 
+import json
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.executorService import ExecutorService
+from dataproc_jupyter_plugin.services.runtimeListService import RuntimeListService
 
 
-class ExecutorController(APIHandler):
+class RuntimeController(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    def get(self):
         try:
-            input_data = self.get_json_body()
-            execute = ExecutorService()
-            credentials = handlers.get_cached_credentials(self.log)
-            execute.execute(credentials, input_data, self.log)
+            page_token = self.get_argument("pageToken")
+            page_size = self.get_argument("pageSize")
+            runtime = RuntimeListService()
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            runtime_list = runtime.list_runtime(
+                credentials, page_size, page_token, self.log
+            )
+            self.finish(json.dumps(runtime_list))
         except Exception as e:
-            self.log.exception(f"Error creating dag schedule: {str(e)}")
+            self.log.exception(f"Error fetching runtime template list: {str(e)}")
             self.finish({"error": str(e)})

@@ -14,23 +14,24 @@
 
 
 import json
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.importErrorService import ImportErrorService
+from dataproc_jupyter_plugin.services.clusterListService import ClusterListService
 
 
-class ImportErrorController(APIHandler):
+class ClusterListController(APIHandler):
     @tornado.web.authenticated
     def get(self):
         try:
-            import_errors = ImportErrorService()
-            composer_name = self.get_argument("composer")
-            credentials = handlers.get_cached_credentials(self.log)
-            import_errors_list = import_errors.list_import_errors(
-                credentials, composer_name, self.log
+            page_token = self.get_argument("pageToken")
+            page_size = self.get_argument("pageSize")
+            cluster = ClusterListService()
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            cluster_list = cluster.list_clusters(
+                credentials, page_size, page_token, self.log
             )
-            self.finish(json.dumps(import_errors_list))
+            self.finish(json.dumps(cluster_list))
         except Exception as e:
-            self.log.exception(f"Error fetching import error list")
+            self.log.exception(f"Error fetching cluster list")
             self.finish({"error": str(e)})

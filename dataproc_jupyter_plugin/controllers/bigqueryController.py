@@ -14,9 +14,9 @@
 
 
 import json
+
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
 from dataproc_jupyter_plugin.services.bigqueryService import (
     BigQueryDatasetInfoService,
     BigQueryDatasetListService,
@@ -26,8 +26,9 @@ from dataproc_jupyter_plugin.services.bigqueryService import (
     BigQueryTableInfoService,
     BigQueryTableListService,
 )
-from dataproc_jupyter_plugin.utils.constants import bq_public_dataset_project_id
+from dataproc_jupyter_plugin.commons.constants import bq_public_dataset_project_id
 from google.cloud.jupyter_config import gcp_project
+from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 
 
 class BigqueryDatasetController(APIHandler):
@@ -37,7 +38,7 @@ class BigqueryDatasetController(APIHandler):
             page_token = self.get_argument("pageToken")
             project_id = self.get_argument("project_id")
             bigquery_dataset = BigQueryDatasetListService()
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dataset_list = bigquery_dataset.list_datasets(
                 credentials, page_token, project_id, self.log
             )
@@ -55,7 +56,7 @@ class BigqueryTableController(APIHandler):
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
             bigquery_dataset = BigQueryTableListService()
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             table_list = bigquery_dataset.list_table(
                 credentials, dataset_id, page_token, project_id, self.log
             )
@@ -72,7 +73,7 @@ class BigqueryDatasetInfoController(APIHandler):
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
             bq_dataset = BigQueryDatasetInfoService()
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dataset_info = bq_dataset.list_dataset_info(
                 credentials, dataset_id, project_id, self.log
             )
@@ -90,7 +91,7 @@ class BigqueryTableInfoController(APIHandler):
             table_id = self.get_argument("table_id")
             project_id = self.get_argument("project_id")
             bq_table = BigQueryTableInfoService()
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             table_info = bq_table.list_table_info(
                 credentials, dataset_id, table_id, project_id, self.log
             )
@@ -106,12 +107,19 @@ class BigqueryPreviewController(APIHandler):
         try:
             dataset_id = self.get_argument("dataset_id")
             table_id = self.get_argument("table_id")
-            page_token = self.get_argument("pageToken")
+            max_results = self.get_argument("max_results")
+            start_index = self.get_argument("start_index")
             project_id = self.get_argument("project_id")
             bq_preview = BigQueryPreviewService()
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             preview_data = bq_preview.bigquery_preview_data(
-                credentials, dataset_id, table_id, page_token, project_id, self.log
+                credentials,
+                dataset_id,
+                table_id,
+                max_results,
+                start_index,
+                project_id,
+                self.log,
             )
             self.finish(json.dumps(preview_data))
         except Exception as e:
@@ -139,7 +147,7 @@ class BigquerySearchController(APIHandler):
             system = self.get_argument("system")
             projects = [gcp_project(), bq_public_dataset_project_id]
             bq_search = BigQuerySearchService()
-            credentials = handlers.get_cached_credentials(self.log)
+            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             search_data = bq_search.bigquery_search(
                 credentials, search_string, type, system, projects, self.log
             )
