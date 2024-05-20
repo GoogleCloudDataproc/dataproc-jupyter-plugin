@@ -855,7 +855,7 @@ function CreateRunTime({
             aria-label="Loading Spinner"
             data-testid="loader"
           />
-          Loading RunTime
+          Loading Runtime
         </div>
       )}
 
