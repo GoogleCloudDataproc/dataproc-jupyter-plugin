@@ -1120,7 +1120,7 @@ function CreateRunTime({
                   )}
                 {!isloadingNetwork &&
                   selectedNetworkRadio === 'projectNetwork' &&
-                  networkSelected === '' &&
+                  networkSelected !== '' &&
                   subNetworkSelected === '' && (
                     <div className="error-key-parent">
                       <iconError.react
