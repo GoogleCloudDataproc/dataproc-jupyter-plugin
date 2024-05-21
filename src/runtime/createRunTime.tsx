@@ -188,8 +188,11 @@ function CreateRunTime({
     region,
     servicesSelected
   ]);
+
   useEffect(() => {
-    listSubNetworksAPI(networkSelected);
+    if (networkSelected !== '') {
+      listSubNetworksAPI(networkSelected);
+    }
   }, [networkSelected]);
 
   const displayUserInfo = async () => {
@@ -387,7 +390,9 @@ function CreateRunTime({
   const listNetworksAPI = async () => {
     await RunTimeSerive.listNetworksAPIService(
       setNetworklist,
-      setNetworkSelected
+      setNetworkSelected,
+      selectedRuntimeClone,
+      setIsloadingNetwork
     );
   };
 
@@ -395,7 +400,9 @@ function CreateRunTime({
     await RunTimeSerive.listSubNetworksAPIService(
       subnetwork,
       setSubNetworklist,
-      setSubNetworkSelected
+      setSubNetworkSelected,
+      selectedRuntimeClone,
+      setIsloadingNetwork
     );
   };
 
@@ -850,7 +857,7 @@ function CreateRunTime({
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -1111,9 +1118,10 @@ function CreateRunTime({
                       </div>
                     </div>
                   )}
-                {selectedNetworkRadio === 'projectNetwork' &&
-                  networkList.length !== 0 &&
-                  subNetworkList.length === 0 && (
+                {!isloadingNetwork &&
+                  selectedNetworkRadio === 'projectNetwork' &&
+                  networkSelected === '' &&
+                  subNetworkSelected === '' && (
                     <div className="error-key-parent">
                       <iconError.react
                         tag="div"
