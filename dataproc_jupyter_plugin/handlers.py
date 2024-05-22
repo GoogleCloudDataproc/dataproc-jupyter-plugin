@@ -20,15 +20,6 @@ import subprocess
 import threading
 import time
 
-from dataproc_jupyter_plugin.controllers.bigqueryController import (
-    BigqueryDatasetController,
-    BigqueryDatasetInfoController,
-    BigqueryPreviewController,
-    BigqueryProjectsController,
-    BigquerySearchController,
-    BigqueryTableController,
-    BigqueryTableInfoController,
-)
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.serverapp import ServerApp
 from jupyter_server.utils import url_path_join
@@ -39,16 +30,24 @@ from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
 from google.cloud.jupyter_config.config import (
+    async_run_gcloud_subcommand,
+    async_get_gcloud_config,
     clear_gcloud_cache,
-    gcp_credentials,
     gcp_kernel_gateway_url,
-    gcp_project,
     gcp_project_number,
     gcp_region,
-    get_gcloud_config,
-    run_gcloud_subcommand,
 )
 
+import dataproc_jupyter_plugin.credentials
+from dataproc_jupyter_plugin.controllers.bigqueryController import (
+    BigqueryDatasetController,
+    BigqueryDatasetInfoController,
+    BigqueryPreviewController,
+    BigqueryProjectsController,
+    BigquerySearchController,
+    BigqueryTableController,
+    BigqueryTableInfoController,
+)
 from dataproc_jupyter_plugin.controllers.clusterController import ClusterListController
 from dataproc_jupyter_plugin.controllers.composerController import ComposerListController
 from dataproc_jupyter_plugin.controllers.dagController import (
@@ -148,38 +147,16 @@ class CredentialsHandler(APIHandler):
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
     @tornado.web.authenticated
-    def get(self):
-        credentials = {
-            "project_id": "",
-            "project_number": 0,
-            "region_id": "",
-            "access_token": "",
-            "config_error": 0,
-            "login_error": 0,
-        }
-        try:
-            credentials["project_id"] = gcp_project()
-            credentials["region_id"] = gcp_region()
-            credentials["config_error"] = 0
-            credentials["access_token"] = gcp_credentials()
-            credentials["project_number"] = gcp_project_number()
-        except Exception as ex:
+    async def get(self):
+        cached = await credentials.get_cached()
+        if credentials["config_error"] == 1:
             self.log.exception(f"Error fetching credentials from gcloud")
-            credentials["config_error"] = 1
-        if not credentials["access_token"] or not credentials["project_number"]:
-            # These will only be set if the user is logged in to gcloud with
-            # an account that has the appropriate permissions on the configured
-            # project.
-            #
-            # As such, we treat them being missing as a signal that there is
-            # a problem with how the user is logged in to gcloud.
-            credentials["login_error"] = 1
-        self.finish(json.dumps(credentials))
+        self.finis(json.dumps(cached))
 
 
 class LoginHandler(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         cmd = "gcloud auth login"
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -194,14 +171,14 @@ class LoginHandler(APIHandler):
 
 class ConfigHandler(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    async def post(self):
         ERROR_MESSAGE = "Project and region update "
         input_data = self.get_json_body()
         project_id = input_data["projectId"]
         region = input_data["region"]
         try:
-            run_gcloud_subcommand(f"config set project {project_id}")
-            run_gcloud_subcommand(f"config set dataproc/region {region}")
+            await async_run_gcloud_subcommand(f"config set project {project_id}")
+            await async_run_gcloud_subcommand(f"config set dataproc/region {region}")
             clear_gcloud_cache()
             configure_gateway_client_url(self.config, self.log)
             self.finish({"config": ERROR_MESSAGE + "successful"})
@@ -213,16 +190,16 @@ class UrlHandler(APIHandler):
     url = {}
 
     @tornado.web.authenticated
-    def get(self):
-        dataproc_url = self.gcp_service_url("dataproc")
-        compute_url = self.gcp_service_url(
+    async def get(self):
+        dataproc_url = await self.gcp_service_url("dataproc")
+        compute_url = await self.gcp_service_url(
             "compute", default_url="https://compute.googleapis.com/compute/v1"
         )
-        metastore_url = self.gcp_service_url("metastore")
-        cloudkms_url = self.gcp_service_url("cloudkms")
-        cloudresourcemanager_url = self.gcp_service_url("cloudresourcemanager")
-        datacatalog_url = self.gcp_service_url("datacatalog")
-        storage_url = self.gcp_service_url(
+        metastore_url = await self.gcp_service_url("metastore")
+        cloudkms_url = await self.gcp_service_url("cloudkms")
+        cloudresourcemanager_url = await self.gcp_service_url("cloudresourcemanager")
+        datacatalog_url = await self.gcp_service_url("datacatalog")
+        storage_url = await self.gcp_service_url(
             "storage", default_url="https://storage.googleapis.com/storage/v1/"
         )
         url = {
@@ -235,10 +212,11 @@ class UrlHandler(APIHandler):
             "storage_url": storage_url,
         }
         self.finish(url)
+        return
 
-    def gcp_service_url(self, service_name, default_url=None):
+    async def gcp_service_url(self, service_name, default_url=None):
         default_url = default_url or f"https://{service_name}.googleapis.com/"
-        configured_url = get_gcloud_config(
+        configured_url = await async_get_gcloud_config(
             f"configuration.properties.api_endpoint_overrides.{service_name}"
         )
         url = configured_url or default_url
@@ -248,7 +226,7 @@ class UrlHandler(APIHandler):
 
 class LogHandler(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    async def post(self):
         logger = self.log.getChild("DataprocPluginClient")
         log_body = self.get_json_body()
         logger.log(log_body["level"], log_body["message"])
