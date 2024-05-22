@@ -31,6 +31,8 @@ async def _gcp_project():
 async def _gcp_project_number():
     """Helper method to get the project number for the project configured through gcloud"""
     project = await _gcp_project()
+    if not project:
+        return None
     return await async_run_gcloud_subcommand(
         f'projects describe {project} --format="value(projectNumber)"'
     )
@@ -54,11 +56,11 @@ async def get_cached():
         "login_error": 0,
     }
     try:
-        credentials["project_id"] = _gcp_project()
-        credentials["region_id"] = _gcp_region()
+        credentials["project_id"] = await _gcp_project()
+        credentials["region_id"] = await _gcp_region()
         credentials["config_error"] = 0
-        credentials["access_token"] = _gcp_credentials()
-        credentials["project_number"] = _gcp_project_number()
+        credentials["access_token"] = await _gcp_credentials()
+        credentials["project_number"] = await _gcp_project_number()
     except Exception as ex:
         self.log.exception(f"Error fetching credentials from gcloud")
         credentials["config_error"] = 1
