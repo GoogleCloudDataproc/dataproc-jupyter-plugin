@@ -151,7 +151,7 @@ class CredentialsHandler(APIHandler):
         cached = await credentials.get_cached()
         if credentials["config_error"] == 1:
             self.log.exception(f"Error fetching credentials from gcloud")
-        self.finis(json.dumps(cached))
+        self.finish(json.dumps(cached))
 
 
 class LoginHandler(APIHandler):
