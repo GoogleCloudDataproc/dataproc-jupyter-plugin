@@ -38,7 +38,7 @@ from google.cloud.jupyter_config.config import (
     gcp_region,
 )
 
-import dataproc_jupyter_plugin.credentials
+from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.controllers.bigqueryController import (
     BigqueryDatasetController,
     BigqueryDatasetInfoController,
