@@ -42,7 +42,9 @@ async def _gcp_region():
     """Helper method to get the project configured through gcloud"""
     region = await async_get_gcloud_config("configuration.properties.dataproc.region")
     if not region:
-        region = await async_get_gcloud_config("configuration.properties.compute.region")
+        region = await async_get_gcloud_config(
+            "configuration.properties.compute.region"
+        )
     return region
 
 
@@ -62,7 +64,6 @@ async def get_cached():
         credentials["access_token"] = await _gcp_credentials()
         credentials["project_number"] = await _gcp_project_number()
     except Exception as ex:
-        self.log.exception(f"Error fetching credentials from gcloud")
         credentials["config_error"] = 1
 
     if not credentials["access_token"] or not credentials["project_number"]:

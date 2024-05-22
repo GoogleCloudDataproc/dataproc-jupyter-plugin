@@ -17,6 +17,10 @@ import json
 
 from jupyter_server.base.handlers import APIHandler
 import tornado
+
+from google.cloud.jupyter_config import gcp_project
+
+from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services.bigqueryService import (
     BigQueryDatasetInfoService,
     BigQueryDatasetListService,
@@ -26,21 +30,22 @@ from dataproc_jupyter_plugin.services.bigqueryService import (
     BigQueryTableInfoService,
     BigQueryTableListService,
 )
-from dataproc_jupyter_plugin.commons.constants import bq_public_dataset_project_id
-from google.cloud.jupyter_config import gcp_project
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
 
 
-class BigqueryDatasetController(APIHandler):
+# GCP project holding BigQuery public datasets.
+BQ_PUBLIC_DATASET_PROJECT_ID = "bigquery-public-data"
+
+
+class DatasetController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
+            creds = await credentials.get_cached()
             page_token = self.get_argument("pageToken")
             project_id = self.get_argument("project_id")
             bigquery_dataset = BigQueryDatasetListService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dataset_list = bigquery_dataset.list_datasets(
-                credentials, page_token, project_id, self.log
+                creds, page_token, project_id, self.log
             )
             self.finish(json.dumps(dataset_list))
         except Exception as e:
@@ -48,17 +53,17 @@ class BigqueryDatasetController(APIHandler):
             self.finish({"error": str(e)})
 
 
-class BigqueryTableController(APIHandler):
+class TableController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
+            creds = await credentials.get_cached()
             page_token = self.get_argument("pageToken")
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
             bigquery_dataset = BigQueryTableListService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             table_list = bigquery_dataset.list_table(
-                credentials, dataset_id, page_token, project_id, self.log
+                creds, dataset_id, page_token, project_id, self.log
             )
             self.finish(json.dumps(table_list))
         except Exception as e:
@@ -66,16 +71,16 @@ class BigqueryTableController(APIHandler):
             self.finish({"error": str(e)})
 
 
-class BigqueryDatasetInfoController(APIHandler):
+class DatasetInfoController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
+            creds = await credentials.get_cached()
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
             bq_dataset = BigQueryDatasetInfoService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             dataset_info = bq_dataset.list_dataset_info(
-                credentials, dataset_id, project_id, self.log
+                creds, dataset_id, project_id, self.log
             )
             self.finish(json.dumps(dataset_info))
         except Exception as e:
@@ -83,17 +88,17 @@ class BigqueryDatasetInfoController(APIHandler):
             self.finish({"error": str(e)})
 
 
-class BigqueryTableInfoController(APIHandler):
+class TableInfoController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
+            creds = await credentials.get_cached()
             dataset_id = self.get_argument("dataset_id")
             table_id = self.get_argument("table_id")
             project_id = self.get_argument("project_id")
             bq_table = BigQueryTableInfoService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             table_info = bq_table.list_table_info(
-                credentials, dataset_id, table_id, project_id, self.log
+                creds, dataset_id, table_id, project_id, self.log
             )
             self.finish(json.dumps(table_info))
         except Exception as e:
@@ -101,19 +106,19 @@ class BigqueryTableInfoController(APIHandler):
             self.finish({"error": str(e)})
 
 
-class BigqueryPreviewController(APIHandler):
+class PreviewController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
+            creds = await credentials.get_cached()
             dataset_id = self.get_argument("dataset_id")
             table_id = self.get_argument("table_id")
             max_results = self.get_argument("max_results")
             start_index = self.get_argument("start_index")
             project_id = self.get_argument("project_id")
             bq_preview = BigQueryPreviewService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             preview_data = bq_preview.bigquery_preview_data(
-                credentials,
+                creds,
                 dataset_id,
                 table_id,
                 max_results,
@@ -127,29 +132,37 @@ class BigqueryPreviewController(APIHandler):
             self.finish({"error": str(e)})
 
 
-class BigqueryProjectsController(APIHandler):
+async def bq_projects_list():
+    creds = await credentials.get_cached()
+    project_list = [BQ_PUBLIC_DATASET_PROJECT_ID]
+    if creds["project_id"]:
+        project_list.append(creds["project_id"])
+    return project_list
+
+
+class ProjectsController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
-            project_list = [gcp_project(), bq_public_dataset_project_id]
+            project_list = await bq_projects_list()
             self.finish(json.dumps(project_list))
         except Exception as e:
             self.log.exception(f"Error fetching projects")
             self.finish({"error": str(e)})
 
 
-class BigquerySearchController(APIHandler):
+class SearchController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
+            creds = await credentials.get_cached()
             search_string = self.get_argument("search_string")
             type = self.get_argument("type")
             system = self.get_argument("system")
-            projects = [gcp_project(), bq_public_dataset_project_id]
+            projects = await bq_projects_list()
             bq_search = BigQuerySearchService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
             search_data = bq_search.bigquery_search(
-                credentials, search_string, type, system, projects, self.log
+                creds, search_string, type, system, projects, self.log
             )
             self.finish(json.dumps(search_data))
         except Exception as e:

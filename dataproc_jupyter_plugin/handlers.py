@@ -39,17 +39,12 @@ from google.cloud.jupyter_config.config import (
 )
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.controllers.bigqueryController import (
-    BigqueryDatasetController,
-    BigqueryDatasetInfoController,
-    BigqueryPreviewController,
-    BigqueryProjectsController,
-    BigquerySearchController,
-    BigqueryTableController,
-    BigqueryTableInfoController,
-)
+from dataproc_jupyter_plugin.controllers import bigquery
+
 from dataproc_jupyter_plugin.controllers.clusterController import ClusterListController
-from dataproc_jupyter_plugin.controllers.composerController import ComposerListController
+from dataproc_jupyter_plugin.controllers.composerController import (
+    ComposerListController,
+)
 from dataproc_jupyter_plugin.controllers.dagController import (
     DagDeleteController,
     DagDownloadController,
@@ -70,20 +65,22 @@ from dataproc_jupyter_plugin.controllers.importErrorController import (
     ImportErrorController,
 )
 from dataproc_jupyter_plugin.controllers.runtimeController import RuntimeController
-from dataproc_jupyter_plugin.controllers.triggerDagController import TriggerDagController
+from dataproc_jupyter_plugin.controllers.triggerDagController import (
+    TriggerDagController,
+)
 
 
-_region_not_set_error = '''GCP region not set in gcloud.
+_region_not_set_error = """GCP region not set in gcloud.
 
 You must configure either the `compute/region` or `dataproc/region` setting
 before you can use the Dataproc Jupyter Plugin.
-'''
+"""
 
-_project_number_not_set_error = '''GCP project number not set in gcloud.
+_project_number_not_set_error = """GCP project number not set in gcloud.
 
 You must configure the `core/project` setting in gcloud to a project that you
 have viewer permission on before you can use the Dataproc Jupyter Plugin.
-'''
+"""
 
 
 def configure_gateway_client_url(c, log):
@@ -264,13 +261,13 @@ def setup_handlers(web_app):
         "importErrorsList": ImportErrorController,
         "triggerDag": TriggerDagController,
         "downloadOutput": downloadOutputController,
-        "bigQueryDataset": BigqueryDatasetController,
-        "bigQueryTable": BigqueryTableController,
-        "bigQueryDatasetInfo": BigqueryDatasetInfoController,
-        "bigQueryTableInfo": BigqueryTableInfoController,
-        "bigQueryPreview": BigqueryPreviewController,
-        "bigQueryProjectsList": BigqueryProjectsController,
-        "bigQuerySearch": BigquerySearchController,
+        "bigQueryDataset": bigquery.DatasetController,
+        "bigQueryTable": bigquery.TableController,
+        "bigQueryDatasetInfo": bigquery.DatasetInfoController,
+        "bigQueryTableInfo": bigquery.TableInfoController,
+        "bigQueryPreview": bigquery.PreviewController,
+        "bigQueryProjectsList": bigquery.ProjectsController,
+        "bigQuerySearch": bigquery.SearchController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

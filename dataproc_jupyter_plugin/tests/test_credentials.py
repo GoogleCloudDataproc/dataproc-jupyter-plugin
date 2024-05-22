@@ -19,6 +19,7 @@ from google.cloud.jupyter_config.config import clear_gcloud_cache
 
 from .. import credentials
 
+
 class TestGetCached(unittest.IsolatedAsyncioTestCase):
     _mock_cloudsdk_variables = {
         "CLOUDSDK_AUTH_ACCESS_TOKEN": "example-token",
@@ -43,7 +44,7 @@ class TestGetCached(unittest.IsolatedAsyncioTestCase):
             os.environ[key] = self.original_cloudsdk_variables[key]
         clear_gcloud_cache()
         return
-    
+
     async def test_get_cached(self):
         cached = await credentials.get_cached()
         self.assertEqual(cached["project_id"], "")
