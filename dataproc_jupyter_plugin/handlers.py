@@ -149,7 +149,7 @@ class CredentialsHandler(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         cached = await credentials.get_cached()
-        if credentials["config_error"] == 1:
+        if cached["config_error"] == 1:
             self.log.exception(f"Error fetching credentials from gcloud")
         self.finish(json.dumps(cached))
 
