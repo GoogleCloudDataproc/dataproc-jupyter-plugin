@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.editDagService import DagEditService
@@ -22,13 +22,13 @@ from dataproc_jupyter_plugin.commons.constants import TAGS
 
 class EditDagController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             dag = DagEditService()
             bucket_name = self.get_argument("bucket_name")
             dag_id = self.get_argument("dag_id")
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            dag_details = dag.edit_jobs(dag_id, bucket_name, credentials, self.log)
+            gcp_credentials = await credentials.get_cached()
+            dag_details = dag.edit_jobs(dag_id, bucket_name, gcp_credentials, self.log)
             self.finish(json.dumps(dag_details))
         except Exception as e:
             self.log.exception(f"Error getting dag details")

@@ -14,7 +14,7 @@
 
 
 import json
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.runtimeListService import RuntimeListService
@@ -22,14 +22,14 @@ from dataproc_jupyter_plugin.services.runtimeListService import RuntimeListServi
 
 class RuntimeController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             page_token = self.get_argument("pageToken")
             page_size = self.get_argument("pageSize")
             runtime = RuntimeListService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            gcp_credentials = await credentials.get_cached()
             runtime_list = runtime.list_runtime(
-                credentials, page_size, page_token, self.log
+                gcp_credentials, page_size, page_token, self.log
             )
             self.finish(json.dumps(runtime_list))
         except Exception as e:

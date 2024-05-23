@@ -14,7 +14,7 @@
 
 
 import json
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.triggerDagService import TriggerDagService
@@ -22,13 +22,13 @@ from dataproc_jupyter_plugin.services.triggerDagService import TriggerDagService
 
 class TriggerDagController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             trigger_dag = TriggerDagService()
             dag_id = self.get_argument("dag_id")
             composer = self.get_argument("composer")
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            trigger = trigger_dag.dag_trigger(credentials, dag_id, composer, self.log)
+            gcp_credentials = await credentials.get_cached()
+            trigger = trigger_dag.dag_trigger(gcp_credentials, dag_id, composer, self.log)
             self.finish(json.dumps(trigger))
         except Exception as e:
             self.log.exception(f"Error triggering dag")

@@ -14,7 +14,7 @@
 
 
 import json
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.dagRunService import (
@@ -26,7 +26,7 @@ from dataproc_jupyter_plugin.services.dagRunService import (
 
 class DagRunController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             dag_run = DagRunListService()
             composer_name = self.get_argument("composer")
@@ -34,9 +34,9 @@ class DagRunController(APIHandler):
             start_date = self.get_argument("start_date")
             offset = self.get_argument("offset")
             end_date = self.get_argument("end_date")
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            gcp_credentials = await credentials.get_cached()
             dag_run_list = dag_run.list_dag_runs(
-                credentials,
+                gcp_credentials,
                 composer_name,
                 dag_id,
                 start_date,
@@ -52,15 +52,15 @@ class DagRunController(APIHandler):
 
 class DagRunTaskController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             dag_run = DagRunTaskListService()
             composer_name = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            gcp_credentials = await credentials.get_cached()
             dag_run_list = dag_run.list_dag_run_task(
-                credentials, composer_name, dag_id, dag_run_id, self.log
+                gcp_credentials, composer_name, dag_id, dag_run_id, self.log
             )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
@@ -70,7 +70,7 @@ class DagRunTaskController(APIHandler):
 
 class DagRunTaskLogsController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             dag_run = DagRunTaskLogsListService()
             composer_name = self.get_argument("composer")
@@ -78,9 +78,9 @@ class DagRunTaskLogsController(APIHandler):
             dag_run_id = self.get_argument("dag_run_id")
             task_id = self.get_argument("task_id")
             task_try_number = self.get_argument("task_try_number")
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            gcp_credentials = await credentials.get_cached()
             dag_run_list = dag_run.list_dag_run_task_logs(
-                credentials,
+                gcp_credentials,
                 composer_name,
                 dag_id,
                 dag_run_id,

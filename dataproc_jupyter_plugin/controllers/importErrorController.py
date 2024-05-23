@@ -14,7 +14,7 @@
 
 
 import json
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.importErrorService import ImportErrorService
@@ -22,13 +22,13 @@ from dataproc_jupyter_plugin.services.importErrorService import ImportErrorServi
 
 class ImportErrorController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             import_errors = ImportErrorService()
             composer_name = self.get_argument("composer")
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            gcp_credentials = await credentials.get_cached()
             import_errors_list = import_errors.list_import_errors(
-                credentials, composer_name, self.log
+                gcp_credentials, composer_name, self.log
             )
             self.finish(json.dumps(import_errors_list))
         except Exception as e:

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import json
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.composerService import ComposerService
@@ -22,12 +22,12 @@ from requests import HTTPError
 
 class ComposerListController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         """Returns names of available composer environments"""
         try:
             environments_manager = ComposerService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            environments = environments_manager.list_environments(credentials, self.log)
+            gcp_credentials = await credentials.get_cached()
+            environments = environments_manager.list_environments(gcp_credentials, self.log)
 
         except Exception as e:
             self.log.exception(f"Error fetching composer environments: {str(e)}")

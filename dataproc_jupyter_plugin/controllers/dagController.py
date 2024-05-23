@@ -15,7 +15,7 @@
 
 import json
 import subprocess
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.dagListService import (
@@ -28,12 +28,12 @@ from dataproc_jupyter_plugin.commons.constants import TAGS
 
 class DagListController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             dag = DagListService()
             composer_name = self.get_argument("composer")
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            dag_list = dag.list_jobs(credentials, composer_name, TAGS, self.log)
+            gcp_credentials = await credentials.get_cached()
+            dag_list = dag.list_jobs(gcp_credentials, composer_name, TAGS, self.log)
             self.finish(json.dumps(dag_list))
         except Exception as e:
             self.log.exception(f"Error fetching cluster list")
@@ -64,15 +64,15 @@ class DagDownloadController(APIHandler):
 
 class DagDeleteController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             dag = DagDeleteService()
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             from_page = self.get_argument("from_page", default=None)
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            gcp_credentials = await credentials.get_cached()
             delete_response = dag.delete_job(
-                credentials, composer, dag_id, from_page, self.log
+                gcp_credentials, composer, dag_id, from_page, self.log
             )
             if delete_response == 0:
                 self.finish(json.dumps({"status": delete_response}))
@@ -86,15 +86,15 @@ class DagDeleteController(APIHandler):
 
 class DagUpdateController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             dag = DagUpdateService()
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             status = self.get_argument("status")
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
+            gcp_credentials = await credentials.get_cached()
             update_response = dag.update_job(
-                credentials, composer, dag_id, status, self.log
+                gcp_credentials, composer, dag_id, status, self.log
             )
             if update_response == 0:
                 self.finish({"status": 0})

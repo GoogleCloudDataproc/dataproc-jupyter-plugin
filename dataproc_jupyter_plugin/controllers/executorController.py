@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin.services.executorService import ExecutorService
@@ -21,12 +21,12 @@ from dataproc_jupyter_plugin.services.executorService import ExecutorService
 
 class ExecutorController(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    async def post(self):
         try:
             input_data = self.get_json_body()
             execute = ExecutorService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            execute.execute(credentials, input_data, self.log)
+            gcp_credentials = await credentials.get_cached()
+            execute.execute(gcp_credentials, input_data, self.log)
         except Exception as e:
             self.log.exception(f"Error creating dag schedule: {str(e)}")
             self.finish({"error": str(e)})

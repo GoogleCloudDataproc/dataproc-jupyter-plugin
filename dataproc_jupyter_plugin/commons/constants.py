@@ -19,9 +19,7 @@ ENVIRONMENT_API = "https://composer.googleapis.com/v1"
 TAGS = "dataproc_jupyter_plugin"
 GCS = "gs://"
 CONTENT_TYPE = "application/json"
-
-
-dataproc_url = gcp_service_url("dataproc")
+bigquery_url = gcp_service_url("bigquery")
 dataproc_url = gcp_service_url("dataproc")
 compute_url = gcp_service_url(
     "compute", default_url="https://compute.googleapis.com/compute/v1"

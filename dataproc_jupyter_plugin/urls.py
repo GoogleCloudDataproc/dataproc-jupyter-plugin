@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.cloud import jupyter_config
+from dataproc_jupyter_plugin.services.gcpUrlService import gcp_service_url
 
 
 async def map():
@@ -37,12 +37,3 @@ async def map():
         "storage_url": storage_url,
     }
     return url_map
-
-
-async def gcp_service_url(service_name, default_url=None):
-    default_url = default_url or f"https://{service_name}.googleapis.com/"
-    configured_url = await jupyter_config.async_get_gcloud_config(
-        f"configuration.properties.api_endpoint_overrides.{service_name}"
-    )
-    url = configured_url or default_url
-    return url
