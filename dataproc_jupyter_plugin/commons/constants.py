@@ -36,4 +36,3 @@ storage_url = gcp_service_url(
 dataplex_url = gcp_service_url(
     "dataplex", default_url="https://dataplex.googleapis.com/v1"
 )
-bq_public_dataset_project_id = "bigquery-public-data"
