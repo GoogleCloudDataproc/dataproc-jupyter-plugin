@@ -27,7 +27,7 @@ class Client:
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            log.exception(f"Missing required credentials")
+            self.log.exception(f"Missing required credentials")
             raise ValueError("Missing required credentials")
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
@@ -47,7 +47,7 @@ class Client:
                 resp = response.json()
                 return resp
             else:
-                raise Exception(f"Error response from BigQuery: {response.body}")
+                raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception(f"Error fetching datasets list")
             return {"error": str(e)}
@@ -60,7 +60,7 @@ class Client:
                 resp = response.json()
                 return resp
             else:
-                raise Exception(f"Error response from BigQuery: {response.body}")
+                raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception(f"Error fetching tables list")
             return {"error": str(e)}
@@ -73,7 +73,7 @@ class Client:
                 resp = response.json()
                 return resp
             else:
-                raise Exception(f"Error response from BigQuery: {response.body}")
+                raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception(f"Error fetching dataset info")
             return {"error": str(e)}
@@ -86,9 +86,9 @@ class Client:
                 resp = response.json()
                 return resp
             else:
-                raise Exception(f"Error response from BigQuery: {response.body}")
+                raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            log.exception(f"Error fetching table information")
+            self.log.exception(f"Error fetching table information")
             return {"error": str(e)}
 
     async def bigquery_preview_data(
@@ -106,9 +106,9 @@ class Client:
                 resp = response.json()
                 return resp
             else:
-                raise Exception(f"Error response from BigQuery: {response.body}")
+                raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            log.exception(f"Error fetching preview data")
+            self.log.exception(f"Error fetching preview data")
             return {"error": str(e)}
 
     async def bigquery_search(self, search_string, type, system, projects):
@@ -138,13 +138,13 @@ class Client:
                     else:
                         has_next = False
                 else:
-                    raise Exception(f"Error response from BigQuery: {response.body}")
+                    raise Exception(f"Error response from BigQuery: {response}")
             if len(search_result) == 0:
                 return {}
             else:
                 return {"results": search_result}
         except Exception as e:
-            log.exception(f"Error fetching search data")
+            self.log.exception(f"Error fetching search data")
             return {"error": str(e)}
 
     async def bigquery_projects(self, dataset_id, table_id):
@@ -155,7 +155,7 @@ class Client:
                 resp = response.json()
                 return resp
             else:
-                raise Exception(f"Error response from BigQuery: {response.body}")
+                raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            log.exception(f"Error fetching projects")
+            self.log.exception(f"Error fetching projects")
             return {"error": str(e)}
