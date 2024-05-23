@@ -38,7 +38,7 @@ from google.cloud.jupyter_config.config import (
     gcp_region,
 )
 
-from dataproc_jupyter_plugin import credentials
+from dataproc_jupyter_plugin import credentials, urls
 from dataproc_jupyter_plugin.controllers import bigquery
 
 from dataproc_jupyter_plugin.controllers.clusterController import ClusterListController
@@ -188,37 +188,10 @@ class UrlHandler(APIHandler):
 
     @tornado.web.authenticated
     async def get(self):
-        dataproc_url = await self.gcp_service_url("dataproc")
-        compute_url = await self.gcp_service_url(
-            "compute", default_url="https://compute.googleapis.com/compute/v1"
-        )
-        metastore_url = await self.gcp_service_url("metastore")
-        cloudkms_url = await self.gcp_service_url("cloudkms")
-        cloudresourcemanager_url = await self.gcp_service_url("cloudresourcemanager")
-        datacatalog_url = await self.gcp_service_url("datacatalog")
-        storage_url = await self.gcp_service_url(
-            "storage", default_url="https://storage.googleapis.com/storage/v1/"
-        )
-        url = {
-            "dataproc_url": dataproc_url,
-            "compute_url": compute_url,
-            "metastore_url": metastore_url,
-            "cloudkms_url": cloudkms_url,
-            "cloudresourcemanager_url": cloudresourcemanager_url,
-            "datacatalog_url": datacatalog_url,
-            "storage_url": storage_url,
-        }
-        self.finish(url)
+        url_map = await urls.map()
+        self.log.info(f"Service URL map: {url_map}")
+        self.finish(url_map)
         return
-
-    async def gcp_service_url(self, service_name, default_url=None):
-        default_url = default_url or f"https://{service_name}.googleapis.com/"
-        configured_url = await async_get_gcloud_config(
-            f"configuration.properties.api_endpoint_overrides.{service_name}"
-        )
-        url = configured_url or default_url
-        self.log.info(f"Service_url for service {service_name}: {url}")
-        return url
 
 
 class LogHandler(APIHandler):

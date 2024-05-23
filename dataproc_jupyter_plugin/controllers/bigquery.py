@@ -21,15 +21,7 @@ import tornado
 from google.cloud.jupyter_config import gcp_project
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services.bigqueryService import (
-    BigQueryDatasetInfoService,
-    BigQueryDatasetListService,
-    BigQueryPreviewService,
-    BigQueryProjectService,
-    BigQuerySearchService,
-    BigQueryTableInfoService,
-    BigQueryTableListService,
-)
+from dataproc_jupyter_plugin.services import bigquery
 
 
 # GCP project holding BigQuery public datasets.
@@ -40,13 +32,10 @@ class DatasetController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
-            creds = await credentials.get_cached()
             page_token = self.get_argument("pageToken")
             project_id = self.get_argument("project_id")
-            bigquery_dataset = BigQueryDatasetListService()
-            dataset_list = bigquery_dataset.list_datasets(
-                creds, page_token, project_id, self.log
-            )
+            client = bigquery.Client(await credentials.get_cached(), self.log)
+            dataset_list = await client.list_datasets(page_token, project_id)
             self.finish(json.dumps(dataset_list))
         except Exception as e:
             self.log.exception(f"Error fetching datasets")
@@ -57,14 +46,11 @@ class TableController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
-            creds = await credentials.get_cached()
             page_token = self.get_argument("pageToken")
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
-            bigquery_dataset = BigQueryTableListService()
-            table_list = bigquery_dataset.list_table(
-                creds, dataset_id, page_token, project_id, self.log
-            )
+            client = bigquery.Client(await credentials.get_cached(), self.log)
+            table_list = await client.list_table(dataset_id, page_token, project_id)
             self.finish(json.dumps(table_list))
         except Exception as e:
             self.log.exception(f"Error fetching datasets")
@@ -75,13 +61,10 @@ class DatasetInfoController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
-            creds = await credentials.get_cached()
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
-            bq_dataset = BigQueryDatasetInfoService()
-            dataset_info = bq_dataset.list_dataset_info(
-                creds, dataset_id, project_id, self.log
-            )
+            client = bigquery.Client(await credentials.get_cached(), self.log)
+            dataset_info = await client.list_dataset_info(dataset_id, project_id)
             self.finish(json.dumps(dataset_info))
         except Exception as e:
             self.log.exception(f"Error fetching dataset information")
@@ -92,14 +75,11 @@ class TableInfoController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
-            creds = await credentials.get_cached()
             dataset_id = self.get_argument("dataset_id")
             table_id = self.get_argument("table_id")
             project_id = self.get_argument("project_id")
-            bq_table = BigQueryTableInfoService()
-            table_info = bq_table.list_table_info(
-                creds, dataset_id, table_id, project_id, self.log
-            )
+            client = bigquery.Client(await credentials.get_cached(), self.log)
+            table_info = await client.list_table_info(dataset_id, table_id, project_id)
             self.finish(json.dumps(table_info))
         except Exception as e:
             self.log.exception(f"Error fetching table information")
@@ -110,21 +90,18 @@ class PreviewController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
-            creds = await credentials.get_cached()
             dataset_id = self.get_argument("dataset_id")
             table_id = self.get_argument("table_id")
             max_results = self.get_argument("max_results")
             start_index = self.get_argument("start_index")
             project_id = self.get_argument("project_id")
-            bq_preview = BigQueryPreviewService()
-            preview_data = bq_preview.bigquery_preview_data(
-                creds,
+            client = bigquery.Client(await credentials.get_cached(), self.log)
+            preview_data = await client.bigquery_preview_data(
                 dataset_id,
                 table_id,
                 max_results,
                 start_index,
                 project_id,
-                self.log,
             )
             self.finish(json.dumps(preview_data))
         except Exception as e:
@@ -155,14 +132,13 @@ class SearchController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
-            creds = await credentials.get_cached()
             search_string = self.get_argument("search_string")
             type = self.get_argument("type")
             system = self.get_argument("system")
             projects = await bq_projects_list()
-            bq_search = BigQuerySearchService()
-            search_data = bq_search.bigquery_search(
-                creds, search_string, type, system, projects, self.log
+            client = bigquery.Client(await credentials.get_cached(), self.log)
+            search_data = await client.bigquery_search(
+                search_string, type, system, projects
             )
             self.finish(json.dumps(search_data))
         except Exception as e:

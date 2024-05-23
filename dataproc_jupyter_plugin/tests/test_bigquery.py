@@ -15,16 +15,11 @@
 import json
 import requests
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
+from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services.bigqueryService import (
-    BigQueryDatasetInfoService,
-    BigQueryDatasetListService,
-    BigQueryPreviewService,
-    BigQueryTableListService,
-    BigQueryTableInfoService,
-)
 
 
 async def mock_credentials():
@@ -214,6 +209,10 @@ async def test_search(monkeypatch, jp_fetch):
         }
         return response
 
+    async def mock_config(config_field):
+        return ""
+
+    monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(requests, "post", mock_post)
 
