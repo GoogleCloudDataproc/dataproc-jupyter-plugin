@@ -14,7 +14,15 @@
 
 from google.cloud import jupyter_config
 
-async def gcp_service_url(service_name, default_url=None):
+def gcp_service_url(service_name, default_url=None):
+    default_url = default_url or f"https://{service_name}.googleapis.com/"
+    configured_url = jupyter_config.get_gcloud_config(
+        f"configuration.properties.api_endpoint_overrides.{service_name}"
+    )
+    url = configured_url or default_url
+    return url
+
+async def async_gcp_service_url(service_name, default_url=None):
     default_url = default_url or f"https://{service_name}.googleapis.com/"
     configured_url = await jupyter_config.async_get_gcloud_config(
         f"configuration.properties.api_endpoint_overrides.{service_name}"
