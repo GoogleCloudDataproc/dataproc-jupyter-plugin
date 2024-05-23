@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,17 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback
+} from 'react';
 import TextField from '@mui/material/TextField';
 import Autocomplete, { AutocompleteProps } from '@mui/material/Autocomplete';
 import { ChipTypeMap, Paper, PaperProps } from '@mui/material';
+import { handleDebounce } from '../utils/utils';
 
 type Props = {
   fetchFunc: (search: string) => Promise<string[]>;
@@ -26,7 +33,7 @@ type Props = {
 };
 
 /**
- * Component to render a dyanmic selector dropdown.
+ * Component to render a dynamic selector dropdown.
  */
 export function DynamicDropdown(
   props: Props &
@@ -45,22 +52,30 @@ export function DynamicDropdown(
   const [search, setSearch] = useState('');
   const [filteredList, setFilteredList] = useState<string[]>([]);
   const currentSearch = useRef(search);
+
+  const debouncedFetch = useCallback(
+    handleDebounce((search: string) => {
+      currentSearch.current = search;
+      fetchFunc(search).then(items => {
+        if (currentSearch.current !== search) {
+          // The prefix changed while the network request was pending
+          // so we should throw away these results.
+          return;
+        }
+        setFilteredList(items);
+      });
+    }, 500), // 5ms debounce
+    [fetchFunc]
+  );
+
   useEffect(() => {
-    currentSearch.current = search;
-    fetchFunc(search).then(items => {
-      if (currentSearch.current != search) {
-        // The prefix changed while the network request was pending
-        // so we should throw away these results.
-        return;
-      }
-      setFilteredList(items);
-    });
-  }, [search, fetchFunc]);
+    debouncedFetch(search);
+  }, [search, debouncedFetch]);
 
   /**
-   * This is the last selected value when the dropdown is opened.  We
+   * This is the last selected value when the dropdown is opened. We
    * always ensure that the current ID exists in the dropdown list,
-   * preppending it if necessary.
+   * prepending it if necessary.
    */
   const [hoistedValue, setHoistedValue] = useState(value);
 
@@ -76,6 +91,7 @@ export function DynamicDropdown(
     }
     return filteredList;
   }, [filteredList, hoistedValue]) as string[];
+
   return (
     <Autocomplete
       value={value}
