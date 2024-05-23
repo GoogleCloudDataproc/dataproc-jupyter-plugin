@@ -275,7 +275,7 @@ export class JobService {
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=500&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
