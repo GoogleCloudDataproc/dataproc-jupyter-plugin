@@ -20,15 +20,6 @@ import subprocess
 import threading
 import time
 
-from dataproc_jupyter_plugin.controllers.bigqueryController import (
-    BigqueryDatasetController,
-    BigqueryDatasetInfoController,
-    BigqueryPreviewController,
-    BigqueryProjectsController,
-    BigquerySearchController,
-    BigqueryTableController,
-    BigqueryTableInfoController,
-)
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.serverapp import ServerApp
 from jupyter_server.utils import url_path_join
@@ -39,18 +30,21 @@ from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
 from google.cloud.jupyter_config.config import (
+    async_run_gcloud_subcommand,
+    async_get_gcloud_config,
     clear_gcloud_cache,
-    gcp_credentials,
     gcp_kernel_gateway_url,
-    gcp_project,
     gcp_project_number,
     gcp_region,
-    get_gcloud_config,
-    run_gcloud_subcommand,
 )
 
+from dataproc_jupyter_plugin import credentials, urls
+from dataproc_jupyter_plugin.controllers import bigquery
+
 from dataproc_jupyter_plugin.controllers.clusterController import ClusterListController
-from dataproc_jupyter_plugin.controllers.composerController import ComposerListController
+from dataproc_jupyter_plugin.controllers.composerController import (
+    ComposerListController,
+)
 from dataproc_jupyter_plugin.controllers.dagController import (
     DagDeleteController,
     DagDownloadController,
@@ -71,20 +65,22 @@ from dataproc_jupyter_plugin.controllers.importErrorController import (
     ImportErrorController,
 )
 from dataproc_jupyter_plugin.controllers.runtimeController import RuntimeController
-from dataproc_jupyter_plugin.controllers.triggerDagController import TriggerDagController
+from dataproc_jupyter_plugin.controllers.triggerDagController import (
+    TriggerDagController,
+)
 
 
-_region_not_set_error = '''GCP region not set in gcloud.
+_region_not_set_error = """GCP region not set in gcloud.
 
 You must configure either the `compute/region` or `dataproc/region` setting
 before you can use the Dataproc Jupyter Plugin.
-'''
+"""
 
-_project_number_not_set_error = '''GCP project number not set in gcloud.
+_project_number_not_set_error = """GCP project number not set in gcloud.
 
 You must configure the `core/project` setting in gcloud to a project that you
 have viewer permission on before you can use the Dataproc Jupyter Plugin.
-'''
+"""
 
 
 def configure_gateway_client_url(c, log):
@@ -148,38 +144,16 @@ class CredentialsHandler(APIHandler):
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
     @tornado.web.authenticated
-    def get(self):
-        credentials = {
-            "project_id": "",
-            "project_number": 0,
-            "region_id": "",
-            "access_token": "",
-            "config_error": 0,
-            "login_error": 0,
-        }
-        try:
-            credentials["project_id"] = gcp_project()
-            credentials["region_id"] = gcp_region()
-            credentials["config_error"] = 0
-            credentials["access_token"] = gcp_credentials()
-            credentials["project_number"] = gcp_project_number()
-        except Exception as ex:
+    async def get(self):
+        cached = await credentials.get_cached()
+        if cached["config_error"] == 1:
             self.log.exception(f"Error fetching credentials from gcloud")
-            credentials["config_error"] = 1
-        if not credentials["access_token"] or not credentials["project_number"]:
-            # These will only be set if the user is logged in to gcloud with
-            # an account that has the appropriate permissions on the configured
-            # project.
-            #
-            # As such, we treat them being missing as a signal that there is
-            # a problem with how the user is logged in to gcloud.
-            credentials["login_error"] = 1
-        self.finish(json.dumps(credentials))
+        self.finish(json.dumps(cached))
 
 
 class LoginHandler(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         cmd = "gcloud auth login"
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -194,14 +168,14 @@ class LoginHandler(APIHandler):
 
 class ConfigHandler(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    async def post(self):
         ERROR_MESSAGE = "Project and region update "
         input_data = self.get_json_body()
         project_id = input_data["projectId"]
         region = input_data["region"]
         try:
-            run_gcloud_subcommand(f"config set project {project_id}")
-            run_gcloud_subcommand(f"config set dataproc/region {region}")
+            await async_run_gcloud_subcommand(f"config set project {project_id}")
+            await async_run_gcloud_subcommand(f"config set dataproc/region {region}")
             clear_gcloud_cache()
             configure_gateway_client_url(self.config, self.log)
             self.finish({"config": ERROR_MESSAGE + "successful"})
@@ -213,42 +187,16 @@ class UrlHandler(APIHandler):
     url = {}
 
     @tornado.web.authenticated
-    def get(self):
-        dataproc_url = self.gcp_service_url("dataproc")
-        compute_url = self.gcp_service_url(
-            "compute", default_url="https://compute.googleapis.com/compute/v1"
-        )
-        metastore_url = self.gcp_service_url("metastore")
-        cloudkms_url = self.gcp_service_url("cloudkms")
-        cloudresourcemanager_url = self.gcp_service_url("cloudresourcemanager")
-        datacatalog_url = self.gcp_service_url("datacatalog")
-        storage_url = self.gcp_service_url(
-            "storage", default_url="https://storage.googleapis.com/storage/v1/"
-        )
-        url = {
-            "dataproc_url": dataproc_url,
-            "compute_url": compute_url,
-            "metastore_url": metastore_url,
-            "cloudkms_url": cloudkms_url,
-            "cloudresourcemanager_url": cloudresourcemanager_url,
-            "datacatalog_url": datacatalog_url,
-            "storage_url": storage_url,
-        }
-        self.finish(url)
-
-    def gcp_service_url(self, service_name, default_url=None):
-        default_url = default_url or f"https://{service_name}.googleapis.com/"
-        configured_url = get_gcloud_config(
-            f"configuration.properties.api_endpoint_overrides.{service_name}"
-        )
-        url = configured_url or default_url
-        self.log.info(f"Service_url for service {service_name}: {url}")
-        return url
+    async def get(self):
+        url_map = await urls.map()
+        self.log.info(f"Service URL map: {url_map}")
+        self.finish(url_map)
+        return
 
 
 class LogHandler(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    async def post(self):
         logger = self.log.getChild("DataprocPluginClient")
         log_body = self.get_json_body()
         logger.log(log_body["level"], log_body["message"])
@@ -286,13 +234,13 @@ def setup_handlers(web_app):
         "importErrorsList": ImportErrorController,
         "triggerDag": TriggerDagController,
         "downloadOutput": downloadOutputController,
-        "bigQueryDataset": BigqueryDatasetController,
-        "bigQueryTable": BigqueryTableController,
-        "bigQueryDatasetInfo": BigqueryDatasetInfoController,
-        "bigQueryTableInfo": BigqueryTableInfoController,
-        "bigQueryPreview": BigqueryPreviewController,
-        "bigQueryProjectsList": BigqueryProjectsController,
-        "bigQuerySearch": BigquerySearchController,
+        "bigQueryDataset": bigquery.DatasetController,
+        "bigQueryTable": bigquery.TableController,
+        "bigQueryDatasetInfo": bigquery.DatasetInfoController,
+        "bigQueryTableInfo": bigquery.TableInfoController,
+        "bigQueryPreview": bigquery.PreviewController,
+        "bigQueryProjectsList": bigquery.ProjectsController,
+        "bigQuerySearch": bigquery.SearchController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)
