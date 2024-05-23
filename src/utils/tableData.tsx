@@ -31,26 +31,28 @@ function TableData({
   tableDataCondition,
   fromPage
 }: any) {
-  const [listDagRunHeight, setListDagRunHeight] = useState(window.innerHeight - 505);
+  const [listDagRunHeight, setListDagRunHeight] = useState(
+    window.innerHeight - 505
+  );
 
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 505;
     setListDagRunHeight(updateHeight);
   }
 
-   // Debounce the handleUpdateHeight function
-   const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
 
-   // Add event listener for window resize using useEffect
-   useEffect(() => {
-     window.addEventListener('resize', debouncedHandleUpdateHeight);
- 
-     // Cleanup function to remove event listener on component unmount
-     return () => {
-       window.removeEventListener('resize', debouncedHandleUpdateHeight);
-     };
-   }, []);
-  
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
+
   const displayData = page ? page : rows;
 
   return (
@@ -78,7 +80,13 @@ function TableData({
         style={fromPage === 'Dag Runs' ? { maxHeight: listDagRunHeight } : null}
       >
         {isLoading ? (
-          <div className="spin-loader">
+          <div
+            className={
+              fromPage === 'Preview'
+                ? 'spin-loader-preview-data'
+                : 'spin-loader'
+            }
+          >
             <CircularProgress
               className="spin-loader-custom-style"
               size={18}
