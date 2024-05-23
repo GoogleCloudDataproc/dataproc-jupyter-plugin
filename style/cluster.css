@@ -111,6 +111,13 @@
   margin-left: 10px;
 }
 
+.spin-loader-preview-data {
+  display: flex;
+  margin-top: 10px;
+  margin-left: 10px;
+  width: 150px;
+}
+
 .spin-loader-main {
   display: flex;
   max-height: 100%;
