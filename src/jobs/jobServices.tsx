@@ -266,6 +266,7 @@ export class JobService {
     setIsLoading: (value: boolean) => void,
     setjobsList: any,
     renderActions: (value: IRenderActionsData) => React.JSX.Element,
+    controllerSignal: any,
     nextPageToken?: string,
     previousJobsList?: object
   ) => {
@@ -346,12 +347,13 @@ export class JobService {
                 ...transformJobListData
               ];
 
-              if (responseResult.nextPageToken) {
+              if (responseResult.nextPageToken && responseResult.jobs && !controllerSignal.aborted) {
                 this.listJobsAPIService(
                   clusterSelected,
                   setIsLoading,
                   setjobsList,
                   renderActions,
+                  controllerSignal,
                   responseResult.nextPageToken,
                   allJobsData
                 );

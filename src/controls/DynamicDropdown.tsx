@@ -58,13 +58,12 @@ export function DynamicDropdown(
       currentSearch.current = search;
       fetchFunc(search).then(items => {
         if (currentSearch.current !== search) {
-          // The prefix changed while the network request was pending
-          // so we should throw away these results.
+          //To update the results as per change in prefix
           return;
         }
         setFilteredList(items);
       });
-    }, 500), // 5ms debounce
+    }, 500), // 500ms debounce
     [fetchFunc]
   );
 
