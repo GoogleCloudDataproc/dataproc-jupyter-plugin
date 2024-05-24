@@ -64,8 +64,7 @@ class Client:
             self.log.exception(f"Error getting bucket name: {str(e)}")
             print(f"Error: {e}")
 
-    @staticmethod
-    def check_file_exists(bucket, file_path, log):
+    def check_file_exists(self, bucket, file_path):
         cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -77,10 +76,9 @@ class Client:
             if "matched no objects" in error.decode():
                 return False
             else:
-                log.exception(f"Error cheking file existence: {error.decode()}")
+                self.log.exception(f"Error cheking file existence: {error.decode()}")
                 raise FileNotFoundError(error.decode)
         
-    @staticmethod
     def upload_papermill_to_gcs(self, gcs_dag_bucket):
         env = Environment(
             loader=PackageLoader(PACKAGE_NAME, "dagTemplates"),
@@ -100,7 +98,6 @@ class Client:
             self.log.exception(f"Error uploading papermill file to gcs: {error.decode()}")
             raise IOError(error.decode)
 
-    @staticmethod
     def upload_input_file_to_gcs(self, input, gcs_dag_bucket, job_name):
         cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
         process = subprocess.Popen(
@@ -113,7 +110,6 @@ class Client:
             self.log.exception(f"Error uploading input file to gcs: {error.decode()}")
             raise IOError(error.decode)
         
-    @staticmethod
     def prepare_dag(self, job, gcs_dag_bucket, dag_file):
         self.log.info(f"Generating dag file")
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
@@ -218,12 +214,9 @@ class Client:
                 metastore_service=metastore_service,
                 version=version,
             )
-
-        print(content)
         with open(dag_file, mode="w", encoding="utf-8") as message:
             message.write(content)
 
-    @staticmethod
     def upload_dag_to_gcs(self, dag_file, gcs_dag_bucket):
         cmd = f"gsutil cp '{dag_file}' gs://{gcs_dag_bucket}/dags/"
         process = subprocess.Popen(
@@ -248,19 +241,17 @@ class Client:
         gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
         remote_file_path = "wrapper_papermill.py"
 
-        if self.check_file_exists(gcs_dag_bucket, remote_file_path, self.log):
+        if self.check_file_exists(gcs_dag_bucket, remote_file_path):
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} exists.")
         else:
             self.upload_papermill_to_gcs(gcs_dag_bucket)
             print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
         if not job.input_filename.startswith(GCS):
-            self.upload_input_file_to_gcs(
-                self, job.input_filename, gcs_dag_bucket, job_name
-            )
+            self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
         self.prepare_dag(job, gcs_dag_bucket, dag_file)
         self.upload_dag_to_gcs(dag_file, gcs_dag_bucket)
 
-    def download_dag_output(self, bucket_name, dag_id, dag_run_id, log):
+    def download_dag_output(self, bucket_name, dag_id, dag_run_id):
         try:
             cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb' ./"
             process = subprocess.Popen(
@@ -270,8 +261,8 @@ class Client:
             if process.returncode == 0:
                 return 0
             else:
-                log.exception(f"Error downloading output notebook file")
+                self.log.exception(f"Error downloading output notebook file")
                 return 1
         except Exception as e:
-            log.exception(f"Error downloading output notebook file: {str(e)}")
+            self.log.exception(f"Error downloading output notebook file: {str(e)}")
             return {"error": str(e)}
