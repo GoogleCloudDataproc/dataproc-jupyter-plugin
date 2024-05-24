@@ -949,7 +949,9 @@ function CreateBatch({
   };
 
   const handleServiceSelected = (data: string | null) => {
-    setServicesSelected(data!.toString());
+    if (data !== null) {
+      setServicesSelected(data!.toString());
+    }
   };
 
   const handleProjectIdChange = (data: any, network: string | undefined) => {
@@ -959,12 +961,16 @@ function CreateBatch({
     regionListAPI(data, network);
   };
   const handleNetworkChange = async (data: DropdownProps | null) => {
-    setNetworkSelected(data!.toString());
+    if (data !== null) {
+      setNetworkSelected(data!.toString());
+    }
     await listSubNetworksAPI(data!.toString());
     await handleProjectIdChange(projectId, data!.toString());
   };
   const handleSubNetworkChange = (data: string | null) => {
-    setSubNetworkSelected(data!.toString());
+    if (data !== null) {
+      setSubNetworkSelected(data!.toString());
+    }
   };
   const handleKeyRingChange = (data: string | null) => {
     setKeyRingSelected(data!.toString());

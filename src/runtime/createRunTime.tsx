@@ -523,7 +523,9 @@ function CreateRunTime({
     setSharedvpcSelected('');
   };
   const handleSubNetworkChange = (data: string | null) => {
-    setSubNetworkSelected(data!.toString());
+    if (data !== null) {
+      setSubNetworkSelected(data!.toString());
+    }
   };
   const handleSharedSubNetwork = async (data: string | null) => {
     setSharedvpcSelected(data!.toString());

@@ -245,7 +245,9 @@ function SubmitJob({
   };
 
   const handleClusterSelected = (data: DropdownProps | null) => {
-    setClusterSelected(data!.toString());
+    if (data !== null) {
+      setClusterSelected(data!.toString());
+    }
   };
 
   const handleJobTypeSelected = (
