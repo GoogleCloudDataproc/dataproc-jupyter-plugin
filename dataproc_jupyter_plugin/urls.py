@@ -11,18 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from dataproc_jupyter_plugin.services.gcpUrlService import async_gcp_service_url
+from google.cloud import jupyter_config
 
 async def map():
-    dataproc_url = await async_gcp_service_url("dataproc")
-    compute_url = await async_gcp_service_url(
+    dataproc_url = await gcp_service_url("dataproc")
+    compute_url = await gcp_service_url(
         "compute", default_url="https://compute.googleapis.com/compute/v1"
     )
-    metastore_url = await async_gcp_service_url("metastore")
-    cloudkms_url = await async_gcp_service_url("cloudkms")
-    cloudresourcemanager_url = await async_gcp_service_url("cloudresourcemanager")
-    datacatalog_url = await async_gcp_service_url("datacatalog")
-    storage_url = await async_gcp_service_url(
+    metastore_url = await gcp_service_url("metastore")
+    cloudkms_url = await gcp_service_url("cloudkms")
+    cloudresourcemanager_url = await gcp_service_url("cloudresourcemanager")
+    datacatalog_url = await gcp_service_url("datacatalog")
+    storage_url = await gcp_service_url(
         "storage", default_url="https://storage.googleapis.com/storage/v1/"
     )
     url_map = {
@@ -35,3 +35,12 @@ async def map():
         "storage_url": storage_url,
     }
     return url_map
+
+
+async def gcp_service_url(service_name, default_url=None):
+    default_url = default_url or f"https://{service_name}.googleapis.com/"
+    configured_url = await jupyter_config.async_get_gcloud_config(
+        f"configuration.properties.api_endpoint_overrides.{service_name}"
+    )
+    url = configured_url or default_url
+    return url
