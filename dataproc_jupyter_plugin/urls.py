@@ -13,17 +13,19 @@
 # limitations under the License.
 from google.cloud import jupyter_config
 
+from dataproc_jupyter_plugin.commons.constants import CLOUDKMS_SERVICE_NAME, CLOUDRESOURCEMANAGER_SERVICE_NAME, COMPUTE_SERVICE_DEFAULT_URL, COMPUTE_SERVICE_NAME, DATACATALOG_SERVICE_NAME, DATAPROC_SERVICE_NAME, METASTORE_SERVICE_NAME, STORAGE_SERVICE_DEFAULT_URL, STORAGE_SERVICE_NAME
+
 async def map():
-    dataproc_url = await gcp_service_url("dataproc")
+    dataproc_url = await gcp_service_url(DATAPROC_SERVICE_NAME)
     compute_url = await gcp_service_url(
-        "compute", default_url="https://compute.googleapis.com/compute/v1"
+        COMPUTE_SERVICE_NAME, default_url=COMPUTE_SERVICE_DEFAULT_URL
     )
-    metastore_url = await gcp_service_url("metastore")
-    cloudkms_url = await gcp_service_url("cloudkms")
-    cloudresourcemanager_url = await gcp_service_url("cloudresourcemanager")
-    datacatalog_url = await gcp_service_url("datacatalog")
+    metastore_url = await gcp_service_url(METASTORE_SERVICE_NAME)
+    cloudkms_url = await gcp_service_url(CLOUDKMS_SERVICE_NAME)
+    cloudresourcemanager_url = await gcp_service_url(CLOUDRESOURCEMANAGER_SERVICE_NAME)
+    datacatalog_url = await gcp_service_url(DATACATALOG_SERVICE_NAME)
     storage_url = await gcp_service_url(
-        "storage", default_url="https://storage.googleapis.com/storage/v1/"
+        STORAGE_SERVICE_NAME, default_url=STORAGE_SERVICE_DEFAULT_URL
     )
     url_map = {
         "dataproc_url": dataproc_url,

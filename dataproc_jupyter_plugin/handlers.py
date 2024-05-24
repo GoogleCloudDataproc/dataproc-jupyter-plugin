@@ -40,35 +40,10 @@ from google.cloud.jupyter_config.config import (
 
 from dataproc_jupyter_plugin import credentials, urls
 from dataproc_jupyter_plugin.controllers import bigquery
-
-from dataproc_jupyter_plugin.controllers.clusterController import ClusterListController
-from dataproc_jupyter_plugin.controllers.composerController import (
-    ComposerListController,
-)
-from dataproc_jupyter_plugin.controllers.dagController import (
-    DagDeleteController,
-    DagDownloadController,
-    DagListController,
-    DagUpdateController,
-)
-from dataproc_jupyter_plugin.controllers.dagRunController import (
-    DagRunController,
-    DagRunTaskController,
-    DagRunTaskLogsController,
-)
-from dataproc_jupyter_plugin.controllers.downloadOutputController import (
-    downloadOutputController,
-)
-from dataproc_jupyter_plugin.controllers.editDagController import EditDagController
-from dataproc_jupyter_plugin.controllers.executorController import ExecutorController
-from dataproc_jupyter_plugin.controllers.importErrorController import (
-    ImportErrorController,
-)
-from dataproc_jupyter_plugin.controllers.runtimeController import RuntimeController
-from dataproc_jupyter_plugin.controllers.triggerDagController import (
-    TriggerDagController,
-)
-
+from dataproc_jupyter_plugin.controllers import dataproc
+from dataproc_jupyter_plugin.controllers import composer
+from dataproc_jupyter_plugin.controllers import airflow
+from dataproc_jupyter_plugin.controllers import executor
 
 _region_not_set_error = """GCP region not set in gcloud.
 
@@ -219,21 +194,21 @@ def setup_handlers(web_app):
         "configuration": ConfigHandler,
         "getGcpServiceUrls": UrlHandler,
         "log": LogHandler,
-        "composerList": ComposerListController,
-        "dagRun": DagRunController,
-        "dagRunTask": DagRunTaskController,
-        "dagRunTaskLogs": DagRunTaskLogsController,
-        "clusterList": ClusterListController,
-        "runtimeList": RuntimeController,
-        "createJobScheduler": ExecutorController,
-        "dagList": DagListController,
-        "dagDownload": DagDownloadController,
-        "dagDelete": DagDeleteController,
-        "dagUpdate": DagUpdateController,
-        "editJobScheduler": EditDagController,
-        "importErrorsList": ImportErrorController,
-        "triggerDag": TriggerDagController,
-        "downloadOutput": downloadOutputController,
+        "composerList": composer.EnvironmentListController,
+        "dagRun": airflow.DagRunController,
+        "dagRunTask": airflow.DagRunTaskController,
+        "dagRunTaskLogs": airflow.DagRunTaskLogsController,
+        "clusterList": dataproc.ClusterListController,
+        "runtimeList": dataproc.RuntimeController,
+        "createJobScheduler": executor.ExecutorController,
+        "dagList": airflow.DagListController,
+        "dagDownload": airflow.DagDownloadController,
+        "dagDelete": airflow.DagDeleteController,
+        "dagUpdate": airflow.DagUpdateController,
+        "editJobScheduler": airflow.EditDagController,
+        "importErrorsList": airflow.ImportErrorController,
+        "triggerDag": airflow.TriggerDagController,
+        "downloadOutput": executor.DownloadOutputController,
         "bigQueryDataset": bigquery.DatasetController,
         "bigQueryTable": bigquery.TableController,
         "bigQueryDatasetInfo": bigquery.DatasetInfoController,
