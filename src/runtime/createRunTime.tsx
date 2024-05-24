@@ -460,7 +460,9 @@ function CreateRunTime({
   };
 
   const handleServiceSelected = (data: string | null) => {
-    setServicesSelected(data!.toString());
+    if (data !== null) {
+      setServicesSelected(data!.toString());
+    }
   };
   const handleIdleSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
