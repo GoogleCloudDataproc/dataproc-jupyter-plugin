@@ -23,7 +23,6 @@ from google.cloud.jupyter_config import gcp_project
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import bigquery
 
-
 # GCP project holding BigQuery public datasets.
 BQ_PUBLIC_DATASET_PROJECT_ID = "bigquery-public-data"
 
