@@ -318,7 +318,16 @@ function CreateBatch({
     listKeysAPI(keyRingSelected);
   }, [keyRingSelected]);
   useEffect(() => {
-    listSubNetworksAPI(networkSelected);
+    if (
+      batchInfoResponse === undefined ||
+      batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri
+    ) {
+      if (networkSelected !== '') {
+        listSubNetworksAPI(networkSelected);
+      }
+    } else {
+      listSubNetworksAPI(networkSelected);
+    }
   }, [networkSelected]);
   useEffect(() => {
     const batchTypeData = [
@@ -635,7 +644,9 @@ function CreateBatch({
   const listNetworksAPI = async () => {
     await BatchService.listNetworksAPIService(
       setNetworklist,
-      setNetworkSelected
+      setNetworkSelected,
+      batchInfoResponse,
+      setIsloadingNetwork
     );
   };
 
@@ -651,7 +662,9 @@ function CreateBatch({
     await BatchService.listSubNetworksAPIService(
       subnetwork,
       setSubNetworklist,
-      setSubNetworkSelected
+      setSubNetworkSelected,
+      batchInfoResponse,
+      setIsloadingNetwork
     );
   };
 
@@ -1643,7 +1656,8 @@ function CreateBatch({
                   </div>
                 </div>
               )}
-            {selectedNetworkRadio === 'projectNetwork' &&
+            {!isloadingNetwork &&
+              selectedNetworkRadio === 'projectNetwork' &&
               networkList.length !== 0 &&
               subNetworkList.length === 0 && (
                 <div className="error-key-parent">
