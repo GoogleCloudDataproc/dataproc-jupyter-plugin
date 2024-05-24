@@ -16,7 +16,6 @@ import json
 from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin.services.executorService import ExecutorService
 from dataproc_jupyter_plugin.services import executor
 
 
