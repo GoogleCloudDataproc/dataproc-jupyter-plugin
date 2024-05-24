@@ -315,8 +315,11 @@ function CreateBatch({
     setKeySelected('');
   };
   useEffect(() => {
-    listKeysAPI(keyRingSelected);
+    if (keyRingSelected !== '') {
+      listKeysAPI(keyRingSelected);
+    }
   }, [keyRingSelected]);
+
   useEffect(() => {
     if (
       batchInfoResponse === undefined ||
