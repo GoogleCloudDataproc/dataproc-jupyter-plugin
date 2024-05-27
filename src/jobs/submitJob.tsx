@@ -249,7 +249,9 @@ function SubmitJob({
   };
 
   const handleJobTypeSelected = (data: DropdownProps | null) => {
-    setJobTypeSelected(data!.toString());
+    if (data !== null) {
+      setJobTypeSelected(data!.toString());
+    }
     setFileSelected([]);
     setJarFileSelected([]);
     setAdditionalPythonFileSelected([]);
@@ -266,7 +268,9 @@ function SubmitJob({
     event: SyntheticEvent<Element, Event>,
     data: DropdownProps | null
   ) => {
-    setQuerySourceSelected(data!.toString());
+    if (data !== null) {
+      setQuerySourceSelected(data!.toString());
+    }
   };
   interface IClusterData {
     clusterName: string;

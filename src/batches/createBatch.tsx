@@ -677,8 +677,10 @@ function CreateBatch({
   };
 
   const handleSharedSubNetwork = async (data: string | null) => {
-    setSharedvpcSelected(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setSharedvpcSelected(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
 
   type Payload = {
@@ -925,7 +927,9 @@ function CreateBatch({
   };
 
   const handleBatchTypeSelected = (data: DropdownProps | null) => {
-    setBatchTypeSelected(data!.toString());
+    if (data !== null) {
+      setBatchTypeSelected(data!.toString());
+    }
     setFilesSelected([]);
     setJarFilesSelected([]);
     setAdditionalPythonFileSelected([]);
@@ -952,9 +956,9 @@ function CreateBatch({
   const handleNetworkChange = async (data: DropdownProps | null) => {
     if (data !== null) {
       setNetworkSelected(data!.toString());
+      await listSubNetworksAPI(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
     }
-    await listSubNetworksAPI(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
   };
   const handleSubNetworkChange = (data: string | null) => {
     if (data !== null) {
@@ -962,11 +966,15 @@ function CreateBatch({
     }
   };
   const handleKeyRingChange = (data: string | null) => {
-    setKeyRingSelected(data!.toString());
-    listKeysAPI(data!.toString());
+    if (data !== null) {
+      setKeyRingSelected(data!.toString());
+      listKeysAPI(data!.toString());
+    }
   };
   const handlekeyChange = (data: string | null) => {
-    setKeySelected(data!.toString());
+    if (data !== null) {
+      setKeySelected(data!.toString());
+    }
   };
   const handleMainClassSelected = (value: string) => {
     setMainClassUpdated(true);
