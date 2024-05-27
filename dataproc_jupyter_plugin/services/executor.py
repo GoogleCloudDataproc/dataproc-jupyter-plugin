@@ -20,7 +20,7 @@ import pendulum
 from datetime import datetime, timedelta
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import COMPOSER_SERVICE_NAME, CONTENT_TYPE, GCS, PACKAGE_NAME
+from dataproc_jupyter_plugin.commons.constants import COMPOSER_SERVICE_NAME, CONTENT_TYPE, GCS, PACKAGE_NAME, WRAPPER_PAPPERMILL_FILE
 from dataproc_jupyter_plugin.models.models import DescribeJob
 from google.cloud.jupyter_config.config import gcp_account
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -239,13 +239,13 @@ class Client:
         job_name = job.name
         dag_file = f"dag_{job_name}.py"
         gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
-        remote_file_path = "wrapper_papermill.py"
+        wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
 
-        if self.check_file_exists(gcs_dag_bucket, remote_file_path):
-            print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} exists.")
+        if self.check_file_exists(gcs_dag_bucket, wrapper_pappermill_file_path):
+            print(f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists.")
         else:
             self.upload_papermill_to_gcs(gcs_dag_bucket)
-            print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
+            print(f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist.")
         if not job.input_filename.startswith(GCS):
             self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
         self.prepare_dag(job, gcs_dag_bucket, dag_file)
