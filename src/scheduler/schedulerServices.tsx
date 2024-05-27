@@ -455,7 +455,7 @@ export class SchedulerService {
     setRedListDates([]);
     setGreenListDates([]);
     setDarkGreenListDates([]);
-    try {     
+    try {
       const data: any = await requestAPI(
         `dagRun?composer=${composerName}&dag_id=${dagId}&start_date=${start_date}&end_date=${end_date}&offset=${offset}`
       );
@@ -664,24 +664,6 @@ export class SchedulerService {
           toastId: 'clusterError'
         });
       }
-    }
-  };
-  static handleDownloadSchedulerAPIService = async (
-    composerSelected: string,
-    jobid: string,
-    bucketName: string
-  ) => {
-    try {
-      const serviceURL = `dagDownload?composer=${composerSelected}&dag_id=${jobid}&bucket_name=${bucketName}`;
-      const formattedResponse: any = await requestAPI(serviceURL);
-      if (formattedResponse.status === 0) {
-        toast.success(`${jobid} downloaded successfully`, toastifyCustomStyle);
-      } else {
-        toast.error(`Failed to download the ${jobid}`, toastifyCustomStyle);
-      }
-    } catch (error) {
-      DataprocLoggingService.log('Error in Download api', LOG_LEVEL.ERROR);
-      toast.error(`Error in Download api : ${error}`, toastifyCustomStyle);
     }
   };
   static handleDownloadOutputNotebookAPIService = async (
