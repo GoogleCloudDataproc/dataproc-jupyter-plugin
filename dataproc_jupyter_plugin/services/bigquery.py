@@ -16,7 +16,12 @@
 import requests
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import BIGQUERY_SERVICE_NAME, CLOUDRESOURCEMANAGER_SERVICE_NAME, CONTENT_TYPE, DATACATALOG_SERVICE_NAME
+from dataproc_jupyter_plugin.commons.constants import (
+    BIGQUERY_SERVICE_NAME,
+    CLOUDRESOURCEMANAGER_SERVICE_NAME,
+    CONTENT_TYPE,
+    DATACATALOG_SERVICE_NAME,
+)
 
 
 class Client:
@@ -70,7 +75,9 @@ class Client:
     async def list_dataset_info(self, dataset_id, project_id):
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
+            api_endpoint = (
+                f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
+            )
             response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:
                 resp = response.json()
@@ -154,7 +161,9 @@ class Client:
 
     async def bigquery_projects(self, dataset_id, table_id):
         try:
-            cloudresourcemanager_url = await urls.gcp_service_url(CLOUDRESOURCEMANAGER_SERVICE_NAME)
+            cloudresourcemanager_url = await urls.gcp_service_url(
+                CLOUDRESOURCEMANAGER_SERVICE_NAME
+            )
             api_endpoint = f"{cloudresourcemanager_url}v1/projects"
             response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:

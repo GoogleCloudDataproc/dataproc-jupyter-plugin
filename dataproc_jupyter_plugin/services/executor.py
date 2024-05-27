@@ -20,7 +20,13 @@ import pendulum
 from datetime import datetime, timedelta
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import COMPOSER_SERVICE_NAME, CONTENT_TYPE, GCS, PACKAGE_NAME, WRAPPER_PAPPERMILL_FILE
+from dataproc_jupyter_plugin.commons.constants import (
+    COMPOSER_SERVICE_NAME,
+    CONTENT_TYPE,
+    GCS,
+    PACKAGE_NAME,
+    WRAPPER_PAPPERMILL_FILE,
+)
 from dataproc_jupyter_plugin.models.models import DescribeJob
 from google.cloud.jupyter_config.config import gcp_account
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -30,6 +36,7 @@ job_id = ""
 job_name = ""
 TEMPLATES_FOLDER_PATH = "dagTemplates"
 ROOT_FOLDER = PACKAGE_NAME
+
 
 class Client:
     def __init__(self, credentials, log):
@@ -78,7 +85,7 @@ class Client:
             else:
                 self.log.exception(f"Error cheking file existence: {error.decode()}")
                 raise FileNotFoundError(error.decode)
-        
+
     def upload_papermill_to_gcs(self, gcs_dag_bucket):
         env = Environment(
             loader=PackageLoader(PACKAGE_NAME, "dagTemplates"),
@@ -95,7 +102,9 @@ class Client:
             self.log.info(f"Papermill file uploaded to gcs successfully")
             print(process.returncode, error, output)
         else:
-            self.log.exception(f"Error uploading papermill file to gcs: {error.decode()}")
+            self.log.exception(
+                f"Error uploading papermill file to gcs: {error.decode()}"
+            )
             raise IOError(error.decode)
 
     def upload_input_file_to_gcs(self, input, gcs_dag_bucket, job_name):
@@ -109,7 +118,7 @@ class Client:
         else:
             self.log.exception(f"Error uploading input file to gcs: {error.decode()}")
             raise IOError(error.decode)
-        
+
     def prepare_dag(self, job, gcs_dag_bucket, dag_file):
         self.log.info(f"Generating dag file")
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
@@ -117,7 +126,7 @@ class Client:
         environment = Environment(
             loader=PackageLoader("dataproc_jupyter_plugin", TEMPLATES_FOLDER_PATH)
         )
-        
+
         gcp_project_id = self.project_id
         gcp_region_id = self.region_id
         user = gcp_account()
@@ -230,7 +239,6 @@ class Client:
             self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
             raise IOError(error.decode)
 
-        
     async def execute(self, input_data):
         job = DescribeJob(**input_data)
         global job_id
@@ -242,10 +250,14 @@ class Client:
         wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
 
         if self.check_file_exists(gcs_dag_bucket, wrapper_pappermill_file_path):
-            print(f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists.")
+            print(
+                f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists."
+            )
         else:
             self.upload_papermill_to_gcs(gcs_dag_bucket)
-            print(f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist.")
+            print(
+                f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
+            )
         if not job.input_filename.startswith(GCS):
             self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
         self.prepare_dag(job, gcs_dag_bucket, dag_file)

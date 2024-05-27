@@ -15,7 +15,11 @@
 import requests
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE, DATAPROC_SERVICE_NAME
+from dataproc_jupyter_plugin.commons.constants import (
+    CONTENT_TYPE,
+    DATAPROC_SERVICE_NAME,
+)
+
 
 class Client:
     def __init__(self, credentials, log):
@@ -36,7 +40,7 @@ class Client:
             "Content-Type": CONTENT_TYPE,
             "Authorization": f"Bearer {self._access_token}",
         }
-    
+
     async def list_clusters(self, page_size, page_token):
         try:
             dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
