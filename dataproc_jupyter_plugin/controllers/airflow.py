@@ -19,6 +19,7 @@ from dataproc_jupyter_plugin.services import airflow
 from jupyter_server.base.handlers import APIHandler
 import tornado
 
+
 class DagListController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
@@ -30,6 +31,7 @@ class DagListController(APIHandler):
         except Exception as e:
             self.log.exception(f"Error fetching cluster list")
             self.finish({"error": str(e)})
+
 
 class DagDeleteController(APIHandler):
     @tornado.web.authenticated
@@ -49,6 +51,7 @@ class DagDeleteController(APIHandler):
             self.log.exception(f"Error deleting dag file: {str(e)}")
             self.finish({"error": str(e)})
 
+
 class DagUpdateController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
@@ -67,25 +70,6 @@ class DagUpdateController(APIHandler):
             self.log.exception(f"Error updating status: {str(e)}")
             self.finish({"error": str(e)})
 
-class DagDownloadController(APIHandler):
-    @tornado.web.authenticated
-    def get(self):
-        try:
-            dag_id = self.get_argument("dag_id")
-            bucket_name = self.get_argument("bucket_name")
-            cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-notebooks/{dag_id}/input_notebooks/*' ~/Downloads"
-            process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-            )
-            output, _ = process.communicate()
-            if process.returncode == 0:
-                self.finish({"status": 0})
-            else:
-                self.log.exception(f"Error downloading input notebook")
-                self.finish({"status": 1})
-        except Exception as e:
-            self.log.exception(f"Error downloading input notebook: {str(e)}")
-            self.finish({"error": str(e)})
 
 class DagRunController(APIHandler):
     @tornado.web.authenticated
@@ -98,16 +82,13 @@ class DagRunController(APIHandler):
             offset = self.get_argument("offset")
             end_date = self.get_argument("end_date")
             dag_run_list = await client.list_dag_runs(
-                composer_name,
-                dag_id,
-                start_date,
-                end_date,
-                offset
+                composer_name, dag_id, start_date, end_date, offset
             )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
             self.log.exception(f"Error fetching dag run list {str(e)}")
             self.finish({"error": str(e)})
+
 
 class DagRunTaskController(APIHandler):
     @tornado.web.authenticated
@@ -117,12 +98,15 @@ class DagRunTaskController(APIHandler):
             composer_name = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
-            dag_run_list = await client.list_dag_run_task(composer_name, dag_id, dag_run_id)
+            dag_run_list = await client.list_dag_run_task(
+                composer_name, dag_id, dag_run_id
+            )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
             self.log.exception(f"Error fetching dag run tasks: {str(e)}")
             self.finish({"error": str(e)})
-            
+
+
 class DagRunTaskLogsController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
@@ -133,11 +117,14 @@ class DagRunTaskLogsController(APIHandler):
             dag_run_id = self.get_argument("dag_run_id")
             task_id = self.get_argument("task_id")
             task_try_number = self.get_argument("task_try_number")
-            dag_run_list = await client.list_dag_run_task_logs(composer_name, dag_id, dag_run_id, task_id, task_try_number)
+            dag_run_list = await client.list_dag_run_task_logs(
+                composer_name, dag_id, dag_run_id, task_id, task_try_number
+            )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
             self.log.exception(f"Error fetching dag run task logs: {str(e)}")
             self.finish({"error": str(e)})
+
 
 class EditDagController(APIHandler):
     @tornado.web.authenticated
@@ -152,6 +139,7 @@ class EditDagController(APIHandler):
             self.log.exception(f"Error getting dag details")
             self.finish({"error": str(e)})
 
+
 class ImportErrorController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
@@ -163,6 +151,7 @@ class ImportErrorController(APIHandler):
         except Exception as e:
             self.log.exception(f"Error fetching import error list")
             self.finish({"error": str(e)})
+
 
 class TriggerDagController(APIHandler):
     @tornado.web.authenticated
