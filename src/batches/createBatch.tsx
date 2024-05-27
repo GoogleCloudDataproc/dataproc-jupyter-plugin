@@ -169,8 +169,8 @@ function CreateBatch({
       keyType =
         batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
       const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
-      keyRing = keyringValues[5];
-      keys = keyringValues[7];
+      keyRing = keyringValues[5] ? keyringValues[5] : '';
+      keys = keyringValues[7] ? keyringValues[7] : '';
       historyServerValue =
         batchInfoResponse?.environmentConfig?.peripheralsConfig
           ?.sparkHistoryServerConfig?.dataprocCluster || '';
