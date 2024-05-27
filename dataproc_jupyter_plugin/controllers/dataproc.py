@@ -32,6 +32,7 @@ class ClusterListController(APIHandler):
             self.log.exception(f"Error fetching cluster list")
             self.finish({"error": str(e)})
 
+
 class RuntimeController(APIHandler):
     @tornado.web.authenticated
     async def get(self):

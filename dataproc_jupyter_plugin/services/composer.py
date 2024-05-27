@@ -17,7 +17,10 @@ import requests
 from typing import List
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.models.models import ComposerEnvironment
-from dataproc_jupyter_plugin.commons.constants import COMPOSER_SERVICE_NAME, CONTENT_TYPE
+from dataproc_jupyter_plugin.commons.constants import (
+    COMPOSER_SERVICE_NAME,
+    CONTENT_TYPE,
+)
 
 
 class Client:

@@ -507,10 +507,12 @@ function CreateRunTime({
   };
 
   const handleNetworkChange = async (data: DropdownProps | null) => {
-    setNetworkSelected(data!.toString());
-    setSubNetworkSelected(defaultValue);
-    await listSubNetworksAPI(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setNetworkSelected(data!.toString());
+      setSubNetworkSelected(defaultValue);
+      await listSubNetworksAPI(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
 
   const handleNetworkSharedVpcRadioChange = () => {
@@ -523,11 +525,15 @@ function CreateRunTime({
     setSharedvpcSelected('');
   };
   const handleSubNetworkChange = (data: string | null) => {
-    setSubNetworkSelected(data!.toString());
+    if (data !== null) {
+      setSubNetworkSelected(data!.toString());
+    }
   };
   const handleSharedSubNetwork = async (data: string | null) => {
-    setSharedvpcSelected(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setSharedvpcSelected(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);

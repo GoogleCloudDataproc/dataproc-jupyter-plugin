@@ -202,7 +202,6 @@ def setup_handlers(web_app):
         "runtimeList": dataproc.RuntimeController,
         "createJobScheduler": executor.ExecutorController,
         "dagList": airflow.DagListController,
-        "dagDownload": airflow.DagDownloadController,
         "dagDelete": airflow.DagDeleteController,
         "dagUpdate": airflow.DagUpdateController,
         "editJobScheduler": airflow.EditDagController,

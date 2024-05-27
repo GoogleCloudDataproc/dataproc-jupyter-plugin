@@ -30,6 +30,7 @@ class ExecutorController(APIHandler):
             self.log.exception(f"Error creating dag schedule: {str(e)}")
             self.finish({"error": str(e)})
 
+
 class DownloadOutputController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
@@ -39,7 +40,7 @@ class DownloadOutputController(APIHandler):
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
             download_status = client.download_dag_output(
-                bucket_name, dag_id, dag_run_id, self.log
+                bucket_name, dag_id, dag_run_id
             )
             self.finish(json.dumps({"status": download_status}))
         except Exception as e:
