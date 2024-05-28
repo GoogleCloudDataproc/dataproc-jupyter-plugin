@@ -39,6 +39,7 @@ export class BigQueryService {
     setTotalRowSize: (value: string) => void,
     setPreviewDataList: any
   ) => {
+    setIsLoading(true);
     try {
       const startIndex = pageIndex * maxResults;
       const data: any = await requestAPI(

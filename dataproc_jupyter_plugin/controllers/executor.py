@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,24 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import json
+from dataproc_jupyter_plugin import credentials
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.downloadOutputService import DownloadOutputService
+from dataproc_jupyter_plugin.services import executor
 
 
-class downloadOutputController(APIHandler):
+class ExecutorController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def post(self):
         try:
-            download_dag = DownloadOutputService()
+            input_data = self.get_json_body()
+            client = executor.Client(await credentials.get_cached(), self.log)
+            await client.execute(input_data)
+        except Exception as e:
+            self.log.exception(f"Error creating dag schedule: {str(e)}")
+            self.finish({"error": str(e)})
+
+
+class DownloadOutputController(APIHandler):
+    @tornado.web.authenticated
+    async def get(self):
+        try:
+            client = executor.Client(await credentials.get_cached(), self.log)
             bucket_name = self.get_argument("bucket_name")
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
-            download_status = download_dag.download_dag_output(
-                bucket_name, dag_id, dag_run_id, self.log
+            download_status = client.download_dag_output(
+                bucket_name, dag_id, dag_run_id
             )
             self.finish(json.dumps({"status": download_status}))
         except Exception as e:

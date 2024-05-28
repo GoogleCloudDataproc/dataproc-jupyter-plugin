@@ -188,8 +188,11 @@ function CreateRunTime({
     region,
     servicesSelected
   ]);
+
   useEffect(() => {
-    listSubNetworksAPI(networkSelected);
+    if (networkSelected !== '') {
+      listSubNetworksAPI(networkSelected);
+    }
   }, [networkSelected]);
 
   const displayUserInfo = async () => {
@@ -387,7 +390,9 @@ function CreateRunTime({
   const listNetworksAPI = async () => {
     await RunTimeSerive.listNetworksAPIService(
       setNetworklist,
-      setNetworkSelected
+      setNetworkSelected,
+      selectedRuntimeClone,
+      setIsloadingNetwork
     );
   };
 
@@ -395,7 +400,9 @@ function CreateRunTime({
     await RunTimeSerive.listSubNetworksAPIService(
       subnetwork,
       setSubNetworklist,
-      setSubNetworkSelected
+      setSubNetworkSelected,
+      selectedRuntimeClone,
+      setIsloadingNetwork
     );
   };
 
@@ -453,7 +460,9 @@ function CreateRunTime({
   };
 
   const handleServiceSelected = (data: string | null) => {
-    setServicesSelected(data!.toString());
+    if (data !== null) {
+      setServicesSelected(data!.toString());
+    }
   };
   const handleIdleSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -498,10 +507,12 @@ function CreateRunTime({
   };
 
   const handleNetworkChange = async (data: DropdownProps | null) => {
-    setNetworkSelected(data!.toString());
-    setSubNetworkSelected(defaultValue);
-    await listSubNetworksAPI(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setNetworkSelected(data!.toString());
+      setSubNetworkSelected(defaultValue);
+      await listSubNetworksAPI(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
 
   const handleNetworkSharedVpcRadioChange = () => {
@@ -514,11 +525,15 @@ function CreateRunTime({
     setSharedvpcSelected('');
   };
   const handleSubNetworkChange = (data: string | null) => {
-    setSubNetworkSelected(data!.toString());
+    if (data !== null) {
+      setSubNetworkSelected(data!.toString());
+    }
   };
   const handleSharedSubNetwork = async (data: string | null) => {
-    setSharedvpcSelected(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setSharedvpcSelected(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
@@ -850,7 +865,7 @@ function CreateRunTime({
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -1111,9 +1126,10 @@ function CreateRunTime({
                       </div>
                     </div>
                   )}
-                {selectedNetworkRadio === 'projectNetwork' &&
-                  networkList.length !== 0 &&
-                  subNetworkList.length === 0 && (
+                {!isloadingNetwork &&
+                  selectedNetworkRadio === 'projectNetwork' &&
+                  networkSelected !== '' &&
+                  subNetworkSelected === '' && (
                     <div className="error-key-parent">
                       <iconError.react
                         tag="div"

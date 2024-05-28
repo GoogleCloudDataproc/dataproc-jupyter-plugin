@@ -266,6 +266,7 @@ export class JobService {
     setIsLoading: (value: boolean) => void,
     setjobsList: any,
     renderActions: (value: IRenderActionsData) => React.JSX.Element,
+    controllerSignal: any,
     nextPageToken?: string,
     previousJobsList?: object
   ) => {
@@ -275,7 +276,7 @@ export class JobService {
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=500&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -346,12 +347,13 @@ export class JobService {
                 ...transformJobListData
               ];
 
-              if (responseResult.nextPageToken) {
+              if (responseResult.nextPageToken && responseResult.jobs && !controllerSignal.aborted) {
                 this.listJobsAPIService(
                   clusterSelected,
                   setIsLoading,
                   setjobsList,
                   renderActions,
+                  controllerSignal,
                   responseResult.nextPageToken,
                   allJobsData
                 );
