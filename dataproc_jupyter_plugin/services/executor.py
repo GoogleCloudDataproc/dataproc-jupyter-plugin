@@ -23,6 +23,7 @@ from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
     CONTENT_TYPE,
+    DIRECTORY,
     GCS,
     PACKAGE_NAME,
     WRAPPER_PAPPERMILL_FILE,
@@ -36,6 +37,7 @@ job_id = ""
 job_name = ""
 TEMPLATES_FOLDER_PATH = "dagTemplates"
 ROOT_FOLDER = PACKAGE_NAME
+
 
 
 class Client:
@@ -223,18 +225,22 @@ class Client:
                 metastore_service=metastore_service,
                 version=version,
             )
-        with open(dag_file, mode="w", encoding="utf-8") as message:
+
+        file_path = os.path.join(DIRECTORY, dag_file)
+        os.makedirs(DIRECTORY, exist_ok=True)
+        with open(file_path, mode="w", encoding="utf-8") as message:
             message.write(content)
 
     def upload_dag_to_gcs(self, dag_file, gcs_dag_bucket):
-        cmd = f"gsutil cp '{dag_file}' gs://{gcs_dag_bucket}/dags/"
+        file_path = os.path.join(DIRECTORY, dag_file)
+        cmd = f"gsutil cp '{file_path}' gs://{gcs_dag_bucket}/dags/"
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
         output, error = process.communicate()
         if process.returncode == 0:
             self.log.info(f"Dag file uploaded to gcs successfully")
-            os.remove(dag_file)
+
         if process.returncode != 0:
             self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
             raise IOError(error.decode)
