@@ -23,7 +23,7 @@ from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
     CONTENT_TYPE,
-    DIRECTORY,
+    LOCAL_DAG_FILE_LOCATION,
     GCS,
     PACKAGE_NAME,
     WRAPPER_PAPPERMILL_FILE,
@@ -226,13 +226,13 @@ class Client:
                 version=version,
             )
 
-        file_path = os.path.join(DIRECTORY, dag_file)
-        os.makedirs(DIRECTORY, exist_ok=True)
+        file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
+        os.makedirs(LOCAL_DAG_FILE_LOCATION, exist_ok=True)
         with open(file_path, mode="w", encoding="utf-8") as message:
             message.write(content)
 
     def upload_dag_to_gcs(self, dag_file, gcs_dag_bucket):
-        file_path = os.path.join(DIRECTORY, dag_file)
+        file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
         cmd = f"gsutil cp '{file_path}' gs://{gcs_dag_bucket}/dags/"
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
