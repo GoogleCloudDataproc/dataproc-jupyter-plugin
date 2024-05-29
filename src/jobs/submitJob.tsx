@@ -137,7 +137,7 @@ function SubmitJob({
   let pythonFileUris: string[] = [];
   let maxFailuresPerHour = '';
   let mainRFileUri = '';
-  let jobType = 'spark';
+  let jobType = 'Spark';
   let mainPythonFileUri = '';
   let queryFileUri = '';
   let queryType = '';
