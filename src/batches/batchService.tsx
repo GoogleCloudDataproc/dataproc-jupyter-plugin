@@ -335,10 +335,12 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                if (!toast.isActive('batchListingError')) {
+                  toast.error(responseResult?.error?.message, {
+                    ...toastifyCustomStyle,
+                    toastId: 'batchListingError'
+                  });
+                }
               }
               const existingBatchData = previousBatchesList ?? [];
 

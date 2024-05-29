@@ -299,10 +299,12 @@ export class JobService {
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                if (!toast.isActive('jobError')) {
+                  toast.error(responseResult?.error?.code, {
+                    ...toastifyCustomStyle,
+                    toastId: 'jobError'
+                  });
+                }
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
@@ -347,7 +349,11 @@ export class JobService {
                 ...transformJobListData
               ];
 
-              if (responseResult.nextPageToken && responseResult.jobs && !controllerSignal.aborted) {
+              if (
+                responseResult.nextPageToken &&
+                responseResult.jobs &&
+                !controllerSignal.aborted
+              ) {
                 this.listJobsAPIService(
                   clusterSelected,
                   setIsLoading,
@@ -428,7 +434,12 @@ export class JobService {
         setClusterResponse(allClustersData);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        if (!toast.isActive('clusterError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'clusterError'
+          });
+        }
       }
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
