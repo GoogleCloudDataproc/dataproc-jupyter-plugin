@@ -252,28 +252,33 @@ class Client:
             raise IOError(error.decode)
 
     async def execute(self, input_data):
-        job = DescribeJob(**input_data)
-        global job_id
-        global job_name
-        job_id = job.dag_id
-        job_name = job.name
-        dag_file = f"dag_{job_name}.py"
-        gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
-        wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
+        try:
+            job = DescribeJob(**input_data)
+            global job_id
+            global job_name
+            job_id = job.dag_id
+            job_name = job.name
+            dag_file = f"dag_{job_name}.py"
+            gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
+            wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
 
-        if self.check_file_exists(gcs_dag_bucket, wrapper_pappermill_file_path):
-            print(
-                f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists."
-            )
-        else:
-            self.upload_papermill_to_gcs(gcs_dag_bucket)
-            print(
-                f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
-            )
-        if not job.input_filename.startswith(GCS):
-            self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
-        self.prepare_dag(job, gcs_dag_bucket, dag_file)
-        self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
+            if self.check_file_exists(gcs_dag_bucket, wrapper_pappermill_file_path):
+                print(
+                    f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists."
+                )
+            else:
+                self.upload_papermill_to_gcs(gcs_dag_bucket)
+                print(
+                    f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
+                )
+            if not job.input_filename.startswith(GCS):
+                self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
+            self.prepare_dag(job, gcs_dag_bucket, dag_file)
+            self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
+            return {'status':0}
+        except Exception as e:
+            return {"error": str(e)}
+
 
     def download_dag_output(self, bucket_name, dag_id, dag_run_id):
         try:

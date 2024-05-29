@@ -25,7 +25,8 @@ class ExecutorController(APIHandler):
         try:
             input_data = self.get_json_body()
             client = executor.Client(await credentials.get_cached(), self.log)
-            await client.execute(input_data)
+            result = await client.execute(input_data)
+            self.finish(json.dumps(result))
         except Exception as e:
             self.log.exception(f"Error creating dag schedule: {str(e)}")
             self.finish({"error": str(e)})
