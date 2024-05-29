@@ -17,7 +17,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import settingsIcon from '../../style/icons/settings_icon.svg';
+import googleCloudIcon from '../../style/icons/google-cloud.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -75,9 +75,9 @@ function ConfigSelection({
   launcher,
   settingRegistry
 }: IConfigSelectionProps) {
-  const Iconsettings = new LabIcon({
-    name: 'launcher:settings_icon',
-    svgstr: settingsIcon
+  const IconGoogleCloud = new LabIcon({
+    name: 'launcher:google_cloud_icon',
+    svgstr: googleCloudIcon
   });
 
   const [bigQueryFeatureEnable, setbigQueryFeatureEnable] = useState(false);
@@ -257,7 +257,10 @@ function ConfigSelection({
         <div className="settings-component">
           <div className="settings-overlay">
             <div>
-              <Iconsettings.react tag="div" className="logo-alignment-style" />
+              <IconGoogleCloud.react
+                tag="div"
+                className="logo-alignment-style"
+              />
             </div>
             <div className="settings-text">Settings</div>
           </div>
@@ -375,9 +378,10 @@ function ConfigSelection({
             </div>
           </div>
           <div>
+            <div className="dataproc-settings-header">Dataproc Settings </div>
             <div className="runtime-title-section">
               <div className="runtime-title-part">
-                Dataproc Serverless Runtime Templates
+                Serverless Runtime Templates
               </div>
               <div
                 className="expand-icon"

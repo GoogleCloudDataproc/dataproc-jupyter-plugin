@@ -253,11 +253,19 @@
   color: var(--jp-brand-color0) !important;
 }
 
+.dataproc-settings-header {
+  padding-bottom: 15px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--jp-ui-font-color0);
+}
+
 .runtime-title-section {
   display: flex;
   justify-content: space-between;
   color: var(--jp-ui-font-color0);
-  font-size: 20px;
+  font-size: 16px;
   font-style: normal;
   font-weight: 500;
   margin-right: 20px;
@@ -290,7 +298,8 @@
   margin-right: 25px;
 }
 
-.project-header, .bigquery-region-header {
+.project-header,
+.bigquery-region-header {
   padding-top: 40px;
   padding-left: 5px;
   font-style: normal;

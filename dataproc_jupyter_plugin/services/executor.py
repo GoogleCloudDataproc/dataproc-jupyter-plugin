@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import shutil
 import requests
 import subprocess
 import uuid
@@ -23,7 +24,6 @@ from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
     CONTENT_TYPE,
-    LOCAL_DAG_FILE_LOCATION,
     GCS,
     PACKAGE_NAME,
     WRAPPER_PAPPERMILL_FILE,
@@ -37,7 +37,6 @@ job_id = ""
 job_name = ""
 TEMPLATES_FOLDER_PATH = "dagTemplates"
 ROOT_FOLDER = PACKAGE_NAME
-
 
 
 class Client:
@@ -225,13 +224,20 @@ class Client:
                 metastore_service=metastore_service,
                 version=version,
             )
-
+        LOCAL_DAG_FILE_LOCATION = f"./scheduled-jobs/{job.name}"
         file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
         os.makedirs(LOCAL_DAG_FILE_LOCATION, exist_ok=True)
         with open(file_path, mode="w", encoding="utf-8") as message:
             message.write(content)
+        env = Environment(
+            loader=PackageLoader(PACKAGE_NAME, "dagTemplates"),
+            autoescape=select_autoescape(["py"]),
+        )
+        wrapper_papermill_path = env.get_template("wrapper_papermill.py").filename
+        shutil.copy2(wrapper_papermill_path, LOCAL_DAG_FILE_LOCATION)
 
-    def upload_dag_to_gcs(self, dag_file, gcs_dag_bucket):
+    def upload_dag_to_gcs(self, job, dag_file, gcs_dag_bucket):
+        LOCAL_DAG_FILE_LOCATION = f"./scheduled-jobs/{job.name}"
         file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
         cmd = f"gsutil cp '{file_path}' gs://{gcs_dag_bucket}/dags/"
         process = subprocess.Popen(
@@ -246,28 +252,33 @@ class Client:
             raise IOError(error.decode)
 
     async def execute(self, input_data):
-        job = DescribeJob(**input_data)
-        global job_id
-        global job_name
-        job_id = job.dag_id
-        job_name = job.name
-        dag_file = f"dag_{job_name}.py"
-        gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
-        wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
+        try:
+            job = DescribeJob(**input_data)
+            global job_id
+            global job_name
+            job_id = job.dag_id
+            job_name = job.name
+            dag_file = f"dag_{job_name}.py"
+            gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
+            wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
 
-        if self.check_file_exists(gcs_dag_bucket, wrapper_pappermill_file_path):
-            print(
-                f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists."
-            )
-        else:
-            self.upload_papermill_to_gcs(gcs_dag_bucket)
-            print(
-                f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
-            )
-        if not job.input_filename.startswith(GCS):
-            self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
-        self.prepare_dag(job, gcs_dag_bucket, dag_file)
-        self.upload_dag_to_gcs(dag_file, gcs_dag_bucket)
+            if self.check_file_exists(gcs_dag_bucket, wrapper_pappermill_file_path):
+                print(
+                    f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists."
+                )
+            else:
+                self.upload_papermill_to_gcs(gcs_dag_bucket)
+                print(
+                    f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
+                )
+            if not job.input_filename.startswith(GCS):
+                self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
+            self.prepare_dag(job, gcs_dag_bucket, dag_file)
+            self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
+            return {'status':0}
+        except Exception as e:
+            return {"error": str(e)}
+
 
     def download_dag_output(self, bucket_name, dag_id, dag_run_id):
         try:
