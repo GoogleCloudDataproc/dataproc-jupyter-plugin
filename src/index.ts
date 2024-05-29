@@ -563,7 +563,9 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
-      label: 'Google BigQuery Settings',
+      label: bqFeature.enable_bigquery_integration
+        ? 'Google BigQuery Settings'
+        : 'Google Dataproc Settings',
       execute: () => {
         const content = new AuthLogin(
           app as JupyterLab,
