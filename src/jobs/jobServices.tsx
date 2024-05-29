@@ -434,10 +434,10 @@ export class JobService {
         setClusterResponse(allClustersData);
       }
       if (formattedResponse?.error?.code) {
-        if (!toast.isActive('clusterError')) {
+        if (!toast.isActive('jobClusterError')) {
           toast.error(formattedResponse?.error?.message, {
             ...toastifyCustomStyle,
-            toastId: 'clusterError'
+            toastId: 'jobClusterError'
           });
         }
       }
