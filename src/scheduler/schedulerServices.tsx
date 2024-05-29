@@ -132,7 +132,12 @@ export class SchedulerService {
         setClusterList(keyLabelStructure);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        if (!toast.isActive('clusterError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'clusterError'
+          });
+        }
       }
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
@@ -190,7 +195,12 @@ export class SchedulerService {
         setServerlessList(keyLabelStructure);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        if (!toast.isActive('sessionTemplateError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'sessionTemplateError'
+          });
+        }
       }
     } catch (error) {
       DataprocLoggingService.log(

@@ -241,7 +241,12 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        if (!toast.isActive('sessionError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'sessionError'
+          });
+        }
         setIsLoading(false);
       }
     } catch (error) {
