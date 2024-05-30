@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import json
-from dataproc_jupyter_plugin import credentials
+
 from jupyter_server.base.handlers import APIHandler
 import tornado
+
 from dataproc_jupyter_plugin.services import composer
+from dataproc_jupyter_plugin import credentials
 
 
 class EnvironmentListController(APIHandler):

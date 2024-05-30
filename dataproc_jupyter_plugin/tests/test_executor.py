@@ -23,9 +23,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.services import executor
-from dataproc_jupyter_plugin.models import models
+
 
 
 async def mock_credentials():
@@ -124,5 +123,4 @@ async def test_downlaod_output(monkeypatch, returncode, expected_result, jp_fetc
     )
     assert response.code == 200
     payload = json.loads(response.body)
-    print(payload)
     assert payload["status"] == 0

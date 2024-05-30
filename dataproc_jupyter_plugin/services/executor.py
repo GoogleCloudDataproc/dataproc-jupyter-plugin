@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime, timedelta
+import os
 import shutil
-import requests
 import subprocess
 import uuid
-import os
+
+from google.cloud.jupyter_config.config import gcp_account
+from jinja2 import Environment, PackageLoader, select_autoescape
 import pendulum
-from datetime import datetime, timedelta
+import requests
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (

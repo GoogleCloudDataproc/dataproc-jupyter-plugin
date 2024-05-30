@@ -16,6 +16,7 @@ import requests
 import subprocess
 import re
 import urllib
+
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
