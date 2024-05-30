@@ -19,8 +19,7 @@ from kernels_mixer.kernels import MixingMappingKernelManager
 from kernels_mixer.kernelspecs import MixingKernelSpecManager
 from kernels_mixer.websockets import DelegatingWebsocketConnection
 
-from .handlers import (DataprocPluginConfig, configure_gateway_client_url,
-                       setup_handlers)
+from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
 
 
 def _jupyter_labextension_paths():

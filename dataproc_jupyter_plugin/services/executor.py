@@ -24,10 +24,13 @@ from google.cloud.jupyter_config.config import gcp_account
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import (COMPOSER_SERVICE_NAME,
-                                                       CONTENT_TYPE, GCS,
-                                                       PACKAGE_NAME,
-                                                       WRAPPER_PAPPERMILL_FILE)
+from dataproc_jupyter_plugin.commons.constants import (
+    COMPOSER_SERVICE_NAME,
+    CONTENT_TYPE,
+    GCS,
+    PACKAGE_NAME,
+    WRAPPER_PAPPERMILL_FILE,
+)
 from dataproc_jupyter_plugin.models.models import DescribeJob
 
 unique_id = str(uuid.uuid4().hex)
