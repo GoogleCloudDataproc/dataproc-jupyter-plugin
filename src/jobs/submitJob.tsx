@@ -34,7 +34,6 @@ import {
 } from '../utils/const';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
-import { Select } from '../controls/MuiWrappedSelect';
 import { DropdownProps } from 'semantic-ui-react';
 import { Autocomplete, TextField } from '@mui/material';
 import { MuiChipsInput } from 'mui-chips-input';
@@ -60,16 +59,16 @@ function jobKey(selectedJobClone: any) {
   return jobKeys;
 }
 function jobTypeFunction(jobKey: string) {
-  let jobType = 'spark';
+  let jobType = 'Spark';
   switch (jobKey) {
     case 'sparkRJob':
-      jobType = 'sparkR';
+      jobType = 'SparkR';
       return jobType;
     case 'pysparkJob':
-      jobType = 'pySpark';
+      jobType = 'PySpark';
       return jobType;
     case 'sparkSqlJob':
-      jobType = 'sparkSql';
+      jobType = 'SparkSql';
       return jobType;
     default:
       return jobType;
@@ -138,7 +137,7 @@ function SubmitJob({
   let pythonFileUris: string[] = [];
   let maxFailuresPerHour = '';
   let mainRFileUri = '';
-  let jobType = 'spark';
+  let jobType = 'Spark';
   let mainPythonFileUri = '';
   let queryFileUri = '';
   let queryType = '';
@@ -229,7 +228,6 @@ function SubmitJob({
     useState(false);
   const [argumentsDuplicateValidation, setArgumentsDuplicateValidation] =
     useState(false);
-  const [labelFocused, setLabelFocused] = useState(false);
   const handleCancelJobButton = () => {
     setSubmitJobView(false);
   };
@@ -245,14 +243,15 @@ function SubmitJob({
   };
 
   const handleClusterSelected = (data: DropdownProps | null) => {
-    setClusterSelected(data!.toString());
+    if (data !== null) {
+      setClusterSelected(data!.toString());
+    }
   };
 
-  const handleJobTypeSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setJobTypeSelected(data.value!.toString());
+  const handleJobTypeSelected = (data: DropdownProps | null) => {
+    if (data !== null) {
+      setJobTypeSelected(data!.toString());
+    }
     setFileSelected([]);
     setJarFileSelected([]);
     setAdditionalPythonFileSelected([]);
@@ -269,7 +268,9 @@ function SubmitJob({
     event: SyntheticEvent<Element, Event>,
     data: DropdownProps | null
   ) => {
-    setQuerySourceSelected(data!.toString());
+    if (data !== null) {
+      setQuerySourceSelected(data!.toString());
+    }
   };
   interface IClusterData {
     clusterName: string;
@@ -287,14 +288,9 @@ function SubmitJob({
     const keyLabelStructure = transformClusterListData.map(
       (obj: { clusterName: string }) => obj.clusterName
     );
-
     setClusterList(keyLabelStructure);
-    const jobTypeData = [
-      { key: 'spark', value: 'spark', text: 'Spark' },
-      { key: 'sparkR', value: 'sparkR', text: 'SparkR' },
-      { key: 'sparkSql', value: 'sparkSql', text: 'SparkSql' },
-      { key: 'pySpark', value: 'pySpark', text: 'PySpark' }
-    ];
+    const jobTypeData = ['Spark', 'SparkR', 'SparkSql', 'PySpark'];
+
     setJobTypeList(jobTypeData);
     const querySourceData = ['Query file', 'Query text'];
     setQuerySourceTypeList(querySourceData);
@@ -329,10 +325,10 @@ function SubmitJob({
     archiveDuplicateValidation
   ]);
   const disableSubmitButtonIfInvalid = () => {
-    const isSparkJob = jobTypeSelected === 'spark';
-    const isSparkRJob = jobTypeSelected === 'sparkR';
-    const isPySparkJob = jobTypeSelected === 'pySpark';
-    const isSparkSqlJob = jobTypeSelected === 'sparkSql';
+    const isSparkJob = jobTypeSelected === 'Spark';
+    const isSparkRJob = jobTypeSelected === 'SparkR';
+    const isPySparkJob = jobTypeSelected === 'PySpark';
+    const isSparkSqlJob = jobTypeSelected === 'SparkSql';
     if (
       clusterSelected !== '' &&
       jobIdSelected !== '' &&
@@ -603,7 +599,7 @@ function SubmitJob({
           ...(labelObject && {
             labels: labelObject
           }),
-          ...(jobTypeSelected === 'pySpark' &&
+          ...(jobTypeSelected === 'PySpark' &&
             createPySparkPayload(
               mainPythonSelected,
               propertyObject,
@@ -613,7 +609,7 @@ function SubmitJob({
               argumentSelected,
               additionalPythonFileSelected
             )),
-          ...(jobTypeSelected === 'spark' &&
+          ...(jobTypeSelected === 'Spark' &&
             createSparkPayload(
               mainClassSelected,
               propertyObject,
@@ -622,14 +618,14 @@ function SubmitJob({
               jarFileSelected,
               argumentSelected
             )),
-          ...(jobTypeSelected === 'sparkR' &&
+          ...(jobTypeSelected === 'SparkR' &&
             createSparkRPayload(
               mainRSelected,
               propertyObject,
               fileSelected,
               argumentSelected
             )),
-          ...(jobTypeSelected === 'sparkSql' &&
+          ...(jobTypeSelected === 'SparkSql' &&
             createSparkSqlPayload(
               propertyObject,
               jarFileSelected,
@@ -721,12 +717,6 @@ function SubmitJob({
     setArgumentSelected(listOfFiles);
     handleDuplicateValidation(setDuplicateValidation, listOfFiles);
   };
-  const handleSelectFocus = () => {
-    setLabelFocused(true);
-  };
-  const handleBlur = () => {
-    setLabelFocused(false);
-  };
   return (
     <div>
       <div className="cluster-details-header">
@@ -785,28 +775,16 @@ function SubmitJob({
         )}
 
         <div className="select-text-overlay">
-          <label
-            className={
-              labelFocused
-                ? 'select-title-text label-focused'
-                : 'select-title-text'
-            }
-            htmlFor="metastore-project"
-          >
-            Job type*
-          </label>
-          <Select
+          <Autocomplete
             className="project-region-select"
-            search
-            onChange={handleJobTypeSelected}
+            onChange={(_event, val) => handleJobTypeSelected(val)}
             options={jobTypeList}
             value={jobTypeSelected}
-            onFocus={handleSelectFocus}
-            onBlur={handleBlur}
+            renderInput={params => <TextField {...params} label=" Job type*" />}
           />
         </div>
 
-        {jobTypeSelected === 'sparkSql' && (
+        {jobTypeSelected === 'SparkSql' && (
           <>
             <div className="select-text-overlay">
               <Autocomplete
@@ -816,8 +794,6 @@ function SubmitJob({
                 }
                 options={querySourceTypeList}
                 value={querySourceSelected}
-                onFocus={handleSelectFocus}
-                onBlur={handleBlur}
                 renderInput={params => (
                   <TextField {...params} label="Query source type*" />
                 )}
@@ -826,7 +802,7 @@ function SubmitJob({
           </>
         )}
         {querySourceSelected === 'Query file' &&
-          jobTypeSelected === 'sparkSql' && (
+          jobTypeSelected === 'SparkSql' && (
             <>
               <div className="select-text-overlay">
                 <Input
@@ -861,7 +837,7 @@ function SubmitJob({
             </>
           )}
         {querySourceSelected === 'Query text' &&
-          jobTypeSelected === 'sparkSql' && (
+          jobTypeSelected === 'SparkSql' && (
             <>
               <div className="select-text-overlay">
                 <Input
@@ -877,7 +853,7 @@ function SubmitJob({
               </div>
             </>
           )}
-        {jobTypeSelected === 'spark' && (
+        {jobTypeSelected === 'Spark' && (
           <>
             <div className="select-text-overlay">
               <Input
@@ -911,7 +887,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {jobTypeSelected === 'sparkR' && (
+        {jobTypeSelected === 'SparkR' && (
           <>
             <div className="select-text-overlay">
               <Input
@@ -945,7 +921,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {jobTypeSelected === 'pySpark' && (
+        {jobTypeSelected === 'PySpark' && (
           <>
             <div className="select-text-overlay">
               <Input
@@ -979,7 +955,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {jobTypeSelected === 'pySpark' && (
+        {jobTypeSelected === 'PySpark' && (
           <>
             <div className="select-text-overlay">
               <MuiChipsInput
@@ -1017,7 +993,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {jobTypeSelected !== 'sparkR' && (
+        {jobTypeSelected !== 'SparkR' && (
           <>
             <div className="select-text-overlay">
               <MuiChipsInput
@@ -1058,7 +1034,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {jobTypeSelected !== 'sparkSql' && (
+        {jobTypeSelected !== 'SparkSql' && (
           <>
             <div className="select-text-overlay">
               <MuiChipsInput
@@ -1099,7 +1075,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {(jobTypeSelected === 'spark' || jobTypeSelected === 'pySpark') && (
+        {(jobTypeSelected === 'Spark' || jobTypeSelected === 'PySpark') && (
           <>
             <div className="select-text-overlay">
               <MuiChipsInput
@@ -1140,7 +1116,7 @@ function SubmitJob({
             )}
           </>
         )}
-        {jobTypeSelected !== 'sparkSql' && (
+        {jobTypeSelected !== 'SparkSql' && (
           <>
             <div className="select-text-overlay">
               <MuiChipsInput
@@ -1168,7 +1144,7 @@ function SubmitJob({
           </>
         )}
         {querySourceSelected === 'Query file' &&
-          jobTypeSelected === 'sparkSql' && (
+          jobTypeSelected === 'SparkSql' && (
             <>
               <div className="submit-job-label-header">Query parameters</div>
               <LabelProperties

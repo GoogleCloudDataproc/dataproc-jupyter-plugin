@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,110 +12,85 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime, timedelta
 import os
+import shutil
 import subprocess
-from typing import Dict
 import uuid
+from datetime import datetime, timedelta
 
-from google.cloud.jupyter_config.config import gcp_account
-from jinja2 import Environment, PackageLoader, select_autoescape
-import nbformat
 import pendulum
 import requests
+from google.cloud.jupyter_config.config import gcp_account
+from jinja2 import Environment, PackageLoader, select_autoescape
 
-from dataproc_jupyter_plugin.services.composerService import ENVIRONMENT_API
+from dataproc_jupyter_plugin import urls
+from dataproc_jupyter_plugin.commons.constants import (
+    COMPOSER_SERVICE_NAME,
+    CONTENT_TYPE,
+    GCS,
+    PACKAGE_NAME,
+    WRAPPER_PAPPERMILL_FILE,
+)
 from dataproc_jupyter_plugin.models.models import DescribeJob
-from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE, GCS
 
 unique_id = str(uuid.uuid4().hex)
 job_id = ""
 job_name = ""
 TEMPLATES_FOLDER_PATH = "dagTemplates"
-ROOT_FOLDER = "dataproc_jupyter_plugin"
+ROOT_FOLDER = PACKAGE_NAME
 
 
-def get_bucket(runtime_env, credentials, log):
-    try:
-        if (
+class Client:
+    def __init__(self, credentials, log):
+        self.log = log
+        if not (
             ("access_token" in credentials)
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            access_token = credentials["access_token"]
-            project_id = credentials["project_id"]
-            region_id = credentials["region_id"]
-            api_endpoint = f"{ENVIRONMENT_API}/projects/{project_id}/locations/{region_id}/environments/{runtime_env}"
+            self.log.exception("Missing required credentials")
+            raise ValueError("Missing required credentials")
+        self._access_token = credentials["access_token"]
+        self.project_id = credentials["project_id"]
+        self.region_id = credentials["region_id"]
 
-            headers = {
-                "Content-Type": CONTENT_TYPE,
-                "Authorization": f"Bearer {access_token}",
-            }
+    def create_headers(self):
+        return {
+            "Content-Type": CONTENT_TYPE,
+            "Authorization": f"Bearer {self._access_token}",
+        }
 
-            response = requests.get(api_endpoint, headers=headers)
+    async def get_bucket(self, runtime_env):
+        try:
+            composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
+            api_endpoint = f"{composer_url}v1/projects/{self.project_id}/locations/{self.region_id}/environments/{runtime_env}"
+            response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:
                 resp = response.json()
                 gcs_dag_path = resp.get("storageConfig", {}).get("bucket", "")
                 return gcs_dag_path
-        else:
-            log.exception(f"Missing required credentials")
-            raise ValueError("Missing required credentials")
-    except Exception as e:
-        log.exception(f"Error getting bucket name: {str(e)}")
-        print(f"Error: {e}")
+        except Exception as e:
+            self.log.exception(f"Error getting bucket name: {str(e)}")
+            print(f"Error: {e}")
 
-
-def check_file_exists(bucket, file_path, log):
-    cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-    )
-    output, error = process.communicate()
-    if process.returncode == 0:
-        return True
-    else:
-        if "matched no objects" in error.decode():
-            return False
-        else:
-            log.exception(f"Error cheking file existence: {error.decode()}")
-            raise FileNotFoundError(error.decode)
-
-
-class ExecutorService:
-    """Default execution manager that executes notebooks"""
-
-    @staticmethod
-    def upload_dag_to_gcs(dag_file, credentials, gcs_dag_bucket, log):
-        if "region_id" in credentials:
-            cmd = f"gsutil cp '{dag_file}' gs://{gcs_dag_bucket}/dags/"
-            process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-            )
-            output, error = process.communicate()
-        if process.returncode == 0:
-            log.info(f"Dag file uploaded to gcs successfully")
-            os.remove(dag_file)
-        if process.returncode != 0:
-            log.exception(f"Error uploading dag file to gcs: {error.decode()}")
-            raise IOError(error.decode)
-
-    @staticmethod
-    def upload_input_file_to_gcs(input, gcs_dag_bucket, job_name, log):
-        cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
+    def check_file_exists(self, bucket, file_path):
+        cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
         output, error = process.communicate()
         if process.returncode == 0:
-            log.info(f"Input file uploaded to gcs successfully")
+            return True
         else:
-            log.exception(f"Error uploading input file to gcs: {error.decode()}")
-            raise IOError(error.decode)
+            if "matched no objects" in error.decode():
+                return False
+            else:
+                self.log.exception(f"Error cheking file existence: {error.decode()}")
+                raise FileNotFoundError(error.decode)
 
-    @staticmethod
-    def upload_papermill_to_gcs(gcs_dag_bucket, log):
+    def upload_papermill_to_gcs(self, gcs_dag_bucket):
         env = Environment(
-            loader=PackageLoader("dataproc_jupyter_plugin", "dagTemplates"),
+            loader=PackageLoader(PACKAGE_NAME, "dagTemplates"),
             autoescape=select_autoescape(["py"]),
         )
         wrapper_papermill_path = env.get_template("wrapper_papermill.py").filename
@@ -126,23 +101,36 @@ class ExecutorService:
         output, error = process.communicate()
         print(process.returncode, error, output)
         if process.returncode == 0:
-            log.info(f"Papermill file uploaded to gcs successfully")
+            self.log.info("Papermill file uploaded to gcs successfully")
             print(process.returncode, error, output)
         else:
-            log.exception(f"Error uploading papermill file to gcs: {error.decode()}")
+            self.log.exception(
+                f"Error uploading papermill file to gcs: {error.decode()}"
+            )
             raise IOError(error.decode)
 
-    @staticmethod
-    def prepare_dag(job, gcs_dag_bucket, dag_file, credentials, log):
-        log.info(f"Generating dag file")
+    def upload_input_file_to_gcs(self, input, gcs_dag_bucket, job_name):
+        cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+        )
+        output, error = process.communicate()
+        if process.returncode == 0:
+            self.log.info("Input file uploaded to gcs successfully")
+        else:
+            self.log.exception(f"Error uploading input file to gcs: {error.decode()}")
+            raise IOError(error.decode)
+
+    def prepare_dag(self, job, gcs_dag_bucket, dag_file):
+        self.log.info("Generating dag file")
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
         DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.txt"
         environment = Environment(
             loader=PackageLoader("dataproc_jupyter_plugin", TEMPLATES_FOLDER_PATH)
         )
-        if ("project_id" in credentials) and ("region_id" in credentials):
-            gcp_project_id = credentials["project_id"]
-            gcp_region_id = credentials["region_id"]
+
+        gcp_project_id = self.project_id
+        gcp_region_id = self.region_id
         user = gcp_account()
         owner = user.split("@")[0]  # getting username from email
         if job.schedule_value == "":
@@ -237,29 +225,75 @@ class ExecutorService:
                 metastore_service=metastore_service,
                 version=version,
             )
-
-        print(content)
-        with open(dag_file, mode="w", encoding="utf-8") as message:
+        LOCAL_DAG_FILE_LOCATION = f"./scheduled-jobs/{job.name}"
+        file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
+        os.makedirs(LOCAL_DAG_FILE_LOCATION, exist_ok=True)
+        with open(file_path, mode="w", encoding="utf-8") as message:
             message.write(content)
+        env = Environment(
+            loader=PackageLoader(PACKAGE_NAME, "dagTemplates"),
+            autoescape=select_autoescape(["py"]),
+        )
+        wrapper_papermill_path = env.get_template("wrapper_papermill.py").filename
+        shutil.copy2(wrapper_papermill_path, LOCAL_DAG_FILE_LOCATION)
 
-    def execute(self, credentials, input_data, log):
-        job = DescribeJob(**input_data)
-        global job_id
-        global job_name
-        job_id = job.dag_id
-        job_name = job.name
-        dag_file = f"dag_{job_name}.py"
-        gcs_dag_bucket = get_bucket(job.composer_environment_name, credentials, log)
-        remote_file_path = "wrapper_papermill.py"
+    def upload_dag_to_gcs(self, job, dag_file, gcs_dag_bucket):
+        LOCAL_DAG_FILE_LOCATION = f"./scheduled-jobs/{job.name}"
+        file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
+        cmd = f"gsutil cp '{file_path}' gs://{gcs_dag_bucket}/dags/"
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+        )
+        output, error = process.communicate()
+        if process.returncode == 0:
+            self.log.info("Dag file uploaded to gcs successfully")
 
-        if check_file_exists(gcs_dag_bucket, remote_file_path, log):
-            print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} exists.")
-        else:
-            self.upload_papermill_to_gcs(gcs_dag_bucket, log)
-            print(f"The file gs://{gcs_dag_bucket}/{remote_file_path} does not exist.")
-        if not job.input_filename.startswith(GCS):
-            self.upload_input_file_to_gcs(
-                job.input_filename, gcs_dag_bucket, job_name, log
+        if process.returncode != 0:
+            self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
+            raise IOError(error.decode)
+
+    async def execute(self, input_data):
+        try:
+            job = DescribeJob(**input_data)
+            global job_id
+            global job_name
+            job_id = job.dag_id
+            job_name = job.name
+            dag_file = f"dag_{job_name}.py"
+            gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
+            wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
+
+            if self.check_file_exists(gcs_dag_bucket, wrapper_pappermill_file_path):
+                print(
+                    f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists."
+                )
+            else:
+                self.upload_papermill_to_gcs(gcs_dag_bucket)
+                print(
+                    f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
+                )
+            if not job.input_filename.startswith(GCS):
+                self.upload_input_file_to_gcs(
+                    job.input_filename, gcs_dag_bucket, job_name
+                )
+            self.prepare_dag(job, gcs_dag_bucket, dag_file)
+            self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
+            return {"status": 0}
+        except Exception as e:
+            return {"error": str(e)}
+
+    def download_dag_output(self, bucket_name, dag_id, dag_run_id):
+        try:
+            cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb' ./"
+            process = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
             )
-        self.prepare_dag(job, gcs_dag_bucket, dag_file, credentials, log)
-        self.upload_dag_to_gcs(dag_file, credentials, gcs_dag_bucket, log)
+            output, _ = process.communicate()
+            if process.returncode == 0:
+                return 0
+            else:
+                self.log.exception("Error downloading output notebook file")
+                return 1
+        except Exception as e:
+            self.log.exception(f"Error downloading output notebook file: {str(e)}")
+            return {"error": str(e)}

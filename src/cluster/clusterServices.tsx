@@ -140,7 +140,12 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        if (!toast.isActive('clusterListingError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'clusterListingError'
+          });
+        }
       }
     } catch (error) {
       setIsLoading(false);

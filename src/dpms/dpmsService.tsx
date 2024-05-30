@@ -167,24 +167,32 @@ export class DpmsService {
           response
             .json()
             .then((responseResult: ITableResponse) => {
-              const filteredEntries = responseResult.results.filter(
-                (entry: { displayName: string }) => entry.displayName
-              );
+              const filteredEntries =
+                responseResult &&
+                responseResult.results &&
+                responseResult.results.filter(
+                  (entry: { displayName: string }) => entry.displayName
+                );
               const tableNames: string[] = [];
               const entryNames: string[] = [];
               const updatedTableDetails: { [key: string]: string } = {};
-              filteredEntries.forEach(
-                (entry: {
-                  displayName: string;
-                  relativeResourceName: string;
-                  description: string;
-                }) => {
-                  tableNames.push(entry.displayName);
-                  entryNames.push(entry.relativeResourceName);
-                  const description = entry.description || 'None';
-                  updatedTableDetails[entry.displayName] = description;
-                }
-              );
+              if (filteredEntries !== undefined) {
+                filteredEntries &&
+                  filteredEntries.forEach(
+                    (entry: {
+                      displayName: string;
+                      relativeResourceName: string;
+                      description: string;
+                    }) => {
+                      tableNames.push(entry.displayName);
+                      entryNames.push(entry.relativeResourceName);
+                      const description = entry.description || 'None';
+                      updatedTableDetails[entry.displayName] = description;
+                    }
+                  );
+              } else {
+                setTotalDatabases(totalDatabases - 1 || 0);
+              }
               setEntries(entryNames);
               setTableDescription(updatedTableDetails);
               setTotalTables(tableNames.length);

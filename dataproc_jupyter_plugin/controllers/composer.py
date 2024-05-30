@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,22 +13,21 @@
 # limitations under the License.
 
 import json
-from dataproc_jupyter_plugin.commons.gcloudOperations import GetCachedCredentials
-from jupyter_server.base.handlers import APIHandler
+
 import tornado
-from dataproc_jupyter_plugin.services.composerService import ComposerService
-from requests import HTTPError
+from jupyter_server.base.handlers import APIHandler
+
+from dataproc_jupyter_plugin import credentials
+from dataproc_jupyter_plugin.services import composer
 
 
-class ComposerListController(APIHandler):
+class EnvironmentListController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         """Returns names of available composer environments"""
         try:
-            environments_manager = ComposerService()
-            credentials = GetCachedCredentials.get_cached_credentials(self.log)
-            environments = environments_manager.list_environments(credentials, self.log)
-
+            client = composer.Client(await credentials.get_cached(), self.log)
+            environments = await client.list_environments()
         except Exception as e:
             self.log.exception(f"Error fetching composer environments: {str(e)}")
             self.finish({"error": str(e)})

@@ -97,6 +97,7 @@ function JobComponent({
   setSelectedJobClone,
   fromPage
 }: any) {
+  const controller = useRef(new AbortController());
   const [jobsList, setjobsList] = useState([]);
   const [jobSelected, setjobSelected] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -194,11 +195,14 @@ function JobComponent({
   };
 
   const listJobsAPI = async () => {
+    controller.current.abort(); 
+    controller.current = new AbortController(); 
     await JobService.listJobsAPIService(
       clusterSelected,
       setIsLoading,
       setjobsList,
-      renderActions
+      renderActions,
+      controller.current.signal 
     );
   };
 
@@ -286,9 +290,13 @@ function JobComponent({
       listClustersAPI();
     }
     return () => {
-      pollingJobs(listJobsAPI, true);
+      controller.current.abort();
+      if (timer.current) {
+        clearTimeout(timer.current);
+      }
     };
   }, [pollingDisable, detailedJobView]);
+  
   useEffect(() => {
     if (!detailedJobView && !isLoading) {
       pollingJobs(listJobsAPI, pollingDisable);

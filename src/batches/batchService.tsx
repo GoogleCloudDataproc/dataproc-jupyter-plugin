@@ -290,7 +290,7 @@ export class BatchService {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=500&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -335,10 +335,12 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                if (!toast.isActive('batchListingError')) {
+                  toast.error(responseResult?.error?.message, {
+                    ...toastifyCustomStyle,
+                    toastId: 'batchListingError'
+                  });
+                }
               }
               const existingBatchData = previousBatchesList ?? [];
 
@@ -509,7 +511,6 @@ export class BatchService {
               transformedNetworkSelected = responseResult.network.split('/')[9];
 
               setNetworkSelected(transformedNetworkSelected);
-              setIsloadingNetwork(false);
               if (responseResult?.error?.code) {
                 toast.error(
                   responseResult?.error?.message,
@@ -522,7 +523,6 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          setIsloadingNetwork(false);
           DataprocLoggingService.log(
             'Error selecting Network',
             LOG_LEVEL.ERROR
@@ -534,8 +534,11 @@ export class BatchService {
 
   static listNetworksAPIService = async (
     setNetworklist: (value: string[]) => void,
-    setNetworkSelected: (value: string) => void
+    setNetworkSelected: (value: string) => void,
+    batchInfoResponse: any,
+    setIsloadingNetwork: (value: boolean) => void
   ) => {
+    setIsloadingNetwork(true);
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
@@ -571,7 +574,9 @@ export class BatchService {
                   }
                 );
                 setNetworklist(transformedNetworkList);
-                setNetworkSelected(transformedNetworkList[0]);
+                if (batchInfoResponse === undefined) {
+                  setNetworkSelected(transformedNetworkList[0]);
+                }
                 if (responseResult?.error?.code) {
                   toast.error(
                     responseResult?.error?.message,
@@ -699,8 +704,11 @@ export class BatchService {
   static listSubNetworksAPIService = async (
     subnetwork: string,
     setSubNetworklist: (value: string[]) => void,
-    setSubNetworkSelected: (value: string) => void
+    setSubNetworkSelected: (value: string) => void,
+    batchInfoResponse: any,
+    setIsloadingNetwork: (value: boolean) => void
   ) => {
+    setIsloadingNetwork(true);
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
@@ -737,7 +745,10 @@ export class BatchService {
                   (data: { name: string }) => data.name
                 );
                 setSubNetworklist(transformedServiceList);
-                setSubNetworkSelected(transformedServiceList[0]);
+                if (batchInfoResponse === undefined) {
+                  setSubNetworkSelected(transformedServiceList[0]);
+                }
+                setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
                   toast.error(
                     responseResult?.error?.message,
@@ -755,6 +766,7 @@ export class BatchService {
             'Error listing subNetworks',
             LOG_LEVEL.ERROR
           );
+          setIsloadingNetwork(false);
           toast.error(
             `Error listing subNetworks : ${err}`,
             toastifyCustomStyle

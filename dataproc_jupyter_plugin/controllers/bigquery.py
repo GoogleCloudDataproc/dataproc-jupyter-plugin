@@ -15,14 +15,11 @@
 
 import json
 
-from jupyter_server.base.handlers import APIHandler
 import tornado
-
-from google.cloud.jupyter_config import gcp_project
+from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import bigquery
-
 
 # GCP project holding BigQuery public datasets.
 BQ_PUBLIC_DATASET_PROJECT_ID = "bigquery-public-data"
@@ -38,7 +35,7 @@ class DatasetController(APIHandler):
             dataset_list = await client.list_datasets(page_token, project_id)
             self.finish(json.dumps(dataset_list))
         except Exception as e:
-            self.log.exception(f"Error fetching datasets")
+            self.log.exception("Error fetching datasets")
             self.finish({"error": str(e)})
 
 
@@ -53,7 +50,7 @@ class TableController(APIHandler):
             table_list = await client.list_table(dataset_id, page_token, project_id)
             self.finish(json.dumps(table_list))
         except Exception as e:
-            self.log.exception(f"Error fetching datasets")
+            self.log.exception("Error fetching datasets")
             self.finish({"error": str(e)})
 
 
@@ -67,7 +64,7 @@ class DatasetInfoController(APIHandler):
             dataset_info = await client.list_dataset_info(dataset_id, project_id)
             self.finish(json.dumps(dataset_info))
         except Exception as e:
-            self.log.exception(f"Error fetching dataset information")
+            self.log.exception("Error fetching dataset information")
             self.finish({"error": str(e)})
 
 
@@ -82,7 +79,7 @@ class TableInfoController(APIHandler):
             table_info = await client.list_table_info(dataset_id, table_id, project_id)
             self.finish(json.dumps(table_info))
         except Exception as e:
-            self.log.exception(f"Error fetching table information")
+            self.log.exception("Error fetching table information")
             self.finish({"error": str(e)})
 
 
@@ -105,7 +102,7 @@ class PreviewController(APIHandler):
             )
             self.finish(json.dumps(preview_data))
         except Exception as e:
-            self.log.exception(f"Error fetching preview data")
+            self.log.exception("Error fetching preview data")
             self.finish({"error": str(e)})
 
 
@@ -124,7 +121,7 @@ class ProjectsController(APIHandler):
             project_list = await bq_projects_list()
             self.finish(json.dumps(project_list))
         except Exception as e:
-            self.log.exception(f"Error fetching projects")
+            self.log.exception("Error fetching projects")
             self.finish({"error": str(e)})
 
 
@@ -142,5 +139,5 @@ class SearchController(APIHandler):
             )
             self.finish(json.dumps(search_data))
         except Exception as e:
-            self.log.exception(f"Error fetching search data")
+            self.log.exception("Error fetching search data")
             self.finish({"error": str(e)})

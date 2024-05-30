@@ -16,7 +16,12 @@
 import requests
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import CONTENT_TYPE
+from dataproc_jupyter_plugin.commons.constants import (
+    BIGQUERY_SERVICE_NAME,
+    CLOUDRESOURCEMANAGER_SERVICE_NAME,
+    CONTENT_TYPE,
+    DATACATALOG_SERVICE_NAME,
+)
 
 
 class Client:
@@ -27,7 +32,7 @@ class Client:
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            self.log.exception(f"Missing required credentials")
+            self.log.exception("Missing required credentials")
             raise ValueError("Missing required credentials")
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
@@ -41,7 +46,8 @@ class Client:
 
     async def list_datasets(self, page_token, project_id):
         try:
-            api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
+            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
+            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
             response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:
                 resp = response.json()
@@ -49,12 +55,13 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching datasets list")
+            self.log.exception("Error fetching datasets list")
             return {"error": str(e)}
 
     async def list_table(self, dataset_id, page_token, project_id):
         try:
-            api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
+            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
+            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
             response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:
                 resp = response.json()
@@ -62,12 +69,15 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching tables list")
+            self.log.exception("Error fetching tables list")
             return {"error": str(e)}
 
     async def list_dataset_info(self, dataset_id, project_id):
         try:
-            api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
+            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
+            api_endpoint = (
+                f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
+            )
             response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:
                 resp = response.json()
@@ -75,12 +85,13 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching dataset info")
+            self.log.exception("Error fetching dataset info")
             return {"error": str(e)}
 
     async def list_table_info(self, dataset_id, table_id, project_id):
         try:
-            api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
+            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
+            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
             response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:
                 resp = response.json()
@@ -100,7 +111,8 @@ class Client:
         project_id,
     ):
         try:
-            api_endpoint = f"https://bigquery.googleapis.com/bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?maxResults={max_results}&startIndex={start_index}"
+            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
+            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?maxResults={max_results}&startIndex={start_index}"
             response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:
                 resp = response.json()
@@ -108,12 +120,12 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching preview data")
+            self.log.exception("Error fetching preview data")
             return {"error": str(e)}
 
     async def bigquery_search(self, search_string, type, system, projects):
         try:
-            datacatalog_url = await urls.gcp_service_url("datacatalog")
+            datacatalog_url = await urls.gcp_service_url(DATACATALOG_SERVICE_NAME)
             api_endpoint = f"{datacatalog_url}v1/catalog:search"
             headers = {
                 "Content-Type": CONTENT_TYPE,
@@ -149,7 +161,10 @@ class Client:
 
     async def bigquery_projects(self, dataset_id, table_id):
         try:
-            api_endpoint = f"https://cloudresourcemanager.googleapis.com/v1/projects"
+            cloudresourcemanager_url = await urls.gcp_service_url(
+                CLOUDRESOURCEMANAGER_SERVICE_NAME
+            )
+            api_endpoint = f"{cloudresourcemanager_url}v1/projects"
             response = requests.get(api_endpoint, headers=self.create_headers())
             if response.status_code == 200:
                 resp = response.json()
@@ -157,5 +172,5 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching projects")
+            self.log.exception("Error fetching projects")
             return {"error": str(e)}

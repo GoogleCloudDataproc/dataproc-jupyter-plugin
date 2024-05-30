@@ -12,27 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from dataproc_jupyter_plugin.services.gcpUrlService import gcp_service_url
-
 ENVIRONMENT_API = "https://composer.googleapis.com/v1"
 TAGS = "dataproc_jupyter_plugin"
 GCS = "gs://"
 CONTENT_TYPE = "application/json"
-
-
-dataproc_url = gcp_service_url("dataproc")
-dataproc_url = gcp_service_url("dataproc")
-compute_url = gcp_service_url(
-    "compute", default_url="https://compute.googleapis.com/compute/v1"
-)
-metastore_url = gcp_service_url("metastore")
-cloudkms_url = gcp_service_url("cloudkms")
-cloudresourcemanager_url = gcp_service_url("cloudresourcemanager")
-datacatalog_url = gcp_service_url("datacatalog")
-storage_url = gcp_service_url(
-    "storage", default_url="https://storage.googleapis.com/storage/v1/"
-)
-dataplex_url = gcp_service_url(
-    "dataplex", default_url="https://dataplex.googleapis.com/v1"
-)
+PACKAGE_NAME = "dataproc_jupyter_plugin"
+COMPOSER_SERVICE_NAME = "composer"
+DATAPROC_SERVICE_NAME = "dataproc"
+BIGQUERY_SERVICE_NAME = "bigquery"
+DATACATALOG_SERVICE_NAME = "datacatalog"
+CLOUDRESOURCEMANAGER_SERVICE_NAME = "cloudresourcemanager"
+STORAGE_SERVICE_NAME = "storage"
+COMPUTE_SERVICE_NAME = "compute"
+METASTORE_SERVICE_NAME = "metastore"
+CLOUDKMS_SERVICE_NAME = "cloudkms"
+COMPUTE_SERVICE_DEFAULT_URL = "https://compute.googleapis.com/compute/v1"
+STORAGE_SERVICE_DEFAULT_URL = "https://storage.googleapis.com/storage/v1/"
+WRAPPER_PAPPERMILL_FILE = "wrapper_papermill.py"
