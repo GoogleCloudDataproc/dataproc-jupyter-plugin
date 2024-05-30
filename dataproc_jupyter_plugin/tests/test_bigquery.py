@@ -22,7 +22,6 @@ from google.cloud import jupyter_config
 from dataproc_jupyter_plugin import credentials
 
 
-
 async def mock_credentials():
     return {
         "project_id": "credentials-project",

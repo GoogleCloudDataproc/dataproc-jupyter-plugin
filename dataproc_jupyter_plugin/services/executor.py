@@ -275,13 +275,14 @@ class Client:
                     f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
                 )
             if not job.input_filename.startswith(GCS):
-                self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
+                self.upload_input_file_to_gcs(
+                    job.input_filename, gcs_dag_bucket, job_name
+                )
             self.prepare_dag(job, gcs_dag_bucket, dag_file)
             self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
-            return {'status':0}
+            return {"status": 0}
         except Exception as e:
             return {"error": str(e)}
-
 
     def download_dag_output(self, bucket_name, dag_id, dag_run_id):
         try:

@@ -26,7 +26,6 @@ from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import executor
 
 
-
 async def mock_credentials():
     return {
         "project_id": "credentials-project",
