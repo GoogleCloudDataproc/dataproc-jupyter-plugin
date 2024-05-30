@@ -31,7 +31,7 @@ class ClusterListController(APIHandler):
             cluster_list = await client.list_clusters(page_size, page_token)
             self.finish(json.dumps(cluster_list))
         except Exception as e:
-            self.log.exception(f"Error fetching cluster list")
+            self.log.exception("Error fetching cluster list")
             self.finish({"error": str(e)})
 
 

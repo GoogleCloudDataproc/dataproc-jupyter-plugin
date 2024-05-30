@@ -29,7 +29,7 @@ class Client:
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            self.log.exception(f"Missing required credentials")
+            self.log.exception("Missing required credentials")
             raise ValueError("Missing required credentials")
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
@@ -50,7 +50,7 @@ class Client:
                 resp = response.json()
             return resp
         except Exception as e:
-            self.log.exception(f"Error fetching cluster list")
+            self.log.exception("Error fetching cluster list")
             return {"error": str(e)}
 
     async def list_runtime(self, page_size, page_token):

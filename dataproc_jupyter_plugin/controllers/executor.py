@@ -47,5 +47,5 @@ class DownloadOutputController(APIHandler):
             )
             self.finish(json.dumps({"status": download_status}))
         except Exception as e:
-            self.log.exception(f"Error download output file")
+            self.log.exception("Error download output file")
             self.finish({"error": str(e)})

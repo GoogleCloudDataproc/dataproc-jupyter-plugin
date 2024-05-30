@@ -48,7 +48,7 @@ class Client:
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            self.log.exception(f"Missing required credentials")
+            self.log.exception("Missing required credentials")
             raise ValueError("Missing required credentials")
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
@@ -101,7 +101,7 @@ class Client:
         output, error = process.communicate()
         print(process.returncode, error, output)
         if process.returncode == 0:
-            self.log.info(f"Papermill file uploaded to gcs successfully")
+            self.log.info("Papermill file uploaded to gcs successfully")
             print(process.returncode, error, output)
         else:
             self.log.exception(
@@ -116,13 +116,13 @@ class Client:
         )
         output, error = process.communicate()
         if process.returncode == 0:
-            self.log.info(f"Input file uploaded to gcs successfully")
+            self.log.info("Input file uploaded to gcs successfully")
         else:
             self.log.exception(f"Error uploading input file to gcs: {error.decode()}")
             raise IOError(error.decode)
 
     def prepare_dag(self, job, gcs_dag_bucket, dag_file):
-        self.log.info(f"Generating dag file")
+        self.log.info("Generating dag file")
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
         DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.txt"
         environment = Environment(
@@ -246,7 +246,7 @@ class Client:
         )
         output, error = process.communicate()
         if process.returncode == 0:
-            self.log.info(f"Dag file uploaded to gcs successfully")
+            self.log.info("Dag file uploaded to gcs successfully")
 
         if process.returncode != 0:
             self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
@@ -292,7 +292,7 @@ class Client:
             if process.returncode == 0:
                 return 0
             else:
-                self.log.exception(f"Error downloading output notebook file")
+                self.log.exception("Error downloading output notebook file")
                 return 1
         except Exception as e:
             self.log.exception(f"Error downloading output notebook file: {str(e)}")

@@ -32,7 +32,7 @@ class Client:
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            self.log.exception(f"Missing required credentials")
+            self.log.exception("Missing required credentials")
             raise ValueError("Missing required credentials")
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
@@ -55,7 +55,7 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching datasets list")
+            self.log.exception("Error fetching datasets list")
             return {"error": str(e)}
 
     async def list_table(self, dataset_id, page_token, project_id):
@@ -69,7 +69,7 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching tables list")
+            self.log.exception("Error fetching tables list")
             return {"error": str(e)}
 
     async def list_dataset_info(self, dataset_id, project_id):
@@ -85,7 +85,7 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching dataset info")
+            self.log.exception("Error fetching dataset info")
             return {"error": str(e)}
 
     async def list_table_info(self, dataset_id, table_id, project_id):
@@ -120,7 +120,7 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching preview data")
+            self.log.exception("Error fetching preview data")
             return {"error": str(e)}
 
     async def bigquery_search(self, search_string, type, system, projects):
@@ -172,5 +172,5 @@ class Client:
             else:
                 raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
-            self.log.exception(f"Error fetching projects")
+            self.log.exception("Error fetching projects")
             return {"error": str(e)}

@@ -33,7 +33,7 @@ class Client:
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            self.log.exception(f"Missing required credentials")
+            self.log.exception("Missing required credentials")
             raise ValueError("Missing required credentials")
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
@@ -74,7 +74,7 @@ class Client:
                         )
                     return environments
             else:
-                self.log.exception(f"Error listing environments")
+                self.log.exception("Error listing environments")
                 print(f"Error: {response.status_code} - {response.text}")
         except FileNotFoundError:
             environments = []

@@ -31,7 +31,7 @@ class DagListController(APIHandler):
             dag_list = await client.list_jobs(composer_name)
             self.finish(json.dumps(dag_list))
         except Exception as e:
-            self.log.exception(f"Error fetching cluster list")
+            self.log.exception("Error fetching cluster list")
             self.finish({"error": str(e)})
 
 
@@ -47,7 +47,7 @@ class DagDeleteController(APIHandler):
             if delete_response == 0:
                 self.finish(json.dumps({"status": delete_response}))
             else:
-                self.log.exception(f"Error deleting dag file")
+                self.log.exception("Error deleting dag file")
                 self.finish(json.dumps({"status": delete_response}))
         except Exception as e:
             self.log.exception(f"Error deleting dag file: {str(e)}")
@@ -66,7 +66,7 @@ class DagUpdateController(APIHandler):
             if update_response == 0:
                 self.finish({"status": 0})
             else:
-                self.log.exception(f"Error updating status")
+                self.log.exception("Error updating status")
                 self.finish(json.dumps(update_response))
         except Exception as e:
             self.log.exception(f"Error updating status: {str(e)}")
@@ -138,7 +138,7 @@ class EditDagController(APIHandler):
             dag_details = await client.edit_jobs(dag_id, bucket_name)
             self.finish(json.dumps(dag_details))
         except Exception as e:
-            self.log.exception(f"Error getting dag details")
+            self.log.exception("Error getting dag details")
             self.finish({"error": str(e)})
 
 
@@ -151,7 +151,7 @@ class ImportErrorController(APIHandler):
             import_errors_list = await client.list_import_errors(composer_name)
             self.finish(json.dumps(import_errors_list))
         except Exception as e:
-            self.log.exception(f"Error fetching import error list")
+            self.log.exception("Error fetching import error list")
             self.finish({"error": str(e)})
 
 
@@ -165,5 +165,5 @@ class TriggerDagController(APIHandler):
             trigger = await client.dag_trigger(dag_id, composer)
             self.finish(json.dumps(trigger))
         except Exception as e:
-            self.log.exception(f"Error triggering dag")
+            self.log.exception("Error triggering dag")
             self.finish({"error": str(e)})
