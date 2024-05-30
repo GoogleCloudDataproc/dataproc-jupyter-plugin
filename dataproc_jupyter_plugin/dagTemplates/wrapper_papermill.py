@@ -25,10 +25,11 @@ Only tested with Dataproc version 2.0+ images
 
 import argparse
 import re
-from google.cloud.storage.client import Client
+import sys
+
 import papermill as pm
 import yaml
-import sys
+from google.cloud.storage.client import Client
 
 
 def main():

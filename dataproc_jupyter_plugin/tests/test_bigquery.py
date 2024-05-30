@@ -13,10 +13,9 @@
 # limitations under the License.
 
 import json
-import requests
-
 from unittest.mock import Mock
 
+import requests
 from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials

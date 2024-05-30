@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.cloud.jupyter_config.config import (
-    async_run_gcloud_subcommand,
-    async_get_gcloud_config,
-)
+from google.cloud.jupyter_config.config import (async_get_gcloud_config,
+                                                async_run_gcloud_subcommand)
 
 
 async def _gcp_credentials():

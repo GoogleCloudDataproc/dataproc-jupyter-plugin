@@ -14,10 +14,10 @@
 
 import json
 import subprocess
+from unittest.mock import Mock
+
 import pytest
 import requests
-
-from unittest.mock import Mock
 from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials

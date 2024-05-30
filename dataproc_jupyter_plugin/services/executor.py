@@ -12,28 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime, timedelta
 import os
 import shutil
 import subprocess
 import uuid
+from datetime import datetime, timedelta
 
-from google.cloud.jupyter_config.config import gcp_account
-from jinja2 import Environment, PackageLoader, select_autoescape
 import pendulum
 import requests
-
-from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import (
-    COMPOSER_SERVICE_NAME,
-    CONTENT_TYPE,
-    GCS,
-    PACKAGE_NAME,
-    WRAPPER_PAPPERMILL_FILE,
-)
-from dataproc_jupyter_plugin.models.models import DescribeJob
 from google.cloud.jupyter_config.config import gcp_account
 from jinja2 import Environment, PackageLoader, select_autoescape
+
+from dataproc_jupyter_plugin import urls
+from dataproc_jupyter_plugin.commons.constants import (COMPOSER_SERVICE_NAME,
+                                                       CONTENT_TYPE, GCS,
+                                                       PACKAGE_NAME,
+                                                       WRAPPER_PAPPERMILL_FILE)
+from dataproc_jupyter_plugin.models.models import DescribeJob
 
 unique_id = str(uuid.uuid4().hex)
 job_id = ""

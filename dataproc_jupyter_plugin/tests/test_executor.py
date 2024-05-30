@@ -15,11 +15,10 @@
 import json
 import subprocess
 import unittest
-import pytest
-import requests
-
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pytest
+import requests
 from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials

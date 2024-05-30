@@ -15,10 +15,9 @@
 
 import json
 
-from jupyter_server.base.handlers import APIHandler
 import tornado
-
 from google.cloud.jupyter_config import gcp_project
+from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import bigquery
