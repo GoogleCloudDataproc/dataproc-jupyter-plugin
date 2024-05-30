@@ -12,17 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-import inspect
 import json
-import re
 import subprocess
-import threading
-import time
+
 
 import tornado
 from google.cloud.jupyter_config.config import (
-    async_get_gcloud_config,
     async_run_gcloud_subcommand,
     clear_gcloud_cache,
     gcp_kernel_gateway_url,
@@ -31,8 +26,7 @@ from google.cloud.jupyter_config.config import (
 )
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.serverapp import ServerApp
-from jupyter_server.utils import ensure_async, url_path_join
-from requests import HTTPError
+from jupyter_server.utils import url_path_join
 from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
