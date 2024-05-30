@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from google.cloud.jupyter_config.config import (
-    async_run_gcloud_subcommand,
     async_get_gcloud_config,
+    async_run_gcloud_subcommand,
 )
 
 

@@ -14,11 +14,12 @@
 
 import json
 import subprocess
+from unittest.mock import Mock
+
 import pytest
 import requests
-
-from unittest.mock import Mock
 from google.cloud import jupyter_config
+
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import airflow
 
@@ -66,7 +67,6 @@ async def test_list_jobs(monkeypatch, jp_fetch):
 
     assert response.code == 200
     payload = json.loads(response.body)
-    print(payload)
     assert (
         payload[0]["api_endpoint"]
         == "https://mock_airflow_uri/api/v1/dags?tags=dataproc_jupyter_plugin"
@@ -181,7 +181,7 @@ async def test_list_dag_run(monkeypatch, jp_fetch):
     )
     assert response.code == 200
     payload = json.loads(response.body)
-    print(payload)
+
     assert (
         payload["api_endpoint"]
         == f"https://mock_airflow_uri/api/v1/dags/mock_dag_id/dagRuns?execution_date_gte={mock_start_date}&execution_date_lte={mock_end_date}&offset={mock_offset}"
@@ -218,9 +218,7 @@ async def test_list_dag_run_task_logs(monkeypatch, jp_fetch):
         },
     )
     assert response.code == 200
-    print(response.body)
     payload = json.loads(response.body)
-    print(payload)
     assert payload["content"] == "mock log content"
 
 
@@ -245,7 +243,6 @@ async def test_list_dag_run_task(monkeypatch, jp_fetch):
     )
     assert response.code == 200
     payload = json.loads(response.body)
-    print(payload)
     assert (
         payload["api_endpoint"]
         == f"https://mock_airflow_uri/api/v1/dags/{mock_dag_id}/dagRuns/{mock_dag_run_id}/taskInstances"
@@ -281,7 +278,6 @@ async def test_list_import_errors(monkeypatch, jp_fetch):
     )
     assert response.code == 200
     payload = json.loads(response.body)
-    print(payload)
     assert (
         payload["api_endpoint"]
         == f"https://mock_airflow_uri/api/v1/importErrors?order_by=-import_error_id"
@@ -318,7 +314,6 @@ async def test_dag_trigger(monkeypatch, jp_fetch):
     )
     assert response.code == 200
     payload = json.loads(response.body)["results"][0]
-    print(payload)
     assert (
         payload["api_endpoint"]
         == f"https://mock_airflow_uri/api/v1/dags/{mock_dag_id}/dagRuns"

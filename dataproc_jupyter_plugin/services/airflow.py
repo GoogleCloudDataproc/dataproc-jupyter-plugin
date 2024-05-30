@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
-import subprocess
 import re
+import subprocess
 import urllib
+
+import requests
+
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
@@ -34,7 +36,7 @@ class Client:
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            self.log.exception(f"Missing required credentials")
+            self.log.exception("Missing required credentials")
             raise ValueError("Missing required credentials")
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
@@ -87,7 +89,7 @@ class Client:
             if process.returncode == 0:
                 return 0
             else:
-                self.log.exception(f"Error deleting dag")
+                self.log.exception("Error deleting dag")
                 return 1
         except Exception as e:
             self.log.exception(f"Error deleting dag: {str(e)}")
@@ -107,7 +109,7 @@ class Client:
             if response.status_code == 200:
                 return 0
             else:
-                self.log.exception(f"Error updating status")
+                self.log.exception("Error updating status")
                 return 1
         except Exception as e:
             self.log.exception(f"Error updating status: {str(e)}")
@@ -287,7 +289,7 @@ class Client:
                 return payload
 
             else:
-                self.log.exception(f"No Dag file found")
+                self.log.exception("No Dag file found")
         except Exception as e:
             self.log.exception(f"Error downloading dag file: {str(e)}")
 

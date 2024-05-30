@@ -29,4 +29,3 @@ CLOUDKMS_SERVICE_NAME = "cloudkms"
 COMPUTE_SERVICE_DEFAULT_URL = "https://compute.googleapis.com/compute/v1"
 STORAGE_SERVICE_DEFAULT_URL = "https://storage.googleapis.com/storage/v1/"
 WRAPPER_PAPPERMILL_FILE = "wrapper_papermill.py"
-

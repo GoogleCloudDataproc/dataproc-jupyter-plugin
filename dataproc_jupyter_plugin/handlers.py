@@ -20,30 +20,30 @@ import subprocess
 import threading
 import time
 
-from jupyter_server.base.handlers import APIHandler
-from jupyter_server.serverapp import ServerApp
-from jupyter_server.utils import url_path_join
-from jupyter_server.utils import ensure_async
-from requests import HTTPError
 import tornado
-from traitlets import Bool, Undefined, Unicode
-from traitlets.config import SingletonConfigurable
-
 from google.cloud.jupyter_config.config import (
-    async_run_gcloud_subcommand,
     async_get_gcloud_config,
+    async_run_gcloud_subcommand,
     clear_gcloud_cache,
     gcp_kernel_gateway_url,
     gcp_project_number,
     gcp_region,
 )
+from jupyter_server.base.handlers import APIHandler
+from jupyter_server.serverapp import ServerApp
+from jupyter_server.utils import ensure_async, url_path_join
+from requests import HTTPError
+from traitlets import Bool, Undefined, Unicode
+from traitlets.config import SingletonConfigurable
 
 from dataproc_jupyter_plugin import credentials, urls
-from dataproc_jupyter_plugin.controllers import bigquery
-from dataproc_jupyter_plugin.controllers import dataproc
-from dataproc_jupyter_plugin.controllers import composer
-from dataproc_jupyter_plugin.controllers import airflow
-from dataproc_jupyter_plugin.controllers import executor
+from dataproc_jupyter_plugin.controllers import (
+    airflow,
+    bigquery,
+    composer,
+    dataproc,
+    executor,
+)
 
 _region_not_set_error = """GCP region not set in gcloud.
 

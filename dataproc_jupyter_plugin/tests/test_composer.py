@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import json
-import requests
-
 from unittest.mock import Mock
+
+import requests
 from google.cloud import jupyter_config
+
 from dataproc_jupyter_plugin import credentials
 
 
@@ -29,16 +30,6 @@ async def mock_credentials():
         "config_error": 0,
         "login_error": 0,
     }
-
-
-# def mock_get(api_endpoint, headers=None):
-#     response = Mock()
-#     response.status_code = 200
-#     response.json.return_value = {
-#         "api_endpoint": api_endpoint,
-#         "headers": headers,
-#     }
-#     return response
 
 
 def mock_get(url, headers):
@@ -64,7 +55,6 @@ async def test_list_composer(monkeypatch, jp_fetch):
     response = await jp_fetch("dataproc-plugin", "composerList")
     assert response.code == 200
     payload = json.loads(response.body)
-    print(payload)
     assert len(payload) == 2
     assert payload[0]["name"] == "env1"
     assert payload[1]["name"] == "env2"

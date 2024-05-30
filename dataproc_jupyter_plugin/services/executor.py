@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import shutil
-import requests
 import subprocess
 import uuid
-import os
-import pendulum
 from datetime import datetime, timedelta
+
+import pendulum
+import requests
+from google.cloud.jupyter_config.config import gcp_account
+from jinja2 import Environment, PackageLoader, select_autoescape
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
@@ -29,8 +32,6 @@ from dataproc_jupyter_plugin.commons.constants import (
     WRAPPER_PAPPERMILL_FILE,
 )
 from dataproc_jupyter_plugin.models.models import DescribeJob
-from google.cloud.jupyter_config.config import gcp_account
-from jinja2 import Environment, PackageLoader, select_autoescape
 
 unique_id = str(uuid.uuid4().hex)
 job_id = ""
@@ -47,7 +48,7 @@ class Client:
             and ("project_id" in credentials)
             and ("region_id" in credentials)
         ):
-            self.log.exception(f"Missing required credentials")
+            self.log.exception("Missing required credentials")
             raise ValueError("Missing required credentials")
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
@@ -100,7 +101,7 @@ class Client:
         output, error = process.communicate()
         print(process.returncode, error, output)
         if process.returncode == 0:
-            self.log.info(f"Papermill file uploaded to gcs successfully")
+            self.log.info("Papermill file uploaded to gcs successfully")
             print(process.returncode, error, output)
         else:
             self.log.exception(
@@ -115,13 +116,13 @@ class Client:
         )
         output, error = process.communicate()
         if process.returncode == 0:
-            self.log.info(f"Input file uploaded to gcs successfully")
+            self.log.info("Input file uploaded to gcs successfully")
         else:
             self.log.exception(f"Error uploading input file to gcs: {error.decode()}")
             raise IOError(error.decode)
 
     def prepare_dag(self, job, gcs_dag_bucket, dag_file):
-        self.log.info(f"Generating dag file")
+        self.log.info("Generating dag file")
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
         DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.txt"
         environment = Environment(
@@ -245,7 +246,7 @@ class Client:
         )
         output, error = process.communicate()
         if process.returncode == 0:
-            self.log.info(f"Dag file uploaded to gcs successfully")
+            self.log.info("Dag file uploaded to gcs successfully")
 
         if process.returncode != 0:
             self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
@@ -272,13 +273,14 @@ class Client:
                     f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
                 )
             if not job.input_filename.startswith(GCS):
-                self.upload_input_file_to_gcs(job.input_filename, gcs_dag_bucket, job_name)
+                self.upload_input_file_to_gcs(
+                    job.input_filename, gcs_dag_bucket, job_name
+                )
             self.prepare_dag(job, gcs_dag_bucket, dag_file)
             self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
-            return {'status':0}
+            return {"status": 0}
         except Exception as e:
             return {"error": str(e)}
-
 
     def download_dag_output(self, bucket_name, dag_id, dag_run_id):
         try:
@@ -290,7 +292,7 @@ class Client:
             if process.returncode == 0:
                 return 0
             else:
-                self.log.exception(f"Error downloading output notebook file")
+                self.log.exception("Error downloading output notebook file")
                 return 1
         except Exception as e:
             self.log.exception(f"Error downloading output notebook file: {str(e)}")

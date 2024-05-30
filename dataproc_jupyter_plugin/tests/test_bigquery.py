@@ -13,14 +13,12 @@
 # limitations under the License.
 
 import json
-import requests
-
 from unittest.mock import Mock
 
+import requests
 from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin import urls
 
 
 async def mock_credentials():
@@ -62,7 +60,6 @@ async def test_list_datasets(monkeypatch, jp_fetch):
     )
     assert response.code == 200
     payload = json.loads(response.body)
-    print("payload ---------", payload)
     assert (
         payload["api_endpoint"]
         == f"https://bigquery.googleapis.com/bigquery/v2/projects/{mock_project_id}/datasets?pageToken={mock_page_token}"
