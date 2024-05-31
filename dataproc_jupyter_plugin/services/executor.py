@@ -18,8 +18,8 @@ import subprocess
 import uuid
 from datetime import datetime, timedelta
 
+import aiohttp
 import pendulum
-import requests
 from google.cloud.jupyter_config.config import gcp_account
 from jinja2 import Environment, PackageLoader, select_autoescape
 
@@ -64,11 +64,14 @@ class Client:
         try:
             composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
             api_endpoint = f"{composer_url}v1/projects/{self.project_id}/locations/{self.region_id}/environments/{runtime_env}"
-            response = requests.get(api_endpoint, headers=self.create_headers())
-            if response.status_code == 200:
-                resp = response.json()
-                gcs_dag_path = resp.get("storageConfig", {}).get("bucket", "")
-                return gcs_dag_path
+            headers = self.create_headers()
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(api_endpoint, headers=headers) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        gcs_dag_path = resp.get("storageConfig", {}).get("bucket", "")
+                        return gcs_dag_path
         except Exception as e:
             self.log.exception(f"Error getting bucket name: {str(e)}")
             print(f"Error: {e}")

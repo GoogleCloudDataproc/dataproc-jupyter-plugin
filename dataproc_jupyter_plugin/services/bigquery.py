@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-import requests
+import aiohttp
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
@@ -48,12 +48,15 @@ class Client:
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
-            response = requests.get(api_endpoint, headers=self.create_headers())
-            if response.status_code == 200:
-                resp = response.json()
-                return resp
-            else:
-                raise Exception(f"Error response from BigQuery: {response}")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    api_endpoint, headers=self.create_headers()
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        return resp
+                    else:
+                        raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception("Error fetching datasets list")
             return {"error": str(e)}
@@ -62,12 +65,16 @@ class Client:
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
-            response = requests.get(api_endpoint, headers=self.create_headers())
-            if response.status_code == 200:
-                resp = response.json()
-                return resp
-            else:
-                raise Exception(f"Error response from BigQuery: {response}")
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    api_endpoint, headers=self.create_headers()
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        return resp
+                    else:
+                        raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception("Error fetching tables list")
             return {"error": str(e)}
@@ -78,12 +85,16 @@ class Client:
             api_endpoint = (
                 f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
             )
-            response = requests.get(api_endpoint, headers=self.create_headers())
-            if response.status_code == 200:
-                resp = response.json()
-                return resp
-            else:
-                raise Exception(f"Error response from BigQuery: {response}")
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    api_endpoint, headers=self.create_headers()
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        return resp
+                    else:
+                        raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception("Error fetching dataset info")
             return {"error": str(e)}
@@ -92,33 +103,36 @@ class Client:
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
-            response = requests.get(api_endpoint, headers=self.create_headers())
-            if response.status_code == 200:
-                resp = response.json()
-                return resp
-            else:
-                raise Exception(f"Error response from BigQuery: {response}")
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    api_endpoint, headers=self.create_headers()
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        return resp
+                    else:
+                        raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception(f"Error fetching table information")
             return {"error": str(e)}
 
     async def bigquery_preview_data(
-        self,
-        dataset_id,
-        table_id,
-        max_results,
-        start_index,
-        project_id,
+        self, dataset_id, table_id, max_results, start_index, project_id
     ):
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?maxResults={max_results}&startIndex={start_index}"
-            response = requests.get(api_endpoint, headers=self.create_headers())
-            if response.status_code == 200:
-                resp = response.json()
-                return resp
-            else:
-                raise Exception(f"Error response from BigQuery: {response}")
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    api_endpoint, headers=self.create_headers()
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        return resp
+                    else:
+                        raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception("Error fetching preview data")
             return {"error": str(e)}
@@ -139,18 +153,21 @@ class Client:
             }
             has_next = True
             search_result = []
-            while has_next:
-                response = requests.post(api_endpoint, headers=headers, json=payload)
-                if response.status_code == 200:
-                    resp = response.json()
-                    if "results" in resp:
-                        search_result += resp["results"]
-                    if "nextPageToken" in resp:
-                        payload["pageToken"] = resp["nextPageToken"]
-                    else:
-                        has_next = False
-                else:
-                    raise Exception(f"Error response from BigQuery: {response}")
+            async with aiohttp.ClientSession() as session:
+                while has_next:
+                    async with session.post(
+                        api_endpoint, headers=headers, json=payload
+                    ) as response:
+                        if response.status == 200:
+                            resp = await response.json()
+                            if "results" in resp:
+                                search_result += resp["results"]
+                            if "nextPageToken" in resp:
+                                payload["pageToken"] = resp["nextPageToken"]
+                            else:
+                                has_next = False
+                        else:
+                            raise Exception(f"Error response from BigQuery: {response}")
             if len(search_result) == 0:
                 return {}
             else:
@@ -165,12 +182,16 @@ class Client:
                 CLOUDRESOURCEMANAGER_SERVICE_NAME
             )
             api_endpoint = f"{cloudresourcemanager_url}v1/projects"
-            response = requests.get(api_endpoint, headers=self.create_headers())
-            if response.status_code == 200:
-                resp = response.json()
-                return resp
-            else:
-                raise Exception(f"Error response from BigQuery: {response}")
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    api_endpoint, headers=self.create_headers()
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        return resp
+                    else:
+                        raise Exception(f"Error response from BigQuery: {response}")
         except Exception as e:
             self.log.exception("Error fetching projects")
             return {"error": str(e)}
