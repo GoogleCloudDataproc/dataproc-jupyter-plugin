@@ -20,8 +20,12 @@ import aiohttp
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
-    COMPOSER_SERVICE_NAME, CONTENT_TYPE, STORAGE_SERVICE_DEFAULT_URL,
-    STORAGE_SERVICE_NAME, TAGS)
+    COMPOSER_SERVICE_NAME,
+    CONTENT_TYPE,
+    STORAGE_SERVICE_DEFAULT_URL,
+    STORAGE_SERVICE_NAME,
+    TAGS,
+)
 
 
 class Client:

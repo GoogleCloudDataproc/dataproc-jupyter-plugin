@@ -17,8 +17,11 @@ import aiohttp
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
-    BIGQUERY_SERVICE_NAME, CLOUDRESOURCEMANAGER_SERVICE_NAME, CONTENT_TYPE,
-    DATACATALOG_SERVICE_NAME)
+    BIGQUERY_SERVICE_NAME,
+    CLOUDRESOURCEMANAGER_SERVICE_NAME,
+    CONTENT_TYPE,
+    DATACATALOG_SERVICE_NAME,
+)
 
 
 class Client:

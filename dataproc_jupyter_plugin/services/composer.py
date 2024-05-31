@@ -18,8 +18,10 @@ from typing import List
 import aiohttp
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import (COMPOSER_SERVICE_NAME,
-                                                       CONTENT_TYPE)
+from dataproc_jupyter_plugin.commons.constants import (
+    COMPOSER_SERVICE_NAME,
+    CONTENT_TYPE,
+)
 from dataproc_jupyter_plugin.models.models import ComposerEnvironment
 
 
