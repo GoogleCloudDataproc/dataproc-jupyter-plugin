@@ -14,12 +14,9 @@
 
 import aiohttp
 
-
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import (
-    CONTENT_TYPE,
-    DATAPROC_SERVICE_NAME,
-)
+from dataproc_jupyter_plugin.commons.constants import (CONTENT_TYPE,
+                                                       DATAPROC_SERVICE_NAME)
 
 
 class Client:
