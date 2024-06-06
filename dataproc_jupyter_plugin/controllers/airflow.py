@@ -18,6 +18,7 @@ import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
+from dataproc_jupyter_plugin.sessions import get_client_session
 from dataproc_jupyter_plugin.services import airflow
 
 
@@ -25,9 +26,10 @@ class DagListController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             composer_name = self.get_argument("composer")
-            dag_list = await client.list_jobs(composer_name)
+            dag_list = await client.list_jobs(composer_name,session)
             self.finish(json.dumps(dag_list))
         except Exception as e:
             self.log.exception("Error fetching cluster list")
@@ -38,11 +40,12 @@ class DagDeleteController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             from_page = self.get_argument("from_page", default=None)
-            delete_response = await client.delete_job(composer, dag_id, from_page)
+            delete_response = await client.delete_job(composer, dag_id, from_page,session)
             if delete_response == 0:
                 self.finish(json.dumps({"status": delete_response}))
             else:
@@ -57,11 +60,12 @@ class DagUpdateController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             status = self.get_argument("status")
-            update_response = await client.update_job(composer, dag_id, status)
+            update_response = await client.update_job(composer, dag_id, status, session)
             if update_response == 0:
                 self.finish({"status": 0})
             else:
@@ -76,6 +80,7 @@ class DagRunController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             composer_name = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
@@ -83,7 +88,7 @@ class DagRunController(APIHandler):
             offset = self.get_argument("offset")
             end_date = self.get_argument("end_date")
             dag_run_list = await client.list_dag_runs(
-                composer_name, dag_id, start_date, end_date, offset
+                composer_name, dag_id, start_date, end_date, offset, session
             )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
@@ -95,12 +100,13 @@ class DagRunTaskController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             composer_name = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
             dag_run_list = await client.list_dag_run_task(
-                composer_name, dag_id, dag_run_id
+                composer_name, dag_id, dag_run_id, session
             )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
@@ -112,6 +118,7 @@ class DagRunTaskLogsController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             composer_name = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
@@ -119,7 +126,7 @@ class DagRunTaskLogsController(APIHandler):
             task_id = self.get_argument("task_id")
             task_try_number = self.get_argument("task_try_number")
             dag_run_list = await client.list_dag_run_task_logs(
-                composer_name, dag_id, dag_run_id, task_id, task_try_number
+                composer_name, dag_id, dag_run_id, task_id, task_try_number, session
             )
             self.finish(json.dumps(dag_run_list))
         except Exception as e:
@@ -131,10 +138,11 @@ class EditDagController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             bucket_name = self.get_argument("bucket_name")
             dag_id = self.get_argument("dag_id")
-            dag_details = await client.edit_jobs(dag_id, bucket_name)
+            dag_details = await client.edit_jobs(dag_id, bucket_name, session)
             self.finish(json.dumps(dag_details))
         except Exception as e:
             self.log.exception("Error getting dag details")
@@ -145,9 +153,10 @@ class ImportErrorController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             composer_name = self.get_argument("composer")
-            import_errors_list = await client.list_import_errors(composer_name)
+            import_errors_list = await client.list_import_errors(composer_name, session)
             self.finish(json.dumps(import_errors_list))
         except Exception as e:
             self.log.exception("Error fetching import error list")
@@ -158,10 +167,11 @@ class TriggerDagController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             dag_id = self.get_argument("dag_id")
             composer = self.get_argument("composer")
-            trigger = await client.dag_trigger(dag_id, composer)
+            trigger = await client.dag_trigger(dag_id, composer, session)
             self.finish(json.dumps(trigger))
         except Exception as e:
             self.log.exception("Error triggering dag")

@@ -45,41 +45,7 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    # async def list_environments(self) -> List[ComposerEnvironment]:
-    #     try:
-    #         environments = []
-    #         composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
-    #         api_endpoint = f"{composer_url}v1/projects/{self.project_id}/locations/{self.region_id}/environments"
-    #         response = requests.get(api_endpoint, headers=self.create_headers())
-    #         if response.status_code == 200:
-    #             resp = response.json()
-    #             if not resp:
-    #                 return environments
-    #             else:
-    #                 environment = resp["environments"]
-    #                 # Extract the 'name' values from the 'environments' list
-    #                 names = [env["name"] for env in environment]
-    #                 # Extract the last value after the last slash for each 'name'
-    #                 last_values = [name.split("/")[-1] for name in names]
-    #                 for env in last_values:
-    #                     name = env
-    #                     environments.append(
-    #                         ComposerEnvironment(
-    #                             name=name,
-    #                             label=name,
-    #                             description=f"Environment: {name}",
-    #                             file_extensions=["ipynb"],
-    #                             metadata={"path": env},
-    #                         )
-    #                     )
-    #                 return environments
-    #         else:
-    #             self.log.exception("Error listing environments")
-    #             print(f"Error: {response.status_code} - {response.text}")
-    #     except FileNotFoundError:
-    #         environments = []
-    #         return environments
-    async def list_environments(self) -> List[ComposerEnvironment]:
+    async def list_environments(self,session) -> List[ComposerEnvironment]:
         try:
             environments = []
             composer_url = await urls.gcp_service_url("composer")
@@ -87,33 +53,32 @@ class Client:
 
             headers = self.create_headers()
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(api_endpoint, headers=headers) as response:
-                    if response.status == 200:
-                        resp = await response.json()
-                        if not resp:
-                            return environments
-                        else:
-                            environment = resp.get("environments", [])
-                            # Extract the 'name' values from the 'environments' list
-                            names = [env["name"] for env in environment]
-                            # Extract the last value after the last slash for each 'name'
-                            last_values = [name.split("/")[-1] for name in names]
-                            for env in last_values:
-                                name = env
-                                environments.append(
-                                    ComposerEnvironment(
-                                        name=name,
-                                        label=name,
-                                        description=f"Environment: {name}",
-                                        file_extensions=["ipynb"],
-                                        metadata={"path": env},
-                                    )
-                                )
-                            return environments
+            async with session.get(api_endpoint, headers=headers) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return environments
                     else:
-                        self.log.exception("Error listing environments")
-                        print(f"Error: {response.status} - {await response.text()}")
+                        environment = resp.get("environments", [])
+                        # Extract the 'name' values from the 'environments' list
+                        names = [env["name"] for env in environment]
+                        # Extract the last value after the last slash for each 'name'
+                        last_values = [name.split("/")[-1] for name in names]
+                        for env in last_values:
+                            name = env
+                            environments.append(
+                                ComposerEnvironment(
+                                    name=name,
+                                    label=name,
+                                    description=f"Environment: {name}",
+                                    file_extensions=["ipynb"],
+                                    metadata={"path": env},
+                                )
+                            )
+                        return environments
+                else:
+                    self.log.exception("Error listing environments")
+                    print(f"Error: {response.status} - {await response.text()}")
         except Exception as e:
             self.log.exception(f"Error fetching environments list: {str(e)}")
             return []

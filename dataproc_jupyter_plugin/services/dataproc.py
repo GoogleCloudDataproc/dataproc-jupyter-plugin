@@ -41,39 +41,37 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_clusters(self, page_size, page_token):
+    async def list_clusters(self, page_size, page_token, session):
         try:
             dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
             api_endpoint = f"{dataproc_url}/v1/projects/{self.project_id}/regions/{self.region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    api_endpoint, headers=self.create_headers()
-                ) as response:
-                    if response.status == 200:
-                        resp = await response.json()
-                        return resp
-                    else:
-                        return {"error": f"Failed to fetch clusters: {response.status}"}
+            async with session.get(
+                api_endpoint, headers=self.create_headers()
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    return resp
+                else:
+                    return {"error": f"Failed to fetch clusters: {response.status}"}
 
         except Exception as e:
             self.log.exception("Error fetching cluster list")
             return {"error": str(e)}
 
-    async def list_runtime(self, page_size, page_token):
+    async def list_runtime(self, page_size, page_token, session):
         try:
             dataproc_url = await urls.gcp_service_url("dataproc")
             api_endpoint = f"{dataproc_url}/v1/projects/{self.project_id}/locations/{self.region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    api_endpoint, headers=self.create_headers()
-                ) as response:
-                    if response.status == 200:
-                        resp = await response.json()
-                        return resp
-                    else:
-                        return {"error": f"Failed to fetch runtimes: {response.status}"}
+            async with session.get(
+                api_endpoint, headers=self.create_headers()
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    return resp
+                else:
+                    return {"error": f"Failed to fetch runtimes: {response.status}"}
         except Exception as e:
             self.log.exception(f"Error fetching runtime list: {str(e)}")
             return {"error": str(e)}

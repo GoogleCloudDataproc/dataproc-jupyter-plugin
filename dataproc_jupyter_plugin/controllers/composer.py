@@ -19,6 +19,7 @@ from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import composer
+from dataproc_jupyter_plugin.sessions import get_client_session
 
 
 class EnvironmentListController(APIHandler):
@@ -26,8 +27,9 @@ class EnvironmentListController(APIHandler):
     async def get(self):
         """Returns names of available composer environments"""
         try:
+            session = await get_client_session()
             client = composer.Client(await credentials.get_cached(), self.log)
-            environments = await client.list_environments()
+            environments = await client.list_environments(session)
         except Exception as e:
             self.log.exception(f"Error fetching composer environments: {str(e)}")
             self.finish({"error": str(e)})

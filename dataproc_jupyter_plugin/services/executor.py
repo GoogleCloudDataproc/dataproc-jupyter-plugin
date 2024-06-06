@@ -32,6 +32,7 @@ from dataproc_jupyter_plugin.commons.constants import (
     WRAPPER_PAPPERMILL_FILE,
 )
 from dataproc_jupyter_plugin.models.models import DescribeJob
+from dataproc_jupyter_plugin.sessions import get_client_session
 
 unique_id = str(uuid.uuid4().hex)
 job_id = ""
@@ -65,13 +66,12 @@ class Client:
             composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
             api_endpoint = f"{composer_url}v1/projects/{self.project_id}/locations/{self.region_id}/environments/{runtime_env}"
             headers = self.create_headers()
-
-            async with aiohttp.ClientSession() as session:
-                async with session.get(api_endpoint, headers=headers) as response:
-                    if response.status == 200:
-                        resp = await response.json()
-                        gcs_dag_path = resp.get("storageConfig", {}).get("bucket", "")
-                        return gcs_dag_path
+            session = await get_client_session()
+            async with session.get(api_endpoint, headers=headers) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    gcs_dag_path = resp.get("storageConfig", {}).get("bucket", "")
+                    return gcs_dag_path
         except Exception as e:
             self.log.exception(f"Error getting bucket name: {str(e)}")
             print(f"Error: {e}")
