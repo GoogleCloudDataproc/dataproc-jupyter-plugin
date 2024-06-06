@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
 import json
 import tornado
 from jupyter_server.base.handlers import APIHandler
@@ -28,7 +27,6 @@ class ClusterListController(APIHandler):
             page_token = self.get_argument("pageToken")
             page_size = self.get_argument("pageSize")
             client = dataproc.Client(await credentials.get_cached(), self.log)
-            # cluster_list = asyncio.run(client.list_clusters(page_size, page_token))
             cluster_list = await client.list_clusters(page_size, page_token)
             self.finish(json.dumps(cluster_list))
         except Exception as e:
