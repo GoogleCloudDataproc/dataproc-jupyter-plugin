@@ -123,7 +123,9 @@ class Client:
             self.log.exception(f"Error updating status: {str(e)}")
             return {"error": str(e)}
 
-    async def list_dag_runs(self, composer_name, dag_id, start_date, end_date, offset, session):
+    async def list_dag_runs(
+        self, composer_name, dag_id, start_date, end_date, offset, session
+    ):
         airflow_uri, bucket = await self.get_airflow_uri(composer_name)
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns?execution_date_gte={start_date}&execution_date_lte={end_date}&offset={offset}"
@@ -304,7 +306,7 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error downloading dag file: {str(e)}")
 
-    async def list_import_errors(self, composer,session):
+    async def list_import_errors(self, composer, session):
         airflow_uri, bucket = await self.get_airflow_uri(composer)
         try:
             api_endpoint = (

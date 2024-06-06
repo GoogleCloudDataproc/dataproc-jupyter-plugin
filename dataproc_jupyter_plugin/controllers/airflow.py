@@ -29,7 +29,7 @@ class DagListController(APIHandler):
             session = await get_client_session()
             client = airflow.Client(await credentials.get_cached(), self.log)
             composer_name = self.get_argument("composer")
-            dag_list = await client.list_jobs(composer_name,session)
+            dag_list = await client.list_jobs(composer_name, session)
             self.finish(json.dumps(dag_list))
         except Exception as e:
             self.log.exception("Error fetching cluster list")
@@ -45,7 +45,9 @@ class DagDeleteController(APIHandler):
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             from_page = self.get_argument("from_page", default=None)
-            delete_response = await client.delete_job(composer, dag_id, from_page,session)
+            delete_response = await client.delete_job(
+                composer, dag_id, from_page, session
+            )
             if delete_response == 0:
                 self.finish(json.dumps({"status": delete_response}))
             else:

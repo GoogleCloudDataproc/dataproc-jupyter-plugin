@@ -45,7 +45,7 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_environments(self,session) -> List[ComposerEnvironment]:
+    async def list_environments(self, session) -> List[ComposerEnvironment]:
         try:
             environments = []
             composer_url = await urls.gcp_service_url("composer")

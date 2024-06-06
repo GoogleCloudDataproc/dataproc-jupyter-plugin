@@ -50,7 +50,9 @@ class TableController(APIHandler):
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
             client = bigquery.Client(await credentials.get_cached(), self.log)
-            table_list = await client.list_table(dataset_id, page_token, project_id, session)
+            table_list = await client.list_table(
+                dataset_id, page_token, project_id, session
+            )
             self.finish(json.dumps(table_list))
         except Exception as e:
             self.log.exception("Error fetching datasets")
@@ -65,7 +67,9 @@ class DatasetInfoController(APIHandler):
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
             client = bigquery.Client(await credentials.get_cached(), self.log)
-            dataset_info = await client.list_dataset_info(dataset_id, project_id, session)
+            dataset_info = await client.list_dataset_info(
+                dataset_id, project_id, session
+            )
             self.finish(json.dumps(dataset_info))
         except Exception as e:
             self.log.exception("Error fetching dataset information")
@@ -81,7 +85,9 @@ class TableInfoController(APIHandler):
             table_id = self.get_argument("table_id")
             project_id = self.get_argument("project_id")
             client = bigquery.Client(await credentials.get_cached(), self.log)
-            table_info = await client.list_table_info(dataset_id, table_id, project_id, session)
+            table_info = await client.list_table_info(
+                dataset_id, table_id, project_id, session
+            )
             self.finish(json.dumps(table_info))
         except Exception as e:
             self.log.exception("Error fetching table information")
@@ -100,12 +106,7 @@ class PreviewController(APIHandler):
             project_id = self.get_argument("project_id")
             client = bigquery.Client(await credentials.get_cached(), self.log)
             preview_data = await client.bigquery_preview_data(
-                dataset_id,
-                table_id,
-                max_results,
-                start_index,
-                project_id,
-                session
+                dataset_id, table_id, max_results, start_index, project_id, session
             )
             self.finish(json.dumps(preview_data))
         except Exception as e:
