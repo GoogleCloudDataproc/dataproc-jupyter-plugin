@@ -61,7 +61,7 @@ class Client:
 
     async def list_runtime(self, page_size, page_token, session):
         try:
-            dataproc_url = await urls.gcp_service_url("dataproc")
+            dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
             api_endpoint = f"{dataproc_url}/v1/projects/{self.project_id}/locations/{self.region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
 
             async with session.get(

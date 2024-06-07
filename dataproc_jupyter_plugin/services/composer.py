@@ -48,7 +48,7 @@ class Client:
     async def list_environments(self, session) -> List[ComposerEnvironment]:
         try:
             environments = []
-            composer_url = await urls.gcp_service_url("composer")
+            composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
             api_endpoint = f"{composer_url}/v1/projects/{self.project_id}/locations/{self.region_id}/environments"
 
             headers = self.create_headers()
