@@ -25,7 +25,7 @@ from dataproc_jupyter_plugin.commons.constants import (
 
 
 class Client:
-    client_session = None
+    client_session = aiohttp.ClientSession()
 
     def __init__(self, credentials, log):
         self.log = log
@@ -41,11 +41,6 @@ class Client:
         self.region_id = credentials["region_id"]
 
 
-    async def get_client_session(self):
-        if self.client_session is None:
-            self.client_session = aiohttp.ClientSession()
-        return self.client_session
-
     def create_headers(self):
         return {
             "Content-Type": CONTENT_TYPE,
@@ -56,8 +51,7 @@ class Client:
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -73,8 +67,7 @@ class Client:
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -92,8 +85,7 @@ class Client:
             api_endpoint = (
                 f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
             )
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -109,8 +101,7 @@ class Client:
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -128,8 +119,7 @@ class Client:
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?maxResults={max_results}&startIndex={start_index}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -158,8 +148,7 @@ class Client:
             has_next = True
             search_result = []
             while has_next:
-                session = await self.get_client_session()
-                async with session.post(
+                async with self.client_session.post(
                     api_endpoint, headers=headers, json=payload
                 ) as response:
                     if response.status == 200:
@@ -186,8 +175,7 @@ class Client:
                 CLOUDRESOURCEMANAGER_SERVICE_NAME
             )
             api_endpoint = f"{cloudresourcemanager_url}v1/projects"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:

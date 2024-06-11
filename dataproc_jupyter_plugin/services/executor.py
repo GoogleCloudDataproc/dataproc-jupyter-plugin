@@ -42,7 +42,7 @@ ROOT_FOLDER = PACKAGE_NAME
 
 
 class Client:
-    client_session = None
+    client_session = aiohttp.ClientSession()
 
     def __init__(self, credentials, log):
         self.log = log
@@ -58,10 +58,6 @@ class Client:
         self.region_id = credentials["region_id"]
     
  
-    async def get_client_session(self):
-        if self.client_session is None:
-            self.client_session = aiohttp.ClientSession()
-        return self.client_session
 
     def create_headers(self):
         return {
@@ -74,8 +70,7 @@ class Client:
             composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
             api_endpoint = f"{composer_url}v1/projects/{self.project_id}/locations/{self.region_id}/environments/{runtime_env}"
             headers = self.create_headers()
-            session = await self.get_client_session()
-            async with session.get(api_endpoint, headers=headers) as response:
+            async with self.client_session.get(api_endpoint, headers=headers) as response:
                 if response.status == 200:
                     resp = await response.json()
                     gcs_dag_path = resp.get("storageConfig", {}).get("bucket", "")

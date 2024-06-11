@@ -22,7 +22,7 @@ from dataproc_jupyter_plugin.commons.constants import (
 
 
 class Client:
-    client_session = None
+    client_session = aiohttp.ClientSession()
 
     def __init__(self, credentials, log):
         self.log = log
@@ -53,8 +53,7 @@ class Client:
         try:
             dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
             api_endpoint = f"{dataproc_url}/v1/projects/{self.project_id}/regions/{self.region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -71,8 +70,7 @@ class Client:
         try:
             dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
             api_endpoint = f"{dataproc_url}/v1/projects/{self.project_id}/locations/{self.region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:

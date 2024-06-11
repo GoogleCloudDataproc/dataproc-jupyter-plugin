@@ -31,7 +31,7 @@ from dataproc_jupyter_plugin.commons.constants import (
 
 
 class Client:
-    client_session = None
+    client_session = aiohttp.ClientSession()
 
     def __init__(self, credentials, log):
         self.log = log
@@ -46,11 +46,6 @@ class Client:
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
 
-    async def get_client_session(self):
-        if self.client_session is None:
-            self.client_session = aiohttp.ClientSession()
-        return self.client_session
-
     def create_headers(self):
         return {
             "Content-Type": CONTENT_TYPE,
@@ -61,8 +56,7 @@ class Client:
         try:
             composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
             api_endpoint = f"{composer_url}v1/projects/{self.project_id}/locations/{self.region_id}/environments/{composer_name}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -78,8 +72,7 @@ class Client:
         airflow_uri, bucket = await self.get_airflow_uri(composer_name)
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags?tags={TAGS}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -94,8 +87,7 @@ class Client:
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}"
             if from_page is None:
-                session = await self.get_client_session()
-                async with session.delete(
+                async with self.client_session.delete(
                     api_endpoint, headers=self.create_headers()
                 ) as response:
                     self.log.info(response)
@@ -119,8 +111,7 @@ class Client:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}"
 
             data = {"is_paused": status.lower() != "true"}
-            session = await self.get_client_session()
-            async with session.patch(
+            async with self.client_session.patch(
                 api_endpoint, json=data, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -138,8 +129,7 @@ class Client:
         airflow_uri, bucket = await self.get_airflow_uri(composer_name)
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns?execution_date_gte={start_date}&execution_date_lte={end_date}&offset={offset}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -155,8 +145,7 @@ class Client:
             api_endpoint = (
                 f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances"
             )
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -172,8 +161,7 @@ class Client:
         airflow_uri, bucket = await self.get_airflow_uri(composer_name)
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances/{task_id}/logs/{task_try_number}"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -191,8 +179,7 @@ class Client:
                 STORAGE_SERVICE_NAME, default_url=STORAGE_SERVICE_DEFAULT_URL
             )
             api_endpoint = f"{storage_url}b/{bucket_name}/o/{encoded_path}?alt=media"
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -322,8 +309,7 @@ class Client:
             api_endpoint = (
                 f"{airflow_uri}/api/v1/importErrors?order_by=-import_error_id"
             )
-            session = await self.get_client_session()
-            async with session.get(
+            async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
@@ -338,8 +324,7 @@ class Client:
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns"
             body = {"conf": {}}
-            session = await self.get_client_session()
-            async with session.post(
+            async with self.client_session.post(
                 api_endpoint, headers=self.create_headers(), json=body
             ) as response:
                 if response.status == 200:
