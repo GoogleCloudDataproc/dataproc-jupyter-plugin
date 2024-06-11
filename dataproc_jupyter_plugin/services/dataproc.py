@@ -42,7 +42,6 @@ class Client:
             self.client_session = aiohttp.ClientSession()
         return self.client_session
 
-
     def create_headers(self):
         return {
             "Content-Type": CONTENT_TYPE,

@@ -54,7 +54,9 @@ class Client:
             api_endpoint = f"{composer_url}/v1/projects/{self.project_id}/locations/{self.region_id}/environments"
 
             headers = self.create_headers()
-            async with self.client_session.get(api_endpoint, headers=headers) as response:
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
                 if response.status == 200:
                     resp = await response.json()
                     if not resp:

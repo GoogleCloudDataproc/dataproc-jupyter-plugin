@@ -28,8 +28,6 @@ from dataproc_jupyter_plugin.commons.constants import (
 )
 
 
-
-
 class Client:
     client_session = aiohttp.ClientSession()
 
@@ -123,9 +121,7 @@ class Client:
             self.log.exception(f"Error updating status: {str(e)}")
             return {"error": str(e)}
 
-    async def list_dag_runs(
-        self, composer_name, dag_id, start_date, end_date, offset
-    ):
+    async def list_dag_runs(self, composer_name, dag_id, start_date, end_date, offset):
         airflow_uri, bucket = await self.get_airflow_uri(composer_name)
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}/dagRuns?execution_date_gte={start_date}&execution_date_lte={end_date}&offset={offset}"

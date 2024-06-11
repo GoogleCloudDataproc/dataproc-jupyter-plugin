@@ -42,9 +42,7 @@ class DagDeleteController(APIHandler):
             composer = self.get_argument("composer")
             dag_id = self.get_argument("dag_id")
             from_page = self.get_argument("from_page", default=None)
-            delete_response = await client.delete_job(
-                composer, dag_id, from_page
-            )
+            delete_response = await client.delete_job(composer, dag_id, from_page)
             if delete_response == 0:
                 self.finish(json.dumps({"status": delete_response}))
             else:

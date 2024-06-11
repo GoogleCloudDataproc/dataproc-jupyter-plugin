@@ -40,7 +40,6 @@ class Client:
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
 
-
     def create_headers(self):
         return {
             "Content-Type": CONTENT_TYPE,

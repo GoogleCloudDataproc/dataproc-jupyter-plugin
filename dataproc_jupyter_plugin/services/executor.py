@@ -56,8 +56,6 @@ class Client:
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
-    
- 
 
     def create_headers(self):
         return {
@@ -70,7 +68,9 @@ class Client:
             composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
             api_endpoint = f"{composer_url}v1/projects/{self.project_id}/locations/{self.region_id}/environments/{runtime_env}"
             headers = self.create_headers()
-            async with self.client_session.get(api_endpoint, headers=headers) as response:
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
                 if response.status == 200:
                     resp = await response.json()
                     gcs_dag_path = resp.get("storageConfig", {}).get("bucket", "")

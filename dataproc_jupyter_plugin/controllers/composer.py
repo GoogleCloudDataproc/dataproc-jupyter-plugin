@@ -21,7 +21,6 @@ from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import composer
 
 
-
 class EnvironmentListController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
