@@ -25,6 +25,8 @@ from dataproc_jupyter_plugin.commons.constants import (
 
 
 class Client:
+    client_session = None
+
     def __init__(self, credentials, log):
         self.log = log
         if not (
@@ -38,16 +40,23 @@ class Client:
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
 
+
+    async def get_client_session(self):
+        if self.client_session is None:
+            self.client_session = aiohttp.ClientSession()
+        return self.client_session
+
     def create_headers(self):
         return {
             "Content-Type": CONTENT_TYPE,
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_datasets(self, page_token, project_id, session):
+    async def list_datasets(self, page_token, project_id):
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
+            session = await self.get_client_session()
             async with session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
@@ -60,10 +69,11 @@ class Client:
             self.log.exception("Error fetching datasets list")
             return {"error": str(e)}
 
-    async def list_table(self, dataset_id, page_token, project_id, session):
+    async def list_table(self, dataset_id, page_token, project_id):
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
+            session = await self.get_client_session()
             async with session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
@@ -76,13 +86,13 @@ class Client:
             self.log.exception("Error fetching tables list")
             return {"error": str(e)}
 
-    async def list_dataset_info(self, dataset_id, project_id, session):
+    async def list_dataset_info(self, dataset_id, project_id):
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = (
                 f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
             )
-
+            session = await self.get_client_session()
             async with session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
@@ -95,11 +105,11 @@ class Client:
             self.log.exception("Error fetching dataset info")
             return {"error": str(e)}
 
-    async def list_table_info(self, dataset_id, table_id, project_id, session):
+    async def list_table_info(self, dataset_id, table_id, project_id):
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
-
+            session = await self.get_client_session()
             async with session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
@@ -113,12 +123,12 @@ class Client:
             return {"error": str(e)}
 
     async def bigquery_preview_data(
-        self, dataset_id, table_id, max_results, start_index, project_id, session
+        self, dataset_id, table_id, max_results, start_index, project_id
     ):
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?maxResults={max_results}&startIndex={start_index}"
-
+            session = await self.get_client_session()
             async with session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
@@ -131,7 +141,7 @@ class Client:
             self.log.exception("Error fetching preview data")
             return {"error": str(e)}
 
-    async def bigquery_search(self, search_string, type, system, projects, session):
+    async def bigquery_search(self, search_string, type, system, projects):
         try:
             datacatalog_url = await urls.gcp_service_url(DATACATALOG_SERVICE_NAME)
             api_endpoint = f"{datacatalog_url}v1/catalog:search"
@@ -148,6 +158,7 @@ class Client:
             has_next = True
             search_result = []
             while has_next:
+                session = await self.get_client_session()
                 async with session.post(
                     api_endpoint, headers=headers, json=payload
                 ) as response:
@@ -169,13 +180,13 @@ class Client:
             self.log.exception(f"Error fetching search data")
             return {"error": str(e)}
 
-    async def bigquery_projects(self, dataset_id, table_id, session):
+    async def bigquery_projects(self, dataset_id, table_id):
         try:
             cloudresourcemanager_url = await urls.gcp_service_url(
                 CLOUDRESOURCEMANAGER_SERVICE_NAME
             )
             api_endpoint = f"{cloudresourcemanager_url}v1/projects"
-
+            session = await self.get_client_session()
             async with session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:

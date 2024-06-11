@@ -22,6 +22,8 @@ from dataproc_jupyter_plugin.commons.constants import (
 
 
 class Client:
+    client_session = None
+
     def __init__(self, credentials, log):
         self.log = log
         if not (
@@ -35,17 +37,23 @@ class Client:
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
 
+    async def get_client_session(self):
+        if self.client_session is None:
+            self.client_session = aiohttp.ClientSession()
+        return self.client_session
+
+
     def create_headers(self):
         return {
             "Content-Type": CONTENT_TYPE,
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_clusters(self, page_size, page_token, session):
+    async def list_clusters(self, page_size, page_token):
         try:
             dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
             api_endpoint = f"{dataproc_url}/v1/projects/{self.project_id}/regions/{self.region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
-
+            session = await self.get_client_session()
             async with session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
@@ -59,11 +67,11 @@ class Client:
             self.log.exception("Error fetching cluster list")
             return {"error": str(e)}
 
-    async def list_runtime(self, page_size, page_token, session):
+    async def list_runtime(self, page_size, page_token):
         try:
             dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
             api_endpoint = f"{dataproc_url}/v1/projects/{self.project_id}/locations/{self.region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
-
+            session = await self.get_client_session()
             async with session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:

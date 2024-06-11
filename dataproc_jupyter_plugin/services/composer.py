@@ -26,6 +26,8 @@ from dataproc_jupyter_plugin.models.models import ComposerEnvironment
 
 
 class Client:
+    client_session = None
+
     def __init__(self, credentials, log):
         self.log = log
         if not (
@@ -38,6 +40,11 @@ class Client:
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
+        
+    async def get_client_session(self):
+        if self.client_session is None:
+            self.client_session = aiohttp.ClientSession()
+        return self.client_session
 
     def create_headers(self):
         return {
@@ -45,14 +52,14 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_environments(self, session) -> List[ComposerEnvironment]:
+    async def list_environments(self) -> List[ComposerEnvironment]:
         try:
             environments = []
             composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
             api_endpoint = f"{composer_url}/v1/projects/{self.project_id}/locations/{self.region_id}/environments"
 
             headers = self.create_headers()
-
+            session = await self.get_client_session()
             async with session.get(api_endpoint, headers=headers) as response:
                 if response.status == 200:
                     resp = await response.json()
