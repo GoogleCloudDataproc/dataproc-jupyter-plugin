@@ -37,11 +37,6 @@ class Client:
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
 
-    async def get_client_session(self):
-        if self.client_session is None:
-            self.client_session = aiohttp.ClientSession()
-        return self.client_session
-
     def create_headers(self):
         return {
             "Content-Type": CONTENT_TYPE,
