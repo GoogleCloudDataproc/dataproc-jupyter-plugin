@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,91 +15,41 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import plusIcon from '../../style/icons/plus_icon.svg';
-import plusIconDisable from '../../style/icons/plus_icon_disable.svg';
-import deleteIcon from '../../style/icons/delete_icon.svg';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { DEFAULT_LABEL_DETAIL } from '../utils/const';
 import { Input } from '../controls/MuiWrappedInput';
 
-const iconPlus = new LabIcon({
-  name: 'launcher:plus-icon',
-  svgstr: plusIcon
-});
-const iconPlusDisable = new LabIcon({
-  name: 'launcher:plus-disable-icon',
-  svgstr: plusIconDisable
-});
-const iconDelete = new LabIcon({
-  name: 'launcher:delete-icon',
-  svgstr: deleteIcon
-});
 const iconError = new LabIcon({
   name: 'launcher:error-icon',
   svgstr: errorIcon
 });
 
-function LabelProperties({
+function SparkProperties({
   labelDetail,
   setLabelDetail,
   labelDetailUpdated,
   setLabelDetailUpdated,
-  selectedJobClone,
+  // selectedJobClone,
   buttonText,
   keyValidation,
   setKeyValidation,
   valueValidation,
   setValueValidation,
   duplicateKeyError,
-  setDuplicateKeyError,
-  labelEditMode,
-  selectedRuntimeClone,
-  batchInfoResponse,
-  createBatch,
-  fromPage
-}: any) {
+  setDuplicateKeyError
+}: // labelEditMode,
+// selectedRuntimeClone,
+// batchInfoResponse,
+// createBatch,
+// fromPage,
+// defaultValueAdded
+any) {
   /*
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
-  useEffect(() => {
-    if (!labelEditMode && fromPage !== 'scheduler') {
-      if (
-        buttonText === 'ADD LABEL' &&
-        !selectedJobClone &&
-        selectedRuntimeClone === undefined &&
-        !createBatch
-      ) {
-        setLabelDetail([DEFAULT_LABEL_DETAIL]);
-        setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
-      } else {
-        if (!selectedRuntimeClone) {
-          setLabelDetailUpdated([]);
-          setLabelDetail([]);
-        }
-      }
-    }
-  }, []);
-
-  const handleAddLabel = (event: React.MouseEvent<HTMLElement>) => {
-    event.preventDefault();
-    const labelAdd = [...labelDetail];
-    labelAdd.push(':');
-    setLabelDetailUpdated(labelAdd);
-    setLabelDetail(labelAdd);
-  };
-
-  const handleDeleteLabel = (index: number, value: string) => {
-    const labelDelete = [...labelDetail];
-    labelDelete.splice(index, 1);
-    setLabelDetailUpdated(labelDelete);
-    setLabelDetail(labelDelete);
-    setDuplicateKeyError(-1);
-    setKeyValidation(-1);
-    setValueValidation(-1);
-  };
 
   const handleEditLabelSwitch = () => {
     if (duplicateKeyError === -1) {
@@ -160,35 +110,9 @@ function LabelProperties({
     setLabelDetailUpdated(labelEdit);
   };
 
-  const styleAddLabelButton = (buttonText: string, labelDetail: string) => {
-    if (
-      buttonText === 'ADD LABEL' &&
-      (labelDetail.length === 0 ||
-        labelDetail[labelDetail.length - 1].split(':')[0].length > 0) &&
-      duplicateKeyError === -1
-    ) {
-      return 'job-add-label-button';
-    } else if (
-      buttonText === 'ADD LABEL' &&
-      (labelDetail.length === 0 ||
-        labelDetail[labelDetail.length - 1].split(':')[0].length === 0) &&
-      duplicateKeyError !== -1
-    ) {
-      return 'job-add-property-button-disabled';
-    } else if (
-      buttonText !== 'ADD LABEL' &&
-      (labelDetail.length === 0 ||
-        labelDetail[labelDetail.length - 1].split(':')[0].length > 0)
-    ) {
-      return 'job-add-property-button';
-    } else {
-      return 'job-add-property-button-disabled';
-    }
-  };
-
   return (
     <div>
-      <div className="job-label-edit-parent">
+      <div className="spark-property-parent">
         {labelDetail.length > 0 &&
           labelDetail.map((label: string, index: number) => {
             /*
@@ -211,13 +135,7 @@ function LabelProperties({
                             ? ''
                             : ' disable-text'
                         }`}
-                        disabled={
-                          labelSplit[0] === '' ||
-                          buttonText !== 'ADD LABEL' ||
-                          duplicateKeyError !== -1
-                            ? false
-                            : true
-                        }
+                        disabled={true}
                         onBlur={() => handleEditLabelSwitch()}
                         onChange={e =>
                           handleEditLabel(e.target.value, index, 'key')
@@ -307,82 +225,14 @@ function LabelProperties({
                       </div>
                     )}
                   </div>
-
-                  <div
-                    role="button"
-                    className={
-                      label === DEFAULT_LABEL_DETAIL &&
-                      buttonText === 'ADD LABEL'
-                        ? 'labels-delete-icon-hide'
-                        : 'labels-delete-icon'
-                    }
-                    onClick={() => {
-                      if (
-                        !(
-                          label === DEFAULT_LABEL_DETAIL &&
-                          buttonText === 'ADD LABEL'
-                        )
-                      ) {
-                        handleDeleteLabel(index, labelSplit[0]);
-                      }
-                    }}
-                  >
-                    <iconDelete.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
-                  </div>
                   <></>
                 </div>
               </div>
             );
           })}
-        <button
-          className={styleAddLabelButton(buttonText, labelDetail)}
-          onClick={e => {
-            const buttonClasses = e.currentTarget.className;
-            const isDisabled =
-              buttonClasses.includes('job-add-label-button-disabled') ||
-              buttonClasses.includes('job-add-property-button-disabled');
-
-            if (!isDisabled) {
-              if (
-                labelDetail.length === 0 ||
-                labelDetail[labelDetail.length - 1].split(':')[0].length > 0
-              ) {
-                handleAddLabel(e);
-              }
-            } else {
-              e.preventDefault();
-            }
-          }}
-        >
-          {labelDetail.length === 0 ||
-          labelDetail[labelDetail.length - 1].split(':')[0].length > 0 ? (
-            <iconPlus.react
-              tag="div"
-              className="icon-black logo-alignment-style"
-            />
-          ) : (
-            <iconPlusDisable.react
-              tag="div"
-              className="icon-black-disable logo-alignment-style"
-            />
-          )}
-          <span
-            className={
-              labelDetail.length === 0 ||
-              labelDetail[labelDetail.length - 1].split(':')[0].length > 0
-                ? 'job-edit-text'
-                : 'job-edit-text-disabled'
-            }
-          >
-            {buttonText}
-          </span>
-        </button>
       </div>
     </div>
   );
 }
 
-export default LabelProperties;
+export default SparkProperties;

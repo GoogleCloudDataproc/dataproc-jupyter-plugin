@@ -55,22 +55,35 @@ import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 import {
   Autocomplete,
+  Checkbox,
   CircularProgress,
+  FormControlLabel,
+  FormGroup,
   Radio,
   TextField
 } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { MuiChipsInput } from 'mui-chips-input';
 import { RunTimeSerive } from './runtimeService';
+import expandLessIcon from '../../style/icons/expand_less.svg';
+import expandMoreIcon from '../../style/icons/expand_more.svg';
+import SparkProperties from './sparkProperties';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
 });
-
 const iconError = new LabIcon({
   name: 'launcher:error-icon',
   svgstr: errorIcon
+});
+const iconExpandLess = new LabIcon({
+  name: 'launcher:expand-less-icon',
+  svgstr: expandLessIcon
+});
+const iconExpandMore = new LabIcon({
+  name: 'launcher:expand-more-icon',
+  svgstr: expandMoreIcon
 });
 
 let networkUris: string[] = [];
@@ -90,6 +103,40 @@ function CreateRunTime({
   app: JupyterLab;
   fromPage: string;
 }) {
+  const resourceAllocationDefault = [
+    'spark.driver.cores:4',
+    'spark.driver.memory:12200m',
+    'spark.driver.memoryOverhead:512m',
+    'spark.dataproc.driver.disk.size:400g',
+    'spark.dataproc.driver.disk.tier:standard',
+    'spark.executor.cores:4',
+    'spark.executor.memory:1024m',
+    'spark.executor.memoryOverhead:512m',
+    'spark.dataproc.executor.disk.size:400g',
+    'spark.dataproc.executor.disk.tier:standard',
+    'spark.executor.instances:2'
+  ];
+  const autoScalingDefault = [
+    'spark.dataproc.scaling.version:2',
+    'spark.dynamicAllocation.enabled:true',
+    'spark.dynamicAllocation.initialExecutors:2',
+    'spark.dynamicAllocation.minExecutors:2',
+    'spark.dynamicAllocation.maxExecutors:1000',
+    'spark.dynamicAllocation.executorAllocationRatio:0.3',
+    'spark.reducer.fetchMigratedShuffle.enabled:false'
+  ];
+  const gpuDefault = [
+    'spark.dataproc.driverEnv.LANG:C.UTF-8',
+    'spark.executorEnv.LANG:C.UTF-8',
+    'spark.dataproc.executor.compute.tier:premium',
+    'spark.dataproc.executor.disk.tier:premium',
+    'spark.dataproc.executor.resource.accelerator.type:l4',
+    'spark.executor.instances:5',
+    'spark.plugins:com.nvidia.spark.SQLPlugin',
+    'spark.executor.resource.gpu.amount:1',
+    'spark.task.resource.gpu.amount:1/$spark_executor_cores',
+    'spark.shuffle.manager:com.nvidia.spark.rapids.RapidsShuffleManager'
+  ];
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
   const [desciptionSelected, setDescriptionSelected] = useState('');
@@ -99,6 +146,22 @@ function CreateRunTime({
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
   ]);
+  const [resourceAllocationDetail, setResourceAllocationDetail] = useState(
+    resourceAllocationDefault
+  );
+  const [resourceAllocationDetailUpdated, setResourceAllocationDetailUpdated] =
+    useState(resourceAllocationDefault);
+  const [autoScalingDetail, setAutoScalingDetail] =
+    useState(autoScalingDefault);
+  const [autoScalingDetailUpdated, setAutoScalingDetailUpdated] =
+    useState(autoScalingDefault);
+  const [gpuDetail, setGpuDetail] = useState(['']);
+  const [gpuDetailUpdated, setGpuDetailUpdated] = useState(['']);
+  const [expandResourceAllocation, setExpandResourceAllocation] =
+    useState(false);
+  const [expandAutoScaling, setExpandAutoScaling] = useState(false);
+  const [expandGpu, setExpandGpu] = useState(false);
+  const [gpuChecked, setGpuChecked] = useState(false);
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
@@ -273,14 +336,69 @@ function CreateRunTime({
             const updatedPropertyDetail = Object.entries(
               selectedRuntimeClone.runtimeConfig.properties
             ).map(([k, v]) => `${k}:${v}`);
-            setPropertyDetail(prevPropertyDetail => [
-              ...prevPropertyDetail,
-              ...updatedPropertyDetail
-            ]);
-            setPropertyDetailUpdated(prevPropertyDetailUpdated => [
-              ...prevPropertyDetailUpdated,
-              ...updatedPropertyDetail
-            ]);
+            let resourceAllocationDetailList: string[] = [];
+            let autoScalingDetailList: string[] = [];
+            let gpuDetailList: string[] = [];
+            let otherDetailList: string[] = [];
+            updatedPropertyDetail.forEach(property => {
+              if (
+                resourceAllocationDefault.some(item => {
+                  const [itemKey] = item.split(':');
+                  return itemKey === property.split(':')[0];
+                })
+              ) {
+                resourceAllocationDetailList.push(property);
+              } else if (
+                autoScalingDefault.some(item => {
+                  const [itemKey] = item.split(':');
+                  return itemKey === property.split(':')[0];
+                })
+              ) {
+                autoScalingDetailList.push(property);
+              } else if (
+                gpuDefault.some(item => {
+                  const [itemKey] = item.split(':');
+                  return itemKey === property.split(':')[0];
+                })
+              ) {
+                gpuDetailList.push(property);
+              } else {
+                otherDetailList.push(property);
+              }
+            });
+      
+            setResourceAllocationDetail(resourceAllocationDetailList);
+            setResourceAllocationDetailUpdated(resourceAllocationDetailList);
+            setAutoScalingDetail(autoScalingDetailList);
+            setAutoScalingDetailUpdated(autoScalingDetailList);
+            if (gpuChecked) {
+              setGpuDetail(gpuDetailList);
+              setGpuDetailUpdated(gpuDetailList);
+            } else {
+              setGpuDetail(['']);
+              setGpuDetailUpdated(['']);
+            }
+            
+            setPropertyDetail(prevPropertyDetail => {
+              if (
+                prevPropertyDetail.length === 1 &&
+                prevPropertyDetail[0] === ''
+              ) {
+                return otherDetailList;
+              } else {
+                return [...prevPropertyDetail, ...otherDetailList];
+              }
+            });
+            setPropertyDetailUpdated(prevPropertyDetailUpdated => {
+              if (
+                prevPropertyDetailUpdated.length === 1 &&
+                prevPropertyDetailUpdated[0] === ''
+              ) {
+                return otherDetailList;
+              } else {
+                return [...prevPropertyDetailUpdated, ...otherDetailList];
+              }
+            });
           }
         }
       }
@@ -758,6 +876,24 @@ function CreateRunTime({
         labelObject[key] = value;
       });
       const propertyObject: { [key: string]: string } = {};
+      resourceAllocationDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        propertyObject[key] = value;
+      });
+      autoScalingDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        propertyObject[key] = value;
+      });
+      gpuDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        propertyObject[key] = value;
+      });
       propertyDetailUpdated.forEach((label: string) => {
         const labelSplit = label.split(':');
         const key = labelSplit[0];
@@ -857,6 +993,32 @@ function CreateRunTime({
       } else {
         createRuntimeApi(payload);
       }
+    }
+  };
+
+  const handleResourceAllocationExpand = () => {
+    let resourceAllocationMode = !expandResourceAllocation;
+    setExpandResourceAllocation(resourceAllocationMode);
+  };
+
+  const handleAutoScalingExpand = () => {
+    let autoScalingMode = !expandAutoScaling;
+    setExpandAutoScaling(autoScalingMode);
+  };
+
+  const handleGpuExpand = () => {
+    let gpuMode = !expandGpu;
+    setExpandGpu(gpuMode);
+  };
+
+  const handleGpuCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setGpuChecked(event.target.checked);
+    if (event.target.checked) {
+      setGpuDetail(gpuDefault);
+      setGpuDetailUpdated(gpuDefault);
+    } else {
+      setGpuDetail(['']);
+      setGpuDetailUpdated(['']);
     }
   };
 
@@ -1334,6 +1496,120 @@ function CreateRunTime({
                 />
               </div>
               <div className="submit-job-label-header">Spark Properties</div>
+              <div className="spark-properties-sub-header-parent">
+                <div className="spark-properties-sub-header">
+                  Resource Allocation
+                </div>
+                <div
+                  className="expand-icon"
+                  onClick={() => handleResourceAllocationExpand()}
+                >
+                  {expandResourceAllocation ? (
+                    <iconExpandLess.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  ) : (
+                    <iconExpandMore.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  )}
+                </div>
+              </div>
+              {expandResourceAllocation && (
+                <SparkProperties
+                  labelDetail={resourceAllocationDetail}
+                  setLabelDetail={setResourceAllocationDetail}
+                  labelDetailUpdated={resourceAllocationDetailUpdated}
+                  setLabelDetailUpdated={setResourceAllocationDetailUpdated}
+                  buttonText="ADD PROPERTY"
+                  keyValidation={keyValidation}
+                  setKeyValidation={setKeyValidation}
+                  valueValidation={valueValidation}
+                  setValueValidation={setValueValidation}
+                  duplicateKeyError={duplicateKeyError}
+                  setDuplicateKeyError={setDuplicateKeyError}
+                />
+              )}
+              <div className="spark-properties-sub-header-parent">
+                <div className="spark-properties-sub-header">Autoscaling</div>
+                <div
+                  className="expand-icon"
+                  onClick={() => handleAutoScalingExpand()}
+                >
+                  {expandAutoScaling ? (
+                    <iconExpandLess.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  ) : (
+                    <iconExpandMore.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  )}
+                </div>
+              </div>
+              {expandAutoScaling && (
+                <SparkProperties
+                  labelDetail={autoScalingDetail}
+                  setLabelDetail={setAutoScalingDetail}
+                  labelDetailUpdated={autoScalingDetailUpdated}
+                  setLabelDetailUpdated={setAutoScalingDetailUpdated}
+                  buttonText="ADD PROPERTY"
+                  keyValidation={keyValidation}
+                  setKeyValidation={setKeyValidation}
+                  valueValidation={valueValidation}
+                  setValueValidation={setValueValidation}
+                  duplicateKeyError={duplicateKeyError}
+                  setDuplicateKeyError={setDuplicateKeyError}
+                />
+              )}
+              <div className="spark-properties-sub-header-parent">
+                <FormGroup row={false}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={gpuChecked}
+                        onChange={handleGpuCheckbox}
+                      />
+                    }
+                    className="create-scheduler-label-style"
+                    label="GPU"
+                  />
+                </FormGroup>
+                <div className="expand-icon" onClick={() => handleGpuExpand()}>
+                  {expandGpu ? (
+                    <iconExpandLess.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  ) : (
+                    <iconExpandMore.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  )}
+                </div>
+              </div>
+              {expandGpu && (
+                <SparkProperties
+                  labelDetail={gpuDetail}
+                  setLabelDetail={setGpuDetail}
+                  labelDetailUpdated={gpuDetailUpdated}
+                  setLabelDetailUpdated={setGpuDetailUpdated}
+                  buttonText="ADD PROPERTY"
+                  keyValidation={keyValidation}
+                  setKeyValidation={setKeyValidation}
+                  valueValidation={valueValidation}
+                  setValueValidation={setValueValidation}
+                  duplicateKeyError={duplicateKeyError}
+                  setDuplicateKeyError={setDuplicateKeyError}
+                />
+              )}
+              <div className="spark-properties-sub-header">Others</div>
               <LabelProperties
                 labelDetail={propertyDetail}
                 setLabelDetail={setPropertyDetail}
