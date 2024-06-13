@@ -125,7 +125,7 @@ any) {
               <div key={label}>
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
-                    <div className="select-text-overlay-label">
+                    <div className="select-text-overlay-label" title={labelSplit[0]}>
                       <Input
                         sx={{ margin: 0 }}
                         className={`edit-input-style ${
