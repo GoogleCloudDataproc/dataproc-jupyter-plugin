@@ -366,7 +366,7 @@ function CreateRunTime({
                 otherDetailList.push(property);
               }
             });
-      
+
             setResourceAllocationDetail(resourceAllocationDetailList);
             setResourceAllocationDetailUpdated(resourceAllocationDetailList);
             setAutoScalingDetail(autoScalingDetailList);
@@ -378,7 +378,7 @@ function CreateRunTime({
               setGpuDetail(['']);
               setGpuDetailUpdated(['']);
             }
-            
+
             setPropertyDetail(prevPropertyDetail => {
               if (
                 prevPropertyDetail.length === 1 &&
@@ -1594,7 +1594,7 @@ function CreateRunTime({
                   )}
                 </div>
               </div>
-              {expandGpu && (
+              {expandGpu && gpuChecked && (
                 <SparkProperties
                   labelDetail={gpuDetail}
                   setLabelDetail={setGpuDetail}
