@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-
 import tornado
 from jupyter_server.base.handlers import APIHandler
 
