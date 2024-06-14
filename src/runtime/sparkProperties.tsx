@@ -19,7 +19,7 @@ import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
-import { Select } from '../controls/MuiWrappedSelect';
+import { Select } from '../controls/MuiWrappedLabelSelect';
 
 const iconError = new LabIcon({
   name: 'launcher:error-icon',
@@ -46,6 +46,17 @@ function SparkProperties({
     'spark.dynamicAllocation.enabled',
     'spark.reducer.fetchMigratedShuffle.enabled'
   ];
+  const memoryRelatedProperties = [
+    'spark.driver.memory',
+    'spark.driver.memoryOverhead',
+    'spark.executor.memory',
+    'spark.executor.memoryOverhead'
+  ];
+  const diskRelatedProperties = [
+    'spark.dataproc.driver.disk.size',
+    'spark.dataproc.executor.disk.size'
+  ];
+  // const coreRelatedProperties = ['spark.driver.cores', 'spark.executor.cores'];
   const booleanSelectOptions = [
     { key: 'true', value: 'true', text: 'true' },
     { key: 'false', value: 'false', text: 'false' }
@@ -86,13 +97,29 @@ function SparkProperties({
         /*
           allowed aplhanumeric and spaces and underscores
         */
-        // const regexp = /^[a-z0-9-_]+$/;
+        if (memoryRelatedProperties.includes(data.split(':')[0])) {
+          const regex = /^[0-9]+(m|g|t)$/i;
 
-        // if (value.search(regexp) === -1) {
-        //   setValueValidation(index);
-        // } else {
-        //   setValueValidation(-1);
-        // }
+          if (value.search(regex) === -1) {
+            setValueValidation(index);
+          } else {
+            setValueValidation(-1);
+          }
+        } else if (diskRelatedProperties.includes(data.split(':')[0])) {
+          const regex = /^[0-9]+(k|m|g|t)$/i;
+
+          if (value.search(regex) === -1) {
+            setValueValidation(index);
+          } else {
+            setValueValidation(-1);
+          }
+        // } else if (coreRelatedProperties.includes(data.split(':')[0])) {
+        //   if (value. === -1) {
+        //     setValueValidation(index);
+        //   } else {
+        //     setValueValidation(-1);
+        //   }
+        }
         /*
           value is split from labels
           Example:"client:dataproc_jupyter_plugin"
@@ -156,6 +183,7 @@ function SparkProperties({
                               ? booleanSelectOptions
                               : tierSelectOptions
                           }
+                          Label={`Value ${index + 1}`}
                         />
                       ) : (
                         <Input
@@ -181,9 +209,7 @@ function SparkProperties({
                           className="logo-alignment-style"
                         />
                         <div className="error-key-missing">
-                          Only hyphens (-), underscores (_), lowercase
-                          characters, and numbers are allowed. International
-                          characters are allowed.
+                          Invalid value. Check the support document
                         </div>
                       </div>
                     )}
