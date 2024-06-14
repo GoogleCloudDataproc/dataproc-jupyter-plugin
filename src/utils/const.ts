@@ -188,3 +188,6 @@ export const NOTEBOOK_TEMPLATES_LIST_URL =
 export type scheduleMode = 'runNow' | 'runSchedule';
 export const scheduleValueExpression = '30 17 * * 1-5'; //Expression for schedule Value in Scheduler Jobs
 export const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
+export const SPARK_RESOURCE_ALLOCATION_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/concepts/properties'
+export const SPARK_AUTOSCALING_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/concepts/autoscaling#spark_dynamic_allocation_properties'
+export const SPARK_GPU_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/guides/gpus-serverless'

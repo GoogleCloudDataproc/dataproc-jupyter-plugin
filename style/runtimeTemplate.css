@@ -153,6 +153,7 @@
   display: flex;
   align-items: center;
   color: var(--jp-ui-font-color0);
+  margin-right: 16px;
 }
 
 .spark-properties-sub-header-parent {
@@ -172,3 +173,8 @@
   color: var(--jp-ui-font-color2);
 }
 
+.spark-properties-title {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}

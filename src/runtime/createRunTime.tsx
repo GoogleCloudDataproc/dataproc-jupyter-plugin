@@ -30,7 +30,10 @@ import {
   LOGIN_ERROR_MESSAGE,
   LOGIN_STATE,
   SHARED_VPC,
-  SERVICE_ACCOUNT
+  SERVICE_ACCOUNT,
+  SPARK_GPU_INFO_URL,
+  SPARK_RESOURCE_ALLOCATION_INFO_URL,
+  SPARK_AUTOSCALING_INFO_URL
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -67,6 +70,7 @@ import { MuiChipsInput } from 'mui-chips-input';
 import { RunTimeSerive } from './runtimeService';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
+import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
 
 const iconLeftArrow = new LabIcon({
@@ -84,6 +88,10 @@ const iconExpandLess = new LabIcon({
 const iconExpandMore = new LabIcon({
   name: 'launcher:expand-more-icon',
   svgstr: expandMoreIcon
+});
+const iconHelp = new LabIcon({
+  name: 'launcher:help-spark-icon',
+  svgstr: helpIcon
 });
 
 let networkUris: string[] = [];
@@ -106,18 +114,17 @@ function CreateRunTime({
   const resourceAllocationDefault = [
     'spark.driver.cores:4',
     'spark.driver.memory:12200m',
-    'spark.driver.memoryOverhead:512m',
+    'spark.driver.memoryOverhead:1220m',
     'spark.dataproc.driver.disk.size:400g',
     'spark.dataproc.driver.disk.tier:standard',
     'spark.executor.cores:4',
-    'spark.executor.memory:1024m',
-    'spark.executor.memoryOverhead:512m',
+    'spark.executor.memory:12200m',
+    'spark.executor.memoryOverhead:1220m',
     'spark.dataproc.executor.disk.size:400g',
     'spark.dataproc.executor.disk.tier:standard',
     'spark.executor.instances:2'
   ];
   const autoScalingDefault = [
-    'spark.dataproc.scaling.version:2',
     'spark.dynamicAllocation.enabled:true',
     'spark.dynamicAllocation.initialExecutors:2',
     'spark.dynamicAllocation.minExecutors:2',
@@ -131,7 +138,6 @@ function CreateRunTime({
     'spark.dataproc.executor.compute.tier:premium',
     'spark.dataproc.executor.disk.tier:premium',
     'spark.dataproc.executor.resource.accelerator.type:l4',
-    'spark.executor.instances:5',
     'spark.plugins:com.nvidia.spark.SQLPlugin',
     'spark.executor.resource.gpu.amount:1',
     'spark.task.resource.gpu.amount:1/$spark_executor_cores',
@@ -1014,9 +1020,11 @@ function CreateRunTime({
   const handleGpuCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
     setGpuChecked(event.target.checked);
     if (event.target.checked) {
+      setExpandGpu(true);
       setGpuDetail(gpuDefault);
       setGpuDetailUpdated(gpuDefault);
     } else {
+      setExpandGpu(false);
       setGpuDetail(['']);
       setGpuDetailUpdated(['']);
     }
@@ -1497,8 +1505,24 @@ function CreateRunTime({
               </div>
               <div className="submit-job-label-header">Spark Properties</div>
               <div className="spark-properties-sub-header-parent">
-                <div className="spark-properties-sub-header">
-                  Resource Allocation
+                <div className="spark-properties-title">
+                  <div className="spark-properties-sub-header">
+                    Resource Allocation
+                  </div>
+                  <div
+                    className="expand-icon"
+                    onClick={() =>
+                      window.open(
+                        `${SPARK_RESOURCE_ALLOCATION_INFO_URL}`,
+                        '_blank'
+                      )
+                    }
+                  >
+                    <iconHelp.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  </div>
                 </div>
                 <div
                   className="expand-icon"
@@ -1533,7 +1557,20 @@ function CreateRunTime({
                 />
               )}
               <div className="spark-properties-sub-header-parent">
-                <div className="spark-properties-sub-header">Autoscaling</div>
+                <div className="spark-properties-title">
+                  <div className="spark-properties-sub-header">Autoscaling</div>
+                  <div
+                    className="expand-icon"
+                    onClick={() =>
+                      window.open(`${SPARK_AUTOSCALING_INFO_URL}`, '_blank')
+                    }
+                  >
+                    <iconHelp.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  </div>
+                </div>
                 <div
                   className="expand-icon"
                   onClick={() => handleAutoScalingExpand()}
@@ -1567,19 +1604,32 @@ function CreateRunTime({
                 />
               )}
               <div className="spark-properties-sub-header-parent">
-                <FormGroup row={false}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={gpuChecked}
-                        onChange={handleGpuCheckbox}
-                      />
+                <div className="spark-properties-title">
+                  <FormGroup row={false}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          size="small"
+                          checked={gpuChecked}
+                          onChange={handleGpuCheckbox}
+                        />
+                      }
+                      className="create-scheduler-label-style"
+                      label="GPU"
+                    />
+                  </FormGroup>
+                  <div
+                    className="expand-icon"
+                    onClick={() =>
+                      window.open(`${SPARK_GPU_INFO_URL}`, '_blank')
                     }
-                    className="create-scheduler-label-style"
-                    label="GPU"
-                  />
-                </FormGroup>
+                  >
+                    <iconHelp.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  </div>
+                </div>
                 <div className="expand-icon" onClick={() => handleGpuExpand()}>
                   {expandGpu ? (
                     <iconExpandLess.react
