@@ -57,6 +57,10 @@ function SparkProperties({
     'spark.dataproc.executor.disk.size'
   ];
   const coreRelatedProperties = ['spark.driver.cores', 'spark.executor.cores'];
+  const executorRelatedProperties = [
+    'spark.executor.instances',
+    'spark.dynamicAllocation.maxExecutors'
+  ];
   const booleanSelectOptions = [
     { key: 'true', value: 'true', text: 'true' },
     { key: 'false', value: 'false', text: 'false' }
@@ -114,7 +118,64 @@ function SparkProperties({
             setValueValidation(-1);
           }
         } else if (coreRelatedProperties.includes(data.split(':')[0])) {
-          if (Number.isNaN(Number(value)) || ![4,8,12].includes(Number(value))) {
+          if (
+            Number.isNaN(Number(value)) ||
+            ![4, 8, 12].includes(Number(value))
+          ) {
+            setValueValidation(index);
+          } else {
+            setValueValidation(-1);
+          }
+        } else if (executorRelatedProperties.includes(data.split(':')[0])) {
+          if (
+            Number.isNaN(Number(value)) ||
+            Number(value) < 2 ||
+            Number(value) > 2000
+          ) {
+            setValueValidation(index);
+          } else {
+            setValueValidation(-1);
+          }
+        } else if (
+          data.split(':')[0] === 'spark.dynamicAllocation.initialExecutors'
+        ) {
+          if (
+            Number.isNaN(Number(value)) ||
+            Number(value) < 2 ||
+            Number(value) > 500
+          ) {
+            setValueValidation(index);
+          } else {
+            setValueValidation(-1);
+          }
+        } else if (
+          data.split(':')[0] === 'spark.dynamicAllocation.minExecutors'
+        ) {
+          if (
+            Number.isNaN(Number(value)) ||
+            Number(value) < 2
+          ) {
+            setValueValidation(index);
+          } else {
+            setValueValidation(-1);
+          }
+        } else if (
+          data.split(':')[0] === 'spark.dynamicAllocation.executorAllocationRatio'
+        ) {
+          if (
+            Number.isNaN(Number(value)) ||
+            Number(value) < 0 ||
+            Number(value) > 1
+          ) {
+            setValueValidation(index);
+          } else {
+            setValueValidation(-1);
+          }
+        } else if (
+          data.split(':')[0] ===
+          'spark.dataproc.executor.resource.accelerator.type'
+        ) {
+          if (!['l4', 'a100-40', 'a100-80'].includes(value)) {
             setValueValidation(index);
           } else {
             setValueValidation(-1);
