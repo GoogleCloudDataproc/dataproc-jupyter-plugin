@@ -1554,6 +1554,7 @@ function CreateRunTime({
                   setValueValidation={setValueValidation}
                   duplicateKeyError={duplicateKeyError}
                   setDuplicateKeyError={setDuplicateKeyError}
+                  sparkSection="resource allocation"
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -1601,6 +1602,7 @@ function CreateRunTime({
                   setValueValidation={setValueValidation}
                   duplicateKeyError={duplicateKeyError}
                   setDuplicateKeyError={setDuplicateKeyError}
+                  sparkSection="autoscaling"
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -1657,6 +1659,7 @@ function CreateRunTime({
                   setValueValidation={setValueValidation}
                   duplicateKeyError={duplicateKeyError}
                   setDuplicateKeyError={setDuplicateKeyError}
+                  sparkSection="gpu"
                 />
               )}
               <div className="spark-properties-sub-header">Others</div>

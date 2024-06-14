@@ -20,6 +20,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { DEFAULT_LABEL_DETAIL } from '../utils/const';
 import { Input } from '../controls/MuiWrappedInput';
+import { Select } from '../controls/MuiWrappedSelect';
 
 const iconError = new LabIcon({
   name: 'launcher:error-icon',
@@ -31,25 +32,54 @@ function SparkProperties({
   setLabelDetail,
   labelDetailUpdated,
   setLabelDetailUpdated,
-  // selectedJobClone,
   buttonText,
   keyValidation,
   setKeyValidation,
   valueValidation,
   setValueValidation,
   duplicateKeyError,
-  setDuplicateKeyError
-}: // labelEditMode,
-// selectedRuntimeClone,
-// batchInfoResponse,
-// createBatch,
-// fromPage,
-// defaultValueAdded
-any) {
+  setDuplicateKeyError,
+  sparkSection
+}: any) {
   /*
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
+
+  const selectFields = [
+    'spark.dataproc.driver.disk.tier',
+    'spark.dataproc.executor.disk.tier',
+    'spark.dynamicAllocation.enabled',
+    'spark.reducer.fetchMigratedShuffle.enabled'
+  ];
+  const booleanSelectOptions = [
+    { key: 'true', value: 'true', text: 'true' },
+    { key: 'false', value: 'false', text: 'false' }
+  ];
+  const tierSelectOptions = [
+    { key: 'standard', value: 'standard', text: 'standard' },
+    { key: 'premium', value: 'premium', text: 'premium' }
+  ];
+
+  const handleLabelDetailSelected = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: string,
+    index: number
+  ) => {
+    const labelEdit = [...labelDetail];
+    
+    labelEdit.forEach((labelData, dataNumber: number) => {
+      if (index === dataNumber) {
+        labelData = labelData.replace(
+          labelData.split(':')[1],
+          data!.toString()
+        );
+        labelEdit[dataNumber] = labelData;
+      }
+    });
+    setLabelDetail(labelEdit);
+    setLabelDetailUpdated(labelEdit);
+  };
 
   const handleEditLabelSwitch = () => {
     if (duplicateKeyError === -1) {
@@ -125,7 +155,10 @@ any) {
               <div key={label}>
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
-                    <div className="select-text-overlay-label" title={labelSplit[0]}>
+                    <div
+                      className="select-text-overlay-label"
+                      title={labelSplit[0]}
+                    >
                       <Input
                         sx={{ margin: 0 }}
                         className={`edit-input-style ${
@@ -187,29 +220,45 @@ any) {
                   </div>
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
-                      <Input
-                        sx={{ margin: 0 }}
-                        className={`edit-input-style ${
-                          label === DEFAULT_LABEL_DETAIL &&
-                          buttonText === 'ADD LABEL'
-                            ? ' disable-text'
-                            : ''
-                        }`}
-                        onBlur={() => handleEditLabelSwitch()}
-                        onChange={e =>
-                          handleEditLabel(e.target.value, index, 'value')
-                        }
-                        disabled={
-                          label === DEFAULT_LABEL_DETAIL &&
-                          buttonText === 'ADD LABEL'
-                        }
-                        defaultValue={
-                          labelSplit.length > 2
-                            ? labelSplit[1] + ':' + labelSplit[2]
-                            : labelSplit[1]
-                        }
-                        Label={`Value ${index + 1}`}
-                      />
+                      {selectFields.includes(labelSplit[0]) && sparkSection !== "gpu" ? (
+                        <Select
+                          className="spark-properties-select-style"
+                          value={labelSplit[1]}
+                          onChange={(e, { value }) =>
+                            handleLabelDetailSelected(e, value as string, index)
+                          }
+                          options={
+                            labelSplit[1] === 'true' ||
+                            labelSplit[1] === 'false'
+                              ? booleanSelectOptions
+                              : tierSelectOptions
+                          }
+                        />
+                      ) : (
+                        <Input
+                          sx={{ margin: 0 }}
+                          className={`edit-input-style ${
+                            label === DEFAULT_LABEL_DETAIL &&
+                            buttonText === 'ADD LABEL'
+                              ? ' disable-text'
+                              : ''
+                          }`}
+                          onBlur={() => handleEditLabelSwitch()}
+                          onChange={e =>
+                            handleEditLabel(e.target.value, index, 'value')
+                          }
+                          disabled={
+                            label === DEFAULT_LABEL_DETAIL &&
+                            buttonText === 'ADD LABEL'
+                          }
+                          defaultValue={
+                            labelSplit.length > 2
+                              ? labelSplit[1] + ':' + labelSplit[2]
+                              : labelSplit[1]
+                          }
+                          Label={`Value ${index + 1}`}
+                        />
+                      )}
                     </div>
                     {valueValidation === index && (
                       <div className="error-key-parent">
