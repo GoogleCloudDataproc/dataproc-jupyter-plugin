@@ -377,7 +377,11 @@ function CreateRunTime({
             setResourceAllocationDetailUpdated(resourceAllocationDetailList);
             setAutoScalingDetail(autoScalingDetailList);
             setAutoScalingDetailUpdated(autoScalingDetailList);
-            if (gpuChecked) {
+            if (gpuDetailList.length > 0) {
+              setGpuChecked(true);
+              setExpandGpu(true);
+            }
+            if (gpuChecked || gpuDetailList.length > 0) {
               setGpuDetail(gpuDetailList);
               setGpuDetailUpdated(gpuDetailList);
             } else {

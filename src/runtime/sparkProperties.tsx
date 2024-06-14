@@ -56,7 +56,7 @@ function SparkProperties({
     'spark.dataproc.driver.disk.size',
     'spark.dataproc.executor.disk.size'
   ];
-  // const coreRelatedProperties = ['spark.driver.cores', 'spark.executor.cores'];
+  const coreRelatedProperties = ['spark.driver.cores', 'spark.executor.cores'];
   const booleanSelectOptions = [
     { key: 'true', value: 'true', text: 'true' },
     { key: 'false', value: 'false', text: 'false' }
@@ -113,12 +113,12 @@ function SparkProperties({
           } else {
             setValueValidation(-1);
           }
-        // } else if (coreRelatedProperties.includes(data.split(':')[0])) {
-        //   if (value. === -1) {
-        //     setValueValidation(index);
-        //   } else {
-        //     setValueValidation(-1);
-        //   }
+        } else if (coreRelatedProperties.includes(data.split(':')[0])) {
+          if (Number.isNaN(Number(value)) || ![4,8,12].includes(Number(value))) {
+            setValueValidation(index);
+          } else {
+            setValueValidation(-1);
+          }
         }
         /*
           value is split from labels
