@@ -18,7 +18,6 @@
 import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { DEFAULT_LABEL_DETAIL } from '../utils/const';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
 
@@ -32,13 +31,8 @@ function SparkProperties({
   setLabelDetail,
   labelDetailUpdated,
   setLabelDetailUpdated,
-  buttonText,
-  keyValidation,
-  setKeyValidation,
   valueValidation,
   setValueValidation,
-  duplicateKeyError,
-  setDuplicateKeyError,
   sparkSection
 }: any) {
   /*
@@ -67,7 +61,7 @@ function SparkProperties({
     index: number
   ) => {
     const labelEdit = [...labelDetail];
-    
+
     labelEdit.forEach((labelData, dataNumber: number) => {
       if (index === dataNumber) {
         labelData = labelData.replace(
@@ -82,9 +76,7 @@ function SparkProperties({
   };
 
   const handleEditLabelSwitch = () => {
-    if (duplicateKeyError === -1) {
-      setLabelDetail(labelDetailUpdated);
-    }
+    setLabelDetail(labelDetailUpdated);
   };
   const handleEditLabel = (value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
@@ -94,45 +86,21 @@ function SparkProperties({
         /*
           allowed aplhanumeric and spaces and underscores
         */
-        const regexp = /^[a-z0-9-_]+$/;
-        if (keyValue === 'key') {
-          if (
-            (value.search(regexp) === -1 ||
-              value.charAt(0) !== value.charAt(0).toLowerCase()) &&
-            buttonText === 'ADD LABEL'
-          ) {
-            setKeyValidation(index);
-          } else {
-            setKeyValidation(-1);
-          }
+        // const regexp = /^[a-z0-9-_]+$/;
 
-          // Check for duplicate key when editing
-          const newKey = value;
-          const duplicateIndex = labelEdit.findIndex(
-            (label, i) => i !== index && label.split(':')[0] === newKey
-          );
-          if (duplicateIndex !== -1 && buttonText === 'ADD LABEL') {
-            setDuplicateKeyError(index);
-          } else {
-            setDuplicateKeyError(-1);
-          }
-
-          data = data.replace(data.split(':')[0], value);
-        } else {
-          if (value.search(regexp) === -1 && buttonText === 'ADD LABEL') {
-            setValueValidation(index);
-          } else {
-            setValueValidation(-1);
-          }
-          /*
+        // if (value.search(regexp) === -1) {
+        //   setValueValidation(index);
+        // } else {
+        //   setValueValidation(-1);
+        // }
+        /*
           value is split from labels
           Example:"client:dataproc_jupyter_plugin"
           */
-          if (data.split(':')[1] === '') {
-            data = data + value;
-          } else {
-            data = data.replace(data.split(':')[1], value);
-          }
+        if (data.split(':')[1] === '') {
+          data = data + value;
+        } else {
+          data = data.replace(data.split(':')[1], value);
         }
       }
       labelEdit[dataNumber] = data;
@@ -161,13 +129,7 @@ function SparkProperties({
                     >
                       <Input
                         sx={{ margin: 0 }}
-                        className={`edit-input-style ${
-                          labelSplit[0] === '' ||
-                          buttonText !== 'ADD LABEL' ||
-                          duplicateKeyError !== -1
-                            ? ''
-                            : ' disable-text'
-                        }`}
+                        className={`edit-input-style`}
                         disabled={true}
                         onBlur={() => handleEditLabelSwitch()}
                         onChange={e =>
@@ -177,50 +139,11 @@ function SparkProperties({
                         Label={`Key ${index + 1}*`}
                       />
                     </div>
-
-                    {labelDetailUpdated[index].split(':')[0] === '' &&
-                    labelDetailUpdated[index] !== '' &&
-                    duplicateKeyError !== index ? (
-                      <div role="alert" className="error-key-parent">
-                        <iconError.react
-                          tag="div"
-                          className="logo-alignment-style"
-                        />
-                        <div className="error-key-missing">key is required</div>
-                      </div>
-                    ) : (
-                      keyValidation === index &&
-                      buttonText === 'ADD LABEL' && (
-                        <div className="error-key-parent">
-                          <iconError.react
-                            tag="div"
-                            className="logo-alignment-style"
-                          />
-                          <div className="error-key-missing">
-                            Only hyphens (-), underscores (_), lowercase
-                            characters, and numbers are allowed. Keys must start
-                            with a lowercase character. International characters
-                            are allowed.
-                          </div>
-                        </div>
-                      )
-                    )}
-                    {duplicateKeyError === index &&
-                      buttonText === 'ADD LABEL' && (
-                        <div className="error-key-parent">
-                          <iconError.react
-                            tag="div"
-                            className="logo-alignment-style"
-                          />
-                          <div className="error-key-missing">
-                            The key is already present
-                          </div>
-                        </div>
-                      )}
                   </div>
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
-                      {selectFields.includes(labelSplit[0]) && sparkSection !== "gpu" ? (
+                      {selectFields.includes(labelSplit[0]) &&
+                      sparkSection !== 'gpu' ? (
                         <Select
                           className="spark-properties-select-style"
                           value={labelSplit[1]}
@@ -237,19 +160,10 @@ function SparkProperties({
                       ) : (
                         <Input
                           sx={{ margin: 0 }}
-                          className={`edit-input-style ${
-                            label === DEFAULT_LABEL_DETAIL &&
-                            buttonText === 'ADD LABEL'
-                              ? ' disable-text'
-                              : ''
-                          }`}
+                          className={`edit-input-style`}
                           onBlur={() => handleEditLabelSwitch()}
                           onChange={e =>
                             handleEditLabel(e.target.value, index, 'value')
-                          }
-                          disabled={
-                            label === DEFAULT_LABEL_DETAIL &&
-                            buttonText === 'ADD LABEL'
                           }
                           defaultValue={
                             labelSplit.length > 2

@@ -1548,12 +1548,8 @@ function CreateRunTime({
                   labelDetailUpdated={resourceAllocationDetailUpdated}
                   setLabelDetailUpdated={setResourceAllocationDetailUpdated}
                   buttonText="ADD PROPERTY"
-                  keyValidation={keyValidation}
-                  setKeyValidation={setKeyValidation}
                   valueValidation={valueValidation}
                   setValueValidation={setValueValidation}
-                  duplicateKeyError={duplicateKeyError}
-                  setDuplicateKeyError={setDuplicateKeyError}
                   sparkSection="resource allocation"
                 />
               )}
@@ -1596,12 +1592,8 @@ function CreateRunTime({
                   labelDetailUpdated={autoScalingDetailUpdated}
                   setLabelDetailUpdated={setAutoScalingDetailUpdated}
                   buttonText="ADD PROPERTY"
-                  keyValidation={keyValidation}
-                  setKeyValidation={setKeyValidation}
                   valueValidation={valueValidation}
                   setValueValidation={setValueValidation}
-                  duplicateKeyError={duplicateKeyError}
-                  setDuplicateKeyError={setDuplicateKeyError}
                   sparkSection="autoscaling"
                 />
               )}
@@ -1653,12 +1645,8 @@ function CreateRunTime({
                   labelDetailUpdated={gpuDetailUpdated}
                   setLabelDetailUpdated={setGpuDetailUpdated}
                   buttonText="ADD PROPERTY"
-                  keyValidation={keyValidation}
-                  setKeyValidation={setKeyValidation}
                   valueValidation={valueValidation}
                   setValueValidation={setValueValidation}
-                  duplicateKeyError={duplicateKeyError}
-                  setDuplicateKeyError={setDuplicateKeyError}
                   sparkSection="gpu"
                 />
               )}
