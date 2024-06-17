@@ -54,7 +54,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    return {"error": f"Failed to fetch clusters: {response.status}"}
+                    return {
+                        "error": f"Failed to fetch clusters: {response.status} {await response.text()}"
+                    }
 
         except Exception as e:
             self.log.exception("Error fetching cluster list")
@@ -71,7 +73,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    return {"error": f"Failed to fetch runtimes: {response.status}"}
+                    return {
+                        "error": f"Failed to fetch runtimes: {response.status} {await response.text()}"
+                    }
         except Exception as e:
             self.log.exception(f"Error fetching runtime list: {str(e)}")
             return {"error": str(e)}
