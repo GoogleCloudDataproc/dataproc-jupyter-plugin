@@ -63,10 +63,12 @@ class Client:
                     bucket = resp.get("storageConfig", {}).get("bucket", "")
                     return airflow_uri, bucket
                 else:
-                    raise Exception(f"Error getting airflow uri: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error getting airflow uri: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error getting airflow uri: {str(e)}")
-            raise Exception (f"Error getting airflow uri: {str(e)}")
+            raise Exception(f"Error getting airflow uri: {str(e)}")
 
     async def list_jobs(self, composer_name):
         airflow_uri, bucket = await self.get_airflow_uri(composer_name)
@@ -79,7 +81,9 @@ class Client:
                     resp = await response.json()
                     return resp, bucket
                 else:
-                    raise Exception(f"Error lsiting scheduled jobs: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error lsiting scheduled jobs: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error getting dag list: {str(e)}")
             return {"error": str(e)}
@@ -102,7 +106,9 @@ class Client:
                 return 0
             else:
                 self.log.exception("Error deleting dag")
-                raise Exception(f"Error getting airflow uri: {response.reason} {await response.text()}")
+                raise Exception(
+                    f"Error getting airflow uri: {response.reason} {await response.text()}"
+                )
         except Exception as e:
             self.log.exception(f"Error deleting dag: {str(e)}")
             return {"error": str(e)}
@@ -120,7 +126,9 @@ class Client:
                     return 0
                 else:
                     self.log.exception("Error updating status")
-                    return {"error": f"Error updating Airflow DAG status: {response.reason} {await response.text()}"}
+                    return {
+                        "error": f"Error updating Airflow DAG status: {response.reason} {await response.text()}"
+                    }
         except Exception as e:
             self.log.exception(f"Error updating status: {str(e)}")
             return {"error": str(e)}
@@ -136,7 +144,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error displaying BigQuery preview data: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error displaying BigQuery preview data: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error fetching dag run list: {str(e)}")
             return {"error": str(e)}
@@ -154,7 +164,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error listing dag runs: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error listing dag runs: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error fetching dag run task list: {str(e)}")
             return {"error": str(e)}
@@ -172,7 +184,9 @@ class Client:
                     resp = await response.text()
                     return {"content": resp}
                 else:
-                    raise Exception(f"Error listing dag run task logs: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error listing dag run task logs: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error fetching dag run task logs: {str(e)}")
             return {"error": str(e)}
@@ -192,7 +206,9 @@ class Client:
                     self.log.info("Dag file response fetched")
                     return await response.read()
                 else:
-                    raise Exception(f"Error getting dag file: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error getting dag file: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error reading dag file: {str(e)}")
             return {"error": str(e)}
@@ -324,7 +340,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error listing import errors: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error listing import errors: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error fetching import error list: {str(e)}")
             return {"error": str(e)}
@@ -341,7 +359,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error triggering dag: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error triggering dag: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error triggering dag: {str(e)}")
             return {"error": str(e)}

@@ -57,7 +57,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error response from BigQuery: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error response from BigQuery: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception("Error fetching datasets list")
             return {"error": str(e)}
@@ -73,7 +75,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error listing BigQuery tables: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error listing BigQuery tables: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception("Error fetching tables list")
             return {"error": str(e)}
@@ -91,7 +95,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error listing BigQuery dataset info: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error listing BigQuery dataset info: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception("Error fetching dataset info")
             return {"error": str(e)}
@@ -107,7 +113,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error listing BigQuery table info: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error listing BigQuery table info: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error fetching table information")
             return {"error": str(e)}
@@ -125,7 +133,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error displaying BigQuery preview data: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error displaying BigQuery preview data: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception("Error fetching preview data")
             return {"error": str(e)}
@@ -159,7 +169,9 @@ class Client:
                         else:
                             has_next = False
                     else:
-                        raise Exception(f"Error searching in BigQuery data : {response.reason} {await response.text()}")
+                        raise Exception(
+                            f"Error searching in BigQuery data : {response.reason} {await response.text()}"
+                        )
             if len(search_result) == 0:
                 return {}
             else:
@@ -181,7 +193,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
-                    raise Exception(f"Error listing BigQuery projects: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error listing BigQuery projects: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception("Error fetching projects")
             return {"error": str(e)}

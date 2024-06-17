@@ -81,7 +81,9 @@ class Client:
                         return environments
                 else:
                     self.log.exception("Error listing environments")
-                    raise Exception(f"Error getting composer list: {response.reason} {await response.text()}")
+                    raise Exception(
+                        f"Error getting composer list: {response.reason} {await response.text()}"
+                    )
         except Exception as e:
             self.log.exception(f"Error fetching environments list: {str(e)}")
             return []
