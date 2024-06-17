@@ -75,6 +75,8 @@ class Client:
                     resp = await response.json()
                     gcs_dag_path = resp.get("storageConfig", {}).get("bucket", "")
                     return gcs_dag_path
+                else:
+                    raise Exception(f"Error getting composer bucket: {response.reason} {await response.text()}")
         except Exception as e:
             self.log.exception(f"Error getting bucket name: {str(e)}")
             print(f"Error: {e}")
