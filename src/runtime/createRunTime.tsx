@@ -1010,6 +1010,17 @@ function CreateRunTime({
       setGpuDetail(GPU_DEFAULT);
       setGpuDetailUpdated(GPU_DEFAULT);
     } else {
+      let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+      resourceAllocationModify = resourceAllocationModify.map(
+        (item: string) => {
+          if (item === 'spark.dataproc.executor.disk.tier:premium') {
+            return 'spark.dataproc.executor.disk.tier:standard';
+          }
+          return item;
+        }
+      );
+      setResourceAllocationDetail(resourceAllocationModify);
+      setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(false);
       setGpuDetail(['']);
       setGpuDetailUpdated(['']);
