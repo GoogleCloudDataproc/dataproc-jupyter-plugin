@@ -20,6 +20,16 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedLabelSelect';
+import {
+  BOOLEAN_SELECT_OPTIONS,
+  CORE_RELATED_PROPERTIES,
+  DISK_RELATED_PROPERTIES,
+  EXECUTOR_RELATED_PROPERTIES,
+  GPU_ACCELERATOR_OPTIONS,
+  MEMORY_RELATED_PROPERTIES,
+  SELECT_FIELDS,
+  TIER_SELECT_OPTIONS
+} from '../utils/const';
 
 const iconError = new LabIcon({
   name: 'launcher:error-icon',
@@ -39,37 +49,6 @@ function SparkProperties({
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
-
-  const selectFields = [
-    'spark.dataproc.driver.disk.tier',
-    'spark.dataproc.executor.disk.tier',
-    'spark.dynamicAllocation.enabled',
-    'spark.reducer.fetchMigratedShuffle.enabled'
-  ];
-  const memoryRelatedProperties = [
-    'spark.driver.memory',
-    'spark.driver.memoryOverhead',
-    'spark.executor.memory',
-    'spark.executor.memoryOverhead'
-  ];
-  const diskRelatedProperties = [
-    'spark.dataproc.driver.disk.size',
-    'spark.dataproc.executor.disk.size'
-  ];
-  const coreRelatedProperties = ['spark.driver.cores', 'spark.executor.cores'];
-  const executorRelatedProperties = [
-    'spark.executor.instances',
-    'spark.dynamicAllocation.maxExecutors'
-  ];
-  const booleanSelectOptions = [
-    { key: 'true', value: 'true', text: 'true' },
-    { key: 'false', value: 'false', text: 'false' }
-  ];
-  const tierSelectOptions = [
-    { key: 'standard', value: 'standard', text: 'standard' },
-    { key: 'premium', value: 'premium', text: 'premium' }
-  ];
-
   const handleLabelDetailSelected = (
     event: React.SyntheticEvent<HTMLElement, Event>,
     data: string,
@@ -101,7 +80,7 @@ function SparkProperties({
         /*
           allowed aplhanumeric and spaces and underscores
         */
-        if (memoryRelatedProperties.includes(data.split(':')[0])) {
+        if (MEMORY_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           const regex = /^[0-9]+(m|g|t)$/i;
 
           if (value.search(regex) === -1) {
@@ -109,7 +88,7 @@ function SparkProperties({
           } else {
             setValueValidation(-1);
           }
-        } else if (diskRelatedProperties.includes(data.split(':')[0])) {
+        } else if (DISK_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           const regex = /^[0-9]+(k|m|g|t)$/i;
 
           if (value.search(regex) === -1) {
@@ -117,7 +96,7 @@ function SparkProperties({
           } else {
             setValueValidation(-1);
           }
-        } else if (coreRelatedProperties.includes(data.split(':')[0])) {
+        } else if (CORE_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           if (
             Number.isNaN(Number(value)) ||
             ![4, 8, 12].includes(Number(value))
@@ -126,7 +105,7 @@ function SparkProperties({
           } else {
             setValueValidation(-1);
           }
-        } else if (executorRelatedProperties.includes(data.split(':')[0])) {
+        } else if (EXECUTOR_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           if (
             Number.isNaN(Number(value)) ||
             Number(value) < 2 ||
@@ -151,16 +130,14 @@ function SparkProperties({
         } else if (
           data.split(':')[0] === 'spark.dynamicAllocation.minExecutors'
         ) {
-          if (
-            Number.isNaN(Number(value)) ||
-            Number(value) < 2
-          ) {
+          if (Number.isNaN(Number(value)) || Number(value) < 2) {
             setValueValidation(index);
           } else {
             setValueValidation(-1);
           }
         } else if (
-          data.split(':')[0] === 'spark.dynamicAllocation.executorAllocationRatio'
+          data.split(':')[0] ===
+          'spark.dynamicAllocation.executorAllocationRatio'
         ) {
           if (
             Number.isNaN(Number(value)) ||
@@ -175,7 +152,7 @@ function SparkProperties({
           data.split(':')[0] ===
           'spark.dataproc.executor.resource.accelerator.type'
         ) {
-          if (!['l4', 'a100-40', 'a100-80'].includes(value)) {
+          if (!GPU_ACCELERATOR_OPTIONS.includes(value)) {
             setValueValidation(index);
           } else {
             setValueValidation(-1);
@@ -230,7 +207,7 @@ function SparkProperties({
                   </div>
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
-                      {selectFields.includes(labelSplit[0]) &&
+                      {SELECT_FIELDS.includes(labelSplit[0]) &&
                       sparkSection !== 'gpu' ? (
                         <Select
                           className="spark-properties-select-style"
@@ -241,8 +218,8 @@ function SparkProperties({
                           options={
                             labelSplit[1] === 'true' ||
                             labelSplit[1] === 'false'
-                              ? booleanSelectOptions
-                              : tierSelectOptions
+                              ? BOOLEAN_SELECT_OPTIONS
+                              : TIER_SELECT_OPTIONS
                           }
                           Label={`Value ${index + 1}`}
                         />

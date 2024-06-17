@@ -188,9 +188,12 @@ export const NOTEBOOK_TEMPLATES_LIST_URL =
 export type scheduleMode = 'runNow' | 'runSchedule';
 export const scheduleValueExpression = '30 17 * * 1-5'; //Expression for schedule Value in Scheduler Jobs
 export const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
-export const SPARK_RESOURCE_ALLOCATION_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/concepts/properties'
-export const SPARK_AUTOSCALING_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/concepts/autoscaling#spark_dynamic_allocation_properties'
-export const SPARK_GPU_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/guides/gpus-serverless'
+export const SPARK_RESOURCE_ALLOCATION_INFO_URL =
+  'https://cloud.google.com/dataproc-serverless/docs/concepts/properties';
+export const SPARK_AUTOSCALING_INFO_URL =
+  'https://cloud.google.com/dataproc-serverless/docs/concepts/autoscaling#spark_dynamic_allocation_properties';
+export const SPARK_GPU_INFO_URL =
+  'https://cloud.google.com/dataproc-serverless/docs/guides/gpus-serverless';
 export const RESOURCE_ALLOCATION_DEFAULT = [
   'spark.driver.cores:4',
   'spark.driver.memory:12200m',
@@ -222,3 +225,36 @@ export const GPU_DEFAULT = [
   'spark.task.resource.gpu.amount:1/$spark_executor_cores',
   'spark.shuffle.manager:com.nvidia.spark.rapids.RapidsShuffleManager'
 ];
+export const SELECT_FIELDS = [
+  'spark.dataproc.driver.disk.tier',
+  'spark.dataproc.executor.disk.tier',
+  'spark.dynamicAllocation.enabled',
+  'spark.reducer.fetchMigratedShuffle.enabled'
+];
+export const MEMORY_RELATED_PROPERTIES = [
+  'spark.driver.memory',
+  'spark.driver.memoryOverhead',
+  'spark.executor.memory',
+  'spark.executor.memoryOverhead'
+];
+export const DISK_RELATED_PROPERTIES = [
+  'spark.dataproc.driver.disk.size',
+  'spark.dataproc.executor.disk.size'
+];
+export const CORE_RELATED_PROPERTIES = [
+  'spark.driver.cores',
+  'spark.executor.cores'
+];
+export const EXECUTOR_RELATED_PROPERTIES = [
+  'spark.executor.instances',
+  'spark.dynamicAllocation.maxExecutors'
+];
+export const BOOLEAN_SELECT_OPTIONS = [
+  { key: 'true', value: 'true', text: 'true' },
+  { key: 'false', value: 'false', text: 'false' }
+];
+export const TIER_SELECT_OPTIONS = [
+  { key: 'standard', value: 'standard', text: 'standard' },
+  { key: 'premium', value: 'premium', text: 'premium' }
+];
+export const GPU_ACCELERATOR_OPTIONS= ['l4', 'a100-40', 'a100-80']
