@@ -102,7 +102,7 @@ class Client:
                 return 0
             else:
                 self.log.exception("Error deleting dag")
-                return 1
+                raise Exception(f"Error getting airflow uri: {response.reason} {await response.text()}")
         except Exception as e:
             self.log.exception(f"Error deleting dag: {str(e)}")
             return {"error": str(e)}
