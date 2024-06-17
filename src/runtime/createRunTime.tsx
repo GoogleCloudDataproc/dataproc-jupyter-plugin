@@ -136,7 +136,6 @@ function CreateRunTime({
     'spark.dataproc.driverEnv.LANG:C.UTF-8',
     'spark.executorEnv.LANG:C.UTF-8',
     'spark.dataproc.executor.compute.tier:premium',
-    'spark.dataproc.executor.disk.tier:premium',
     'spark.dataproc.executor.resource.accelerator.type:l4',
     'spark.plugins:com.nvidia.spark.SQLPlugin',
     'spark.executor.resource.gpu.amount:1',
@@ -1024,6 +1023,17 @@ function CreateRunTime({
   const handleGpuCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
     setGpuChecked(event.target.checked);
     if (event.target.checked) {
+      let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+      resourceAllocationModify = resourceAllocationModify.map(
+        (item: string) => {
+          if (item === 'spark.dataproc.executor.disk.tier:standard') {
+            return 'spark.dataproc.executor.disk.tier:premium';
+          }
+          return item;
+        }
+      );
+      setResourceAllocationDetail(resourceAllocationModify);
+      setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(true);
       setGpuDetail(gpuDefault);
       setGpuDetailUpdated(gpuDefault);
