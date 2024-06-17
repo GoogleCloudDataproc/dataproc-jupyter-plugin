@@ -33,7 +33,10 @@ import {
   SERVICE_ACCOUNT,
   SPARK_GPU_INFO_URL,
   SPARK_RESOURCE_ALLOCATION_INFO_URL,
-  SPARK_AUTOSCALING_INFO_URL
+  SPARK_AUTOSCALING_INFO_URL,
+  RESOURCE_ALLOCATION_DEFAULT,
+  AUTO_SCALING_DEFAULT,
+  GPU_DEFAULT
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -111,37 +114,6 @@ function CreateRunTime({
   app: JupyterLab;
   fromPage: string;
 }) {
-  const resourceAllocationDefault = [
-    'spark.driver.cores:4',
-    'spark.driver.memory:12200m',
-    'spark.driver.memoryOverhead:1220m',
-    'spark.dataproc.driver.disk.size:400g',
-    'spark.dataproc.driver.disk.tier:standard',
-    'spark.executor.cores:4',
-    'spark.executor.memory:12200m',
-    'spark.executor.memoryOverhead:1220m',
-    'spark.dataproc.executor.disk.size:400g',
-    'spark.dataproc.executor.disk.tier:standard',
-    'spark.executor.instances:2'
-  ];
-  const autoScalingDefault = [
-    'spark.dynamicAllocation.enabled:true',
-    'spark.dynamicAllocation.initialExecutors:2',
-    'spark.dynamicAllocation.minExecutors:2',
-    'spark.dynamicAllocation.maxExecutors:1000',
-    'spark.dynamicAllocation.executorAllocationRatio:0.3',
-    'spark.reducer.fetchMigratedShuffle.enabled:false'
-  ];
-  const gpuDefault = [
-    'spark.dataproc.driverEnv.LANG:C.UTF-8',
-    'spark.executorEnv.LANG:C.UTF-8',
-    'spark.dataproc.executor.compute.tier:premium',
-    'spark.dataproc.executor.resource.accelerator.type:l4',
-    'spark.plugins:com.nvidia.spark.SQLPlugin',
-    'spark.executor.resource.gpu.amount:1',
-    'spark.task.resource.gpu.amount:1/$spark_executor_cores',
-    'spark.shuffle.manager:com.nvidia.spark.rapids.RapidsShuffleManager'
-  ];
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
   const [desciptionSelected, setDescriptionSelected] = useState('');
@@ -152,14 +124,14 @@ function CreateRunTime({
     ...networkUris
   ]);
   const [resourceAllocationDetail, setResourceAllocationDetail] = useState(
-    resourceAllocationDefault
+    RESOURCE_ALLOCATION_DEFAULT
   );
   const [resourceAllocationDetailUpdated, setResourceAllocationDetailUpdated] =
-    useState(resourceAllocationDefault);
+    useState(RESOURCE_ALLOCATION_DEFAULT);
   const [autoScalingDetail, setAutoScalingDetail] =
-    useState(autoScalingDefault);
+    useState(AUTO_SCALING_DEFAULT);
   const [autoScalingDetailUpdated, setAutoScalingDetailUpdated] =
-    useState(autoScalingDefault);
+    useState(AUTO_SCALING_DEFAULT);
   const [gpuDetail, setGpuDetail] = useState(['']);
   const [gpuDetailUpdated, setGpuDetailUpdated] = useState(['']);
   const [expandResourceAllocation, setExpandResourceAllocation] =
@@ -347,21 +319,21 @@ function CreateRunTime({
             let otherDetailList: string[] = [];
             updatedPropertyDetail.forEach(property => {
               if (
-                resourceAllocationDefault.some(item => {
+                RESOURCE_ALLOCATION_DEFAULT.some(item => {
                   const [itemKey] = item.split(':');
                   return itemKey === property.split(':')[0];
                 })
               ) {
                 resourceAllocationDetailList.push(property);
               } else if (
-                autoScalingDefault.some(item => {
+                AUTO_SCALING_DEFAULT.some(item => {
                   const [itemKey] = item.split(':');
                   return itemKey === property.split(':')[0];
                 })
               ) {
                 autoScalingDetailList.push(property);
               } else if (
-                gpuDefault.some(item => {
+                GPU_DEFAULT.some(item => {
                   const [itemKey] = item.split(':');
                   return itemKey === property.split(':')[0];
                 })
@@ -1035,8 +1007,8 @@ function CreateRunTime({
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(true);
-      setGpuDetail(gpuDefault);
-      setGpuDetailUpdated(gpuDefault);
+      setGpuDetail(GPU_DEFAULT);
+      setGpuDetailUpdated(GPU_DEFAULT);
     } else {
       setExpandGpu(false);
       setGpuDetail(['']);

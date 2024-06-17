@@ -191,3 +191,34 @@ export const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
 export const SPARK_RESOURCE_ALLOCATION_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/concepts/properties'
 export const SPARK_AUTOSCALING_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/concepts/autoscaling#spark_dynamic_allocation_properties'
 export const SPARK_GPU_INFO_URL = 'https://cloud.google.com/dataproc-serverless/docs/guides/gpus-serverless'
+export const RESOURCE_ALLOCATION_DEFAULT = [
+  'spark.driver.cores:4',
+  'spark.driver.memory:12200m',
+  'spark.driver.memoryOverhead:1220m',
+  'spark.dataproc.driver.disk.size:400g',
+  'spark.dataproc.driver.disk.tier:standard',
+  'spark.executor.cores:4',
+  'spark.executor.memory:12200m',
+  'spark.executor.memoryOverhead:1220m',
+  'spark.dataproc.executor.disk.size:400g',
+  'spark.dataproc.executor.disk.tier:standard',
+  'spark.executor.instances:2'
+];
+export const AUTO_SCALING_DEFAULT = [
+  'spark.dynamicAllocation.enabled:true',
+  'spark.dynamicAllocation.initialExecutors:2',
+  'spark.dynamicAllocation.minExecutors:2',
+  'spark.dynamicAllocation.maxExecutors:1000',
+  'spark.dynamicAllocation.executorAllocationRatio:0.3',
+  'spark.reducer.fetchMigratedShuffle.enabled:false'
+];
+export const GPU_DEFAULT = [
+  'spark.dataproc.driverEnv.LANG:C.UTF-8',
+  'spark.executorEnv.LANG:C.UTF-8',
+  'spark.dataproc.executor.compute.tier:premium',
+  'spark.dataproc.executor.resource.accelerator.type:l4',
+  'spark.plugins:com.nvidia.spark.SQLPlugin',
+  'spark.executor.resource.gpu.amount:1',
+  'spark.task.resource.gpu.amount:1/$spark_executor_cores',
+  'spark.shuffle.manager:com.nvidia.spark.rapids.RapidsShuffleManager'
+];
