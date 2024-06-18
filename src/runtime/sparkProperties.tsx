@@ -99,7 +99,7 @@ function SparkProperties({
         } else if (CORE_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           if (
             Number.isNaN(Number(value)) ||
-            ![4, 8, 12].includes(Number(value))
+            Number(value) < 0 
           ) {
             setValueValidation(index);
           } else {
@@ -247,7 +247,7 @@ function SparkProperties({
                           className="logo-alignment-style"
                         />
                         <div className="error-key-missing">
-                          Invalid value. Check the support document
+                          Invalid value. Consult Dataproc documentation 
                         </div>
                       </div>
                     )}
