@@ -118,7 +118,7 @@ function SparkProperties({
           if (
             value.includes('.') ||
             !Number.isInteger(Number(value)) ||
-            Number(value) < 0
+            Number(value) <= 0
           ) {
             updateErrorIndexes(index, true);
           } else {
