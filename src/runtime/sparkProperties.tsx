@@ -41,8 +41,8 @@ function SparkProperties({
   setLabelDetail,
   labelDetailUpdated,
   setLabelDetailUpdated,
-  valueValidation,
-  setValueValidation,
+  sparkValueValidation,
+  setSparkValueValidation,
   sparkSection
 }: any) {
   /*
@@ -72,6 +72,24 @@ function SparkProperties({
   const handleEditLabelSwitch = () => {
     setLabelDetail(labelDetailUpdated);
   };
+
+  const updateErrorIndexes = (index: number, hasError: boolean) => {
+    let newErrorIndexes = { ...sparkValueValidation };
+
+    // Ensure deep copy for the specific section
+    newErrorIndexes[sparkSection] = [...newErrorIndexes[sparkSection]];
+
+    const errorIndex = newErrorIndexes[sparkSection].indexOf(index);
+
+    if (hasError && errorIndex === -1) {
+      newErrorIndexes[sparkSection].push(index);
+    } else if (!hasError && errorIndex !== -1) {
+      newErrorIndexes[sparkSection].splice(errorIndex, 1);
+    }
+
+    setSparkValueValidation(newErrorIndexes);
+  };
+
   const handleEditLabel = (value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
 
@@ -84,56 +102,63 @@ function SparkProperties({
           const regex = /^[0-9]+(m|g|t)$/i;
 
           if (value.search(regex) === -1) {
-            setValueValidation(index);
+            updateErrorIndexes(index, true);
           } else {
-            setValueValidation(-1);
+            updateErrorIndexes(index, false);
           }
         } else if (DISK_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           const regex = /^[0-9]+(k|m|g|t)$/i;
 
           if (value.search(regex) === -1) {
-            setValueValidation(index);
+            updateErrorIndexes(index, true);
           } else {
-            setValueValidation(-1);
+            updateErrorIndexes(index, false);
           }
         } else if (CORE_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           if (
-            Number.isNaN(Number(value)) ||
-            Number(value) < 0 
+            value.includes('.') ||
+            !Number.isInteger(Number(value)) ||
+            Number(value) < 0
           ) {
-            setValueValidation(index);
+            updateErrorIndexes(index, true);
           } else {
-            setValueValidation(-1);
+            updateErrorIndexes(index, false);
           }
         } else if (EXECUTOR_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           if (
-            Number.isNaN(Number(value)) ||
+            value.includes('.') ||
+            !Number.isInteger(Number(value)) ||
             Number(value) < 2 ||
             Number(value) > 2000
           ) {
-            setValueValidation(index);
+            updateErrorIndexes(index, true);
           } else {
-            setValueValidation(-1);
+            updateErrorIndexes(index, false);
           }
         } else if (
           data.split(':')[0] === 'spark.dynamicAllocation.initialExecutors'
         ) {
           if (
-            Number.isNaN(Number(value)) ||
+            value.includes('.') ||
+            !Number.isInteger(Number(value)) ||
             Number(value) < 2 ||
             Number(value) > 500
           ) {
-            setValueValidation(index);
+            updateErrorIndexes(index, true);
           } else {
-            setValueValidation(-1);
+            updateErrorIndexes(index, false);
           }
         } else if (
           data.split(':')[0] === 'spark.dynamicAllocation.minExecutors'
         ) {
-          if (Number.isNaN(Number(value)) || Number(value) < 2) {
-            setValueValidation(index);
+          if (
+            value.includes('.') ||
+            !Number.isInteger(Number(value)) ||
+            Number(value) < 2
+          ) {
+            updateErrorIndexes(index, true);
           } else {
-            setValueValidation(-1);
+            updateErrorIndexes(index, false);
           }
         } else if (
           data.split(':')[0] ===
@@ -144,18 +169,18 @@ function SparkProperties({
             Number(value) < 0 ||
             Number(value) > 1
           ) {
-            setValueValidation(index);
+            updateErrorIndexes(index, true);
           } else {
-            setValueValidation(-1);
+            updateErrorIndexes(index, false);
           }
         } else if (
           data.split(':')[0] ===
           'spark.dataproc.executor.resource.accelerator.type'
         ) {
           if (!GPU_ACCELERATOR_OPTIONS.includes(value)) {
-            setValueValidation(index);
+            updateErrorIndexes(index, true);
           } else {
-            setValueValidation(-1);
+            updateErrorIndexes(index, false);
           }
         }
         /*
@@ -240,14 +265,14 @@ function SparkProperties({
                         />
                       )}
                     </div>
-                    {valueValidation === index && (
+                    {sparkValueValidation[sparkSection].includes(index) && (
                       <div className="error-key-parent">
                         <iconError.react
                           tag="div"
                           className="logo-alignment-style"
                         />
                         <div className="error-key-missing">
-                          Invalid value. Consult Dataproc documentation 
+                          Invalid value. Consult Dataproc documentation
                         </div>
                       </div>
                     )}

@@ -143,6 +143,11 @@ function CreateRunTime({
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
+  const [sparkValueValidation, setSparkValueValidation] = useState({
+    resourceallocation: [],
+    autoscaling: [],
+    gpu: []
+  });
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
@@ -674,6 +679,9 @@ function CreateRunTime({
   };
   function isSaveDisabled() {
     return (
+      sparkValueValidation.resourceallocation.length !== 0 ||
+      sparkValueValidation.autoscaling.length !== 0 ||
+      sparkValueValidation.gpu.length !== 0 ||
       displayNameSelected === '' ||
       runTimeSelected === '' ||
       desciptionSelected === '' ||
@@ -1545,9 +1553,9 @@ function CreateRunTime({
                   labelDetailUpdated={resourceAllocationDetailUpdated}
                   setLabelDetailUpdated={setResourceAllocationDetailUpdated}
                   buttonText="ADD PROPERTY"
-                  valueValidation={valueValidation}
-                  setValueValidation={setValueValidation}
-                  sparkSection="resource allocation"
+                  sparkValueValidation={sparkValueValidation}
+                  setSparkValueValidation={setSparkValueValidation}
+                  sparkSection="resourceallocation"
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -1589,8 +1597,8 @@ function CreateRunTime({
                   labelDetailUpdated={autoScalingDetailUpdated}
                   setLabelDetailUpdated={setAutoScalingDetailUpdated}
                   buttonText="ADD PROPERTY"
-                  valueValidation={valueValidation}
-                  setValueValidation={setValueValidation}
+                  sparkValueValidation={sparkValueValidation}
+                  setSparkValueValidation={setSparkValueValidation}
                   sparkSection="autoscaling"
                 />
               )}
@@ -1642,8 +1650,8 @@ function CreateRunTime({
                   labelDetailUpdated={gpuDetailUpdated}
                   setLabelDetailUpdated={setGpuDetailUpdated}
                   buttonText="ADD PROPERTY"
-                  valueValidation={valueValidation}
-                  setValueValidation={setValueValidation}
+                  sparkValueValidation={sparkValueValidation}
+                  setSparkValueValidation={setSparkValueValidation}
                   sparkSection="gpu"
                 />
               )}
