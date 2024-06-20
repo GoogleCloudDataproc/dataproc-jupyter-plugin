@@ -385,7 +385,7 @@ const CreateNotebookScheduler = ({
     if (context !== '') {
       getKernelDetail();
     }
-  }, [serverlessDataList]);
+  }, [serverlessDataList,clusterList]);
 
   return (
     <>
