@@ -118,7 +118,7 @@ function CreateRunTime({
   const [displayNameSelected, setDisplayNameSelected] = useState('');
   const [desciptionSelected, setDescriptionSelected] = useState('');
   const [runTimeSelected, setRunTimeSelected] = useState('');
-  const [versionSelected, setVersionSelected] = useState('2.1');
+  const [versionSelected, setVersionSelected] = useState('2.2');
   const [pythonRepositorySelected, setPythonRepositorySelected] = useState('');
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
@@ -269,7 +269,7 @@ function CreateRunTime({
       const descriptionDetail = description ? description : '';
       const versionDetail = runtimeConfig?.version
         ? runtimeConfig.version
-        : '2.1';
+        : '2.2';
       const containerImage = runtimeConfig?.containerImage
         ? runtimeConfig.containerImage
         : '';

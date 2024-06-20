@@ -99,7 +99,7 @@ function SparkProperties({
           allowed aplhanumeric and spaces and underscores
         */
         if (MEMORY_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          const regex = /^[0-9]+(m|g|t)$/i;
+          const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
 
           if (value.search(regex) === -1) {
             updateErrorIndexes(index, true);
@@ -107,7 +107,7 @@ function SparkProperties({
             updateErrorIndexes(index, false);
           }
         } else if (DISK_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          const regex = /^[0-9]+(k|m|g|t)$/i;
+          const regex = /^(0*[1-9][0-9]*)(k|m|g|t)$/i;
 
           if (value.search(regex) === -1) {
             updateErrorIndexes(index, true);
@@ -255,6 +255,12 @@ function SparkProperties({
                           onBlur={() => handleEditLabelSwitch()}
                           onChange={e =>
                             handleEditLabel(e.target.value, index, 'value')
+                          }
+                          disabled={
+                            labelSplit[0] ===
+                            'spark.dataproc.executor.compute.tier'
+                              ? true
+                              : false
                           }
                           defaultValue={
                             labelSplit.length > 2
