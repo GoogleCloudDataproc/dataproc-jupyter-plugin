@@ -322,8 +322,8 @@ const CreateNotebookScheduler = ({
     if (
       kernels &&
       context.sessionContext.kernelPreference.name &&
-      clusterList.length > 0 &&
-      serverlessDataList.length > 0
+      (clusterList.length > 0 ||
+      serverlessDataList.length > 0)
     ) {
       if (
         kernels[context.sessionContext.kernelPreference.name].resources
@@ -385,7 +385,7 @@ const CreateNotebookScheduler = ({
     if (context !== '') {
       getKernelDetail();
     }
-  }, [serverlessDataList]);
+  }, [serverlessDataList,clusterList]);
 
   return (
     <>
