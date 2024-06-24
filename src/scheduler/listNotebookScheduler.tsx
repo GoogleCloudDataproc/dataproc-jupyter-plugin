@@ -99,7 +99,8 @@ function listNotebookScheduler({
   setTimeZoneSelected,
   setEditMode,
   bucketName,
-  setBucketName
+  setBucketName,
+  setIsLoadingKernelDetail
 }: {
   app: JupyterFrontEnd;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
@@ -130,6 +131,7 @@ function listNotebookScheduler({
   setStopCluster?: (value: boolean) => void;
   setTimeZoneSelected?: (value: string) => void;
   setEditMode?: (value: boolean) => void;
+  setIsLoadingKernelDetail?: (value: boolean) => void;
   bucketName: string;
   setBucketName: (value: string) => void;
 }) {
@@ -265,7 +267,8 @@ function listNotebookScheduler({
         setEmailList,
         setStopCluster,
         setTimeZoneSelected,
-        setEditMode
+        setEditMode,
+        setIsLoadingKernelDetail
       );
     }
   };
@@ -288,7 +291,7 @@ function listNotebookScheduler({
   };
 
   const handleDeleteImportError = async (dagId: string) => {
-    const fromPage = "importErrorPage"
+    const fromPage = 'importErrorPage';
     await SchedulerService.handleDeleteSchedulerAPIService(
       composerSelectedList,
       dagId,
@@ -615,7 +618,7 @@ function listNotebookScheduler({
           {isLoading && (
             <div className="spin-loader-main">
               <CircularProgress
-                className = "spin-loader-custom-style"
+                className="spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"
