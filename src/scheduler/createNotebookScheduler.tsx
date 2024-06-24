@@ -320,21 +320,14 @@ const CreateNotebookScheduler = ({
   };
 
   const getKernelDetail = async () => {
-    // setIsLoadingKernelDetail(true);
     const kernelSpecs: any = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
-    console.log(
-      kernels,
-      context.sessionContext.kernelPreference.name,
-      clusterList,
-      serverlessDataList
-    );
+    
     if (kernels && context.sessionContext.kernelPreference.name) {
       if (
         kernels[context.sessionContext.kernelPreference.name].resources
           .endpointParentResource
       ) {
-        console.log('inside');
         if (
           kernels[
             context.sessionContext.kernelPreference.name
@@ -355,11 +348,9 @@ const CreateNotebookScheduler = ({
             setServerlessSelected('');
           }
         } else {
-          console.log(clusterList);
           const selectedData: any = clusterList.filter((cluster: string) => {
             return context.sessionContext.kernelDisplayName.includes(cluster);
           });
-          console.log(selectedData);
           if (selectedData.length > 0) {
             setClusterSelected(selectedData[0]);
           } else {
@@ -367,7 +358,6 @@ const CreateNotebookScheduler = ({
           }
         }
       }
-      // setIsLoadingKernelDetail(false);
     }
   };
 
@@ -404,7 +394,6 @@ const CreateNotebookScheduler = ({
   }, [serverlessDataList, clusterList]);
 
   useEffect(() => {
-    console.log(selectedMode);
     if (selectedMode === 'cluster') {
       listClustersAPI();
     } else {
