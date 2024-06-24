@@ -95,7 +95,7 @@ function SparkProperties({
     labelEdit.forEach((data, dataNumber: number) => {
       if (index === dataNumber) {
         /*
-          allowed aplhanumeric and spaces and underscores
+          allowed aplhanumeric and spaces and underscores values
         */
         if (MEMORY_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
