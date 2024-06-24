@@ -73,7 +73,6 @@ test('Job Scheduler', async ({ page }) => {
       clusterNotEmpty &&
       retryCountNotEmpty &&
       retryDelayNotEmpty;
-    console.log("values --------", jobNameNotEmpty,environmentNotEmpty,clusterNotEmpty,retryCountNotEmpty,retryDelayNotEmpty,allFieldsFilled)
     if (!allFieldsFilled) {
       await expect(page.getByRole('button', { name: 'Create' })).toBeDisabled();
     } else {
