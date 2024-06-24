@@ -322,7 +322,7 @@ const CreateNotebookScheduler = ({
   const getKernelDetail = async () => {
     const kernelSpecs: any = await KernelSpecAPI.getSpecs();
     const kernels = kernelSpecs.kernelspecs;
-    
+
     if (kernels && context.sessionContext.kernelPreference.name) {
       if (
         kernels[context.sessionContext.kernelPreference.name].resources
