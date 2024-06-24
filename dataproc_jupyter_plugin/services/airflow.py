@@ -255,7 +255,7 @@ class Client:
                             r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
                             email_str,
                         )
-                        # Remove quotes from email addresses
+                        # Remove quotes from the email addresses
                         email_list = [email.strip("'\"") for email in email_list]
                         break
                 for line in file_content.split("\n"):
