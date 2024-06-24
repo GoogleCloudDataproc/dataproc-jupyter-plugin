@@ -222,7 +222,7 @@ export const GPU_DEFAULT = [
   'spark.dataproc.executor.resource.accelerator.type:l4',
   'spark.plugins:com.nvidia.spark.SQLPlugin',
   'spark.executor.resource.gpu.amount:1',
-  'spark.task.resource.gpu.amount:1/$spark_executor_cores',
+  'spark.task.resource.gpu.amount',
   'spark.shuffle.manager:com.nvidia.spark.rapids.RapidsShuffleManager'
 ];
 export const SELECT_FIELDS = [
@@ -257,4 +257,3 @@ export const TIER_SELECT_OPTIONS = [
   { key: 'standard', value: 'standard', text: 'standard' },
   { key: 'premium', value: 'premium', text: 'premium' }
 ];
-export const GPU_ACCELERATOR_OPTIONS= ['l4', 'a100-40', 'a100-80']

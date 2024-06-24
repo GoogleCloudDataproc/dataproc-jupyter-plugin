@@ -1015,8 +1015,23 @@ function CreateRunTime({
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(true);
-      setGpuDetail(GPU_DEFAULT);
-      setGpuDetailUpdated(GPU_DEFAULT);
+      let gpuDetailModify = [...GPU_DEFAULT];
+      resourceAllocationModify.forEach(item => {
+        const [key, value] = item.split(':');
+        if (key === 'spark.executor.cores') {
+          const cores = Number(value);
+          const gpuValue = (1 / cores).toFixed(2);
+          gpuDetailModify = gpuDetailModify.map(gpuItem => {
+            const [gpuKey] = gpuItem.split(':');
+            if (gpuKey === 'spark.task.resource.gpu.amount') {
+              return `spark.task.resource.gpu.amount:${gpuValue}`;
+            }
+            return gpuItem;
+          });
+        }
+      });
+      setGpuDetail(gpuDetailModify);
+      setGpuDetailUpdated(gpuDetailModify);
     } else {
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
       resourceAllocationModify = resourceAllocationModify.map(
