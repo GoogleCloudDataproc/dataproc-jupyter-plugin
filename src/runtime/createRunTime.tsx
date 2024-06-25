@@ -1010,7 +1010,7 @@ function CreateRunTime({
           if (item === 'spark.dataproc.executor.disk.tier:standard') {
             return 'spark.dataproc.executor.disk.tier:premium';
           }
-          return item !== 'spark.executor.memoryOverhead:1220m'; // To remove the property if GPU checkbox is checked
+          return item !== 'spark.executor.memoryOverhead:1220m'; // To remove the property if GPU checkbox is checked.
         }
       );
       setResourceAllocationDetail(resourceAllocationModify);
