@@ -1008,7 +1008,6 @@ function CreateRunTime({
       resourceAllocationModify = resourceAllocationModify
         .map((item: string) => {
           if (item === 'spark.dataproc.executor.disk.tier:standard') {
-            console.log('check');
             return 'spark.dataproc.executor.disk.tier:premium';
           } else if (item === 'spark.executor.memoryOverhead:1220m') {
             // To remove the property if GPU checkbox is checked.
@@ -1016,7 +1015,7 @@ function CreateRunTime({
           }
           return item;
         })
-        .filter((item): item is string => item !== null); // To filter out null values
+        .filter((item): item is string => item !== null); // To filter out null values.
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(true);
