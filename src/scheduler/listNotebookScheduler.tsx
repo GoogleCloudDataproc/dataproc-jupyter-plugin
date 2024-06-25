@@ -291,7 +291,7 @@ function listNotebookScheduler({
   };
 
   const handleDeleteImportError = async (dagId: string) => {
-    const fromPage = 'importErrorPage';
+    const fromPage = "importErrorPage";
     await SchedulerService.handleDeleteSchedulerAPIService(
       composerSelectedList,
       dagId,
