@@ -1002,20 +1002,20 @@ function CreateRunTime({
 
   const handleGpuCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
     setGpuChecked(event.target.checked);
+    let gpuDetailModify = [...GPU_DEFAULT];
     if (event.target.checked) {
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
-      resourceAllocationModify = resourceAllocationModify.map(
+      resourceAllocationModify = resourceAllocationModify.filter(
         (item: string) => {
           if (item === 'spark.dataproc.executor.disk.tier:standard') {
             return 'spark.dataproc.executor.disk.tier:premium';
           }
-          return item;
+          return item !== 'spark.executor.memoryOverhead:1220m'; // To remove the property if GPU checkbox is checked
         }
       );
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(true);
-      let gpuDetailModify = [...GPU_DEFAULT];
       resourceAllocationModify.forEach(item => {
         const [key, value] = item.split(':');
         if (key === 'spark.executor.cores') {
@@ -1032,6 +1032,24 @@ function CreateRunTime({
       });
       setGpuDetail(gpuDetailModify);
       setGpuDetailUpdated(gpuDetailModify);
+      gpuDetailModify.forEach(item => {
+        const [key, value] = item.split(':');
+        if (
+          key === 'spark.dataproc.executor.resource.accelerator.type' &&
+          value === 'l4'
+        ) {
+          resourceAllocationModify = resourceAllocationModify.map(
+            (item: string) => {
+              if (item === 'spark.dataproc.executor.disk.size:400g') {
+                return 'spark.dataproc.executor.disk.size:375g';
+              }
+              return item;
+            }
+          );
+          setResourceAllocationDetail(resourceAllocationModify);
+          setResourceAllocationDetailUpdated(resourceAllocationModify);
+        }
+      });
     } else {
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
       resourceAllocationModify = resourceAllocationModify.map(
@@ -1042,11 +1060,41 @@ function CreateRunTime({
           return item;
         }
       );
+      if (
+        !resourceAllocationModify.includes(
+          'spark.executor.memoryOverhead:1220m'
+        )
+      ) {
+        // To add the spark.executor.memoryOverhead:1220m at index 8
+        resourceAllocationModify.splice(
+          7,
+          0,
+          'spark.executor.memoryOverhead:1220m'
+        );
+      }
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(false);
       setGpuDetail(['']);
       setGpuDetailUpdated(['']);
+      gpuDetailModify.forEach(item => {
+        const [key, value] = item.split(':');
+        if (
+          key === 'spark.dataproc.executor.resource.accelerator.type' &&
+          value === 'l4'
+        ) {
+          resourceAllocationModify = resourceAllocationModify.map(
+            (item: string) => {
+              if (item === 'spark.dataproc.executor.disk.size:375g') {
+                return 'spark.dataproc.executor.disk.size:400g';
+              }
+              return item;
+            }
+          );
+          setResourceAllocationDetail(resourceAllocationModify);
+          setResourceAllocationDetailUpdated(resourceAllocationModify);
+        }
+      });
     }
   };
 

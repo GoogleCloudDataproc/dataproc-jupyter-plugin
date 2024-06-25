@@ -221,7 +221,6 @@ export const GPU_DEFAULT = [
   'spark.dataproc.executor.compute.tier:premium',
   'spark.dataproc.executor.resource.accelerator.type:l4',
   'spark.plugins:com.nvidia.spark.SQLPlugin',
-  'spark.executor.resource.gpu.amount:1',
   'spark.task.resource.gpu.amount',
   'spark.shuffle.manager:com.nvidia.spark.rapids.RapidsShuffleManager'
 ];
