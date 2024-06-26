@@ -1041,14 +1041,14 @@ function CreateRunTime({
           key === 'spark.dataproc.executor.resource.accelerator.type' &&
           value === 'l4'
         ) {
-          resourceAllocationModify = resourceAllocationModify.map(
-            (item: string) => {
+          resourceAllocationModify = resourceAllocationModify
+            .map((item: string) => {
               if (item === 'spark.dataproc.executor.disk.size:400g') {
-                return 'spark.dataproc.executor.disk.size:375g';
+                return null;
               }
               return item;
-            }
-          );
+            })
+            .filter((item): item is string => item !== null); // To filter out null values.
           setResourceAllocationDetail(resourceAllocationModify);
           setResourceAllocationDetailUpdated(resourceAllocationModify);
         }
@@ -1073,6 +1073,18 @@ function CreateRunTime({
           7,
           0,
           'spark.executor.memoryOverhead:1220m'
+        );
+      }
+      if (
+        !resourceAllocationModify.includes(
+          'spark.dataproc.executor.disk.size:400g'
+        )
+      ) {
+        // To add the spark.dataproc.executor.disk.size:400g at index 9
+        resourceAllocationModify.splice(
+          8,
+          0,
+          'spark.dataproc.executor.disk.size:400g'
         );
       }
       setResourceAllocationDetail(resourceAllocationModify);
