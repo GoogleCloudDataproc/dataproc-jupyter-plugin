@@ -50,7 +50,8 @@ const NotebookJobComponent = ({
   setEmailList,
   setStopCluster,
   setTimeZoneSelected,
-  setEditMode
+  setEditMode,
+  setIsLoadingKernelDetail
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
@@ -80,6 +81,7 @@ const NotebookJobComponent = ({
   setStopCluster?: (value: boolean) => void;
   setTimeZoneSelected?: (value: string) => void;
   setEditMode?: (value: boolean) => void;
+  setIsLoadingKernelDetail?: (value: boolean) => void;
 }): React.JSX.Element => {
   const [showExecutionHistory, setShowExecutionHistory] = useState(false);
   const [composerName, setComposerName] = useState('');
@@ -143,6 +145,7 @@ const NotebookJobComponent = ({
               setEditMode={setEditMode}
               bucketName={bucketName}
               setBucketName={setBucketName}
+              setIsLoadingKernelDetail={setIsLoadingKernelDetail}
             />
           </div>
         </div>
