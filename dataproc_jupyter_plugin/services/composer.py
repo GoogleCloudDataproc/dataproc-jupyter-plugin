@@ -15,7 +15,7 @@
 
 from typing import List
 
-import requests
+import aiohttp
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
@@ -26,6 +26,8 @@ from dataproc_jupyter_plugin.models.models import ComposerEnvironment
 
 
 class Client:
+    client_session = aiohttp.ClientSession()
+
     def __init__(self, credentials, log):
         self.log = log
         if not (
@@ -49,33 +51,39 @@ class Client:
         try:
             environments = []
             composer_url = await urls.gcp_service_url(COMPOSER_SERVICE_NAME)
-            api_endpoint = f"{composer_url}v1/projects/{self.project_id}/locations/{self.region_id}/environments"
-            response = requests.get(api_endpoint, headers=self.create_headers())
-            if response.status_code == 200:
-                resp = response.json()
-                if not resp:
-                    return environments
-                else:
-                    environment = resp["environments"]
-                    # Extract the 'name' values from the 'environments' list
-                    names = [env["name"] for env in environment]
-                    # Extract the last value after the last slash for each 'name'
-                    last_values = [name.split("/")[-1] for name in names]
-                    for env in last_values:
-                        name = env
-                        environments.append(
-                            ComposerEnvironment(
-                                name=name,
-                                label=name,
-                                description=f"Environment: {name}",
-                                file_extensions=["ipynb"],
-                                metadata={"path": env},
+            api_endpoint = f"{composer_url}/v1/projects/{self.project_id}/locations/{self.region_id}/environments"
+
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return environments
+                    else:
+                        environment = resp.get("environments", [])
+                        # Extract the 'name' values from the 'environments' list
+                        names = [env["name"] for env in environment]
+                        # Extract the last value after the last slash for each 'name'
+                        last_values = [name.split("/")[-1] for name in names]
+                        for env in last_values:
+                            name = env
+                            environments.append(
+                                ComposerEnvironment(
+                                    name=name,
+                                    label=name,
+                                    description=f"Environment: {name}",
+                                    file_extensions=["ipynb"],
+                                    metadata={"path": env},
+                                )
                             )
-                        )
-                    return environments
-            else:
-                self.log.exception("Error listing environments")
-                print(f"Error: {response.status_code} - {response.text}")
-        except FileNotFoundError:
-            environments = []
-            return environments
+                        return environments
+                else:
+                    self.log.exception("Error listing environments")
+                    raise Exception(
+                        f"Error getting composer list: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error fetching environments list: {str(e)}")
+            return f'{"Error fetching environments list": str(e)}'
