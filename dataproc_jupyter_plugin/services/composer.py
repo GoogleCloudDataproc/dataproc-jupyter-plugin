@@ -86,4 +86,4 @@ class Client:
                     )
         except Exception as e:
             self.log.exception(f"Error fetching environments list: {str(e)}")
-            return []
+            return f'{"Error fetching environments list": str(e)}'
