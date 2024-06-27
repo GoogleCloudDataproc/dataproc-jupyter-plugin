@@ -1068,7 +1068,7 @@ function CreateRunTime({
           'spark.executor.memoryOverhead:1220m'
         )
       ) {
-        // To add the spark.executor.memoryOverhead:1220m at index 8
+        // To add the spark.executor.memoryOverhead:1220m at index 8.
         resourceAllocationModify.splice(
           7,
           0,
@@ -1080,7 +1080,7 @@ function CreateRunTime({
           'spark.dataproc.executor.disk.size:400g'
         )
       ) {
-        // To add the spark.dataproc.executor.disk.size:400g at index 9
+        // To add the spark.dataproc.executor.disk.size:400g at index 9.
         resourceAllocationModify.splice(
           8,
           0,
