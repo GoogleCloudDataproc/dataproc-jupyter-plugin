@@ -1044,6 +1044,7 @@ function CreateRunTime({
           resourceAllocationModify = resourceAllocationModify
             .map((item: string) => {
               if (item === 'spark.dataproc.executor.disk.size:400g') {
+                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
                 return null;
               }
               return item;
