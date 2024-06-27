@@ -94,11 +94,7 @@ class PreviewController(APIHandler):
             project_id = self.get_argument("project_id")
             client = bigquery.Client(await credentials.get_cached(), self.log)
             preview_data = await client.bigquery_preview_data(
-                dataset_id,
-                table_id,
-                max_results,
-                start_index,
-                project_id,
+                dataset_id, table_id, max_results, start_index, project_id
             )
             self.finish(json.dumps(preview_data))
         except Exception as e:
