@@ -91,10 +91,12 @@ interface IDagRunList {
 export class SchedulerService {
   static listClustersAPIService = async (
     setClusterList: (value: string[]) => void,
+    setIsLoadingKernelDetail: (value: boolean) => void,
     nextPageToken?: string,
     previousClustersList?: (value: string[]) => void
   ) => {
     const pageToken = nextPageToken ?? '';
+    setIsLoadingKernelDetail(true);
     try {
       const serviceURL = `clusterList?pageSize=500&pageToken=${pageToken}`;
 
@@ -130,6 +132,7 @@ export class SchedulerService {
         );
 
         setClusterList(keyLabelStructure);
+        setIsLoadingKernelDetail(false);
       }
       if (formattedResponse?.error?.code) {
         if (!toast.isActive('clusterError')) {
@@ -152,10 +155,14 @@ export class SchedulerService {
   static listSessionTemplatesAPIService = async (
     setServerlessDataList: (value: string[]) => void,
     setServerlessList: (value: string[]) => void,
+    setIsLoadingKernelDetail?: (value: boolean) => void,
     nextPageToken?: string,
     previousSessionTemplatesList?: object
   ) => {
     const pageToken = nextPageToken ?? '';
+    if (setIsLoadingKernelDetail) {
+      setIsLoadingKernelDetail(true);
+    }
     try {
       const serviceURL = `runtimeList?pageSize=500&pageToken=${pageToken}`;
 
@@ -193,6 +200,9 @@ export class SchedulerService {
 
         setServerlessDataList(transformSessionTemplateListData);
         setServerlessList(keyLabelStructure);
+        if (setIsLoadingKernelDetail) {
+          setIsLoadingKernelDetail(false);
+        }
       }
       if (formattedResponse?.error?.code) {
         if (!toast.isActive('sessionTemplateError')) {
@@ -339,7 +349,8 @@ export class SchedulerService {
     setEmailList?: (value: string[]) => void,
     setStopCluster?: (value: boolean) => void,
     setTimeZoneSelected?: (value: string) => void,
-    setEditMode?: (value: boolean) => void
+    setEditMode?: (value: boolean) => void,
+    setIsLoadingKernelDetail?: (value: boolean) => void
   ) => {
     setEditDagLoading(dagId);
     try {
@@ -383,7 +394,8 @@ export class SchedulerService {
         if (formattedResponse.mode_selected === 'serverless') {
           await this.listSessionTemplatesAPIService(
             setServerlessDataList,
-            setServerlessList
+            setServerlessList,
+            setIsLoadingKernelDetail
           );
           if (serverlessDataList.length > 0) {
             const selectedData: any = serverlessDataList.filter(

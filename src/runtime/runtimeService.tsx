@@ -478,11 +478,28 @@ export class RunTimeSerive {
 
       setNetworklist(transformedNetworkList);
       if (selectedRuntimeClone === undefined) {
-        setNetworkSelected(transformedNetworkList[0]);
+        if (transformedNetworkList.length > 0) {
+          setNetworkSelected(transformedNetworkList[0]);
+        } else {
+          DataprocLoggingService.log(
+            'No networks found. Account may lack access to list networks',
+            LOG_LEVEL.ERROR
+          );
+          toast.error(
+            `No networks found. Account may lack access to list networks.`,
+            toastifyCustomStyle
+          );
+        }
       }
     } catch (error) {
-      DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-      toast.error(`Error listing Networks : ${error}`, toastifyCustomStyle);
+      DataprocLoggingService.log(
+        'Error listing Networks',
+        LOG_LEVEL.ERROR
+      );
+      toast.error(
+        `Error listing Networks : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
   static listMetaStoreAPIService = async (
@@ -680,7 +697,18 @@ export class RunTimeSerive {
                 );
                 setSubNetworklist(transformedServiceList);
                 if (selectedRuntimeClone === undefined) {
-                  setSubNetworkSelected(transformedServiceList[0]);
+                  if (transformedServiceList.length > 0) {
+                    setSubNetworkSelected(transformedServiceList[0]);
+                  } else {
+                    DataprocLoggingService.log(
+                      'No subNetworks found. Account may lack access to list subNetworks', 
+                      LOG_LEVEL.ERROR
+                    );
+                    toast.error(
+                      `No subNetworks found. Account may lack access to list subNetworks`,
+                      toastifyCustomStyle
+                    );
+                  }
                 }
                 setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
