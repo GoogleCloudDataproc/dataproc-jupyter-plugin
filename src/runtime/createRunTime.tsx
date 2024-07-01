@@ -240,6 +240,48 @@ function CreateRunTime({
     }
   }, [networkSelected]);
 
+  const modifyResourceAllocation = () => {
+    let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+    gpuDetailUpdated.forEach(item => {
+      const [key, value] = item.split(':');
+      if (key === 'spark.dataproc.executor.resource.accelerator.type') {
+        if (value === 'l4') {
+          resourceAllocationModify = resourceAllocationDetailUpdated
+            .map((item: string) => {
+              if (item === 'spark.dataproc.executor.disk.size:400g') {
+                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
+                return null;
+              }
+              return item;
+            })
+            .filter((item): item is string => item !== null); // To filter out null values.'
+          setResourceAllocationDetail(resourceAllocationModify);
+          setResourceAllocationDetailUpdated(resourceAllocationModify);
+        } else {
+          if (
+            !resourceAllocationDetailUpdated.includes(
+              'spark.dataproc.executor.disk.size:400g'
+            )
+          ) {
+            // To add the spark.dataproc.executor.disk.size:400g at index 9.
+            resourceAllocationDetailUpdated.splice(
+              8,
+              0,
+              'spark.dataproc.executor.disk.size:400g'
+            );
+            const updatedArray = [...resourceAllocationDetailUpdated];
+            setResourceAllocationDetail(updatedArray);
+            setResourceAllocationDetailUpdated(updatedArray);
+          }
+        }
+      }
+    });
+  };
+
+  useEffect(() => {
+    modifyResourceAllocation();
+  }, [gpuDetailUpdated]);
+
   const displayUserInfo = async () => {
     await RunTimeSerive.displayUserInfoService(setUserInfo);
   };
@@ -1035,25 +1077,6 @@ function CreateRunTime({
       });
       setGpuDetail(gpuDetailModify);
       setGpuDetailUpdated(gpuDetailModify);
-      gpuDetailModify.forEach(item => {
-        const [key, value] = item.split(':');
-        if (
-          key === 'spark.dataproc.executor.resource.accelerator.type' &&
-          value === 'l4'
-        ) {
-          resourceAllocationModify = resourceAllocationModify
-            .map((item: string) => {
-              if (item === 'spark.dataproc.executor.disk.size:400g') {
-                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
-                return null;
-              }
-              return item;
-            })
-            .filter((item): item is string => item !== null); // To filter out null values.
-          setResourceAllocationDetail(resourceAllocationModify);
-          setResourceAllocationDetailUpdated(resourceAllocationModify);
-        }
-      });
     } else {
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
       resourceAllocationModify = resourceAllocationModify.map(
@@ -1076,41 +1099,11 @@ function CreateRunTime({
           'spark.executor.memoryOverhead:1220m'
         );
       }
-      if (
-        !resourceAllocationModify.includes(
-          'spark.dataproc.executor.disk.size:400g'
-        )
-      ) {
-        // To add the spark.dataproc.executor.disk.size:400g at index 9.
-        resourceAllocationModify.splice(
-          8,
-          0,
-          'spark.dataproc.executor.disk.size:400g'
-        );
-      }
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(false);
       setGpuDetail(['']);
       setGpuDetailUpdated(['']);
-      gpuDetailModify.forEach(item => {
-        const [key, value] = item.split(':');
-        if (
-          key === 'spark.dataproc.executor.resource.accelerator.type' &&
-          value === 'l4'
-        ) {
-          resourceAllocationModify = resourceAllocationModify.map(
-            (item: string) => {
-              if (item === 'spark.dataproc.executor.disk.size:375g') {
-                return 'spark.dataproc.executor.disk.size:400g';
-              }
-              return item;
-            }
-          );
-          setResourceAllocationDetail(resourceAllocationModify);
-          setResourceAllocationDetailUpdated(resourceAllocationModify);
-        }
-      });
     }
   };
 
