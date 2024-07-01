@@ -75,8 +75,10 @@ function LabelProperties({
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
       } else {
-        setLabelDetailUpdated([]);
-        setLabelDetail([]);
+        if (!selectedRuntimeClone) {
+          setLabelDetailUpdated([]);
+          setLabelDetail([]);
+        }
       }
     }
   }, []);

@@ -144,3 +144,41 @@
   display: flex;
   margin-top: 5px;
 }
+
+.spark-properties-sub-header {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 28px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color0);
+  margin-right: 16px;
+}
+
+.spark-properties-sub-header-parent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 512px;
+  margin: 15px 0px;
+}
+
+.spark-property-parent {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+  width: 512px;
+  color: var(--jp-ui-font-color2);
+}
+
+.spark-properties-title {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.spark-properties-select-style {
+  width: 90%;
+}

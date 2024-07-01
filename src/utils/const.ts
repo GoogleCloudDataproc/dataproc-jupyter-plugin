@@ -188,3 +188,71 @@ export const NOTEBOOK_TEMPLATES_LIST_URL =
 export type scheduleMode = 'runNow' | 'runSchedule';
 export const scheduleValueExpression = '30 17 * * 1-5'; //Expression for schedule Value in Scheduler Jobs
 export const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
+export const SPARK_RESOURCE_ALLOCATION_INFO_URL =
+  'https://cloud.google.com/dataproc-serverless/docs/concepts/properties';
+export const SPARK_AUTOSCALING_INFO_URL =
+  'https://cloud.google.com/dataproc-serverless/docs/concepts/autoscaling#spark_dynamic_allocation_properties';
+export const SPARK_GPU_INFO_URL =
+  'https://cloud.google.com/dataproc-serverless/docs/guides/gpus-serverless';
+export const RESOURCE_ALLOCATION_DEFAULT = [
+  'spark.driver.cores:4',
+  'spark.driver.memory:12200m',
+  'spark.driver.memoryOverhead:1220m',
+  'spark.dataproc.driver.disk.size:400g',
+  'spark.dataproc.driver.disk.tier:standard',
+  'spark.executor.cores:4',
+  'spark.executor.memory:12200m',
+  'spark.executor.memoryOverhead:1220m',
+  'spark.dataproc.executor.disk.size:400g',
+  'spark.dataproc.executor.disk.tier:standard',
+  'spark.executor.instances:2'
+];
+export const AUTO_SCALING_DEFAULT = [
+  'spark.dynamicAllocation.enabled:true',
+  'spark.dynamicAllocation.initialExecutors:2',
+  'spark.dynamicAllocation.minExecutors:2',
+  'spark.dynamicAllocation.maxExecutors:1000',
+  'spark.dynamicAllocation.executorAllocationRatio:0.3',
+  'spark.reducer.fetchMigratedShuffle.enabled:false'
+];
+export const GPU_DEFAULT = [
+  'spark.dataproc.driverEnv.LANG:C.UTF-8',
+  'spark.executorEnv.LANG:C.UTF-8',
+  'spark.dataproc.executor.compute.tier:premium',
+  'spark.dataproc.executor.resource.accelerator.type:l4',
+  'spark.plugins:com.nvidia.spark.SQLPlugin',
+  'spark.task.resource.gpu.amount',
+  'spark.shuffle.manager:com.nvidia.spark.rapids.RapidsShuffleManager'
+];
+export const SELECT_FIELDS = [
+  'spark.dataproc.driver.disk.tier',
+  'spark.dataproc.executor.disk.tier',
+  'spark.dynamicAllocation.enabled',
+  'spark.reducer.fetchMigratedShuffle.enabled'
+];
+export const MEMORY_RELATED_PROPERTIES = [
+  'spark.driver.memory',
+  'spark.driver.memoryOverhead',
+  'spark.executor.memory',
+  'spark.executor.memoryOverhead'
+];
+export const DISK_RELATED_PROPERTIES = [
+  'spark.dataproc.driver.disk.size',
+  'spark.dataproc.executor.disk.size'
+];
+export const CORE_RELATED_PROPERTIES = [
+  'spark.driver.cores',
+  'spark.executor.cores'
+];
+export const EXECUTOR_RELATED_PROPERTIES = [
+  'spark.executor.instances',
+  'spark.dynamicAllocation.maxExecutors'
+];
+export const BOOLEAN_SELECT_OPTIONS = [
+  { key: 'true', value: 'true', text: 'true' },
+  { key: 'false', value: 'false', text: 'false' }
+];
+export const TIER_SELECT_OPTIONS = [
+  { key: 'standard', value: 'standard', text: 'standard' },
+  { key: 'premium', value: 'premium', text: 'premium' }
+];
