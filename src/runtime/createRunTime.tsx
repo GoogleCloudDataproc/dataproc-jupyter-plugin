@@ -1099,6 +1099,18 @@ function CreateRunTime({
           'spark.executor.memoryOverhead:1220m'
         );
       }
+      if (
+        !resourceAllocationModify.includes(
+          'spark.dataproc.executor.disk.size:400g'
+        )
+      ) {
+        // To add the spark.dataproc.executor.disk.size:400g at index 9 when GPU is unchecked
+        resourceAllocationModify.splice(
+          8,
+          0,
+          'spark.dataproc.executor.disk.size:400g'
+        );
+      }
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(false);
