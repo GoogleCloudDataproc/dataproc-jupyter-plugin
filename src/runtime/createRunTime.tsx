@@ -1516,6 +1516,7 @@ function CreateRunTime({
                   </div>
                   <div
                     className="expand-icon"
+                    id="resource-allocation-help-icon"
                     onClick={() =>
                       window.open(
                         `${SPARK_RESOURCE_ALLOCATION_INFO_URL}`,
@@ -1531,6 +1532,7 @@ function CreateRunTime({
                 </div>
                 <div
                   className="expand-icon"
+                  id="resource-allocation-expand-icon"
                   onClick={() => handleResourceAllocationExpand()}
                 >
                   {expandResourceAllocation ? (
@@ -1563,6 +1565,7 @@ function CreateRunTime({
                   <div className="spark-properties-sub-header">Autoscaling</div>
                   <div
                     className="expand-icon"
+                    id="autoscaling-help-icon"
                     onClick={() =>
                       window.open(`${SPARK_AUTOSCALING_INFO_URL}`, '_blank')
                     }
@@ -1575,6 +1578,7 @@ function CreateRunTime({
                 </div>
                 <div
                   className="expand-icon"
+                  id="autoscaling-expand-icon"
                   onClick={() => handleAutoScalingExpand()}
                 >
                   {expandAutoScaling ? (
@@ -1615,10 +1619,12 @@ function CreateRunTime({
                       }
                       className="create-scheduler-label-style"
                       label="GPU"
+                      id="gpu-checkbox"
                     />
                   </FormGroup>
                   <div
                     className="expand-icon"
+                    id="gpu-help-icon"
                     onClick={() =>
                       window.open(`${SPARK_GPU_INFO_URL}`, '_blank')
                     }
@@ -1629,7 +1635,11 @@ function CreateRunTime({
                     />
                   </div>
                 </div>
-                <div className="expand-icon" onClick={() => handleGpuExpand()}>
+                <div
+                  className="expand-icon"
+                  id="gpu-expand-icon"
+                  onClick={() => handleGpuExpand()}
+                >
                   {expandGpu ? (
                     <iconExpandLess.react
                       tag="div"
