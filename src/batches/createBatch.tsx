@@ -196,7 +196,7 @@ function CreateBatch({
   const [hexNumber, setHexNumber] = useState('');
   const [batchIdSelected, setBatchIdSelected] = useState('');
   const [batchTypeSelected, setBatchTypeSelected] = useState(batchType);
-  const [versionSelected, setVersionSelected] = useState('2.1');
+  const [versionSelected, setVersionSelected] = useState('2.2');
   const [selectedRadio, setSelectedRadio] = useState(selectedRadioInitialValue);
   const [mainClassSelected, setMainClassSelected] = useState(mainClass);
   const [mainClassUpdated, setMainClassUpdated] = useState(false);
