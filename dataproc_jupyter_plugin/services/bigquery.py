@@ -51,7 +51,7 @@ class Client:
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
 
             async with self.client_session.get(
-                    api_endpoint, headers=self.create_headers()
+                api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
                     resp = await response.json()
