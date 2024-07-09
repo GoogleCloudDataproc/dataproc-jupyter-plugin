@@ -240,6 +240,48 @@ function CreateRunTime({
     }
   }, [networkSelected]);
 
+  const modifyResourceAllocation = () => {
+    let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+    gpuDetailUpdated.forEach(item => {
+      const [key, value] = item.split(':');
+      if (key === 'spark.dataproc.executor.resource.accelerator.type') {
+        if (value === 'l4') {
+          resourceAllocationModify = resourceAllocationDetailUpdated
+            .map((item: string) => {
+              if (item === 'spark.dataproc.executor.disk.size:400g') {
+                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
+                return null;
+              }
+              return item;
+            })
+            .filter((item): item is string => item !== null); // To filter out null values.'
+          setResourceAllocationDetail(resourceAllocationModify);
+          setResourceAllocationDetailUpdated(resourceAllocationModify);
+        } else {
+          if (
+            !resourceAllocationDetailUpdated.includes(
+              'spark.dataproc.executor.disk.size:400g'
+            )
+          ) {
+            // To add the spark.dataproc.executor.disk.size:400g at index 9.
+            resourceAllocationDetailUpdated.splice(
+              8,
+              0,
+              'spark.dataproc.executor.disk.size:400g'
+            );
+            const updatedArray = [...resourceAllocationDetailUpdated];
+            setResourceAllocationDetail(updatedArray);
+            setResourceAllocationDetailUpdated(updatedArray);
+          }
+        }
+      }
+    });
+  };
+
+  useEffect(() => {
+    modifyResourceAllocation();
+  }, [gpuDetailUpdated]);
+
   const displayUserInfo = async () => {
     await RunTimeSerive.displayUserInfoService(setUserInfo);
   };
@@ -1002,21 +1044,39 @@ function CreateRunTime({
 
   const handleGpuCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
     setGpuChecked(event.target.checked);
+    let gpuDetailModify = [...GPU_DEFAULT];
     if (event.target.checked) {
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
-      resourceAllocationModify = resourceAllocationModify.map(
-        (item: string) => {
+      resourceAllocationModify = resourceAllocationModify
+        .map((item: string) => {
           if (item === 'spark.dataproc.executor.disk.tier:standard') {
             return 'spark.dataproc.executor.disk.tier:premium';
+          } else if (item === 'spark.executor.memoryOverhead:1220m') {
+            // To remove the property if GPU checkbox is checked.
+            return null;
           }
           return item;
-        }
-      );
+        })
+        .filter((item): item is string => item !== null); // To filter out null values.
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(true);
-      setGpuDetail(GPU_DEFAULT);
-      setGpuDetailUpdated(GPU_DEFAULT);
+      resourceAllocationModify.forEach(item => {
+        const [key, value] = item.split(':');
+        if (key === 'spark.executor.cores') {
+          const cores = Number(value);
+          const gpuValue = (1 / cores).toFixed(2);
+          gpuDetailModify = gpuDetailModify.map(gpuItem => {
+            const [gpuKey] = gpuItem.split(':');
+            if (gpuKey === 'spark.task.resource.gpu.amount') {
+              return `spark.task.resource.gpu.amount:${gpuValue}`;
+            }
+            return gpuItem;
+          });
+        }
+      });
+      setGpuDetail(gpuDetailModify);
+      setGpuDetailUpdated(gpuDetailModify);
     } else {
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
       resourceAllocationModify = resourceAllocationModify.map(
@@ -1027,6 +1087,30 @@ function CreateRunTime({
           return item;
         }
       );
+      if (
+        !resourceAllocationModify.includes(
+          'spark.executor.memoryOverhead:1220m'
+        )
+      ) {
+        // To add the spark.executor.memoryOverhead:1220m at index 8.
+        resourceAllocationModify.splice(
+          7,
+          0,
+          'spark.executor.memoryOverhead:1220m'
+        );
+      }
+      if (
+        !resourceAllocationModify.includes(
+          'spark.dataproc.executor.disk.size:400g'
+        )
+      ) {
+        // To add the spark.dataproc.executor.disk.size:400g at index 9 when GPU is unchecked
+        resourceAllocationModify.splice(
+          8,
+          0,
+          'spark.dataproc.executor.disk.size:400g'
+        );
+      }
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(false);

@@ -25,7 +25,6 @@ import {
   CORE_RELATED_PROPERTIES,
   DISK_RELATED_PROPERTIES,
   EXECUTOR_RELATED_PROPERTIES,
-  GPU_ACCELERATOR_OPTIONS,
   MEMORY_RELATED_PROPERTIES,
   SELECT_FIELDS,
   TIER_SELECT_OPTIONS
@@ -96,7 +95,7 @@ function SparkProperties({
     labelEdit.forEach((data, dataNumber: number) => {
       if (index === dataNumber) {
         /*
-          allowed aplhanumeric and spaces and underscores
+          allowed aplhanumeric and spaces and underscores values
         */
         if (MEMORY_RELATED_PROPERTIES.includes(data.split(':')[0])) {
           const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
@@ -169,15 +168,6 @@ function SparkProperties({
             Number(value) < 0 ||
             Number(value) > 1
           ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (
-          data.split(':')[0] ===
-          'spark.dataproc.executor.resource.accelerator.type'
-        ) {
-          if (!GPU_ACCELERATOR_OPTIONS.includes(value)) {
             updateErrorIndexes(index, true);
           } else {
             updateErrorIndexes(index, false);
