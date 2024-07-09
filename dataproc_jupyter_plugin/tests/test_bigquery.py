@@ -15,7 +15,7 @@
 import json
 from unittest.mock import Mock
 
-import requests
+import aiohttp
 from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials
@@ -32,14 +32,44 @@ async def mock_credentials():
     }
 
 
-def mock_get(api_endpoint, headers=None):
-    response = Mock()
-    response.status_code = 200
-    response.json.return_value = {
-        "api_endpoint": api_endpoint,
-        "headers": headers,
-    }
-    return response
+class MockResponse():
+    def __init__(self, json):
+        self._json = json
+        self.status = 200
+    
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args, **kwargs):
+        return
+
+    async def json(self):
+        return self._json
+
+
+class MockClientSession():
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args, **kwargs):
+        return
+
+    def get(self, api_endpoint, headers=None):
+        return MockResponse({
+            "api_endpoint": api_endpoint,
+            "headers": headers,
+        })
+
+    def post(self, api_endpoint, headers=None, json=None):
+        return MockResponse({
+            "results": [
+                {
+                    "api_endpoint": api_endpoint,
+                    "headers": headers,
+                    "json": json,
+                }
+            ]
+        })
 
 
 async def mock_config(field_name):
@@ -49,7 +79,7 @@ async def mock_config(field_name):
 async def test_list_datasets(monkeypatch, jp_fetch):
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(aiohttp,  "ClientSession", MockClientSession)
 
     mock_project_id = "mock-project-id"
     mock_page_token = "mock-page-token"
@@ -73,7 +103,7 @@ async def test_list_datasets_with_invalid_credentials(monkeypatch, jp_fetch):
 
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
     response = await jp_fetch(
         "dataproc-plugin",
         "bigQueryDataset",
@@ -87,7 +117,7 @@ async def test_list_datasets_with_invalid_credentials(monkeypatch, jp_fetch):
 async def test_list_tables(monkeypatch, jp_fetch):
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
 
     mock_dataset_id = "mock-dataset-id"
     mock_project_id = "mock-project-id"
@@ -113,7 +143,7 @@ async def test_list_tables(monkeypatch, jp_fetch):
 async def test_dataset_info(monkeypatch, jp_fetch):
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
 
     mock_dataset_id = "mock-dataset-id"
     mock_project_id = "mock-project-id"
@@ -137,7 +167,7 @@ async def test_dataset_info(monkeypatch, jp_fetch):
 async def test_table_info(monkeypatch, jp_fetch):
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
 
     mock_dataset_id = "mock-dataset-id"
     mock_project_id = "mock-project-id"
@@ -163,7 +193,7 @@ async def test_table_info(monkeypatch, jp_fetch):
 async def test_preview(monkeypatch, jp_fetch):
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
 
     mock_dataset_id = "mock-dataset-id"
     mock_max_results = "mock-max-results"
@@ -192,7 +222,7 @@ async def test_preview(monkeypatch, jp_fetch):
 
 async def test_projects_list(monkeypatch, jp_fetch):
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
 
     response = await jp_fetch(
         "dataproc-plugin",
@@ -204,27 +234,13 @@ async def test_projects_list(monkeypatch, jp_fetch):
 
 
 async def test_search(monkeypatch, jp_fetch):
-    def mock_post(api_endpoint, headers=None, json=None):
-        response = Mock()
-        response.status_code = 200
-        response.json.return_value = {
-            "results": [
-                {
-                    "api_endpoint": api_endpoint,
-                    "headers": headers,
-                    "json": json,
-                }
-            ]
-        }
-        return response
-
     async def mock_config(config_field):
         return ""
 
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-    monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
 
     mock_search_string = "mock-search-string"
     mock_system = "mock-system"

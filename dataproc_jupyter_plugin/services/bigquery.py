@@ -25,9 +25,7 @@ from dataproc_jupyter_plugin.commons.constants import (
 
 
 class Client:
-    client_session = aiohttp.ClientSession()
-
-    def __init__(self, credentials, log):
+    def __init__(self, credentials, log, client_session):
         self.log = log
         if not (
             ("access_token" in credentials)
@@ -39,6 +37,7 @@ class Client:
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
+        self.client_session = client_session
 
     def create_headers(self):
         return {
@@ -52,7 +51,7 @@ class Client:
             api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
 
             async with self.client_session.get(
-                api_endpoint, headers=self.create_headers()
+                    api_endpoint, headers=self.create_headers()
             ) as response:
                 if response.status == 200:
                     resp = await response.json()
