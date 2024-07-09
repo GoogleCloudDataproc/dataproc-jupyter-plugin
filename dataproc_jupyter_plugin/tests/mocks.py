@@ -33,7 +33,7 @@ async def mock_config(field_name):
     return None
 
 
-class _MockResponse:
+class MockResponse:
     def __init__(self, json):
         self._json = json
         self.status = 200
@@ -56,7 +56,7 @@ class MockClientSession:
         return
 
     def get(self, api_endpoint, headers=None):
-        return _MockResponse(
+        return MockResponse(
             {
                 "api_endpoint": api_endpoint,
                 "headers": headers,
@@ -64,7 +64,7 @@ class MockClientSession:
         )
 
     def post(self, api_endpoint, headers=None, json=None):
-        return _MockResponse(
+        return MockResponse(
             {
                 "results": [
                     {
