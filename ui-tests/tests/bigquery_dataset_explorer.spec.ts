@@ -41,9 +41,62 @@ test('bigquery-dataset-explorer', async ({ page, request }) => {
     await page.locator('div[role="treeitem"][aria-level="1"]').first().click();
     await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
 
+    // Check all dataset cells are visible on UI
+    await page.getByText('Dataset info',{ exact: true }).isVisible();
+    await expect(page.getByRole('cell', { name: 'Dataset ID' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Created' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Default table expiration' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Last modified' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Data location' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Description' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Default collation' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Default rounding mode' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Time travel window' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Storage billing model' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Case insensitive' })).toBeVisible();
+
+    // Click on first table
     await page.locator('div[role="treeitem"][aria-level="2"]').first().click();
+
+    // Check all table cells are visible on UI
+    await page.getByText('Table info').isVisible();
+    await expect(page.getByRole('cell', { name: 'Table ID' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Created' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Last modified' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Table expiration' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Data location' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Default collation' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Default rounding mode' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Description' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Case insensitive' })).toBeVisible();
+
+    // Click on Schema tab and check all the fields are visible on UI
     await page.getByText('Schema', { exact: true }).click();
+    await expect(page.getByText('Schema').nth(2)).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Field name' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Type' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Mode' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Key' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Collation' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Default Value' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Policy Tags' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Data Policies' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Description' })).toBeVisible();
+
+    // Click on Preview tab and check data is present or not
     await page.getByText('Preview', { exact: true }).click();
+
+    await page.waitForTimeout(3000);
+    const dataExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+    if (dataExists) {
+      const rowCount = await page.locator('//table[@class="clusters-list-table"]//tr').count();
+      expect(rowCount).toBeGreaterThan(0);
+
+    } else {
+      await page.waitForTimeout(1000);
+      await expect(page.getByText('No rows to display')).toBeVisible();
+    }
+
   } else {
     expect(response.enable_bigquery_integration).toBe(false);
   }
