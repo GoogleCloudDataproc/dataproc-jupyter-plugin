@@ -34,9 +34,10 @@ async def mock_config(field_name):
 
 
 class MockResponse:
-    def __init__(self, json):
+    def __init__(self, json, status=200, text=None):
         self._json = json
-        self.status = 200
+        self._text = text
+        self.status = status
 
     async def __aenter__(self):
         return self
@@ -46,6 +47,9 @@ class MockResponse:
 
     async def json(self):
         return self._json
+
+    async def text(self, encoding=None):
+        return self._text or json.dumps(self._json)
 
 
 class MockClientSession:
