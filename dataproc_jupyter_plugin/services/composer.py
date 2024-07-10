@@ -15,8 +15,6 @@
 
 from typing import List
 
-import aiohttp
-
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
@@ -26,9 +24,7 @@ from dataproc_jupyter_plugin.models.models import ComposerEnvironment
 
 
 class Client:
-    client_session = aiohttp.ClientSession()
-
-    def __init__(self, credentials, log):
+    def __init__(self, credentials, log, client_session):
         self.log = log
         if not (
             ("access_token" in credentials)
@@ -40,6 +36,7 @@ class Client:
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
+        self.client_session = client_session
 
     def create_headers(self):
         return {
@@ -86,4 +83,4 @@ class Client:
                     )
         except Exception as e:
             self.log.exception(f"Error fetching environments list: {str(e)}")
-            return f'{"Error fetching environments list": str(e)}'
+            return {"Error fetching environments list": str(e)}
