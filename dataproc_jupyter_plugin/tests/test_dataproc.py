@@ -13,43 +13,13 @@
 # limitations under the License.
 
 import json
-from unittest.mock import Mock
 
-import requests
-from google.cloud import jupyter_config
-
-from dataproc_jupyter_plugin import credentials
-
-
-async def mock_credentials():
-    return {
-        "project_id": "credentials-project",
-        "project_number": 12345,
-        "region_id": "mock-region",
-        "access_token": "mock-token",
-        "config_error": 0,
-        "login_error": 0,
-    }
-
-
-def mock_get(api_endpoint, headers=None):
-    response = Mock()
-    response.status_code = 200
-    response.json.return_value = {
-        "api_endpoint": api_endpoint,
-        "headers": headers,
-    }
-    return response
-
-
-async def mock_config(field_name):
-    return None
+from dataproc_jupyter_plugin.tests import mocks
 
 
 async def test_list_clusters(monkeypatch, jp_fetch):
-    monkeypatch.setattr(credentials, "get_cached", mock_credentials)
-    monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-    monkeypatch.setattr(requests, "get", mock_get)
+    mocks.patch_mocks(monkeypatch)
+
     mock_project_id = "credentials-project"
     mock_page_token = "mock-page-token"
     mock_region_id = "mock-region"
@@ -69,9 +39,8 @@ async def test_list_clusters(monkeypatch, jp_fetch):
 
 
 async def test_list_runtime(monkeypatch, jp_fetch):
-    monkeypatch.setattr(credentials, "get_cached", mock_credentials)
-    monkeypatch.setattr(requests, "get", mock_get)
-    monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
+    mocks.patch_mocks(monkeypatch)
+
     mock_project_id = "credentials-project"
     mock_page_token = "mock-page-token"
     mock_region_id = "mock-region"
