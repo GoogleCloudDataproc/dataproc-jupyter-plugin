@@ -17,6 +17,7 @@ import subprocess
 import urllib
 
 from dataproc_jupyter_plugin import urls
+from dataproc_jupyter_plugin.commons.commands import async_command_executor
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
     CONTENT_TYPE,
@@ -94,14 +95,11 @@ class Client:
                     api_endpoint, headers=self.create_headers()
                 ) as response:
                     self.log.info(response)
-            cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
-            process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-            )
-            output, _ = process.communicate()
-            if process.returncode == 0:
+            try:
+                cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
+                await async_command_executor(cmd)
                 return 0
-            else:
+            except subprocess.CalledProcessError as error:
                 self.log.exception("Error deleting dag")
                 raise Exception(
                     f"Error getting airflow uri: {response.reason} {await response.text()}"
