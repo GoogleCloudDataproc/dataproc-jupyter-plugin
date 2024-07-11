@@ -13,45 +13,38 @@
 # limitations under the License.
 
 import json
-from unittest.mock import Mock
 
-import requests
-from google.cloud import jupyter_config
+import aiohttp
 
-from dataproc_jupyter_plugin import credentials
+from dataproc_jupyter_plugin.tests import mocks
 
 
-async def mock_credentials():
-    return {
-        "project_id": "credentials-project",
-        "project_number": 12345,
-        "region_id": "mock-region",
-        "access_token": "mock-token",
-        "config_error": 0,
-        "login_error": 0,
-    }
+class MockClientSession:
+    async def __aenter__(self):
+        return self
 
+    async def __aexit__(self, *args, **kwargs):
+        return
 
-def mock_get(url, headers):
-    mock_resp = Mock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = {
-        "environments": [
-            {"name": "projects/mock-project/locations/mock-location/environments/env1"},
-            {"name": "projects/mock-project/locations/mock-location/environments/env2"},
-        ]
-    }
-    return mock_resp
-
-
-async def mock_config(field_name):
-    return None
+    def get(self, api_endpoint, headers=None):
+        return mocks.MockResponse(
+            {
+                "environments": [
+                    {
+                        "name": "projects/mock-project/locations/mock-location/environments/env1"
+                    },
+                    {
+                        "name": "projects/mock-project/locations/mock-location/environments/env2"
+                    },
+                ]
+            }
+        )
 
 
 async def test_list_composer(monkeypatch, jp_fetch):
-    monkeypatch.setattr(credentials, "get_cached", mock_credentials)
-    monkeypatch.setattr(requests, "get", mock_get)
-    monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
+    mocks.patch_mocks(monkeypatch)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
+
     response = await jp_fetch("dataproc-plugin", "composerList")
     assert response.code == 200
     payload = json.loads(response.body)
