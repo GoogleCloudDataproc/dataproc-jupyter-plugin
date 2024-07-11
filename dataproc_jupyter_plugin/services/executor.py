@@ -90,9 +90,7 @@ class Client:
             await async_command_executor(cmd)
             return True
         except subprocess.CalledProcessError as error:
-            self.log.exception(
-                f"Error checking papermill file: {error.decode()}"
-            )
+            self.log.exception(f"Error checking papermill file: {error.decode()}")
             raise IOError(error.decode)
 
     async def upload_papermill_to_gcs(self, gcs_dag_bucket):
