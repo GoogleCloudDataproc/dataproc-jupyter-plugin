@@ -33,11 +33,13 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         // Click on Create button
         await page.getByText('Create', { exact: true }).click();
 
+        await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
+
         // Check Spark Properties section and subsections are present on the page
-        await expect(page.locator('//*[text()="Spark Properties"]')).toBeVisible();
-        await expect(page.locator('//*[text()="Resource Allocation"]')).toBeVisible();
-        await expect(page.locator('//*[text()="Autoscaling"]')).toBeVisible();
-        await expect(page.locator('//*[text()="GPU"]')).toBeVisible();
+        await expect(page.getByText('Spark Properties', { exact: true })).toBeVisible();
+        await expect(page.getByText('Resource Allocation', { exact: true })).toBeVisible();
+        await expect(page.getByText('Autoscaling', { exact: true })).toBeVisible();
+        await expect(page.getByText('GPU', { exact: true })).toBeVisible();
 
         // Expand Resource Allocation subsection and check the properties keys
         await page.locator('//*[@class="spark-properties-sub-header-parent"][1]/div[2]').click();
@@ -52,9 +54,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         await expect(page.locator('//*[@value="spark.dataproc.executor.disk.size"]')).toBeVisible();
         await expect(page.locator('//*[@value="spark.dataproc.executor.disk.tier"]')).toBeVisible();
         await expect(page.locator('//*[@value="spark.executor.instances"]')).toBeVisible();
-        await page.keyboard.down('PageDown');
 
-        // Verify the default values of the properties keys in the Allocation subsection
         // Verify the default values of the properties keys in the Allocation subsection
         const sparkDriverCoresValue = await page.locator('//*[@id="value-spark.driver.cores"]//input').getAttribute('value');
         expect(sparkDriverCoresValue).toBe('4');
@@ -79,7 +79,6 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         const sparkExecutorInstancesValue = await page.locator('//*[@id="value-spark.executor.instances"]//input').getAttribute('value');
         expect(sparkExecutorInstancesValue).toBe('2');
 
-
         // Expand Resource Autoscaling sub section and check the properties
         await page.locator('//*[@class="spark-properties-sub-header-parent"][2]/div[2]').click();
         await expect(page.locator('//*[@value="spark.dynamicAllocation.enabled"]')).toBeVisible();
@@ -102,8 +101,6 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         expect(sparkDAExecutorARValue).toBe('0.3');
         const sparkRFMSEnabledValue = await page.locator('//*[@id="value-spark.reducer.fetchMigratedShuffle.enabled"]//input').getAttribute('value');
         expect(sparkRFMSEnabledValue).toBe('false');
-
-
 
         // Check the GPU subsection is unchecked by default
         const isChecked = await page.getByLabel('GPU').isChecked();
@@ -151,6 +148,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
 
         // Click on Create button
         await page.getByText('Create', { exact: true }).click();
+        await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
 
         // Expand Resource Allocation subsection and check the properties keys
         await page.locator('//*[@class="spark-properties-sub-header-parent"][1]/div[2]').click();
@@ -175,6 +173,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
 
         // Click on Create button
         await page.getByText('Create', { exact: true }).click();
+        await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
 
         // Expand Resource Allocation subsection and check the properties keys
         await page.locator('//*[@class="spark-properties-sub-header-parent"][1]/div[2]').click();

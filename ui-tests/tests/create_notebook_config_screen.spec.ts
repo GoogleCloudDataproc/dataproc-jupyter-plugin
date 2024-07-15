@@ -22,7 +22,7 @@ test.describe('Create serverless notebook from config screen', () => {
     // Generate formatted current date string
     const now = new Date();
     const pad = (num: number) => String(num).padStart(2, '0');
-    const dateTimeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(Math.floor(now.getMinutes() / 5) * 5)}:00`;
+    const dateTimeStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(Math.floor(now.getMinutes() / 5) * 5)}:${pad(now.getSeconds())}`;
 
     // Create template name
     const templateName = 'auto-test-' + dateTimeStr;
@@ -49,14 +49,15 @@ test.describe('Create serverless notebook from config screen', () => {
         await page.getByLabel('Description*').fill('Testing');
 
         // Select the project
-        await page.getByLabel('Project ID').click();
-        await page.getByRole('combobox', { name: 'Project ID' }).fill('dataproc');
-        await page.getByRole('option', { name: 'dataproc-jupyter-extension-dev' }).click();
+        await page.getByRole('combobox', { name: 'Project ID' }).click();
+        await page.getByRole('combobox', { name: 'Project ID' }).fill('kokoro');
+        await page.getByRole('option', { name: 'dataproc-kokoro-tests' }).click();
         await page.waitForTimeout(5000);
 
         // Select Metastore service
-        await page.locator('div').filter({ hasText: /^Metastore services$/ }).getByLabel('Open').click();
-        await page.getByRole('option', { name: 'projects/dataproc-jupyter-extension-dev/locations/us-central1/services/service-meta1' }).click();
+        await page.getByRole('combobox', { name: 'Metastore services' }).click();
+        const firstOption = await page.getByRole('option').first();
+        await firstOption.click();
 
         // Click on save button to create a notebook
         await page.getByText('SAVE', { exact: true }).click();
@@ -65,5 +66,4 @@ test.describe('Create serverless notebook from config screen', () => {
         // Check the notebook created confirmation message
         await expect(page.getByText('Runtime Template ' + templateName + ' successfully created')).toBeVisible();
     });
-
 });

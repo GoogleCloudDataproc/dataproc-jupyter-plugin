@@ -40,9 +40,12 @@ test('bigquery-dataset-explorer', async ({ page, request }) => {
     await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
     await page.locator('div[role="treeitem"][aria-level="1"]').first().click();
     await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
+    
+    // Wait till the page loads
+    await page.getByText('Loading dataset details').waitFor({ state: "hidden" });
 
     // Check all dataset cells are visible on UI
-    await page.getByText('Dataset info',{ exact: true }).isVisible();
+    await expect(page.getByText('Dataset info',{ exact: true })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Dataset ID' })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Created' })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Default table expiration' })).toBeVisible();
@@ -58,8 +61,11 @@ test('bigquery-dataset-explorer', async ({ page, request }) => {
     // Click on first table
     await page.locator('div[role="treeitem"][aria-level="2"]').first().click();
 
+    // Wait till the page loads
+    await page.getByText('Loading table details').waitFor({ state: "hidden" });
+
     // Check all table cells are visible on UI
-    await page.getByText('Table info').isVisible();
+    await expect(page.getByText('Table info')).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Table ID' })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Created' })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Last modified' })).toBeVisible();
@@ -86,14 +92,15 @@ test('bigquery-dataset-explorer', async ({ page, request }) => {
     // Click on Preview tab and check data is present or not
     await page.getByText('Preview', { exact: true }).click();
 
-    await page.waitForTimeout(3000);
+    // Wait till the page loads
+    await page.getByText('Loading Preview Data').waitFor({ state: "hidden" });
+    
     const dataExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
     if (dataExists) {
       const rowCount = await page.locator('//table[@class="clusters-list-table"]//tr').count();
       expect(rowCount).toBeGreaterThan(0);
 
     } else {
-      await page.waitForTimeout(1000);
       await expect(page.getByText('No rows to display')).toBeVisible();
     }
 
