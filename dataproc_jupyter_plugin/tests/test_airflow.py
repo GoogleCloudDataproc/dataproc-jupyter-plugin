@@ -19,8 +19,6 @@ import aiohttp
 
 from dataproc_jupyter_plugin.tests import mocks
 
-from unittest.mock import Mock
-
 import pytest
 from google.cloud import jupyter_config
 
@@ -85,19 +83,20 @@ async def test_list_dag_with_invalid_credentials(monkeypatch, jp_fetch):
 
 @pytest.mark.parametrize("returncode, expected_result", [(0, 0)])
 async def test_delete_job(monkeypatch, returncode, expected_result, jp_fetch):
-    def mock_popen(returncode=0):
-        def _mock_popen(*args, **kwargs):
-            mock_process = Mock()
-            mock_process.communicate.return_value = (b"output", b"")
-            mock_process.returncode = returncode
-            return mock_process
 
-        return _mock_popen
+    async def mock_async_command_executor(cmd):
+        if cmd is None:
+            raise ValueError("Received None for cmd parameter")
+        if returncode == 0:
+            return b"output", b""
+        else:
+            raise subprocess.CalledProcessError(
+                returncode, cmd, output=b"output", stderr=b"error in executing command"
+            )
 
-    mocks.patch_mocks(monkeypatch)
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
-    monkeypatch.setattr(subprocess, "Popen", mock_popen(returncode))
-
+    monkeypatch.setattr(airflow, "async_command_executor", mock_async_command_executor)
+    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
     mock_composer = "mock_composer"
     mock_dag_id = "mock_dag_id"
     mock_from_page = "mock_from_page"
@@ -129,6 +128,9 @@ class MockClientSession:
 
     def get(self, api_endpoint, headers=None):
         return mocks.MockResponse(None, text="mock log content")
+
+    def delete(self, api_endpoint, headers=None):
+        return mocks.MockResponse({})
 
 
 async def test_update_job(monkeypatch, jp_fetch):

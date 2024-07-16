@@ -24,6 +24,7 @@ from google.cloud.jupyter_config.config import gcp_account
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 from dataproc_jupyter_plugin import urls
+from dataproc_jupyter_plugin.commons.commands import async_command_executor
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
     CONTENT_TYPE,
@@ -83,51 +84,37 @@ class Client:
             self.log.exception(f"Error getting bucket name: {str(e)}")
             raise Exception(f"Error getting composer bucket: {str(e)}")
 
-    def check_file_exists(self, bucket, file_path):
-        cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        output, error = process.communicate()
-        if process.returncode == 0:
+    async def check_file_exists(self, bucket, file_path):
+        try:
+            cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
+            await async_command_executor(cmd)
             return True
-        else:
-            if "matched no objects" in error.decode():
-                return False
-            else:
-                self.log.exception(f"Error cheking file existence: {error.decode()}")
-                raise FileNotFoundError(error.decode)
+        except subprocess.CalledProcessError as error:
+            self.log.exception(f"Error checking papermill file: {error.decode()}")
+            raise IOError(error.decode)
 
-    def upload_papermill_to_gcs(self, gcs_dag_bucket):
+    async def upload_papermill_to_gcs(self, gcs_dag_bucket):
         env = Environment(
             loader=PackageLoader(PACKAGE_NAME, "dagTemplates"),
             autoescape=select_autoescape(["py"]),
         )
         wrapper_papermill_path = env.get_template("wrapper_papermill.py").filename
-        cmd = f"gsutil cp '{wrapper_papermill_path}' gs://{gcs_dag_bucket}/dataproc-notebooks/"
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        output, error = process.communicate()
-        print(process.returncode, error, output)
-        if process.returncode == 0:
+        try:
+            cmd = f"gsutil cp '{wrapper_papermill_path}' gs://{gcs_dag_bucket}/dataproc-notebooks/"
+            await async_command_executor(cmd)
             self.log.info("Papermill file uploaded to gcs successfully")
-            print(process.returncode, error, output)
-        else:
+        except subprocess.CalledProcessError as error:
             self.log.exception(
                 f"Error uploading papermill file to gcs: {error.decode()}"
             )
             raise IOError(error.decode)
 
-    def upload_input_file_to_gcs(self, input, gcs_dag_bucket, job_name):
-        cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        output, error = process.communicate()
-        if process.returncode == 0:
+    async def upload_input_file_to_gcs(self, input, gcs_dag_bucket, job_name):
+        try:
+            cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
+            await async_command_executor(cmd)
             self.log.info("Input file uploaded to gcs successfully")
-        else:
+        except subprocess.CalledProcessError as error:
             self.log.exception(f"Error uploading input file to gcs: {error.decode()}")
             raise IOError(error.decode)
 
@@ -247,18 +234,14 @@ class Client:
         wrapper_papermill_path = env.get_template("wrapper_papermill.py").filename
         shutil.copy2(wrapper_papermill_path, LOCAL_DAG_FILE_LOCATION)
 
-    def upload_dag_to_gcs(self, job, dag_file, gcs_dag_bucket):
+    async def upload_dag_to_gcs(self, job, dag_file, gcs_dag_bucket):
         LOCAL_DAG_FILE_LOCATION = f"./scheduled-jobs/{job.name}"
         file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
-        cmd = f"gsutil cp '{file_path}' gs://{gcs_dag_bucket}/dags/"
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        output, error = process.communicate()
-        if process.returncode == 0:
+        try:
+            cmd = f"gsutil cp '{file_path}' gs://{gcs_dag_bucket}/dags/"
+            await async_command_executor(cmd)
             self.log.info("Dag file uploaded to gcs successfully")
-
-        if process.returncode != 0:
+        except subprocess.CalledProcessError as error:
             self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
             raise IOError(error.decode)
 
@@ -273,37 +256,33 @@ class Client:
             gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
             wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
 
-            if self.check_file_exists(gcs_dag_bucket, wrapper_pappermill_file_path):
+            if await self.check_file_exists(
+                gcs_dag_bucket, wrapper_pappermill_file_path
+            ):
                 print(
                     f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists."
                 )
             else:
-                self.upload_papermill_to_gcs(gcs_dag_bucket)
+                await self.upload_papermill_to_gcs(gcs_dag_bucket)
                 print(
                     f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
                 )
             if not job.input_filename.startswith(GCS):
-                self.upload_input_file_to_gcs(
+                await self.upload_input_file_to_gcs(
                     job.input_filename, gcs_dag_bucket, job_name
                 )
             self.prepare_dag(job, gcs_dag_bucket, dag_file)
-            self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
+            await self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
             return {"status": 0}
         except Exception as e:
             return {"error": str(e)}
 
-    def download_dag_output(self, bucket_name, dag_id, dag_run_id):
+    async def download_dag_output(self, bucket_name, dag_id, dag_run_id):
         try:
             cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb' ./"
-            process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-            )
-            output, _ = process.communicate()
-            if process.returncode == 0:
-                return 0
-            else:
-                self.log.exception("Error downloading output notebook file")
-                return 1
-        except Exception as e:
-            self.log.exception(f"Error downloading output notebook file: {str(e)}")
-            return {"error": str(e)}
+            await async_command_executor(cmd)
+            self.log.info("Output notebook file downloaded successfully")
+            return 0
+        except subprocess.CalledProcessError as error:
+            self.log.exception(f"Error downloading output notebook file: {str(error)}")
+            return {"error": str(error)}
