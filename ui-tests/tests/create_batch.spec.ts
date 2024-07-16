@@ -26,12 +26,12 @@ test.describe('Serverless batch creation.', () => {
         await page
             .locator('//*[@data-category="Google Cloud Resources" and @title="Serverless"]').click();
 
+        // Wait till the page loads
+        await page.getByText('Loading Batches').waitFor({ state: "detached" });
+
         // Check both Batches and Sessions tabs are available
         await expect(page.getByText('Batches', { exact: true })).toBeVisible();
         await expect(page.getByText('Sessions', { exact: true })).toBeVisible();
-
-        // Wait till the page loads
-        await page.getByText('Loading Batches').waitFor({ state: "detached" });
 
         // Check list table is present on the page
         await expect(page.locator('//table[@class="clusters-list-table"]')).toBeVisible();
@@ -41,22 +41,21 @@ test.describe('Serverless batch creation.', () => {
 
         // Click on Back button
         await page.locator('.back-arrow-icon > .icon-white > svg > path').click();
-
     });
 
-    test('Can verify Batchs and Sessions tabs table headers', async ({ page }) => {
+    test('Can verify Batchs tab table headers', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
 
         // Click on Google Cloud Resources - Severless card
         await page
             .locator('//*[@data-category="Google Cloud Resources" and @title="Serverless"]').click();
 
+        // Wait till the page loads
+        await page.getByText('Loading Batches').waitFor({ state: "detached" });
+
         // Check both Batches and Sessions tabs are available
         await expect(page.getByText('Batches', { exact: true })).toBeVisible();
         await expect(page.getByText('Sessions', { exact: true })).toBeVisible();
-
-        // Wait till the page loads
-        await page.getByText('Loading Batches').waitFor({ state: "detached" });
 
         // Check search field is present
         await expect(page.getByPlaceholder('Filter Table')).toBeVisible();
@@ -69,6 +68,17 @@ test.describe('Serverless batch creation.', () => {
         await expect(page.getByRole('columnheader', { name: 'Elapsed time' })).toBeVisible();
         await expect(page.getByRole('columnheader', { name: 'Type' })).toBeVisible();
         await expect(page.getByRole('columnheader', { name: 'Actions' })).toBeVisible();
+    });
+
+    test('Can verify Sessions tab table headers', async ({ page }) => {
+        test.setTimeout(5 * 60 * 1000);
+
+        // Click on Google Cloud Resources - Severless card
+        await page
+            .locator('//*[@data-category="Google Cloud Resources" and @title="Serverless"]').click();
+
+        // Wait till the page loads
+        await page.getByText('Loading Batches').waitFor({ state: "detached" });
 
         // Click on Session tab
         await page.getByText('Sessions', { exact: true }).click();
@@ -87,7 +97,6 @@ test.describe('Serverless batch creation.', () => {
         await expect(page.getByRole('columnheader', { name: 'Creation time' })).toBeVisible();
         await expect(page.getByRole('columnheader', { name: 'Elapsed time' })).toBeVisible();
         await expect(page.getByRole('columnheader', { name: 'Actions' })).toBeVisible();
-
     });
 
     test('Can create serverless batch', async ({ page }) => {
@@ -129,7 +138,7 @@ test.describe('Serverless batch creation.', () => {
 
         // Click on Submit and wait to display the confirmation message
         await page.getByLabel('submit Batch').click();
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(5000);
 
         await expect(page.getByText('Batch ' + batchId + ' successfully submitted')).toBeVisible();
     });
@@ -199,6 +208,27 @@ test.describe('Serverless batch creation.', () => {
         await expect(page.getByText('Details', { exact: true })).toBeVisible();
     });
 
+    test('Can delete a batch', async ({ page }) => {
+        test.setTimeout(5 * 60 * 1000);
+
+        // Click on Google Cloud Resources - Severless card
+        await page
+            .locator('//*[@data-category="Google Cloud Resources" and @title="Serverless"]').click();
+
+        // Wait till the page loads
+        await page.getByText('Loading Batches').waitFor({ state: "detached" });
+
+        // Get the first batch id
+        const batchId = await page.getByRole('cell').first().innerText();
+
+        // Delete the first batch and wait to get the confitmation message
+        await page.getByLabel('Delete Job').first().click();
+        await page.getByRole('button', { name: 'Delete' }).click();
+        await page.waitForTimeout(5000);
+
+        await expect(page.getByText('Batch ' + batchId + ' deleted successfully')).toBeVisible();
+    });
+
     test('Can clone the batch and create new one', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
 
@@ -229,7 +259,7 @@ test.describe('Serverless batch creation.', () => {
 
         // Click on Submit button and wait to complete the process
         await page.getByLabel('submit Batch').click();
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(5000);
 
         await expect(page.getByText('Batch ' + batchId + ' successfully submitted')).toBeVisible();
     });

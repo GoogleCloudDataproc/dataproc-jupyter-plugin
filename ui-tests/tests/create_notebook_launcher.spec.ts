@@ -53,10 +53,11 @@ test.describe('Create serverless notebook from launcher screen', () => {
         await page.waitForTimeout(2000);
         const firstOption = await page.getByRole('option').first();
         await firstOption.click();
+        await page.waitForTimeout(2000);
 
         // Click on save button to create a notebook
         await page.getByText('SAVE', { exact: true }).click();
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(5000);
 
         // Check the notebook created confirmation message
         await expect(page.getByText('Runtime Template ' + templateName + ' successfully created')).toBeVisible();
