@@ -91,7 +91,7 @@ async def test_delete_job(monkeypatch, returncode, expected_result, jp_fetch):
             return b"output", b""
         else:
             raise subprocess.CalledProcessError(
-                returncode, cmd, output=b"output", stderr=b"some error message"
+                returncode, cmd, output=b"output", stderr=b"error in executing command"
             )
 
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
