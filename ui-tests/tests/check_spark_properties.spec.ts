@@ -43,6 +43,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
 
         // Expand Resource Allocation subsection and check the properties keys
         await page.locator('//*[@class="spark-properties-sub-header-parent"][1]/div[2]').click();
+        await page.mouse.wheel(0, 300); // Scroll down 300 pixels
         await expect(page.locator('//*[@value="spark.driver.cores"]')).toBeVisible();
         await expect(page.locator('//*[@value="spark.driver.memory"]')).toBeVisible();
         await expect(page.locator('//*[@value="spark.driver.memoryOverhead"]')).toBeVisible();
@@ -81,6 +82,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
 
         // Expand Resource Autoscaling sub section and check the properties
         await page.locator('//*[@class="spark-properties-sub-header-parent"][2]/div[2]').click();
+        await page.mouse.wheel(0, 300); // Scroll down 300 pixels
         await expect(page.locator('//*[@value="spark.dynamicAllocation.enabled"]')).toBeVisible();
         await expect(page.locator('//*[@value="spark.dynamicAllocation.initialExecutors"]')).toBeVisible();
         await expect(page.locator('//*[@value="spark.dynamicAllocation.minExecutors"]')).toBeVisible();
@@ -101,7 +103,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         expect(sparkDAExecutorARValue).toBe('0.3');
         const sparkRFMSEnabledValue = await page.locator('//*[@id="value-spark.reducer.fetchMigratedShuffle.enabled"]//input').getAttribute('value');
         expect(sparkRFMSEnabledValue).toBe('false');
-
+        
         // Check the GPU subsection is unchecked by default
         const isChecked = await page.getByLabel('GPU').isChecked();
         expect(isChecked).toBe(false);
