@@ -15,96 +15,88 @@
  * limitations under the License.
  */
 
-import { test, expect, galata } from '@jupyterlab/galata';
+import { test, expect } from '@jupyterlab/galata';
 
 test('bigquery-dataset-explorer', async ({ page, request }) => {
-  const issues = await page.request.get(
-    'http://localhost:8888/dataproc-plugin/settings'
-  );
+  // Fetch Dataproc plugin settings
+  const issues = await page.request.get('http://localhost:8888/dataproc-plugin/settings');
   expect(issues.ok()).toBeTruthy();
-  const response: any = await issues.json();
+
+  // Parse response and check BigQuery integration is enabled
+  const response = await issues.json();
   expect(response.enable_bigquery_integration).toBe(true);
 
-  const tabExists = await page.isVisible(
-    'role=tab[name="Dataset Explorer - BigQuery"]'
-  );
+  // Check if the "Dataset Explorer - BigQuery" tab is visible
+  const tabExists = await page.isVisible('role=tab[name="Dataset Explorer - BigQuery"]');
 
   if (tabExists) {
-    expect(response.enable_bigquery_integration).toBe(true);
-    await page
-      .getByRole('tab', { name: 'Dataset Explorer - BigQuery' })
-      .click();
+    // Click on the "Dataset Explorer - BigQuery" tab
+    await page.getByRole('tab', { name: 'Dataset Explorer - BigQuery' }).click();
 
+    // Expand and navigate through the dataset tree
     await page.waitForSelector('div[role="treeitem"].caret-icon.down');
-
     await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
     await page.locator('div[role="treeitem"][aria-level="1"]').first().click();
     await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
-    
-    // Wait till the page loads
+
+    // Wait for the dataset details to load
     await page.getByText('Loading dataset details').waitFor({ state: "hidden" });
 
-    // Check all dataset cells are visible on UI
-    await expect(page.getByText('Dataset info',{ exact: true })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Dataset ID' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Created' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Default table expiration' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Last modified' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Data location' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Description' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Default collation' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Default rounding mode' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Time travel window' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Storage billing model' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Case insensitive' })).toBeVisible();
+    // Check dataset details are visible
+    await expect(page.getByText('Dataset info', { exact: true })).toBeVisible();
+    const datasetRowHeaders = [
+      'Dataset ID', 'Created', 'Default table expiration',
+      'Last modified', 'Data location', 'Description', 'Default collation',
+      'Default rounding mode', 'Time travel window', 'Storage billing model', 'Case insensitive'
+    ];
+    for (const header of datasetRowHeaders) {
+      await expect(page.getByRole('cell', { name: header, exact: true })).toBeVisible();
+    }
 
-    // Click on first table
+    // Click on the first table
     await page.locator('div[role="treeitem"][aria-level="2"]').first().click();
 
-    // Wait till the page loads
+    // Wait for the table details to load
     await page.getByText('Loading table details').waitFor({ state: "hidden" });
 
-    // Check all table cells are visible on UI
+    // Check table details are visible
     await expect(page.getByText('Table info')).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Table ID' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Created' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Last modified' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Table expiration' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Data location' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Default collation' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Default rounding mode' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Description' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'Case insensitive' })).toBeVisible();
+    const tableHeaders = [
+      'Table ID', 'Created', 'Last modified', 'Table expiration',
+      'Data location', 'Default collation', 'Default rounding mode', 'Description', 'Case insensitive'
+    ];
+    for (const header of tableHeaders) {
+      await expect(page.getByRole('cell', { name: header, exact: true })).toBeVisible();
+    }
 
-    // Click on Schema tab and check all the fields are visible on UI
+    // Click on the Schema tab and check all schema fields are visible
     await page.getByText('Schema', { exact: true }).click();
     await expect(page.getByText('Schema').nth(2)).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Field name' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Type' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Mode' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Key' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Collation' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Default Value' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Policy Tags' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Data Policies' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Description' })).toBeVisible();
+    const schemaHeaders = [
+      'Field name', 'Type', 'Mode', 'Key', 'Collation', 'Default Value',
+      'Policy Tags', 'Data Policies', 'Description'
+    ];
+    for (const header of schemaHeaders) {
+      await expect(page.getByRole('columnheader', { name: header, exact: true })).toBeVisible();
+    }
 
-    // Click on Preview tab and check data is present or not
+    // Click on the Preview tab and check if data is present
     await page.getByText('Preview', { exact: true }).click();
 
-    // Wait till the page loads
+    // Wait for the preview data to load
     await page.getByText('Loading Preview Data').waitFor({ state: "hidden" });
-    
+
+    // Check if data is present in the preview table
     const dataExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
     if (dataExists) {
       const rowCount = await page.locator('//table[@class="clusters-list-table"]//tr').count();
       expect(rowCount).toBeGreaterThan(0);
-
     } else {
       await expect(page.getByText('No rows to display')).toBeVisible();
     }
 
   } else {
+    // If the tab doesn't exist, verify BigQuery integration is disabled
     expect(response.enable_bigquery_integration).toBe(false);
   }
 });

@@ -16,177 +16,173 @@
  */
 
 import { expect, test } from '@jupyterlab/galata';
-
+ 
 test.describe('Check all spark properties on Serverless Runtime Template', () => {
+ 
+    // Navigate to config setup page and click on create template button
+    async function navigateToRuntimeTemplate(page) {
+        await page.getByLabel('main menu', { exact: true }).getByText('Settings').click();
+        const dataprocSettings = page.getByText('Google Dataproc Settings');
+        const bigQuerySettings = page.getByText('Google BigQuery Settings');
+        await dataprocSettings.or(bigQuerySettings).click();
+        await page.getByText('Create', { exact: true }).click();
+        await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
+    }
+ 
+    // Check if spark properties are visible
+    async function checkSparkProperties(page) {
+        const properties = [
+            'spark.driver.cores', 'spark.driver.memory', 'spark.driver.memoryOverhead',
+            'spark.dataproc.driver.disk.size', 'spark.dataproc.driver.disk.tier',
+            'spark.executor.cores', 'spark.executor.memory', 'spark.executor.memoryOverhead',
+            'spark.dataproc.executor.disk.size', 'spark.dataproc.executor.disk.tier',
+            'spark.executor.instances'
+        ];
+        for (const prop of properties) {
+            await expect(page.locator(`//*[@value="${prop}"]`)).toBeVisible();
+        }
+    }
+ 
+    // Check if default values for properties match expected values
+    async function checkDefaultValues(page, values) {
+        for (const [id, value] of Object.entries(values)) {
+            const actualValue = await page.locator(`//*[@id="value-${id}"]//input`).getAttribute('value');
+            expect(actualValue).toBe(value);
+        }
+    }
+ 
     test('Can check all spark properties are displayed', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
-
-        // Goto menu and click on Google setting
-        await page
-            .getByLabel('main menu', { exact: true })
-            .getByText('Settings')
-            .click();
-        const dataprocSettings = page.getByText('Google Dataproc Settings');
-        const bigQuerySettings = page.getByText('Google BigQuery Settings');
-        await dataprocSettings.or(bigQuerySettings).click();
-
-        // Click on Create button
-        await page.getByText('Create', { exact: true }).click();
-
-        await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
-
-        // Check Spark Properties section and subsections are present on the page
-        await expect(page.getByText('Spark Properties', { exact: true })).toBeVisible();
-        await expect(page.getByText('Resource Allocation', { exact: true })).toBeVisible();
-        await expect(page.getByText('Autoscaling', { exact: true })).toBeVisible();
-        await expect(page.getByText('GPU', { exact: true })).toBeVisible();
-
-        // Expand Resource Allocation subsection and check the properties keys
-        await page.locator('//*[@class="spark-properties-sub-header-parent"][1]/div[2]').click();
-        await page.mouse.wheel(0, 300); // Scroll down 300 pixels
-        await expect(page.locator('//*[@value="spark.driver.cores"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.driver.memory"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.driver.memoryOverhead"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dataproc.driver.disk.size"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dataproc.driver.disk.tier"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.executor.cores"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.executor.memory"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.executor.memoryOverhead"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dataproc.executor.disk.size"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dataproc.executor.disk.tier"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.executor.instances"]')).toBeVisible();
-
-        // Verify the default values of the properties keys in the Allocation subsection
-        const sparkDriverCoresValue = await page.locator('//*[@id="value-spark.driver.cores"]//input').getAttribute('value');
-        expect(sparkDriverCoresValue).toBe('4');
-        const sparkDriverMemoryValue = await page.locator('//*[@id="value-spark.driver.memory"]//input').getAttribute('value');
-        expect(sparkDriverMemoryValue).toBe('12200m');
-        const sparkDriverMemoryOverheadValue = await page.locator('//*[@id="value-spark.driver.memoryOverhead"]//input').getAttribute('value');
-        expect(sparkDriverMemoryOverheadValue).toBe('1220m');
-        const sparkDataprocDriverDiskSizeValue = await page.locator('//*[@id="value-spark.dataproc.driver.disk.size"]//input').getAttribute('value');
-        expect(sparkDataprocDriverDiskSizeValue).toBe('400g');
-        const sparkDataprocDriverDiskTierValue = await page.locator('//*[@id="value-spark.dataproc.driver.disk.tier"]//input').getAttribute('value');
-        expect(sparkDataprocDriverDiskTierValue).toBe('standard');
-        const sparkExecutorCoresValue = await page.locator('//*[@id="value-spark.executor.cores"]//input').getAttribute('value');
-        expect(sparkExecutorCoresValue).toBe('4');
-        const sparkExecutorMemoryValue = await page.locator('//*[@id="value-spark.executor.memory"]//input').getAttribute('value');
-        expect(sparkExecutorMemoryValue).toBe('12200m');
-        const sparkExecutorMemoryOverheadValue = await page.locator('//*[@id="value-spark.executor.memoryOverhead"]//input').getAttribute('value');
-        expect(sparkExecutorMemoryOverheadValue).toBe('1220m');
-        const sparkDataprocExecutorDiskSizeValue = await page.locator('//*[@id="value-spark.dataproc.executor.disk.size"]//input').getAttribute('value');
-        expect(sparkDataprocExecutorDiskSizeValue).toBe('400g');
-        const sparkDataprocExecutorDiskTierValue = await page.locator('//*[@id="value-spark.dataproc.executor.disk.tier"]//input').getAttribute('value');
-        expect(sparkDataprocExecutorDiskTierValue).toBe('standard');
-        const sparkExecutorInstancesValue = await page.locator('//*[@id="value-spark.executor.instances"]//input').getAttribute('value');
-        expect(sparkExecutorInstancesValue).toBe('2');
-
-        // Expand Resource Autoscaling sub section and check the properties
-        await page.locator('//*[@class="spark-properties-sub-header-parent"][2]/div[2]').click();
-        await page.mouse.wheel(0, 300); // Scroll down 300 pixels
-        await expect(page.locator('//*[@value="spark.dynamicAllocation.enabled"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dynamicAllocation.initialExecutors"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dynamicAllocation.minExecutors"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dynamicAllocation.maxExecutors"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dynamicAllocation.executorAllocationRatio"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.reducer.fetchMigratedShuffle.enabled"]')).toBeVisible();
-
-        // Verify the default values of the properties keys in the Autoscaling subsection
-        const sparkDAEnabledValue = await page.locator('//*[@id="value-spark.dynamicAllocation.enabled"]//input').getAttribute('value');
-        expect(sparkDAEnabledValue).toBe('true');
-        const sparkDAInitialExecutorsValue = await page.locator('//*[@id="value-spark.dynamicAllocation.initialExecutors"]//input').getAttribute('value');
-        expect(sparkDAInitialExecutorsValue).toBe('2');
-        const sparkDAMinExecutorsValue = await page.locator('//*[@id="value-spark.dynamicAllocation.minExecutors"]//input').getAttribute('value');
-        expect(sparkDAMinExecutorsValue).toBe('2');
-        const sparkDAMaxExecutorsValue = await page.locator('//*[@id="value-spark.dynamicAllocation.maxExecutors"]//input').getAttribute('value');
-        expect(sparkDAMaxExecutorsValue).toBe('1000');
-        const sparkDAExecutorARValue = await page.locator('//*[@id="value-spark.dynamicAllocation.executorAllocationRatio"]//input').getAttribute('value');
-        expect(sparkDAExecutorARValue).toBe('0.3');
-        const sparkRFMSEnabledValue = await page.locator('//*[@id="value-spark.reducer.fetchMigratedShuffle.enabled"]//input').getAttribute('value');
-        expect(sparkRFMSEnabledValue).toBe('false');
-        
-        // Check the GPU subsection is unchecked by default
+ 
+        await navigateToRuntimeTemplate(page);
+ 
+        // Verify sections and subsections presence
+        const sections = ['Spark Properties', 'Resource Allocation', 'Autoscaling', 'GPU'];
+        for (const section of sections) {
+            await expect(page.getByText(section, { exact: true })).toBeVisible();
+        }
+ 
+        // Expand and check properties in Resource Allocation subsection
+        await page.locator('//*[@id="resource-allocation-expand-icon"]').click();
+        await page.mouse.wheel(0, 300); // Scroll down to reveal properties
+        await checkSparkProperties(page);
+ 
+        // Verify default values in Resource Allocation subsection
+        const allocationValues = {
+            'spark.driver.cores': '4',
+            'spark.driver.memory': '12200m',
+            'spark.driver.memoryOverhead': '1220m',
+            'spark.dataproc.driver.disk.size': '400g',
+            'spark.dataproc.driver.disk.tier': 'standard',
+            'spark.executor.cores': '4',
+            'spark.executor.memory': '12200m',
+            'spark.executor.memoryOverhead': '1220m',
+            'spark.dataproc.executor.disk.size': '400g',
+            'spark.dataproc.executor.disk.tier': 'standard',
+            'spark.executor.instances': '2'
+        };
+        await checkDefaultValues(page, allocationValues);
+ 
+        // Expand and check properties in Resource Autoscaling subsection
+        await page.locator('//*[@id="autoscaling-expand-icon"]').click();
+        await page.mouse.wheel(0, 300); // Scroll down to reveal properties
+        const autoscalingProps = [
+            'spark.dynamicAllocation.enabled', 'spark.dynamicAllocation.initialExecutors',
+            'spark.dynamicAllocation.minExecutors', 'spark.dynamicAllocation.maxExecutors',
+            'spark.dynamicAllocation.executorAllocationRatio', 'spark.reducer.fetchMigratedShuffle.enabled'
+        ];
+        for (const prop of autoscalingProps) {
+            await expect(page.locator(`//*[@value="${prop}"]`)).toBeVisible();
+        }
+ 
+        // Verify default values in Resource Autoscaling subsection
+        const autoscalingValues = {
+            'spark.dynamicAllocation.enabled': 'true',
+            'spark.dynamicAllocation.initialExecutors': '2',
+            'spark.dynamicAllocation.minExecutors': '2',
+            'spark.dynamicAllocation.maxExecutors': '1000',
+            'spark.dynamicAllocation.executorAllocationRatio': '0.3',
+            'spark.reducer.fetchMigratedShuffle.enabled': 'false'
+        };
+        await checkDefaultValues(page, autoscalingValues);
+ 
+        // Verify GPU subsection is unchecked by default
         const isChecked = await page.getByLabel('GPU').isChecked();
         expect(isChecked).toBe(false);
-
-        // Check the GPU checkbox and validate the properties
+ 
+        // Check GPU checkbox and validate properties are visible
         await page.getByLabel('GPU').check();
-        await expect(page.locator('//*[@value="spark.dataproc.driverEnv.LANG"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.executorEnv.LANG"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dataproc.executor.compute.tier"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.dataproc.executor.resource.accelerator.type"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.plugins"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.task.resource.gpu.amount"]')).toBeVisible();
-        await expect(page.locator('//*[@value="spark.shuffle.manager"]')).toBeVisible();
-
-        // Verify the default values of the properties keys in the GPU subsection
-        const sparDPDriverEnvLANGValue = await page.locator('//*[@id="value-spark.dataproc.driverEnv.LANG"]//input').getAttribute('value');
-        expect(sparDPDriverEnvLANGValue).toBe('C.UTF-8');
-        const sparkExecutorEnvLANGValue = await page.locator('//*[@id="value-spark.executorEnv.LANG"]//input').getAttribute('value');
-        expect(sparkExecutorEnvLANGValue).toBe('C.UTF-8');
-        const sparkDPEComputeTierValue = await page.locator('//*[@id="value-spark.dataproc.executor.compute.tier"]//input').getAttribute('value');
-        expect(sparkDPEComputeTierValue).toBe('premium');
-        const sparkDPERATypeValue = await page.locator('//*[@id="value-spark.dataproc.executor.resource.accelerator.type"]//input').getAttribute('value');
-        expect(sparkDPERATypeValue).toBe('l4');
-        const sparkPluginsValue = await page.locator('//*[@id="value-spark.plugins"]//input').getAttribute('value');
-        expect(sparkPluginsValue).toBe('com.nvidia.spark.SQLPlugin');
-        const sparkTaskRGPUAmountValue = await page.locator('//*[@id="value-spark.task.resource.gpu.amount"]//input').getAttribute('value');
-        expect(sparkTaskRGPUAmountValue).toBe('0.25');
-        const sparkShuffleManagerValue = await page.locator('//*[@id="value-spark.shuffle.manager"]//input').getAttribute('value');
-        expect(sparkShuffleManagerValue).toBe('com.nvidia.spark.rapids.RapidsShuffleManager');
-
+        const gpuProps = [
+            'spark.dataproc.driverEnv.LANG', 'spark.executorEnv.LANG', 'spark.dataproc.executor.compute.tier',
+            'spark.dataproc.executor.resource.accelerator.type', 'spark.plugins', 'spark.task.resource.gpu.amount',
+            'spark.shuffle.manager'
+        ];
+        for (const prop of gpuProps) {
+            await expect(page.locator(`//*[@value="${prop}"]`)).toBeVisible();
+        }
+ 
+        // Verify default values in GPU subsection
+        const gpuValues = {
+            'spark.dataproc.driverEnv.LANG': 'C.UTF-8',
+            'spark.executorEnv.LANG': 'C.UTF-8',
+            'spark.dataproc.executor.compute.tier': 'premium',
+            'spark.dataproc.executor.resource.accelerator.type': 'l4',
+            'spark.plugins': 'com.nvidia.spark.SQLPlugin',
+            'spark.task.resource.gpu.amount': '0.25',
+            'spark.shuffle.manager': 'com.nvidia.spark.rapids.RapidsShuffleManager'
+        };
+        await checkDefaultValues(page, gpuValues);
     });
-
-    test('Can confirm Allocation subsection properties are removed when GPU is selected', async ({ page }) => {
+ 
+    test('Can check allocation subsection properties changes when GPU is selected and unselected', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
-
-        // Goto menu and click on Google setting
-        await page
-            .getByLabel('main menu', { exact: true })
-            .getByText('Settings')
-            .click();
-        const dataprocSettings = page.getByText('Google Dataproc Settings');
-        const bigQuerySettings = page.getByText('Google BigQuery Settings');
-        await dataprocSettings.or(bigQuerySettings).click();
-
-        // Click on Create button
-        await page.getByText('Create', { exact: true }).click();
-        await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
-
-        // Expand Resource Allocation subsection and check the properties keys
-        await page.locator('//*[@class="spark-properties-sub-header-parent"][1]/div[2]').click();
-
-        // Check the GPU checkbox and validate Allocation subsection properties will be removed when GPU is checked
+ 
+        await navigateToRuntimeTemplate(page);
+ 
+        // Expand Resource Allocation subsection
+        await page.locator('//*[@id="resource-allocation-expand-icon"]').click();
+ 
+        // Check GPU checkbox and validate the properties
         await page.getByLabel('GPU').check();
-        await expect(page.locator('//*[@value="spark.executor.memoryOverhead"]')).toBeHidden();
-        await expect(page.locator('//*[@value="spark.dataproc.executor.disk.size"]')).toBeHidden();
-    });
 
+        let sDEDiskTierValue = {
+            'spark.dataproc.executor.disk.tier': 'premium',
+        };
+        await checkDefaultValues(page, sDEDiskTierValue);
+        
+        const hiddenProps = ['spark.executor.memoryOverhead', 'spark.dataproc.executor.disk.size'];
+        for (const prop of hiddenProps) {
+            await expect(page.locator(`//*[@value="${prop}"]`)).toBeHidden();
+        }
+
+        // Uncheck GPU checkbox and validate the properties
+        await page.getByLabel('GPU').uncheck();
+
+        sDEDiskTierValue = {
+            'spark.dataproc.executor.disk.tier': 'standard',
+        };
+        await checkDefaultValues(page, sDEDiskTierValue);
+        
+        const visibleProps = ['spark.executor.memoryOverhead', 'spark.dataproc.executor.disk.size'];
+        for (const prop of visibleProps) {
+            await expect(page.locator(`//*[@value="${prop}"]`)).toBeVisible();
+        }
+    });
+ 
     test('Can verify by changing to non-L4 value', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
-
-        // Goto menu and click on Google setting
-        await page
-            .getByLabel('main menu', { exact: true })
-            .getByText('Settings')
-            .click();
-        const dataprocSettings = page.getByText('Google Dataproc Settings');
-        const bigQuerySettings = page.getByText('Google BigQuery Settings');
-        await dataprocSettings.or(bigQuerySettings).click();
-
-        // Click on Create button
-        await page.getByText('Create', { exact: true }).click();
-        await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
-
-        // Expand Resource Allocation subsection and check the properties keys
+ 
+        await navigateToRuntimeTemplate(page);
+ 
+        // Expand Resource Allocation subsection
         await page.locator('//*[@class="spark-properties-sub-header-parent"][1]/div[2]').click();
-
-        // After Changing to non-L4 card (like a100-40 or a100-80), the spark.dataproc.executor.disk.size field should be displayed
+ 
+        // Change GPU type to non-L4 value and validate properties are visible
         await page.getByLabel('GPU').check();
         const sparkDPERATypeInput = page.locator('//*[@id="value-spark.dataproc.executor.resource.accelerator.type"]//input');
         await sparkDPERATypeInput.fill('a100-40');
-
-        // Check Allocation subsection property spark.dataproc.executor.disk.size is visible
+ 
+        // Check Allocation subsection property is visible
         await expect(page.locator('//*[@value="spark.dataproc.executor.disk.size"]')).toBeVisible();
     });
 });
-
