@@ -19,7 +19,7 @@ import sys
 import tempfile
 
 
-async def async_command_executor(cmd):
+async def async_run_gsutil_subcommand(cmd):
     """Run a specified command and return its output."""
     with tempfile.TemporaryFile() as t:
         p = await asyncio.create_subprocess_shell(
