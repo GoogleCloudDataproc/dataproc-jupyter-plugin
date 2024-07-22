@@ -24,7 +24,7 @@ from google.cloud.jupyter_config.config import gcp_account
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.commands import async_command_executor
+from dataproc_jupyter_plugin.commons.commands import async_run_gsutil_subcommand
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
     CONTENT_TYPE,
@@ -87,7 +87,7 @@ class Client:
     async def check_file_exists(self, bucket, file_path):
         try:
             cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
-            await async_command_executor(cmd)
+            await async_run_gsutil_subcommand(cmd)
             return True
         except subprocess.CalledProcessError as error:
             self.log.exception(f"Error checking papermill file: {error.decode()}")
@@ -101,7 +101,7 @@ class Client:
         wrapper_papermill_path = env.get_template("wrapper_papermill.py").filename
         try:
             cmd = f"gsutil cp '{wrapper_papermill_path}' gs://{gcs_dag_bucket}/dataproc-notebooks/"
-            await async_command_executor(cmd)
+            await async_run_gsutil_subcommand(cmd)
             self.log.info("Papermill file uploaded to gcs successfully")
         except subprocess.CalledProcessError as error:
             self.log.exception(
@@ -112,7 +112,7 @@ class Client:
     async def upload_input_file_to_gcs(self, input, gcs_dag_bucket, job_name):
         try:
             cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
-            await async_command_executor(cmd)
+            await async_run_gsutil_subcommand(cmd)
             self.log.info("Input file uploaded to gcs successfully")
         except subprocess.CalledProcessError as error:
             self.log.exception(f"Error uploading input file to gcs: {error.decode()}")
@@ -239,7 +239,7 @@ class Client:
         file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
         try:
             cmd = f"gsutil cp '{file_path}' gs://{gcs_dag_bucket}/dags/"
-            await async_command_executor(cmd)
+            await async_run_gsutil_subcommand(cmd)
             self.log.info("Dag file uploaded to gcs successfully")
         except subprocess.CalledProcessError as error:
             self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
@@ -280,7 +280,7 @@ class Client:
     async def download_dag_output(self, bucket_name, dag_id, dag_run_id):
         try:
             cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb' ./"
-            await async_command_executor(cmd)
+            await async_run_gsutil_subcommand(cmd)
             self.log.info("Output notebook file downloaded successfully")
             return 0
         except subprocess.CalledProcessError as error:

@@ -17,7 +17,7 @@ import subprocess
 import urllib
 
 from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.commands import async_command_executor
+from dataproc_jupyter_plugin.commons.commands import async_run_gsutil_subcommand
 from dataproc_jupyter_plugin.commons.constants import (
     COMPOSER_SERVICE_NAME,
     CONTENT_TYPE,
@@ -97,7 +97,7 @@ class Client:
                     self.log.info(response)
             try:
                 cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
-                await async_command_executor(cmd)
+                await async_run_gsutil_subcommand(cmd)
                 return 0
             except subprocess.CalledProcessError as error:
                 self.log.exception("Error deleting dag")

@@ -105,7 +105,7 @@ async def test_download_dag_output(monkeypatch, returncode, expected_result, jp_
                 returncode, cmd, output=b"output", stderr=b"error in executing command"
             )
 
-    monkeypatch.setattr(executor, "async_command_executor", mock_async_command_executor)
+    monkeypatch.setattr(executor, "async_run_gsutil_subcommand", mock_async_command_executor)
     monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
 
     mock_bucket_name = "mock_bucekt"

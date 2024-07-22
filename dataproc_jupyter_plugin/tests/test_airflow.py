@@ -95,7 +95,7 @@ async def test_delete_job(monkeypatch, returncode, expected_result, jp_fetch):
             )
 
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
-    monkeypatch.setattr(airflow, "async_command_executor", mock_async_command_executor)
+    monkeypatch.setattr(airflow, "async_run_gsutil_subcommand", mock_async_command_executor)
     monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
     mock_composer = "mock_composer"
     mock_dag_id = "mock_dag_id"
