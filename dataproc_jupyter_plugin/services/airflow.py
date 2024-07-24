@@ -95,9 +95,9 @@ class Client:
                     api_endpoint, headers=self.create_headers()
                 ) as response:
                     self.log.info(response)
-                cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
-                await async_run_gsutil_subcommand(cmd)
-                return 0
+            cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
+            await async_run_gsutil_subcommand(cmd)
+            return 0
         except Exception as e:
             self.log.exception(f"Error deleting dag: {str(e)}")
             return {"error": str(e)}
