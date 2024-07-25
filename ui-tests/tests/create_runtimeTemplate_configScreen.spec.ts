@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { expect, test } from '@jupyterlab/galata';
+import { expect, test, galata } from '@jupyterlab/galata';
 
 test.describe('Create serverless notebook from config screen', () => {
 

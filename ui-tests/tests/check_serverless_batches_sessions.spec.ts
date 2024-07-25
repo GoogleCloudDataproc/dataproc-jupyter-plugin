@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-import { expect, test } from '@jupyterlab/galata';
+import { expect, test, galata } from '@jupyterlab/galata';
+import { Locator } from '@playwright/test';
 
 test.describe('Serverless batches and sessions.', () => {
 
@@ -118,6 +119,7 @@ test.describe('Serverless batches and sessions.', () => {
         await page.getByLabel('Value 2').fill('us-central1');
 
         // Submit the batch and verify confirmation message
+        await page.waitForTimeout(2000);
         await page.getByLabel('submit Batch').click();
         await page.waitForTimeout(5000);
         await expect(page.getByText(`Batch ${batchId} successfully submitted`)).toBeVisible();
@@ -252,6 +254,96 @@ test.describe('Serverless batches and sessions.', () => {
         await page.getByRole('button', { name: 'Delete' }).click();
         await page.waitForTimeout(5000);
         await expect(page.getByText('Session ' + sessionId + ' deleted successfully')).toBeVisible();
+    });
+
+    test("Check pagination in serverless batches tab", async ({ page }) => {
+        test.setTimeout(5 * 60 * 1000);
+
+        // Navigate to Serverless page
+        await navigateToServerless(page);
+
+        // Check if pagination is visible on the page
+        const paginationLocator = page.locator('//div[@class="pagination-parent-view"]');
+        const isPaginationVisible = await paginationLocator.isVisible();
+
+        // Function to validate row count
+        const validateRowCount = async (tableRowsLocator: Locator, expectedCount: number) => {
+            const rowCount = await tableRowsLocator.count();
+            expect(rowCount).toBeLessThanOrEqual(expectedCount);
+        };
+
+        // Function to change rows per page and validate
+        const changeRowsPerPageAndValidate = async (paginationLocator: Locator, tableRowsLocator: Locator, newRowsPerPage: number) => {
+            let currentRowsPerPage = await paginationLocator.locator('input').getAttribute('value');
+            await page.getByText(currentRowsPerPage!, { exact: true }).click();
+            await page.getByRole('option', { name: String(newRowsPerPage) }).click();
+            await page.waitForTimeout(2000);
+            await validateRowCount(tableRowsLocator, newRowsPerPage);
+        };
+
+        // Function to navigate and validate row count
+        const navigateAndValidate = async (buttonLocator: Locator, tableRowsLocator: Locator, expectedCount: number) => {
+            await buttonLocator.click();
+            await page.waitForTimeout(2000);
+            await validateRowCount(tableRowsLocator, expectedCount);
+        };
+
+        // Function to validate the range
+        const validateRange = async (pageRange: Locator, expectedStart: number, expectedEnd: number) => {
+            const rangeText = await pageRange.textContent();
+            const [currentRange, totalCount] = rangeText!.split(" of ");
+            const [start, end] = currentRange.split(" - ").map(Number);
+            expect(start).toBe(expectedStart);
+            expect(end).toBeLessThanOrEqual(expectedEnd);
+        };
+
+        if (isPaginationVisible) {
+            const tableRowsLocator = page.locator('//tbody[@class="clusters-table-body"]/tr[@role="row"]');
+
+            // Verify the default row count and selected pagination number
+            await validateRowCount(tableRowsLocator, 50);
+            let currentRowsPerPage = await paginationLocator.locator('input').getAttribute('value');
+            expect(currentRowsPerPage).toBe('50');
+
+            // Change rows per page to 100 and validate
+            await changeRowsPerPageAndValidate(paginationLocator, tableRowsLocator, 100);
+
+            // Change rows per page to 200 and validate
+            await changeRowsPerPageAndValidate(paginationLocator, tableRowsLocator, 200);
+
+            // Change back rows per page to 50
+            await changeRowsPerPageAndValidate(paginationLocator, tableRowsLocator, 50);
+
+            // Validate pagination controls
+            const leftArrow = page.locator('//div[contains(@class,"page-move-button")]').first();
+            const rightArrow = page.locator('//div[contains(@class,"page-move-button")]').nth(1);
+            const pageRange = page.locator('//div[@class="page-display-part"]');
+
+            // Validate the displayed row range and total count
+            let rangeText = await pageRange.textContent();
+            let [currentRange, totalCount] = rangeText!.split(" of ");
+
+            if (parseInt(totalCount) > 50) {
+
+                // Validate the initial range
+                await validateRange(pageRange, 1, 50);
+
+                // Navigate to the next page using the right arrow and validate
+                await navigateAndValidate(rightArrow, tableRowsLocator, 50);
+
+                // Validate the range after clicking right arrow
+                await validateRange(pageRange, 51, 100);
+
+                // Navigate to the previous page using the left arrow and validate
+                await navigateAndValidate(leftArrow, tableRowsLocator, 50);
+
+                // Validate the range after clicking left arrow
+                await validateRange(pageRange, 1, 50);
+            }
+        } else {
+            // If the pagination view not present in the page
+            expect(isPaginationVisible).toBe(false);
+        }
     });
 });
 

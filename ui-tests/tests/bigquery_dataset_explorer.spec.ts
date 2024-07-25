@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { test, expect } from '@jupyterlab/galata';
+import { test, expect, galata } from '@jupyterlab/galata';
 
 test('bigquery-dataset-explorer', async ({ page, request }) => {
   // Fetch Dataproc plugin settings

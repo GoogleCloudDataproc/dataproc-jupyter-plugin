@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-import { expect, test } from '@jupyterlab/galata';
- 
+import { expect, test, galata } from '@jupyterlab/galata';
+
 test.describe('Check all spark properties on Serverless Runtime Template', () => {
- 
+
     // Navigate to config setup page and click on create template button
     async function navigateToRuntimeTemplate(page) {
         await page.getByLabel('main menu', { exact: true }).getByText('Settings').click();
@@ -28,7 +28,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         await page.getByText('Create', { exact: true }).click();
         await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
     }
- 
+
     // Check if spark properties are visible
     async function checkSparkProperties(page) {
         const properties = [
@@ -42,7 +42,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
             await expect(page.locator(`//*[@value="${prop}"]`)).toBeVisible();
         }
     }
- 
+
     // Check if default values for properties match expected values
     async function checkDefaultValues(page, values) {
         for (const [id, value] of Object.entries(values)) {
@@ -50,23 +50,23 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
             expect(actualValue).toBe(value);
         }
     }
- 
+
     test('Can check all spark properties are displayed', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
- 
+
         await navigateToRuntimeTemplate(page);
- 
+
         // Verify sections and subsections presence
         const sections = ['Spark Properties', 'Resource Allocation', 'Autoscaling', 'GPU'];
         for (const section of sections) {
             await expect(page.getByText(section, { exact: true })).toBeVisible();
         }
- 
+
         // Expand and check properties in Resource Allocation subsection
         await page.locator('//*[@id="resource-allocation-expand-icon"]').click();
         await page.mouse.wheel(0, 300); // Scroll down to reveal properties
         await checkSparkProperties(page);
- 
+
         // Verify default values in Resource Allocation subsection
         const allocationValues = {
             'spark.driver.cores': '4',
@@ -82,7 +82,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
             'spark.executor.instances': '2'
         };
         await checkDefaultValues(page, allocationValues);
- 
+
         // Expand and check properties in Resource Autoscaling subsection
         await page.locator('//*[@id="autoscaling-expand-icon"]').click();
         await page.mouse.wheel(0, 300); // Scroll down to reveal properties
@@ -94,7 +94,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         for (const prop of autoscalingProps) {
             await expect(page.locator(`//*[@value="${prop}"]`)).toBeVisible();
         }
- 
+
         // Verify default values in Resource Autoscaling subsection
         const autoscalingValues = {
             'spark.dynamicAllocation.enabled': 'true',
@@ -105,11 +105,11 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
             'spark.reducer.fetchMigratedShuffle.enabled': 'false'
         };
         await checkDefaultValues(page, autoscalingValues);
- 
+
         // Verify GPU subsection is unchecked by default
         const isChecked = await page.getByLabel('GPU').isChecked();
         expect(isChecked).toBe(false);
- 
+
         // Check GPU checkbox and validate properties are visible
         await page.getByLabel('GPU').check();
         const gpuProps = [
@@ -120,7 +120,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         for (const prop of gpuProps) {
             await expect(page.locator(`//*[@value="${prop}"]`)).toBeVisible();
         }
- 
+
         // Verify default values in GPU subsection
         const gpuValues = {
             'spark.dataproc.driverEnv.LANG': 'C.UTF-8',
@@ -133,15 +133,15 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
         };
         await checkDefaultValues(page, gpuValues);
     });
- 
+
     test('Can check allocation subsection properties changes when GPU is selected and unselected', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
- 
+
         await navigateToRuntimeTemplate(page);
- 
+
         // Expand Resource Allocation subsection
         await page.locator('//*[@id="resource-allocation-expand-icon"]').click();
- 
+
         // Check GPU checkbox and validate the properties
         await page.getByLabel('GPU').check();
 
@@ -149,7 +149,7 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
             'spark.dataproc.executor.disk.tier': 'premium',
         };
         await checkDefaultValues(page, sDEDiskTierValue);
-        
+
         const hiddenProps = ['spark.executor.memoryOverhead', 'spark.dataproc.executor.disk.size'];
         for (const prop of hiddenProps) {
             await expect(page.locator(`//*[@value="${prop}"]`)).toBeHidden();
@@ -162,26 +162,26 @@ test.describe('Check all spark properties on Serverless Runtime Template', () =>
             'spark.dataproc.executor.disk.tier': 'standard',
         };
         await checkDefaultValues(page, sDEDiskTierValue);
-        
+
         const visibleProps = ['spark.executor.memoryOverhead', 'spark.dataproc.executor.disk.size'];
         for (const prop of visibleProps) {
             await expect(page.locator(`//*[@value="${prop}"]`)).toBeVisible();
         }
     });
- 
+
     test('Can verify by changing to non-L4 value', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
- 
+
         await navigateToRuntimeTemplate(page);
- 
+
         // Expand Resource Allocation subsection
         await page.locator('//*[@class="spark-properties-sub-header-parent"][1]/div[2]').click();
- 
+
         // Change GPU type to non-L4 value and validate properties are visible
         await page.getByLabel('GPU').check();
         const sparkDPERATypeInput = page.locator('//*[@id="value-spark.dataproc.executor.resource.accelerator.type"]//input');
         await sparkDPERATypeInput.fill('a100-40');
- 
+
         // Check Allocation subsection property is visible
         await expect(page.locator('//*[@value="spark.dataproc.executor.disk.size"]')).toBeVisible();
     });
