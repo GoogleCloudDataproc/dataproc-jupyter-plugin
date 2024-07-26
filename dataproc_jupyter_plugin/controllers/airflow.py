@@ -13,184 +13,201 @@
 # limitations under the License.
 
 import json
+import re
 
 import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
+from dataproc_jupyter_plugin.commons import constants
 from dataproc_jupyter_plugin.services import airflow
 
 
-class DagListController(APIHandler):
+class AirflowHandler(APIHandler):
+    """Base class for all Airflow-related handlers.
+
+    This class handles argument validation and error reporting.
+    """
+
+    @property
+    def composer_environment(self):
+        composer_arg = self.get_argument("composer")
+        if not re.fullmatch(constants.COMPOSER_ENVIRONMENT_REGEXP, composer_arg):
+            raise ValueError(f"Invalid Composer environment name: {composer_arg}")
+        return composer_arg
+
+    @property
+    def dag_id(self):
+        dag_id_arg = self.get_argument("dag_id")
+        if not re.fullmatch(constants.DAG_ID_REGEXP, dag_id_arg):
+            raise ValueError(f"Invalid DAG ID: {dag_id_arg}")
+        return dag_id_arg
+
+    @property
+    def dag_run_id(self):
+        dag_run_id_arg = self.get_argument("dag_run_id")
+        if not re.fullmatch(constants.DAG_RUN_ID_REGEXP, dag_run_id_arg):
+            raise ValueError(f"Invalid DAG Run ID: {dag_run_id_arg}")
+        return dag_run_id_arg
+
+    @property
+    def bucket_name(self):
+        bucket_arg = self.get_argument("bucket_name")
+        if not re.fullmatch(constants.BUCKET_NAME_REGEXP, bucket_arg):
+            raise ValueError(f"Invalid bucket name: {bucket_arg}")
+        return bucket_arg
+
+    def description(self):
+        pass
+
+    async def _handle_get(self, client):
+        raise Exception("GET method unsupported")
+
     @tornado.web.authenticated
     async def get(self):
         try:
-            composer_name = self.get_argument("composer")
             async with aiohttp.ClientSession() as client_session:
                 client = airflow.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                dag_list = await client.list_jobs(composer_name)
-            self.finish(json.dumps(dag_list))
+                resp = await self._handle_get(client)
+                self.finish(json.dumps(resp))
         except Exception as e:
-            self.log.exception("Error fetching cluster list")
+            self.log.exception(f"Error fetching {self.description()}")
             self.finish({"error": str(e)})
 
+    async def _handle_post(self, client):
+        raise Exception("POST method unsupported")
 
-class DagDeleteController(APIHandler):
     @tornado.web.authenticated
-    async def get(self):
+    async def post(self):
         try:
-            composer = self.get_argument("composer")
-            dag_id = self.get_argument("dag_id")
-            from_page = self.get_argument("from_page", default=None)
             async with aiohttp.ClientSession() as client_session:
                 client = airflow.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                delete_response = await client.delete_job(composer, dag_id, from_page)
-            if delete_response == 0:
-                self.finish(json.dumps({"status": delete_response}))
-            else:
-                self.log.exception("Error deleting dag file")
-                self.finish(json.dumps({"status": delete_response}))
+                resp = await self._handle_post(client)
+                self.finish(json.dumps(resp))
         except Exception as e:
-            self.log.exception(f"Error deleting dag file: {str(e)}")
+            self.log.exception(f"Error updating {self.description()}")
             self.finish({"error": str(e)})
 
+    async def _handle_delete(self, client):
+        raise Exception("DELETE method unsupported")
 
-class DagUpdateController(APIHandler):
     @tornado.web.authenticated
-    async def get(self):
+    async def delete(self):
         try:
-            composer = self.get_argument("composer")
-            dag_id = self.get_argument("dag_id")
-            status = self.get_argument("status")
             async with aiohttp.ClientSession() as client_session:
                 client = airflow.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                update_response = await client.update_job(composer, dag_id, status)
-            if update_response == 0:
-                self.finish({"status": 0})
-            else:
-                self.log.exception("Error updating status")
-                self.finish(json.dumps(update_response))
+                resp = await self._handle_delete(client)
+                self.finish(json.dumps(resp))
         except Exception as e:
-            self.log.exception(f"Error updating status: {str(e)}")
+            self.log.exception(f"Error deleting {self.description()}")
             self.finish({"error": str(e)})
 
 
-class DagRunController(APIHandler):
-    @tornado.web.authenticated
-    async def get(self):
-        try:
-            composer_name = self.get_argument("composer")
-            dag_id = self.get_argument("dag_id")
-            start_date = self.get_argument("start_date")
-            offset = self.get_argument("offset")
-            end_date = self.get_argument("end_date")
-            async with aiohttp.ClientSession() as client_session:
-                client = airflow.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                dag_run_list = await client.list_dag_runs(
-                    composer_name, dag_id, start_date, end_date, offset
-                )
-            self.finish(json.dumps(dag_run_list))
-        except Exception as e:
-            self.log.exception(f"Error fetching dag run list {str(e)}")
-            self.finish({"error": str(e)})
+class DagListController(AirflowHandler):
+    def description(self):
+        return "cluster list"
+
+    async def _handle_get(self, client):
+        return await client.list_jobs(self.composer_environment)
 
 
-class DagRunTaskController(APIHandler):
-    @tornado.web.authenticated
-    async def get(self):
-        try:
-            composer_name = self.get_argument("composer")
-            dag_id = self.get_argument("dag_id")
-            dag_run_id = self.get_argument("dag_run_id")
-            async with aiohttp.ClientSession() as client_session:
-                client = airflow.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                dag_run_list = await client.list_dag_run_task(
-                    composer_name, dag_id, dag_run_id
-                )
-            self.finish(json.dumps(dag_run_list))
-        except Exception as e:
-            self.log.exception(f"Error fetching dag run tasks: {str(e)}")
-            self.finish({"error": str(e)})
+class DagDeleteController(AirflowHandler):
+    def description(self):
+        return "dag file"
+
+    async def _handle_delete(self, client):
+        from_page = self.get_argument("from_page", default=None)
+        delete_response = await client.delete_job(
+            self.composer_environment, self.dag_id, from_page
+        )
+        if delete_response != 0:
+            raise Exception(
+                f"Error deleting dag file, unexpected response: {delete_response}"
+            )
+        return {"status": delete_response}
 
 
-class DagRunTaskLogsController(APIHandler):
-    @tornado.web.authenticated
-    async def get(self):
-        try:
-            composer_name = self.get_argument("composer")
-            dag_id = self.get_argument("dag_id")
-            dag_run_id = self.get_argument("dag_run_id")
-            task_id = self.get_argument("task_id")
-            task_try_number = self.get_argument("task_try_number")
-            async with aiohttp.ClientSession() as client_session:
-                client = airflow.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                dag_run_list = await client.list_dag_run_task_logs(
-                    composer_name, dag_id, dag_run_id, task_id, task_try_number
-                )
-            self.finish(json.dumps(dag_run_list))
-        except Exception as e:
-            self.log.exception(f"Error fetching dag run task logs: {str(e)}")
-            self.finish({"error": str(e)})
+class DagUpdateController(AirflowHandler):
+    def description(self):
+        return "status"
+
+    async def _handle_post(self, client):
+        status = self.get_argument("status")
+        update_response = await client.update_job(
+            self.composer_environment, self.dag_id, status
+        )
+        if update_response != 0:
+            raise Exception(
+                f"Error updating job status, unexpected response: {update_response}"
+            )
+        return {"status": update_response}
 
 
-class EditDagController(APIHandler):
-    @tornado.web.authenticated
-    async def get(self):
-        try:
-            bucket_name = self.get_argument("bucket_name")
-            dag_id = self.get_argument("dag_id")
-            async with aiohttp.ClientSession() as client_session:
-                client = airflow.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                dag_details = await client.edit_jobs(dag_id, bucket_name)
-            self.finish(json.dumps(dag_details))
-        except Exception as e:
-            self.log.exception("Error getting dag details")
-            self.finish({"error": str(e)})
+class DagRunController(AirflowHandler):
+    def description(self):
+        return "dag run list"
+
+    async def _handle_get(self, client):
+        start_date = self.get_argument("start_date")
+        offset = self.get_argument("offset")
+        end_date = self.get_argument("end_date")
+        return await client.list_dag_runs(
+            self.composer_environment, self.dag_id, start_date, end_date, offset
+        )
 
 
-class ImportErrorController(APIHandler):
-    @tornado.web.authenticated
-    async def get(self):
-        try:
-            composer_name = self.get_argument("composer")
-            async with aiohttp.ClientSession() as client_session:
-                client = airflow.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                import_errors_list = await client.list_import_errors(composer_name)
-            self.finish(json.dumps(import_errors_list))
-        except Exception as e:
-            self.log.exception("Error fetching import error list")
-            self.finish({"error": str(e)})
+class DagRunTaskController(AirflowHandler):
+    def description(self):
+        return "dag run tasks"
+
+    async def _handle_get(self, client):
+        return await client.list_dag_run_task(
+            self.composer_environment, self.dag_id, self.dag_run_id
+        )
 
 
-class TriggerDagController(APIHandler):
-    @tornado.web.authenticated
-    async def get(self):
-        try:
-            dag_id = self.get_argument("dag_id")
-            composer = self.get_argument("composer")
-            async with aiohttp.ClientSession() as client_session:
-                client = airflow.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                trigger = await client.dag_trigger(dag_id, composer)
-            self.finish(json.dumps(trigger))
-        except Exception as e:
-            self.log.exception("Error triggering dag")
-            self.finish({"error": str(e)})
+class DagRunTaskLogsController(AirflowHandler):
+    def description(self):
+        return "dag run task logs"
+
+    async def _handle_get(self, client):
+        task_id = self.get_argument("task_id")
+        task_try_number = self.get_argument("task_try_number")
+        return await client.list_dag_run_task_logs(
+            self.composer_environment,
+            self.dag_id,
+            self.dag_run_id,
+            task_id,
+            task_try_number,
+        )
+
+
+class EditDagController(AirflowHandler):
+    def description(self):
+        return "job"
+
+    async def _handle_post(self, client):
+        return await client.edit_jobs(self.dag_id, self.bucket_name)
+
+
+class ImportErrorController(AirflowHandler):
+    def description(self):
+        return "import error list"
+
+    async def _handle_get(self, client):
+        return await client.list_import_errors(self.composer_environment)
+
+
+class TriggerDagController(AirflowHandler):
+    def description(self):
+        return "DAG"
+
+    async def _handle_post(self, client):
+        return await client.dag_trigger(self.dag_id, self.composer_environment)

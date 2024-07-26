@@ -34,7 +34,7 @@ async def test_list_jobs(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
 
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
-    mock_composer = "mock_url"
+    mock_composer = "mock-url"
     response = await jp_fetch(
         "dataproc-plugin",
         "dagList",
@@ -70,7 +70,7 @@ async def test_list_dag_with_invalid_credentials(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
     monkeypatch.setattr(credentials, "get_cached", mock_credentials)
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
-    mock_composer = "mock_url"
+    mock_composer = "mock-url"
     response = await jp_fetch(
         "dataproc-plugin",
         "dagList",
@@ -95,9 +95,11 @@ async def test_delete_job(monkeypatch, returncode, expected_result, jp_fetch):
             )
 
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
-    monkeypatch.setattr(airflow, "async_run_gsutil_subcommand", mock_async_command_executor)
+    monkeypatch.setattr(
+        airflow, "async_run_gsutil_subcommand", mock_async_command_executor
+    )
     monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
-    mock_composer = "mock_composer"
+    mock_composer = "mock-composer"
     mock_dag_id = "mock_dag_id"
     mock_from_page = "mock_from_page"
     response = await jp_fetch(
@@ -108,6 +110,7 @@ async def test_delete_job(monkeypatch, returncode, expected_result, jp_fetch):
             "dag_id": mock_dag_id,
             "from_page": mock_from_page,
         },
+        method="DELETE",
     )
     assert response.code == 200
     payload = json.loads(response.body)
@@ -152,6 +155,8 @@ async def test_update_job(monkeypatch, jp_fetch):
             "dag_id": mock_dag_id,
             "status": mock_status,
         },
+        method="POST",
+        allow_nonstandard_methods=True,
     )
     assert response.code == 200
     payload = json.loads(response.body)
@@ -162,7 +167,7 @@ async def test_list_dag_run(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
 
-    mock_composer = "mock_url"
+    mock_composer = "mock-url"
     mock_dag_id = "mock_dag_id"
     mock_start_date = "mock_start_date"
     mock_offset = "mock_offset"
@@ -193,9 +198,9 @@ async def test_list_dag_run_task_logs(monkeypatch, jp_fetch):
     monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
 
-    mock_composer = "mock_url"
+    mock_composer = "mock-url"
     mock_dag_id = "mock_dag_id"
-    mock_dag_run_id = "mock_dag_run_id"
+    mock_dag_run_id = "256"
     mock_task_id = "mock_task_id"
     mock_task_try = "mock_task_try"
     response = await jp_fetch(
@@ -218,9 +223,9 @@ async def test_list_dag_run_task(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
 
-    mock_composer = "mock_url"
+    mock_composer = "mock-url"
     mock_dag_id = "mock_dag_id"
-    mock_dag_run_id = "mock_dag_run_id"
+    mock_dag_run_id = "257"
     response = await jp_fetch(
         "dataproc-plugin",
         "dagRunTask",
@@ -242,7 +247,7 @@ async def test_list_dag_run_task(monkeypatch, jp_fetch):
 async def test_edit_jobs(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
 
-    mock_bucket_name = "mock_url"
+    mock_bucket_name = "mock-url"
     mock_dag_id = "mock_dag_id"
     response = await jp_fetch(
         "dataproc-plugin",
@@ -256,7 +261,7 @@ async def test_list_import_errors(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
 
-    mock_composer = "mock_composer"
+    mock_composer = "mock-composer"
     response = await jp_fetch(
         "dataproc-plugin",
         "importErrorsList",
@@ -275,12 +280,14 @@ async def test_dag_trigger(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
     monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
 
-    mock_composer = "mock_url"
+    mock_composer = "mock-url"
     mock_dag_id = "mock_dag_id"
     response = await jp_fetch(
         "dataproc-plugin",
         "triggerDag",
         params={"dag_id": mock_dag_id, "composer": mock_composer},
+        method="POST",
+        allow_nonstandard_methods=True,
     )
     assert response.code == 200
     payload = json.loads(response.body)["results"][0]
@@ -289,3 +296,72 @@ async def test_dag_trigger(monkeypatch, jp_fetch):
         == f"https://mock_airflow_uri/api/v1/dags/{mock_dag_id}/dagRuns"
     )
     assert payload["headers"]["Authorization"] == f"Bearer mock-token"
+
+
+async def test_invalid_composer(monkeypatch, jp_fetch):
+    mocks.patch_mocks(monkeypatch)
+    monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
+
+    mock_composer = "mock/url"
+    mock_dag_id = "mock_dag_id"
+    mock_dag_run_id = 22
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "dagRunTask",
+        params={
+            "dag_id": mock_dag_id,
+            "composer": mock_composer,
+            "dag_run_id": mock_dag_run_id,
+        },
+    )
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert "results" not in payload
+    assert "error" in payload
+    assert "Invalid Composer environment name" in payload["error"]
+
+
+async def test_invalid_dag_id(monkeypatch, jp_fetch):
+    mocks.patch_mocks(monkeypatch)
+    monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
+
+    mock_composer = "mock-url"
+    mock_dag_id = "mock/dag/id"
+    mock_dag_run_id = 22
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "dagRunTask",
+        params={
+            "dag_id": mock_dag_id,
+            "composer": mock_composer,
+            "dag_run_id": mock_dag_run_id,
+        },
+    )
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert "results" not in payload
+    assert "error" in payload
+    assert "Invalid DAG ID" in payload["error"]
+
+
+async def test_invalid_dag_run_id(monkeypatch, jp_fetch):
+    mocks.patch_mocks(monkeypatch)
+    monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
+
+    mock_composer = "mock-url"
+    mock_dag_id = "mock-dag-id"
+    mock_dag_run_id = "abcd"
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "dagRunTask",
+        params={
+            "dag_id": mock_dag_id,
+            "composer": mock_composer,
+            "dag_run_id": mock_dag_run_id,
+        },
+    )
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert "results" not in payload
+    assert "error" in payload
+    assert "Invalid DAG Run ID" in payload["error"]

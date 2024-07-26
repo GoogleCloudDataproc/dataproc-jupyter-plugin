@@ -308,7 +308,7 @@ export class SchedulerService {
     setEditNotebookLoading(dagId);
     try {
       const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
-      const formattedResponse: any = await requestAPI(serviceURL);
+      const formattedResponse: any = await requestAPI(serviceURL, {method: 'POST'});
       setInputNotebookFilePath(formattedResponse.input_filename);
       setEditNotebookLoading('');
     } catch (reason) {
@@ -355,7 +355,7 @@ export class SchedulerService {
     setEditDagLoading(dagId);
     try {
       const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
-      const formattedResponse: any = await requestAPI(serviceURL);
+      const formattedResponse: any = await requestAPI(serviceURL, {method: 'POST'});
       if (
         setCreateCompleted &&
         setJobNameSelected &&
@@ -729,7 +729,8 @@ export class SchedulerService {
     try {
       const serviceURL = `dagDelete?composer=${composerSelected}&dag_id=${dag_id}&from_page=${fromPage}`;
       const deleteResponse: IUpdateSchedulerAPIResponse = await requestAPI(
-        serviceURL
+        serviceURL,
+	{method: 'DELETE'}
       );
       if (deleteResponse.status === 0) {
         await SchedulerService.listDagInfoAPIService(
@@ -764,7 +765,8 @@ export class SchedulerService {
     try {
       const serviceURL = `dagUpdate?composer=${composerSelected}&dag_id=${dag_id}&status=${is_status_paused}`;
       const formattedResponse: IUpdateSchedulerAPIResponse = await requestAPI(
-        serviceURL
+        serviceURL,
+	{method: 'POST'}
       );
       if (formattedResponse && formattedResponse.status === 0) {
         toast.success(
@@ -878,7 +880,8 @@ export class SchedulerService {
   ) => {
     try {
       const data: any = await requestAPI(
-        `triggerDag?dag_id=${dagId}&composer=${composerSelectedList}`
+        `triggerDag?dag_id=${dagId}&composer=${composerSelectedList}`,
+	{method: 'POST'}
       );
       if (data) {
         toast.success(`${dagId} triggered successfully `, toastifyCustomStyle);

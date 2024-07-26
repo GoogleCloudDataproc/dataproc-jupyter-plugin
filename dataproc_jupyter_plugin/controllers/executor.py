@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import json
+import re
 
 import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
+from dataproc_jupyter_plugin.commons import constants
 from dataproc_jupyter_plugin.services import executor
 
 
@@ -26,6 +28,13 @@ class ExecutorController(APIHandler):
     async def post(self):
         try:
             input_data = self.get_json_body()
+            if not re.fullmatch(
+                constants.COMPOSER_ENVIRONMENT_REGEXP,
+                input_data.composer_environment_name,
+            ):
+                raise ValueError(f"Invalid environment name: {input_data}")
+            if not re.fullmatch(constants.DAG_ID_REGEXP, input_data.dag_id):
+                raise ValueError(f"Invalid DAG ID: {input_data}")
             client = executor.Client(await credentials.get_cached(), self.log)
             result = await client.execute(input_data)
             self.finish(json.dumps(result))
@@ -38,10 +47,16 @@ class DownloadOutputController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
-            client = executor.Client(await credentials.get_cached(), self.log)
             bucket_name = self.get_argument("bucket_name")
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
+            if not re.fullmatch(constants.BUCKET_NAME_REGEXP, bucket_name):
+                raise ValueError(f"Invalid bucket name: {bucket_name}")
+            if not re.fullmatch(constants.DAG_ID_REGEXP, dag_id):
+                raise ValueError(f"Invalid DAG ID: {dag_id}")
+            if not re.fullmatch(constants.DAG_RUN_ID_REGEXP, dag_run_id):
+                raise ValueError(f"Invalid DAG Run ID: {dag_run_id}")
+            client = executor.Client(await credentials.get_cached(), self.log)
             download_status = await client.download_dag_output(
                 bucket_name, dag_id, dag_run_id
             )
