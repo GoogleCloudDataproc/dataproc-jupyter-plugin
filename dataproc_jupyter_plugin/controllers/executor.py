@@ -42,7 +42,7 @@ class DownloadOutputController(APIHandler):
             bucket_name = self.get_argument("bucket_name")
             dag_id = self.get_argument("dag_id")
             dag_run_id = self.get_argument("dag_run_id")
-            download_status = client.download_dag_output(
+            download_status = await client.download_dag_output(
                 bucket_name, dag_id, dag_run_id
             )
             self.finish(json.dumps({"status": download_status}))
