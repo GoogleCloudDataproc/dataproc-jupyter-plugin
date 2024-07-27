@@ -216,6 +216,7 @@ const ListDagRuns = ({
   const handleDownloadOutput = async (event: React.MouseEvent) => {
     const dagRunId = event.currentTarget.getAttribute('data-dag-run-id')!;
     await SchedulerService.handleDownloadOutputNotebookAPIService(
+      composerName,
       dagRunId,
       bucketName,
       dagId,

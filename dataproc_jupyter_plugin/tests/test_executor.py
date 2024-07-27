@@ -21,6 +21,7 @@ import aiohttp
 import pytest
 
 from dataproc_jupyter_plugin.commons import commands
+from dataproc_jupyter_plugin.services import airflow
 from dataproc_jupyter_plugin.services import executor
 from dataproc_jupyter_plugin.tests.test_airflow import MockClientSession
 
@@ -105,17 +106,25 @@ async def test_download_dag_output(monkeypatch, returncode, expected_result, jp_
                 returncode, cmd, output=b"output", stderr=b"error in executing command"
             )
 
-    monkeypatch.setattr(executor, "async_run_gsutil_subcommand", mock_async_command_executor)
+    async def mock_list_dag_run_task(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr(airflow.Client, "list_dag_run_task", mock_list_dag_run_task)
+    monkeypatch.setattr(
+        executor, "async_run_gsutil_subcommand", mock_async_command_executor
+    )
     monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
 
-    mock_bucket_name = "mock_bucekt"
-    mock_dag_id = "mock_dag_id"
-    mock_dag_run_id = "mock_dag_run_id"
+    mock_composer_name = "mock-composer"
+    mock_bucket_name = "mock_bucket"
+    mock_dag_id = "mock-dag-id"
+    mock_dag_run_id = "258"
     command = f"gsutil cp 'gs://{mock_bucket_name}/dataproc-output/{mock_dag_id}/output-notebooks/{mock_dag_id}_{mock_dag_run_id}.ipynb' ./"
     response = await jp_fetch(
         "dataproc-plugin",
         "downloadOutput",
         params={
+            "composer": mock_composer_name,
             "bucket_name": mock_bucket_name,
             "dag_id": mock_dag_id,
             "dag_run_id": mock_dag_run_id,
@@ -124,3 +133,91 @@ async def test_download_dag_output(monkeypatch, returncode, expected_result, jp_
     assert response.code == 200
     payload = json.loads(response.body)
     assert payload["status"] == 0
+
+
+async def test_invalid_composer_name(monkeypatch, jp_fetch):
+    mock_composer_name = "mock_composer"
+    mock_bucket_name = "mock-bucket"
+    mock_dag_id = "mock-dag-id"
+    mock_dag_run_id = "258"
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "downloadOutput",
+        params={
+            "composer": mock_composer_name,
+            "bucket_name": mock_bucket_name,
+            "dag_id": mock_dag_id,
+            "dag_run_id": mock_dag_run_id,
+        },
+    )
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert "status" not in payload
+    assert "error" in payload
+    assert "Invalid Composer environment name" in payload["error"]
+
+
+async def test_invalid_bucket_name(monkeypatch, jp_fetch):
+    mock_composer_name = "mock-composer"
+    mock_bucket_name = "mock/bucket"
+    mock_dag_id = "mock-dag-id"
+    mock_dag_run_id = "258"
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "downloadOutput",
+        params={
+            "composer": mock_composer_name,
+            "bucket_name": mock_bucket_name,
+            "dag_id": mock_dag_id,
+            "dag_run_id": mock_dag_run_id,
+        },
+    )
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert "status" not in payload
+    assert "error" in payload
+    assert "Invalid bucket name" in payload["error"]
+
+
+async def test_invalid_dag_id(monkeypatch, jp_fetch):
+    mock_composer_name = "mock-composer"
+    mock_bucket_name = "mock-bucket"
+    mock_dag_id = "mock/dag/id"
+    mock_dag_run_id = "258"
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "downloadOutput",
+        params={
+            "composer": mock_composer_name,
+            "bucket_name": mock_bucket_name,
+            "dag_id": mock_dag_id,
+            "dag_run_id": mock_dag_run_id,
+        },
+    )
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert "status" not in payload
+    assert "error" in payload
+    assert "Invalid DAG ID" in payload["error"]
+
+
+async def test_invalid_dag_run_id(monkeypatch, jp_fetch):
+    mock_composer_name = "mock-composer"
+    mock_bucket_name = "mock-bucket"
+    mock_dag_id = "mock-dag-id"
+    mock_dag_run_id = "a/b/c/d"
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "downloadOutput",
+        params={
+            "composer": mock_composer_name,
+            "bucket_name": mock_bucket_name,
+            "dag_id": mock_dag_id,
+            "dag_run_id": mock_dag_run_id,
+        },
+    )
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert "status" not in payload
+    assert "error" in payload
+    assert "Invalid DAG Run ID" in payload["error"]
