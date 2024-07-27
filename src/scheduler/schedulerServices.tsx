@@ -689,6 +689,7 @@ export class SchedulerService {
     }
   };
   static handleDownloadOutputNotebookAPIService = async (
+    composerName: string,
     dagRunId: string,
     bucketName: string,
     dagId: string,
@@ -697,7 +698,7 @@ export class SchedulerService {
     setDownloadOutputDagRunId(dagRunId);
     try {
       dagRunId = encodeURIComponent(dagRunId);
-      const serviceURL = `downloadOutput?bucket_name=${bucketName}&dag_id=${dagId}&dag_run_id=${dagRunId}`;
+      const serviceURL = `downloadOutput?composer=${composerName}&bucket_name=${bucketName}&dag_id=${dagId}&dag_run_id=${dagRunId}`;
       const formattedResponse: any = await requestAPI(serviceURL);
       dagRunId = decodeURIComponent(dagRunId);
       if (formattedResponse.status === 0) {

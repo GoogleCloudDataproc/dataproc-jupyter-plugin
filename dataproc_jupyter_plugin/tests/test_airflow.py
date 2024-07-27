@@ -342,26 +342,3 @@ async def test_invalid_dag_id(monkeypatch, jp_fetch):
     assert "results" not in payload
     assert "error" in payload
     assert "Invalid DAG ID" in payload["error"]
-
-
-async def test_invalid_dag_run_id(monkeypatch, jp_fetch):
-    mocks.patch_mocks(monkeypatch)
-    monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
-
-    mock_composer = "mock-url"
-    mock_dag_id = "mock-dag-id"
-    mock_dag_run_id = "abcd"
-    response = await jp_fetch(
-        "dataproc-plugin",
-        "dagRunTask",
-        params={
-            "dag_id": mock_dag_id,
-            "composer": mock_composer,
-            "dag_run_id": mock_dag_run_id,
-        },
-    )
-    assert response.code == 200
-    payload = json.loads(response.body)
-    assert "results" not in payload
-    assert "error" in payload
-    assert "Invalid DAG Run ID" in payload["error"]

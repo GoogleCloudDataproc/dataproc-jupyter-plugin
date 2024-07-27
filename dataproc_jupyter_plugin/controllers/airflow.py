@@ -47,8 +47,6 @@ class AirflowHandler(APIHandler):
     @property
     def dag_run_id(self):
         dag_run_id_arg = self.get_argument("dag_run_id")
-        if not re.fullmatch(constants.DAG_RUN_ID_REGEXP, dag_run_id_arg):
-            raise ValueError(f"Invalid DAG Run ID: {dag_run_id_arg}")
         return dag_run_id_arg
 
     @property

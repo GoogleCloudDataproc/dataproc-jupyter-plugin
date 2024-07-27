@@ -48,5 +48,10 @@ COMPOSER_ENVIRONMENT_REGEXP = re.compile("[a-z]([a-z0-9-]{0,62}[a-z0-9])?")
 #  https://airflow.apache.org/docs/apache-airflow/2.1.3/_api/airflow/models/dag/index.html
 DAG_ID_REGEXP = re.compile("([a-zA-Z0-9_.-])+")
 
-# DAG run IDs must be integers.
-DAG_RUN_ID_REGEXP = re.compile("([0-9])+")
+# DAG run IDs are largely free-form, but we still enforce some sanity checking
+#  on them in case the generated ID might cause issues with how we generate
+#  output file names.
+DAG_RUN_ID_REGEXP = re.compile("[a-zA-Z0-9_:\\+-]+")
+
+# This matches the requirements set by the scheduler form.
+AIRFLOW_JOB_REGEXP = re.compile("[a-zA-Z0-9_-]+")
