@@ -33,6 +33,7 @@ from dataproc_jupyter_plugin.commons.constants import (
     WRAPPER_PAPPERMILL_FILE,
 )
 from dataproc_jupyter_plugin.models.models import DescribeJob
+from dataproc_jupyter_plugin.services import airflow
 
 
 unique_id = str(uuid.uuid4().hex)
@@ -45,7 +46,7 @@ ROOT_FOLDER = PACKAGE_NAME
 class Client:
     client_session = aiohttp.ClientSession()
 
-    def __init__(self, credentials, log):
+    def __init__(self, credentials, log, client_session):
         self.log = log
         if not (
             ("access_token" in credentials)
@@ -57,6 +58,7 @@ class Client:
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
+        self.airflow_client = airflow.Client(credentials, log, client_session)
 
     def create_headers(self):
         return {
@@ -277,7 +279,15 @@ class Client:
         except Exception as e:
             return {"error": str(e)}
 
-    async def download_dag_output(self, bucket_name, dag_id, dag_run_id):
+    async def download_dag_output(
+        self, composer_environment_name, bucket_name, dag_id, dag_run_id
+    ):
+        try:
+            await self.airflow_client.list_dag_run_task(
+                composer_environment_name, dag_id, dag_run_id
+            )
+        except Exception as ex:
+            return {"error": f"Invalid DAG run ID {dag_run_id}"}
         try:
             cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb' ./"
             await async_run_gsutil_subcommand(cmd)
