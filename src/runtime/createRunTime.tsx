@@ -241,7 +241,7 @@ function CreateRunTime({
   }, [networkSelected]);
 
   const modifyResourceAllocation = () => {
-    const regexPattern = /^a100-(?:[0-9]|[1-9][0-9]{1,2})$/i;
+    const regexPattern =  /^a100-(40|80)$/i;
     let resourceAllocationModify = [...resourceAllocationDetailUpdated];
     gpuDetailUpdated.forEach(item => {
       const [key, value] = item.split(':');
@@ -289,7 +289,7 @@ function CreateRunTime({
             )
           ) {
             resourceAllocationModify.splice(
-              8,
+              7,
               0,
               'spark.dataproc.executor.disk.size:400g'
             );
@@ -1106,6 +1106,12 @@ function CreateRunTime({
         (item: string) => {
           if (item === 'spark.dataproc.executor.disk.tier:premium') {
             return 'spark.dataproc.executor.disk.tier:standard';
+          }
+          if (item === 'spark.dataproc.executor.disk.size:750g') {
+            return 'spark.dataproc.executor.disk.size:400g';
+          }
+          if (item === 'spark.executor.cores:12') {
+            return 'spark.executor.cores:4';
           }
           return item;
         }
