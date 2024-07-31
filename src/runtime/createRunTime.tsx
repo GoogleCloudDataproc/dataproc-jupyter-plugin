@@ -241,12 +241,13 @@ function CreateRunTime({
   }, [networkSelected]);
 
   const modifyResourceAllocation = () => {
-    const regexPattern = /^a100-(40|80)$/i;
+   // const regexPattern = /^a100-(40|80)$/i;
     let resourceAllocationModify = [...resourceAllocationDetailUpdated];
-    let gpuDetailModify = [...GPU_DEFAULT];
+    let gpuDetailModify = JSON.parse(JSON.stringify(gpuDetailUpdated)); //Deep copy
     gpuDetailUpdated.forEach(item => {
       const [key, value] = item.split(':');
       if (key === 'spark.dataproc.executor.resource.accelerator.type') {
+        if(value){}
         if (value === 'l4') {
           resourceAllocationModify = resourceAllocationModify
             .map((item: string) => {
@@ -259,7 +260,7 @@ function CreateRunTime({
               return item;
             })
             .filter((item): item is string => item !== null); // To filter out null values.
-        } else if (regexPattern.test(value)) {
+        } else if (value === 'a100-40' || value === 'a100-80') {
           resourceAllocationModify = resourceAllocationModify.map(
             (item: string) => {
               if (item === 'spark.dataproc.executor.disk.size:400g') {
@@ -268,7 +269,7 @@ function CreateRunTime({
               if (item === 'spark.executor.cores:4') {
                 const newCores = 12; // to change core value to 12 for a100-40 and a100-80
                 const gpuValue = (1 / newCores).toFixed(2); // Calculate the GPU value based on the new core count
-                gpuDetailModify = gpuDetailModify.map(gpuItem => {
+                gpuDetailModify = gpuDetailModify.map((gpuItem: any) => {
                   const [gpuKey] = gpuItem.split(':');
                   if (gpuKey === 'spark.task.resource.gpu.amount') {
                     return `spark.task.resource.gpu.amount:${gpuValue}`;
@@ -292,11 +293,12 @@ function CreateRunTime({
               if (item === 'spark.executor.cores:12') {
                 const newCores = 4; // reverting the value for spark.executor.cores for non a100 fields
                 const gpuValue = (1 / newCores).toFixed(2); // Calculate the GPU value based on the new core count
-                gpuDetailModify = gpuDetailModify.map(gpuItem => {
+                gpuDetailModify = gpuDetailModify.map((gpuItem: any) => {
                   const [gpuKey] = gpuItem.split(':');
                   if (gpuKey === 'spark.task.resource.gpu.amount') {
                     return `spark.task.resource.gpu.amount:${gpuValue}`;
                   }
+                  console.log("gpuitem",gpuItem)
                   return gpuItem;
                 });
                 setGpuDetail(gpuDetailModify);
