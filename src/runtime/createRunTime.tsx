@@ -241,43 +241,92 @@ function CreateRunTime({
   }, [networkSelected]);
 
   const modifyResourceAllocation = () => {
+    // const regexPattern = /^a100-(40|80)$/i;
     let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+    //let gpuDetailModify = JSON.parse(JSON.stringify(gpuDetailUpdated)); //Deep copy
     gpuDetailUpdated.forEach(item => {
       const [key, value] = item.split(':');
       if (key === 'spark.dataproc.executor.resource.accelerator.type') {
+        if (value) {
+        }
         if (value === 'l4') {
-          resourceAllocationModify = resourceAllocationDetailUpdated
+          resourceAllocationModify = resourceAllocationModify
             .map((item: string) => {
-              if (item === 'spark.dataproc.executor.disk.size:400g') {
-                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
+              if (
+                item === 'spark.dataproc.executor.disk.size:400g' ||
+                item === 'spark.dataproc.executor.disk.size:750g'
+              ) {
                 return null;
               }
               return item;
             })
-            .filter((item): item is string => item !== null); // To filter out null values.'
-          setResourceAllocationDetail(resourceAllocationModify);
-          setResourceAllocationDetailUpdated(resourceAllocationModify);
+            .filter((item): item is string => item !== null); // To filter out null values.
+        } else if (value === 'a100-40' || value === 'a100-80') {
+          resourceAllocationModify = resourceAllocationModify.map(
+            (item: string) => {
+              if (item === 'spark.dataproc.executor.disk.size:400g') {
+                return 'spark.dataproc.executor.disk.size:750g';
+              }
+              if (item === 'spark.executor.cores:4') {
+                return 'spark.executor.cores:12';
+                // const newCores = 12; // to change core value to 12 for a100-40 and a100-80
+                // const gpuValue = (1 / newCores).toFixed(2); // Calculate the GPU value based on the new core count
+                // gpuDetailModify = gpuDetailModify.map((gpuItem: any) => {
+                //   const [gpuKey] = gpuItem.split(':');
+                //   if (gpuKey === 'spark.task.resource.gpu.amount') {
+                //     return `spark.task.resource.gpu.amount:${gpuValue}`;
+                //   }
+                //   return gpuItem;
+                // });
+
+                // return `spark.executor.cores:${newCores}`;
+              }
+              // setGpuDetail(gpuDetailModify);
+              //setGpuDetailUpdated(gpuDetailModify);
+              return item;
+            }
+          );
         } else {
+          resourceAllocationModify = resourceAllocationModify.map(
+            (item: string) => {
+              if (item === 'spark.dataproc.executor.disk.size:750g') {
+                return 'spark.dataproc.executor.disk.size:400g';
+              }
+              if (item === 'spark.executor.cores:12') {
+                return 'spark.executor.cores:4';
+                // const newCores = 4; // reverting the value for spark.executor.cores for non a100 fields
+                // const gpuValue = (1 / newCores).toFixed(2); // Calculate the GPU value based on the new core count
+                // gpuDetailModify = gpuDetailModify.map((gpuItem: any) => {
+                //   const [gpuKey] = gpuItem.split(':');
+                //   if (gpuKey === 'spark.task.resource.gpu.amount') {
+                //     return `spark.task.resource.gpu.amount:${gpuValue}`;
+                //   }
+                //   return gpuItem;
+                // });
+                // setGpuDetail(gpuDetailModify);
+                // setGpuDetailUpdated(gpuDetailModify);
+                // return `spark.executor.cores:${newCores}`;
+              }
+              return item;
+            }
+          );
           if (
-            !resourceAllocationDetailUpdated.includes(
+            !resourceAllocationModify.includes(
               'spark.dataproc.executor.disk.size:400g'
             )
           ) {
-            // To add the spark.dataproc.executor.disk.size:400g at index 9.
-            resourceAllocationDetailUpdated.splice(
-              8,
+            resourceAllocationModify.splice(
+              7,
               0,
               'spark.dataproc.executor.disk.size:400g'
             );
-            const updatedArray = [...resourceAllocationDetailUpdated];
-            setResourceAllocationDetail(updatedArray);
-            setResourceAllocationDetailUpdated(updatedArray);
           }
         }
       }
     });
+    setResourceAllocationDetail(resourceAllocationModify);
+    setResourceAllocationDetailUpdated(resourceAllocationModify);
   };
-
   useEffect(() => {
     modifyResourceAllocation();
   }, [gpuDetailUpdated]);
@@ -357,6 +406,7 @@ function CreateRunTime({
           }
 
           if (selectedRuntimeClone.runtimeConfig.hasOwnProperty('properties')) {
+            //update form properties
             const updatedPropertyDetail = Object.entries(
               selectedRuntimeClone.runtimeConfig.properties
             ).map(([k, v]) => `${k}:${v}`);
@@ -1084,6 +1134,12 @@ function CreateRunTime({
           if (item === 'spark.dataproc.executor.disk.tier:premium') {
             return 'spark.dataproc.executor.disk.tier:standard';
           }
+          if (item === 'spark.dataproc.executor.disk.size:750g') {
+            return 'spark.dataproc.executor.disk.size:400g';
+          }
+          if (item === 'spark.executor.cores:12') {
+            return 'spark.executor.cores:4';
+          }
           return item;
         }
       );
@@ -1102,6 +1158,9 @@ function CreateRunTime({
       if (
         !resourceAllocationModify.includes(
           'spark.dataproc.executor.disk.size:400g'
+        ) &&
+        !resourceAllocationModify.includes(
+          'spark.dataproc.executor.disk.size:750g'
         )
       ) {
         // To add the spark.dataproc.executor.disk.size:400g at index 9 when GPU is unchecked
