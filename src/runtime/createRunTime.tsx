@@ -241,13 +241,14 @@ function CreateRunTime({
   }, [networkSelected]);
 
   const modifyResourceAllocation = () => {
-   // const regexPattern = /^a100-(40|80)$/i;
+    // const regexPattern = /^a100-(40|80)$/i;
     let resourceAllocationModify = [...resourceAllocationDetailUpdated];
-    let gpuDetailModify = JSON.parse(JSON.stringify(gpuDetailUpdated)); //Deep copy
+    //let gpuDetailModify = JSON.parse(JSON.stringify(gpuDetailUpdated)); //Deep copy
     gpuDetailUpdated.forEach(item => {
       const [key, value] = item.split(':');
       if (key === 'spark.dataproc.executor.resource.accelerator.type') {
-        if(value){}
+        if (value) {
+        }
         if (value === 'l4') {
           resourceAllocationModify = resourceAllocationModify
             .map((item: string) => {
@@ -267,20 +268,21 @@ function CreateRunTime({
                 return 'spark.dataproc.executor.disk.size:750g';
               }
               if (item === 'spark.executor.cores:4') {
-                const newCores = 12; // to change core value to 12 for a100-40 and a100-80
-                const gpuValue = (1 / newCores).toFixed(2); // Calculate the GPU value based on the new core count
-                gpuDetailModify = gpuDetailModify.map((gpuItem: any) => {
-                  const [gpuKey] = gpuItem.split(':');
-                  if (gpuKey === 'spark.task.resource.gpu.amount') {
-                    return `spark.task.resource.gpu.amount:${gpuValue}`;
-                  }
-                  return gpuItem;
-                });
+                return 'spark.executor.cores:12';
+                // const newCores = 12; // to change core value to 12 for a100-40 and a100-80
+                // const gpuValue = (1 / newCores).toFixed(2); // Calculate the GPU value based on the new core count
+                // gpuDetailModify = gpuDetailModify.map((gpuItem: any) => {
+                //   const [gpuKey] = gpuItem.split(':');
+                //   if (gpuKey === 'spark.task.resource.gpu.amount') {
+                //     return `spark.task.resource.gpu.amount:${gpuValue}`;
+                //   }
+                //   return gpuItem;
+                // });
 
-                return `spark.executor.cores:${newCores}`;
+                // return `spark.executor.cores:${newCores}`;
               }
-              setGpuDetail(gpuDetailModify);
-              setGpuDetailUpdated(gpuDetailModify);
+              // setGpuDetail(gpuDetailModify);
+              //setGpuDetailUpdated(gpuDetailModify);
               return item;
             }
           );
@@ -291,19 +293,19 @@ function CreateRunTime({
                 return 'spark.dataproc.executor.disk.size:400g';
               }
               if (item === 'spark.executor.cores:12') {
-                const newCores = 4; // reverting the value for spark.executor.cores for non a100 fields
-                const gpuValue = (1 / newCores).toFixed(2); // Calculate the GPU value based on the new core count
-                gpuDetailModify = gpuDetailModify.map((gpuItem: any) => {
-                  const [gpuKey] = gpuItem.split(':');
-                  if (gpuKey === 'spark.task.resource.gpu.amount') {
-                    return `spark.task.resource.gpu.amount:${gpuValue}`;
-                  }
-                  console.log("gpuitem",gpuItem)
-                  return gpuItem;
-                });
-                setGpuDetail(gpuDetailModify);
-                setGpuDetailUpdated(gpuDetailModify);
-                return `spark.executor.cores:${newCores}`;
+                return 'spark.executor.cores:4';
+                // const newCores = 4; // reverting the value for spark.executor.cores for non a100 fields
+                // const gpuValue = (1 / newCores).toFixed(2); // Calculate the GPU value based on the new core count
+                // gpuDetailModify = gpuDetailModify.map((gpuItem: any) => {
+                //   const [gpuKey] = gpuItem.split(':');
+                //   if (gpuKey === 'spark.task.resource.gpu.amount') {
+                //     return `spark.task.resource.gpu.amount:${gpuValue}`;
+                //   }
+                //   return gpuItem;
+                // });
+                // setGpuDetail(gpuDetailModify);
+                // setGpuDetailUpdated(gpuDetailModify);
+                // return `spark.executor.cores:${newCores}`;
               }
               return item;
             }
