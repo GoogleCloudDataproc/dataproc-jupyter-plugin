@@ -122,7 +122,7 @@ class CredentialsHandler(APIHandler):
 
 class LoginHandler(APIHandler):
     @tornado.web.authenticated
-    async def get(self):
+    async def post(self):
         cmd = "gcloud auth login"
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True

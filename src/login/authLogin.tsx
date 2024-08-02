@@ -54,7 +54,9 @@ const AuthLoginComponent = ({
 
   const login = async () => {
     setIsloginDisabled(true);
-    const data = await requestAPI('login');
+    const data = await requestAPI('login', {
+      method: 'POST'
+    });;
     if (typeof data === 'object' && data !== null) {
       const loginStatus = (data as { login: string }).login;
       if (loginStatus === STATUS_SUCCESS) {
