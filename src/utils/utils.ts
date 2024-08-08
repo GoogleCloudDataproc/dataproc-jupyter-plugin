@@ -24,6 +24,7 @@ import { requestAPI } from '../handler/handler';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
+  ClusterStatusState,
   DCU_HOURS,
   GB_MONTHS,
   HTTP_METHOD,
@@ -31,7 +32,7 @@ import {
   SPARK,
   SPARKR,
   SPARKSQL,
-  STATUS_CREATING,
+  // STATUS_CREATING,
   STATUS_DONE,
   STATUS_ERROR,
   STATUS_FAIL,
@@ -262,11 +263,11 @@ export const statusMessage = (data: { status: { state: string } }) => {
   }
 };
 
-export const statusValue = (data: { status: { state: string } }) => {
-  if (data.status.state === STATUS_CREATING) {
+export const statusValue = (data: { status: { state: number } }) => {
+  if (data.status.state === 1) {
     return STATUS_PROVISIONING;
   } else {
-    return data.status.state;
+    return ClusterStatusState[data.status.state.toString()];
   }
 };
 

@@ -21,6 +21,7 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   ClusterStatus,
+  ClusterStatusState,
   HTTP_METHOD,
   POLLING_TIME_LIMIT,
   gcpServiceUrls
@@ -86,29 +87,27 @@ export class ClusterService {
       const formattedResponse: any = await requestAPI(serviceURL);
       let transformClusterListData = [];
       if (formattedResponse) {
-        transformClusterListData = formattedResponse.map(
-          (data: any) => {
-            const statusVal = statusValue(data);
-            // Extracting zone from zoneUri
-            // Example: "projects/{project}/zones/{zone}"
+        transformClusterListData = formattedResponse.map((data: any) => {
+          const statusVal = statusValue(data);
+          // Extracting zone from zoneUri
+          // Example: "projects/{project}/zones/{zone}"
 
-            const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
+          const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
 
-            return {
-              clusterUuid: data.clusterUuid,
-              status: statusVal,
-              clusterName: data.clusterName,
-              clusterImage: data.config.softwareConfig.imageVersion,
-              region: data.labels['goog-dataproc-location'],
-              zone: zoneUri[zoneUri.length - 1],
-              totalWorkersNode: data.config.workerConfig
-                ? data.config.workerConfig.numInstances
-                : 0,
-              schedulesDeletion: data.config.lifecycleConfig ? 'On' : 'Off',
-              actions: renderActions(data)
-            };
-          }
-        );
+          return {
+            clusterUuid: data.clusterUuid,
+            status: statusVal,
+            clusterName: data.clusterName,
+            clusterImage: data.config.softwareConfig.imageVersion,
+            region: data.labels['goog-dataproc-location'],
+            zone: zoneUri[zoneUri.length - 1],
+            totalWorkersNode: data.config.workerConfig
+              ? data.config.workerConfig.numInstances
+              : 0,
+            schedulesDeletion: data.config.lifecycleConfig ? 'On' : 'Off',
+            actions: renderActions(data)
+          };
+        });
       }
       const existingClusterData = previousClustersList ?? [];
       //setStateAction never type issue
@@ -157,7 +156,9 @@ export class ClusterService {
       try {
         const serviceURL = `clusterDetail?clusterSelected=${clusterSelected}`;
 
-        const responseResult: any = await requestAPI(serviceURL);
+        let responseResult: any = await requestAPI(serviceURL);
+        responseResult.status.state =
+          ClusterStatusState[responseResult.status.state.toString()];
         if (responseResult) {
           if (responseResult.error && responseResult.error.code === 404) {
             setErrorView(true);
@@ -191,7 +192,9 @@ export class ClusterService {
     try {
       const serviceURL = `clusterDetail?clusterSelected=${selectedCluster}`;
 
-      const formattedResponse: any = await requestAPI(serviceURL);
+      let formattedResponse: any = await requestAPI(serviceURL);
+      formattedResponse.status.state =
+        ClusterStatusState[formattedResponse.status.state.toString()];
 
       if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
         ClusterService.startClusterApi(selectedCluster);
@@ -228,7 +231,7 @@ export class ClusterService {
       });
       const formattedResponse = await response.json();
       console.log(formattedResponse);
-      
+
       listClustersAPI();
       timer.current = setInterval(() => {
         statusApi(selectedCluster);

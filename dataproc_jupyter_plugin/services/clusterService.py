@@ -51,6 +51,8 @@ class ClusterService:
             
                 # Handle the response
                 for response in page_result:
+                    # response.status.state = 'STOPPED'
+                    # print("aaaaaaa", response.status.state)
                     clusters_list.append(json.loads(proto.Message.to_json(response)))
 
                 return clusters_list
@@ -60,34 +62,6 @@ class ClusterService:
         except Exception as e:
             log.exception(f"Error fetching cluster list")
             return {"error": str(e)}
-
-    # def list_clusters(self, credentials, page_size, page_token, log):
-    #     try:
-    #         if (
-    #             ("access_token" in credentials)
-    #             and ("project_id" in credentials)
-    #             and ("region_id" in credentials)
-    #         ):
-    #             access_token = credentials["access_token"]
-    #             project_id = credentials["project_id"]
-    #             region_id = credentials["region_id"]
-    #             api_endpoint = f"{dataproc_url}/v1/projects/{project_id}/regions/{region_id}/clusters?pageSize={page_size}&pageToken={page_token}"
-    #             headers = {
-    #                 "Content-Type": CONTENT_TYPE,
-    #                 "Authorization": f"Bearer {access_token}",
-    #             }
-    #             response = requests.get(api_endpoint, headers=headers)
-    #             if response.status_code == 200:
-    #                 resp = response.json()
-
-    #             return resp
-    #         else:
-    #             log.exception(f"Missing required credentials")
-    #             raise ValueError("Missing required credentials")
-    #     except Exception as e:
-    #         log.exception(f"Error fetching cluster list")
-    #         return {"error": str(e)}
- 
             
     def get_cluster_detail(self, credentials, cluster_selected, log):
         try:
@@ -112,8 +86,7 @@ class ClusterService:
                 response = client.get_cluster(request=request)
 
                 # Handle the response
-                print(response)
-                return response
+                return json.loads(proto.Message.to_json(response))
             else:
                 log.exception(f"Missing required credentials")
                 raise ValueError("Missing required credentials")
