@@ -18,7 +18,7 @@ import aiohttp
 from jupyter_server.base.handlers import APIHandler
 import tornado
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services import clusterService
+from dataproc_jupyter_plugin.services import cluster
 
 
 class ClusterListPageController(APIHandler):
@@ -28,7 +28,7 @@ class ClusterListPageController(APIHandler):
             page_token = self.get_argument("pageToken")
             page_size = self.get_argument("pageSize")
             async with aiohttp.ClientSession() as client_session:
-                client = clusterService.Client(
+                client = cluster.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
                 cluster_list = await client.list_clusters(page_size, page_token)
@@ -44,7 +44,7 @@ class ClusterDetailController(APIHandler):
         try:
             cluster_selected = self.get_argument("clusterSelected")
             async with aiohttp.ClientSession() as client_session:
-                client = clusterService.Client(
+                client = cluster.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
                 get_cluster = await client.get_cluster_detail(cluster_selected)
@@ -60,7 +60,7 @@ class StopClusterController(APIHandler):
         try:
             cluster_selected = self.get_argument("clusterSelected")
             async with aiohttp.ClientSession() as client_session:
-                client = clusterService.Client(
+                client = cluster.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
                 stop_cluster = await client.post_stop_cluster(cluster_selected)
@@ -76,7 +76,7 @@ class StartClusterController(APIHandler):
         try:
             cluster_selected = self.get_argument("clusterSelected")
             async with aiohttp.ClientSession() as client_session:
-                client = clusterService.Client(
+                client = cluster.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
                 start_cluster = await client.post_start_cluster(cluster_selected)
