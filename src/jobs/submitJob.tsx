@@ -495,26 +495,50 @@ function SubmitJob({
     jarFileSelected: string[] | string,
     argumentSelected: string[] | string
   ) => {
-    return {
-      sparkJob: {
-        mainJarFileUri: mainClassSelected,
-        ...(propertyObject && {
-          properties: propertyObject
-        }),
-        ...(archieveFileSelected !== '' && {
-          archiveUris: archieveFileSelected
-        }),
-        ...(fileSelected !== '' && {
-          fileUris: [fileSelected]
-        }),
-        ...(jarFileSelected !== '' && {
-          jarFileUris: jarFileSelected
-        }),
-        ...(argumentSelected !== '' && {
-          args: argumentSelected
-        })
-      }
-    };
+    if(mainClassSelected.includes('.jar')){
+      return {
+        sparkJob: {
+          mainJarFileUri: mainClassSelected,
+          ...(propertyObject && {
+            properties: propertyObject
+          }),
+          ...(archieveFileSelected !== '' && {
+            archiveUris: archieveFileSelected
+          }),
+          ...(fileSelected !== '' && {
+            fileUris: [fileSelected]
+          }),
+          ...(jarFileSelected !== '' && {
+            jarFileUris: jarFileSelected
+          }),
+          ...(argumentSelected !== '' && {
+            args: argumentSelected
+          })
+        }
+      };
+    }
+    else{
+      return {
+        sparkJob: {
+          mainClass: mainClassSelected,
+          ...(propertyObject && {
+            properties: propertyObject
+          }),
+          ...(archieveFileSelected !== '' && {
+            archiveUris: archieveFileSelected
+          }),
+          ...(fileSelected !== '' && {
+            fileUris: [fileSelected]
+          }),
+          ...(jarFileSelected !== '' && {
+            jarFileUris: jarFileSelected
+          }),
+          ...(argumentSelected !== '' && {
+            args: argumentSelected
+          })
+        }
+      };
+    }
   };
 
   const createSparkRPayload = (
