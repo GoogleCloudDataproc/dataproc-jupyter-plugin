@@ -43,10 +43,25 @@ class ClusterDetailController(APIHandler):
             cluster_selected = self.get_argument("clusterSelected")
             cluster = ClusterService()
             credentials = handlers.get_cached_credentials(self.log)
-            cluster_list = cluster.get_cluster_detail(
+            get_cluster = cluster.get_cluster_detail(
                 credentials, cluster_selected, self.log
             )
-            self.finish(json.dumps(cluster_list))
+            self.finish(json.dumps(get_cluster))
         except Exception as e:
-            self.log.exception(f"Error fetching cluster list")
+            self.log.exception(f"Error fetching get cluster")
+            self.finish({"error": str(e)})
+
+class StopClusterController(APIHandler):
+    @tornado.web.authenticated
+    def post(self):
+        try:
+            cluster_selected = self.get_argument("clusterSelected")
+            cluster = ClusterService()
+            credentials = handlers.get_cached_credentials(self.log)
+            stop_cluster = cluster.post_stop_cluster(
+                credentials, cluster_selected, self.log
+            )
+            self.finish(json.dumps(stop_cluster))
+        except Exception as e:
+            self.log.exception(f"Error fetching stop cluster")
             self.finish({"error": str(e)})

@@ -36,7 +36,6 @@ class ClusterService:
                 client = dataproc.ClusterControllerClient(client_options={"api_endpoint": f"us-central1-dataproc.googleapis.com:443"},credentials = access_credentials)
 
                 # Initialize request argument(s)
-                print("call params",int(page_size), page_token)
                 request = dataproc.ListClustersRequest(
                     project_id=credentials["project_id"],
                     page_size=int(page_size),
@@ -51,8 +50,6 @@ class ClusterService:
             
                 # Handle the response
                 for response in page_result:
-                    # response.status.state = 'STOPPED'
-                    # print("aaaaaaa", response.status.state)
                     clusters_list.append(json.loads(proto.Message.to_json(response)))
 
                 return clusters_list
@@ -92,4 +89,36 @@ class ClusterService:
                 raise ValueError("Missing required credentials")
         except Exception as e:
             log.exception(f"Error fetching cluster detail")
+            return {"error": str(e)}
+
+    def post_stop_cluster(self, credentials, cluster_selected, log):
+        try:
+            if (
+                ("access_token" in credentials)
+                and ("project_id" in credentials)
+                and ("region_id" in credentials)
+            ):   
+                access_credentials = google.oauth2.credentials.Credentials(credentials["access_token"])
+
+                # Create a client
+                client = dataproc.ClusterControllerClient(client_options={"api_endpoint": f"us-central1-dataproc.googleapis.com:443"},credentials = access_credentials)
+
+                # Initialize request argument(s)
+                request = dataproc.StopClusterRequest(
+                    project_id=credentials["project_id"],
+                    region=credentials["region_id"],
+                    cluster_name=cluster_selected
+                )
+
+                operation = client.stop_cluster(request=request)
+
+                response = operation.result()
+
+                # Handle the response
+                return json.loads(proto.Message.to_json(response))
+            else:
+                log.exception(f"Missing required credentials")
+                raise ValueError("Missing required credentials")
+        except Exception as e:
+            log.exception(f"Error fetching stop cluster")
             return {"error": str(e)}

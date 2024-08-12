@@ -22,7 +22,7 @@ import {
   API_HEADER_CONTENT_TYPE,
   ClusterStatus,
   ClusterStatusState,
-  HTTP_METHOD,
+  // HTTP_METHOD,
   POLLING_TIME_LIMIT,
   gcpServiceUrls
 } from '../utils/const';
@@ -31,7 +31,7 @@ import {
   toastifyCustomStyle,
   loggedFetch,
   getProjectId,
-  authenticatedFetch,
+  // authenticatedFetch,
   statusValue
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
@@ -219,25 +219,41 @@ export class ClusterService {
     setRestartEnabled: (value: boolean) => void,
     listClustersAPI: () => void,
     timer: any,
-    statusApi: (value: string) => void
+    statusApi: (value: string) => void,
+    clustersList: ICluster[],
+    setClustersList: (value: ICluster[]) => void
   ) => {
     setRestartEnabled(true);
 
+    let tempClustersList = [...clustersList];
+    console.log(tempClustersList)
+    tempClustersList.forEach(clusterData => {
+      if (clusterData.clusterName === selectedCluster) {
+        clusterData.status = 'STOPPING';
+      }
+    });
+    setClustersList(tempClustersList);
+
     try {
-      const response = await authenticatedFetch({
-        uri: `clusters/${selectedCluster}:stop`,
-        method: HTTP_METHOD.POST,
-        regionIdentifier: 'regions'
+      // const response = await authenticatedFetch({
+      //   uri: `clusters/${selectedCluster}:stop`,
+      //   method: HTTP_METHOD.POST,
+      //   regionIdentifier: 'regions'
+      // });
+      const serviceURL = `stopCluster?clusterSelected=${selectedCluster}`;
+
+      let formattedResponse: any = await requestAPI(serviceURL, {
+        method: 'POST'
       });
-      const formattedResponse = await response.json();
+      // const formattedResponse = await response.json();
       console.log(formattedResponse);
 
       listClustersAPI();
       timer.current = setInterval(() => {
         statusApi(selectedCluster);
       }, POLLING_TIME_LIMIT);
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      if (formattedResponse?.error) {
+        toast.error(formattedResponse?.error, toastifyCustomStyle);
       }
       // This is an artifact of the refactoring
       listClustersAPI();
