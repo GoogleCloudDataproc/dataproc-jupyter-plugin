@@ -199,10 +199,9 @@ export class BatchService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error('Error deleting batches', err);
           DataprocLoggingService.log('Error deleting batches', LOG_LEVEL.ERROR);
           toast.error(
-            `Failed to delete the batch ${selectedBatch}`,
+            `Failed to delete the batch ${selectedBatch} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -266,9 +265,8 @@ export class BatchService {
             'Error in getting Batch details',
             LOG_LEVEL.ERROR
           );
-          console.error('Error in getting Batch details', err);
           toast.error(
-            `Failed to fetch batch details ${batchSelected}`,
+            `Failed to fetch batch details ${batchSelected} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -292,7 +290,7 @@ export class BatchService {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=500&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -337,14 +335,19 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                if (!toast.isActive('batchListingError')) {
+                  toast.error(responseResult?.error?.message, {
+                    ...toastifyCustomStyle,
+                    toastId: 'batchListingError'
+                  });
+                }
               }
               const existingBatchData = previousBatchesList ?? [];
 
-              let allBatchesData: IBatchesList[] = [...(existingBatchData as []), ...transformBatchListData];
+              let allBatchesData: IBatchesList[] = [
+                ...(existingBatchData as []),
+                ...transformBatchListData
+              ];
 
               if (responseResult.nextPageToken) {
                 this.listBatchAPIService(
@@ -370,9 +373,13 @@ export class BatchService {
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error listing batches', err);
           DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
-          toast.error('Failed to fetch batches', toastifyCustomStyle);
+          if (!toast.isActive('batchListingError')) {
+            toast.error(`Failed to fetch batches : ${err}`, {
+              ...toastifyCustomStyle,
+              toastId: 'batchListingError'
+            });
+          }
         });
     }
   };
@@ -423,8 +430,10 @@ export class BatchService {
         toast.error(responseResult?.error?.message, toastifyCustomStyle);
       }
     } catch (err) {
-      console.error('Error displaying sharedVPC subNetwork', err);
-      toast.error('Failed to fetch  sharedVPC subNetwork', toastifyCustomStyle);
+      toast.error(
+        `Failed to fetch  sharedVPC subNetwork : ${err}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -459,8 +468,10 @@ export class BatchService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error('Error displaying user info', err);
-          toast.error('Failed to fetch user information', toastifyCustomStyle);
+          toast.error(
+            `Failed to fetch user information : ${err}`,
+            toastifyCustomStyle
+          );
           DataprocLoggingService.log(
             'Error displaying user info',
             LOG_LEVEL.ERROR
@@ -500,7 +511,6 @@ export class BatchService {
               transformedNetworkSelected = responseResult.network.split('/')[9];
 
               setNetworkSelected(transformedNetworkSelected);
-              setIsloadingNetwork(false);
               if (responseResult?.error?.code) {
                 toast.error(
                   responseResult?.error?.message,
@@ -513,20 +523,22 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          setIsloadingNetwork(false);
           DataprocLoggingService.log(
             'Error selecting Network',
             LOG_LEVEL.ERROR
           );
-          console.error('Error selecting Network', err);
+          toast.error(`Error selecting Network : ${err}`, toastifyCustomStyle);
         });
     }
   };
 
   static listNetworksAPIService = async (
     setNetworklist: (value: string[]) => void,
-    setNetworkSelected: (value: string) => void
+    setNetworkSelected: (value: string) => void,
+    batchInfoResponse: any,
+    setIsloadingNetwork: (value: boolean) => void
   ) => {
+    setIsloadingNetwork(true);
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
@@ -562,7 +574,9 @@ export class BatchService {
                   }
                 );
                 setNetworklist(transformedNetworkList);
-                setNetworkSelected(transformedNetworkList[0]);
+                if (batchInfoResponse === undefined) {
+                  setNetworkSelected(transformedNetworkList[0]);
+                }
                 if (responseResult?.error?.code) {
                   toast.error(
                     responseResult?.error?.message,
@@ -577,8 +591,8 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
           DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+          toast.error(`Error listing Networks : ${err}`), toastifyCustomStyle;
         });
     }
   };
@@ -627,8 +641,8 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
           DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+          toast.error(`Error listing Networks : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -681,8 +695,8 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing Networks', err);
           DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+          toast.error(`Error listing Networks : ${err}`), toastifyCustomStyle;
         });
     }
   };
@@ -690,8 +704,11 @@ export class BatchService {
   static listSubNetworksAPIService = async (
     subnetwork: string,
     setSubNetworklist: (value: string[]) => void,
-    setSubNetworkSelected: (value: string) => void
+    setSubNetworkSelected: (value: string) => void,
+    batchInfoResponse: any,
+    setIsloadingNetwork: (value: boolean) => void
   ) => {
+    setIsloadingNetwork(true);
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
@@ -728,7 +745,10 @@ export class BatchService {
                   (data: { name: string }) => data.name
                 );
                 setSubNetworklist(transformedServiceList);
-                setSubNetworkSelected(transformedServiceList[0]);
+                if (batchInfoResponse === undefined) {
+                  setSubNetworkSelected(transformedServiceList[0]);
+                }
+                setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
                   toast.error(
                     responseResult?.error?.message,
@@ -742,10 +762,14 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing subNetworks', err);
           DataprocLoggingService.log(
             'Error listing subNetworks',
             LOG_LEVEL.ERROR
+          );
+          setIsloadingNetwork(false);
+          toast.error(
+            `Error listing subNetworks : ${err}`,
+            toastifyCustomStyle
           );
         });
     }
@@ -822,9 +846,9 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing services', err);
           setIsLoadingService(false);
           DataprocLoggingService.log('Error listing services', LOG_LEVEL.ERROR);
+          toast.error(`Error listing services : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -896,8 +920,8 @@ export class BatchService {
             });
         })
         .catch((err: Error) => {
-          console.error('Error listing regions', err);
           DataprocLoggingService.log('Error listing regions', LOG_LEVEL.ERROR);
+          toast.error(`Error listing regions : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -945,8 +969,7 @@ export class BatchService {
         }
       })
       .catch((err: Error) => {
-        console.error('Error submitting Batch', err);
-        toast.error('Failed to submit the Batch', toastifyCustomStyle);
+        toast.error(`Failed to submit the Batch : ${err}`, toastifyCustomStyle);
         DataprocLoggingService.log('Error submitting Batch', LOG_LEVEL.ERROR);
       });
   };
@@ -963,16 +986,24 @@ export class BatchService {
       });
       const formattedResponse = await response.json();
       let transformClusterListData: string[] = [];
-      transformClusterListData = formattedResponse.clusters
-        .filter((data: { clusterName: string; status: { state: string } }) => {
-          return data.status.state === STATUS_RUNNING;
-        })
-        .map((data: { clusterName: string }) => data.clusterName);
-      setClustersList(transformClusterListData);
+      if (formattedResponse.clusters) {
+        transformClusterListData = formattedResponse.clusters
+          .filter(
+            (data: { clusterName: string; status: { state: string } }) => {
+              return data.status.state === STATUS_RUNNING;
+            }
+          )
+          .map((data: { clusterName: string }) => data.clusterName);
+        setClustersList(transformClusterListData);
+      } else {
+        setClustersList([]);
+      }
     } catch (error) {
-      console.error('Error listing clusters', error);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      toast.error('Failed to list the clusters', toastifyCustomStyle);
+      toast.error(
+        `Failed to list the clusters : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
 }

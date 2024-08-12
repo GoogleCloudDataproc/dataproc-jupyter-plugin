@@ -21,7 +21,7 @@ import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
 import { JupyterFrontEnd } from '@jupyterlab/application';
-import { Autocomplete, TextField } from '@mui/material';
+import { Autocomplete, CircularProgress, TextField } from '@mui/material';
 import deleteIcon from '../../style/icons/scheduler_delete.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import playIcon from '../../style/icons/scheduler_play.svg';
@@ -29,7 +29,6 @@ import pauseIcon from '../../style/icons/scheduler_pause.svg';
 import EditIconDisable from '../../style/icons/scheduler_edit_dag.svg';
 import EditNotebookIcon from '../../style/icons/scheduler_edit_calendar.svg';
 import { SchedulerService } from './schedulerServices';
-import { ClipLoader } from 'react-spinners';
 import DeletePopup from '../utils/deletePopup';
 import PollingTimer from '../utils/pollingTimer';
 import PollingImportErrorTimer from '../utils/pollingImportErrorTimer';
@@ -100,7 +99,8 @@ function listNotebookScheduler({
   setTimeZoneSelected,
   setEditMode,
   bucketName,
-  setBucketName
+  setBucketName,
+  setIsLoadingKernelDetail
 }: {
   app: JupyterFrontEnd;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
@@ -131,6 +131,7 @@ function listNotebookScheduler({
   setStopCluster?: (value: boolean) => void;
   setTimeZoneSelected?: (value: string) => void;
   setEditMode?: (value: boolean) => void;
+  setIsLoadingKernelDetail?: (value: boolean) => void;
   bucketName: string;
   setBucketName: (value: string) => void;
 }) {
@@ -266,7 +267,8 @@ function listNotebookScheduler({
         setEmailList,
         setStopCluster,
         setTimeZoneSelected,
-        setEditMode
+        setEditMode,
+        setIsLoadingKernelDetail
       );
     }
   };
@@ -289,7 +291,7 @@ function listNotebookScheduler({
   };
 
   const handleDeleteImportError = async (dagId: string) => {
-    const fromPage ="importErrorPage"
+    const fromPage = "importErrorPage";
     await SchedulerService.handleDeleteSchedulerAPIService(
       composerSelectedList,
       dagId,
@@ -393,9 +395,7 @@ function listNotebookScheduler({
         </div>
         {data.jobid === editDagLoading ? (
           <div className="icon-buttons-style">
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
               size={18}
               aria-label="Loading Spinner"
               data-testid="loader"
@@ -417,9 +417,7 @@ function listNotebookScheduler({
         )}
         {data.jobid === editNotebookLoading ? (
           <div className="icon-buttons-style">
-            <ClipLoader
-              color="#3367d6"
-              loading={true}
+            <CircularProgress
               size={18}
               aria-label="Loading Spinner"
               data-testid="loader"
@@ -574,7 +572,7 @@ function listNotebookScheduler({
                 importErrorEntries={importErrorEntries}
                 importErrorPopupOpen={importErrorPopupOpen}
                 onClose={handleImportErrorClosed}
-                onDelete={(dagId :string) =>handleDeleteImportError(dagId)}
+                onDelete={(dagId: string) => handleDeleteImportError(dagId)}
               />
             )}
           </div>
@@ -619,9 +617,8 @@ function listNotebookScheduler({
         <div>
           {isLoading && (
             <div className="spin-loader-main">
-              <ClipLoader
-                color="#3367d6"
-                loading={true}
+              <CircularProgress
+                className="spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"

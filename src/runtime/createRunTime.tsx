@@ -30,7 +30,13 @@ import {
   LOGIN_ERROR_MESSAGE,
   LOGIN_STATE,
   SHARED_VPC,
-  SERVICE_ACCOUNT
+  SERVICE_ACCOUNT,
+  SPARK_GPU_INFO_URL,
+  SPARK_RESOURCE_ALLOCATION_INFO_URL,
+  SPARK_AUTOSCALING_INFO_URL,
+  RESOURCE_ALLOCATION_DEFAULT,
+  AUTO_SCALING_DEFAULT,
+  GPU_DEFAULT
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -40,7 +46,6 @@ import {
   loggedFetch,
   checkConfig
 } from '../utils/utils';
-import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { toast } from 'react-toastify';
@@ -54,19 +59,42 @@ import { DropdownProps } from 'semantic-ui-react';
 
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
-import { Autocomplete, Radio, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  Checkbox,
+  CircularProgress,
+  FormControlLabel,
+  FormGroup,
+  Radio,
+  TextField
+} from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { MuiChipsInput } from 'mui-chips-input';
 import { RunTimeSerive } from './runtimeService';
+import expandLessIcon from '../../style/icons/expand_less.svg';
+import expandMoreIcon from '../../style/icons/expand_more.svg';
+import helpIcon from '../../style/icons/help_icon.svg';
+import SparkProperties from './sparkProperties';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
   svgstr: LeftArrowIcon
 });
-
 const iconError = new LabIcon({
   name: 'launcher:error-icon',
   svgstr: errorIcon
+});
+const iconExpandLess = new LabIcon({
+  name: 'launcher:expand-less-icon',
+  svgstr: expandLessIcon
+});
+const iconExpandMore = new LabIcon({
+  name: 'launcher:expand-more-icon',
+  svgstr: expandMoreIcon
+});
+const iconHelp = new LabIcon({
+  name: 'launcher:help-spark-icon',
+  svgstr: helpIcon
 });
 
 let networkUris: string[] = [];
@@ -90,15 +118,36 @@ function CreateRunTime({
   const [displayNameSelected, setDisplayNameSelected] = useState('');
   const [desciptionSelected, setDescriptionSelected] = useState('');
   const [runTimeSelected, setRunTimeSelected] = useState('');
-  const [versionSelected, setVersionSelected] = useState('2.1');
+  const [versionSelected, setVersionSelected] = useState('2.2');
   const [pythonRepositorySelected, setPythonRepositorySelected] = useState('');
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
   ]);
+  const [resourceAllocationDetail, setResourceAllocationDetail] = useState(
+    RESOURCE_ALLOCATION_DEFAULT
+  );
+  const [resourceAllocationDetailUpdated, setResourceAllocationDetailUpdated] =
+    useState(RESOURCE_ALLOCATION_DEFAULT);
+  const [autoScalingDetail, setAutoScalingDetail] =
+    useState(AUTO_SCALING_DEFAULT);
+  const [autoScalingDetailUpdated, setAutoScalingDetailUpdated] =
+    useState(AUTO_SCALING_DEFAULT);
+  const [gpuDetail, setGpuDetail] = useState(['']);
+  const [gpuDetailUpdated, setGpuDetailUpdated] = useState(['']);
+  const [expandResourceAllocation, setExpandResourceAllocation] =
+    useState(false);
+  const [expandAutoScaling, setExpandAutoScaling] = useState(false);
+  const [expandGpu, setExpandGpu] = useState(false);
+  const [gpuChecked, setGpuChecked] = useState(false);
   const [propertyDetail, setPropertyDetail] = useState(['']);
   const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
+  const [sparkValueValidation, setSparkValueValidation] = useState({
+    resourceallocation: [],
+    autoscaling: [],
+    gpu: []
+  });
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
@@ -184,9 +233,54 @@ function CreateRunTime({
     region,
     servicesSelected
   ]);
+
   useEffect(() => {
-    listSubNetworksAPI(networkSelected);
+    if (networkSelected !== '') {
+      listSubNetworksAPI(networkSelected);
+    }
   }, [networkSelected]);
+
+  const modifyResourceAllocation = () => {
+    let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+    gpuDetailUpdated.forEach(item => {
+      const [key, value] = item.split(':');
+      if (key === 'spark.dataproc.executor.resource.accelerator.type') {
+        if (value === 'l4') {
+          resourceAllocationModify = resourceAllocationDetailUpdated
+            .map((item: string) => {
+              if (item === 'spark.dataproc.executor.disk.size:400g') {
+                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
+                return null;
+              }
+              return item;
+            })
+            .filter((item): item is string => item !== null); // To filter out null values.'
+          setResourceAllocationDetail(resourceAllocationModify);
+          setResourceAllocationDetailUpdated(resourceAllocationModify);
+        } else {
+          if (
+            !resourceAllocationDetailUpdated.includes(
+              'spark.dataproc.executor.disk.size:400g'
+            )
+          ) {
+            // To add the spark.dataproc.executor.disk.size:400g at index 9.
+            resourceAllocationDetailUpdated.splice(
+              8,
+              0,
+              'spark.dataproc.executor.disk.size:400g'
+            );
+            const updatedArray = [...resourceAllocationDetailUpdated];
+            setResourceAllocationDetail(updatedArray);
+            setResourceAllocationDetailUpdated(updatedArray);
+          }
+        }
+      }
+    });
+  };
+
+  useEffect(() => {
+    modifyResourceAllocation();
+  }, [gpuDetailUpdated]);
 
   const displayUserInfo = async () => {
     await RunTimeSerive.displayUserInfoService(setUserInfo);
@@ -217,7 +311,7 @@ function CreateRunTime({
       const descriptionDetail = description ? description : '';
       const versionDetail = runtimeConfig?.version
         ? runtimeConfig.version
-        : '2.1';
+        : '2.2';
       const containerImage = runtimeConfig?.containerImage
         ? runtimeConfig.containerImage
         : '';
@@ -266,14 +360,73 @@ function CreateRunTime({
             const updatedPropertyDetail = Object.entries(
               selectedRuntimeClone.runtimeConfig.properties
             ).map(([k, v]) => `${k}:${v}`);
-            setPropertyDetail(prevPropertyDetail => [
-              ...prevPropertyDetail,
-              ...updatedPropertyDetail
-            ]);
-            setPropertyDetailUpdated(prevPropertyDetailUpdated => [
-              ...prevPropertyDetailUpdated,
-              ...updatedPropertyDetail
-            ]);
+            let resourceAllocationDetailList: string[] = [];
+            let autoScalingDetailList: string[] = [];
+            let gpuDetailList: string[] = [];
+            let otherDetailList: string[] = [];
+            updatedPropertyDetail.forEach(property => {
+              if (
+                RESOURCE_ALLOCATION_DEFAULT.some(item => {
+                  const [itemKey] = item.split(':');
+                  return itemKey === property.split(':')[0];
+                })
+              ) {
+                resourceAllocationDetailList.push(property);
+              } else if (
+                AUTO_SCALING_DEFAULT.some(item => {
+                  const [itemKey] = item.split(':');
+                  return itemKey === property.split(':')[0];
+                })
+              ) {
+                autoScalingDetailList.push(property);
+              } else if (
+                GPU_DEFAULT.some(item => {
+                  const [itemKey] = item.split(':');
+                  return itemKey === property.split(':')[0];
+                })
+              ) {
+                gpuDetailList.push(property);
+              } else {
+                otherDetailList.push(property);
+              }
+            });
+
+            setResourceAllocationDetail(resourceAllocationDetailList);
+            setResourceAllocationDetailUpdated(resourceAllocationDetailList);
+            setAutoScalingDetail(autoScalingDetailList);
+            setAutoScalingDetailUpdated(autoScalingDetailList);
+            if (gpuDetailList.length > 0) {
+              setGpuChecked(true);
+              setExpandGpu(true);
+            }
+            if (gpuChecked || gpuDetailList.length > 0) {
+              setGpuDetail(gpuDetailList);
+              setGpuDetailUpdated(gpuDetailList);
+            } else {
+              setGpuDetail(['']);
+              setGpuDetailUpdated(['']);
+            }
+
+            setPropertyDetail(prevPropertyDetail => {
+              if (
+                prevPropertyDetail.length === 1 &&
+                prevPropertyDetail[0] === ''
+              ) {
+                return otherDetailList;
+              } else {
+                return [...prevPropertyDetail, ...otherDetailList];
+              }
+            });
+            setPropertyDetailUpdated(prevPropertyDetailUpdated => {
+              if (
+                prevPropertyDetailUpdated.length === 1 &&
+                prevPropertyDetailUpdated[0] === ''
+              ) {
+                return otherDetailList;
+              } else {
+                return [...prevPropertyDetailUpdated, ...otherDetailList];
+              }
+            });
           }
         }
       }
@@ -383,7 +536,9 @@ function CreateRunTime({
   const listNetworksAPI = async () => {
     await RunTimeSerive.listNetworksAPIService(
       setNetworklist,
-      setNetworkSelected
+      setNetworkSelected,
+      selectedRuntimeClone,
+      setIsloadingNetwork
     );
   };
 
@@ -391,7 +546,9 @@ function CreateRunTime({
     await RunTimeSerive.listSubNetworksAPIService(
       subnetwork,
       setSubNetworklist,
-      setSubNetworkSelected
+      setSubNetworkSelected,
+      selectedRuntimeClone,
+      setIsloadingNetwork
     );
   };
 
@@ -449,7 +606,9 @@ function CreateRunTime({
   };
 
   const handleServiceSelected = (data: string | null) => {
-    setServicesSelected(data!.toString());
+    if (data !== null) {
+      setServicesSelected(data!.toString());
+    }
   };
   const handleIdleSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -494,10 +653,12 @@ function CreateRunTime({
   };
 
   const handleNetworkChange = async (data: DropdownProps | null) => {
-    setNetworkSelected(data!.toString());
-    setSubNetworkSelected(defaultValue);
-    await listSubNetworksAPI(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setNetworkSelected(data!.toString());
+      setSubNetworkSelected(defaultValue);
+      await listSubNetworksAPI(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
 
   const handleNetworkSharedVpcRadioChange = () => {
@@ -510,11 +671,15 @@ function CreateRunTime({
     setSharedvpcSelected('');
   };
   const handleSubNetworkChange = (data: string | null) => {
-    setSubNetworkSelected(data!.toString());
+    if (data !== null) {
+      setSubNetworkSelected(data!.toString());
+    }
   };
   const handleSharedSubNetwork = async (data: string | null) => {
-    setSharedvpcSelected(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setSharedvpcSelected(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
   const handleCancelButton = async () => {
     setOpenCreateTemplate(false);
@@ -556,6 +721,9 @@ function CreateRunTime({
   };
   function isSaveDisabled() {
     return (
+      sparkValueValidation.resourceallocation.length !== 0 ||
+      sparkValueValidation.autoscaling.length !== 0 ||
+      sparkValueValidation.gpu.length !== 0 ||
       displayNameSelected === '' ||
       runTimeSelected === '' ||
       desciptionSelected === '' ||
@@ -709,7 +877,10 @@ function CreateRunTime({
             'Error Creating template',
             LOG_LEVEL.ERROR
           );
-          toast.error('Failed to create the template', toastifyCustomStyle);
+          toast.error(
+            `Failed to create the template : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -736,6 +907,24 @@ function CreateRunTime({
         labelObject[key] = value;
       });
       const propertyObject: { [key: string]: string } = {};
+      resourceAllocationDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        propertyObject[key] = value;
+      });
+      autoScalingDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        propertyObject[key] = value;
+      });
+      gpuDetailUpdated.forEach((label: string) => {
+        const labelSplit = label.split(':');
+        const key = labelSplit[0];
+        const value = labelSplit[1];
+        propertyObject[key] = value;
+      });
       propertyDetailUpdated.forEach((label: string) => {
         const labelSplit = label.split(':');
         const key = labelSplit[0];
@@ -838,18 +1027,109 @@ function CreateRunTime({
     }
   };
 
+  const handleResourceAllocationExpand = () => {
+    let resourceAllocationMode = !expandResourceAllocation;
+    setExpandResourceAllocation(resourceAllocationMode);
+  };
+
+  const handleAutoScalingExpand = () => {
+    let autoScalingMode = !expandAutoScaling;
+    setExpandAutoScaling(autoScalingMode);
+  };
+
+  const handleGpuExpand = () => {
+    let gpuMode = !expandGpu;
+    setExpandGpu(gpuMode);
+  };
+
+  const handleGpuCheckbox = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setGpuChecked(event.target.checked);
+    let gpuDetailModify = [...GPU_DEFAULT];
+    if (event.target.checked) {
+      let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+      resourceAllocationModify = resourceAllocationModify
+        .map((item: string) => {
+          if (item === 'spark.dataproc.executor.disk.tier:standard') {
+            return 'spark.dataproc.executor.disk.tier:premium';
+          } else if (item === 'spark.executor.memoryOverhead:1220m') {
+            // To remove the property if GPU checkbox is checked.
+            return null;
+          }
+          return item;
+        })
+        .filter((item): item is string => item !== null); // To filter out null values.
+      setResourceAllocationDetail(resourceAllocationModify);
+      setResourceAllocationDetailUpdated(resourceAllocationModify);
+      setExpandGpu(true);
+      resourceAllocationModify.forEach(item => {
+        const [key, value] = item.split(':');
+        if (key === 'spark.executor.cores') {
+          const cores = Number(value);
+          const gpuValue = (1 / cores).toFixed(2);
+          gpuDetailModify = gpuDetailModify.map(gpuItem => {
+            const [gpuKey] = gpuItem.split(':');
+            if (gpuKey === 'spark.task.resource.gpu.amount') {
+              return `spark.task.resource.gpu.amount:${gpuValue}`;
+            }
+            return gpuItem;
+          });
+        }
+      });
+      setGpuDetail(gpuDetailModify);
+      setGpuDetailUpdated(gpuDetailModify);
+    } else {
+      let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+      resourceAllocationModify = resourceAllocationModify.map(
+        (item: string) => {
+          if (item === 'spark.dataproc.executor.disk.tier:premium') {
+            return 'spark.dataproc.executor.disk.tier:standard';
+          }
+          return item;
+        }
+      );
+      if (
+        !resourceAllocationModify.includes(
+          'spark.executor.memoryOverhead:1220m'
+        )
+      ) {
+        // To add the spark.executor.memoryOverhead:1220m at index 8.
+        resourceAllocationModify.splice(
+          7,
+          0,
+          'spark.executor.memoryOverhead:1220m'
+        );
+      }
+      if (
+        !resourceAllocationModify.includes(
+          'spark.dataproc.executor.disk.size:400g'
+        )
+      ) {
+        // To add the spark.dataproc.executor.disk.size:400g at index 9 when GPU is unchecked
+        resourceAllocationModify.splice(
+          8,
+          0,
+          'spark.dataproc.executor.disk.size:400g'
+        );
+      }
+      setResourceAllocationDetail(resourceAllocationModify);
+      setResourceAllocationDetailUpdated(resourceAllocationModify);
+      setExpandGpu(false);
+      setGpuDetail(['']);
+      setGpuDetailUpdated(['']);
+    }
+  };
+
   return (
     <div>
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
+          <CircularProgress
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
           />
-          Loading RunTime
+          Loading Runtime
         </div>
       )}
 
@@ -1059,8 +1339,7 @@ function CreateRunTime({
                   <div className="create-batch-network">
                     {isloadingNetwork ? (
                       <div className="metastore-loader">
-                        <ClipLoader
-                          loading={true}
+                        <CircularProgress
                           size={25}
                           aria-label="Loading Spinner"
                           data-testid="loader"
@@ -1096,15 +1375,28 @@ function CreateRunTime({
                 )}
                 {selectedNetworkRadio === 'projectNetwork' &&
                   networkList.length === 0 && (
-                    <div className="create-no-list-message">
-                      No local networks are available.
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        No local networks are available.
+                      </div>
                     </div>
                   )}
-                {selectedNetworkRadio === 'projectNetwork' &&
-                  networkList.length !== 0 &&
-                  subNetworkList.length === 0 && (
-                    <div className="create-no-list-message">
-                      Please select a valid network and subnetwork.
+                {!isloadingNetwork &&
+                  selectedNetworkRadio === 'projectNetwork' &&
+                  networkSelected !== '' &&
+                  subNetworkSelected === '' && (
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        Please select a valid network and subnetwork.
+                      </div>
                     </div>
                   )}
                 {selectedNetworkRadio === 'sharedVpc' && (
@@ -1121,8 +1413,14 @@ function CreateRunTime({
                 )}
                 {selectedNetworkRadio === 'sharedVpc' &&
                   sharedSubNetworkList.length === 0 && (
-                    <div className="create-no-list-message">
-                      No shared subnetworks are available in this region.
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        No shared subnetworks are available in this region.
+                      </div>
                     </div>
                   )}
               </div>
@@ -1177,8 +1475,7 @@ function CreateRunTime({
               <div className="select-text-overlay">
                 {isLoadingService ? (
                   <div className="metastore-loader">
-                    <ClipLoader
-                      loading={true}
+                    <CircularProgress
                       size={25}
                       aria-label="Loading Spinner"
                       data-testid="loader"
@@ -1289,12 +1586,160 @@ function CreateRunTime({
                   options={clustersList}
                   value={clusterSelected}
                   onChange={(_event, val) => handleClusterSelected(val)}
+                  noOptionsText="No history server clusters available"
                   renderInput={params => (
                     <TextField {...params} label="History server cluster" />
                   )}
                 />
               </div>
               <div className="submit-job-label-header">Spark Properties</div>
+              <div className="spark-properties-sub-header-parent">
+                <div className="spark-properties-title">
+                  <div className="spark-properties-sub-header">
+                    Resource Allocation
+                  </div>
+                  <div
+                    className="expand-icon"
+                    onClick={() =>
+                      window.open(
+                        `${SPARK_RESOURCE_ALLOCATION_INFO_URL}`,
+                        '_blank'
+                      )
+                    }
+                  >
+                    <iconHelp.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  </div>
+                </div>
+                <div
+                  className="expand-icon"
+                  onClick={() => handleResourceAllocationExpand()}
+                >
+                  {expandResourceAllocation ? (
+                    <iconExpandLess.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  ) : (
+                    <iconExpandMore.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  )}
+                </div>
+              </div>
+              {expandResourceAllocation && (
+                <SparkProperties
+                  labelDetail={resourceAllocationDetail}
+                  setLabelDetail={setResourceAllocationDetail}
+                  labelDetailUpdated={resourceAllocationDetailUpdated}
+                  setLabelDetailUpdated={setResourceAllocationDetailUpdated}
+                  buttonText="ADD PROPERTY"
+                  sparkValueValidation={sparkValueValidation}
+                  setSparkValueValidation={setSparkValueValidation}
+                  sparkSection="resourceallocation"
+                />
+              )}
+              <div className="spark-properties-sub-header-parent">
+                <div className="spark-properties-title">
+                  <div className="spark-properties-sub-header">Autoscaling</div>
+                  <div
+                    className="expand-icon"
+                    onClick={() =>
+                      window.open(`${SPARK_AUTOSCALING_INFO_URL}`, '_blank')
+                    }
+                  >
+                    <iconHelp.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  </div>
+                </div>
+                <div
+                  className="expand-icon"
+                  onClick={() => handleAutoScalingExpand()}
+                >
+                  {expandAutoScaling ? (
+                    <iconExpandLess.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  ) : (
+                    <iconExpandMore.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  )}
+                </div>
+              </div>
+              {expandAutoScaling && (
+                <SparkProperties
+                  labelDetail={autoScalingDetail}
+                  setLabelDetail={setAutoScalingDetail}
+                  labelDetailUpdated={autoScalingDetailUpdated}
+                  setLabelDetailUpdated={setAutoScalingDetailUpdated}
+                  buttonText="ADD PROPERTY"
+                  sparkValueValidation={sparkValueValidation}
+                  setSparkValueValidation={setSparkValueValidation}
+                  sparkSection="autoscaling"
+                />
+              )}
+              <div className="spark-properties-sub-header-parent">
+                <div className="spark-properties-title">
+                  <FormGroup row={false}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          size="small"
+                          checked={gpuChecked}
+                          onChange={handleGpuCheckbox}
+                        />
+                      }
+                      className="create-scheduler-label-style"
+                      label="GPU"
+                    />
+                  </FormGroup>
+                  <div
+                    className="expand-icon"
+                    onClick={() =>
+                      window.open(`${SPARK_GPU_INFO_URL}`, '_blank')
+                    }
+                  >
+                    <iconHelp.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  </div>
+                </div>
+                <div className="expand-icon" onClick={() => handleGpuExpand()}>
+                  {expandGpu ? (
+                    <iconExpandLess.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  ) : (
+                    <iconExpandMore.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
+                  )}
+                </div>
+              </div>
+              {expandGpu && gpuChecked && (
+                <SparkProperties
+                  labelDetail={gpuDetail}
+                  setLabelDetail={setGpuDetail}
+                  labelDetailUpdated={gpuDetailUpdated}
+                  setLabelDetailUpdated={setGpuDetailUpdated}
+                  buttonText="ADD PROPERTY"
+                  sparkValueValidation={sparkValueValidation}
+                  setSparkValueValidation={setSparkValueValidation}
+                  sparkSection="gpu"
+                />
+              )}
+              <div className="spark-properties-sub-header">Others</div>
               <LabelProperties
                 labelDetail={propertyDetail}
                 setLabelDetail={setPropertyDetail}

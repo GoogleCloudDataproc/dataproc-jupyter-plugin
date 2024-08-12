@@ -16,14 +16,23 @@
  */
 import React from 'react';
 import { ReactWidget } from '@jupyterlab/apputils';
+import { LabIcon } from '@jupyterlab/ui-components';
+import refreshDatasetIcon from '../../style/icons/refresh_icon.svg';
+
+const iconRefreshDatasetExplorer = new LabIcon({
+  name: 'launcher:refresh-dataset-explorer-icon',
+  svgstr: refreshDatasetIcon
+});
 
 export const TitleComponent = function ({
   titleStr,
   isPreview,
+  getBigQueryProjects,
   styles
 }: {
   titleStr: string;
   isPreview: boolean;
+  getBigQueryProjects?: () => void;
   styles?: React.CSSProperties;
 }) {
   return (
@@ -40,20 +49,36 @@ export const TitleComponent = function ({
         ...styles
       }}
     >
-      <span>{titleStr}</span>
-      {isPreview ? (
-        <span
-          style={{
-            marginLeft: '5px',
-            fontSize: '13px',
-            padding: '2px',
-            backgroundColor: 'var(--jp-inverse-layout-color2)',
-            color: 'var(--jp-ui-inverse-font-color1)'
-          }}
-        >
-          PREVIEW
-        </span>
-      ) : null}
+      <div className="dataset-explorer-refresh-container">
+        <div>
+          <span>{titleStr}</span>
+          {isPreview ? (
+            <span
+              style={{
+                marginLeft: '5px',
+                fontSize: '13px',
+                padding: '2px',
+                backgroundColor: 'var(--jp-inverse-layout-color2)',
+                color: 'var(--jp-ui-inverse-font-color1)'
+              }}
+            >
+              PREVIEW
+            </span>
+          ) : null}
+        </div>
+        {getBigQueryProjects ? (
+          <span
+            onClick={() => getBigQueryProjects()}
+            aria-label="dataset-explorer-refresh"
+            className="dataset-explorer-refresh"
+          >
+            <iconRefreshDatasetExplorer.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 };

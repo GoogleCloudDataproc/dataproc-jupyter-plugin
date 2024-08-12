@@ -38,7 +38,6 @@ import {
 } from '../utils/utils';
 
 import ClusterDetails from '../cluster/clusterDetails';
-import { ClipLoader } from 'react-spinners';
 import LabelProperties from './labelProperties';
 import SubmitJob from './submitJob';
 import ViewLogs from '../utils/viewLogs';
@@ -49,6 +48,7 @@ import { JobService } from './jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { IJobDetails } from '../utils/jobDetailsInterface';
+import { CircularProgress } from '@mui/material';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -700,9 +700,8 @@ function JobDetails({
             <>
               {isLoading && (
                 <div className="spin-loader-main">
-                  <ClipLoader
-                    color="#3367d6"
-                    loading={true}
+                  <CircularProgress
+                    className = "spin-loader-custom-style"
                     size={18}
                     aria-label="Loading Spinner"
                     data-testid="loader"

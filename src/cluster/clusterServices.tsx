@@ -132,13 +132,22 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        if (!toast.isActive('clusterListingError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'clusterListingError'
+          });
+        }
       }
     } catch (error) {
       setIsLoading(false);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters', toastifyCustomStyle);
+      if (!toast.isActive('clusterListingError')) {
+        toast.error(`Failed to fetch clusters : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'clusterListingError'
+        });
+      }
     }
   };
 
@@ -177,7 +186,7 @@ export class ClusterService {
           LOG_LEVEL.ERROR
         );
         toast.error(
-          `Failed to fetch cluster details ${clusterSelected}`,
+          `Failed to fetch cluster details ${clusterSelected} : ${err}`,
           toastifyCustomStyle
         );
       }
@@ -205,10 +214,9 @@ export class ClusterService {
       }
       listClustersAPI();
     } catch (error) {
-      console.error('Error fetching status', error);
       DataprocLoggingService.log('Error fetching status', LOG_LEVEL.ERROR);
       toast.error(
-        `Failed to fetch the status ${selectedCluster}`,
+        `Failed to fetch the status ${selectedCluster} : ${error}`,
         toastifyCustomStyle
       );
     }
@@ -260,10 +268,9 @@ export class ClusterService {
 
       setRestartEnabled(false);
     } catch (error) {
-      console.error('Error restarting cluster', error);
       DataprocLoggingService.log('Error restarting cluster', LOG_LEVEL.ERROR);
       toast.error(
-        `Failed to restart the cluster ${selectedCluster}`,
+        `Failed to restart the cluster ${selectedCluster} : ${error}`,
         toastifyCustomStyle
       );
     }
@@ -304,8 +311,8 @@ export class ClusterService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error('Error deleting cluster', err);
           DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
+          toast.error(`Error deleting cluster : ${err}`, toastifyCustomStyle);
         });
     }
   };
@@ -343,13 +350,12 @@ export class ClusterService {
             .catch((e: Error) => console.log(e));
         })
         .catch((err: Error) => {
-          console.error(`Error ${operation} cluster`, err);
           DataprocLoggingService.log(
             `Error ${operation} cluster`,
             LOG_LEVEL.ERROR
           );
           toast.error(
-            `Failed to ${operation} the cluster ${selectedcluster}`,
+            `Failed to ${operation} the cluster ${selectedcluster} : ${err}`,
             toastifyCustomStyle
           );
         });

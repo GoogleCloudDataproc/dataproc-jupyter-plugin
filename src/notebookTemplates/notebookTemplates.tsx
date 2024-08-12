@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
-import { ClipLoader } from 'react-spinners';
 import { checkConfig } from '../utils/utils';
 import ListNotebookTemplates from './listNotebookTemplates';
 import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import { CircularProgress } from '@mui/material';
 
 const NotebookTemplatesComponent = ({
   app,
@@ -35,9 +35,8 @@ const NotebookTemplatesComponent = ({
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
+          <CircularProgress
+            className = "spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"

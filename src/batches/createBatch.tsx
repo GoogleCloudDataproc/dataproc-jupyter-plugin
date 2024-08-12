@@ -40,12 +40,15 @@ import {
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi } from '../utils/utils';
-import { ClipLoader } from 'react-spinners';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { Select } from '../controls/MuiWrappedSelect';
 import { Input } from '../controls/MuiWrappedInput';
-import { Autocomplete, Radio, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  CircularProgress,
+  Radio,
+  TextField
+} from '@mui/material';
 import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
@@ -72,16 +75,16 @@ interface ICreateBatchProps {
 }
 
 function batchTypeFunction(batchKey: string) {
-  let batchType = 'spark';
+  let batchType = 'Spark';
   switch (batchKey) {
     case 'sparkRBatch':
-      batchType = 'sparkR';
+      batchType = 'SparkR';
       return batchType;
     case 'pysparkBatch':
-      batchType = 'pySpark';
+      batchType = 'PySpark';
       return batchType;
     case 'sparkSqlBatch':
-      batchType = 'sparkSql';
+      batchType = 'SparkSql';
       return batchType;
     default:
       return batchType;
@@ -97,7 +100,7 @@ function CreateBatch({
   createBatch
 }: ICreateBatchProps) {
   let batchKeys: string[] = [];
-  let batchType = 'spark';
+  let batchType = 'Spark';
   let mainClass = '';
   let mainJarFileUri = '';
   let mainRFileUri = '';
@@ -166,8 +169,8 @@ function CreateBatch({
       keyType =
         batchInfoResponse?.environmentConfig?.executionConfig?.kmsKey || '';
       const keyringValues = keyType.split('/'); // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
-      keyRing = keyringValues[5];
-      keys = keyringValues[7];
+      keyRing = keyringValues[5] ? keyringValues[5] : '';
+      keys = keyringValues[7] ? keyringValues[7] : '';
       historyServerValue =
         batchInfoResponse?.environmentConfig?.peripheralsConfig
           ?.sparkHistoryServerConfig?.dataprocCluster || '';
@@ -193,7 +196,7 @@ function CreateBatch({
   const [hexNumber, setHexNumber] = useState('');
   const [batchIdSelected, setBatchIdSelected] = useState('');
   const [batchTypeSelected, setBatchTypeSelected] = useState(batchType);
-  const [versionSelected, setVersionSelected] = useState('2.1');
+  const [versionSelected, setVersionSelected] = useState('2.2');
   const [selectedRadio, setSelectedRadio] = useState(selectedRadioInitialValue);
   const [mainClassSelected, setMainClassSelected] = useState(mainClass);
   const [mainClassUpdated, setMainClassUpdated] = useState(false);
@@ -283,7 +286,6 @@ function CreateBatch({
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
   const [projectInfo, setProjectInfo] = useState('');
-  const [labelFocused, setLabelFocused] = useState(false);
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -311,19 +313,25 @@ function CreateBatch({
     setKeySelected('');
   };
   useEffect(() => {
-    listKeysAPI(keyRingSelected);
+    if (keyRingSelected !== '') {
+      listKeysAPI(keyRingSelected);
+    }
   }, [keyRingSelected]);
+
   useEffect(() => {
-    listSubNetworksAPI(networkSelected);
+    if (
+      batchInfoResponse === undefined ||
+      batchInfoResponse?.environmentConfig?.executionConfig?.subnetworkUri
+    ) {
+      if (networkSelected !== '') {
+        listSubNetworksAPI(networkSelected);
+      }
+    } else {
+      listSubNetworksAPI(networkSelected);
+    }
   }, [networkSelected]);
   useEffect(() => {
-    const batchTypeData = [
-      { key: 'spark', value: 'spark', text: 'Spark' },
-      { key: 'sparkR', value: 'sparkR', text: 'SparkR' },
-      { key: 'sparkSql', value: 'sparkSql', text: 'SparkSql' },
-      { key: 'pySpark', value: 'pySpark', text: 'PySpark' }
-    ];
-
+    const batchTypeData = ['Spark', 'SparkR', 'SparkSql', 'PySpark'];
     setBatchTypeList(batchTypeData);
 
     listClustersAPI();
@@ -491,7 +499,7 @@ function CreateBatch({
         networkList.length !== 0 &&
         subNetworkList.length === 0);
     switch (batchTypeSelected) {
-      case 'spark':
+      case 'Spark':
         return (
           commonConditions ||
           (selectedRadio === 'mainClass' && mainClassSelected === '') ||
@@ -507,7 +515,7 @@ function CreateBatch({
           networkTagsDuplicateValidation ||
           jarFileDuplicateValidation
         );
-      case 'sparkR':
+      case 'SparkR':
         return (
           commonConditions ||
           mainRSelected === '' ||
@@ -520,7 +528,7 @@ function CreateBatch({
           argumentsDuplicateValidation ||
           networkTagsDuplicateValidation
         );
-      case 'pySpark':
+      case 'PySpark':
         return (
           commonConditions ||
           mainPythonSelected === '' ||
@@ -537,7 +545,7 @@ function CreateBatch({
           networkTagsDuplicateValidation ||
           jarFileDuplicateValidation
         );
-      case 'sparkSql':
+      case 'SparkSql':
         return (
           commonConditions ||
           queryFileSelected === '' ||
@@ -631,7 +639,9 @@ function CreateBatch({
   const listNetworksAPI = async () => {
     await BatchService.listNetworksAPIService(
       setNetworklist,
-      setNetworkSelected
+      setNetworkSelected,
+      batchInfoResponse,
+      setIsloadingNetwork
     );
   };
 
@@ -647,7 +657,9 @@ function CreateBatch({
     await BatchService.listSubNetworksAPIService(
       subnetwork,
       setSubNetworklist,
-      setSubNetworkSelected
+      setSubNetworkSelected,
+      batchInfoResponse,
+      setIsloadingNetwork
     );
   };
 
@@ -665,8 +677,10 @@ function CreateBatch({
   };
 
   const handleSharedSubNetwork = async (data: string | null) => {
-    setSharedvpcSelected(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setSharedvpcSelected(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
 
   type Payload = {
@@ -712,7 +726,7 @@ function CreateBatch({
   ): Payload => {
     const payload: Payload = {};
 
-    if (batchTypeSelected === 'spark') {
+    if (batchTypeSelected === 'Spark') {
       payload.sparkBatch = {
         ...(mainJarSelected !== '' && { mainJarFileUri: mainJarSelected }),
         ...(mainClassSelected !== '' && { mainClass: mainClassSelected }),
@@ -726,7 +740,7 @@ function CreateBatch({
         ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
-    if (batchTypeSelected === 'sparkR') {
+    if (batchTypeSelected === 'SparkR') {
       payload.sparkRBatch = {
         ...(mainRSelected !== '' && { mainRFileUri: mainRSelected }),
         ...(ArchiveFilesSelected.length > 0 && {
@@ -738,7 +752,7 @@ function CreateBatch({
         ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
-    if (batchTypeSelected === 'pySpark') {
+    if (batchTypeSelected === 'PySpark') {
       payload.pysparkBatch = {
         ...(additionalPythonFileSelected.length > 0 && {
           pythonFileUris: additionalPythonFileSelected
@@ -756,7 +770,7 @@ function CreateBatch({
         ...(argumentsSelected.length > 0 && { args: argumentsSelected })
       };
     }
-    if (batchTypeSelected === 'sparkSql') {
+    if (batchTypeSelected === 'SparkSql') {
       payload.sparkSqlBatch = {
         ...(queryFileSelected !== '' && { queryFileUri: queryFileSelected }),
         ...(parameterObject && { queryVariables: parameterObject }),
@@ -812,10 +826,10 @@ function CreateBatch({
           metastoreService: servicesSelected
         }),
         ...(clusterSelected !== '' && {
-            sparkHistoryServerConfig: {
-              dataprocCluster: `projects/${projectName}/regions/${regionName}/clusters/${clusterSelected}`
-            } as SparkHistoryServerConfig
-          })
+          sparkHistoryServerConfig: {
+            dataprocCluster: `projects/${projectName}/regions/${regionName}/clusters/${clusterSelected}`
+          } as SparkHistoryServerConfig
+        })
       }
     };
 
@@ -912,11 +926,10 @@ function CreateBatch({
     setSharedvpcSelected('');
   };
 
-  const handleBatchTypeSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setBatchTypeSelected(data.value!.toString());
+  const handleBatchTypeSelected = (data: DropdownProps | null) => {
+    if (data !== null) {
+      setBatchTypeSelected(data!.toString());
+    }
     setFilesSelected([]);
     setJarFilesSelected([]);
     setAdditionalPythonFileSelected([]);
@@ -929,7 +942,9 @@ function CreateBatch({
   };
 
   const handleServiceSelected = (data: string | null) => {
-    setServicesSelected(data!.toString());
+    if (data !== null) {
+      setServicesSelected(data!.toString());
+    }
   };
 
   const handleProjectIdChange = (data: any, network: string | undefined) => {
@@ -939,19 +954,27 @@ function CreateBatch({
     regionListAPI(data, network);
   };
   const handleNetworkChange = async (data: DropdownProps | null) => {
-    setNetworkSelected(data!.toString());
-    await listSubNetworksAPI(data!.toString());
-    await handleProjectIdChange(projectId, data!.toString());
+    if (data !== null) {
+      setNetworkSelected(data!.toString());
+      await listSubNetworksAPI(data!.toString());
+      await handleProjectIdChange(projectId, data!.toString());
+    }
   };
   const handleSubNetworkChange = (data: string | null) => {
-    setSubNetworkSelected(data!.toString());
+    if (data !== null) {
+      setSubNetworkSelected(data!.toString());
+    }
   };
   const handleKeyRingChange = (data: string | null) => {
-    setKeyRingSelected(data!.toString());
-    listKeysAPI(data!.toString());
+    if (data !== null) {
+      setKeyRingSelected(data!.toString());
+      listKeysAPI(data!.toString());
+    }
   };
   const handlekeyChange = (data: string | null) => {
-    setKeySelected(data!.toString());
+    if (data !== null) {
+      setKeySelected(data!.toString());
+    }
   };
   const handleMainClassSelected = (value: string) => {
     setMainClassUpdated(true);
@@ -977,12 +1000,6 @@ function CreateBatch({
     }
 
     setManualKeySelected(inputValue);
-  };
-  const handleSelectFocus = () => {
-    setLabelFocused(true);
-  };
-  const handleBlur = () => {
-    setLabelFocused(false);
   };
   return (
     <div>
@@ -1027,25 +1044,14 @@ function CreateBatch({
           </div>
           <div className="submit-job-label-header">Container</div>
           <div className="select-text-overlay">
-            <label
-              className={
-                labelFocused
-                  ? 'select-dropdown-text label-focused'
-                  : 'select-dropdown-text'
-              }
-              htmlFor="batch-type"
-            >
-              Batch type*
-            </label>
-            <Select
-              search
+            <Autocomplete
               className="project-region-select"
               value={batchTypeSelected}
-              type="text"
               options={batchTypeList}
-              onChange={handleBatchTypeSelected}
-              onFocus={handleSelectFocus}
-              onBlur={handleBlur}
+              onChange={(_event, val) => handleBatchTypeSelected(val)}
+              renderInput={params => (
+                <TextField {...params} label=" Batch type*" />
+              )}
             />
           </div>
           <div className="select-text-overlay">
@@ -1057,7 +1063,7 @@ function CreateBatch({
               Label="Runtime version*"
             />
           </div>
-          {batchTypeSelected === 'spark' && (
+          {batchTypeSelected === 'Spark' && (
             <div>
               <div>
                 <div className="create-batch-radio">
@@ -1104,7 +1110,7 @@ function CreateBatch({
               )}
             </div>
           )}
-          {batchTypeSelected === 'spark' && (
+          {batchTypeSelected === 'Spark' && (
             <div>
               <div>
                 <div className="create-batch-radio">
@@ -1163,7 +1169,7 @@ function CreateBatch({
               )}
             </div>
           )}
-          {batchTypeSelected === 'sparkR' && (
+          {batchTypeSelected === 'SparkR' && (
             <>
               <div className="select-text-overlay">
                 <Input
@@ -1197,7 +1203,7 @@ function CreateBatch({
               )}
             </>
           )}
-          {batchTypeSelected === 'pySpark' && (
+          {batchTypeSelected === 'PySpark' && (
             <>
               <div className="select-text-overlay">
                 <Input
@@ -1231,7 +1237,7 @@ function CreateBatch({
               )}
             </>
           )}
-          {batchTypeSelected === 'pySpark' && (
+          {batchTypeSelected === 'PySpark' && (
             <>
               <div className="select-text-overlay">
                 <MuiChipsInput
@@ -1269,7 +1275,7 @@ function CreateBatch({
               )}
             </>
           )}
-          {batchTypeSelected === 'sparkSql' && (
+          {batchTypeSelected === 'SparkSql' && (
             <>
               <div className="select-text-overlay">
                 <Input
@@ -1348,7 +1354,7 @@ function CreateBatch({
             </div>
           </div>
           {
-            batchTypeSelected !== 'sparkR' && (
+            batchTypeSelected !== 'SparkR' && (
               <>
                 <div className="select-text-overlay">
                   <MuiChipsInput
@@ -1398,7 +1404,7 @@ function CreateBatch({
             )
             //) )
           }
-          {batchTypeSelected !== 'sparkSql' && (
+          {batchTypeSelected !== 'SparkSql' && (
             <>
               <div className="select-text-overlay">
                 <MuiChipsInput
@@ -1439,7 +1445,7 @@ function CreateBatch({
               )}
             </>
           )}
-          {batchTypeSelected !== 'sparkSql' && (
+          {batchTypeSelected !== 'SparkSql' && (
             <>
               <div className="select-text-overlay">
                 <MuiChipsInput
@@ -1482,7 +1488,7 @@ function CreateBatch({
               )}
             </>
           )}
-          {batchTypeSelected !== 'sparkSql' && (
+          {batchTypeSelected !== 'SparkSql' && (
             <>
               <div className="select-text-overlay">
                 <MuiChipsInput
@@ -1509,7 +1515,7 @@ function CreateBatch({
               )}
             </>
           )}
-          {batchTypeSelected === 'sparkSql' && (
+          {batchTypeSelected === 'SparkSql' && (
             <>
               <div className="submit-job-label-header">Query parameters</div>
               <LabelProperties
@@ -1598,8 +1604,7 @@ function CreateBatch({
               <div className="create-batch-network">
                 {isloadingNetwork ? (
                   <div className="metastore-loader">
-                    <ClipLoader
-                      loading={true}
+                    <CircularProgress
                       size={25}
                       aria-label="Loading Spinner"
                       data-testid="loader"
@@ -1633,15 +1638,22 @@ function CreateBatch({
             )}
             {selectedNetworkRadio === 'projectNetwork' &&
               networkList.length === 0 && (
-                <div className="create-no-list-message">
-                  No local networks are available.
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    No local networks are available.
+                  </div>
                 </div>
               )}
-            {selectedNetworkRadio === 'projectNetwork' &&
+            {!isloadingNetwork &&
+              selectedNetworkRadio === 'projectNetwork' &&
               networkList.length !== 0 &&
               subNetworkList.length === 0 && (
-                <div className="create-no-list-message">
-                  Please select a valid network and subnetwork.
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    Please select a valid network and subnetwork.
+                  </div>
                 </div>
               )}
 
@@ -1659,8 +1671,11 @@ function CreateBatch({
             )}
             {selectedNetworkRadio === 'sharedVpc' &&
               sharedSubNetworkList.length === 0 && (
-                <div className="create-no-list-message">
-                  No shared subnetworks are available in this region.
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">
+                    No shared subnetworks are available in this region.
+                  </div>
                 </div>
               )}
           </div>
@@ -1846,8 +1861,7 @@ function CreateBatch({
           <div className="select-text-overlay">
             {isLoadingService ? (
               <div className="metastore-loader">
-                <ClipLoader
-                  loading={true}
+                <CircularProgress
                   size={25}
                   aria-label="Loading Spinner"
                   data-testid="loader"
@@ -1873,6 +1887,7 @@ function CreateBatch({
               options={clustersList}
               value={clusterSelected}
               onChange={(_event, val) => handleClusterSelected(val)}
+              noOptionsText="No history server clusters available"
               renderInput={params => (
                 <TextField {...params} label="History server cluster" />
               )}

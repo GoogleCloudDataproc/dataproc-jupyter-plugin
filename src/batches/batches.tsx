@@ -20,8 +20,8 @@ import ListBatches from './listBatches';
 import ListSessions from '../sessions/listSessions';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
-import { ClipLoader } from 'react-spinners';
 import { checkConfig } from '../utils/utils';
+import { CircularProgress } from '@mui/material';
 
 const BatchesComponent = (): React.JSX.Element => {
   const [selectedMode, setSelectedMode] = useState('Batches');
@@ -56,9 +56,8 @@ const BatchesComponent = (): React.JSX.Element => {
     <div className="component-level">
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
-          <ClipLoader
-            color="#3367d6"
-            loading={true}
+          <CircularProgress
+            className = "spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"

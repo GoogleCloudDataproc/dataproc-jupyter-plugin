@@ -12,62 +12,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-import inspect
 import json
-import re
 import subprocess
-import threading
-import time
 
-from cachetools import TTLCache
-from dataproc_jupyter_plugin.contollers.bigqueryController import BigqueryDatasetController, BigqueryDatasetInfoController, BigqueryPreviewController, BigqueryProjectsController, BigqueryTableController, BigqueryTableInfoController
+
+import tornado
+from google.cloud.jupyter_config.config import (
+    async_run_gcloud_subcommand,
+    clear_gcloud_cache,
+    gcp_kernel_gateway_url,
+    gcp_project_number,
+    gcp_region,
+)
 from jupyter_server.base.handlers import APIHandler
 from jupyter_server.serverapp import ServerApp
 from jupyter_server.utils import url_path_join
-from jupyter_server.utils import ensure_async
-from requests import HTTPError
-import tornado
 from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
-from google.cloud.jupyter_config.config import gcp_kernel_gateway_url, get_gcloud_config
+from dataproc_jupyter_plugin import credentials, urls
+from dataproc_jupyter_plugin.controllers import (
+    airflow,
+    bigquery,
+    composer,
+    dataproc,
+    cluster,
+    executor,
+)
 
-from dataproc_jupyter_plugin.controllers.clusterController import ClusterDetailController, StopClusterController, ClusterListController
-from dataproc_jupyter_plugin.contollers.composerController import ComposerListController
-from dataproc_jupyter_plugin.contollers.dagController import (
-    DagDeleteController,
-    DagDownloadController,
-    DagListController,
-    DagUpdateController,
-)
-from dataproc_jupyter_plugin.contollers.dagRunController import (
-    DagRunController,
-    DagRunTaskController,
-    DagRunTaskLogsController,
-)
-from dataproc_jupyter_plugin.contollers.downloadOutputController import (
-    downloadOutputController,
-)
-from dataproc_jupyter_plugin.contollers.editDagController import EditDagController
-from dataproc_jupyter_plugin.contollers.executorController import ExecutorController
-from dataproc_jupyter_plugin.contollers.importErrorController import (
-    ImportErrorController,
-)
-from dataproc_jupyter_plugin.contollers.runtimeController import RuntimeController
-from dataproc_jupyter_plugin.contollers.triggerDagController import TriggerDagController
+_region_not_set_error = """GCP region not set in gcloud.
+
+You must configure either the `compute/region` or `dataproc/region` setting
+before you can use the Dataproc Jupyter Plugin.
+"""
+
+_project_number_not_set_error = """GCP project number not set in gcloud.
+
+You must configure the `core/project` setting in gcloud to a project that you
+have viewer permission on before you can use the Dataproc Jupyter Plugin.
+"""
 
 
-def update_gateway_client_url(c, log):
+def configure_gateway_client_url(c, log):
     try:
+        if not gcp_region():
+            log.error(_region_not_set_error)
+            return False
+        if not gcp_project_number():
+            log.error(_project_number_not_set_error)
+            return False
+
         kernel_gateway_url = gcp_kernel_gateway_url()
+        log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
+        c.GatewayClient.url = kernel_gateway_url
+        return True
     except subprocess.SubprocessError as e:
-        log.warning(
+        log.error(
             f"Error constructing the kernel gateway URL; configure your project, region, and credentials using gcloud: {e}"
         )
-        return
-    log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
-    c.GatewayClient.url = kernel_gateway_url
+        return False
 
 
 class DataprocPluginConfig(SingletonConfigurable):
@@ -106,148 +109,21 @@ class SettingsHandler(APIHandler):
         self.finish(json.dumps(dataproc_plugin_config))
 
 
-credentials_cache = None
-
-
-def get_cached_credentials(log):
-    global credentials_cache
-    try:
-        if credentials_cache is None or "credentials" not in credentials_cache:
-            cmd = "gcloud config config-helper --format=json"
-            process = subprocess.Popen(
-                cmd,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            output, error = process.communicate()
-            if process.returncode == 0:
-                config_data = json.loads(output)
-                credentials = {
-                    "project_id": config_data["configuration"]["properties"]["core"][
-                        "project"
-                    ],
-                    "region_id": config_data["configuration"]["properties"]["compute"][
-                        "region"
-                    ],
-                    "access_token": config_data["credential"]["access_token"],
-                }
-
-                token_expiry = config_data["credential"]["token_expiry"]
-                utc_datetime = datetime.datetime.strptime(
-                    token_expiry, "%Y-%m-%dT%H:%M:%SZ"
-                )
-                current_utc_datetime = datetime.datetime.utcnow()
-                expiry_timedelta = utc_datetime - current_utc_datetime
-                expiry_seconds = expiry_timedelta.total_seconds()
-                if expiry_seconds > 1000:
-                    ttl_seconds = 1000
-                else:
-                    ttl_seconds = expiry_seconds
-                credentials_cache = TTLCache(maxsize=1, ttl=ttl_seconds)
-                credentials_cache["credentials"] = credentials
-                return credentials
-            else:
-                cmd = "gcloud config get-value account"
-                process = subprocess.Popen(
-                    cmd,
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                )
-                output, error = process.communicate()
-                if output == "":
-                    cmd = "gcloud config get-value project"
-                    process = subprocess.Popen(
-                        cmd,
-                        shell=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                    )
-                    project, error = process.communicate()
-                    if project == "":
-                        credentials = {
-                            "project_id": "",
-                            "region_id": "",
-                            "access_token": "",
-                            "config_error": 1,
-                            "login_error": 0,
-                        }
-                    else:
-                        cmd = "gcloud config get-value compute/region"
-                        process = subprocess.Popen(
-                            cmd,
-                            shell=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            text=True,
-                        )
-                        region, error = process.communicate()
-                        if region == "":
-                            credentials = {
-                                "project_id": "",
-                                "region_id": "",
-                                "access_token": "",
-                                "config_error": 1,
-                                "login_error": 0,
-                            }
-                        else:
-                            credentials = {
-                                "project_id": "",
-                                "region_id": "",
-                                "access_token": "",
-                                "config_error": 0,
-                                "login_error": 1,
-                            }
-                else:
-                    credentials = {
-                        "project_id": "",
-                        "region_id": "",
-                        "access_token": "",
-                        "config_error": 1,
-                        "login_error": 0,
-                    }
-                credentials_cache = TTLCache(maxsize=1, ttl=5)
-                credentials_cache["credentials"] = credentials
-                return credentials
-        else:
-            return credentials_cache["credentials"]
-    except Exception:
-        log.exception(f"Error fetching credentials from gcloud")
-        credentials = {"access_token": "", "config_error": 1}
-        credentials_cache = TTLCache(maxsize=1, ttl=2)
-        credentials_cache["credentials"] = credentials
-        return credentials
-
-
 class CredentialsHandler(APIHandler):
     # The following decorator should be present on all verb methods (head, get, post,
     # patch, put, delete, options) to ensure only authorized user can request the
     # Jupyter server
-    credentials_cache = None
-
     @tornado.web.authenticated
-    def get(self):
-        try:
-            if credentials_cache is None or "credentials" not in credentials_cache:
-                cached_credentials = get_cached_credentials(self.log)
-                self.finish(json.dumps(cached_credentials))
-            else:
-                t1 = threading.Thread(target=get_cached_credentials, args=([self.log]))
-                t1.start()
-                self.finish(json.dumps(credentials_cache["credentials"]))
-        except Exception:
-            self.log.exception(f"Error handling credential request")
-            cached_credentials = get_cached_credentials(self.log)
-            self.finish(json.dumps(cached_credentials))
+    async def get(self):
+        cached = await credentials.get_cached()
+        if cached["config_error"] == 1:
+            self.log.exception(f"Error fetching credentials from gcloud")
+        self.finish(json.dumps(cached))
 
 
 class LoginHandler(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def post(self):
         cmd = "gcloud auth login"
         process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -262,30 +138,18 @@ class LoginHandler(APIHandler):
 
 class ConfigHandler(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    async def post(self):
         ERROR_MESSAGE = "Project and region update "
-        global credentials_cache
         input_data = self.get_json_body()
         project_id = input_data["projectId"]
         region = input_data["region"]
-        cmd = "gcloud config set project " + project_id
-        project_set = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        output, _ = project_set.communicate()
-        if project_set.returncode == 0:
-            cmd = "gcloud config set compute/region " + region
-            region_set = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-            )
-            output, _ = region_set.communicate()
-            if region_set.returncode == 0:
-                credentials_cache = None
-                update_gateway_client_url(self.config, self.log)
-                self.finish({"config": ERROR_MESSAGE + "successful"})
-            else:
-                self.finish({"config": ERROR_MESSAGE + "failed"})
-        else:
+        try:
+            await async_run_gcloud_subcommand(f"config set project {project_id}")
+            await async_run_gcloud_subcommand(f"config set dataproc/region {region}")
+            clear_gcloud_cache()
+            configure_gateway_client_url(self.config, self.log)
+            self.finish({"config": ERROR_MESSAGE + "successful"})
+        except subprocess.CalledProcessError as er:
             self.finish({"config": ERROR_MESSAGE + "failed"})
 
 
@@ -293,42 +157,16 @@ class UrlHandler(APIHandler):
     url = {}
 
     @tornado.web.authenticated
-    def get(self):
-        dataproc_url = self.gcp_service_url("dataproc")
-        compute_url = self.gcp_service_url(
-            "compute", default_url="https://compute.googleapis.com/compute/v1"
-        )
-        metastore_url = self.gcp_service_url("metastore")
-        cloudkms_url = self.gcp_service_url("cloudkms")
-        cloudresourcemanager_url = self.gcp_service_url("cloudresourcemanager")
-        datacatalog_url = self.gcp_service_url("datacatalog")
-        storage_url = self.gcp_service_url(
-            "storage", default_url="https://storage.googleapis.com/storage/v1/"
-        )
-        url = {
-            "dataproc_url": dataproc_url,
-            "compute_url": compute_url,
-            "metastore_url": metastore_url,
-            "cloudkms_url": cloudkms_url,
-            "cloudresourcemanager_url": cloudresourcemanager_url,
-            "datacatalog_url": datacatalog_url,
-            "storage_url": storage_url,
-        }
-        self.finish(url)
-
-    def gcp_service_url(self, service_name, default_url=None):
-        default_url = default_url or f"https://{service_name}.googleapis.com/"
-        configured_url = get_gcloud_config(
-            f"configuration.properties.api_endpoint_overrides.{service_name}"
-        )
-        url = configured_url or default_url
-        self.log.info(f"Service_url for service {service_name}: {url}")
-        return url
+    async def get(self):
+        url_map = await urls.map()
+        self.log.info(f"Service URL map: {url_map}")
+        self.finish(url_map)
+        return
 
 
 class LogHandler(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    async def post(self):
         logger = self.log.getChild("DataprocPluginClient")
         log_body = self.get_json_body()
         logger.log(log_body["level"], log_body["message"])
@@ -351,29 +189,30 @@ def setup_handlers(web_app):
         "configuration": ConfigHandler,
         "getGcpServiceUrls": UrlHandler,
         "log": LogHandler,
-        "composerList": ComposerListController,
-        "dagRun": DagRunController,
-        "dagRunTask": DagRunTaskController,
-        "dagRunTaskLogs": DagRunTaskLogsController,
-        "clusterList": ClusterListController,
-        "clusterDetail": ClusterDetailController,
-        "stopCluster": StopClusterController,
-        "runtimeList": RuntimeController,
-        "createJobScheduler": ExecutorController,
-        "dagList": DagListController,
-        "dagDownload": DagDownloadController,
-        "dagDelete": DagDeleteController,
-        "dagUpdate": DagUpdateController,
-        "editJobScheduler": EditDagController,
-        "importErrorsList": ImportErrorController,
-        "triggerDag": TriggerDagController,
-        "downloadOutput": downloadOutputController,
-        "bigQueryDataset": BigqueryDatasetController,
-        "bigQueryTable": BigqueryTableController,
-        "bigQueryDatasetInfo": BigqueryDatasetInfoController,
-        "bigQueryTableInfo": BigqueryTableInfoController,
-        "bigQueryPreview": BigqueryPreviewController,
-        "bigQueryProjectsList": BigqueryProjectsController
+        "composerList": composer.EnvironmentListController,
+        "dagRun": airflow.DagRunController,
+        "dagRunTask": airflow.DagRunTaskController,
+        "dagRunTaskLogs": airflow.DagRunTaskLogsController,
+        "clusterList": dataproc.ClusterListController,
+        "clusterListPage": cluster.ClusterListPageController,
+        "clusterDetail": cluster.ClusterDetailController,
+        "stopCluster": cluster.StopClusterController,
+        "runtimeList": dataproc.RuntimeController,
+        "createJobScheduler": executor.ExecutorController,
+        "dagList": airflow.DagListController,
+        "dagDelete": airflow.DagDeleteController,
+        "dagUpdate": airflow.DagUpdateController,
+        "editJobScheduler": airflow.EditDagController,
+        "importErrorsList": airflow.ImportErrorController,
+        "triggerDag": airflow.TriggerDagController,
+        "downloadOutput": executor.DownloadOutputController,
+        "bigQueryDataset": bigquery.DatasetController,
+        "bigQueryTable": bigquery.TableController,
+        "bigQueryDatasetInfo": bigquery.DatasetInfoController,
+        "bigQueryTableInfo": bigquery.TableInfoController,
+        "bigQueryPreview": bigquery.PreviewController,
+        "bigQueryProjectsList": bigquery.ProjectsController,
+        "bigQuerySearch": bigquery.SearchController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

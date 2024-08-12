@@ -101,12 +101,14 @@ export class JobService {
                 );
               }
             })
-            .catch((e: Error) => console.log(e));
+            .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
-          console.error('Error to  stop job', err);
           DataprocLoggingService.log('Error to  stop job', LOG_LEVEL.ERROR);
-          toast.error(`Failed to stop job ${jobId}`, toastifyCustomStyle);
+          toast.error(
+            `Failed to stop job ${jobId} : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -135,12 +137,14 @@ export class JobService {
                 toastifyCustomStyle
               );
             })
-            .catch((e: Error) => console.log(e));
+            .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
-          console.error('Error Deleting Job', err);
           DataprocLoggingService.log('Error Deleting Job', LOG_LEVEL.ERROR);
-          toast.error(`Failed to delete the job ${jobId}`, toastifyCustomStyle);
+          toast.error(
+            `Failed to delete the job ${jobId} : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
@@ -200,13 +204,12 @@ export class JobService {
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error in getting job details', err);
           DataprocLoggingService.log(
             'Error in getting job details',
             LOG_LEVEL.ERROR
           );
           toast.error(
-            `Failed to fetch job details ${jobSelected}`,
+            `Failed to fetch job details ${jobSelected} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -250,10 +253,9 @@ export class JobService {
             .catch((e: Error) => console.error(e));
         })
         .catch((err: Error) => {
-          console.error('Error in updating job', err);
           DataprocLoggingService.log('Error in updating job', LOG_LEVEL.ERROR);
           toast.error(
-            `Failed to update the job ${jobSelected}`,
+            `Failed to update the job ${jobSelected} : ${err}`,
             toastifyCustomStyle
           );
         });
@@ -264,6 +266,7 @@ export class JobService {
     setIsLoading: (value: boolean) => void,
     setjobsList: any,
     renderActions: (value: IRenderActionsData) => React.JSX.Element,
+    controllerSignal: any,
     nextPageToken?: string,
     previousJobsList?: object
   ) => {
@@ -273,7 +276,7 @@ export class JobService {
     const pageToken = nextPageToken ?? '';
     if (credentials) {
       loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=50&pageToken=${pageToken}&&clusterName=${clusterName}`,
+        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/jobs?pageSize=500&pageToken=${pageToken}&&clusterName=${clusterName}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -296,10 +299,12 @@ export class JobService {
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                if (!toast.isActive('jobError')) {
+                  toast.error(responseResult?.error?.code, {
+                    ...toastifyCustomStyle,
+                    toastId: 'jobError'
+                  });
+                }
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
@@ -344,12 +349,17 @@ export class JobService {
                 ...transformJobListData
               ];
 
-              if (responseResult.nextPageToken) {
+              if (
+                responseResult.nextPageToken &&
+                responseResult.jobs &&
+                !controllerSignal.aborted
+              ) {
                 this.listJobsAPIService(
                   clusterSelected,
                   setIsLoading,
                   setjobsList,
                   renderActions,
+                  controllerSignal,
                   responseResult.nextPageToken,
                   allJobsData
                 );
@@ -359,15 +369,18 @@ export class JobService {
               }
             })
             .catch((e: Error) => {
-              console.error(e);
               setIsLoading(false);
             });
         })
         .catch((err: Error) => {
           setIsLoading(false);
-          console.error('Error listing jobs', err);
           DataprocLoggingService.log('Error listing jobs', LOG_LEVEL.ERROR);
-          toast.error('Failed to fetch jobs', toastifyCustomStyle);
+          if (!toast.isActive('jobError')) {
+            toast.error(`Failed to fetch jobs : ${err}`, {
+              ...toastifyCustomStyle,
+              toastId: 'jobError'
+            });
+          }
         });
     }
   };
@@ -421,12 +434,21 @@ export class JobService {
         setClusterResponse(allClustersData);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        if (!toast.isActive('jobClusterError')) {
+          toast.error(formattedResponse?.error?.message, {
+            ...toastifyCustomStyle,
+            toastId: 'jobClusterError'
+          });
+        }
       }
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      console.error('Error listing clusters', error);
-      toast.error('Failed to fetch clusters', toastifyCustomStyle);
+      if (!toast.isActive('clusterError')) {
+        toast.error(`Failed to fetch clusters : ${error}`, {
+          ...toastifyCustomStyle,
+          toastId: 'clusterError'
+        });
+      }
     }
   };
   static submitJobService = async (
@@ -458,7 +480,7 @@ export class JobService {
               );
             })
             .catch((e: Error) => {
-              console.log(e);
+              console.error(e);
             });
         } else {
           const errorResponse = await response.json();
@@ -467,9 +489,8 @@ export class JobService {
         }
       })
       .catch((err: Error) => {
-        console.error('Error submitting job', err);
         DataprocLoggingService.log('Error submitting job', LOG_LEVEL.ERROR);
-        toast.error('Failed to submit the job', toastifyCustomStyle);
+        toast.error(`Failed to submit the job : ${err}`, toastifyCustomStyle);
       });
   };
 }

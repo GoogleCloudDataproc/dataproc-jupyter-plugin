@@ -32,24 +32,17 @@ import { Database } from './databaseInfo';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
-import {
-  API_HEADER_CONTENT_TYPE,
-  API_HEADER_BEARER,
-  QUERY_DATABASE,
-  QUERY_TABLE,
-  gcpServiceUrls
-} from '../utils/const';
-import { authApi, toastifyCustomStyle, loggedFetch } from '../utils/utils';
 import { Table } from './tableInfo';
-import { ClipLoader } from 'react-spinners';
-import { toast } from 'react-toastify';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { IconButton, InputAdornment, TextField } from '@mui/material';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import {
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  TextField
+} from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
-import BigQueryComponent from './bigQueryWidget';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { DpmsService } from './dpmsService';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -129,112 +122,26 @@ const DpmsComponent = ({
   const [apiMessage, setApiMessage] = useState('');
 
   const getColumnDetails = async (name: string) => {
-    const credentials = await authApi();
-    const { COLUMN } = await gcpServiceUrls;
-    if (credentials && notebookValue) {
-      loggedFetch(`${COLUMN}${name}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token,
-          'X-Goog-User-Project': credentials.project_id || ''
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: IColumn) => {
-              setColumnResponse((prevResponse: IColumn[]) => [
-                ...prevResponse,
-                responseResult
-              ]);
-              if (data) {
-                setIsLoading(false);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error getting column details', err);
-          DataprocLoggingService.log(
-            'Error getting column details',
-            LOG_LEVEL.ERROR
-          );
-          toast.error('Error getting column details', toastifyCustomStyle);
-        });
-    }
+    await DpmsService.getColumnDetailsAPIService(
+      name,
+      notebookValue,
+      setColumnResponse,
+      setIsLoading,
+      data
+    );
   };
 
-  interface ITableResponse {
-    results: Array<{
-      displayName: string;
-      relativeResourceName: string;
-      description: string;
-    }>;
-  }
   const getTableDetails = async (database: string) => {
-    const credentials = await authApi();
-    const { CATALOG } = await gcpServiceUrls;
-    if (credentials && notebookValue) {
-      const requestBody = {
-        query: `${QUERY_TABLE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}.${database}`,
-        scope: {
-          includeProjectIds: [credentials.project_id]
-        }
-      };
-      loggedFetch(`${CATALOG}`, {
-        method: 'POST',
-        body: JSON.stringify(requestBody),
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token,
-          'X-Goog-User-Project': credentials.project_id || ''
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: ITableResponse) => {
-              const filteredEntries = responseResult.results.filter(
-                (entry: { displayName: string }) => entry.displayName
-              );
-              const tableNames: string[] = [];
-              const entryNames: string[] = [];
-              const updatedTableDetails: { [key: string]: string } = {};
-              filteredEntries.forEach(
-                (entry: {
-                  displayName: string;
-                  relativeResourceName: string;
-                  description: string;
-                }) => {
-                  tableNames.push(entry.displayName);
-                  entryNames.push(entry.relativeResourceName);
-                  const description = entry.description || 'None';
-                  updatedTableDetails[entry.displayName] = description;
-                }
-              );
-              setEntries(entryNames);
-              setTableDescription(updatedTableDetails);
-              setTotalTables(tableNames.length);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              if (totalDatabases !== undefined) {
-                setTotalDatabases(totalDatabases - 1 || 0);
-              }
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error getting table details', err);
-          DataprocLoggingService.log(
-            'Error getting table details',
-            LOG_LEVEL.ERROR
-          );
-          toast.error('Error getting table details', toastifyCustomStyle);
-        });
-    }
+    await DpmsService.getTableDetailsAPIService(
+      database,
+      notebookValue,
+      dataprocMetastoreServices,
+      totalDatabases,
+      setTotalTables,
+      setTotalDatabases,
+      setEntries,
+      setTableDescription
+    );
   };
   interface IColumn {
     name: string;
@@ -546,219 +453,40 @@ const DpmsComponent = ({
       </div>
     );
   };
-  interface IDatabaseResponse {
-    results?: Array<{
-      displayName: string;
-      description: string;
-    }>;
-    error?: {
-      message: string;
-      code: string;
-    };
-  }
+
   const getDatabaseDetails = async () => {
-    const credentials = await authApi();
-    const { CATALOG } = await gcpServiceUrls;
-    if (credentials && notebookValue) {
-      const requestBody = {
-        query: `${QUERY_DATABASE}${credentials.project_id}.${credentials.region_id}.${dataprocMetastoreServices}`,
-        scope: {
-          includeProjectIds: [credentials.project_id]
-        }
-      };
-      loggedFetch(`${CATALOG}`, {
-        method: 'POST',
-        body: JSON.stringify(requestBody),
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token,
-          'X-Goog-User-Project': credentials.project_id || ''
-        }
-      })
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: IDatabaseResponse) => {
-              if (responseResult?.results) {
-                const filteredEntries = responseResult.results.filter(
-                  (entry: { displayName: string }) => entry.displayName
-                );
-                const databaseNames: string[] = [];
-                const updatedDatabaseDetails: { [key: string]: string } = {};
-                filteredEntries.forEach(
-                  (entry: { description: string; displayName: string }) => {
-                    databaseNames.push(entry.displayName);
-                    const description = entry.description || 'None';
-                    updatedDatabaseDetails[entry.displayName] = description;
-                  }
-                );
-                setDatabaseDetails(updatedDatabaseDetails);
-                setDatabaseNames(databaseNames);
-                setTotalDatabases(databaseNames.length);
-                setApiError(false);
-                setSchemaError(false);
-              } else {
-                if (responseResult?.error?.code) {
-                  setApiError(true);
-                  setApiMessage(responseResult?.error?.message);
-                  setSchemaError(false);
-                } else {
-                  setSchemaError(true);
-                  setApiError(false);
-                }
-                setNoDpmsInstance(true);
-                setIsLoading(false);
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          console.error('Error getting database details', err);
-          DataprocLoggingService.log(
-            'Error getting database details',
-            LOG_LEVEL.ERROR
-          );
-          toast.error('Error getting database details', toastifyCustomStyle);
-        });
-    }
+    await DpmsService.getDatabaseDetailsAPIService(
+      notebookValue,
+      dataprocMetastoreServices,
+      setDatabaseDetails,
+      setDatabaseNames,
+      setTotalDatabases,
+      setApiError,
+      setSchemaError,
+      setNoDpmsInstance,
+      setIsLoading,
+      setApiMessage
+    );
   };
 
-  interface IClusterDetailsResponse {
-    error: {
-      code: number;
-      message: string;
-    };
-    config?: {
-      metastoreConfig?: {
-        dataprocMetastoreService?: string;
-      };
-    };
-  }
   const getClusterDetails = async () => {
-    const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
-    if (credentials && notebookValue) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${notebookValue}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: IClusterDetailsResponse) => {
-              const metastoreServices =
-                responseResult.config?.metastoreConfig
-                  ?.dataprocMetastoreService;
-              if (metastoreServices) {
-                const lastIndex = metastoreServices.lastIndexOf('/');
-                const instanceName =
-                  lastIndex !== -1
-                    ? metastoreServices.substring(lastIndex + 1)
-                    : '';
-                setDataprocMetastoreServices(instanceName);
-                setNoDpmsInstance(false);
-                setCluster(false);
-              } else {
-                setNoDpmsInstance(true);
-                setCluster(true);
-                if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
-                }
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing session details', err);
-          DataprocLoggingService.log(
-            'Error listing session details',
-            LOG_LEVEL.ERROR
-          );
-          toast.error('Failed to fetch session details', toastifyCustomStyle);
-        });
-    }
+    await DpmsService.getClusterDetailsAPIService(
+      notebookValue,
+      setIsLoading,
+      setCluster,
+      setNoDpmsInstance,
+      setDataprocMetastoreServices
+    );
   };
-  interface ISessionDetailsResponse {
-    error: {
-      code: number;
-      message: string;
-    };
-    environmentConfig?: {
-      peripheralsConfig?: {
-        metastoreService?: string;
-      };
-    };
-  }
 
   const getSessionDetails = async () => {
-    const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
-    if (credentials && notebookValue) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${notebookValue}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: ISessionDetailsResponse) => {
-              const metastoreServices =
-                responseResult.environmentConfig?.peripheralsConfig
-                  ?.metastoreService;
-              if (metastoreServices) {
-                const lastIndex = metastoreServices.lastIndexOf('/');
-                const instanceName =
-                  lastIndex !== -1
-                    ? metastoreServices.substring(lastIndex + 1)
-                    : '';
-                setDataprocMetastoreServices(instanceName);
-                setNoDpmsInstance(false);
-                setSession(false);
-              } else {
-                setNoDpmsInstance(true);
-                setSession(true);
-                if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
-                }
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          console.error('Error listing clusters details', err);
-          DataprocLoggingService.log(
-            'Error listing clusters details',
-            LOG_LEVEL.ERROR
-          );
-          toast.error('Failed to fetch cluster details', toastifyCustomStyle);
-        });
-    }
+    await DpmsService.getSessionDetailsAPIService(
+      notebookValue,
+      setIsLoading,
+      setSession,
+      setNoDpmsInstance,
+      setDataprocMetastoreServices
+    );
   };
   const getActiveNotebook = () => {
     const notebookVal = localStorage.getItem('notebookValue');
@@ -812,9 +540,8 @@ const DpmsComponent = ({
             {isLoading ? (
               <div className="database-loader">
                 <div>
-                  <ClipLoader
-                    color="#3367d6"
-                    loading={true}
+                  <CircularProgress
+                    className="spin-loader-custom-style"
                     size={20}
                     aria-label="Loading Spinner"
                     data-testid="loader"
@@ -910,27 +637,13 @@ const DpmsComponent = ({
 
 export class dpmsWidget extends DataprocWidget {
   app: JupyterLab;
-  settingRegistry: ISettingRegistry;
 
-  constructor(
-    app: JupyterLab,
-    settingRegistry: ISettingRegistry,
-    themeManager: IThemeManager
-  ) {
+  constructor(app: JupyterLab, themeManager: IThemeManager) {
     super(themeManager);
     this.app = app;
-    this.settingRegistry = settingRegistry;
   }
 
   renderInternal(): JSX.Element {
-    return localStorage.getItem('notebookValue')?.includes('bigframes') ? (
-      <BigQueryComponent
-        app={this.app}
-        settingRegistry={this.settingRegistry}
-        themeManager={this.themeManager}
-      />
-    ) : (
-      <DpmsComponent app={this.app} themeManager={this.themeManager} />
-    );
+    return <DpmsComponent app={this.app} themeManager={this.themeManager} />;
   }
 }

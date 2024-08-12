@@ -23,7 +23,9 @@ test.describe('Settings Menu', () => {
       .getByLabel('main menu', { exact: true })
       .getByText('Settings')
       .click();
-    await page.getByText('Google BigQuery Settings').click();
+    const dataprocSettings = page.getByText('Google Dataproc Settings');
+    const bigQuerySettings = page.getByText('Google BigQuery Settings');
+    await dataprocSettings.or(bigQuerySettings).click();
   });
 
   test('Can change project', async ({ page }) => {
@@ -31,7 +33,9 @@ test.describe('Settings Menu', () => {
       .getByLabel('main menu', { exact: true })
       .getByText('Settings')
       .click();
-    await page.getByText('Google BigQuery Settings').click();
+      const dataprocSettings = page.getByText('Google Dataproc Settings');
+      const bigQuerySettings = page.getByText('Google BigQuery Settings');
+      await dataprocSettings.or(bigQuerySettings).click();
 
     // Assert clearing the Project ID disables the save button.
     await page.getByRole('combobox', { name: 'Project ID' }).click();

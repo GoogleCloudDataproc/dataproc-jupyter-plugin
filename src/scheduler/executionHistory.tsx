@@ -25,6 +25,8 @@ import ListDagRuns from './listDagRuns';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import ListDagTaskInstances from './listDagTaskInstances';
+import { Box, LinearProgress } from '@mui/material';
+import { handleDebounce } from '../utils/utils';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -47,13 +49,33 @@ const ExecutionHistory = ({
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-
+  const [isLoading, setIsLoading] = useState(true);
   const [blueListDates, setBlueListDates] = useState<string[]>([]);
   const [greyListDates, setGreyListDates] = useState<string[]>([]);
   const [orangeListDates, setOrangeListDates] = useState<string[]>([]);
   const [redListDates, setRedListDates] = useState<string[]>([]);
   const [greenListDates, setGreenListDates] = useState<string[]>([]);
   const [darkGreenListDates, setDarkGreenListDates] = useState<string[]>([]);
+
+  const [height, setHeight] = useState(window.innerHeight - 145);
+
+  function handleUpdateHeight() {
+    let updateHeight = window.innerHeight - 145;
+    setHeight(updateHeight);
+  }
+
+  // Debounce the handleUpdateHeight function
+  const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
+
+  // Add event listener for window resize using useEffect
+  useEffect(() => {
+    window.addEventListener('resize', debouncedHandleUpdateHeight);
+
+    // Cleanup function to remove event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', debouncedHandleUpdateHeight);
+    };
+  }, []);
 
   const handleDateSelection = (selectedValue: any) => {
     setDagRunId('');
@@ -99,7 +121,9 @@ const ExecutionHistory = ({
       darkGreenListDates.length > 0 &&
       darkGreenListDates.includes(formattedTotalViewDate);
 
-    const isSelectedExecution = [selectedDate?.date()].includes(totalViewDates) && selectedDate?.month() === day?.month();
+    const isSelectedExecution =
+      [selectedDate?.date()].includes(totalViewDates) &&
+      selectedDate?.month() === day?.month();
     const currentDataExecution =
       [dayjs(currentDate)?.date()].includes(totalViewDates) &&
       [dayjs(currentDate)?.month()].includes(day.month());
@@ -173,9 +197,24 @@ const ExecutionHistory = ({
             Execution History: {dagId}
           </div>
         </div>
-        <div className="execution-history-main-wrapper">
+        <div
+          className="execution-history-main-wrapper"
+          style={{ height: height }}
+        >
           <div className="execution-history-left-wrapper">
             <LocalizationProvider dateAdapter={AdapterDayjs}>
+              {isLoading ? (
+                <div className="spin-loader-main-calender">
+                  <Box sx={{ width: '100%' }}>
+                    <LinearProgress />
+                  </Box>
+                </div>
+              ) : (
+                <div
+                  className="spin-loader-main-calender"
+                  style={{ height: '4px' }}
+                ></div>
+              )}
               <DateCalendar
                 minDate={dayjs().year(2024).startOf('year')}
                 maxDate={dayjs(currentDate)}
@@ -201,6 +240,8 @@ const ExecutionHistory = ({
                 setGreenListDates={setGreenListDates}
                 setDarkGreenListDates={setDarkGreenListDates}
                 bucketName={bucketName}
+                setIsLoading={setIsLoading}
+                isLoading={isLoading}
               />
             )}
           </div>

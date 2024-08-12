@@ -25,3 +25,4 @@ configure_jupyter_server(c)
 # Uncomment to set server log level to debug level
 # c.ServerApp.log_level = "DEBUG"
 c.DataprocPluginConfig.log_path = "serverapp.log"
+c.DataprocPluginConfig.enable_bigquery_integration = True
