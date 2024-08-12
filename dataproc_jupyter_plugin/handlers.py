@@ -197,6 +197,7 @@ def setup_handlers(web_app):
         "clusterListPage": cluster.ClusterListPageController,
         "clusterDetail": cluster.ClusterDetailController,
         "stopCluster": cluster.StopClusterController,
+        "startCluster": cluster.StartClusterController,
         "runtimeList": dataproc.RuntimeController,
         "createJobScheduler": executor.ExecutorController,
         "dagList": airflow.DagListController,

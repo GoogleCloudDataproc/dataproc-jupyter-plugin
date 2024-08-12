@@ -14,54 +14,73 @@
 
 
 import json
+import aiohttp
 from jupyter_server.base.handlers import APIHandler
 import tornado
-from dataproc_jupyter_plugin import handlers
-from dataproc_jupyter_plugin.services.clusterService import ClusterService
+from dataproc_jupyter_plugin import credentials
+from dataproc_jupyter_plugin.services import clusterService
 
 
 class ClusterListPageController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             page_token = self.get_argument("pageToken")
             page_size = self.get_argument("pageSize")
-            cluster = ClusterService()
-            credentials = handlers.get_cached_credentials(self.log)
-            cluster_list = cluster.list_clusters(
-                credentials, page_size, page_token, self.log
-            )
+            async with aiohttp.ClientSession() as client_session:
+                client = clusterService.Client(
+                    await credentials.get_cached(), self.log, client_session
+                )
+                cluster_list = await client.list_clusters(page_size, page_token)
             self.finish(json.dumps(cluster_list))
         except Exception as e:
             self.log.exception(f"Error fetching cluster list")
             self.finish({"error": str(e)})
 
+
 class ClusterDetailController(APIHandler):
     @tornado.web.authenticated
-    def get(self):
+    async def get(self):
         try:
             cluster_selected = self.get_argument("clusterSelected")
-            cluster = ClusterService()
-            credentials = handlers.get_cached_credentials(self.log)
-            get_cluster = cluster.get_cluster_detail(
-                credentials, cluster_selected, self.log
-            )
+            async with aiohttp.ClientSession() as client_session:
+                client = clusterService.Client(
+                    await credentials.get_cached(), self.log, client_session
+                )
+                get_cluster = await client.get_cluster_detail(cluster_selected)
             self.finish(json.dumps(get_cluster))
         except Exception as e:
             self.log.exception(f"Error fetching get cluster")
             self.finish({"error": str(e)})
 
+
 class StopClusterController(APIHandler):
     @tornado.web.authenticated
-    def post(self):
+    async def post(self):
         try:
             cluster_selected = self.get_argument("clusterSelected")
-            cluster = ClusterService()
-            credentials = handlers.get_cached_credentials(self.log)
-            stop_cluster = cluster.post_stop_cluster(
-                credentials, cluster_selected, self.log
-            )
+            async with aiohttp.ClientSession() as client_session:
+                client = clusterService.Client(
+                    await credentials.get_cached(), self.log, client_session
+                )
+                stop_cluster = await client.post_stop_cluster(cluster_selected)
             self.finish(json.dumps(stop_cluster))
         except Exception as e:
             self.log.exception(f"Error fetching stop cluster")
+            self.finish({"error": str(e)})
+
+
+class StartClusterController(APIHandler):
+    @tornado.web.authenticated
+    async def post(self):
+        try:
+            cluster_selected = self.get_argument("clusterSelected")
+            async with aiohttp.ClientSession() as client_session:
+                client = clusterService.Client(
+                    await credentials.get_cached(), self.log, client_session
+                )
+                start_cluster = await client.post_start_cluster(cluster_selected)
+            self.finish(json.dumps(start_cluster))
+        except Exception as e:
+            self.log.exception(f"Error fetching start cluster")
             self.finish({"error": str(e)})
