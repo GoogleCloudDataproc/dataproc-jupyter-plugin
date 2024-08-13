@@ -926,7 +926,7 @@ function CreateRunTime({
         propertyObject[key] = value;
       });
       propertyDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
+        const labelSplit = label.split(/:(.+)/);
         const key = labelSplit[0];
         const value = labelSplit[1];
         propertyObject[key] = value;
