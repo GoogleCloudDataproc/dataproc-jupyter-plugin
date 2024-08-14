@@ -495,9 +495,10 @@ function SubmitJob({
     jarFileSelected: string[] | string,
     argumentSelected: string[] | string
   ) => {
+    const isJar = mainClassSelected.includes('.jar');
     return {
       sparkJob: {
-        mainJarFileUri: mainClassSelected,
+        ...(isJar ? { mainJarFileUri: mainClassSelected } : { mainClass: mainClassSelected }),
         ...(propertyObject && {
           properties: propertyObject
         }),
