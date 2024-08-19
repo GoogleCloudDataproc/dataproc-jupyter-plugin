@@ -203,9 +203,7 @@ function ListCluster({
       setRestartEnabled,
       listClustersAPI,
       timer,
-      statusApi,
-      clustersList,
-      setClustersList
+      statusApi
     );
   };
 

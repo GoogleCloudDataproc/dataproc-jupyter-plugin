@@ -80,7 +80,6 @@ export class ClusterService {
 
       const formattedResponse: any = await requestAPI(serviceURL);
 
-      console.log(formattedResponse);
       let transformClusterListData = [];
       if (formattedResponse) {
         transformClusterListData = formattedResponse.map((data: any) => {
@@ -127,9 +126,9 @@ export class ClusterService {
         setIsLoading(false);
         setLoggedIn(true);
       }
-      if (formattedResponse?.error?.code) {
+      if (formattedResponse?.error) {
         if (!toast.isActive('clusterListingError')) {
-          toast.error(formattedResponse?.error?.message, {
+          toast.error(formattedResponse?.error, {
             ...toastifyCustomStyle,
             toastId: 'clusterListingError'
           });
@@ -205,8 +204,8 @@ export class ClusterService {
         ClusterService.startClusterApi(selectedCluster);
         clearInterval(timer.current);
       }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      if (formattedResponse?.error) {
+        toast.error(formattedResponse?.error, toastifyCustomStyle);
       }
       listClustersAPI();
     } catch (error) {
@@ -223,9 +222,7 @@ export class ClusterService {
     setRestartEnabled: (value: boolean) => void,
     listClustersAPI: () => void,
     timer: any,
-    statusApi: (value: string) => void,
-    clustersList: ICluster[],
-    setClustersList: (value: ICluster[]) => void
+    statusApi: (value: string) => void
   ) => {
     setRestartEnabled(true);
     try {
@@ -234,8 +231,6 @@ export class ClusterService {
       let formattedResponse: any = await requestAPI(serviceURL, {
         method: 'POST'
       });
-      // const formattedResponse = await response.json();
-      console.log(formattedResponse);
 
       listClustersAPI();
       timer.current = setInterval(() => {
@@ -266,7 +261,7 @@ export class ClusterService {
       });
       
       if (formattedResponse?.error) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        toast.error(formattedResponse?.error, toastifyCustomStyle);
       } else {
         toast.success(
           `Cluster ${selectedcluster} deleted successfully`,
@@ -293,13 +288,12 @@ export class ClusterService {
           ? `stopCluster?clusterSelected=${selectedcluster}`
           : `startCluster?clusterSelected=${selectedcluster}`;
 
-      let responseResult: any = await requestAPI(serviceURL, {
+      let formattedResponse: any = await requestAPI(serviceURL, {
         method: 'POST'
       });
 
-      const formattedResponse = await responseResult.json();
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      if (formattedResponse?.error) {
+        toast.error(formattedResponse?.error, toastifyCustomStyle);
       }
     } catch (err) {
       DataprocLoggingService.log(`Error ${operation} cluster`, LOG_LEVEL.ERROR);

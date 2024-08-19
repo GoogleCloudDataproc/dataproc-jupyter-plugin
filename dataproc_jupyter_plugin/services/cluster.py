@@ -16,6 +16,7 @@ from google.cloud import dataproc_v1 as dataproc
 import proto
 import json
 import google.oauth2.credentials as oauth2
+from google.protobuf.empty_pb2 import Empty
 
 class Client:
     def __init__(self, credentials, log):
@@ -107,9 +108,7 @@ class Client:
 
             operation = await client.stop_cluster(request=request)
 
-            print("stoppppppp111",operation)
             response = await operation.result()
-            print("stoppppppp222",response)
             # Handle the response
             return json.loads(proto.Message.to_json(response))
         except Exception as e:
@@ -135,9 +134,7 @@ class Client:
 
             operation = await client.start_cluster(request=request)
 
-            print("startttttt111",operation)
             response = await operation.result()
-            print("startttttt222",response)
             # Handle the response
             return json.loads(proto.Message.to_json(response))
         except Exception as e:
@@ -146,7 +143,6 @@ class Client:
         
     async def delete_cluster(self, cluster_selected):
         try:
-            print("delete cluster")
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
                 client_options={
@@ -164,11 +160,12 @@ class Client:
 
             operation = await client.delete_cluster(request=request)
 
-            print("delete111",operation)
             response = await operation.result()
-            print("delete222",response)
             # Handle the response
-            return json.loads(proto.Message.to_json(response))
+            if isinstance(response, Empty):
+                return "Deleted successfully"
+            else:
+                return json.loads(proto.Message.to_json(response))
         except Exception as e:
             self.log.exception(f"Error deleting cluster")
             return {"error": str(e)}
