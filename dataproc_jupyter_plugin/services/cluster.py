@@ -105,10 +105,10 @@ class Client:
                 cluster_name=cluster_selected,
             )
 
-            operation = client.stop_cluster(request=request)
+            operation = await client.stop_cluster(request=request)
 
             print("stoppppppp111",operation)
-            response = (await operation).result()
+            response = await operation.result()
             print("stoppppppp222",response)
             # Handle the response
             return json.loads(proto.Message.to_json(response))
@@ -133,10 +133,10 @@ class Client:
                 cluster_name=cluster_selected,
             )
 
-            operation = client.start_cluster(request=request)
+            operation = await client.start_cluster(request=request)
 
             print("startttttt111",operation)
-            response = (await operation).result()
+            response = await operation.result()
             print("startttttt222",response)
             # Handle the response
             return json.loads(proto.Message.to_json(response))
@@ -162,10 +162,10 @@ class Client:
                 cluster_name=cluster_selected,
             )
 
-            operation = client.delete_cluster(request=request)
+            operation = await client.delete_cluster(request=request)
 
             print("delete111",operation)
-            response = (await operation).result()
+            response = await operation.result()
             print("delete222",response)
             # Handle the response
             return json.loads(proto.Message.to_json(response))
