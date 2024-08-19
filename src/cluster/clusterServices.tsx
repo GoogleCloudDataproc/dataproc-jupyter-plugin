@@ -18,20 +18,14 @@
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
   ClusterStatus,
   ClusterStatusState,
-  // HTTP_METHOD,
-  POLLING_TIME_LIMIT,
-  gcpServiceUrls
+  POLLING_TIME_LIMIT
 } from '../utils/const';
 import {
   authApi,
   toastifyCustomStyle,
-  loggedFetch,
   getProjectId,
-  // authenticatedFetch,
   statusValue
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
@@ -234,22 +228,7 @@ export class ClusterService {
     setClustersList: (value: ICluster[]) => void
   ) => {
     setRestartEnabled(true);
-
-    let tempClustersList = [...clustersList];
-    console.log(tempClustersList);
-    tempClustersList.forEach(clusterData => {
-      if (clusterData.clusterName === selectedCluster) {
-        clusterData.status = 'STOPPING';
-      }
-    });
-    setClustersList(tempClustersList);
-
     try {
-      // const response = await authenticatedFetch({
-      //   uri: `clusters/${selectedCluster}:stop`,
-      //   method: HTTP_METHOD.POST,
-      //   regionIdentifier: 'regions'
-      // });
       const serviceURL = `stopCluster?clusterSelected=${selectedCluster}`;
 
       let formattedResponse: any = await requestAPI(serviceURL, {
@@ -279,43 +258,28 @@ export class ClusterService {
   };
 
   static deleteClusterApi = async (selectedcluster: string) => {
-    const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: Response) => {
-              console.log(responseResult);
-              const formattedResponse = await responseResult.json();
-              if (formattedResponse?.error?.code) {
-                toast.error(
-                  formattedResponse?.error?.message,
-                  toastifyCustomStyle
-                );
-              } else {
-                toast.success(
-                  `Cluster ${selectedcluster} deleted successfully`,
-                  toastifyCustomStyle
-                );
-              }
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
-          toast.error(`Error deleting cluster : ${err}`, toastifyCustomStyle);
-        });
+    try {
+      const serviceURL = `deleteCluster?clusterSelected=${selectedcluster}`;
+
+      let formattedResponse: any = await requestAPI(serviceURL, {
+        method: 'DELETE'
+      });
+      
+      if (formattedResponse?.error) {
+        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      } else {
+        toast.success(
+          `Cluster ${selectedcluster} deleted successfully`,
+          toastifyCustomStyle
+        );
+      }
+
+    } catch (error) {
+      DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
+      toast.error(
+        `Error deleting cluster ${selectedcluster} : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -323,9 +287,6 @@ export class ClusterService {
     selectedcluster: string,
     operation: 'start' | 'stop'
   ) => {
-    // const credentials = await authApi();
-    // const { DATAPROC } = await gcpServiceUrls;
-
     try {
       const serviceURL =
         operation === 'stop'
@@ -347,44 +308,6 @@ export class ClusterService {
         toastifyCustomStyle
       );
     }
-
-    // if (credentials) {
-    //   loggedFetch(
-    //     `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:${operation}`,
-    //     {
-    //       method: 'POST',
-    //       headers: {
-    //         'Content-Type': API_HEADER_CONTENT_TYPE,
-    //         Authorization: API_HEADER_BEARER + credentials.access_token
-    //       }
-    //     }
-    //   )
-    //     .then((response: Response) => {
-    //       response
-    //         .json()
-    //         .then(async (responseResult: Response) => {
-    //           console.log(responseResult);
-    //           const formattedResponse = await responseResult.json();
-    //           if (formattedResponse?.error?.code) {
-    //             toast.error(
-    //               formattedResponse?.error?.message,
-    //               toastifyCustomStyle
-    //             );
-    //           }
-    //         })
-    //         .catch((e: Error) => console.log(e));
-    //     })
-    //     .catch((err: Error) => {
-    //       DataprocLoggingService.log(
-    //         `Error ${operation} cluster`,
-    //         LOG_LEVEL.ERROR
-    //       );
-    //       toast.error(
-    //         `Failed to ${operation} the cluster ${selectedcluster} : ${err}`,
-    //         toastifyCustomStyle
-    //       );
-    //     });
-    // }
   };
 
   static startClusterApi = async (selectedcluster: string) => {

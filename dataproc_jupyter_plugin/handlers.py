@@ -34,9 +34,9 @@ from dataproc_jupyter_plugin import credentials, urls
 from dataproc_jupyter_plugin.controllers import (
     airflow,
     bigquery,
+    cluster,
     composer,
     dataproc,
-    cluster,
     executor,
 )
 
@@ -198,6 +198,7 @@ def setup_handlers(web_app):
         "clusterDetail": cluster.ClusterDetailController,
         "stopCluster": cluster.StopClusterController,
         "startCluster": cluster.StartClusterController,
+        "deleteCluster": cluster.DeleteClusterController,
         "runtimeList": dataproc.RuntimeController,
         "createJobScheduler": executor.ExecutorController,
         "dagList": airflow.DagListController,

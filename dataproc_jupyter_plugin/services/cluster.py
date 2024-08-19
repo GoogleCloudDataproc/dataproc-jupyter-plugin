@@ -15,10 +15,10 @@
 from google.cloud import dataproc_v1 as dataproc
 import proto
 import json
-
+import google.oauth2.credentials as oauth2
 
 class Client:
-    def __init__(self, credentials, log, client_session):
+    def __init__(self, credentials, log):
         self.log = log
         if not (
             ("access_token" in credentials)
@@ -30,17 +30,15 @@ class Client:
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
-        self.client_session = client_session
 
     async def list_clusters(self, page_size, page_token):
-        print("List cluster service")
         try:
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
                 client_options={
                     "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
                 },
-                credentials=self._access_token,
+                credentials=oauth2.Credentials(self._access_token),
             )
 
             # Initialize request argument(s)
@@ -51,17 +49,13 @@ class Client:
                 region=self.region_id,
             )
 
-            print("requesttttt", request)
             # Make the request
             page_result = await client.list_clusters(request=request)
-
-            print("page_resultttt", page_result)
             clusters_list = []
 
-            print("responseeee", page_result)
             # Handle the response
             async for response in page_result:
-                await clusters_list.append(json.loads(proto.Message.to_json(response)))
+                clusters_list.append(json.loads(proto.Message.to_json(response)))
 
             return clusters_list
         except Exception as e:
@@ -75,7 +69,7 @@ class Client:
                 client_options={
                     "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
                 },
-                credentials=self._access_token,
+                credentials=oauth2.Credentials(self._access_token),
             )
 
             # Initialize request argument(s)
@@ -94,14 +88,14 @@ class Client:
             self.log.exception(f"Error fetching cluster detail")
             return {"error": str(e)}
 
-    async def post_stop_cluster(self, cluster_selected):
+    async def stop_cluster(self, cluster_selected):
         try:
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
                 client_options={
                     "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
                 },
-                credentials=self._access_token,
+                credentials=oauth2.Credentials(self._access_token),
             )
 
             # Initialize request argument(s)
@@ -113,22 +107,23 @@ class Client:
 
             operation = client.stop_cluster(request=request)
 
+            print("stoppppppp111",operation)
             response = (await operation).result()
-
+            print("stoppppppp222",response)
             # Handle the response
             return json.loads(proto.Message.to_json(response))
         except Exception as e:
             self.log.exception(f"Error fetching stop cluster")
             return {"error": str(e)}
 
-    async def post_start_cluster(self, cluster_selected):
+    async def start_cluster(self, cluster_selected):
         try:
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
                 client_options={
                     "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
                 },
-                credentials=self._access_token,
+                credentials=oauth2.Credentials(self._access_token),
             )
 
             # Initialize request argument(s)
@@ -140,10 +135,40 @@ class Client:
 
             operation = client.start_cluster(request=request)
 
+            print("startttttt111",operation)
             response = (await operation).result()
-
+            print("startttttt222",response)
             # Handle the response
             return json.loads(proto.Message.to_json(response))
         except Exception as e:
             self.log.exception(f"Error fetching start cluster")
+            return {"error": str(e)}
+        
+    async def delete_cluster(self, cluster_selected):
+        try:
+            print("delete cluster")
+            # Create a client
+            client = dataproc.ClusterControllerAsyncClient(
+                client_options={
+                    "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
+                },
+                credentials=oauth2.Credentials(self._access_token),
+            )
+
+            # Initialize request argument(s)
+            request = dataproc.DeleteClusterRequest(
+                project_id=self.project_id,
+                region=self.region_id,
+                cluster_name=cluster_selected,
+            )
+
+            operation = client.delete_cluster(request=request)
+
+            print("delete111",operation)
+            response = (await operation).result()
+            print("delete222",response)
+            # Handle the response
+            return json.loads(proto.Message.to_json(response))
+        except Exception as e:
+            self.log.exception(f"Error deleting cluster")
             return {"error": str(e)}
