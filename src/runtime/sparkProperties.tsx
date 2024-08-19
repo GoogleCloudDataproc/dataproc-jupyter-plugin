@@ -42,7 +42,8 @@ function SparkProperties({
   setLabelDetailUpdated,
   sparkValueValidation,
   setSparkValueValidation,
-  sparkSection
+  sparkSection,
+  setGpuDetailChangeDone
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
@@ -70,6 +71,9 @@ function SparkProperties({
 
   const handleEditLabelSwitch = () => {
     setLabelDetail(labelDetailUpdated);
+    if (sparkSection === 'gpu') {
+      setGpuDetailChangeDone(false);
+    }
   };
 
   const updateErrorIndexes = (index: number, hasError: boolean) => {
@@ -177,11 +181,9 @@ function SparkProperties({
           value is split from labels
           Example:"client:dataproc_jupyter_plugin"
           */
-        if (data.split(':')[1] === '') {
-          data = data + value;
-        } else {
-          data = data.replace(data.split(':')[1], value);
-        }
+        let sparkProperties = data.split(':');
+        sparkProperties[1] = value.trim();
+        data = sparkProperties[0] + ':' + sparkProperties[1];
       }
       labelEdit[dataNumber] = data;
     });
