@@ -1142,6 +1142,8 @@ function CreateRunTime({
         (item: string) => {
           if (item === 'spark.dataproc.executor.disk.tier:premium') {
             return 'spark.dataproc.executor.disk.tier:standard';
+          } else if (item.includes('spark.executor.cores')) {
+            return 'spark.executor.cores:4'
           }
           return item;
         }
@@ -1169,7 +1171,17 @@ function CreateRunTime({
           0,
           'spark.dataproc.executor.disk.size:400g'
         );
+      } else {
+        resourceAllocationModify = resourceAllocationModify.map(
+          (item: string) => {
+            if (item.includes('spark.dataproc.executor.disk.size')) {
+              return 'spark.dataproc.executor.disk.size:400g';
+            }
+            return item;
+          }
+        );
       }
+
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(false);
