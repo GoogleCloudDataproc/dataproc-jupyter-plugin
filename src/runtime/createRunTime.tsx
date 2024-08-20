@@ -333,7 +333,17 @@ function CreateRunTime({
     setResourceAllocationDetailUpdated(resourceAllocationModify);
   };
   useEffect(() => {
-    if (!gpuDetailChangeDone) {
+    if (
+      !gpuDetailChangeDone &&
+      (!selectedRuntimeClone ||
+        selectedRuntimeClone.runtimeConfig.properties[
+          'spark.dataproc.executor.resource.accelerator.type'
+        ] === 'l4' ||
+        gpuDetailUpdated.includes(
+          'spark.dataproc.executor.resource.accelerator.type:l4'
+        ) ||
+        resourceAllocationDetailUpdated.length === 9)
+    ) {
       modifyResourceAllocation();
     }
   }, [gpuDetailUpdated, gpuDetailChangeDone]);
@@ -1143,7 +1153,7 @@ function CreateRunTime({
           if (item === 'spark.dataproc.executor.disk.tier:premium') {
             return 'spark.dataproc.executor.disk.tier:standard';
           } else if (item.includes('spark.executor.cores')) {
-            return 'spark.executor.cores:4'
+            return 'spark.executor.cores:4';
           }
           return item;
         }
