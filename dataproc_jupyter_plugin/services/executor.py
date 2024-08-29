@@ -17,6 +17,8 @@ import shutil
 import subprocess
 import uuid
 from datetime import datetime, timedelta
+from google.cloud import storage
+from google.api_core.exceptions import NotFound
 
 import aiohttp
 import pendulum
@@ -88,12 +90,17 @@ class Client:
 
     async def check_file_exists(self, bucket, file_path):
         try:
-            cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
-            await async_run_gsutil_subcommand(cmd)
-            return True
-        except subprocess.CalledProcessError as error:
-            self.log.exception(f"Error checking papermill file: {error.decode()}")
-            raise IOError(error.decode)
+            if not bucket:
+                raise ValueError("Bucket name cannot be empty")
+            bucket_name = storage.Client().bucket(bucket)
+            blob = bucket_name.blob(file_path)
+            if blob.exists():
+                return True
+            else:
+                return False
+        except Exception as error:
+            self.log.exception(f"Error checking file: {error}")
+            raise IOError(f"Error checking file: {error}")
 
     async def upload_papermill_to_gcs(self, gcs_dag_bucket):
         env = Environment(
