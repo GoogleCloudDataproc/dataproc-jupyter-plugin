@@ -100,7 +100,7 @@ class Client:
                 return False
         except Exception as error:
             self.log.exception(f"Error checking file: {error}")
-            raise IOError(f"Error checking file: {error}")
+            raise IOError(f"Error creating dag: {error}")
 
     async def upload_papermill_to_gcs(self, gcs_dag_bucket):
         env = Environment(
