@@ -94,10 +94,7 @@ class Client:
                 raise ValueError("Bucket name cannot be empty")
             bucket_name = storage.Client().bucket(bucket)
             blob = bucket_name.blob(file_path)
-            if blob.exists():
-                return True
-            else:
-                return False
+            return blob.exists()
         except Exception as error:
             self.log.exception(f"Error checking file: {error}")
             raise IOError(f"Error creating dag: {error}")
