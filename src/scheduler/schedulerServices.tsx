@@ -102,8 +102,8 @@ export class SchedulerService {
 
       const formattedResponse: any = await requestAPI(serviceURL);
       let transformClusterListData = [];
-      if (formattedResponse && formattedResponse.clusters) {
-        transformClusterListData = formattedResponse.clusters.map(
+      if (formattedResponse) {
+        transformClusterListData = formattedResponse.map(
           (data: IClusterAPIResponse) => {
             return {
               clusterName: data.clusterName

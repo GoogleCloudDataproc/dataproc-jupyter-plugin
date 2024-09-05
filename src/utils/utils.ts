@@ -266,7 +266,7 @@ export const statusValue = (data: { status: { state: number } }) => {
   if (data.status.state === 1) {
     return STATUS_PROVISIONING;
   } else {
-    return ClusterStatusState[data.status.state.toString()];
+    return ClusterStatusState[data.status.state];
   }
 };
 

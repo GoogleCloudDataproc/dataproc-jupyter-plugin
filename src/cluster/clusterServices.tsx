@@ -76,7 +76,7 @@ export class ClusterService {
       const projectId = await getProjectId();
       setProjectId(projectId);
 
-      const serviceURL = `clusterListPage?pageSize=50&pageToken=${pageToken}`;
+      const serviceURL = `clusterList?pageSize=50&pageToken=${pageToken}`;
 
       const formattedResponse: any = await requestAPI(serviceURL);
 
@@ -158,7 +158,7 @@ export class ClusterService {
       setProjectName(credentials.project_id || '');
 
       try {
-        const serviceURL = `clusterDetail?clusterSelected=${clusterSelected}`;
+        const serviceURL = `clusterDetail?cluster=${clusterSelected}`;
 
         let responseResult: any = await requestAPI(serviceURL);
         responseResult.status.state =
@@ -194,7 +194,7 @@ export class ClusterService {
     timer: any
   ) => {
     try {
-      const serviceURL = `clusterDetail?clusterSelected=${selectedCluster}`;
+      const serviceURL = `clusterDetail?cluster=${selectedCluster}`;
 
       let formattedResponse: any = await requestAPI(serviceURL);
       formattedResponse.status.state =
@@ -226,7 +226,7 @@ export class ClusterService {
   ) => {
     setRestartEnabled(true);
     try {
-      const serviceURL = `stopCluster?clusterSelected=${selectedCluster}`;
+      const serviceURL = `stopCluster?cluster=${selectedCluster}`;
 
       let formattedResponse: any = await requestAPI(serviceURL, {
         method: 'POST'
@@ -254,7 +254,7 @@ export class ClusterService {
 
   static deleteClusterApi = async (selectedcluster: string) => {
     try {
-      const serviceURL = `deleteCluster?clusterSelected=${selectedcluster}`;
+      const serviceURL = `deleteCluster?cluster=${selectedcluster}`;
 
       let formattedResponse: any = await requestAPI(serviceURL, {
         method: 'DELETE'
@@ -285,8 +285,8 @@ export class ClusterService {
     try {
       const serviceURL =
         operation === 'stop'
-          ? `stopCluster?clusterSelected=${selectedcluster}`
-          : `startCluster?clusterSelected=${selectedcluster}`;
+          ? `stopCluster?cluster=${selectedcluster}`
+          : `startCluster?cluster=${selectedcluster}`;
 
       let formattedResponse: any = await requestAPI(serviceURL, {
         method: 'POST'

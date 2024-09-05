@@ -68,19 +68,6 @@ export enum ClusterStatus {
   STATUS_STOPPED = 'STOPPED',
   STATUS_ACTIVE = 'ACTIVE'
 }
-export const ClusterStatusState: any = {
-  '0': 'UNKNOWN',
-  '1': 'CREATING',
-  '2': 'RUNNING',
-  '3': 'ERROR',
-  '4': 'DELETING',
-  '5': 'UPDATING',
-  '6': 'STOPPING',
-  '7': 'STOPPED',
-  '8': 'STARTING',
-  '9': 'ERROR_DUE_TO_UPDATE',
-  '10': 'REPAIRING'
-};
 export enum BatchStatus {
   STATUS_PENDING = 'PENDING'
 }
@@ -269,3 +256,16 @@ export const TIER_SELECT_OPTIONS = [
   { key: 'standard', value: 'standard', text: 'standard' },
   { key: 'premium', value: 'premium', text: 'premium' }
 ];
+export const ClusterStatusState: any = {
+  0: 'UNKNOWN',
+  1: STATUS_CREATING,
+  2: STATUS_RUNNING,
+  3: STATUS_ERROR,
+  4: STATUS_DELETING,
+  5: 'UPDATING',
+  6: STATUS_STOPPING,
+  7: STATUS_STOPPED,
+  8: STATUS_STARTING,
+  9: 'ERROR_DUE_TO_UPDATE',
+  10: 'REPAIRING'
+};

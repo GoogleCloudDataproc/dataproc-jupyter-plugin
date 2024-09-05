@@ -215,23 +215,23 @@ function ListCluster({
       <div
         role="button"
         aria-disabled={
-          ClusterStatusState[data.status.state.toString()] !== ClusterStatus.STATUS_STOPPED &&
+          ClusterStatusState[data.status.state] !== ClusterStatus.STATUS_STOPPED &&
           restartEnabled !== true
         }
         className={
-          ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_STOPPED &&
+          ClusterStatusState[data.status.state] === ClusterStatus.STATUS_STOPPED &&
           restartEnabled !== true
             ? 'icon-buttons-style'
             : 'icon-buttons-style-disable'
         }
         title="Start Cluster"
         onClick={
-          ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_STOPPED && !restartEnabled
+          ClusterStatusState[data.status.state] === ClusterStatus.STATUS_STOPPED && !restartEnabled
             ? () => ClusterService.startClusterApi(data.clusterName)
             : undefined
         }
       >
-        {ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_STOPPED &&
+        {ClusterStatusState[data.status.state] === ClusterStatus.STATUS_STOPPED &&
         !restartEnabled ? (
           <iconStart.react
             tag="div"
@@ -254,20 +254,20 @@ function ListCluster({
     return (
       <div
         role="button"
-        aria-disabled={ClusterStatusState[data.status.state.toString()] !== ClusterStatus.STATUS_RUNNING}
+        aria-disabled={ClusterStatusState[data.status.state] !== ClusterStatus.STATUS_RUNNING}
         className={
-          ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_RUNNING
+          ClusterStatusState[data.status.state] === ClusterStatus.STATUS_RUNNING
             ? 'icon-buttons-style'
             : 'icon-buttons-style-disable'
         }
         title="Stop Cluster"
         onClick={
-          ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_RUNNING
+          ClusterStatusState[data.status.state] === ClusterStatus.STATUS_RUNNING
             ? () => ClusterService.stopClusterApi(data.clusterName)
             : undefined
         }
       >
-        {ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_RUNNING ? (
+        {ClusterStatusState[data.status.state] === ClusterStatus.STATUS_RUNNING ? (
           <iconStop.react
             tag="div"
             className="icon-white logo-alignment-style"
@@ -289,20 +289,20 @@ function ListCluster({
     return (
       <div
         role="button"
-        aria-disabled={ClusterStatusState[data.status.state.toString()] !== ClusterStatus.STATUS_RUNNING}
+        aria-disabled={ClusterStatusState[data.status.state] !== ClusterStatus.STATUS_RUNNING}
         className={
-          ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_RUNNING
+          ClusterStatusState[data.status.state] === ClusterStatus.STATUS_RUNNING
             ? 'icon-buttons-style'
             : 'icon-buttons-style-disable'
         }
         title="Restart Cluster"
         onClick={
-          ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_RUNNING
+          ClusterStatusState[data.status.state] === ClusterStatus.STATUS_RUNNING
             ? () => restartClusterApi(data.clusterName)
             : undefined
         }
       >
-        {ClusterStatusState[data.status.state.toString()] === ClusterStatus.STATUS_RUNNING ? (
+        {ClusterStatusState[data.status.state] === ClusterStatus.STATUS_RUNNING ? (
           <iconRestart.react
             tag="div"
             className="icon-white logo-alignment-style"
