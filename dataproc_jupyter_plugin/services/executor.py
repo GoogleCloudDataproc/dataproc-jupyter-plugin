@@ -88,12 +88,12 @@ class Client:
             self.log.exception(f"Error getting bucket name: {str(e)}")
             raise Exception(f"Error getting composer bucket: {str(e)}")
 
-    async def check_file_exists(self, bucket, file_path):
+    async def check_file_exists(self, bucket_name, file_path):
         try:
-            if not bucket:
+            if not bucket_name:
                 raise ValueError("Bucket name cannot be empty")
-            bucket_name = storage.Client().bucket(bucket)
-            blob = bucket_name.blob(file_path)
+            bucket = storage.Client().bucket(bucket_name)
+            blob = bucket.blob(file_path)
             return blob.exists()
         except Exception as error:
             self.log.exception(f"Error checking file: {error}")
