@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import proto
-import json
 import google.oauth2.credentials as oauth2
 from google.cloud import dataproc_v1 as dataproc
 from google.protobuf.empty_pb2 import Empty
@@ -25,7 +24,7 @@ from dataproc_jupyter_plugin.commons.constants import (
 
 
 class Client:
-    def __init__(self, credentials, log, client_session=None):
+    def __init__(self, credentials, log, dataproc_url, client_session=None):
         self.log = log
         if not (
             ("access_token" in credentials)
@@ -38,6 +37,7 @@ class Client:
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
         self.client_session = client_session
+        self.api_endpoint = f"{self.region_id}-{dataproc_url.split('/')[2]}:443"
 
     def create_headers(self):
         return {
@@ -67,9 +67,7 @@ class Client:
         try:
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
-                client_options={
-                    "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
-                },
+                client_options={"api_endpoint": self.api_endpoint},
                 credentials=oauth2.Credentials(self._access_token),
             )
 
@@ -87,7 +85,13 @@ class Client:
 
             # Handle the response
             async for response in page_result:
-                clusters_list.append(proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False))
+                clusters_list.append(
+                    proto.Message.to_dict(
+                        response,
+                        use_integers_for_enums=False,
+                        preserving_proto_field_name=False,
+                    )
+                )
             return clusters_list
         except Exception as e:
             self.log.exception(f"Error fetching cluster list: {str(e)}")
@@ -97,9 +101,7 @@ class Client:
         try:
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
-                client_options={
-                    "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
-                },
+                client_options={"api_endpoint": self.api_endpoint},
                 credentials=oauth2.Credentials(self._access_token),
             )
 
@@ -114,7 +116,11 @@ class Client:
             response = await client.get_cluster(request=request)
 
             # Handle the response
-            return proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False)
+            return proto.Message.to_dict(
+                response,
+                use_integers_for_enums=False,
+                preserving_proto_field_name=False,
+            )
         except Exception as e:
             self.log.exception(f"Error fetching cluster detail: {str(e)}")
             return {"error": str(e)}
@@ -123,9 +129,7 @@ class Client:
         try:
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
-                client_options={
-                    "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
-                },
+                client_options={"api_endpoint": self.api_endpoint},
                 credentials=oauth2.Credentials(self._access_token),
             )
 
@@ -140,7 +144,11 @@ class Client:
 
             response = await operation.result()
             # Handle the response
-            return proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False)
+            return proto.Message.to_dict(
+                response,
+                use_integers_for_enums=False,
+                preserving_proto_field_name=False,
+            )
         except Exception as e:
             self.log.exception(f"Error stopping a cluster: {str(e)}")
             return {"error": str(e)}
@@ -149,9 +157,7 @@ class Client:
         try:
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
-                client_options={
-                    "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
-                },
+                client_options={"api_endpoint": self.api_endpoint},
                 credentials=oauth2.Credentials(self._access_token),
             )
 
@@ -166,7 +172,11 @@ class Client:
 
             response = await operation.result()
             # Handle the response
-            return proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False)
+            return proto.Message.to_dict(
+                response,
+                use_integers_for_enums=False,
+                preserving_proto_field_name=False,
+            )
         except Exception as e:
             self.log.exception(f"Error starting a cluster: {str(e)}")
             return {"error": str(e)}
@@ -175,9 +185,7 @@ class Client:
         try:
             # Create a client
             client = dataproc.ClusterControllerAsyncClient(
-                client_options={
-                    "api_endpoint": f"us-central1-dataproc.googleapis.com:443"
-                },
+                client_options={"api_endpoint": self.api_endpoint},
                 credentials=oauth2.Credentials(self._access_token),
             )
 
@@ -195,7 +203,11 @@ class Client:
             if isinstance(response, Empty):
                 return "Deleted successfully"
             else:
-                return proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False)
+                return proto.Message.to_dict(
+                    response,
+                    use_integers_for_enums=False,
+                    preserving_proto_field_name=False,
+                )
         except Exception as e:
             self.log.exception(f"Error deleting a cluster: {str(e)}")
             return {"error": str(e)}
