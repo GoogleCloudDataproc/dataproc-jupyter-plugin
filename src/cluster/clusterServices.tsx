@@ -17,10 +17,7 @@
 
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-  ClusterStatus,
-  POLLING_TIME_LIMIT
-} from '../utils/const';
+import { ClusterStatus, POLLING_TIME_LIMIT } from '../utils/const';
 import {
   authApi,
   toastifyCustomStyle,
@@ -253,7 +250,7 @@ export class ClusterService {
       let formattedResponse: any = await requestAPI(serviceURL, {
         method: 'DELETE'
       });
-      
+
       if (formattedResponse?.error) {
         toast.error(formattedResponse?.error, toastifyCustomStyle);
       } else {
@@ -262,7 +259,6 @@ export class ClusterService {
           toastifyCustomStyle
         );
       }
-
     } catch (error) {
       DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
       toast.error(
