@@ -17,6 +17,8 @@ import shutil
 import subprocess
 import uuid
 from datetime import datetime, timedelta
+from google.cloud import storage
+from google.api_core.exceptions import NotFound
 
 import aiohttp
 import pendulum
@@ -86,14 +88,16 @@ class Client:
             self.log.exception(f"Error getting bucket name: {str(e)}")
             raise Exception(f"Error getting composer bucket: {str(e)}")
 
-    async def check_file_exists(self, bucket, file_path):
+    async def check_file_exists(self, bucket_name, file_path):
         try:
-            cmd = f"gsutil ls gs://{bucket}/dataproc-notebooks/{file_path}"
-            await async_run_gsutil_subcommand(cmd)
-            return True
-        except subprocess.CalledProcessError as error:
-            self.log.exception(f"Error checking papermill file: {error.decode()}")
-            raise IOError(error.decode)
+            if not bucket_name:
+                raise ValueError("Bucket name cannot be empty")
+            bucket = storage.Client().bucket(bucket_name)
+            blob = bucket.blob(file_path)
+            return blob.exists()
+        except Exception as error:
+            self.log.exception(f"Error checking file: {error}")
+            raise IOError(f"Error creating dag: {error}")
 
     async def upload_papermill_to_gcs(self, gcs_dag_bucket):
         env = Environment(

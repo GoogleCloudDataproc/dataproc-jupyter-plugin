@@ -151,7 +151,7 @@ function LabelProperties({
           if (data.split(':')[1] === '') {
             data = data + value;
           } else {
-            data = data.replace(data.split(':')[1], value);
+            data = data.replace(data.split(/:(.+)/)[1], value);
           }
         }
       }
@@ -287,7 +287,7 @@ function LabelProperties({
                         }
                         defaultValue={
                           labelSplit.length > 2
-                            ? labelSplit[1] + ':' + labelSplit[2]
+                            ? label.split(/:(.+)/)[1]
                             : labelSplit[1]
                         }
                         Label={`Value ${index + 1}`}
