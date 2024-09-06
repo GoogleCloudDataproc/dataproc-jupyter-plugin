@@ -256,4 +256,3 @@ export const TIER_SELECT_OPTIONS = [
   { key: 'standard', value: 'standard', text: 'standard' },
   { key: 'premium', value: 'premium', text: 'premium' }
 ];
-
