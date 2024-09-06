@@ -49,7 +49,7 @@ class ClusterListController(APIHandler):
             cluster_list = await client.list_clusters(page_size, page_token)
             self.finish(json.dumps(cluster_list))
         except Exception as e:
-            self.log.exception(f"Error fetching cluster list")
+            self.log.exception(f"Error fetching cluster list: {str(e)}")
             self.finish({"error": str(e)})
 
 
@@ -62,7 +62,7 @@ class ClusterDetailController(APIHandler):
             get_cluster = await client.get_cluster_detail(cluster)
             self.finish(json.dumps(get_cluster))
         except Exception as e:
-            self.log.exception(f"Error fetching get cluster")
+            self.log.exception(f"Error fetching a cluster: {str(e)}")
             self.finish({"error": str(e)})
 
 
@@ -75,7 +75,7 @@ class StopClusterController(APIHandler):
             stop_cluster = await client.stop_cluster(cluster)
             self.finish(json.dumps(stop_cluster))
         except Exception as e:
-            self.log.exception(f"Error fetching stop cluster")
+            self.log.exception(f"Error stopping a cluster: {str(e)}")
             self.finish({"error": str(e)})
 
 
@@ -88,7 +88,7 @@ class StartClusterController(APIHandler):
             start_cluster = await client.start_cluster(cluster)
             self.finish(json.dumps(start_cluster))
         except Exception as e:
-            self.log.exception(f"Error fetching start cluster")
+            self.log.exception(f"Error starting a cluster: {str(e)}")
             self.finish({"error": str(e)})
 
 
@@ -101,5 +101,5 @@ class DeleteClusterController(APIHandler):
             delete_cluster = await client.delete_cluster(cluster)
             self.finish(json.dumps(delete_cluster))
         except Exception as e:
-            self.log.exception(f"Error deleting cluster")
+            self.log.exception(f"Error deleting a cluster: {str(e)}")
             self.finish({"error": str(e)})

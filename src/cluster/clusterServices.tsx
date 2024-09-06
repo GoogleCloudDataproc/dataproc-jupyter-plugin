@@ -19,7 +19,6 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
   ClusterStatus,
-  ClusterStatusState,
   POLLING_TIME_LIMIT
 } from '../utils/const';
 import {
@@ -161,8 +160,6 @@ export class ClusterService {
         const serviceURL = `clusterDetail?cluster=${clusterSelected}`;
 
         let responseResult: any = await requestAPI(serviceURL);
-        responseResult.status.state =
-          ClusterStatusState[responseResult.status.state.toString()];
         if (responseResult) {
           if (responseResult.error && responseResult.error.code === 404) {
             setErrorView(true);
@@ -197,9 +194,6 @@ export class ClusterService {
       const serviceURL = `clusterDetail?cluster=${selectedCluster}`;
 
       let formattedResponse: any = await requestAPI(serviceURL);
-      formattedResponse.status.state =
-        ClusterStatusState[formattedResponse.status.state.toString()];
-
       if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
         ClusterService.startClusterApi(selectedCluster);
         clearInterval(timer.current);

@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import proto
+import json
+import google.oauth2.credentials as oauth2
+from google.cloud import dataproc_v1 as dataproc
+from google.protobuf.empty_pb2 import Empty
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
     DATAPROC_SERVICE_NAME,
 )
-
-from google.cloud import dataproc_v1 as dataproc
-import proto
-import json
-import google.oauth2.credentials as oauth2
-from google.protobuf.empty_pb2 import Empty
 
 
 class Client:
@@ -88,11 +87,10 @@ class Client:
 
             # Handle the response
             async for response in page_result:
-                clusters_list.append(json.loads(proto.Message.to_json(response)))
-
+                clusters_list.append(proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False))
             return clusters_list
         except Exception as e:
-            self.log.exception(f"Error fetching cluster list")
+            self.log.exception(f"Error fetching cluster list: {str(e)}")
             return {"error": str(e)}
 
     async def get_cluster_detail(self, cluster):
@@ -116,9 +114,9 @@ class Client:
             response = await client.get_cluster(request=request)
 
             # Handle the response
-            return json.loads(proto.Message.to_json(response))
+            return proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False)
         except Exception as e:
-            self.log.exception(f"Error fetching cluster detail")
+            self.log.exception(f"Error fetching cluster detail: {str(e)}")
             return {"error": str(e)}
 
     async def stop_cluster(self, cluster):
@@ -142,9 +140,9 @@ class Client:
 
             response = await operation.result()
             # Handle the response
-            return json.loads(proto.Message.to_json(response))
+            return proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False)
         except Exception as e:
-            self.log.exception(f"Error fetching stop cluster")
+            self.log.exception(f"Error stopping a cluster: {str(e)}")
             return {"error": str(e)}
 
     async def start_cluster(self, cluster):
@@ -168,9 +166,9 @@ class Client:
 
             response = await operation.result()
             # Handle the response
-            return json.loads(proto.Message.to_json(response))
+            return proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False)
         except Exception as e:
-            self.log.exception(f"Error fetching start cluster")
+            self.log.exception(f"Error starting a cluster: {str(e)}")
             return {"error": str(e)}
 
     async def delete_cluster(self, cluster):
@@ -197,7 +195,7 @@ class Client:
             if isinstance(response, Empty):
                 return "Deleted successfully"
             else:
-                return json.loads(proto.Message.to_json(response))
+                return proto.Message.to_dict(response, use_integers_for_enums=False, preserving_proto_field_name=False)
         except Exception as e:
-            self.log.exception(f"Error deleting cluster")
+            self.log.exception(f"Error deleting a cluster: {str(e)}")
             return {"error": str(e)}

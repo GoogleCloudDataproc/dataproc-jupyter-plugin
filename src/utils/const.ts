@@ -256,16 +256,4 @@ export const TIER_SELECT_OPTIONS = [
   { key: 'standard', value: 'standard', text: 'standard' },
   { key: 'premium', value: 'premium', text: 'premium' }
 ];
-export const ClusterStatusState: any = {
-  0: 'UNKNOWN',
-  1: STATUS_CREATING,
-  2: STATUS_RUNNING,
-  3: STATUS_ERROR,
-  4: STATUS_DELETING,
-  5: 'UPDATING',
-  6: STATUS_STOPPING,
-  7: STATUS_STOPPED,
-  8: STATUS_STARTING,
-  9: 'ERROR_DUE_TO_UPDATE',
-  10: 'REPAIRING'
-};
+
