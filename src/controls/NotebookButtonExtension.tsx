@@ -31,6 +31,7 @@ import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
 import notebookSchedulerIcon from '../../style/icons/scheduler_calendar_month.svg';
 import { NotebookScheduler } from '../scheduler/notebookScheduler';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconLogs = new LabIcon({
   name: 'launcher:logs-icon',
@@ -69,6 +70,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     private readonly panel: NotebookPanel,
     private readonly context: DocumentRegistry.IContext<INotebookModel>,
     private readonly app: JupyterLab,
+    private readonly settingRegistry: ISettingRegistry,
     private readonly launcher: ILauncher,
     private readonly themeManager: IThemeManager
   ) {
@@ -96,6 +98,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       'session-details',
       this.sessionDetailsButton
     );
+
     this.notebookSchedulerButton = new ToolbarButton({
       icon: iconNotebookScheduler,
       onClick: () => this.onNotebookSchedulerClick(),
@@ -113,6 +116,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     const content = new NotebookScheduler(
       this.app as JupyterLab,
       this.themeManager,
+      this.settingRegistry as ISettingRegistry,
       this.context
     );
     const widget = new MainAreaWidget<NotebookScheduler>({ content });
@@ -228,6 +232,7 @@ export class NotebookButtonExtension
 {
   constructor(
     private app: JupyterLab,
+    private settingRegistry: ISettingRegistry,
     private launcher: ILauncher,
     private themeManager: IThemeManager
   ) {}
@@ -240,6 +245,7 @@ export class NotebookButtonExtension
       panel,
       context,
       this.app,
+      this.settingRegistry,
       this.launcher,
       this.themeManager
     );

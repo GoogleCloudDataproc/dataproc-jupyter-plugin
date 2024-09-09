@@ -302,21 +302,28 @@ export class SchedulerService {
   static editNotebookSchedulerService = async (
     bucketName: string,
     dagId: string,
+    isPreviewEnabled: boolean,
     setInputNotebookFilePath: (value: string) => void,
     setEditNotebookLoading: (value: string) => void
   ) => {
-    setEditNotebookLoading(dagId);
-    try {
-      const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
-      const formattedResponse: any = await requestAPI(serviceURL, {method: 'POST'});
-      setInputNotebookFilePath(formattedResponse.input_filename);
-      setEditNotebookLoading('');
-    } catch (reason) {
-      setEditNotebookLoading('');
-      toast.error(
-        `Error on POST {dataToSend}.\n${reason}`,
-        toastifyCustomStyle
-      );
+    if (!isPreviewEnabled) {
+      toast.error(`GCS is not enabled to open notebook`, toastifyCustomStyle);
+    } else {
+      setEditNotebookLoading(dagId);
+      try {
+        const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
+        const formattedResponse: any = await requestAPI(serviceURL, {
+          method: 'POST'
+        });
+        setInputNotebookFilePath(formattedResponse.input_filename);
+        setEditNotebookLoading('');
+      } catch (reason) {
+        setEditNotebookLoading('');
+        toast.error(
+          `Error on POST {dataToSend}.\n${reason}`,
+          toastifyCustomStyle
+        );
+      }
     }
   };
 
@@ -355,7 +362,9 @@ export class SchedulerService {
     setEditDagLoading(dagId);
     try {
       const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
-      const formattedResponse: any = await requestAPI(serviceURL, {method: 'POST'});
+      const formattedResponse: any = await requestAPI(serviceURL, {
+        method: 'POST'
+      });
       if (
         setCreateCompleted &&
         setJobNameSelected &&
@@ -731,7 +740,7 @@ export class SchedulerService {
       const serviceURL = `dagDelete?composer=${composerSelected}&dag_id=${dag_id}&from_page=${fromPage}`;
       const deleteResponse: IUpdateSchedulerAPIResponse = await requestAPI(
         serviceURL,
-	{method: 'DELETE'}
+        { method: 'DELETE' }
       );
       if (deleteResponse.status === 0) {
         await SchedulerService.listDagInfoAPIService(
@@ -767,7 +776,7 @@ export class SchedulerService {
       const serviceURL = `dagUpdate?composer=${composerSelected}&dag_id=${dag_id}&status=${is_status_paused}`;
       const formattedResponse: IUpdateSchedulerAPIResponse = await requestAPI(
         serviceURL,
-	{method: 'POST'}
+        { method: 'POST' }
       );
       if (formattedResponse && formattedResponse.status === 0) {
         toast.success(
@@ -882,7 +891,7 @@ export class SchedulerService {
     try {
       const data: any = await requestAPI(
         `triggerDag?dag_id=${dagId}&composer=${composerSelectedList}`,
-	{method: 'POST'}
+        { method: 'POST' }
       );
       if (data) {
         toast.success(`${dagId} triggered successfully `, toastifyCustomStyle);
