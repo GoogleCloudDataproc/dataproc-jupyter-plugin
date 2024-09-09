@@ -157,6 +157,8 @@ class NotebookButtonExtensionPoint implements IDisposable {
    *  3) Show or hide the log and session details buttons as necessary.
    */
   private onKernelChanged = async (session: ISessionContext) => {
+    this.sparkLogsButton.hide();
+    this.sessionDetailsButton.hide();
     // Get the current kernel ID and look for the kernel in the kernel API.
     const currentId = session.session?.kernel?.id;
     const runningKernels = await KernelAPI.listRunning();
