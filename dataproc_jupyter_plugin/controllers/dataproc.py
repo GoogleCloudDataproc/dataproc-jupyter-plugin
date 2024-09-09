@@ -27,9 +27,10 @@ class RuntimeController(APIHandler):
         try:
             page_token = self.get_argument("pageToken")
             page_size = self.get_argument("pageSize")
+            dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
             async with aiohttp.ClientSession() as client_session:
                 client = dataproc.Client(
-                    await credentials.get_cached(), self.log, client_session
+                    await credentials.get_cached(), self.log, dataproc_url, client_session
                 )
                 runtime_list = await client.list_runtime(page_size, page_token)
             self.finish(json.dumps(runtime_list))

@@ -37,6 +37,7 @@ class Client:
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
         self.client_session = client_session
+        self.dataproc_url = dataproc_url
         self.api_endpoint = f"{self.region_id}-{dataproc_url.split('/')[2]}:443"
 
     def create_headers(self):
@@ -47,8 +48,7 @@ class Client:
 
     async def list_runtime(self, page_size, page_token):
         try:
-            dataproc_url = await urls.gcp_service_url(DATAPROC_SERVICE_NAME)
-            api_endpoint = f"{dataproc_url}/v1/projects/{self.project_id}/locations/{self.region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
+            api_endpoint = f"{self.dataproc_url}/v1/projects/{self.project_id}/locations/{self.region_id}/sessionTemplates?pageSize={page_size}&pageToken={page_token}"
             async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
