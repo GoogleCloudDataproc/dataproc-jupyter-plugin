@@ -228,7 +228,6 @@ function listNotebookScheduler({
       await SchedulerService.editNotebookSchedulerService(
         bucketName,
         jobid,
-        isPreviewEnabled,
         setInputNotebookFilePath,
         setEditNotebookLoading
       );
@@ -420,28 +419,29 @@ function listNotebookScheduler({
             />
           </div>
         )}
-        {data.jobid === editNotebookLoading ? (
-          <div className="icon-buttons-style">
-            <CircularProgress
-              size={18}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
-          </div>
-        ) : (
-          <div
-            role="button"
-            className="icon-buttons-style"
-            title="Edit Notebook"
-            data-jobid={data.jobid}
-            onClick={e => handleEditNotebook(e)}
-          >
-            <iconEditDag.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          </div>
-        )}
+        {isPreviewEnabled &&
+          (data.jobid === editNotebookLoading ? (
+            <div className="icon-buttons-style">
+              <CircularProgress
+                size={18}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            </div>
+          ) : (
+            <div
+              role="button"
+              className="icon-buttons-style"
+              title="Edit Notebook"
+              data-jobid={data.jobid}
+              onClick={e => handleEditNotebook(e)}
+            >
+              <iconEditDag.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
+            </div>
+          ))}
         <div
           role="button"
           className="icon-buttons-style"

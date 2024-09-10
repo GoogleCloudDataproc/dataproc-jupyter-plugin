@@ -302,28 +302,23 @@ export class SchedulerService {
   static editNotebookSchedulerService = async (
     bucketName: string,
     dagId: string,
-    isPreviewEnabled: boolean,
     setInputNotebookFilePath: (value: string) => void,
     setEditNotebookLoading: (value: string) => void
   ) => {
-    if (!isPreviewEnabled) {
-      toast.error(`GCS is not enabled to open notebook`, toastifyCustomStyle);
-    } else {
-      setEditNotebookLoading(dagId);
-      try {
-        const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
-        const formattedResponse: any = await requestAPI(serviceURL, {
-          method: 'POST'
-        });
-        setInputNotebookFilePath(formattedResponse.input_filename);
-        setEditNotebookLoading('');
-      } catch (reason) {
-        setEditNotebookLoading('');
-        toast.error(
-          `Error on POST {dataToSend}.\n${reason}`,
-          toastifyCustomStyle
-        );
-      }
+    setEditNotebookLoading(dagId);
+    try {
+      const serviceURL = `editJobScheduler?&dag_id=${dagId}&bucket_name=${bucketName}`;
+      const formattedResponse: any = await requestAPI(serviceURL, {
+        method: 'POST'
+      });
+      setInputNotebookFilePath(formattedResponse.input_filename);
+      setEditNotebookLoading('');
+    } catch (reason) {
+      setEditNotebookLoading('');
+      toast.error(
+        `Error on POST {dataToSend}.\n${reason}`,
+        toastifyCustomStyle
+      );
     }
   };
 
