@@ -116,6 +116,10 @@
 .logs-button {
   cursor: context-menu !important;
 }
+.dark-theme-logs-disable {
+  opacity: 0.5;
+  cursor: default !important;
+}
 body[data-jp-theme-name='JupyterLab Light'] .filter-search-gcs {
   padding: 0px 5px;
   background-color: var(--jp-layout-color0);
@@ -130,6 +134,12 @@ body[data-jp-theme-light='true'].scroll-fix-header {
 }
 body[data-jp-theme-name='JupyterLab Dark'] .dark-theme-logs path {
   fill: var(--jp-ui-font-color1);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .dark-theme-logs-disable path {
+  fill: var(--jp-ui-font-color1);
+  opacity: 0.5;
+  cursor: default !important;
 }
 
 body[data-jp-theme-name='JupyterLab Dark'] .icon-white path {
