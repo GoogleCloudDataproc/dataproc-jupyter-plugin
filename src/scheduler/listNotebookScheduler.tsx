@@ -493,11 +493,11 @@ function listNotebookScheduler({
 
   const openEditDagNotebookFile = async () => {
     let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-    const result: any = await app.commands.execute('docmanager:open', {
+    const openNotebookFile: any = await app.commands.execute('docmanager:open', {
       path: filePath
     });
     setInputNotebookFilePath('');
-    if (result) {
+    if (openNotebookFile) {
       setEditNotebookLoading('');
     }
   };
