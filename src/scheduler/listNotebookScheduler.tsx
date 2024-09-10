@@ -491,13 +491,20 @@ function listNotebookScheduler({
     setIsPreviewEnabled(previewEnabled);
   };
 
+  const openEditDagNotebookFile = async () => {
+    let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
+    const result: any = await app.commands.execute('docmanager:open', {
+      path: filePath
+    });
+    setInputNotebookFilePath('');
+    if (result) {
+      setEditNotebookLoading('');
+    }
+  };
+
   useEffect(() => {
     if (inputNotebookFilePath !== '') {
-      let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-      app.commands.execute('docmanager:open', {
-        path: filePath
-      });
-      setInputNotebookFilePath('');
+      openEditDagNotebookFile();
     }
   }, [inputNotebookFilePath]);
 
