@@ -31,6 +31,7 @@ import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
 import notebookSchedulerIcon from '../../style/icons/scheduler_calendar_month.svg';
 import { NotebookScheduler } from '../scheduler/notebookScheduler';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconLogs = new LabIcon({
   name: 'launcher:logs-icon',
@@ -57,6 +58,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
   isDisposed: boolean;
   private readonly sparkLogsButton: ToolbarButton;
   private readonly sessionDetailsButton: ToolbarButton;
+  private readonly sessionDetailsButtonDisable: ToolbarButton;
   private readonly notebookSchedulerButton: ToolbarButton;
   private sessionId?: string;
 
@@ -69,6 +71,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     private readonly panel: NotebookPanel,
     private readonly context: DocumentRegistry.IContext<INotebookModel>,
     private readonly app: JupyterLab,
+    private readonly settingRegistry: ISettingRegistry,
     private readonly launcher: ILauncher,
     private readonly themeManager: IThemeManager
   ) {
@@ -96,6 +99,19 @@ class NotebookButtonExtensionPoint implements IDisposable {
       'session-details',
       this.sessionDetailsButton
     );
+    this.sessionDetailsButton.hide();
+
+    this.sessionDetailsButtonDisable = new ToolbarButton({
+      icon: iconSessionLogs,
+      tooltip: 'Please wait till session is ready',
+      className: 'dark-theme-logs-disable'
+    });
+    this.panel.toolbar.insertItem(
+      1000,
+      'session-details-disable',
+      this.sessionDetailsButtonDisable
+    );
+
     this.notebookSchedulerButton = new ToolbarButton({
       icon: iconNotebookScheduler,
       onClick: () => this.onNotebookSchedulerClick(),
@@ -113,6 +129,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     const content = new NotebookScheduler(
       this.app as JupyterLab,
       this.themeManager,
+      this.settingRegistry as ISettingRegistry,
       this.context
     );
     const widget = new MainAreaWidget<NotebookScheduler>({ content });
@@ -153,6 +170,8 @@ class NotebookButtonExtensionPoint implements IDisposable {
    *  3) Show or hide the log and session details buttons as necessary.
    */
   private onKernelChanged = async (session: ISessionContext) => {
+    this.sessionDetailsButton.hide();
+
     // Get the current kernel ID and look for the kernel in the kernel API.
     const currentId = session.session?.kernel?.id;
     const runningKernels = await KernelAPI.listRunning();
@@ -167,6 +186,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       // hide everything and abort.
       this.sparkLogsButton.hide();
       this.sessionDetailsButton.hide();
+      this.sessionDetailsButtonDisable.hide();
       this.sessionId = undefined;
       this.shsUri = undefined;
       return;
@@ -184,12 +204,14 @@ class NotebookButtonExtensionPoint implements IDisposable {
       // TODO: fix this for Cluster Notebooks.
       this.sparkLogsButton.hide();
       this.sessionDetailsButton.hide();
+      this.sessionDetailsButtonDisable.hide();
       this.sessionId = undefined;
       this.shsUri = undefined;
       return;
     }
 
     // If session ID is specified, show session detail button.
+    this.sessionDetailsButtonDisable.hide();
     this.sessionDetailsButton.show();
 
     // Fetch session details (we care about the SHS URL) from OnePlatform.
@@ -228,6 +250,7 @@ export class NotebookButtonExtension
 {
   constructor(
     private app: JupyterLab,
+    private settingRegistry: ISettingRegistry,
     private launcher: ILauncher,
     private themeManager: IThemeManager
   ) {}
@@ -240,6 +263,7 @@ export class NotebookButtonExtension
       panel,
       context,
       this.app,
+      this.settingRegistry,
       this.launcher,
       this.themeManager
     );

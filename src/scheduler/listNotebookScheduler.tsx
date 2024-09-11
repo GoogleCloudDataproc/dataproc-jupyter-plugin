@@ -34,7 +34,8 @@ import PollingTimer from '../utils/pollingTimer';
 import PollingImportErrorTimer from '../utils/pollingImportErrorTimer';
 import ImportErrorPopup from '../utils/importErrorPopup';
 import triggerIcon from '../../style/icons/scheduler_trigger.svg';
-import { scheduleMode } from '../utils/const';
+import { PLUGIN_ID, scheduleMode } from '../utils/const';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -70,6 +71,7 @@ interface IDagList {
 
 function listNotebookScheduler({
   app,
+  settingRegistry,
   handleDagIdSelection,
   backButtonComposerName,
   composerSelectedFromCreate,
@@ -103,6 +105,7 @@ function listNotebookScheduler({
   setIsLoadingKernelDetail
 }: {
   app: JupyterFrontEnd;
+  settingRegistry: ISettingRegistry;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
   backButtonComposerName: string;
   composerSelectedFromCreate: string;
@@ -151,6 +154,7 @@ function listNotebookScheduler({
   const [deletingNotebook, setDeletingNotebook] = useState(false);
   const [importErrorData, setImportErrorData] = useState<string[]>([]);
   const [importErrorEntries, setImportErrorEntries] = useState<number>(0);
+  const [isPreviewEnabled, setIsPreviewEnabled] = useState(false);
   const columns = React.useMemo(
     () => [
       {
@@ -291,7 +295,7 @@ function listNotebookScheduler({
   };
 
   const handleDeleteImportError = async (dagId: string) => {
-    const fromPage = "importErrorPage";
+    const fromPage = 'importErrorPage';
     await SchedulerService.handleDeleteSchedulerAPIService(
       composerSelectedList,
       dagId,
@@ -415,28 +419,29 @@ function listNotebookScheduler({
             />
           </div>
         )}
-        {data.jobid === editNotebookLoading ? (
-          <div className="icon-buttons-style">
-            <CircularProgress
-              size={18}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
-          </div>
-        ) : (
-          <div
-            role="button"
-            className="icon-buttons-style"
-            title="Edit Notebook"
-            data-jobid={data.jobid}
-            onClick={e => handleEditNotebook(e)}
-          >
-            <iconEditDag.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          </div>
-        )}
+        {isPreviewEnabled &&
+          (data.jobid === editNotebookLoading ? (
+            <div className="icon-buttons-style">
+              <CircularProgress
+                size={18}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            </div>
+          ) : (
+            <div
+              role="button"
+              className="icon-buttons-style"
+              title="Edit Notebook"
+              data-jobid={data.jobid}
+              onClick={e => handleEditNotebook(e)}
+            >
+              <iconEditDag.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
+            </div>
+          ))}
         <div
           role="button"
           className="icon-buttons-style"
@@ -477,17 +482,34 @@ function listNotebookScheduler({
       );
     }
   };
+
+  const checkPreviewEnabled = async () => {
+    const settings = await settingRegistry.load(PLUGIN_ID);
+
+    // The current value of whether or not preview features are enabled.
+    let previewEnabled = settings.get('previewEnabled').composite as boolean;
+    setIsPreviewEnabled(previewEnabled);
+  };
+
+  const openEditDagNotebookFile = async () => {
+    let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
+    const openNotebookFile: any = await app.commands.execute('docmanager:open', {
+      path: filePath
+    });
+    setInputNotebookFilePath('');
+    if (openNotebookFile) {
+      setEditNotebookLoading('');
+    }
+  };
+
   useEffect(() => {
     if (inputNotebookFilePath !== '') {
-      let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-      app.commands.execute('docmanager:open', {
-        path: filePath
-      });
-      setInputNotebookFilePath('');
+      openEditDagNotebookFile();
     }
   }, [inputNotebookFilePath]);
 
   useEffect(() => {
+    checkPreviewEnabled();
     const loadComposerListAndSelectFirst = async () => {
       await listComposersAPI();
     };
