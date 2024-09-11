@@ -255,7 +255,12 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
+      new NotebookButtonExtension(
+        app as JupyterLab,
+        settingRegistry as ISettingRegistry,
+        launcher,
+        themeManager
+      )
     );
 
     const loadDpmsWidget = (value: string) => {
@@ -533,6 +538,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new NotebookScheduler(
           app as JupyterLab,
           themeManager,
+          settingRegistry as ISettingRegistry,
           ''
         );
         const widget = new MainAreaWidget<NotebookScheduler>({ content });

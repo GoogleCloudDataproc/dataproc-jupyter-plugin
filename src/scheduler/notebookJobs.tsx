@@ -22,9 +22,11 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import ListNotebookScheduler from './listNotebookScheduler';
 import ExecutionHistory from './executionHistory';
 import { scheduleMode } from '../utils/const';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const NotebookJobComponent = ({
   app,
+  settingRegistry,
   composerSelectedFromCreate,
   setCreateCompleted,
   setJobNameSelected,
@@ -55,6 +57,7 @@ const NotebookJobComponent = ({
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
+  settingRegistry: ISettingRegistry;
   composerSelectedFromCreate: string;
   setCreateCompleted?: (value: boolean) => void;
   setJobNameSelected?: (value: string) => void;
@@ -116,6 +119,7 @@ const NotebookJobComponent = ({
           <div>
             <ListNotebookScheduler
               app={app}
+              settingRegistry={settingRegistry}
               handleDagIdSelection={handleDagIdSelection}
               backButtonComposerName={backComposerName}
               composerSelectedFromCreate={composerSelectedFromCreate}
@@ -156,21 +160,25 @@ const NotebookJobComponent = ({
 
 export class NotebookJobs extends DataprocWidget {
   app: JupyterLab;
+  settingRegistry: ISettingRegistry;
   composerSelectedFromCreate: string;
 
   constructor(
     app: JupyterLab,
+    settingRegistry: ISettingRegistry,
     themeManager: IThemeManager,
     composerSelectedFromCreate: string
   ) {
     super(themeManager);
     this.app = app;
+    this.settingRegistry = settingRegistry;
     this.composerSelectedFromCreate = composerSelectedFromCreate;
   }
   renderInternal(): React.JSX.Element {
     return (
       <NotebookJobComponent
         app={this.app}
+        settingRegistry={this.settingRegistry}
         themeManager={this.themeManager}
         composerSelectedFromCreate={this.composerSelectedFromCreate}
       />

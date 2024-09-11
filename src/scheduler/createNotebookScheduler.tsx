@@ -45,6 +45,7 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
 import { scheduleValueExpression } from '../utils/const';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 interface IDagList {
   jobid: string;
@@ -66,11 +67,13 @@ const iconError = new LabIcon({
 const CreateNotebookScheduler = ({
   themeManager,
   app,
-  context
+  context,
+  settingRegistry
 }: {
   themeManager: IThemeManager;
   app: JupyterLab;
   context: any;
+  settingRegistry: ISettingRegistry;
 }): JSX.Element => {
   const [jobNameSelected, setJobNameSelected] = useState('');
   const [inputFileSelected, setInputFileSelected] = useState('');
@@ -407,6 +410,7 @@ const CreateNotebookScheduler = ({
         <NotebookJobComponent
           app={app}
           themeManager={themeManager}
+          settingRegistry={settingRegistry}
           composerSelectedFromCreate={composerSelected}
           setCreateCompleted={setCreateCompleted}
           setJobNameSelected={setJobNameSelected}
