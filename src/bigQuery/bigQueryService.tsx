@@ -407,7 +407,10 @@ export class BigQueryService {
     setSearchLoading(true);
     try {
       const data: any = await requestAPI(
-        `bigQuerySearch?search_string=${searchTerm}&type=(table|dataset)&system=bigquery`
+        `bigQuerySearch?search_string=${searchTerm}&type=(table|dataset)&system=bigquery`,
+        {
+          method: 'POST'
+        }
       );
       setSearchResponse(data);
     } catch (reason) {
