@@ -702,7 +702,9 @@ export class SchedulerService {
     try {
       dagRunId = encodeURIComponent(dagRunId);
       const serviceURL = `downloadOutput?composer=${composerName}&bucket_name=${bucketName}&dag_id=${dagId}&dag_run_id=${dagRunId}`;
-      const formattedResponse: any = await requestAPI(serviceURL);
+      const formattedResponse: any = await requestAPI(serviceURL, {
+        method: 'POST'
+      });
       dagRunId = decodeURIComponent(dagRunId);
       if (formattedResponse.status === 0) {
         toast.success(

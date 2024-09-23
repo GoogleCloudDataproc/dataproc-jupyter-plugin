@@ -51,7 +51,7 @@ class ExecutorController(APIHandler):
 
 class DownloadOutputController(APIHandler):
     @tornado.web.authenticated
-    async def get(self):
+    async def post(self):
         try:
             composer_name = self.get_argument("composer")
             bucket_name = self.get_argument("bucket_name")
