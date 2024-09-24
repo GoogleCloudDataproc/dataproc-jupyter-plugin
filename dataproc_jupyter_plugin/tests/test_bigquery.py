@@ -184,6 +184,7 @@ async def test_search(monkeypatch, jp_fetch):
             "type": mock_type,
         },
         method="POST",
+        allow_nonstandard_methods=True,
     )
     assert response.code == 200
     payload = json.loads(response.body)["results"][0]
