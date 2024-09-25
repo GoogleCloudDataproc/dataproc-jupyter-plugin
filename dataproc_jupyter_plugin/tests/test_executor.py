@@ -129,6 +129,8 @@ async def test_download_dag_output(monkeypatch, returncode, expected_result, jp_
             "dag_id": mock_dag_id,
             "dag_run_id": mock_dag_run_id,
         },
+        method="POST",
+        allow_nonstandard_methods=True,
     )
     assert response.code == 200
     payload = json.loads(response.body)
@@ -149,6 +151,8 @@ async def test_invalid_composer_name(monkeypatch, jp_fetch):
             "dag_id": mock_dag_id,
             "dag_run_id": mock_dag_run_id,
         },
+        method="POST",
+        allow_nonstandard_methods=True,
     )
     assert response.code == 200
     payload = json.loads(response.body)
@@ -171,6 +175,8 @@ async def test_invalid_bucket_name(monkeypatch, jp_fetch):
             "dag_id": mock_dag_id,
             "dag_run_id": mock_dag_run_id,
         },
+        method="POST",
+        allow_nonstandard_methods=True,
     )
     assert response.code == 200
     payload = json.loads(response.body)
@@ -193,6 +199,8 @@ async def test_invalid_dag_id(monkeypatch, jp_fetch):
             "dag_id": mock_dag_id,
             "dag_run_id": mock_dag_run_id,
         },
+        method="POST",
+        allow_nonstandard_methods=True,
     )
     assert response.code == 200
     payload = json.loads(response.body)
@@ -215,6 +223,8 @@ async def test_invalid_dag_run_id(monkeypatch, jp_fetch):
             "dag_id": mock_dag_id,
             "dag_run_id": mock_dag_run_id,
         },
+        method="POST",
+        allow_nonstandard_methods=True,
     )
     assert response.code == 200
     payload = json.loads(response.body)

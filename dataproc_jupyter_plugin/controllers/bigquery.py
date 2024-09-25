@@ -141,7 +141,7 @@ class ProjectsController(APIHandler):
 
 class SearchController(APIHandler):
     @tornado.web.authenticated
-    async def get(self):
+    async def post(self):
         try:
             search_string = self.get_argument("search_string")
             type = self.get_argument("type")
