@@ -1,6 +1,6 @@
 {
     "name": "dataproc_jupyter_plugin",
-    "version": "0.1.80",
+    "version": "0.1.81",
     "description": "It is a plugin to work with dataproc services in Jupyterlab",
     "keywords": [
         "jupyter",
@@ -134,7 +134,7 @@
         "stylelint-config-standard": "^26.0.0",
         "stylelint-prettier": "^2.0.0",
         "typescript": "~5.0.2",
-        "webpack": "^5.88.2",
+        "webpack": "^5.94.0",
         "yjs": "^13.5.0"
     },
     "sideEffects": [
