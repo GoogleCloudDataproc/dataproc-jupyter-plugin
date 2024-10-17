@@ -128,6 +128,7 @@ class Client:
         self.log.info("Generating dag file")
         DAG_TEMPLATE_CLUSTER_V1 = "pysparkJobTemplate-v1.txt"
         DAG_TEMPLATE_SERVERLESS_V1 = "pysparkBatchTemplate-v1.txt"
+        DAG_TEMPLATE_LOCAL_V1 = "localPythonTemplate-v1.txt"
         environment = Environment(
             loader=PackageLoader("dataproc_jupyter_plugin", TEMPLATES_FOLDER_PATH)
         )
@@ -156,60 +157,89 @@ class Client:
             parameters = "\n".join(item.replace(":", ": ") for item in job.parameters)
         else:
             parameters = ""
-        if job.mode_selected == "cluster":
-            template = environment.get_template(DAG_TEMPLATE_CLUSTER_V1)
-            if not job.input_filename.startswith(GCS):
-                input_notebook = f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
+        if job.local_kernel is False:
+            if job.mode_selected == "cluster":
+                template = environment.get_template(DAG_TEMPLATE_CLUSTER_V1)
+                if not job.input_filename.startswith(GCS):
+                    input_notebook = f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
+                else:
+                    input_notebook = job.input_filename
+                content = template.render(
+                    job,
+                    inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py",
+                    gcpProjectId=gcp_project_id,
+                    gcpRegion=gcp_region_id,
+                    input_notebook=input_notebook,
+                    output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_",
+                    owner=owner,
+                    schedule_interval=schedule_interval,
+                    start_date=start_date,
+                    parameters=parameters,
+                    time_zone=time_zone,
+                )
             else:
-                input_notebook = job.input_filename
-            content = template.render(
-                job,
-                inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py",
-                gcpProjectId=gcp_project_id,
-                gcpRegion=gcp_region_id,
-                input_notebook=input_notebook,
-                output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_",
-                owner=owner,
-                schedule_interval=schedule_interval,
-                start_date=start_date,
-                parameters=parameters,
-                time_zone=time_zone,
-            )
+                template = environment.get_template(DAG_TEMPLATE_SERVERLESS_V1)
+                job_dict = job.dict()
+                phs_path = (
+                    job_dict.get("serverless_name", {})
+                    .get("environmentConfig", {})
+                    .get("peripheralsConfig", {})
+                    .get("sparkHistoryServerConfig", {})
+                    .get("dataprocCluster", "")
+                )
+                serverless_name = (
+                    job_dict.get("serverless_name", {})
+                    .get("jupyterSession", {})
+                    .get("displayName", "")
+                )
+                custom_container = (
+                    job_dict.get("serverless_name", {})
+                    .get("runtimeConfig", {})
+                    .get("containerImage", "")
+                )
+                metastore_service = (
+                    job_dict.get("serverless_name", {})
+                    .get("environmentConfig", {})
+                    .get("peripheralsConfig", {})
+                    .get("metastoreService", {})
+                )
+                version = (
+                    job_dict.get("serverless_name", {})
+                    .get("runtimeConfig", {})
+                    .get("version", "")
+                )
+                if not job.input_filename.startswith(GCS):
+                    input_notebook = f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
+                else:
+                    input_notebook = job.input_filename
+                content = template.render(
+                    job,
+                    inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py",
+                    gcpProjectId=gcp_project_id,
+                    gcpRegion=gcp_region_id,
+                    input_notebook=input_notebook,
+                    output_notebook=f"gs://{gcs_dag_bucket}/dataproc-output/{job.name}/output-notebooks/{job.name}_",
+                    owner=owner,
+                    schedule_interval=schedule_interval,
+                    start_date=start_date,
+                    parameters=parameters,
+                    phs_path=phs_path,
+                    serverless_name=serverless_name,
+                    time_zone=time_zone,
+                    custom_container=custom_container,
+                    metastore_service=metastore_service,
+                    version=version,
+                )
         else:
-            template = environment.get_template(DAG_TEMPLATE_SERVERLESS_V1)
-            job_dict = job.dict()
-            phs_path = (
-                job_dict.get("serverless_name", {})
-                .get("environmentConfig", {})
-                .get("peripheralsConfig", {})
-                .get("sparkHistoryServerConfig", {})
-                .get("dataprocCluster", "")
-            )
-            serverless_name = (
-                job_dict.get("serverless_name", {})
-                .get("jupyterSession", {})
-                .get("displayName", "")
-            )
-            custom_container = (
-                job_dict.get("serverless_name", {})
-                .get("runtimeConfig", {})
-                .get("containerImage", "")
-            )
-            metastore_service = (
-                job_dict.get("serverless_name", {})
-                .get("environmentConfig", {})
-                .get("peripheralsConfig", {})
-                .get("metastoreService", {})
-            )
-            version = (
-                job_dict.get("serverless_name", {})
-                .get("runtimeConfig", {})
-                .get("version", "")
-            )
+            template = environment.get_template(DAG_TEMPLATE_LOCAL_V1)
             if not job.input_filename.startswith(GCS):
                 input_notebook = f"gs://{gcs_dag_bucket}/dataproc-notebooks/{job.name}/input_notebooks/{job.input_filename}"
             else:
                 input_notebook = job.input_filename
+            if len(job.parameters) != 0:
+                parameters = ",".join(item.replace(":", ": ") for item in job.parameters)
+            else:
+                parameters = ""
             content = template.render(
                 job,
                 inputFilePath=f"gs://{gcs_dag_bucket}/dataproc-notebooks/wrapper_papermill.py",
@@ -221,12 +251,7 @@ class Client:
                 schedule_interval=schedule_interval,
                 start_date=start_date,
                 parameters=parameters,
-                phs_path=phs_path,
-                serverless_name=serverless_name,
                 time_zone=time_zone,
-                custom_container=custom_container,
-                metastore_service=metastore_service,
-                version=version,
             )
         LOCAL_DAG_FILE_LOCATION = f"./scheduled-jobs/{job.name}"
         file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)

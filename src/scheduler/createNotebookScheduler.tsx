@@ -121,8 +121,8 @@ const CreateNotebookScheduler = ({
   const [editMode, setEditMode] = useState(false);
   const [dagListCall, setDagListCall] = useState(false);
   const [isLoadingKernelDetail, setIsLoadingKernelDetail] = useState(false);
+  const [isLocalKernel, setIsLocalKernel] = useState(false);
 
-  const [isBigQueryNotebook, setIsBigQueryNotebook] = useState(false);
 
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(
@@ -266,6 +266,7 @@ const CreateNotebookScheduler = ({
       schedule_value: scheduleMode === 'runNow' ? '' : scheduleValue,
       stop_cluster: stopCluster,
       dag_id: randomDagId,
+      local_kernel: isLocalKernel,
       time_zone: scheduleMode !== 'runNow' ? timeZoneSelected : '',
       [selectedMode === 'cluster' ? 'cluster_name' : 'serverless_name']:
         selectedMode === 'cluster' ? clusterSelected : serverlessDataSelected
@@ -306,8 +307,8 @@ const CreateNotebookScheduler = ({
       (!jobNameUniqueValidation && !editMode) ||
       inputFileSelected === '' ||
       composerSelected === '' ||
-      (selectedMode === 'cluster' && clusterSelected === '') ||
-      (selectedMode === 'serverless' && serverlessSelected === '') ||
+      (selectedMode === 'cluster' && clusterSelected === '' && !isLocalKernel) ||
+      (selectedMode === 'serverless' && serverlessSelected === '' && !isLocalKernel) ||
       ((emailOnFailure || emailOnRetry || emailOnSuccess) &&
         emailList.length === 0)
     );
@@ -327,6 +328,12 @@ const CreateNotebookScheduler = ({
     const kernels = kernelSpecs.kernelspecs;
 
     if (kernels && context.sessionContext.kernelPreference.name) {
+      console.log('aaaaa', context.sessionContext.kernelDisplayName);
+      if (context.sessionContext.kernelDisplayName.includes('Local')) {
+        setIsLocalKernel(true);
+      } else {
+        setIsLocalKernel(false);
+      }
       if (
         kernels[context.sessionContext.kernelPreference.name].resources
           .endpointParentResource
@@ -369,10 +376,6 @@ const CreateNotebookScheduler = ({
 
     if (context !== '') {
       setInputFileSelected(context.path);
-      if (context.path.toLowerCase().startsWith('bigframes')) {
-        setIsBigQueryNotebook(true);
-        setSelectedMode('serverless');
-      }
     }
     setJobNameSelected('');
     if (!editMode) {
@@ -553,93 +556,94 @@ const CreateNotebookScheduler = ({
                 fromPage="scheduler"
               />
             </>
-            {!isBigQueryNotebook && (
-              <div className="create-scheduler-form-element">
-                <FormControl>
-                  <RadioGroup
-                    aria-labelledby="demo-controlled-radio-buttons-group"
-                    name="controlled-radio-buttons-group"
-                    value={selectedMode}
-                    onChange={handleSelectedModeChange}
-                    row={true}
-                  >
-                    <FormControlLabel
-                      value="cluster"
-                      control={<Radio size="small" />}
-                      label={
-                        <Typography sx={{ fontSize: 13 }}>Cluster</Typography>
-                      }
-                    />
-                    <FormControlLabel
-                      value="serverless"
-                      className="create-scheduler-label-style"
-                      control={<Radio size="small" />}
-                      label={
-                        <Typography sx={{ fontSize: 13 }}>
-                          Serverless
-                        </Typography>
-                      }
-                    />
-                  </RadioGroup>
-                </FormControl>
-              </div>
-            )}
-            <div className="create-scheduler-form-element">
-              {isLoadingKernelDetail && (
-                <CircularProgress
-                  size={18}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-              )}
-              {!isBigQueryNotebook &&
-                selectedMode === 'cluster' &&
-                !isLoadingKernelDetail && (
-                  <Autocomplete
-                    className="create-scheduler-style"
-                    options={clusterList}
-                    value={clusterSelected}
-                    onChange={(_event, val) => handleClusterSelected(val)}
-                    renderInput={params => (
-                      <TextField {...params} label="Cluster*" />
-                    )}
-                  />
-                )}
-              {selectedMode === 'serverless' && !isLoadingKernelDetail && (
-                <Autocomplete
-                  className="create-scheduler-style"
-                  options={serverlessList}
-                  value={serverlessSelected}
-                  onChange={(_event, val) => handleServerlessSelected(val)}
-                  renderInput={params => (
-                    <TextField {...params} label="Serverless*" />
-                  )}
-                />
-              )}
-            </div>
-            {!isBigQueryNotebook && selectedMode === 'cluster' && (
-              <div className="create-scheduler-form-element">
-                <FormGroup row={true}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={stopCluster}
-                        onChange={handleStopCluster}
+
+            {!isLocalKernel && (
+              <>
+                <div className="create-scheduler-form-element">
+                  <FormControl>
+                    <RadioGroup
+                      aria-labelledby="demo-controlled-radio-buttons-group"
+                      name="controlled-radio-buttons-group"
+                      value={selectedMode}
+                      onChange={handleSelectedModeChange}
+                      row={true}
+                    >
+                      <FormControlLabel
+                        value="cluster"
+                        control={<Radio size="small" />}
+                        label={
+                          <Typography sx={{ fontSize: 13 }}>Cluster</Typography>
+                        }
                       />
-                    }
-                    className="create-scheduler-label-style"
-                    label={
-                      <Typography
-                        sx={{ fontSize: 13 }}
-                        title="Stopping cluster abruptly will impact if any other job is running on the cluster at the moment"
-                      >
-                        Stop the cluster after notebook execution
-                      </Typography>
-                    }
-                  />
-                </FormGroup>
-              </div>
+                      <FormControlLabel
+                        value="serverless"
+                        className="create-scheduler-label-style"
+                        control={<Radio size="small" />}
+                        label={
+                          <Typography sx={{ fontSize: 13 }}>
+                            Serverless
+                          </Typography>
+                        }
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </div>
+                <div className="create-scheduler-form-element">
+                  {isLoadingKernelDetail && (
+                    <CircularProgress
+                      size={18}
+                      aria-label="Loading Spinner"
+                      data-testid="loader"
+                    />
+                  )}
+                  {selectedMode === 'cluster' && !isLoadingKernelDetail && (
+                    <Autocomplete
+                      className="create-scheduler-style"
+                      options={clusterList}
+                      value={clusterSelected}
+                      onChange={(_event, val) => handleClusterSelected(val)}
+                      renderInput={params => (
+                        <TextField {...params} label="Cluster*" />
+                      )}
+                    />
+                  )}
+                  {selectedMode === 'serverless' && !isLoadingKernelDetail && (
+                    <Autocomplete
+                      className="create-scheduler-style"
+                      options={serverlessList}
+                      value={serverlessSelected}
+                      onChange={(_event, val) => handleServerlessSelected(val)}
+                      renderInput={params => (
+                        <TextField {...params} label="Serverless*" />
+                      )}
+                    />
+                  )}
+                </div>
+                {selectedMode === 'cluster' && (
+                  <div className="create-scheduler-form-element">
+                    <FormGroup row={true}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            size="small"
+                            checked={stopCluster}
+                            onChange={handleStopCluster}
+                          />
+                        }
+                        className="create-scheduler-label-style"
+                        label={
+                          <Typography
+                            sx={{ fontSize: 13 }}
+                            title="Stopping cluster abruptly will impact if any other job is running on the cluster at the moment"
+                          >
+                            Stop the cluster after notebook execution
+                          </Typography>
+                        }
+                      />
+                    </FormGroup>
+                  </div>
+                )}
+              </>
             )}
             <div className="create-scheduler-form-element">
               <Input
