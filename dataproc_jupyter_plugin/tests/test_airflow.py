@@ -14,6 +14,7 @@
 
 import json
 import subprocess
+from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 
@@ -81,40 +82,34 @@ async def test_list_dag_with_invalid_credentials(monkeypatch, jp_fetch):
     assert payload == {"error": "Missing required credentials"}
 
 
-@pytest.mark.parametrize("returncode, expected_result", [(0, 0)])
-async def test_delete_job(monkeypatch, returncode, expected_result, jp_fetch):
-
-    async def mock_async_command_executor(cmd):
-        if cmd is None:
-            raise ValueError("Received None for cmd parameter")
-        if returncode == 0:
-            return b"output", b""
-        else:
-            raise subprocess.CalledProcessError(
-                returncode, cmd, output=b"output", stderr=b"error in executing command"
-            )
-
-    monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
-    monkeypatch.setattr(
-        airflow, "async_run_gsutil_subcommand", mock_async_command_executor
-    )
-    monkeypatch.setattr(aiohttp, "ClientSession", MockClientSession)
-    mock_composer = "mock-composer"
-    mock_dag_id = "mock_dag_id"
-    mock_from_page = "mock_from_page"
-    response = await jp_fetch(
-        "dataproc-plugin",
-        "dagDelete",
-        params={
-            "composer": mock_composer,
-            "dag_id": mock_dag_id,
-            "from_page": mock_from_page,
-        },
-        method="DELETE",
-    )
-    assert response.code == 200
-    payload = json.loads(response.body)
-    assert payload["status"] == 0
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("from_page, expected_status", [(None, 0), ("some_page", 0)])
+    async def test_delete_job(monkeypatch, from_page, expected_status, jp_fetch):
+        monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
+        mock_delete = AsyncMock()
+        mock_delete.return_value.__aenter__.return_value.status = 200
+        mock_client_session = MagicMock()
+        mock_client_session.delete = mock_delete
+        monkeypatch.setattr("dagDelete.aiohttp.ClientSession", lambda: mock_client_session)
+        mock_bucket = MagicMock()
+        mock_blob = MagicMock()
+        mock_bucket.blob.return_value = mock_blob
+        mock_storage_client = MagicMock()
+        mock_storage_client.bucket.return_value = mock_bucket
+        monkeypatch.setattr("dagDelete.storage.Client", lambda: mock_storage_client)
+        response = await jp_fetch(
+            "dataproc-plugin",
+            "dagDelete",
+            method="DELETE",
+            params={
+                "composer": "mock-composer",
+                "dag_id": "mock_dag_id",
+                "from_page": from_page,
+            },
+        )
+        assert response.code == 200
+        payload = json.loads(response.body)
+        assert payload["status"] == expected_status
 
 
 class MockClientSession:
