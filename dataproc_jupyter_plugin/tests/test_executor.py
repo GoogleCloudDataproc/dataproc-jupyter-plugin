@@ -119,7 +119,6 @@ async def test_download_dag_output(monkeypatch, returncode, expected_result, jp_
     mock_dag_id = "mock-dag-id"
     mock_dag_run_id = "258"
 
-
     response = await jp_fetch(
         "dataproc-plugin",
         "downloadOutput",

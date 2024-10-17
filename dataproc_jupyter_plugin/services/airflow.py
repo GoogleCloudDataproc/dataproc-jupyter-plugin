@@ -87,11 +87,10 @@ class Client:
             self.log.exception(f"Error getting dag list: {str(e)}")
             return {"error": str(e)}
 
-        
     async def delete_job(self, composer_name, dag_id, from_page):
         airflow_uri, bucket_name = await self.get_airflow_uri(composer_name)
         try:
-            api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}"            
+            api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}"
             # Delete the DAG via the Airflow API if from_page is None
             if from_page is None:
                 async with self.client_session.delete(
@@ -104,7 +103,7 @@ class Client:
             blob.delete()
 
             self.log.info(f"Deleted {blob_name} from bucket {bucket_name}")
-            
+
             return 0
         except Exception as e:
             self.log.exception(f"Error deleting DAG: {str(e)}")

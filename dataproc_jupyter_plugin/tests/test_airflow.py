@@ -81,16 +81,19 @@ async def test_list_dag_with_invalid_credentials(monkeypatch, jp_fetch):
     payload = json.loads(response.body)
     assert payload == {"error": "Missing required credentials"}
 
-
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("from_page, expected_status", [(None, 0), ("some_page", 0)])
+    @pytest.mark.parametrize(
+        "from_page, expected_status", [(None, 0), ("some_page", 0)]
+    )
     async def test_delete_job(monkeypatch, from_page, expected_status, jp_fetch):
         monkeypatch.setattr(airflow.Client, "get_airflow_uri", mock_get_airflow_uri)
         mock_delete = AsyncMock()
         mock_delete.return_value.__aenter__.return_value.status = 200
         mock_client_session = MagicMock()
         mock_client_session.delete = mock_delete
-        monkeypatch.setattr("dagDelete.aiohttp.ClientSession", lambda: mock_client_session)
+        monkeypatch.setattr(
+            "dagDelete.aiohttp.ClientSession", lambda: mock_client_session
+        )
         mock_bucket = MagicMock()
         mock_blob = MagicMock()
         mock_bucket.blob.return_value = mock_blob
