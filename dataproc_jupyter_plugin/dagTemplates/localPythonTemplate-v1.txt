@@ -49,7 +49,6 @@ def convert_parameters(param_str):
 time_zone = '{{time_zone}}'
 input_notebook = '{{input_notebook}}'
 output_notebook = {% raw %}"{{ ti.xcom_pull(task_ids='generate_output_file') }}"{% endraw %}
-parameters_str = '{{parameters}}'
 
 
 dag = DAG(
@@ -62,8 +61,13 @@ dag = DAG(
 )
 
 def run_notebook_task(**kwargs):
+    parameters_str = '{{parameters}}'
+    if len(parameters_str)>0:
+        parameters_dict = convert_parameters(parameters_str)
+    else:
+        parameters_dict = {}
     output_notebook = kwargs['ti'].xcom_pull(task_ids='generate_output_file')
-    pm.execute_notebook(input_notebook, output_notebook, kernel_name = "python3", parameters=dict(convert_parameters('{{parameters}}')))
+    pm.execute_notebook(input_notebook, output_notebook, kernel_name = "python3", parameters=parameters_dict)
 
  
 write_output_task = PythonOperator(
