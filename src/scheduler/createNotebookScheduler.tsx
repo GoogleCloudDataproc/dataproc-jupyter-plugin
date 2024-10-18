@@ -121,7 +121,7 @@ const CreateNotebookScheduler = ({
   const [editMode, setEditMode] = useState(false);
   const [dagListCall, setDagListCall] = useState(false);
   const [isLoadingKernelDetail, setIsLoadingKernelDetail] = useState(false);
-  const [isLocalKernel, setIsLocalKernel] = useState(false);
+  const [isLocalKernel, setIsLocalKernel] = useState(true);
 
 
   const listClustersAPI = async () => {
