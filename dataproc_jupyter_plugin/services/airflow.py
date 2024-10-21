@@ -15,6 +15,7 @@
 import re
 import subprocess
 import urllib
+from google.cloud import storage
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.commands import async_run_gsutil_subcommand
@@ -87,19 +88,25 @@ class Client:
             return {"error": str(e)}
 
     async def delete_job(self, composer_name, dag_id, from_page):
-        airflow_uri, bucket = await self.get_airflow_uri(composer_name)
+        airflow_uri, bucket_name = await self.get_airflow_uri(composer_name)
         try:
             api_endpoint = f"{airflow_uri}/api/v1/dags/{dag_id}"
+            # Delete the DAG via the Airflow API if from_page is None
             if from_page is None:
                 async with self.client_session.delete(
                     api_endpoint, headers=self.create_headers()
                 ) as response:
                     self.log.info(response)
-            cmd = f"gsutil rm gs://{bucket}/dags/dag_{dag_id}.py"
-            await async_run_gsutil_subcommand(cmd)
+            bucket = storage.Client().bucket(bucket_name)
+            blob_name = f"dags/dag_{dag_id}.py"
+            blob = bucket.blob(blob_name)
+            blob.delete()
+
+            self.log.info(f"Deleted {blob_name} from bucket {bucket_name}")
+
             return 0
         except Exception as e:
-            self.log.exception(f"Error deleting dag: {str(e)}")
+            self.log.exception(f"Error deleting DAG: {str(e)}")
             return {"error": str(e)}
 
     async def update_job(self, composer_name, dag_id, status):
