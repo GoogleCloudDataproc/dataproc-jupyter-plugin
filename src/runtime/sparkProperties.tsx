@@ -207,6 +207,7 @@ function SparkProperties({
                   <div className="key-message-wrapper">
                     <div
                       className="select-text-overlay-label"
+                      id={`key-${labelSplit[0]}`}
                       title={labelSplit[0]}
                     >
                       <Input
@@ -222,7 +223,10 @@ function SparkProperties({
                       />
                     </div>
                   </div>
-                  <div className="key-message-wrapper">
+                  <div
+                    className="key-message-wrapper"
+                    id={`value-${labelSplit[0]}`}
+                  >
                     <div className="select-text-overlay-label">
                       {SELECT_FIELDS.includes(labelSplit[0]) &&
                       sparkSection !== 'gpu' ? (
