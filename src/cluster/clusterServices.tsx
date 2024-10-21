@@ -17,23 +17,15 @@
 
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
-  ClusterStatus,
-  HTTP_METHOD,
-  POLLING_TIME_LIMIT,
-  gcpServiceUrls
-} from '../utils/const';
+import { ClusterStatus, POLLING_TIME_LIMIT } from '../utils/const';
 import {
   authApi,
   toastifyCustomStyle,
-  loggedFetch,
   getProjectId,
-  authenticatedFetch,
   statusValue
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { requestAPI } from '../handler/handler';
 
 interface IClusterRenderData {
   status: { state: ClusterStatus };
@@ -80,42 +72,33 @@ export class ClusterService {
       const projectId = await getProjectId();
       setProjectId(projectId);
 
-      const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
-      queryParams.append('pageToken', pageToken);
+      const serviceURL = `clusterList?pageSize=50&pageToken=${pageToken}`;
 
-      const response = await authenticatedFetch({
-        uri: 'clusters',
-        regionIdentifier: 'regions',
-        method: HTTP_METHOD.GET,
-        queryParams: queryParams
-      });
-      const formattedResponse = await response.json();
+      const formattedResponse: any = await requestAPI(serviceURL);
+
       let transformClusterListData = [];
-      if (formattedResponse && formattedResponse.clusters) {
-        transformClusterListData = formattedResponse.clusters.map(
-          (data: any) => {
-            const statusVal = statusValue(data);
-            // Extracting zone from zoneUri
-            // Example: "projects/{project}/zones/{zone}"
+      if (formattedResponse) {
+        transformClusterListData = formattedResponse.map((data: any) => {
+          const statusVal = statusValue(data);
+          // Extracting zone from zoneUri
+          // Example: "projects/{project}/zones/{zone}"
 
-            const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
+          const zoneUri = data.config.gceClusterConfig.zoneUri.split('/');
 
-            return {
-              clusterUuid: data.clusterUuid,
-              status: statusVal,
-              clusterName: data.clusterName,
-              clusterImage: data.config.softwareConfig.imageVersion,
-              region: data.labels['goog-dataproc-location'],
-              zone: zoneUri[zoneUri.length - 1],
-              totalWorkersNode: data.config.workerConfig
-                ? data.config.workerConfig.numInstances
-                : 0,
-              schedulesDeletion: data.config.lifecycleConfig ? 'On' : 'Off',
-              actions: renderActions(data)
-            };
-          }
-        );
+          return {
+            clusterUuid: data.clusterUuid,
+            status: statusVal,
+            clusterName: data.clusterName,
+            clusterImage: data.config.softwareConfig.imageVersion,
+            region: data.labels['goog-dataproc-location'],
+            zone: zoneUri[zoneUri.length - 1],
+            totalWorkersNode: data.config.workerConfig
+              ? data.config.workerConfig.numInstances
+              : 0,
+            schedulesDeletion: data.config.lifecycleConfig ? 'On' : 'Off',
+            actions: renderActions(data)
+          };
+        });
       }
       const existingClusterData = previousClustersList ?? [];
       //setStateAction never type issue
@@ -139,9 +122,9 @@ export class ClusterService {
         setIsLoading(false);
         setLoggedIn(true);
       }
-      if (formattedResponse?.error?.code) {
+      if (formattedResponse?.error) {
         if (!toast.isActive('clusterListingError')) {
-          toast.error(formattedResponse?.error?.message, {
+          toast.error(formattedResponse?.error, {
             ...toastifyCustomStyle,
             toastId: 'clusterListingError'
           });
@@ -167,51 +150,35 @@ export class ClusterService {
     setClusterInfo: (value: IClusterDetailsResponse) => void
   ) => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       setProjectName(credentials.project_id || '');
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+
+      try {
+        const serviceURL = `clusterDetail?cluster=${clusterSelected}`;
+
+        let responseResult: any = await requestAPI(serviceURL);
+        if (responseResult) {
+          if (responseResult.error && responseResult.error.code === 404) {
+            setErrorView(true);
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IClusterDetailsResponse) => {
-              if (responseResult.error && responseResult.error.code === 404) {
-                setErrorView(true);
-              }
-              if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-              setClusterInfo(responseResult);
-              setIsLoading(false);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
+          if (responseResult?.error?.code) {
+            toast.error(responseResult?.error?.message, toastifyCustomStyle);
+          }
+          setClusterInfo(responseResult);
           setIsLoading(false);
-          DataprocLoggingService.log(
-            'Error listing clusters Details',
-            LOG_LEVEL.ERROR
-          );
-          toast.error(
-            `Failed to fetch cluster details ${clusterSelected} : ${err}`,
-            toastifyCustomStyle
-          );
-        });
+        }
+      } catch (err) {
+        setIsLoading(false);
+        console.error('Error listing clusters Details', err);
+        DataprocLoggingService.log(
+          'Error listing clusters Details',
+          LOG_LEVEL.ERROR
+        );
+        toast.error(
+          `Failed to fetch cluster details ${clusterSelected} : ${err}`,
+          toastifyCustomStyle
+        );
+      }
     }
   };
 
@@ -221,19 +188,15 @@ export class ClusterService {
     timer: any
   ) => {
     try {
-      const response = await authenticatedFetch({
-        uri: `clusters/${selectedCluster}`,
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'regions'
-      });
-      const formattedResponse = await response.json();
+      const serviceURL = `clusterDetail?cluster=${selectedCluster}`;
 
+      let formattedResponse: any = await requestAPI(serviceURL);
       if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
         ClusterService.startClusterApi(selectedCluster);
         clearInterval(timer.current);
       }
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      if (formattedResponse?.error) {
+        toast.error(formattedResponse?.error, toastifyCustomStyle);
       }
       listClustersAPI();
     } catch (error) {
@@ -253,21 +216,19 @@ export class ClusterService {
     statusApi: (value: string) => void
   ) => {
     setRestartEnabled(true);
-
     try {
-      const response = await authenticatedFetch({
-        uri: `clusters/${selectedCluster}:stop`,
-        method: HTTP_METHOD.POST,
-        regionIdentifier: 'regions'
+      const serviceURL = `stopCluster?cluster=${selectedCluster}`;
+
+      let formattedResponse: any = await requestAPI(serviceURL, {
+        method: 'POST'
       });
-      const formattedResponse = await response.json();
-      console.log(formattedResponse);
+
       listClustersAPI();
       timer.current = setInterval(() => {
         statusApi(selectedCluster);
       }, POLLING_TIME_LIMIT);
-      if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+      if (formattedResponse?.error) {
+        toast.error(formattedResponse?.error, toastifyCustomStyle);
       }
       // This is an artifact of the refactoring
       listClustersAPI();
@@ -283,43 +244,27 @@ export class ClusterService {
   };
 
   static deleteClusterApi = async (selectedcluster: string) => {
-    const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: Response) => {
-              console.log(responseResult);
-              const formattedResponse = await responseResult.json();
-              if (formattedResponse?.error?.code) {
-                toast.error(
-                  formattedResponse?.error?.message,
-                  toastifyCustomStyle
-                );
-              } else {
-                toast.success(
-                  `Cluster ${selectedcluster} deleted successfully`,
-                  toastifyCustomStyle
-                );
-              }
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
-          toast.error(`Error deleting cluster : ${err}`, toastifyCustomStyle);
-        });
+    try {
+      const serviceURL = `deleteCluster?cluster=${selectedcluster}`;
+
+      let formattedResponse: any = await requestAPI(serviceURL, {
+        method: 'DELETE'
+      });
+
+      if (formattedResponse?.error) {
+        toast.error(formattedResponse?.error, toastifyCustomStyle);
+      } else {
+        toast.success(
+          `Cluster ${selectedcluster} deleted successfully`,
+          toastifyCustomStyle
+        );
+      }
+    } catch (error) {
+      DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
+      toast.error(
+        `Error deleting cluster ${selectedcluster} : ${error}`,
+        toastifyCustomStyle
+      );
     }
   };
 
@@ -327,44 +272,25 @@ export class ClusterService {
     selectedcluster: string,
     operation: 'start' | 'stop'
   ) => {
-    const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:${operation}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: Response) => {
-              console.log(responseResult);
-              const formattedResponse = await responseResult.json();
-              if (formattedResponse?.error?.code) {
-                toast.error(
-                  formattedResponse?.error?.message,
-                  toastifyCustomStyle
-                );
-              }
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          DataprocLoggingService.log(
-            `Error ${operation} cluster`,
-            LOG_LEVEL.ERROR
-          );
-          toast.error(
-            `Failed to ${operation} the cluster ${selectedcluster} : ${err}`,
-            toastifyCustomStyle
-          );
-        });
+    try {
+      const serviceURL =
+        operation === 'stop'
+          ? `stopCluster?cluster=${selectedcluster}`
+          : `startCluster?cluster=${selectedcluster}`;
+
+      let formattedResponse: any = await requestAPI(serviceURL, {
+        method: 'POST'
+      });
+
+      if (formattedResponse?.error) {
+        toast.error(formattedResponse?.error, toastifyCustomStyle);
+      }
+    } catch (err) {
+      DataprocLoggingService.log(`Error ${operation} cluster`, LOG_LEVEL.ERROR);
+      toast.error(
+        `Failed to ${operation} the cluster ${selectedcluster} : ${err}`,
+        toastifyCustomStyle
+      );
     }
   };
 
