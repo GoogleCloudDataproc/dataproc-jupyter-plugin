@@ -38,10 +38,8 @@ test('bigquery-dataset-explorer', async ({ page, request }) => {
     await page.waitForSelector('div[role="treeitem"].caret-icon.down');
 
     await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
-    await page.locator('div[role="treeitem"][aria-level="1"]').first().click();
-    await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
-
-    await page.locator('div[role="treeitem"][aria-level="2"]').first().click();
+    await page.locator('div[role="treeitem"][aria-level="1"].caret-icon.down').nth(0).click();
+    await page.locator('div[role="treeitem"][aria-level="2"]').third().click();
     await page.getByText('Schema', { exact: true }).click();
     await page.getByText('Preview', { exact: true }).click();
   } else {
