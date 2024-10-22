@@ -35,13 +35,19 @@ test('bigquery-dataset-explorer', async ({ page, request }) => {
       .getByRole('tab', { name: 'Dataset Explorer - BigQuery' })
       .click();
 
+    // Wait for the Dataset projects to populate.
     await page.waitForSelector('div[role="treeitem"].caret-icon.down');
 
-    await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
-    await page.locator('div[role="treeitem"][aria-level="1"]').first().click();
-    await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
+    // Expand the first dataset project. This should always be the `bigquery-public-data` one.
+    await page.locator('div[role="treeitem"].caret-icon.down').nth(0).click();
 
-    await page.locator('div[role="treeitem"][aria-level="2"]').first().click();
+    // Wait for the first dataset to be displayed, and then expand it.
+    await page.waitForSelector('div[role="treeitem"][aria-level="2"]');
+    await page.waitForSelector('div[role="treeitem"].caret-icon.down');
+    await page.locator('div[role="treeitem"].caret-icon.down').nth(0).click();
+
+    // Click on the first table displayed.
+    await page.locator('div[role="treeitem"][aria-level="3"]').first().click();
     await page.getByText('Schema', { exact: true }).click();
     await page.getByText('Preview', { exact: true }).click();
   } else {
