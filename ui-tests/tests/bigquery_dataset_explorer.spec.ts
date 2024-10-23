@@ -36,6 +36,7 @@ test('bigquery-dataset-explorer', async ({ page, request }) => {
       .click();
 
     // Wait for the Dataset projects to populate.
+    await page.waitForSelector('div[role="treeitem"][aria-level="1"]');
     await page.waitForSelector('div[role="treeitem"].caret-icon.down');
 
     // Expand the first dataset project. This should always be the `bigquery-public-data` one.
