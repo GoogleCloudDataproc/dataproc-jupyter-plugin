@@ -39,7 +39,7 @@ import { KernelSpecAPI } from '@jupyterlab/services';
 import tzdata from 'tzdata';
 import { SchedulerService } from './schedulerServices';
 import NotebookJobComponent from './notebookJobs';
-import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
+// import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Button } from '@mui/material';
@@ -54,10 +54,10 @@ interface IDagList {
   scheduleInterval: string;
 }
 
-const iconLeftArrow = new LabIcon({
-  name: 'launcher:left-arrow-icon',
-  svgstr: LeftArrowIcon
-});
+// const iconLeftArrow = new LabIcon({
+//   name: 'launcher:left-arrow-icon',
+//   svgstr: LeftArrowIcon
+// });
 
 const iconError = new LabIcon({
   name: 'launcher:error-icon',
@@ -68,15 +68,39 @@ const CreateNotebookScheduler = ({
   themeManager,
   app,
   context,
-  settingRegistry
+  settingRegistry,
+  createCompleted,
+  setCreateCompleted,
+  jobNameSelected,
+  setJobNameSelected,
+  inputFileSelected,
+  setInputFileSelected,
+  editMode,
+  setEditMode,
+  jobNameValidation,
+  jobNameSpecialValidation,
+  jobNameUniqueValidation,
+  setJobNameUniqueValidation
 }: {
   themeManager: IThemeManager;
   app: JupyterLab;
   context: any;
   settingRegistry: ISettingRegistry;
+  createCompleted: boolean;
+  setCreateCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+  jobNameSelected: string;
+  setJobNameSelected: React.Dispatch<React.SetStateAction<string>>;
+  inputFileSelected: string;
+  setInputFileSelected: React.Dispatch<React.SetStateAction<string>>;
+  editMode: boolean;
+  setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  jobNameValidation: boolean;
+  jobNameSpecialValidation: boolean;
+  jobNameUniqueValidation: boolean;
+  setJobNameUniqueValidation: React.Dispatch<React.SetStateAction<boolean>>;
 }): JSX.Element => {
-  const [jobNameSelected, setJobNameSelected] = useState('');
-  const [inputFileSelected, setInputFileSelected] = useState('');
+  // const [jobNameSelected, setJobNameSelected] = useState('');
+  // const [inputFileSelected, setInputFileSelected] = useState('');
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelected, setComposerSelected] = useState('');
 
@@ -110,15 +134,15 @@ const CreateNotebookScheduler = ({
 
   const timezones = Object.keys(tzdata.zones).sort();
 
-  const [createCompleted, setCreateCompleted] =
-    context !== '' ? useState(false) : useState(true);
+  // const [createCompleted, setCreateCompleted] =
+  //   context !== '' ? useState(false) : useState(true);
   const [creatingScheduler, setCreatingScheduler] = useState(false);
-  const [jobNameValidation, setJobNameValidation] = useState(true);
-  const [jobNameSpecialValidation, setJobNameSpecialValidation] =
-    useState(false);
-  const [jobNameUniqueValidation, setJobNameUniqueValidation] = useState(true);
+  // const [jobNameValidation] = useState(true);
+  // const [jobNameSpecialValidation] =
+  //   useState(false);
+  // const [jobNameUniqueValidation, setJobNameUniqueValidation] = useState(true);
   const [dagList, setDagList] = useState<IDagList[]>([]);
-  const [editMode, setEditMode] = useState(false);
+  // const [editMode, setEditMode] = useState(false);
   const [dagListCall, setDagListCall] = useState(false);
   const [isLoadingKernelDetail, setIsLoadingKernelDetail] = useState(false);
 
@@ -281,20 +305,20 @@ const CreateNotebookScheduler = ({
     setEditMode(false);
   };
 
-  const handleJobNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    event.target.value.length > 0
-      ? setJobNameValidation(true)
-      : setJobNameValidation(false);
+  // const handleJobNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   event.target.value.length > 0
+  //     ? setJobNameValidation(true)
+  //     : setJobNameValidation(false);
 
-    //Regex to check job name must contain only letters, numbers, hyphens, and underscores
-    const regexp = /^[a-zA-Z0-9-_]+$/;
-    event.target.value.search(regexp)
-      ? setJobNameSpecialValidation(true)
-      : setJobNameSpecialValidation(false);
-    setJobNameSelected(event.target.value);
+  //   //Regex to check job name must contain only letters, numbers, hyphens, and underscores
+  //   const regexp = /^[a-zA-Z0-9-_]+$/;
+  //   event.target.value.search(regexp)
+  //     ? setJobNameSpecialValidation(true)
+  //     : setJobNameSpecialValidation(false);
+  //   setJobNameSelected(event.target.value);
 
-    setJobNameSelected(event.target.value);
-  };
+  //   setJobNameSelected(event.target.value);
+  // };
 
   const isSaveDisabled = () => {
     return (
@@ -440,7 +464,7 @@ const CreateNotebookScheduler = ({
         />
       ) : (
         <div>
-          <div className="cluster-details-header">
+          {/* <div className="cluster-details-header">
             <div
               role="button"
               className="back-arrow-icon"
@@ -460,9 +484,9 @@ const CreateNotebookScheduler = ({
                 Create A Scheduled Job
               </div>
             )}
-          </div>
+          </div> */}
           <div className="submit-job-container">
-            <div className="create-scheduler-form-element">
+            {/* <div className="create-scheduler-form-element">
               <Input
                 className="create-scheduler-style"
                 value={jobNameSelected}
@@ -504,7 +528,7 @@ const CreateNotebookScheduler = ({
                 Label="Input file*"
                 disabled={true}
               />
-            </div>
+            </div> */}
             <div className="create-scheduler-form-element">
               <Autocomplete
                 className="create-scheduler-style"
@@ -794,8 +818,8 @@ const CreateNotebookScheduler = ({
                       ? 'UPDATING'
                       : 'UPDATE'
                     : creatingScheduler
-                    ? 'CREATING'
-                    : 'CREATE'}
+                      ? 'CREATING'
+                      : 'CREATE'}
                 </div>
               </Button>
               <Button
