@@ -1,6 +1,7 @@
 import React from 'react';
 
-const CreateVertexScheduler = ({ }: {}): JSX.Element => {
+const CreateVertexScheduler: React.FC = ({ }) => {
+
     return (
         <div className='submit-job-container'>
             CreateVertexScheduler
