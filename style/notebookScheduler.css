@@ -41,6 +41,14 @@
   align-items: center;
 }
 
+.create-scheduler-form-element-input-fl {
+  width: 247px !important;
+}
+
+.create-pr {
+  padding-right: 18px;
+}
+
 .edit-notebook-style {
   cursor: pointer;
   margin-top: 10px;
@@ -53,6 +61,20 @@
   font-style: normal;
   font-weight: 400;
   font-size: 18px;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color0);
+}
+
+.create-job-scheduler-sub-title {
+  font-weight: 700;
+}
+
+.create-job-scheduler-text-para {
+  padding:  10px 0px;
+  font-style: normal;
+  font-size: 13px;
   line-height: 24px;
   display: flex;
   align-items: center;
@@ -279,3 +301,26 @@
   margin-left: 10px;
   margin-right: 10px;
 }
+
+.sub-para {
+  padding-left: 37px;
+}
+
+.sub-title-heading {
+  padding: 0px;
+}
+
+.tab-description {
+  width: 512px;
+}
+
+.panel-margin {
+  margin: 0;
+}
+
+.tab-text-sub-cl {
+  color: #000000A8;
+  font-size: 12px;
+  padding-top: 5px;
+}
+
