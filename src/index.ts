@@ -461,7 +461,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const openBigQueryNotebook = async () => {
       const template = {
-        url: 'https://raw.githubusercontent.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/main/public_datasets/bigframes/bigframes_quickstart.ipynb'
+        url: 'https://raw.githubusercontent.com/GoogleCloudPlatform/ai-ml-recipes/main/public_datasets/bigframes/bigframes_quickstart.ipynb'
       };
       await NotebookTemplateService.handleClickService(
         template,
