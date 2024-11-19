@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO: modify code
-from typing import List
-
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     VERTEX_SERVICE_NAME,
@@ -43,11 +40,10 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_uiconfig(self) -> List[]:
+    async def list_uiconfig(self, region_id):
         try:
             uiconfig = []
-            # vertex_url = await urls.gcp_service_url(VERTEX_SERVICE_NAME)
-            # api_endpoint = f"{self.region_id}-{vertex_url}/ui/projects/{self.project_id}/locations/{self.region_id}/uiConfig"
+            # api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/ui/projects/{self.project_id}/locations/{region_id}/uiConfig"
             api_endpoint = "https://us-central1-aiplatform.googleapis.com/ui/projects/bngy-prod-colab/locations/us-central1/uiConfig"
 
             headers = self.create_headers()
@@ -75,3 +71,83 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error fetching ui config: {str(e)}")
             return {"Error fetching ui config": str(e)}
+
+    async def list_region(self):
+        try:
+            regions = []
+            vertex_url = await urls.gcp_service_url(COMPUTE_SERVICE_NAME)
+            api_endpoint = f"{vertex_url}/compute/v1/projects/{self.project_id}/regions"
+
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return regions
+                    else:
+                        for item in resp.get("items"):
+                            region = item.get("name")
+                            regions.append(region)
+                        return regions
+                else:
+                    self.log.exception("Error listing regions")
+                    raise Exception(
+                        f"Error getting regions: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error fetching regions: {str(e)}")
+            return {"Error fetching regions": str(e)}
+
+    async def get_network(self):
+        try:
+            networks = []
+            vertex_url = await urls.gcp_service_url(COMPUTE_SERVICE_NAME)
+            api_endpoint = f"{vertex_url}/compute/v1/projects/{self.project_id}/global/networks"
+
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return networks
+                    else:
+                        networks.append(resp.get("items"))
+                        return networks
+                else:
+                    self.log.exception("Error getting network")
+                    raise Exception(
+                        f"Error getting network: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error fetching network: {str(e)}")
+            return {"Error fetching network": str(e)}
+
+    async def get_subnetwork(self):
+        try:
+            sub_networks = []
+            vertex_url = await urls.gcp_service_url(COMPUTE_SERVICE_NAME)
+            api_endpoint = f"{vertex_url}/compute/v1/projects/{self.project_id}/regions/{self.region_id}/subnetworks"
+
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return sub_networks
+                    else:
+                        sub_networks.append(resp.get("items"))
+                        return sub_networks
+                else:
+                    self.log.exception("Error getting sub network")
+                    raise Exception(
+                        f"Error getting sub network: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error fetching sub network: {str(e)}")
+            return {"Error fetching sub network": str(e)}

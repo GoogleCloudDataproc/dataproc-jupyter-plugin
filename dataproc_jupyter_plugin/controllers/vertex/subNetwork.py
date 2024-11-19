@@ -22,21 +22,21 @@ from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services.vertex import vertex
 
 
-class UIConfigController(APIHandler):
+class SubNetworkController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
-        """Returns available ui config"""
+        """Returns sub network"""
         try:
             async with aiohttp.ClientSession() as client_session:
                 client = vertex.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                configs = await client.list_uiconfig()
+                sub_network = await client.get_subnetwork()
                 response = []
-                for config in configs:
-                    env = config.dict()
+                for item in sub_network:
+                    env = item.dict()
                     response.append(env)
                 self.finish(json.dumps(response))
         except Exception as e:
-            self.log.exception(f"Error fetching ui config: {str(e)}")
+            self.log.exception(f"Error fetching sub network: {str(e)}")
             self.finish({"error": str(e)})
