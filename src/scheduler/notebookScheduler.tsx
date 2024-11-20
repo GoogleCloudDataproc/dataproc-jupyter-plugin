@@ -52,7 +52,7 @@ const NotebookSchedulerComponent = ({
   themeManager,
   app,
   context,
-  settingRegistry
+  settingRegistry,
 }: {
   themeManager: IThemeManager;
   app: JupyterLab;
@@ -109,94 +109,100 @@ const NotebookSchedulerComponent = ({
 
   return (
     <div className="component-level">
-      <div className="cluster-details-header">
-        <div
-          role="button"
-          className="back-arrow-icon"
-          onClick={handleCancel}
-        >
-          <iconLeftArrow.react
-            tag="div"
-            className="icon-white logo-alignment-style"
-          />
-        </div>
-        <div className="create-job-scheduler-title">
-          {editMode ? 'Update A Scheduled Job' : 'Create A Scheduled Job'}
-        </div>
-      </div>
-      <div className="common-fields">
-        <div className="create-scheduler-form-element">
-          <Input
-            className="create-scheduler-style"
-            value={jobNameSelected}
-            onChange={e => handleJobNameChange(e)}
-            type="text"
-            placeholder=""
-            Label="Job name*"
-            disabled={editMode}
-          />
-        </div>
-        {!jobNameValidation && !editMode && (
-          <div className="error-key-parent">
-            <iconError.react tag="div" className="logo-alignment-style" />
-            <div className="error-key-missing">Name is required</div>
-          </div>
-        )}
-        {jobNameSpecialValidation && jobNameValidation && !editMode && (
-          <div className="error-key-parent">
-            <iconError.react tag="div" className="logo-alignment-style" />
-            <div className="error-key-missing">
-              Name must contain only letters, numbers, hyphens, and
-              underscores
-            </div>
-          </div>
-        )}
-        {!jobNameUniqueValidation && !editMode && (
-          <div className="error-key-parent">
-            <iconError.react tag="div" className="logo-alignment-style" />
-            <div className="error-key-missing">
-              Job name must be unique for the selected environment
-            </div>
-          </div>
-        )}
-
-        <div className="create-scheduler-form-element-input-file">
-          <Input
-            className="create-scheduler-style"
-            value={inputFileSelected}
-            Label="Input file*"
-            disabled={true}
-          />
-        </div>
-        <div className="create-scheduler-form-element ">
-          <FormControl>
-            <RadioGroup
-              className='schedule-radio-btn'
-              aria-labelledby="demo-controlled-radio-buttons-group"
-              name="controlled-radio-buttons-group"
-              value={notebookSelector}
-              onChange={handleSchedulerModeChange}
+      {
+        !createCompleted &&
+        <>
+          <div className="cluster-details-header">
+            <div
+              role="button"
+              className="back-arrow-icon"
+              onClick={handleCancel}
             >
-              <FormControlLabel
-                value="composer"
-                className="create-scheduler-label-style"
-                control={<Radio size="small" />}
-                label={
-                  <Typography sx={{ fontSize: 13 }}>Composer</Typography>
-                }
+              <iconLeftArrow.react
+                tag="div"
+                className="icon-white logo-alignment-style"
               />
-              <FormControlLabel
-                value="vertex"
-                className="create-scheduler-label-style"
-                control={<Radio size="small" />}
-                label={
-                  <Typography sx={{ fontSize: 13 }}>Vertex</Typography>
-                }
+            </div>
+            <div className="create-job-scheduler-title">
+              {editMode ? 'Update A Scheduled Job' : 'Create A Scheduled Job'}
+            </div>
+          </div>
+          <div className="common-fields">
+            <div className="create-scheduler-form-element">
+              <Input
+                className="create-scheduler-style"
+                value={jobNameSelected}
+                onChange={e => handleJobNameChange(e)}
+                type="text"
+                placeholder=""
+                Label="Job name*"
+                disabled={editMode}
               />
-            </RadioGroup>
-          </FormControl>
-        </div>
-      </div>
+            </div>
+            {!jobNameValidation && !editMode && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">Name is required</div>
+              </div>
+            )}
+            {jobNameSpecialValidation && jobNameValidation && !editMode && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Name must contain only letters, numbers, hyphens, and
+                  underscores
+                </div>
+              </div>
+            )}
+            {!jobNameUniqueValidation && !editMode && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">
+                  Job name must be unique for the selected environment
+                </div>
+              </div>
+            )}
+
+            <div className="create-scheduler-form-element-input-file">
+              <Input
+                className="create-scheduler-style"
+                value={inputFileSelected}
+                Label="Input file*"
+                disabled={true}
+              />
+            </div>
+            <div className="create-scheduler-form-element ">
+              <FormControl>
+                <RadioGroup
+                  className='schedule-radio-btn'
+                  aria-labelledby="demo-controlled-radio-buttons-group"
+                  name="controlled-radio-buttons-group"
+                  value={notebookSelector}
+                  onChange={handleSchedulerModeChange}
+                >
+                  <FormControlLabel
+                    value="vertex"
+                    className="create-scheduler-label-style"
+                    control={<Radio size="small" />}
+                    label={
+                      <Typography sx={{ fontSize: 13 }}>Vertex</Typography>
+                    }
+                  />
+                  <FormControlLabel
+                    value="composer"
+                    className="create-scheduler-label-style"
+                    control={<Radio size="small" />}
+                    label={
+                      <Typography sx={{ fontSize: 13 }}>Composer</Typography>
+                    }
+                  />
+                </RadioGroup>
+              </FormControl>
+            </div>
+          </div>
+        </>
+      }
+
       {
         notebookSelector === 'composer' ?
           <CreateNotebookScheduler
@@ -218,7 +224,14 @@ const NotebookSchedulerComponent = ({
             setJobNameUniqueValidation={setJobNameUniqueValidation}
           />
           :
-          <CreateVertexScheduler />
+          <CreateVertexScheduler
+            themeManager={themeManager}
+            app={app}
+            context={context}
+            settingRegistry={settingRegistry}
+            createCompleted={createCompleted}
+            setCreateCompleted={setCreateCompleted}
+          />
       }
     </div>
   );

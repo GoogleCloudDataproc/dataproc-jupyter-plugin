@@ -18,11 +18,20 @@
 import React, { useState } from 'react';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { JupyterLab } from '@jupyterlab/application';
+import {
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Typography
+} from '@mui/material';
 import { IThemeManager } from '@jupyterlab/apputils';
 import ListNotebookScheduler from './listNotebookScheduler';
+import ListVertexScheduler from './VertexScheduler/ListVertexScheduler';
 import ExecutionHistory from './executionHistory';
 import { scheduleMode } from '../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+
 
 const NotebookJobComponent = ({
   app,
@@ -91,6 +100,8 @@ const NotebookJobComponent = ({
   const [bucketName, setBucketName] = useState('');
   const [dagId, setDagId] = useState('');
   const [backComposerName, setBackComposerName] = useState('');
+  const [schedulerSelector, setSchedulerSelector] = useState<string>('vertex');
+
   const handleDagIdSelection = (composerName: string, dagId: string) => {
     setShowExecutionHistory(true);
     setComposerName(composerName);
@@ -101,6 +112,14 @@ const NotebookJobComponent = ({
     setShowExecutionHistory(false);
     setBackComposerName(composerName);
   };
+
+  const handleSchedulerSelector = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newValue = (event.target as HTMLInputElement).value;
+    setSchedulerSelector(newValue);
+  };
+
 
   return (
     <>
@@ -116,41 +135,107 @@ const NotebookJobComponent = ({
           <div className="clusters-list-overlay" role="tab">
             <div className="cluster-details-title">Scheduled Jobs</div>
           </div>
+          <div className="create-scheduler-form-element sub-para">
+            <FormControl>
+              <RadioGroup
+                className='schedule-radio-btn'
+                aria-labelledby="demo-controlled-radio-buttons-group"
+                name="controlled-radio-buttons-group"
+                value={schedulerSelector}
+                onChange={handleSchedulerSelector}
+              >
+                <FormControlLabel
+                  value="vertex"
+                  className="create-scheduler-label-style"
+                  control={<Radio size="small" />}
+                  label={
+                    <Typography sx={{ fontSize: 13 }}>Vertex</Typography>
+                  }
+                />
+                <FormControlLabel
+                  value="composer"
+                  className="create-scheduler-label-style"
+                  control={<Radio size="small" />}
+                  label={
+                    <Typography sx={{ fontSize: 13 }}>Composer</Typography>
+                  }
+                />
+              </RadioGroup>
+            </FormControl>
+          </div>
           <div>
-            <ListNotebookScheduler
-              app={app}
-              settingRegistry={settingRegistry}
-              handleDagIdSelection={handleDagIdSelection}
-              backButtonComposerName={backComposerName}
-              composerSelectedFromCreate={composerSelectedFromCreate}
-              setCreateCompleted={setCreateCompleted}
-              setJobNameSelected={setJobNameSelected}
-              setComposerSelected={setComposerSelected}
-              setScheduleMode={setScheduleMode}
-              setScheduleValue={setScheduleValue}
-              setInputFileSelected={setInputFileSelected}
-              setParameterDetail={setParameterDetail}
-              setParameterDetailUpdated={setParameterDetailUpdated}
-              setSelectedMode={setSelectedMode}
-              setClusterSelected={setClusterSelected}
-              setServerlessSelected={setServerlessSelected}
-              setServerlessDataSelected={setServerlessDataSelected}
-              serverlessDataList={serverlessDataList}
-              setServerlessDataList={setServerlessDataList}
-              setServerlessList={setServerlessList}
-              setRetryCount={setRetryCount}
-              setRetryDelay={setRetryDelay}
-              setEmailOnFailure={setEmailOnFailure}
-              setEmailonRetry={setEmailonRetry}
-              setEmailOnSuccess={setEmailOnSuccess}
-              setEmailList={setEmailList}
-              setStopCluster={setStopCluster}
-              setTimeZoneSelected={setTimeZoneSelected}
-              setEditMode={setEditMode}
-              bucketName={bucketName}
-              setBucketName={setBucketName}
-              setIsLoadingKernelDetail={setIsLoadingKernelDetail}
-            />
+            {
+              schedulerSelector === 'composer' ?
+                <ListNotebookScheduler
+                  app={app}
+                  settingRegistry={settingRegistry}
+                  handleDagIdSelection={handleDagIdSelection}
+                  backButtonComposerName={backComposerName}
+                  composerSelectedFromCreate={composerSelectedFromCreate}
+                  setCreateCompleted={setCreateCompleted}
+                  setJobNameSelected={setJobNameSelected}
+                  setComposerSelected={setComposerSelected}
+                  setScheduleMode={setScheduleMode}
+                  setScheduleValue={setScheduleValue}
+                  setInputFileSelected={setInputFileSelected}
+                  setParameterDetail={setParameterDetail}
+                  setParameterDetailUpdated={setParameterDetailUpdated}
+                  setSelectedMode={setSelectedMode}
+                  setClusterSelected={setClusterSelected}
+                  setServerlessSelected={setServerlessSelected}
+                  setServerlessDataSelected={setServerlessDataSelected}
+                  serverlessDataList={serverlessDataList}
+                  setServerlessDataList={setServerlessDataList}
+                  setServerlessList={setServerlessList}
+                  setRetryCount={setRetryCount}
+                  setRetryDelay={setRetryDelay}
+                  setEmailOnFailure={setEmailOnFailure}
+                  setEmailonRetry={setEmailonRetry}
+                  setEmailOnSuccess={setEmailOnSuccess}
+                  setEmailList={setEmailList}
+                  setStopCluster={setStopCluster}
+                  setTimeZoneSelected={setTimeZoneSelected}
+                  setEditMode={setEditMode}
+                  bucketName={bucketName}
+                  setBucketName={setBucketName}
+                  setIsLoadingKernelDetail={setIsLoadingKernelDetail}
+                /> :
+                <ListVertexScheduler
+                  app={app}
+                  settingRegistry={settingRegistry}
+                  handleDagIdSelection={handleDagIdSelection}
+                  backButtonComposerName={backComposerName}
+                  composerSelectedFromCreate={composerSelectedFromCreate}
+                  setCreateCompleted={setCreateCompleted}
+                  setJobNameSelected={setJobNameSelected}
+                  setComposerSelected={setComposerSelected}
+                  setScheduleMode={setScheduleMode}
+                  setScheduleValue={setScheduleValue}
+                  setInputFileSelected={setInputFileSelected}
+                  setParameterDetail={setParameterDetail}
+                  setParameterDetailUpdated={setParameterDetailUpdated}
+                  setSelectedMode={setSelectedMode}
+                  setClusterSelected={setClusterSelected}
+                  setServerlessSelected={setServerlessSelected}
+                  setServerlessDataSelected={setServerlessDataSelected}
+                  serverlessDataList={serverlessDataList}
+                  setServerlessDataList={setServerlessDataList}
+                  setServerlessList={setServerlessList}
+                  setRetryCount={setRetryCount}
+                  setRetryDelay={setRetryDelay}
+                  setEmailOnFailure={setEmailOnFailure}
+                  setEmailonRetry={setEmailonRetry}
+                  setEmailOnSuccess={setEmailOnSuccess}
+                  setEmailList={setEmailList}
+                  setStopCluster={setStopCluster}
+                  setTimeZoneSelected={setTimeZoneSelected}
+                  setEditMode={setEditMode}
+                  bucketName={bucketName}
+                  setBucketName={setBucketName}
+                  setIsLoadingKernelDetail={setIsLoadingKernelDetail}
+                />
+            }
+
           </div>
         </div>
       )}

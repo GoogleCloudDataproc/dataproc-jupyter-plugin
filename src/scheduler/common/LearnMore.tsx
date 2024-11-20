@@ -4,7 +4,7 @@ const LearnMore: React.FC = ({}) => {
 
   return (
     <div
-      className="learn-more-url"
+      className="learn-more-a-tag learn-more-url"
       // onClick={() => {
       //   window.open(`${CUSTOM_CONTAINERS}`, '_blank');
       // }}
