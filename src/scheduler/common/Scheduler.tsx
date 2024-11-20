@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   FormControl,
   FormControlLabel,
@@ -8,6 +8,8 @@ import {
 } from '@mui/material';
 
 const Scheduler: React.FC = () => {
+  const [scheduleMode] = useState('runNow');
+
   return (
     <>
       <div className="create-scheduler-label">Schedule</div>
@@ -16,7 +18,7 @@ const Scheduler: React.FC = () => {
           <RadioGroup
             aria-labelledby="demo-controlled-radio-buttons-group"
             name="controlled-radio-buttons-group"
-            // value={scheduleMode}
+            value={scheduleMode}
             // onChange={handleSchedulerModeChange}
           >
             <FormControlLabel

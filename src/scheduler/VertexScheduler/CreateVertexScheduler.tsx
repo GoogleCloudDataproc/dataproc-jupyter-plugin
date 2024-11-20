@@ -18,21 +18,45 @@ import LearnMore from '../common/LearnMore';
 import Scheduler from '../common/Scheduler';
 import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
+import VertexScheduleJobs from './VertexScheduleJobs';
 
-
-const CreateVertexScheduler = ({ themeManager,
+const CreateVertexScheduler = ({
+  themeManager,
   app,
   context,
   settingRegistry,
   createCompleted,
-  setCreateCompleted, }: {
-    themeManager: IThemeManager;
-    app: JupyterLab;
-    context: any;
-    settingRegistry: ISettingRegistry;
-    createCompleted: boolean;
-    setCreateCompleted: React.Dispatch<React.SetStateAction<boolean>>;
-  }) => {
+  setCreateCompleted,
+  jobNameSelected,
+  setJobNameSelected,
+  inputFileSelected,
+  setInputFileSelected,
+  editMode,
+  setEditMode,
+  jobNameValidation,
+  jobNameSpecialValidation,
+  jobNameUniqueValidation,
+  setJobNameUniqueValidation,
+  notebookSelector
+}: {
+  themeManager: IThemeManager;
+  app: JupyterLab;
+  context: any;
+  settingRegistry: ISettingRegistry;
+  createCompleted: boolean;
+  setCreateCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+  jobNameSelected: string;
+  setJobNameSelected: React.Dispatch<React.SetStateAction<string>>;
+  inputFileSelected: string;
+  setInputFileSelected: React.Dispatch<React.SetStateAction<string>>;
+  editMode: boolean;
+  setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  jobNameValidation: boolean;
+  jobNameSpecialValidation: boolean;
+  jobNameUniqueValidation: boolean;
+  setJobNameUniqueValidation: React.Dispatch<React.SetStateAction<boolean>>;
+  notebookSelector: string;
+}) => {
 
   const [dummyList] = useState([1, 2, 3]);
 
@@ -100,7 +124,7 @@ const CreateVertexScheduler = ({ themeManager,
   const [networkSelected, setNetworkSelected] = useState('networkInThisProject');
   const [region, setRegion] = useState('');
   const [projectId, setProjectId] = useState('');
-
+  // const [composerSelected, setComposerSelected] = useState('');
 
   /**
  * Kernel selection
@@ -202,15 +226,39 @@ const CreateVertexScheduler = ({ themeManager,
     <>
       {
         createCompleted ?
-          <></>
-            //VertexScheduledJobs
-            // app={app}
-            // themeManager={themeManager}
-            // settingRegistry={settingRegistry}
-            // composerSelectedFromCreate={composerSelected}
-            // createCompleted={createCompleted}
-            // setCreateCompleted={setCreateCompleted}
-           :
+          // <></>
+          <VertexScheduleJobs
+            app={app}
+            themeManager={themeManager}
+            settingRegistry={settingRegistry}
+            composerSelectedFromCreate='vertex'
+            setCreateCompleted={setCreateCompleted}
+            setJobNameSelected={setJobNameSelected}
+            // setComposerSelected={setComposerSelected}
+            // setScheduleMode={setScheduleMode}
+            // setScheduleValue={setScheduleValue}
+            // setInputFileSelected={setInputFileSelected}
+            // setParameterDetail={setParameterDetail}
+            // setParameterDetailUpdated={setParameterDetailUpdated}
+            // setSelectedMode={setSelectedMode}
+            // setClusterSelected={setClusterSelected}
+            // setServerlessSelected={setServerlessSelected}
+            // setServerlessDataSelected={setServerlessDataSelected}
+            // serverlessDataList={serverlessDataList}
+            // setServerlessDataList={setServerlessDataList}
+            // setServerlessList={setServerlessList}
+            // setRetryCount={setRetryCount}
+            // setRetryDelay={setRetryDelay}
+            // setEmailOnFailure={setEmailOnFailure}
+            // setEmailonRetry={setEmailonRetry}
+            // setEmailOnSuccess={setEmailOnSuccess}
+            // setEmailList={setEmailList}
+            // setStopCluster={setStopCluster}
+            // setTimeZoneSelected={setTimeZoneSelected}
+            // setEditMode={setEditMode}
+            // setIsLoadingKernelDetail={setIsLoadingKernelDetail}
+          />
+          :
           <div className='submit-job-container'>
 
             <div className="region-overlay create-scheduler-form-element">

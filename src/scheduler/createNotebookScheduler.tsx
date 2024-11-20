@@ -80,7 +80,8 @@ const CreateNotebookScheduler = ({
   jobNameValidation,
   jobNameSpecialValidation,
   jobNameUniqueValidation,
-  setJobNameUniqueValidation
+  setJobNameUniqueValidation,
+  notebookSelector
 }: {
   themeManager: IThemeManager;
   app: JupyterLab;
@@ -98,6 +99,7 @@ const CreateNotebookScheduler = ({
   jobNameSpecialValidation: boolean;
   jobNameUniqueValidation: boolean;
   setJobNameUniqueValidation: React.Dispatch<React.SetStateAction<boolean>>;
+  notebookSelector: string;
 }): JSX.Element => {
   // const [jobNameSelected, setJobNameSelected] = useState('');
   // const [inputFileSelected, setInputFileSelected] = useState('');
@@ -461,6 +463,7 @@ const CreateNotebookScheduler = ({
           setTimeZoneSelected={setTimeZoneSelected}
           setEditMode={setEditMode}
           setIsLoadingKernelDetail={setIsLoadingKernelDetail}
+          notebookSelector={notebookSelector}
         />
       ) : (
         <div>
