@@ -14,7 +14,6 @@
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
-    VERTEX_SERVICE_NAME,
     CONTENT_TYPE,
 )
 
@@ -43,8 +42,7 @@ class Client:
     async def list_uiconfig(self, region_id):
         try:
             uiconfig = []
-            # api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/ui/projects/{self.project_id}/locations/{region_id}/uiConfig"
-            api_endpoint = "https://us-central1-aiplatform.googleapis.com/ui/projects/bngy-prod-colab/locations/us-central1/uiConfig"
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/ui/projects/{self.project_id}/locations/{region_id}/uiConfig"
 
             headers = self.create_headers()
             async with self.client_session.get(
@@ -56,7 +54,7 @@ class Client:
                         return uiconfig
                     else:
                         for machineconfig in resp.get("notebookRuntimeConfig").get("machineConfigs"):
-                            ramBytes_in_gb = int(machineconfig.get('ramBytes')) / 1000000000
+                            ramBytes_in_gb = round(int(machineconfig.get('ramBytes')) / 1000000000, 2)
                             formatted_config = {
                                 "machineType": f"{machineconfig.get('machineType')} ({machineconfig.get('cpuCount')} CPUs, {ramBytes_in_gb} GB RAM)",
                                 "acceleratorConfigs": machineconfig.get("acceleratorConfigs")
