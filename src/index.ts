@@ -64,6 +64,7 @@ import * as path from 'path';
 import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
 import { BigQueryWidget } from './bigQuery/bigQueryWidget';
+import { RunTimeSerive } from './runtime/runtimeService';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -169,6 +170,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         loadBigQueryWidget('');
       }
     });
+
+    await RunTimeSerive.listClustersDataprocAPIService();
 
     /**
      * Handler for when the Jupyter Lab theme changes.

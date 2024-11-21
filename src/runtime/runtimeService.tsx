@@ -450,6 +450,31 @@ export class RunTimeSerive {
       );
     }
   };
+  static listClustersDataprocAPIService = async () => {
+    try {
+      const queryParams = new URLSearchParams({ pageSize: '100' });
+      const response = await authenticatedFetch({
+        uri: 'clusters',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'regions',
+        queryParams: queryParams
+      });
+      const formattedResponse = await response.json();
+      if(formattedResponse?.error?.message) {
+        toast.error(
+          `${formattedResponse.error.message}`,
+          toastifyCustomStyle
+        );
+      }
+      return formattedResponse;
+    } catch (error: any) {
+      toast.error(
+        `${error}`,
+        toastifyCustomStyle
+      );
+      return error;
+    }
+  };
   static listNetworksAPIService = async (
     setNetworklist: (value: string[]) => void,
     setNetworkSelected: (value: string) => void,
@@ -492,14 +517,8 @@ export class RunTimeSerive {
         }
       }
     } catch (error) {
-      DataprocLoggingService.log(
-        'Error listing Networks',
-        LOG_LEVEL.ERROR
-      );
-      toast.error(
-        `Error listing Networks : ${error}`,
-        toastifyCustomStyle
-      );
+      DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+      toast.error(`Error listing Networks : ${error}`, toastifyCustomStyle);
     }
   };
   static listMetaStoreAPIService = async (
@@ -701,7 +720,7 @@ export class RunTimeSerive {
                     setSubNetworkSelected(transformedServiceList[0]);
                   } else {
                     DataprocLoggingService.log(
-                      'No subNetworks found. Account may lack access to list subNetworks', 
+                      'No subNetworks found. Account may lack access to list subNetworks',
                       LOG_LEVEL.ERROR
                     );
                     toast.error(

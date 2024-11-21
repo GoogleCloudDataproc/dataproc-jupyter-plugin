@@ -33,6 +33,8 @@ import notebookSchedulerIcon from '../../style/icons/scheduler_calendar_month.sv
 import { NotebookScheduler } from '../scheduler/notebookScheduler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
+import { Widget } from '@lumino/widgets';
+
 const iconLogs = new LabIcon({
   name: 'launcher:logs-icon',
   svgstr: logsIcon
@@ -56,6 +58,7 @@ const iconNotebookScheduler = new LabIcon({
 class NotebookButtonExtensionPoint implements IDisposable {
   // IDisposable required.
   isDisposed: boolean;
+  private kernelStatusWidget: Widget;
   private readonly sparkLogsButton: ToolbarButton;
   private readonly sessionDetailsButton: ToolbarButton;
   private readonly sessionDetailsButtonDisable: ToolbarButton;
@@ -77,6 +80,32 @@ class NotebookButtonExtensionPoint implements IDisposable {
   ) {
     this.isDisposed = false;
     this.context.sessionContext.sessionChanged.connect(this.onSessionChanged);
+
+    this.context.sessionContext.statusChanged.connect(this.updateKernelStatus);
+
+    // Create the kernel status widget
+    this.kernelStatusWidget = new Widget();
+    this.kernelStatusWidget.node.className = 'kernel-status-toolbar';
+    this.kernelStatusWidget.node.style.display = 'flex';
+    this.kernelStatusWidget.node.style.alignItems = 'center';
+
+    const kernelStatusLabel = document.createElement('span');
+    kernelStatusLabel.textContent = '|';
+    kernelStatusLabel.style.marginRight = '5px';
+
+    const kernelStatusValue = document.createElement('span');
+    kernelStatusValue.textContent = 'Loading...'; 
+    kernelStatusValue.style.color = 'gray';
+    kernelStatusValue.className = 'kernel-status-value';
+
+    this.kernelStatusWidget.node.appendChild(kernelStatusLabel);
+    this.kernelStatusWidget.node.appendChild(kernelStatusValue);
+
+    // Add the widget to the toolbar
+    this.panel.toolbar.insertItem(12, 'kernel-status', this.kernelStatusWidget);
+
+    // Initial fetch of kernel status
+    this.fetchAndUpdateKernelStatus();
 
     this.sparkLogsButton = new ToolbarButton({
       icon: iconLogs,
@@ -124,6 +153,71 @@ class NotebookButtonExtensionPoint implements IDisposable {
       this.notebookSchedulerButton
     );
   }
+
+  /**
+   * Fetch and update kernel status from the KernelAPI.
+   */
+  private async fetchAndUpdateKernelStatus() {
+    try {
+      const currentKernelId = this.context.sessionContext.session?.kernel?.id;
+      if (!currentKernelId) {
+        this.setKernelStatus('Connecting', 'gray');
+        return;
+      }
+
+      const runningKernels = await KernelAPI.listRunning();
+      const currentKernel = runningKernels.find(kernel => kernel.id === currentKernelId);
+
+      if (currentKernel) {
+        const kernelStatus = currentKernel?.execution_state ?? 'Unknown';
+        this.setKernelStatus(kernelStatus, this.getStatusColor(kernelStatus));
+      } else {
+        this.setKernelStatus('Disconnected', 'red');
+      }
+    } catch (error) {
+      console.error('Error fetching kernel status:', error);
+      this.setKernelStatus('Error', 'red');
+    }
+  }
+
+  /**
+   * Update the kernel status label and color.
+   */
+  private setKernelStatus(status: string, color: string) {
+    const kernelStatusValue = this.kernelStatusWidget.node.querySelector(
+      '.kernel-status-value'
+    ) as HTMLElement;
+
+    if (kernelStatusValue) {
+      kernelStatusValue.textContent =
+        status.charAt(0).toUpperCase() + status.slice(1); 
+      kernelStatusValue.style.color = color;
+      kernelStatusValue.style.marginRight = '5px';
+    }
+  }
+
+  /**
+   * Get color based on kernel status.
+   */
+  private getStatusColor(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'idle':
+        return 'green';
+      case 'busy':
+        return 'orange';
+      case 'starting':
+        return 'blue';
+      default:
+        return 'gray';
+    }
+  }
+
+  /**
+   * Event handler to update kernel status when the session status changes.
+   */
+  private updateKernelStatus = async () => {
+    await this.fetchAndUpdateKernelStatus();
+  };
 
   private onNotebookSchedulerClick = () => {
     const content = new NotebookScheduler(
@@ -234,10 +328,13 @@ class NotebookButtonExtensionPoint implements IDisposable {
    * Event handler for when the session changes, we need to reattach kernel change events.
    */
   private onSessionChanged = async (session: ISessionContext) => {
+    session.connectionStatusChanged.connect(this.updateKernelStatus);
     session.kernelChanged.connect(this.onKernelChanged);
   };
 
   dispose() {
+    this.context.sessionContext.statusChanged.disconnect(this.updateKernelStatus);
+    this.kernelStatusWidget.dispose();
     this.context.sessionContext.sessionChanged.disconnect(
       this.onSessionChanged
     );
