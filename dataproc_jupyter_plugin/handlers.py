@@ -35,16 +35,11 @@ from dataproc_jupyter_plugin.controllers import (
     airflow,
     bigquery,
     composer,
+    compute,
     dataproc,
     executor,
-)
-from dataproc_jupyter_plugin.controllers.vertex import (
-    uiConfig, 
-    region,
-    network,
-    subNetwork,
-    cloudStorageBucket,
-    sharedNetwork
+    storage,
+    vertex,
 )
 
 _region_not_set_error = """GCP region not set in gcloud.
@@ -217,12 +212,12 @@ def setup_handlers(web_app):
         "bigQueryPreview": bigquery.PreviewController,
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
-        "api/vertex/uiConfig": uiConfig.UIConfigController,
-        "api/vertex/region": region.RegionController,
-        "api/vertex/network": network.NetworkController,
-        "api/vertex/subNetwork": subNetwork.SubNetworkController,
-        "api/vertex/sharedNetwork": sharedNetwork.SharedNetworkController,
-        "api/vertex/cloudStorageBucket": cloudStorageBucket.CloudStorageBucketController
+        "api/vertex/uiConfig": vertex.UIConfigController,
+        "api/compute/region": compute.RegionController,
+        "api/compute/network": compute.NetworkController,
+        "api/compute/subNetwork": compute.SubNetworkController,
+        "api/compute/sharedNetwork": compute.SharedNetworkController,
+        "api/storage/listBucket": storage.CloudStorageController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

@@ -19,24 +19,24 @@ import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services.vertex import vertex
+from dataproc_jupyter_plugin.services import storage
 
 
-class SubNetworkController(APIHandler):
+class CloudStorageController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
-        """Returns sub network"""
+        """Returns cloud storage bucket"""
         try:
             async with aiohttp.ClientSession() as client_session:
-                client = vertex.Client(
+                client = storage.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                sub_network = await client.get_subnetwork()
+                csb = await client.list_bucket()
                 response = []
-                for item in sub_network:
+                for item in csb:
                     env = item.dict()
                     response.append(env)
                 self.finish(json.dumps(response))
         except Exception as e:
-            self.log.exception(f"Error fetching sub network: {str(e)}")
+            self.log.exception(f"Error fetching cloud storage bucket: {str(e)}")
             self.finish({"error": str(e)})
