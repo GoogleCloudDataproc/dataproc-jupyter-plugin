@@ -42,7 +42,9 @@ from dataproc_jupyter_plugin.controllers.vertex import (
     uiConfig, 
     region,
     network,
-    subNetwork
+    subNetwork,
+    cloudStorageBucket,
+    sharedNetwork
 )
 
 _region_not_set_error = """GCP region not set in gcloud.
@@ -219,6 +221,8 @@ def setup_handlers(web_app):
         "api/vertex/region": region.RegionController,
         "api/vertex/network": network.NetworkController,
         "api/vertex/subNetwork": subNetwork.SubNetworkController,
+        "api/vertex/sharedNetwork": sharedNetwork.SharedNetworkController,
+        "api/vertex/cloudStorageBucket": cloudStorageBucket.CloudStorageBucketController
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

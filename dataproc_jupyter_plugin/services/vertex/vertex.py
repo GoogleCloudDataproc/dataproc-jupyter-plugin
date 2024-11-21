@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from google.cloud import storage
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
@@ -113,7 +114,8 @@ class Client:
                     if not resp:
                         return networks
                     else:
-                        networks.append(resp.get("items"))
+                        for item in resp.get("items"):
+                            networks.append(item)
                         return networks
                 else:
                     self.log.exception("Error getting network")
@@ -139,7 +141,8 @@ class Client:
                     if not resp:
                         return sub_networks
                     else:
-                        sub_networks.append(resp.get("items"))
+                        for item in resp.get("items"):
+                            sub_networks.append(item)
                         return sub_networks
                 else:
                     self.log.exception("Error getting sub network")
@@ -149,3 +152,43 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error fetching sub network: {str(e)}")
             return {"Error fetching sub network": str(e)}
+
+    async def get_shared_network(self):
+        try:
+            shared_networks = []
+            vertex_url = await urls.gcp_service_url(COMPUTE_SERVICE_NAME)
+            api_endpoint = f"{vertex_url}/compute/v1/projects/{self.project_id}/aggregated/subnetworks/listUsable"
+
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return shared_networks
+                    else:
+                        for item in resp.get("items"):
+                            shared_networks.append(item)
+                        return shared_networks
+                else:
+                    self.log.exception("Error getting shared network")
+                    raise Exception(
+                        f"Error getting network shared from host: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error fetching shared network: {str(e)}")
+            return {"Error fetching network shared from host": str(e)}
+
+    async def get_csb(self):
+        try:
+            cloud_storage_buckets = []
+            storage_client = storage.Client()
+            buckets = storage_client.list_buckets()
+            for bucket in buckets:
+                cloud_storage_buckets.append(bucket.name)
+            return cloud_storage_buckets
+
+        except Exception as e:
+            self.log.exception(f"Error fetching cloud storage buckets: {str(e)}")
+            return {"Error fetching cloud storage buckets": str(e)}
