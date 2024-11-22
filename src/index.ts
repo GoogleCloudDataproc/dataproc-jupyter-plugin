@@ -65,6 +65,7 @@ import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
 import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
+import { Notification } from '@jupyterlab/apputils';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -171,7 +172,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    await RunTimeSerive.listClustersDataprocAPIService();
+    const dataprocClusterResponse =
+      await RunTimeSerive.listClustersDataprocAPIService();
 
     /**
      * Handler for when the Jupyter Lab theme changes.
@@ -704,6 +706,26 @@ const extension: JupyterFrontEndPlugin<void> = {
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 4
       });
+    }
+
+    if (dataprocClusterResponse.error.message) {
+      Notification.error(
+        `Required APIs not enabled: Dataproc API.`,
+        {
+          actions: [
+            {
+              label: 'Enable',
+              callback: () =>
+                window.open(
+                  'https://console.cloud.google.com/apis/library/dataproc.googleapis.com',
+                  '_blank'
+                ),
+              displayType: 'link'
+            }
+          ],
+          autoClose: false
+        }
+      );
     }
 
     // the plugin depends on having a toast container, and Jupyter labs lazy

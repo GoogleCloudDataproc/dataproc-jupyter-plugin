@@ -460,18 +460,8 @@ export class RunTimeSerive {
         queryParams: queryParams
       });
       const formattedResponse = await response.json();
-      if(formattedResponse?.error?.message) {
-        toast.error(
-          `${formattedResponse.error.message}`,
-          toastifyCustomStyle
-        );
-      }
       return formattedResponse;
     } catch (error: any) {
-      toast.error(
-        `${error}`,
-        toastifyCustomStyle
-      );
       return error;
     }
   };
@@ -706,28 +696,39 @@ export class RunTimeSerive {
                   code: number;
                 };
               }) => {
-                const filteredServices = responseResult.items.filter(
+                const filteredServices = responseResult?.items?.filter(
                   (item: { network: string; privateIpGoogleAccess: boolean }) =>
                     item.network.split('/')[9] === subnetwork &&
                     item.privateIpGoogleAccess === true
                 );
-                const transformedServiceList = filteredServices.map(
-                  (data: { name: string }) => data.name
-                );
-                setSubNetworklist(transformedServiceList);
-                if (selectedRuntimeClone === undefined) {
-                  if (transformedServiceList.length > 0) {
-                    setSubNetworkSelected(transformedServiceList[0]);
-                  } else {
-                    DataprocLoggingService.log(
-                      'No subNetworks found. Account may lack access to list subNetworks',
-                      LOG_LEVEL.ERROR
-                    );
-                    toast.error(
-                      `No subNetworks found. Account may lack access to list subNetworks`,
-                      toastifyCustomStyle
-                    );
+                if (filteredServices) {
+                  const transformedServiceList = filteredServices.map(
+                    (data: { name: string }) => data.name
+                  );
+                  setSubNetworklist(transformedServiceList);
+                  if (selectedRuntimeClone === undefined) {
+                    if (transformedServiceList.length > 0) {
+                      setSubNetworkSelected(transformedServiceList[0]);
+                    } else {
+                      DataprocLoggingService.log(
+                        'There are no subnetworks with google private access enabled',
+                        LOG_LEVEL.ERROR
+                      );
+                      toast.error(
+                        `There are no subnetworks with google private access enabled`,
+                        toastifyCustomStyle
+                      );
+                    }
                   }
+                } else {
+                  DataprocLoggingService.log(
+                    'No subNetworks found',
+                    LOG_LEVEL.ERROR
+                  );
+                  toast.error(
+                    `No subNetworks found`,
+                    toastifyCustomStyle
+                  );
                 }
                 setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
