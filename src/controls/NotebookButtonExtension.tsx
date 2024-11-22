@@ -90,7 +90,10 @@ class NotebookButtonExtensionPoint implements IDisposable {
     this.kernelStatusWidget.node.style.alignItems = 'center';
 
     const kernelStatusLabel = document.createElement('span');
-    kernelStatusLabel.textContent = '|';
+    kernelStatusLabel.textContent =
+      this.context.sessionContext.kernelDisplayName.includes('Local')
+        ? ''
+        : '|';
     kernelStatusLabel.style.marginRight = '5px';
 
     const kernelStatusValue = document.createElement('span');
@@ -174,7 +177,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
         const kernelStatus = currentKernel?.execution_state ?? 'Unknown';
         this.setKernelStatus(kernelStatus, this.getStatusColor(kernelStatus));
       } else {
-        this.setKernelStatus('Unknown', '#C9C9C9');
+        this.setKernelStatus('Failed', '#D93025');
       }
     } catch (error) {
       console.error('Error fetching kernel status:', error);
@@ -192,7 +195,9 @@ class NotebookButtonExtensionPoint implements IDisposable {
 
     if (kernelStatusValue) {
       kernelStatusValue.textContent =
-        status === 'idle'
+        this.context.sessionContext.kernelDisplayName.includes('Local')
+          ? ''
+          : status === 'idle'
           ? status.charAt(0).toUpperCase() + status.slice(1) + ' (Ready)'
           : status === 'busy'
           ? status.charAt(0).toUpperCase() + status.slice(1) + ' (Executing)'
