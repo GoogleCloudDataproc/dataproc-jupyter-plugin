@@ -94,7 +94,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     kernelStatusLabel.style.marginRight = '5px';
 
     const kernelStatusValue = document.createElement('span');
-    kernelStatusValue.textContent = 'Loading...'; 
+    kernelStatusValue.textContent = 'Loading...';
     kernelStatusValue.style.color = 'gray';
     kernelStatusValue.className = 'kernel-status-value';
 
@@ -161,22 +161,24 @@ class NotebookButtonExtensionPoint implements IDisposable {
     try {
       const currentKernelId = this.context.sessionContext.session?.kernel?.id;
       if (!currentKernelId) {
-        this.setKernelStatus('Connecting', 'gray');
+        this.setKernelStatus('Unknown', '#C9C9C9');
         return;
       }
 
       const runningKernels = await KernelAPI.listRunning();
-      const currentKernel = runningKernels.find(kernel => kernel.id === currentKernelId);
+      const currentKernel = runningKernels.find(
+        kernel => kernel.id === currentKernelId
+      );
 
       if (currentKernel) {
         const kernelStatus = currentKernel?.execution_state ?? 'Unknown';
         this.setKernelStatus(kernelStatus, this.getStatusColor(kernelStatus));
       } else {
-        this.setKernelStatus('Disconnected', 'red');
+        this.setKernelStatus('Unknown', '#C9C9C9');
       }
     } catch (error) {
       console.error('Error fetching kernel status:', error);
-      this.setKernelStatus('Error', 'red');
+      this.setKernelStatus('Failed', '#D93025');
     }
   }
 
@@ -190,7 +192,11 @@ class NotebookButtonExtensionPoint implements IDisposable {
 
     if (kernelStatusValue) {
       kernelStatusValue.textContent =
-        status.charAt(0).toUpperCase() + status.slice(1); 
+        status === 'idle'
+          ? status.charAt(0).toUpperCase() + status.slice(1) + ' (Ready)'
+          : status === 'busy'
+          ? status.charAt(0).toUpperCase() + status.slice(1) + ' (Executing)'
+          : status.charAt(0).toUpperCase() + status.slice(1);
       kernelStatusValue.style.color = color;
       kernelStatusValue.style.marginRight = '5px';
     }
@@ -202,13 +208,17 @@ class NotebookButtonExtensionPoint implements IDisposable {
   private getStatusColor(status: string): string {
     switch (status.toLowerCase()) {
       case 'idle':
-        return 'green';
+        return '#188038';
       case 'busy':
-        return 'orange';
+        return '#3A8DFF';
       case 'starting':
-        return 'blue';
+        return '#FFB300';
+      case 'initialize':
+        return ' #455A64';
+      case 'restarting':
+        return '#9747FF';
       default:
-        return 'gray';
+        return '#FF9800';
     }
   }
 
@@ -333,7 +343,9 @@ class NotebookButtonExtensionPoint implements IDisposable {
   };
 
   dispose() {
-    this.context.sessionContext.statusChanged.disconnect(this.updateKernelStatus);
+    this.context.sessionContext.statusChanged.disconnect(
+      this.updateKernelStatus
+    );
     this.kernelStatusWidget.dispose();
     this.context.sessionContext.sessionChanged.disconnect(
       this.onSessionChanged

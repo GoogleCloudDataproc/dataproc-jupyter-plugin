@@ -708,7 +708,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
     }
 
-    if (dataprocClusterResponse.error.message) {
+    if (dataprocClusterResponse?.error?.message) {
       Notification.error(
         `Required APIs not enabled: Dataproc API.`,
         {
