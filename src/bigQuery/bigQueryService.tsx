@@ -432,4 +432,17 @@ export class BigQueryService {
       return reason;
     }
   };
+  static getBigQuerySearchCatalogAPIService = async () => {
+    try {
+      const data: any = await requestAPI(
+        `bigQuerySearch?search_string=''&type=(table|dataset)&system=bigquery`,
+        {
+          method: 'POST'
+        }
+      );
+      return data;
+    } catch (reason) {
+      return reason;
+    }
+  };
 }

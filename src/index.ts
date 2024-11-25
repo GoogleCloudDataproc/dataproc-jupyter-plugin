@@ -181,10 +181,16 @@ const extension: JupyterFrontEndPlugin<void> = {
     const credentials = await authApi();
     if (credentials && credentials?.project_id) {
       bigqueryDatasetsResponse =
-      await BigQueryService.listBigQueryDatasetsAPIService(credentials?.project_id);
+        await BigQueryService.listBigQueryDatasetsAPIService(
+          credentials?.project_id
+        );
     }
 
-    const composerListResponse = await SchedulerService.listComposersAPICheckService();
+    const composerListResponse =
+      await SchedulerService.listComposersAPICheckService();
+    const dataCatalogResponse =
+      await BigQueryService.getBigQuerySearchCatalogAPIService();
+    console.log(dataCatalogResponse);
 
     /**
      * Handler for when the Jupyter Lab theme changes.
@@ -719,64 +725,86 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
     }
 
-    if (dataprocClusterResponse?.error && dataprocClusterResponse?.error?.message.includes("Cloud Dataproc API has not been used in project")) {
-      Notification.error(
-        `Required APIs not enabled: Dataproc API.`,
-        {
-          actions: [
-            {
-              label: 'Enable',
-              callback: () =>
-                window.open(
-                  'https://console.cloud.google.com/apis/library/dataproc.googleapis.com',
-                  '_blank'
-                ),
-              displayType: 'link'
-            }
-          ],
-          autoClose: false
-        }
-      );
+    if (
+      dataprocClusterResponse?.error &&
+      dataprocClusterResponse?.error?.message.includes(
+        'Cloud Dataproc API has not been used in project'
+      )
+    ) {
+      Notification.error(`Required APIs not enabled: Dataproc API.`, {
+        actions: [
+          {
+            label: 'Enable',
+            callback: () =>
+              window.open(
+                'https://console.cloud.google.com/apis/library/dataproc.googleapis.com',
+                '_blank'
+              ),
+            displayType: 'link'
+          }
+        ],
+        autoClose: false
+      });
     }
-    if (bigqueryDatasetsResponse?.error && bigqueryDatasetsResponse?.error.includes("has not enabled BigQuery")){
-      Notification.error(
-        `Required APIs not enabled: BigQuery API.`,
-        {
-          actions: [
-            {
-              label: 'Enable',
-              callback: () =>
-                window.open(
-                  'https://console.cloud.google.com/apis/library/bigquery.googleapis.com',
-                  '_blank'
-                ),
-              displayType: 'link'
-            }
-          ],
-          autoClose: false
-        }
-      );
+    if (
+      bigqueryDatasetsResponse?.error &&
+      bigqueryDatasetsResponse?.error.includes('has not enabled BigQuery')
+    ) {
+      Notification.error(`Required APIs not enabled: BigQuery API.`, {
+        actions: [
+          {
+            label: 'Enable',
+            callback: () =>
+              window.open(
+                'https://console.cloud.google.com/apis/library/bigquery.googleapis.com',
+                '_blank'
+              ),
+            displayType: 'link'
+          }
+        ],
+        autoClose: false
+      });
     }
-    if (composerListResponse['Error fetching environments list'] && composerListResponse['Error fetching environments list'].includes("Cloud Composer API has not been used in project")) {
-      Notification.error(
-        `Required APIs not enabled: Composer API.`,
-        {
-          actions: [
-            {
-              label: 'Enable',
-              callback: () =>
-                window.open(
-                  'https://console.cloud.google.com/apis/library/composer.googleapis.com',
-                  '_blank'
-                ),
-              displayType: 'link'
-            }
-          ],
-          autoClose: false
-        }
-      );
+    if (
+      composerListResponse['Error fetching environments list'] &&
+      composerListResponse['Error fetching environments list'].includes(
+        'Cloud Composer API has not been used in project'
+      )
+    ) {
+      Notification.error(`Required APIs not enabled: Composer API.`, {
+        actions: [
+          {
+            label: 'Enable',
+            callback: () =>
+              window.open(
+                'https://console.cloud.google.com/apis/library/composer.googleapis.com',
+                '_blank'
+              ),
+            displayType: 'link'
+          }
+        ],
+        autoClose: false
+      });
     }
-    
+    if (
+      dataCatalogResponse?.error &&
+      dataCatalogResponse?.error.includes('Google Cloud Data Catalog API has not been used in project')
+    ) {
+      Notification.error(`Required APIs not enabled: Data Catalog API.`, {
+        actions: [
+          {
+            label: 'Enable',
+            callback: () =>
+              window.open(
+                'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com',
+                '_blank'
+              ),
+            displayType: 'link'
+          }
+        ],
+        autoClose: false
+      });
+    }
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
     // loads one when a notification occurs.  Let's hackily fire off a notification
