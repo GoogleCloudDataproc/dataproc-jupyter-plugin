@@ -19,7 +19,7 @@ import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services.vertex import executor
+from dataproc_jupyter_plugin.services import vertex
 
 
 class CreateController(APIHandler):
@@ -28,10 +28,10 @@ class CreateController(APIHandler):
         try:
             input_data = self.get_json_body()
             async with aiohttp.ClientSession() as client_session:
-                client = executor.Client(
+                client = vertex.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                result = await client.execute(input_data)
+                result = await client.create(input_data)
                 self.finish(json.dumps(result))
         except Exception as e:
             self.log.exception(f"Error creating job schedule: {str(e)}")

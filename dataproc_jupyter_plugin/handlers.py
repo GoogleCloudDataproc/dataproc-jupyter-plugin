@@ -37,10 +37,7 @@ from dataproc_jupyter_plugin.controllers import (
     composer,
     dataproc,
     executor,
-)
-
-from dataproc_jupyter_plugin.controllers.vertex import (
-    createJobScheduler
+    vertex
 )
 
 _region_not_set_error = """GCP region not set in gcloud.
@@ -213,7 +210,7 @@ def setup_handlers(web_app):
         "bigQueryPreview": bigquery.PreviewController,
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
-        "api/vertex/createJobScheduler": createJobScheduler.CreateController,
+        "api/vertex/createJobScheduler": vertex.CreateController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

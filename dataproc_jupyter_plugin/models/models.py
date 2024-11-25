@@ -58,3 +58,24 @@ class DescribeJob(BaseModel):
     @classmethod
     def from_dict(cls, data):
         return cls(**data)
+
+
+class DescribeVertexJob(BaseModel):
+    input_filename: str = None
+    display_name: str = None
+    machine_type: str = None
+    accelerator_type: Optional[str] = None
+    accelerator_count: Optional[int] = None
+    kernel_name: str = None
+    schedule_value: str = None
+    max_run_count: str = None
+    region: str = None
+    cloud_storage_bucket: str = None
+    parameters: Optional[List[str]] = None
+    service_account: str = None
+    network: str = None
+    subnetwork: str = None
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
