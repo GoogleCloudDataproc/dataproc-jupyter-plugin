@@ -420,4 +420,16 @@ export class BigQueryService {
       );
     }
   };
+
+  static listBigQueryDatasetsAPIService = async (projectId: string) => {
+    const pageToken = '';
+    try {
+      const data: any = await requestAPI(
+        `bigQueryDataset?project_id=${projectId}&pageToken=${pageToken}`
+      );
+      return data;
+    } catch (reason) {
+      return reason;
+    }
+  };
 }

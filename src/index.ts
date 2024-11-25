@@ -66,6 +66,8 @@ import { eventEmitter } from './utils/signalEmitter';
 import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
+import { BigQueryService } from './bigQuery/bigQueryService';
+import { SchedulerService } from './scheduler/schedulerServices';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -174,6 +176,15 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const dataprocClusterResponse =
       await RunTimeSerive.listClustersDataprocAPIService();
+    let bigqueryDatasetsResponse;
+
+    const credentials = await authApi();
+    if (credentials && credentials?.project_id) {
+      bigqueryDatasetsResponse =
+      await BigQueryService.listBigQueryDatasetsAPIService(credentials?.project_id);
+    }
+
+    const composerListResponse = await SchedulerService.listComposersAPICheckService();
 
     /**
      * Handler for when the Jupyter Lab theme changes.
@@ -708,7 +719,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
     }
 
-    if (dataprocClusterResponse?.error?.message) {
+    if (dataprocClusterResponse?.error && dataprocClusterResponse?.error?.message.includes("Cloud Dataproc API has not been used in project")) {
       Notification.error(
         `Required APIs not enabled: Dataproc API.`,
         {
@@ -727,6 +738,45 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       );
     }
+    if (bigqueryDatasetsResponse?.error && bigqueryDatasetsResponse?.error.includes("has not enabled BigQuery")){
+      Notification.error(
+        `Required APIs not enabled: BigQuery API.`,
+        {
+          actions: [
+            {
+              label: 'Enable',
+              callback: () =>
+                window.open(
+                  'https://console.cloud.google.com/apis/library/bigquery.googleapis.com',
+                  '_blank'
+                ),
+              displayType: 'link'
+            }
+          ],
+          autoClose: false
+        }
+      );
+    }
+    if (composerListResponse['Error fetching environments list'] && composerListResponse['Error fetching environments list'].includes("Cloud Composer API has not been used in project")) {
+      Notification.error(
+        `Required APIs not enabled: Composer API.`,
+        {
+          actions: [
+            {
+              label: 'Enable',
+              callback: () =>
+                window.open(
+                  'https://console.cloud.google.com/apis/library/composer.googleapis.com',
+                  '_blank'
+                ),
+              displayType: 'link'
+            }
+          ],
+          autoClose: false
+        }
+      );
+    }
+    
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
     // loads one when a notification occurs.  Let's hackily fire off a notification

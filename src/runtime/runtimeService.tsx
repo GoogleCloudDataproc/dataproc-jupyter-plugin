@@ -461,7 +461,7 @@ export class RunTimeSerive {
       });
       const formattedResponse = await response.json();
       return formattedResponse;
-    } catch (error: any) {
+    } catch (error) {
       return error;
     }
   };
