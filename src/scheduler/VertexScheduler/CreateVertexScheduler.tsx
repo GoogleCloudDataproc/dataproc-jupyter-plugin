@@ -127,14 +127,15 @@ const CreateVertexScheduler = ({
     const [networkSelected, setNetworkSelected] = useState('networkInThisProject');
     const [region, setRegion] = useState('');
     const [projectId, setProjectId] = useState('');
+    const [maxRuns, setMaxRuns] = useState('');
     const [scheduleMode, setScheduleMode] = useState<scheduleMode>('runNow');
     const [scheduleValue, setScheduleValue] = useState(scheduleValueExpression);
     const [timeZoneSelected, setTimeZoneSelected] = useState(
-      Intl.DateTimeFormat().resolvedOptions().timeZone
+        Intl.DateTimeFormat().resolvedOptions().timeZone
     );
-  
+
     const timezones = Object.keys(tzdata.zones).sort();
-  
+
     // const [composerSelected, setComposerSelected] = useState('');
 
     /**
@@ -152,6 +153,18 @@ const CreateVertexScheduler = ({
     const handleMachineType = (machineType: any) => {
         setMachineTypeSelected(machineType);
     }
+
+    /**
+    * Max Runs
+    * @param {string} maxRuns seleted machine type
+    */
+    const handleMaxRuns = (e: any | React.ChangeEvent<HTMLInputElement>) => {
+        const re = /^[0-9\b]+$/;
+        if (e.target.value === '' || re.test(e.target.value)) {
+            setMaxRuns(e.target.value);
+            console.log(e.target.value)
+         }
+    };
 
     /**
     * Acceleration Type listing
@@ -244,11 +257,11 @@ const CreateVertexScheduler = ({
 
     const handleTimeZoneSelected = (data: string | null) => {
         if (data) {
-          const selectedTimeZone = data.toString();
-          setTimeZoneSelected(selectedTimeZone);
+            const selectedTimeZone = data.toString();
+            setTimeZoneSelected(selectedTimeZone);
         }
-      };
-    
+    };
+
     return (
         <>
             {
@@ -385,7 +398,17 @@ const CreateVertexScheduler = ({
                             />
                         </div>
                         <span className="tab-description tab-text-sub-cl">Where results are stored. Select an existing bucket or create a new one.</span>
-
+                        <div className="create-scheduler-form-element">
+                            <Input
+                                className="create-scheduler-style"
+                                value={maxRuns}
+                                onChange={e => handleMaxRuns(e)}
+                                type="number"
+                                placeholder=""
+                                Label="Max runs"
+                                disabled={editMode}
+                            />
+                        </div>
 
                         <>
                             <div className="create-job-scheduler-title sub-title-heading ">
