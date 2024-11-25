@@ -91,10 +91,12 @@ class NotebookButtonExtensionPoint implements IDisposable {
 
     const kernelStatusLabel = document.createElement('span');
     kernelStatusLabel.textContent =
-      this.context.sessionContext.kernelDisplayName.includes('Local')
+      this.context.sessionContext.kernelDisplayName.includes('Local') ||
+      this.context.sessionContext.kernelDisplayName.includes('No Kernel')
         ? ''
         : '|';
     kernelStatusLabel.style.marginRight = '5px';
+    kernelStatusLabel.className = 'kernel-status-label';
 
     const kernelStatusValue = document.createElement('span');
     kernelStatusValue.textContent = 'Loading...';
@@ -164,7 +166,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     try {
       const currentKernelId = this.context.sessionContext.session?.kernel?.id;
       if (!currentKernelId) {
-        this.setKernelStatus('Unknown', '#C9C9C9');
+        this.setKernelStatus('Initializing', '#455A64');
         return;
       }
 
@@ -192,8 +194,15 @@ class NotebookButtonExtensionPoint implements IDisposable {
     const kernelStatusValue = this.kernelStatusWidget.node.querySelector(
       '.kernel-status-value'
     ) as HTMLElement;
+    const kernelStatusLabel = this.kernelStatusWidget.node.querySelector(
+      '.kernel-status-label'
+    ) as HTMLElement;
 
-    if (kernelStatusValue) {
+    if (kernelStatusValue && kernelStatusLabel) {
+      kernelStatusLabel.textContent = this.context.sessionContext.kernelDisplayName.includes('Local') ||
+      this.context.sessionContext.kernelDisplayName.includes('No Kernel')
+        ? ''
+        : '|';
       kernelStatusValue.textContent =
         this.context.sessionContext.kernelDisplayName.includes('Local')
           ? ''
@@ -218,10 +227,12 @@ class NotebookButtonExtensionPoint implements IDisposable {
         return '#3A8DFF';
       case 'starting':
         return '#FFB300';
-      case 'initialize':
+      case 'initializing':
         return ' #455A64';
       case 'restarting':
         return '#9747FF';
+      case 'Unknown':
+        return '#C9C9C9';
       default:
         return '#FF9800';
     }
