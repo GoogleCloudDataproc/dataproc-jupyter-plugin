@@ -94,7 +94,7 @@ class Client:
             for item in response:
                 shared_networks.append(item)
             return shared_networks
-        
+
         except Exception as e:
             self.log.exception(f"Error fetching shared network: {str(e)}")
             return {"Error fetching network shared from host": str(e)}
