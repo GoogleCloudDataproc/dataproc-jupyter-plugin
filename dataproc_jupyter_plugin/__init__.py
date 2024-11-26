@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.from ._version import __version__
 import logging
+import sys
 
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 from jupyter_server.services.sessions.sessionmanager import SessionManager
 from kernels_mixer.kernels import MixingMappingKernelManager
 from kernels_mixer.kernelspecs import MixingKernelSpecManager
 from kernels_mixer.websockets import DelegatingWebsocketConnection
+from traitlets import Bool
+from jupyter_server.serverapp import ServerApp
+
+from dataproc_jupyter_plugin.commons.vertexPlatform import _parse_vertexai_flag
+
 
 from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
 
@@ -83,6 +89,11 @@ def _load_jupyter_server_extension(server_app):
     server_app: jupyterlab.labapp.LabApp
         JupyterLab application instance
     """
+    flag_status = _parse_vertexai_flag()
+
+    # Log the verterai flag
+    server_app.log.info(f"Vertexai flag: {flag_status}")
+
     setup_handlers(server_app.web_app)
     name = "dataproc_jupyter_plugin"
     server_app.log.info(f"Registered {name} server extension")

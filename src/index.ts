@@ -78,6 +78,10 @@ const iconPythonLogo = new LabIcon({
   svgstr: pythonLogo
 });
 
+interface VertexResponse {
+  enabled: boolean;
+  error?: string;  // Optional error property for error cases
+}
 const extension: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_ID,
   autoStart: true,
@@ -199,7 +203,7 @@ const extension: JupyterFrontEndPlugin<void> = {
      * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
      * as necessary.
      */
-    const onPreviewEnabledChanged = () => {
+    const onPreviewEnabledChanged = async () => {
       previewEnabled = settings.get('previewEnabled').composite as boolean;
       if (!previewEnabled) {
         // Preview was disabled, tear everything down.
@@ -214,6 +218,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       } else {
         // Preview was enabled, (re)create DPMS and GCS.
         if (!panelDpms && !panelGcs) {
+          const vertexai: VertexResponse = await requestAPI('api/vertexPlatform')
+          if(!vertexai.enabled){
           panelDpms = new Panel();
           panelDpms.id = 'dpms-tab';
           panelDpms.title.caption = 'Dataset Explorer - DPMS';
@@ -246,6 +252,28 @@ const extension: JupyterFrontEndPlugin<void> = {
             app.shell.add(panelDatasetExplorer, 'left', { rank: 1000 });
           }
           app.shell.add(panelDpms, 'left', { rank: 1001 });
+        }
+        else{
+          panelDpms = new Panel();
+          panelDpms.id = 'dpms-tab';
+          panelDpms.title.caption = 'Dataset Explorer - DPMS';
+          panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+          if (bqFeature.enable_bigquery_integration && !panelDatasetExplorer) {
+            panelDatasetExplorer = new Panel();
+            panelDatasetExplorer.id = 'dataset-explorer-tab';
+            panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
+            panelDatasetExplorer.addWidget(
+              new BigQueryWidget(
+                app as JupyterLab,
+                settingRegistry as ISettingRegistry,
+                bqFeature.enable_bigquery_integration as boolean,
+                themeManager
+              )
+            );
+          }
+          onThemeChanged();
+          app.shell.add(panelDpms, 'left', { rank: 1001 });
+        }
         }
       }
     };
