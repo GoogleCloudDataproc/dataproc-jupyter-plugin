@@ -19,24 +19,20 @@ import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services import storage
+from dataproc_jupyter_plugin.services import iam
 
 
-class CloudStorageController(APIHandler):
+class ServiceAccountController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
-        """Returns cloud storage bucket"""
+        """Returns service accounts"""
         try:
             async with aiohttp.ClientSession() as client_session:
-                client = storage.Client(
+                client = iam.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                csb = await client.list_bucket()
-                response = []
-                for item in csb:
-                    env = item.dict()
-                    response.append(env)
-                self.finish(json.dumps(response))
+                service_account = await client.list_service_account()
+                self.finish(json.dumps(service_account))
         except Exception as e:
-            self.log.exception(f"Error fetching cloud storage bucket: {str(e)}")
+            self.log.exception(f"Error fetching service accounts: {str(e)}")
             self.finish({"error": str(e)})

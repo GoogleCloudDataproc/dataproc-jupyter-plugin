@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.cloud import storage
+import google.oauth2.credentials as oauth2
+from google.cloud import iam_admin_v1
+from google.cloud.iam_admin_v1 import types
 
 
 class Client:
@@ -30,15 +32,19 @@ class Client:
         self.region_id = credentials["region_id"]
         self.client_session = client_session
 
-    async def list_bucket(self):
+    async def list_service_account(self):
         try:
-            cloud_storage_buckets = []
-            storage_client = storage.Client()
-            buckets = storage_client.list_buckets()
-            for bucket in buckets:
-                cloud_storage_buckets.append(bucket.name)
-            return cloud_storage_buckets
+            credentials = oauth2.Credentials(self._access_token)
+            iam_admin_client = iam_admin_v1.IAMAsyncClient(credentials = credentials)
+            request = types.ListServiceAccountsRequest()
+            request.name = f"projects/{self.project_id}"
 
+            accounts = await iam_admin_client.list_service_accounts(request=request)
+            account_list = []
+            async for account in accounts:
+                account_list.append(json.loads(proto.Message.to_json(account))) 
+
+            return account_list
         except Exception as e:
-            self.log.exception(f"Error fetching cloud storage buckets: {str(e)}")
-            return {"Error fetching cloud storage buckets": str(e)}
+            self.log.exception(f"Error listing service accounts: {str(e)}")
+            return {"error": str(e)}
