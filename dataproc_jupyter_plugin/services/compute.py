@@ -15,6 +15,7 @@
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
+    COMPUTE_SERVICE_NAME
 )
 
 

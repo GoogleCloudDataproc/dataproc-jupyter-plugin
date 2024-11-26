@@ -51,8 +51,8 @@ class ServiceAccountController(APIHandler):
                 client = storage.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                response = await client.list_service_account()
-                self.finish(json.dumps(response))
+                service_account = await client.list_service_account()
+                self.finish(json.dumps(service_account))
         except Exception as e:
             self.log.exception(f"Error fetching service accounts: {str(e)}")
             self.finish({"error": str(e)})

@@ -34,11 +34,7 @@ class UIConfigController(APIHandler):
                 )
 
                 configs = await client.list_uiconfig(region_id)
-                response = []
-                for config in configs:
-                    env = config.dict()
-                    response.append(env)
-                self.finish(json.dumps(response))
+                self.finish(json.dumps(configs))
         except Exception as e:
             self.log.exception(f"Error fetching ui config: {str(e)}")
             self.finish({"error": str(e)})
