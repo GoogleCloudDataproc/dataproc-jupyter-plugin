@@ -40,3 +40,19 @@ class CloudStorageController(APIHandler):
         except Exception as e:
             self.log.exception(f"Error fetching cloud storage bucket: {str(e)}")
             self.finish({"error": str(e)})
+
+    
+class ServiceAccountController(APIHandler):
+    @tornado.web.authenticated
+    async def get(self):
+        """Returns service accounts"""
+        try:
+            async with aiohttp.ClientSession() as client_session:
+                client = storage.Client(
+                    await credentials.get_cached(), self.log, client_session
+                )
+                response = await client.list_service_account()
+                self.finish(json.dumps(response))
+        except Exception as e:
+            self.log.exception(f"Error fetching service accounts: {str(e)}")
+            self.finish({"error": str(e)})
