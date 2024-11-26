@@ -68,6 +68,7 @@ class DescribeVertexJob(BaseModel):
     accelerator_count: Optional[int] = None
     kernel_name: str = None
     schedule_value: str = None
+    time_zone: str = None
     max_run_count: str = None
     region: str = None
     cloud_storage_bucket: str = None

@@ -69,23 +69,33 @@ class Client:
         input_notebook = file_path.split('/')[-1]
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
+        folder_name = input_notebook.split('.')[0]
 
-        blob_name = f"gs://{bucket_name}/{input_notebook.split('.')[0]}/{input_notebook}"
+        # uploading the input file
+        blob_name = f"gs://{bucket_name}/{folder_name}/{input_notebook}"
         blob = bucket.blob(blob_name)
         blob.upload_from_filename(input_notebook)
+
+        # uploading json file containing the input file path
+        json_blob_name = f"gs://{bucket_name}/{folder_name}/{folder_name}.json"
+        json_blob = bucket.blob(json_blob_name)
+        json_blob.upload_from_string(blob_name)
+
         self.log.info(f"File {input_notebook} uploaded to gcs successfully")
         return blob_name
 
     async def create_schedule(self, job, file_path):
         try:
+            schedule_value = "* * * * *" if job.schedule_value == "" else job.schedule_value
             api_endpoint = f"https://{self.region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.region_id}/schedules"
-            headers = self.create_headers()      
+            headers = self.create_headers()
             payload = {
                 "displayName": job.display_name,
-                "cron": "",
+                "cron": f"TZ={job.time_zone} {schedule_value}",
                 "maxRunCount": job.max_run_count,
                 "maxConcurrentRunCount": job.max_run_count,
                 "createNotebookExecutionJobRequest": {
+                    "parent": f"projects/{self.project_id}/locations/{sef.region_id}",
                     "notebookExecutionJob": {
                         "displayName": job.display_name,
                         "customEnvironmentSpec": {
