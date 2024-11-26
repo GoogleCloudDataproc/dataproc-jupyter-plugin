@@ -32,11 +32,7 @@ class RegionController(APIHandler):
                     await credentials.get_cached(), self.log, client_session
                 )
                 regions = await client.list_region()
-                response = []
-                for region in regions:
-                    env = region.dict()
-                    response.append(env)
-                self.finish(json.dumps(response))
+                self.finish(json.dumps(regions))
         except Exception as e:
             self.log.exception(f"Error fetching regions: {str(e)}")
             self.finish({"error": str(e)})
@@ -63,11 +59,12 @@ class SubNetworkController(APIHandler):
     async def get(self):
         """Returns sub network"""
         try:
+            region_id = self.get_argument("region_id")
             async with aiohttp.ClientSession() as client_session:
                 client = compute.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                sub_network = await client.get_subnetwork()
+                sub_network = await client.get_subnetwork(region_id)
                 self.finish(json.dumps(sub_network))
         except Exception as e:
             self.log.exception(f"Error fetching sub network: {str(e)}")

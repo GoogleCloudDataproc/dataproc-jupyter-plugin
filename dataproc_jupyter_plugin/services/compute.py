@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from google.cloud import compute_v1
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
-    COMPUTE_SERVICE_NAME
 )
 
 
@@ -34,36 +34,18 @@ class Client:
         self.region_id = credentials["region_id"]
         self.client_session = client_session
 
-    def create_headers(self):
-        return {
-            "Content-Type": CONTENT_TYPE,
-            "Authorization": f"Bearer {self._access_token}",
-        }
-
     async def list_region(self):
         try:
             regions = []
-            vertex_url = await urls.gcp_service_url(COMPUTE_SERVICE_NAME)
-            api_endpoint = f"{vertex_url}/compute/v1/projects/{self.project_id}/regions"
+            client = compute_v1.RegionsClient()
+            request = compute_v1.ListRegionsRequest(
+                project=self.project_id,
+            )
+            response = client.list(request=request)
+            for item in response:
+                regions.append(item.name)
+            return regions
 
-            headers = self.create_headers()
-            async with self.client_session.get(
-                api_endpoint, headers=headers
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    if not resp:
-                        return regions
-                    else:
-                        for item in resp.get("items"):
-                            region = item.get("name")
-                            regions.append(region)
-                        return regions
-                else:
-                    self.log.exception("Error listing regions")
-                    raise Exception(
-                        f"Error getting regions: {response.reason} {await response.text()}"
-                    )
         except Exception as e:
             self.log.exception(f"Error fetching regions: {str(e)}")
             return {"Error fetching regions": str(e)}
@@ -71,55 +53,32 @@ class Client:
     async def get_network(self):
         try:
             networks = []
-            vertex_url = await urls.gcp_service_url(COMPUTE_SERVICE_NAME)
-            api_endpoint = (
-                f"{vertex_url}/compute/v1/projects/{self.project_id}/global/networks"
+            client = compute_v1.NetworksClient()
+            request = compute_v1.ListNetworksRequest(
+                project=self.project_id,
             )
+            response = client.list(request=request)
+            for item in response:
+                networks.append(item)
+            return networks
 
-            headers = self.create_headers()
-            async with self.client_session.get(
-                api_endpoint, headers=headers
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    if not resp:
-                        return networks
-                    else:
-                        for item in resp.get("items"):
-                            networks.append(item)
-                        return networks
-                else:
-                    self.log.exception("Error getting network")
-                    raise Exception(
-                        f"Error getting network: {response.reason} {await response.text()}"
-                    )
         except Exception as e:
             self.log.exception(f"Error fetching network: {str(e)}")
             return {"Error fetching network": str(e)}
 
-    async def get_subnetwork(self):
+    async def get_subnetwork(self, region_id):
         try:
             sub_networks = []
-            vertex_url = await urls.gcp_service_url(COMPUTE_SERVICE_NAME)
-            api_endpoint = f"{vertex_url}/compute/v1/projects/{self.project_id}/regions/{self.region_id}/subnetworks"
+            client = compute_v1.SubnetworksClient()
+            request = compute_v1.ListSubnetworksRequest(
+                project=self.project_id,
+                region=region_id,
+            )
+            response = client.list(request=request)
+            for item in response:
+                sub_networks.append(item)
+            return sub_networks
 
-            headers = self.create_headers()
-            async with self.client_session.get(
-                api_endpoint, headers=headers
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    if not resp:
-                        return sub_networks
-                    else:
-                        for item in resp.get("items"):
-                            sub_networks.append(item)
-                        return sub_networks
-                else:
-                    self.log.exception("Error getting sub network")
-                    raise Exception(
-                        f"Error getting sub network: {response.reason} {await response.text()}"
-                    )
         except Exception as e:
             self.log.exception(f"Error fetching sub network: {str(e)}")
             return {"Error fetching sub network": str(e)}
@@ -127,26 +86,15 @@ class Client:
     async def get_shared_network(self):
         try:
             shared_networks = []
-            vertex_url = await urls.gcp_service_url(COMPUTE_SERVICE_NAME)
-            api_endpoint = f"{vertex_url}/compute/v1/projects/{self.project_id}/aggregated/subnetworks/listUsable"
-
-            headers = self.create_headers()
-            async with self.client_session.get(
-                api_endpoint, headers=headers
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    if not resp:
-                        return shared_networks
-                    else:
-                        for item in resp.get("items"):
-                            shared_networks.append(item)
-                        return shared_networks
-                else:
-                    self.log.exception("Error getting shared network")
-                    raise Exception(
-                        f"Error getting network shared from host: {response.reason} {await response.text()}"
-                    )
+            client = compute_v1.SubnetworksClient()
+            request = compute_v1.ListUsableSubnetworksRequest(
+                project=self.project_id,
+            )
+            response = client.list_usable(request=request)
+            for item in response:
+                shared_networks.append(item)
+            return shared_networks
+        
         except Exception as e:
             self.log.exception(f"Error fetching shared network: {str(e)}")
             return {"Error fetching network shared from host": str(e)}
