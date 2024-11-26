@@ -22,6 +22,7 @@ import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
 import VertexScheduleJobs from './VertexScheduleJobs';
 import { scheduleMode, scheduleValueExpression } from '../../utils/const';
+import { VertexServices } from './VertexServices';
 
 const CreateVertexScheduler = ({
     themeManager,
@@ -61,58 +62,9 @@ const CreateVertexScheduler = ({
     notebookSelector: string;
 }) => {
 
-    const [dummyList] = useState([1, 2, 3]);
+    const [vertexScheduler] = useState(false);
+    const [dummyList] = useState(['1', '2', '3']);
 
-    const machineDetails = [
-        {
-            machineType: 'n1-standard-2',
-            acceleratorConfigs: [
-                {
-                    acceleratorType: "NVIDIA_TESLA_T4",
-                    allowedCounts: [
-                        1,
-                        2,
-                        4
-                    ]
-                },
-                {
-                    acceleratorType: "NVIDIA_TESLA_V100",
-                    allowedCounts: [
-                        1,
-                        2,
-                        4,
-                        8
-                    ]
-                }
-            ],
-        },
-        {
-            machineType: "n1-standard-4",
-            acceleratorConfigs: [
-                {
-                    acceleratorType: "NVIDIA_TESLA_T4",
-                    allowedCounts: [
-                        1,
-                        2,
-                        4
-                    ]
-                },
-                {
-                    acceleratorType: "NVIDIA_TESLA_V100",
-                    allowedCounts: [
-                        1,
-                        2,
-                        4,
-                        8
-                    ]
-                }
-            ],
-        },
-        {
-            machineType: "n1-standard-5",
-        }
-
-    ]
     const [parameterDetail, setParameterDetail] = useState(['']);
     const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
     const [keyValidation, setKeyValidation] = useState(-1);
@@ -121,7 +73,16 @@ const CreateVertexScheduler = ({
 
     const [kernel] = useState(['python3', 'pytorch', 'tensorflow']);
     const [kernelSelected, setKernelSelected] = useState('');
+    const [cloudStorageList, setCloudStorageList] = useState<string[]>([]);
+    const [cloudStorage, setCloudStorage] = useState('');
+    const [machineTypeList, setMachineTypeList] = useState<string[]>([]);
     const [machineTypeSelected, setMachineTypeSelected] = useState('');
+    const [primaryNetworkList, setPrimaryNetworkList] = useState<string[]>([]);
+    const [primaryNetworkSelected, setPrimaryNetworkSelected] = useState('');
+    const [subNetworkList, setSubNetworkList] = useState<string[]>([]);
+    const [subNetworkSelected, setSubNetworkSelected] = useState('');
+    const [sharedNetworkList, setSharedNetworkList] = useState<string[]>([]);
+    const [sharedNetworkSelected, setSharedNetworkSelected] = useState('');
     const [acceleratorType, setAcceleratorType] = useState('');
     const [acceleratedCount, setAcceleratedCount] = useState(null);
     const [networkSelected, setNetworkSelected] = useState('networkInThisProject');
@@ -147,6 +108,38 @@ const CreateVertexScheduler = ({
     }
 
     /**
+   * Primary Network selection
+   * @param {string} primaryNetworkSelected seleted kernel
+   */
+    const handlePrimaryNetwork = (primaryValue: any) => {
+        setPrimaryNetworkSelected(primaryValue)
+    }
+
+    /**
+   * Sub Network selection
+   * @param {string} subNetworkSelected seleted kernel
+   */
+    const handleSubNetwork = (subNetworkValue: any) => {
+        setSubNetworkSelected(subNetworkValue)
+    }
+
+    /**
+   * Primary Network selection
+   * @param {string} primaryNetworkSelected seleted kernel
+   */
+    const handleSharedNetwork = (shredNetworkValue: any) => {
+        setSharedNetworkSelected(shredNetworkValue)
+    }
+
+    /**
+   * Kernel selection
+   * @param {string} cloudStorage seleted kernel
+   */
+    const handleCloudStorageSelected = (cloudStorageValue: any) => {
+        setCloudStorage(cloudStorageValue)
+    }
+
+    /**
     * Machine Type selection
     * @param {string} machineTypeSelected seleted machine type
     */
@@ -162,8 +155,7 @@ const CreateVertexScheduler = ({
         const re = /^[0-9\b]+$/;
         if (e.target.value === '' || re.test(e.target.value)) {
             setMaxRuns(e.target.value);
-            console.log(e.target.value)
-         }
+        }
     };
 
     /**
@@ -232,7 +224,43 @@ const CreateVertexScheduler = ({
     //   }
     // }
 
+    const machineTypeAPI = async () => {
+        await VertexServices.machineTypeAPIService(region, setMachineTypeList);
+    };
+
+    const cloudStorageAPI = async () => {
+        await VertexServices.cloudStorageAPIService(setCloudStorageList);
+    };
+
+    const primaryNetworkAPI = async () => {
+        await VertexServices.primaryNetworkAPIService(setPrimaryNetworkList);
+    };
+
+    const subNetworkAPI = async () => {
+        await VertexServices.subNetworkAPIService(setSubNetworkList);
+    };
+
+    const sharedNetworkAPI = async () => {
+        await VertexServices.sharedNetworkAPIService(setSharedNetworkList);
+    };
+
+    const handleCancel = async () => {
+        if (!editMode) {
+            setCreateCompleted(false);
+            app.shell.activeWidget?.close();
+        } else {
+            setCreateCompleted(true);
+        }
+    };
+
     useEffect(() => {
+        if (region !== '') {
+            machineTypeAPI()
+        }
+        cloudStorageAPI()
+        primaryNetworkAPI()
+        subNetworkAPI()
+        sharedNetworkAPI()
         authApi()
             .then((credentials) => {
                 if (credentials && credentials?.region_id && credentials.project_id) {
@@ -312,7 +340,8 @@ const CreateVertexScheduler = ({
                         <div className="create-scheduler-form-element">
                             <Autocomplete
                                 className="create-scheduler-style"
-                                options={machineDetails.map(item => item.machineType)}
+                                options={machineTypeList && machineTypeList.map((item: any) => item.machineType)}
+                                // options={machineTypeList && machineTypeList}
                                 value={machineTypeSelected}
                                 onChange={(_event, val) => handleMachineType(val)}
                                 renderInput={params => (
@@ -323,10 +352,10 @@ const CreateVertexScheduler = ({
                         </div>
 
                         {
-                            machineDetails.map(item => {
-                                if ("acceleratorConfigs" in item && item.machineType === machineTypeSelected) {
+                            machineTypeList && machineTypeList.map((item: any) => {
+                                if ("acceleratorConfigs" in item && item.machineType === machineTypeSelected && item.acceleratorConfigs !== null) {
                                     return (
-                                        console.log('getAcceleratedType(item.acceleratorConfigs)', getAcceleratedType(item.acceleratorConfigs)),
+                                        // console.log('getAcceleratedType(item.acceleratorConfigs)', getAcceleratedType(item.acceleratorConfigs)),
                                         <div className="execution-history-main-wrapper">
                                             <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
                                                 <Autocomplete
@@ -342,9 +371,9 @@ const CreateVertexScheduler = ({
                                             </div>
 
                                             {
-                                                item?.acceleratorConfigs?.map(element => {
+                                                item?.acceleratorConfigs?.map((element: { allowedCounts: any[]; acceleratorType: string; }) => {
                                                     return (
-                                                        console.log("element.allowedCounts", element.allowedCounts),
+                                                        // console.log("element.allowedCounts", element.allowedCounts),
                                                         <>
                                                             {
                                                                 element.acceleratorType === acceleratorType ? <div className="create-scheduler-form-element create-scheduler-form-element-input-fl">
@@ -388,9 +417,9 @@ const CreateVertexScheduler = ({
                         <div className="create-scheduler-form-element">
                             <Autocomplete
                                 className="create-scheduler-style"
-                                options={dummyList}
-                                //value={composerSelected}
-                                //onChange={(_event, val) => handleComposerSelected(val)}
+                                options={cloudStorageList}
+                                value={cloudStorage}
+                                onChange={(_event, val) => handleCloudStorageSelected(val)}
                                 renderInput={params => (
                                     <TextField {...params} label="Cloud Storage Bucket*" />
                                 )}
@@ -493,9 +522,9 @@ const CreateVertexScheduler = ({
                                         <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
                                             <Autocomplete
                                                 className="create-scheduler-style create-scheduler-form-element-input-fl"
-                                                options={dummyList}
-                                                //value={composerSelected}
-                                                //onChange={(_event, val) => handleComposerSelected(val)}
+                                                options={primaryNetworkList}
+                                                value={primaryNetworkSelected}
+                                                onChange={(_event, val) => handlePrimaryNetwork(val)}
                                                 renderInput={params => (
                                                     <TextField {...params} label="Primary network" />
                                                 )}
@@ -505,9 +534,9 @@ const CreateVertexScheduler = ({
                                         <div className="create-scheduler-form-element create-scheduler-form-element-input-fl">
                                             <Autocomplete
                                                 className="create-scheduler-style create-scheduler-form-element-input-fl"
-                                                options={dummyList}
-                                                //value={composerSelected}
-                                                //onChange={(_event, val) => handleComposerSelected(val)}
+                                                options={subNetworkList}
+                                                value={subNetworkSelected}
+                                                onChange={(_event, val) => handleSubNetwork(val)}
                                                 renderInput={params => (
                                                     <TextField {...params} label="Sub network" />
                                                 )}
@@ -534,9 +563,9 @@ const CreateVertexScheduler = ({
                                     <div className="create-scheduler-form-element">
                                         <Autocomplete
                                             className="create-scheduler-style"
-                                            options={dummyList}
-                                            //value={composerSelected}
-                                            //onChange={(_event, val) => handleComposerSelected(val)}
+                                            options={sharedNetworkList}
+                                            value={sharedNetworkSelected}
+                                            onChange={(_event, val) => handleSharedNetwork(val)}
                                             renderInput={params => (
                                                 <TextField {...params} label="Share subnetwork" />
                                             )}
@@ -606,17 +635,23 @@ const CreateVertexScheduler = ({
                                 // }}
                                 variant="contained"
                                 //disabled={isSaveDisabled()}
-                                aria-label='Create Schedule'
+                                aria-label={editMode ? ' Update Schedule' : 'Create Schedule'}
                             >
                                 <div>
-                                    Create
+                                    {editMode
+                                        ? vertexScheduler
+                                            ? 'UPDATING'
+                                            : 'UPDATE'
+                                        : vertexScheduler
+                                            ? 'CREATING'
+                                            : 'CREATE'}
                                 </div>
                             </Button>
                             <Button
                                 variant="outlined"
-                                // disabled={creatingScheduler}
+                                disabled={vertexScheduler}
                                 aria-label="cancel Batch"
-                            //onClick={!creatingScheduler ? handleCancel : undefined}
+                                onClick={!vertexScheduler ? handleCancel : undefined}
                             >
                                 <div>CANCEL</div>
                             </Button>
