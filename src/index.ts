@@ -731,7 +731,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         'Cloud Dataproc API has not been used in project'
       )
     ) {
-      Notification.error(`Required APIs not enabled: Dataproc API.`, {
+      Notification.error(`The Cloud Dataproc API is not enabled.`, {
         actions: [
           {
             label: 'Enable',
@@ -750,7 +750,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       bigqueryDatasetsResponse?.error &&
       bigqueryDatasetsResponse?.error.includes('has not enabled BigQuery')
     ) {
-      Notification.error(`Required APIs not enabled: BigQuery API.`, {
+      Notification.error(`The BigQuery API is not enabled.`, {
         actions: [
           {
             label: 'Enable',
@@ -771,7 +771,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         'Cloud Composer API has not been used in project'
       )
     ) {
-      Notification.error(`Required APIs not enabled: Composer API.`, {
+      Notification.error(`The Cloud Composer API is not enabled.`, {
         actions: [
           {
             label: 'Enable',
@@ -790,7 +790,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       dataCatalogResponse?.error &&
       dataCatalogResponse?.error.includes('Google Cloud Data Catalog API has not been used in project')
     ) {
-      Notification.error(`Required APIs not enabled: Data Catalog API.`, {
+      Notification.error(`The Cloud Data Catalog API is not enabled..`, {
         actions: [
           {
             label: 'Enable',
