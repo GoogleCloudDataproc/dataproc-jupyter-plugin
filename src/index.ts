@@ -790,7 +790,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       dataCatalogResponse?.error &&
       dataCatalogResponse?.error.includes('Google Cloud Data Catalog API has not been used in project')
     ) {
-      Notification.error(`The Cloud Data Catalog API is not enabled..`, {
+      Notification.error(`Google Cloud Data Catalog API is not enabled.`, {
         actions: [
           {
             label: 'Enable',
