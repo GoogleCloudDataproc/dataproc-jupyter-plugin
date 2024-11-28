@@ -139,25 +139,45 @@ class Client:
             self.log.exception(f"Error deleting schedule: {str(e)}")
             return {"Error deleting schedule": str(e)}
 
-    # async def trigger_schedule(self, region_id, input_data):
-    #     try:
-    #         # data = DescribeVertexJob(**input_data)
-    #         api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs"
+    async def get_schedule(self, region_id, schedule_id):
+        try:
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/schedules/{schedule_id}"
 
-    #         headers = self.create_headers()
-    #         async with self.client_session.post(
-    #             api_endpoint, headers=headers json=
-    #         ) as response:
-    #             if response.status == 200:
-    #                 return await response.json()
-    #             else:
-    #                 self.log.exception("Error triggering the schedule")
-    #                 raise Exception(
-    #                     f"Error triggering the schedule: {response.reason} {await response.text()}"
-    #                 )
-    #     except Exception as e:
-    #         self.log.exception(f"Error triggering schedule: {str(e)}")
-    #         return {"Error triggering schedule": str(e)}
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    self.log.exception("Error getting the schedule")
+                    raise Exception(
+                        f"Error getting the schedule: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error getting schedule: {str(e)}")
+            return {"Error getting schedule": str(e)}
+
+    async def trigger_schedule(self, region_id, schedule_id):
+        try:
+            data = await self.get_schedule(region_id, schedule_id)
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs"
+
+            headers = self.create_headers()
+            payload = data.get("createNotebookExecutionJobRequest").get("notebookExecutionJob")
+            async with self.client_session.post(
+                api_endpoint, headers=headers json=payload
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    self.log.exception("Error triggering the schedule")
+                    raise Exception(
+                        f"Error triggering the schedule: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error triggering schedule: {str(e)}")
+            return {"Error triggering schedule": str(e)}
 
 
     # async def update_schedule(self, region_id, schedule_id, input_data):
