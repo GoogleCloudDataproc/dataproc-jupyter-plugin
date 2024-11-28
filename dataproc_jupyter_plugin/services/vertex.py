@@ -164,9 +164,11 @@ class Client:
             api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs"
 
             headers = self.create_headers()
-            payload = data.get("createNotebookExecutionJobRequest").get("notebookExecutionJob")
+            payload = data.get("createNotebookExecutionJobRequest").get(
+                "notebookExecutionJob"
+            )
             async with self.client_session.post(
-                api_endpoint, headers=headers json=payload
+                api_endpoint, headers=headers, json=payload
             ) as response:
                 if response.status == 200:
                     return await response.json()
@@ -178,7 +180,6 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error triggering schedule: {str(e)}")
             return {"Error triggering schedule": str(e)}
-
 
     # async def update_schedule(self, region_id, schedule_id, input_data):
     #     try:
