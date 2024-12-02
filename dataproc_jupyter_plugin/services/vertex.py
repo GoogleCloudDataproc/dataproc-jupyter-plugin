@@ -15,6 +15,7 @@
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
 )
+from dataproc_jupyter_plugin.models.models import DescribeUpdateVertexJob
 
 
 class Client:
@@ -181,22 +182,69 @@ class Client:
             self.log.exception(f"Error triggering schedule: {str(e)}")
             return {"Error triggering schedule": str(e)}
 
-    # async def update_schedule(self, region_id, schedule_id, input_data):
-    #     try:
-    #         # data = DescribeVertexJob(**input_data)
-    #         api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}"
+    async def update_schedule(self, region_id, schedule_id, input_data):
+        try:
+            data = DescribeUpdateVertexJob(**input_data)
+            notebook_execution_job = {
+                "kernelName": data.kernel_name,
+            }
+            schedule_value = "* * * * *" if data.schedule_value == "" else data.schedule_value
 
-    #         headers = self.create_headers()
-    #         async with self.client_session.patch(
-    #             api_endpoint, headers=headers json=data
-    #         ) as response:
-    #             if response.status == 200:
-    #                 return await response.json()
-    #             else:
-    #                 self.log.exception("Error deleting the schedule")
-    #                 raise Exception(
-    #                     f"Error updating the schedule: {response.reason} {await response.text()}"
-    #                 )
-    #     except Exception as e:
-    #         self.log.exception(f"Error updating schedule: {str(e)}")
-    #         return {"Error updating schedule": str(e)}
+            if data.service_account:
+                notebook_execution_job["serviceAccount"]: data.service_account
+            if data.cloud_storage_bucket:
+                notebook_execution_job["gcsOutputUri"]: data.cloud_storage_bucket
+            if data.parameters:
+                notebook_execution_job["labels"]: data.parameters
+            if data.machine_type:
+                notebook_execution_job["customEnvironmentSpec"]: {
+                    "machineSpec" : {
+                        "machineType": data.machine_type,
+                        "acceleratorType": data.accelerator_type,
+                        "acceleratorCount": data.accelerator_count
+                    }
+                }
+            if data.network:
+                notebook_execution_job["customEnvironmentSpec"]: {
+                    "networkSpec": {
+                        "network": data.network,
+                    }
+                }
+            if data.subnetwork:
+                notebook_execution_job["customEnvironmentSpec"]: {
+                    "networkSpec": {
+                        "subnetwork": data.subnetwork,
+                    }
+                }
+
+            payload = {
+                "displayName": data.display_name,
+                "maxConcurrentRunCount": data.max_run_count,
+                "cron": f"TZ={data.time_zone} {schedule_value}",
+                "createNotebookExecutionJobRequest": {
+                    "parent": f"projects/{self.project_id}/locations/{region_id}",
+                    "notebookExecutionJob": notebook_execution_job,
+                },
+            }
+
+            if data.start_time:
+                payload["startTime"]: data.start_time
+            if data.end_date:
+                payload["endTime"]: data.end_time
+        
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}"
+
+            headers = self.create_headers()
+            async with self.client_session.patch(
+                api_endpoint, headers=headers, json=payload
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    self.log.exception("Error deleting the schedule")
+                    raise Exception(
+                        f"Error updating the schedule: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error updating schedule: {str(e)}")
+            return {"Error updating schedule": str(e)}
