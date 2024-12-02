@@ -19,6 +19,8 @@ import uuid
 from datetime import datetime, timedelta
 from google.cloud import storage
 from google.api_core.exceptions import NotFound
+import google.oauth2.credentials as oauth2
+import aiofiles
 
 import aiohttp
 import pendulum
@@ -99,30 +101,33 @@ class Client:
             self.log.exception(f"Error checking file: {error}")
             raise IOError(f"Error creating dag: {error}")
 
-    async def upload_papermill_to_gcs(self, gcs_dag_bucket):
-        env = Environment(
-            loader=PackageLoader(PACKAGE_NAME, "dagTemplates"),
-            autoescape=select_autoescape(["py"]),
-        )
-        wrapper_papermill_path = env.get_template("wrapper_papermill.py").filename
+    async def upload_to_gcs(
+        self, gcs_dag_bucket, file_path=None, template_name=None, destination_dir=None
+    ):
         try:
-            cmd = f"gsutil cp '{wrapper_papermill_path}' gs://{gcs_dag_bucket}/dataproc-notebooks/"
-            await async_run_gsutil_subcommand(cmd)
-            self.log.info("Papermill file uploaded to gcs successfully")
-        except subprocess.CalledProcessError as error:
-            self.log.exception(
-                f"Error uploading papermill file to gcs: {error.decode()}"
-            )
-            raise IOError(error.decode)
+            storage_client = storage.Client()
+            bucket = storage_client.bucket(gcs_dag_bucket)
+            if template_name:
+                env = Environment(
+                    loader=PackageLoader(PACKAGE_NAME, TEMPLATES_FOLDER_PATH),
+                    autoescape=select_autoescape(["py"]),
+                )
+                file_path = env.get_template(template_name).filename
 
-    async def upload_input_file_to_gcs(self, input, gcs_dag_bucket, job_name):
-        try:
-            cmd = f"gsutil cp './{input}' gs://{gcs_dag_bucket}/dataproc-notebooks/{job_name}/input_notebooks/"
-            await async_run_gsutil_subcommand(cmd)
-            self.log.info("Input file uploaded to gcs successfully")
-        except subprocess.CalledProcessError as error:
-            self.log.exception(f"Error uploading input file to gcs: {error.decode()}")
-            raise IOError(error.decode)
+            if not file_path:
+                raise ValueError("No file path or template name provided for upload.")
+            if destination_dir:
+                blob_name = f"{destination_dir}/{file_path.split('/')[-1]}"
+            else:
+                blob_name = f"{file_path.split('/')[-1]}"
+
+            blob = bucket.blob(blob_name)
+            blob.upload_from_filename(file_path)
+            self.log.info(f"File {file_path} uploaded to gcs successfully")
+
+        except Exception as error:
+            self.log.exception(f"Error uploading file to GCS: {str(error)}")
+            raise IOError(str(error))
 
     def prepare_dag(self, job, gcs_dag_bucket, dag_file):
         self.log.info("Generating dag file")
@@ -239,17 +244,7 @@ class Client:
         )
         wrapper_papermill_path = env.get_template("wrapper_papermill.py").filename
         shutil.copy2(wrapper_papermill_path, LOCAL_DAG_FILE_LOCATION)
-
-    async def upload_dag_to_gcs(self, job, dag_file, gcs_dag_bucket):
-        LOCAL_DAG_FILE_LOCATION = f"./scheduled-jobs/{job.name}"
-        file_path = os.path.join(LOCAL_DAG_FILE_LOCATION, dag_file)
-        try:
-            cmd = f"gsutil cp '{file_path}' gs://{gcs_dag_bucket}/dags/"
-            await async_run_gsutil_subcommand(cmd)
-            self.log.info("Dag file uploaded to gcs successfully")
-        except subprocess.CalledProcessError as error:
-            self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
-            raise IOError(error.decode)
+        return file_path
 
     async def execute(self, input_data):
         try:
@@ -269,16 +264,24 @@ class Client:
                     f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} exists."
                 )
             else:
-                await self.upload_papermill_to_gcs(gcs_dag_bucket)
+                await self.upload_to_gcs(
+                    gcs_dag_bucket,
+                    template_name=WRAPPER_PAPPERMILL_FILE,
+                    destination_dir="dataproc-notebooks",
+                )
                 print(
                     f"The file gs://{gcs_dag_bucket}/{wrapper_pappermill_file_path} does not exist."
                 )
             if not job.input_filename.startswith(GCS):
-                await self.upload_input_file_to_gcs(
-                    job.input_filename, gcs_dag_bucket, job_name
+                await self.upload_to_gcs(
+                    gcs_dag_bucket,
+                    file_path=f"./{job.input_filename}",
+                    destination_dir=f"dataproc-notebooks/{job_name}/input_notebooks",
                 )
-            self.prepare_dag(job, gcs_dag_bucket, dag_file)
-            await self.upload_dag_to_gcs(job, dag_file, gcs_dag_bucket)
+            file_path = self.prepare_dag(job, gcs_dag_bucket, dag_file)
+            await self.upload_to_gcs(
+                gcs_dag_bucket, file_path=file_path, destination_dir="dags"
+            )
             return {"status": 0}
         except Exception as e:
             return {"error": str(e)}
@@ -292,11 +295,24 @@ class Client:
             )
         except Exception as ex:
             return {"error": f"Invalid DAG run ID {dag_run_id}"}
+
         try:
-            cmd = f"gsutil cp 'gs://{bucket_name}/dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb' ./"
-            await async_run_gsutil_subcommand(cmd)
-            self.log.info("Output notebook file downloaded successfully")
+            credentials = oauth2.Credentials(self._access_token)
+            storage_client = storage.Client(credentials=credentials)
+            blob_name = (
+                f"dataproc-output/{dag_id}/output-notebooks/{dag_id}_{dag_run_id}.ipynb"
+            )
+            bucket = storage_client.bucket(bucket_name)
+            blob = bucket.blob(blob_name)
+            original_file_name = os.path.basename(blob_name)
+            destination_file_name = os.path.join(".", original_file_name)
+            async with aiofiles.open(destination_file_name, "wb") as f:
+                file_data = blob.download_as_bytes()
+                await f.write(file_data)
+            self.log.info(
+                f"Output notebook file '{original_file_name}' downloaded successfully"
+            )
             return 0
-        except subprocess.CalledProcessError as error:
+        except Exception as error:
             self.log.exception(f"Error downloading output notebook file: {str(error)}")
             return {"error": str(error)}
