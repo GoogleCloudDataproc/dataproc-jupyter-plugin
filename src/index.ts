@@ -190,7 +190,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       await SchedulerService.listComposersAPICheckService();
     const dataCatalogResponse =
       await BigQueryService.getBigQuerySearchCatalogAPIService();
-    console.log(dataCatalogResponse);
 
     /**
      * Handler for when the Jupyter Lab theme changes.
