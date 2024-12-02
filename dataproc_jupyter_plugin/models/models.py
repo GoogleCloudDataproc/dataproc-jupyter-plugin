@@ -72,10 +72,12 @@ class DescribeVertexJob(BaseModel):
     max_run_count: str = None
     region: str = None
     cloud_storage_bucket: str = None
-    parameters: Optional[List[str]] = None
+    parameters: Optional[dict] = None
     service_account: str = None
     network: str = None
     subnetwork: str = None
+    start_time: str = None
+    end_time: str = None
 
     @classmethod
     def from_dict(cls, data):

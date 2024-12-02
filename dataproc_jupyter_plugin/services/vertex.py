@@ -91,6 +91,8 @@ class Client:
             headers = self.create_headers()
             payload = {
                 "displayName": job.display_name,
+                "startTime": job.start_time,
+                "endTime": job.end_time,
                 "cron": f"TZ={job.time_zone} {schedule_value}",
                 "maxRunCount": job.max_run_count,
                 "maxConcurrentRunCount": job.max_run_count,
@@ -98,6 +100,7 @@ class Client:
                     "parent": f"projects/{self.project_id}/locations/{sef.region_id}",
                     "notebookExecutionJob": {
                         "displayName": job.display_name,
+                        "labels": job.parameters,
                         "customEnvironmentSpec": {
                             "machineSpec": {
                                 "machineType": job.machine_type,
