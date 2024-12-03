@@ -231,7 +231,7 @@ class Client:
 
             payload = {
                 "displayName": data.display_name,
-                "maxConcurrentRunCount": 1,
+                "maxConcurrentRunCount": "1",
                 "cron": f"TZ={data.time_zone} {schedule_value}",
                 "createNotebookExecutionJobRequest": {
                     "parent": f"projects/{self.project_id}/locations/{region_id}",
