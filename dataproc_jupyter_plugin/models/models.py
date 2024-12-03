@@ -66,7 +66,7 @@ class DescribeUpdateVertexJob(BaseModel):
     machine_type: Optional[str] = None
     accelerator_type: Optional[str] = None
     accelerator_count: Optional[int] = None
-    kernel_name: str = None
+    kernel_name: Optional[str] = None
     schedule_value: str = None
     time_zone: str = None
     max_run_count: str = None

@@ -182,14 +182,26 @@ class Client:
             self.log.exception(f"Error triggering schedule: {str(e)}")
             return {"Error triggering schedule": str(e)}
 
+    def get_keys(data, parent_key=""):
+        keys = []
+        for key, value in data.items():
+            full_key = f"{parent_key}.{key}" if parent_key else key
+            if isinstance(value, dict):
+                keys.extend(get_keys(value, full_key))
+            else:
+                keys.append(full_key)
+        return keys
+
     async def update_schedule(self, region_id, schedule_id, input_data):
         try:
             data = DescribeUpdateVertexJob(**input_data)
-            notebook_execution_job = {
-                "kernelName": data.kernel_name,
-            }
-            schedule_value = "* * * * *" if data.schedule_value == "" else data.schedule_value
+            notebook_execution_job = {"displayName": data.display_name}
+            schedule_value = (
+                "* * * * *" if data.schedule_value == "" else data.schedule_value
+            )
 
+            if data.kernel_name:
+                notebook_execution_job["kernelName"]: data.kernel_name
             if data.service_account:
                 notebook_execution_job["serviceAccount"]: data.service_account
             if data.cloud_storage_bucket:
@@ -198,10 +210,10 @@ class Client:
                 notebook_execution_job["labels"]: data.parameters
             if data.machine_type:
                 notebook_execution_job["customEnvironmentSpec"]: {
-                    "machineSpec" : {
+                    "machineSpec": {
                         "machineType": data.machine_type,
                         "acceleratorType": data.accelerator_type,
-                        "acceleratorCount": data.accelerator_count
+                        "acceleratorCount": data.accelerator_count,
                     }
                 }
             if data.network:
@@ -219,7 +231,7 @@ class Client:
 
             payload = {
                 "displayName": data.display_name,
-                "maxConcurrentRunCount": data.max_run_count,
+                "maxConcurrentRunCount": 1,
                 "cron": f"TZ={data.time_zone} {schedule_value}",
                 "createNotebookExecutionJobRequest": {
                     "parent": f"projects/{self.project_id}/locations/{region_id}",
@@ -231,8 +243,11 @@ class Client:
                 payload["startTime"]: data.start_time
             if data.end_date:
                 payload["endTime"]: data.end_time
-        
-            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}"
+
+            keys = get_keys(payload)
+            filtered_keys = [item for item in keys if "displayName" not in item]
+            update_mask = ", ".join(filtered_keys)
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/schedules/{schedule_id}?updateMask={update_mask}"
 
             headers = self.create_headers()
             async with self.client_session.patch(
