@@ -95,7 +95,7 @@ class Client:
                 "endTime": job.end_time,
                 "cron": f"TZ={job.time_zone} {schedule_value}",
                 "maxRunCount": job.max_run_count,
-                "maxConcurrentRunCount": job.max_run_count,
+                "maxConcurrentRunCount": "1",
                 "createNotebookExecutionJobRequest": {
                     "parent": f"projects/{self.project_id}/locations/{sef.region_id}",
                     "notebookExecutionJob": {
