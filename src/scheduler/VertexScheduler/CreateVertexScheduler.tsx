@@ -23,6 +23,9 @@ import { authApi } from '../../utils/utils';
 import VertexScheduleJobs from './VertexScheduleJobs';
 import { scheduleMode, scheduleValueExpression } from '../../utils/const';
 import { VertexServices } from './VertexServices';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 const CreateVertexScheduler = ({
     themeManager,
@@ -96,6 +99,8 @@ const CreateVertexScheduler = ({
     );
 
     const timezones = Object.keys(tzdata.zones).sort();
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
 
     // const [composerSelected, setComposerSelected] = useState('');
 
@@ -152,7 +157,7 @@ const CreateVertexScheduler = ({
     * @param {string} maxRuns seleted machine type
     */
     const handleMaxRuns = (e: any | React.ChangeEvent<HTMLInputElement>) => {
-        const re = /^[0-9\b]+$/;
+        const re = /^[1-9][0-9]*$/;
         if (e.target.value === '' || re.test(e.target.value)) {
             setMaxRuns(e.target.value);
         }
@@ -193,6 +198,15 @@ const CreateVertexScheduler = ({
     const handleNetworkSelection = (eventValue: any) => {
         console.log('network', eventValue);
         setNetworkSelected(eventValue.target.value);
+    }
+
+    const handleStartDate = (val: any) => {
+        console.log('startDate', val)
+        setStartDate(val.$d)
+    }
+    const handleEndDate = (val: any) => {
+        console.log('endDate', val)
+        setEndDate(val.$d)
     }
 
     /**
@@ -237,7 +251,7 @@ const CreateVertexScheduler = ({
     };
 
     const subNetworkAPI = async () => {
-        await VertexServices.subNetworkAPIService(setSubNetworkList);
+        await VertexServices.subNetworkAPIService(region, setSubNetworkList);
     };
 
     const sharedNetworkAPI = async () => {
@@ -254,13 +268,15 @@ const CreateVertexScheduler = ({
     };
 
     useEffect(() => {
-        if (region !== '') {
-            machineTypeAPI()
+        if (!createCompleted) {
+            if (region !== '') {
+                machineTypeAPI()
+                subNetworkAPI()
+            }
+            cloudStorageAPI()
+            primaryNetworkAPI()
+            sharedNetworkAPI()
         }
-        cloudStorageAPI()
-        primaryNetworkAPI()
-        subNetworkAPI()
-        sharedNetworkAPI()
         authApi()
             .then((credentials) => {
                 if (credentials && credentials?.region_id && credentials.project_id) {
@@ -289,19 +305,19 @@ const CreateVertexScheduler = ({
             setTimeZoneSelected(selectedTimeZone);
         }
     };
+    console.log({ 'startDate': startDate, 'endDate': endDate });
 
     return (
         <>
             {
                 createCompleted ?
-                    // <></>
                     <VertexScheduleJobs
                         app={app}
                         themeManager={themeManager}
                         settingRegistry={settingRegistry}
-                        composerSelectedFromCreate='vertex'
-                        setCreateCompleted={setCreateCompleted}
-                        setJobNameSelected={setJobNameSelected}
+                    // composerSelectedFromCreate='vertex'
+                    // setCreateCompleted={setCreateCompleted}
+                    // setJobNameSelected={setJobNameSelected}
                     // setComposerSelected={setComposerSelected}
                     // setScheduleMode={setScheduleMode}
                     // setScheduleValue={setScheduleValue}
@@ -427,17 +443,6 @@ const CreateVertexScheduler = ({
                             />
                         </div>
                         <span className="tab-description tab-text-sub-cl">Where results are stored. Select an existing bucket or create a new one.</span>
-                        <div className="create-scheduler-form-element">
-                            <Input
-                                className="create-scheduler-style"
-                                value={maxRuns}
-                                onChange={e => handleMaxRuns(e)}
-                                type="number"
-                                placeholder=""
-                                Label="Max runs"
-                                disabled={editMode}
-                            />
-                        </div>
 
                         <>
                             <div className="create-job-scheduler-title sub-title-heading ">
@@ -455,7 +460,6 @@ const CreateVertexScheduler = ({
                                 setValueValidation={setValueValidation}
                                 duplicateKeyError={duplicateKeyError}
                                 setDuplicateKeyError={setDuplicateKeyError}
-                                fromPage="scheduler"
                             />
                         </>
 
@@ -611,6 +615,27 @@ const CreateVertexScheduler = ({
                                 <div className="create-scheduler-form-element">
                                     <Cron value={scheduleValue} setValue={setScheduleValue} />
                                 </div>
+                                <div className="execution-history-main-wrapper">
+                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
+                                            <DateTimePicker
+                                                className="create-scheduler-style create-scheduler-form-element-input-fl"
+                                                label="Start Date"
+                                                // value={startDate}
+                                                onChange={(newValue) => handleStartDate(newValue)}
+                                            />
+                                        </div>
+                                        <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
+                                            <DateTimePicker
+                                                className="create-scheduler-style create-scheduler-form-element-input-fl"
+                                                label="End Date"
+                                                // value={endDate}
+                                                onChange={(newValue) => handleEndDate(newValue)}
+                                                slotProps={{ field: { clearable: true } }}
+                                            />
+                                        </div>
+                                    </LocalizationProvider>
+                                </div>
                                 <div className="create-scheduler-form-element">
                                     <Autocomplete
                                         className="create-scheduler-style"
@@ -624,6 +649,21 @@ const CreateVertexScheduler = ({
                                 </div>
                             </>
                         )}
+
+                        {
+                            scheduleMode !== 'runNow' &&
+                            <div className="create-scheduler-form-element">
+                                <Input
+                                    className="create-scheduler-style"
+                                    value={maxRuns}
+                                    onChange={e => handleMaxRuns(e)}
+                                    type="number"
+                                    placeholder=""
+                                    Label="Max runs"
+                                // disabled={scheduleMode === 'runNow'}
+                                />
+                            </div>
+                        }
 
                         <div className="save-overlay">
                             <Button
@@ -658,11 +698,7 @@ const CreateVertexScheduler = ({
                         </div>
 
                     </div>
-
-
             }
-
-
 
         </>
 

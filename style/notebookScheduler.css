@@ -327,3 +327,17 @@
 .learn-more-a-tag {
   padding-left: 27px;
 }
+
+.pagination-button {
+  padding: 15px 10px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  float: right;
+  width: 10%;
+}
+
+.content-pd-space {
+  padding: 0 0 22px 22px;
+  width: 370px !important;
+}

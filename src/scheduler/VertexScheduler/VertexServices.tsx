@@ -19,12 +19,17 @@ import { toast } from 'react-toastify';
 import { requestAPI } from '../../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../../utils/loggingService';
 import { toastifyCustomStyle } from '../../utils/utils';
+ 
+interface IDagList {
+    displayName: string;
+    schedule: string;
+    status: string;
+}
 
 export class VertexServices {
     static machineTypeAPIService = async (
         region: string,
         setMachineTypeList: (value: string[]) => void,
-        setIsLoading?: (value: boolean) => void
     ) => {
         try {
             const formattedResponse: any = await requestAPI(`api/vertex/uiConfig?region_id=${region}`);
@@ -34,18 +39,10 @@ export class VertexServices {
                     'No machine type in this region',
                     toastifyCustomStyle
                 );
-                if (setIsLoading) {
-                    setIsLoading(false);
-                }
             } else {
                 if (formattedResponse) {
                     setMachineTypeList(formattedResponse);
                 }
-                //   let machineTypeList: string[] = [];
-                // formattedResponse.forEach((data: IMachineType) => {
-                //   machineTypeList.push(data);
-                // });
-                // machineTypeList.sort();
             }
         } catch (error) {
             DataprocLoggingService.log(
@@ -53,7 +50,7 @@ export class VertexServices {
                 LOG_LEVEL.ERROR
             );
             toast.error(
-                `Failed to fetch machine type list : ${error}`,
+                `Failed to fetch machine type list`,
                 toastifyCustomStyle
             );
         }
@@ -61,7 +58,7 @@ export class VertexServices {
 
     static cloudStorageAPIService = async (
         setCloudStorageList: (value: string[]) => void,
-        setIsLoading?: (value: boolean) => void
+        // setIsLoading?: (value: boolean) => void
     ) => {
         try {
             const formattedResponse: any = await requestAPI(`api/storage/listBucket`);
@@ -71,11 +68,10 @@ export class VertexServices {
                     'No cloud storage buckets',
                     toastifyCustomStyle
                 );
-                if (setIsLoading) {
-                    setIsLoading(false);
-                }
+                // if (setIsLoading) {
+                //     setIsLoading(false);
+                // }
             } else {
-                console.log(formattedResponse)
                 //   let cloudStorageList: string[] = [];
                 // formattedResponse.forEach((data: IComposerAPIResponse) => {
                 //   cloudStorageList.push(data.name);
@@ -89,7 +85,7 @@ export class VertexServices {
                 LOG_LEVEL.ERROR
             );
             toast.error(
-                `Failed to fetch cloud storage bucket : ${error}`,
+                `Failed to fetch cloud storage bucket`,
                 toastifyCustomStyle
             );
         }
@@ -97,7 +93,6 @@ export class VertexServices {
 
     static primaryNetworkAPIService = async (
         setPrimaryNetworkList: (value: string[]) => void,
-        setIsLoading?: (value: boolean) => void
     ) => {
         try {
             const formattedResponse: any = await requestAPI(`api/compute/network`);
@@ -107,11 +102,7 @@ export class VertexServices {
                     'No primary networks',
                     toastifyCustomStyle
                 );
-                if (setIsLoading) {
-                    setIsLoading(false);
-                }
             } else {
-                // console.log('primary netwwork', formattedResponse)
                 let primaryList: string[] = [];
                 formattedResponse.forEach((data: { name: string; }) => {
                     primaryList.push(data.name);
@@ -125,29 +116,25 @@ export class VertexServices {
                 LOG_LEVEL.ERROR
             );
             toast.error(
-                `Failed to fetch primary network list : ${error}`,
+                `Failed to fetch primary network list`,
                 toastifyCustomStyle
             );
         }
     };
 
     static subNetworkAPIService = async (
+        region: string,
         setSubNetworkList: (value: string[]) => void,
-        setIsLoading?: (value: boolean) => void
     ) => {
         try {
-            const formattedResponse: any = await requestAPI(`api/compute/subNetwork`);
+            const formattedResponse: any = await requestAPI(`api/compute/subNetwork?region_id=${region}`);
             if (formattedResponse.length === 0) {
                 // Handle the case where the list is empty
                 toast.error(
                     'No sub networks',
                     toastifyCustomStyle
                 );
-                if (setIsLoading) {
-                    setIsLoading(false);
-                }
             } else {
-                // console.log('sub netwwork', formattedResponse)
                 let subNetworkList: string[] = [];
                 formattedResponse.forEach((data: { name: string }) => {
                     subNetworkList.push(data.name);
@@ -161,7 +148,7 @@ export class VertexServices {
                 LOG_LEVEL.ERROR
             );
             toast.error(
-                `Failed to fetch sub networks list : ${error}`,
+                `Failed to fetch sub networks list`,
                 toastifyCustomStyle
             );
         }
@@ -169,7 +156,6 @@ export class VertexServices {
 
     static sharedNetworkAPIService = async (
         setSharedNetworkList: (value: string[]) => void,
-        setIsLoading?: (value: boolean) => void
     ) => {
         try {
             const formattedResponse: any = await requestAPI(`api/compute/sharedNetwork`);
@@ -179,11 +165,7 @@ export class VertexServices {
                     'No shared networks',
                     toastifyCustomStyle
                 );
-                if (setIsLoading) {
-                    setIsLoading(false);
-                }
             } else {
-                // console.log('shared netwwork', formattedResponse)
                 let sharedNetworkList: string[] = [];
                 formattedResponse.forEach((data: { subnetwork: string }) => {
                     sharedNetworkList.push(data.subnetwork);
@@ -197,9 +179,44 @@ export class VertexServices {
                 LOG_LEVEL.ERROR
             );
             toast.error(
-                `Failed to fetch shared networks list : ${error}`,
+                `Failed to fetch shared networks list`,
                 toastifyCustomStyle
             );
         }
     };
+
+    static listVertexSchedules = async (
+        setDagList: (value: IDagList[]) => void,
+        region: string,
+        setIsLoading: (value: boolean) => void,
+        setNextPageFlag: (value: string) => void,
+    ) => {
+        try {
+            const serviceURL = 'api/vertex/listSchedules';
+            const formattedResponse: any = await requestAPI(serviceURL + `?region_id=${region}`);
+            if(Object.keys(formattedResponse).length !== 0) {
+                if (formattedResponse.schedules.length > 0) {
+                    setDagList(formattedResponse.schedules);
+                    setIsLoading(false);
+                    setNextPageFlag(formattedResponse?.nextPageToken)
+                } 
+            } else {
+                setDagList([]);
+                setIsLoading(false);
+            }
+        } catch (error) {
+            DataprocLoggingService.log(
+                'Error listing vertex schedules',
+                LOG_LEVEL.ERROR
+            );
+            // setTimeout(() => {
+            //     toast.error(
+            //         `Failed to fetch vertex schedules list`,
+            //         toastifyCustomStyle
+            //     );
+            // }, 10000);
+            
+        }
+    }
+
 }

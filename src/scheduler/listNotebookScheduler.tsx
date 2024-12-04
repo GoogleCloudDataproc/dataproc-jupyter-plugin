@@ -74,7 +74,7 @@ function listNotebookScheduler({
   settingRegistry,
   handleDagIdSelection,
   backButtonComposerName,
-  composerSelectedFromCreate,
+  // composerSelectedFromCreate,
   setCreateCompleted,
   setJobNameSelected,
   setComposerSelected,
@@ -108,7 +108,7 @@ function listNotebookScheduler({
   settingRegistry: ISettingRegistry;
   handleDagIdSelection: (composerName: string, dagId: string) => void;
   backButtonComposerName: string;
-  composerSelectedFromCreate: string;
+  // composerSelectedFromCreate: string;
   setCreateCompleted?: (value: boolean) => void;
   setJobNameSelected?: (value: string) => void;
   setComposerSelected?: (value: string) => void;
@@ -144,7 +144,7 @@ function listNotebookScheduler({
   const [dagList, setDagList] = useState<IDagList[]>([]);
   const data = dagList;
   const backselectedEnvironment = backButtonComposerName;
-  const createSelectedEnvironment = composerSelectedFromCreate;
+  // const createSelectedEnvironment = composerSelectedFromCreate;
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [importErrorPopupOpen, setImportErrorPopupOpen] = useState(false);
   const [selectedDagId, setSelectedDagId] = useState('');
@@ -519,18 +519,18 @@ function listNotebookScheduler({
   useEffect(() => {
     if (
       composerList.length > 0 &&
-      backselectedEnvironment === '' &&
-      createSelectedEnvironment === ''
+      backselectedEnvironment === ''
+      // createSelectedEnvironment === ''
     ) {
       setComposerSelectedList(composerList[0]);
     }
-    if (
-      composerList.length > 0 &&
-      backselectedEnvironment === '' &&
-      createSelectedEnvironment !== ''
-    ) {
-      setComposerSelectedList(createSelectedEnvironment);
-    }
+    // if (
+    //   composerList.length > 0 &&
+    //   backselectedEnvironment === '' &&
+    //   // createSelectedEnvironment !== ''
+    // ) {
+    //   setComposerSelectedList(createSelectedEnvironment);
+    // }
     if (composerList.length > 0 && backselectedEnvironment !== '') {
       setComposerSelectedList(backselectedEnvironment);
     }
