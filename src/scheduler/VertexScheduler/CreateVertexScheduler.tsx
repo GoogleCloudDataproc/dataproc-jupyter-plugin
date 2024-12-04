@@ -26,6 +26,15 @@ import { VertexServices } from './VertexServices';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+// import { DesktopDateTimePicker } from '@mui/x-date-pickers/DesktopDateTimePicker';
+import dayjs from 'dayjs';
+import { LabIcon } from '@jupyterlab/ui-components';
+import errorIcon from '../../../style/icons/error_icon.svg';
+
+const iconError = new LabIcon({
+    name: 'launcher:error-icon',
+    svgstr: errorIcon
+});
 
 const CreateVertexScheduler = ({
     themeManager,
@@ -64,7 +73,6 @@ const CreateVertexScheduler = ({
     setJobNameUniqueValidation: React.Dispatch<React.SetStateAction<boolean>>;
     notebookSelector: string;
 }) => {
-
     const [vertexScheduler] = useState(false);
     const [dummyList] = useState(['1', '2', '3']);
 
@@ -99,9 +107,12 @@ const CreateVertexScheduler = ({
     );
 
     const timezones = Object.keys(tzdata.zones).sort();
-    const [startDate, setStartDate] = useState<string>('');
-    const [endDate, setEndDate] = useState<string>('');
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
+    const [endDateError, setEndDateError] = useState(false)
 
+    const minDateStart = dayjs();
+    const minDateEnd = startDate ? dayjs(startDate) : minDateStart;
     // const [composerSelected, setComposerSelected] = useState('');
 
     /**
@@ -201,12 +212,26 @@ const CreateVertexScheduler = ({
     }
 
     const handleStartDate = (val: any) => {
-        console.log('startDate', val)
-        setStartDate(val.$d)
+        // console.log('startDate', val)
+        // setStartDate(val.$d)
+        setStartDate(val);
+
+        if (val && endDate && dayjs(endDate).isBefore(dayjs(val))) {
+            setEndDateError(true);
+        } else {
+            setEndDateError(false);
+        }
     }
+
     const handleEndDate = (val: any) => {
-        console.log('endDate', val)
-        setEndDate(val.$d)
+        if (startDate && (dayjs(val).isBefore(dayjs(startDate)) || dayjs(val).isSame(dayjs(startDate), 'minute'))) {
+            setEndDateError(true);
+        } else {
+            setEndDateError(false);
+        }
+        setEndDate(val);
+        // console.log('endDate', val)
+        // setEndDate(val.$d)
     }
 
     /**
@@ -621,21 +646,41 @@ const CreateVertexScheduler = ({
                                             <DateTimePicker
                                                 className="create-scheduler-style create-scheduler-form-element-input-fl"
                                                 label="Start Date"
-                                                // value={startDate}
+                                                value={startDate}
                                                 onChange={(newValue) => handleStartDate(newValue)}
+                                                slotProps={{
+                                                    actionBar: {
+                                                        actions: ['clear']
+                                                    }
+                                                }}
+                                                minDate={minDateStart}
+                                                closeOnSelect={true}
                                             />
                                         </div>
                                         <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
                                             <DateTimePicker
                                                 className="create-scheduler-style create-scheduler-form-element-input-fl"
                                                 label="End Date"
-                                                // value={endDate}
+                                                value={endDate}
                                                 onChange={(newValue) => handleEndDate(newValue)}
-                                                slotProps={{ field: { clearable: true } }}
+                                                slotProps={{
+                                                    field: { clearable: true },
+                                                    actionBar: {
+                                                        actions: ['clear']
+                                                    }
+                                                }}
+                                                minDate={minDateEnd}
                                             />
                                         </div>
                                     </LocalizationProvider>
                                 </div>
+                                {
+                                    endDateError &&
+                                    <div className="error-key-time">
+                                        <iconError.react tag="div" className="logo-alignment-style" />
+                                        <div className="error-key-missing">End date should be greater than Start date</div>
+                                    </div>
+                                }
                                 <div className="create-scheduler-form-element">
                                     <Autocomplete
                                         className="create-scheduler-style"
