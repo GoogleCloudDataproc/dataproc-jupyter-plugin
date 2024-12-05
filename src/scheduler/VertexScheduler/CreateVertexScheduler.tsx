@@ -351,6 +351,8 @@ const CreateVertexScheduler = ({
     ) => {
         const newValue = (event.target as HTMLInputElement).value;
         setInternalScheduleMode(newValue as internalScheduleMode);
+        setStartDate(null)
+        setEndDate(null)
         // if (newValue === 'cronFormat' && scheduleValue === '') {
         //     setScheduleValue(scheduleValueExpression);
         // }
