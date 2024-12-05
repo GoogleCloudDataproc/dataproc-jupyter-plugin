@@ -899,4 +899,13 @@ export class SchedulerService {
       );
     }
   };
+
+  static listComposersAPICheckService = async () => {
+    try {
+      const formattedResponse: any = await requestAPI('composerList');
+      return formattedResponse;
+    } catch (error) {
+      return error;
+    }
+  };
 }

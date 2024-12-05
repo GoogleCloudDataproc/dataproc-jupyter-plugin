@@ -450,6 +450,21 @@ export class RunTimeSerive {
       );
     }
   };
+  static listClustersDataprocAPIService = async () => {
+    try {
+      const queryParams = new URLSearchParams({ pageSize: '100' });
+      const response = await authenticatedFetch({
+        uri: 'clusters',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'regions',
+        queryParams: queryParams
+      });
+      const formattedResponse = await response.json();
+      return formattedResponse;
+    } catch (error) {
+      return error;
+    }
+  };
   static listNetworksAPIService = async (
     setNetworklist: (value: string[]) => void,
     setNetworkSelected: (value: string) => void,
@@ -492,14 +507,8 @@ export class RunTimeSerive {
         }
       }
     } catch (error) {
-      DataprocLoggingService.log(
-        'Error listing Networks',
-        LOG_LEVEL.ERROR
-      );
-      toast.error(
-        `Error listing Networks : ${error}`,
-        toastifyCustomStyle
-      );
+      DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+      toast.error(`Error listing Networks : ${error}`, toastifyCustomStyle);
     }
   };
   static listMetaStoreAPIService = async (
@@ -687,28 +696,39 @@ export class RunTimeSerive {
                   code: number;
                 };
               }) => {
-                const filteredServices = responseResult.items.filter(
+                const filteredServices = responseResult?.items?.filter(
                   (item: { network: string; privateIpGoogleAccess: boolean }) =>
                     item.network.split('/')[9] === subnetwork &&
                     item.privateIpGoogleAccess === true
                 );
-                const transformedServiceList = filteredServices.map(
-                  (data: { name: string }) => data.name
-                );
-                setSubNetworklist(transformedServiceList);
-                if (selectedRuntimeClone === undefined) {
-                  if (transformedServiceList.length > 0) {
-                    setSubNetworkSelected(transformedServiceList[0]);
-                  } else {
-                    DataprocLoggingService.log(
-                      'No subNetworks found. Account may lack access to list subNetworks', 
-                      LOG_LEVEL.ERROR
-                    );
-                    toast.error(
-                      `No subNetworks found. Account may lack access to list subNetworks`,
-                      toastifyCustomStyle
-                    );
+                if (filteredServices) {
+                  const transformedServiceList = filteredServices.map(
+                    (data: { name: string }) => data.name
+                  );
+                  setSubNetworklist(transformedServiceList);
+                  if (selectedRuntimeClone === undefined) {
+                    if (transformedServiceList.length > 0) {
+                      setSubNetworkSelected(transformedServiceList[0]);
+                    } else {
+                      DataprocLoggingService.log(
+                        'There are no subnetworks with google private access enabled',
+                        LOG_LEVEL.ERROR
+                      );
+                      toast.error(
+                        `There are no subnetworks with google private access enabled`,
+                        toastifyCustomStyle
+                      );
+                    }
                   }
+                } else {
+                  DataprocLoggingService.log(
+                    'No subNetworks found',
+                    LOG_LEVEL.ERROR
+                  );
+                  toast.error(
+                    `No subNetworks found`,
+                    toastifyCustomStyle
+                  );
                 }
                 setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
