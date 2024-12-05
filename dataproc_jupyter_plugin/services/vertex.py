@@ -62,6 +62,7 @@ class Client:
                         schedules = resp.get("schedules")
                         for schedule in schedules:
                             formatted_schedule = {
+                                "name": schedule.get("name")
                                 "displayName": schedule.get("displayName"),
                                 "schedule": get_description(schedule.get("cron")),
                                 "status": schedule.get("state"),
