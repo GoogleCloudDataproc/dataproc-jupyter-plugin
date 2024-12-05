@@ -32,14 +32,7 @@ class EnvironmentListController(APIHandler):
                     await credentials.get_cached(), self.log, client_session
                 )
                 environments = await client.list_environments()
-                response = []
-                if type(environments) == list:
-                    for environment in environments:
-                        env = environment.dict()
-                        response.append(env)
-                    self.finish(json.dumps(response))
-                else:
-                    self.finish(environments)
+                self.finish(json.dumps(environments, default=lambda x: x.dict()))
         except Exception as e:
             self.log.exception(f"Error fetching composer environments: {str(e)}")
             self.finish({"error": str(e)})

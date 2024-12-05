@@ -169,27 +169,115 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', (message: string) => {
+      checkAllApisEnabled();
       if (bqFeature.enable_bigquery_integration) {
         loadBigQueryWidget('');
       }
     });
 
-    const dataprocClusterResponse =
-      await RunTimeSerive.listClustersDataprocAPIService();
-    let bigqueryDatasetsResponse;
+    const checkAllApisEnabled = async () => {
+      const dataprocClusterResponse =
+        await RunTimeSerive.listClustersDataprocAPIService();
 
-    const credentials = await authApi();
-    if (credentials && credentials?.project_id) {
-      bigqueryDatasetsResponse =
-        await BigQueryService.listBigQueryDatasetsAPIService(
-          credentials?.project_id
-        );
-    }
+      let bigqueryDatasetsResponse;
+      const credentials = await authApi();
+      if (credentials && credentials?.project_id) {
+        bigqueryDatasetsResponse =
+          await BigQueryService.listBigQueryDatasetsAPIService(
+            credentials?.project_id
+          );
+      }
 
-    const composerListResponse =
-      await SchedulerService.listComposersAPICheckService();
-    const dataCatalogResponse =
-      await BigQueryService.getBigQuerySearchCatalogAPIService();
+      const composerListResponse =
+        await SchedulerService.listComposersAPICheckService();
+      const dataCatalogResponse =
+        await BigQueryService.getBigQuerySearchCatalogAPIService();
+
+      if (
+        dataprocClusterResponse?.error &&
+        dataprocClusterResponse?.error?.message.includes(
+          'Cloud Dataproc API has not been used in project'
+        )
+      ) {
+        Notification.error(`The Cloud Dataproc API is not enabled.`, {
+          actions: [
+            {
+              label: 'Enable',
+              callback: () =>
+                window.open(
+                  'https://console.cloud.google.com/apis/library/dataproc.googleapis.com',
+                  '_blank'
+                ),
+              displayType: 'link'
+            }
+          ],
+          autoClose: false
+        });
+      }
+      if (
+        bigqueryDatasetsResponse?.error &&
+        bigqueryDatasetsResponse?.error.includes('has not enabled BigQuery')
+      ) {
+        Notification.error(`The BigQuery API is not enabled.`, {
+          actions: [
+            {
+              label: 'Enable',
+              callback: () =>
+                window.open(
+                  'https://console.cloud.google.com/apis/library/bigquery.googleapis.com',
+                  '_blank'
+                ),
+              displayType: 'link'
+            }
+          ],
+          autoClose: false
+        });
+      }
+      if (
+        composerListResponse['Error fetching environments list'] &&
+        composerListResponse['Error fetching environments list'].includes(
+          'Cloud Composer API has not been used in project'
+        )
+      ) {
+        Notification.error(`The Cloud Composer API is not enabled.`, {
+          actions: [
+            {
+              label: 'Enable',
+              callback: () =>
+                window.open(
+                  'https://console.cloud.google.com/apis/library/composer.googleapis.com',
+                  '_blank'
+                ),
+              displayType: 'link'
+            }
+          ],
+          autoClose: false
+        });
+      }
+      if (
+        dataCatalogResponse?.error &&
+        dataCatalogResponse?.error.includes(
+          'Google Cloud Data Catalog API has not been used in project'
+        )
+      ) {
+        Notification.error(`Google Cloud Data Catalog API is not enabled.`, {
+          actions: [
+            {
+              label: 'Enable',
+              callback: () =>
+                window.open(
+                  'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com',
+                  '_blank'
+                ),
+              displayType: 'link'
+            }
+          ],
+          autoClose: false
+        });
+      }
+    };
+
+    await checkAllApisEnabled();
 
     /**
      * Handler for when the Jupyter Lab theme changes.
@@ -721,87 +809,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         command: createNotebookJobsComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 4
-      });
-    }
-
-    if (
-      dataprocClusterResponse?.error &&
-      dataprocClusterResponse?.error?.message.includes(
-        'Cloud Dataproc API has not been used in project'
-      )
-    ) {
-      Notification.error(`The Cloud Dataproc API is not enabled.`, {
-        actions: [
-          {
-            label: 'Enable',
-            callback: () =>
-              window.open(
-                'https://console.cloud.google.com/apis/library/dataproc.googleapis.com',
-                '_blank'
-              ),
-            displayType: 'link'
-          }
-        ],
-        autoClose: false
-      });
-    }
-    if (
-      bigqueryDatasetsResponse?.error &&
-      bigqueryDatasetsResponse?.error.includes('has not enabled BigQuery')
-    ) {
-      Notification.error(`The BigQuery API is not enabled.`, {
-        actions: [
-          {
-            label: 'Enable',
-            callback: () =>
-              window.open(
-                'https://console.cloud.google.com/apis/library/bigquery.googleapis.com',
-                '_blank'
-              ),
-            displayType: 'link'
-          }
-        ],
-        autoClose: false
-      });
-    }
-    if (
-      composerListResponse['Error fetching environments list'] &&
-      composerListResponse['Error fetching environments list'].includes(
-        'Cloud Composer API has not been used in project'
-      )
-    ) {
-      Notification.error(`The Cloud Composer API is not enabled.`, {
-        actions: [
-          {
-            label: 'Enable',
-            callback: () =>
-              window.open(
-                'https://console.cloud.google.com/apis/library/composer.googleapis.com',
-                '_blank'
-              ),
-            displayType: 'link'
-          }
-        ],
-        autoClose: false
-      });
-    }
-    if (
-      dataCatalogResponse?.error &&
-      dataCatalogResponse?.error.includes('Google Cloud Data Catalog API has not been used in project')
-    ) {
-      Notification.error(`Google Cloud Data Catalog API is not enabled.`, {
-        actions: [
-          {
-            label: 'Enable',
-            callback: () =>
-              window.open(
-                'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com',
-                '_blank'
-              ),
-            displayType: 'link'
-          }
-        ],
-        autoClose: false
       });
     }
 
