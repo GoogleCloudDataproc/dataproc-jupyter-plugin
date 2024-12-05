@@ -745,11 +745,17 @@ const CreateVertexScheduler = ({
                                                     label="End Date"
                                                     value={endDate}
                                                     onChange={(newValue) => handleEndDate(newValue)}
+                                                    slots={{
+                                                        openPickerIcon: CalendarMonthIcon
+                                                    }}
                                                     slotProps={{
-                                                        field: { clearable: true },
                                                         actionBar: {
                                                             actions: ['clear']
-                                                        }
+                                                        },
+                                                        field: { clearable: true },
+                                                        tabs: {
+                                                            hidden: true,
+                                                        },
                                                     }}
                                                     minDate={minDateEnd}
                                                 />

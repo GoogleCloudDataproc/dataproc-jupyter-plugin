@@ -72,6 +72,7 @@ export class VertexServices {
                 //     setIsLoading(false);
                 // }
             } else {
+                console.log(formattedResponse)
                 //   let cloudStorageList: string[] = [];
                 // formattedResponse.forEach((data: IComposerAPIResponse) => {
                 //   cloudStorageList.push(data.name);
@@ -209,13 +210,6 @@ export class VertexServices {
                 'Error listing vertex schedules',
                 LOG_LEVEL.ERROR
             );
-            // setTimeout(() => {
-            //     toast.error(
-            //         `Failed to fetch vertex schedules list`,
-            //         toastifyCustomStyle
-            //     );
-            // }, 10000);
-            
         }
     }
 
