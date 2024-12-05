@@ -110,7 +110,6 @@ class SettingsHandler(APIHandler):
             #
             # We explicitly filter out the `config`, `parent`, and `log` attributes
             # that are inherited from the `SingletonConfigurable` class.
-            print("aaaaa", t, v)
             if t not in dataproc_plugin_config and t not in ["config", "parent", "log"]:
                 if v.default_value is not Undefined:
                     dataproc_plugin_config[t] = v.default_value
