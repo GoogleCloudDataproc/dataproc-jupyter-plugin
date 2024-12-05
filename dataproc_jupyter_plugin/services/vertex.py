@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cron_descriptor import get_description
+
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
 )
@@ -61,7 +63,7 @@ class Client:
                         for schedule in schedules:
                             formatted_schedule = {
                                 "displayName": schedule.get("displayName"),
-                                "schedule": schedule.get("cron"),
+                                "schedule": get_description(schedule.get("cron")),
                                 "status": schedule.get("state"),
                             }
                             schedule_list.append(formatted_schedule)
