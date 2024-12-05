@@ -45,6 +45,10 @@
   width: 247px !important;
 }
 
+.create-scheduler-radio-element div{
+  flex-direction: row;
+}
+
 .create-pr {
   padding-right: 18px;
 }
