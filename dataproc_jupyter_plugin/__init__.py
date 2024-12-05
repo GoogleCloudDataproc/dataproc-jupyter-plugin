@@ -22,8 +22,6 @@ from kernels_mixer.websockets import DelegatingWebsocketConnection
 from traitlets import Bool
 from jupyter_server.serverapp import ServerApp
 
-from dataproc_jupyter_plugin.commons.vertexPlatform import _parse_vertexai_flag
-
 
 from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
 
@@ -89,10 +87,6 @@ def _load_jupyter_server_extension(server_app):
     server_app: jupyterlab.labapp.LabApp
         JupyterLab application instance
     """
-    flag_status = _parse_vertexai_flag()
-
-    # Log the verterai flag
-    server_app.log.info(f"Vertexai flag: {flag_status}")
 
     setup_handlers(server_app.web_app)
     name = "dataproc_jupyter_plugin"

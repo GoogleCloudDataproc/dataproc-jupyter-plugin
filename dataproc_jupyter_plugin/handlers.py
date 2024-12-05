@@ -37,7 +37,6 @@ from dataproc_jupyter_plugin.controllers import (
     composer,
     dataproc,
     executor,
-    vertexPlatform,
 )
 
 _region_not_set_error = """GCP region not set in gcloud.
@@ -85,6 +84,16 @@ class DataprocPluginConfig(SingletonConfigurable):
         config=True,
         help="Enable integration with BigQuery in JupyterLab",
     )
+    enable_cloud_storage_integration = Bool(
+        False,
+        config=True,
+        help="Enable integration with gcs in JupyterLab",
+    )
+    enable_metastore_integration = Bool(
+        False,
+        config=True,
+        help="Enable integration with gcs in JupyterLab",
+    )
 
 
 class SettingsHandler(APIHandler):
@@ -101,6 +110,7 @@ class SettingsHandler(APIHandler):
             #
             # We explicitly filter out the `config`, `parent`, and `log` attributes
             # that are inherited from the `SingletonConfigurable` class.
+            print("aaaaa", t, v)
             if t not in dataproc_plugin_config and t not in ["config", "parent", "log"]:
                 if v.default_value is not Undefined:
                     dataproc_plugin_config[t] = v.default_value
@@ -210,7 +220,6 @@ def setup_handlers(web_app):
         "bigQueryPreview": bigquery.PreviewController,
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
-        "api/vertexPlatform": vertexPlatform.VertexPlatformController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)
