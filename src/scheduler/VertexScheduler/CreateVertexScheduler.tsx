@@ -121,6 +121,8 @@ const CreateVertexScheduler = ({
     const handleRegionChange = (value: React.SetStateAction<string>) => {
         setRegion(value)
         setMachineTypeSelected('')
+        setAcceleratedCount(null)
+        setAcceleratorType('')
     }
     /**
    * Kernel selection
