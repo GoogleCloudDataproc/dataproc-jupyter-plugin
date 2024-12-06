@@ -13,14 +13,11 @@
 # limitations under the License.from ._version import __version__
 import logging
 
-
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 from jupyter_server.services.sessions.sessionmanager import SessionManager
 from kernels_mixer.kernels import MixingMappingKernelManager
 from kernels_mixer.kernelspecs import MixingKernelSpecManager
 from kernels_mixer.websockets import DelegatingWebsocketConnection
-
-
 
 from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
 
@@ -86,7 +83,6 @@ def _load_jupyter_server_extension(server_app):
     server_app: jupyterlab.labapp.LabApp
         JupyterLab application instance
     """
-
     setup_handlers(server_app.web_app)
     name = "dataproc_jupyter_plugin"
     server_app.log.info(f"Registered {name} server extension")
