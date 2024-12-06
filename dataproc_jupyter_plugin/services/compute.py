@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import proto
 from google.cloud import compute_v1
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
@@ -58,8 +59,14 @@ class Client:
                 project=self.project_id,
             )
             response = client.list(request=request)
-            for item in response:
-                networks.append(item)
+            for item in response.items:
+                networks.append(
+                    proto.Message.to_dict(
+                        item,
+                        use_integers_for_enums=False,
+                        preserving_proto_field_name=False,
+                    )
+                )
             return networks
 
         except Exception as e:
@@ -75,8 +82,14 @@ class Client:
                 region=region_id,
             )
             response = client.list(request=request)
-            for item in response:
-                sub_networks.append(item)
+            for item in response.items:
+                sub_networks.append(
+                    proto.Message.to_dict(
+                        item,
+                        use_integers_for_enums=False,
+                        preserving_proto_field_name=False,
+                    )
+                )
             return sub_networks
 
         except Exception as e:
@@ -92,7 +105,13 @@ class Client:
             )
             response = client.list_usable(request=request)
             for item in response:
-                shared_networks.append(item)
+                shared_networks.append(
+                    proto.Message.to_dict(
+                        item,
+                        use_integers_for_enums=False,
+                        preserving_proto_field_name=False,
+                    )
+                )
             return shared_networks
 
         except Exception as e:
