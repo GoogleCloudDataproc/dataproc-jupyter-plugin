@@ -148,7 +148,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       localStorage.removeItem('notebookValue');
     });
     interface SettingsResponse {
-      enable_metastore_integration: any;
+      enable_metastore_integration?: boolean;
       enable_cloud_storage_integration?: boolean;
       enable_bigquery_integration?: boolean;
     }
