@@ -32,11 +32,7 @@ class CloudStorageController(APIHandler):
                     await credentials.get_cached(), self.log, client_session
                 )
                 csb = await client.list_bucket()
-                response = []
-                for item in csb:
-                    env = item.dict()
-                    response.append(env)
-                self.finish(json.dumps(response))
+                self.finish(json.dumps(csb))
         except Exception as e:
             self.log.exception(f"Error fetching cloud storage bucket: {str(e)}")
             self.finish({"error": str(e)})

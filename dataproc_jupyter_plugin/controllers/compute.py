@@ -48,7 +48,11 @@ class NetworkController(APIHandler):
                     await credentials.get_cached(), self.log, client_session
                 )
                 network = await client.get_network()
-                self.finish(json.dumps(network))
+                response = []
+                for item in network:
+                    env = item.dict()
+                    response.append(env)
+                self.finish(json.dumps(response))
         except Exception as e:
             self.log.exception(f"Error fetching network: {str(e)}")
             self.finish({"error": str(e)})
@@ -65,7 +69,11 @@ class SubNetworkController(APIHandler):
                     await credentials.get_cached(), self.log, client_session
                 )
                 sub_network = await client.get_subnetwork(region_id)
-                self.finish(json.dumps(sub_network))
+                response = []
+                for item in sub_network:
+                    env = item.dict()
+                    response.append(env)
+                self.finish(json.dumps(response))
         except Exception as e:
             self.log.exception(f"Error fetching sub network: {str(e)}")
             self.finish({"error": str(e)})
@@ -81,7 +89,11 @@ class SharedNetworkController(APIHandler):
                     await credentials.get_cached(), self.log, client_session
                 )
                 shared_network = await client.get_shared_network()
-                self.finish(json.dumps(shared_network))
+                response = []
+                for item in shared_network:
+                    env = item.dict()
+                    response.append(env)
+                self.finish(json.dumps(response))
         except Exception as e:
             self.log.exception(f"Error fetching network shared from host: {str(e)}")
             self.finish({"error": str(e)})
