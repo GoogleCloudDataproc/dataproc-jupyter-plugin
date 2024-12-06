@@ -19,21 +19,21 @@ import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services import logentries
+from dataproc_jupyter_plugin.services import vertex
 
 
-class ListEntriesController(APIHandler):
+class ListNotebookExecutionJobsController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
-        """Returns log entries"""
+        """Returns list of notebook execution jobs"""
         try:
-            filter_query = self.get_argument("filter_query")
+            region_id = self.get_argument("region_id")
             async with aiohttp.ClientSession() as client_session:
                 client = logentries.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                logs = await client.list_entries(filter_query)
-                self.finish(json.dumps(logs))
+                jobs = await client.list_notebook_execution_jobs(region_id)
+                self.finish(json.dumps(jobs))
         except Exception as e:
-            self.log.exception(f"Error fetching entries: {str(e)}")
+            self.log.exception(f"Error fetching notebook execution jobs: {str(e)}")
             self.finish({"error": str(e)})
