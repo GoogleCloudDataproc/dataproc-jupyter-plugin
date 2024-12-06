@@ -78,6 +78,7 @@ const iconPythonLogo = new LabIcon({
   svgstr: pythonLogo
 });
 
+
 const extension: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_ID,
   autoStart: true,
@@ -147,6 +148,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       localStorage.removeItem('notebookValue');
     });
     interface SettingsResponse {
+      enable_metastore_integration?: boolean;
+      enable_cloud_storage_integration?: boolean;
       enable_bigquery_integration?: boolean;
     }
     let bqFeature: SettingsResponse = await requestAPI('settings');
@@ -154,20 +157,18 @@ const extension: JupyterFrontEndPlugin<void> = {
     const settings = await settingRegistry.load(PLUGIN_ID);
 
     // The current value of whether or not preview features are enabled.
-    let previewEnabled = settings.get('previewEnabled').composite as boolean;
     let panelDpms: Panel | undefined,
       panelGcs: Panel | undefined,
       panelDatasetExplorer: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
-    settings.changed.connect(() => {
-      onPreviewEnabledChanged();
-    });
+
 
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', (message: string) => {
       if (bqFeature.enable_bigquery_integration) {
         loadBigQueryWidget('');
       }
+      onPreviewEnabledChanged()
     });
 
     /**
@@ -199,38 +200,38 @@ const extension: JupyterFrontEndPlugin<void> = {
      * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
      * as necessary.
      */
-    const onPreviewEnabledChanged = () => {
-      previewEnabled = settings.get('previewEnabled').composite as boolean;
-      if (!previewEnabled) {
-        // Preview was disabled, tear everything down.
+    const onPreviewEnabledChanged = async () => {
+      if (!bqFeature.enable_metastore_integration) {
+     // Preview was disabled, tear everything down.
         panelDpms?.dispose();
-        panelDatasetExplorer?.dispose();
+        panelDpms = undefined;
+      }
+      if (!bqFeature.enable_cloud_storage_integration){
         panelGcs?.dispose();
         gcsDrive?.dispose();
-        panelDpms = undefined;
-        panelDatasetExplorer = undefined;
         panelGcs = undefined;
         gcsDrive = undefined;
-      } else {
-        // Preview was enabled, (re)create DPMS and GCS.
-        if (!panelDpms && !panelGcs) {
+      }
+      if(!bqFeature.enable_bigquery_integration){
+        panelDatasetExplorer?.dispose();
+        panelDatasetExplorer = undefined;
+      }
+      if(bqFeature.enable_bigquery_integration || bqFeature.enable_cloud_storage_integration || bqFeature.enable_metastore_integration){
           panelDpms = new Panel();
           panelDpms.id = 'dpms-tab';
           panelDpms.title.caption = 'Dataset Explorer - DPMS';
           panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-          if (bqFeature.enable_bigquery_integration && !panelDatasetExplorer) {
-            panelDatasetExplorer = new Panel();
-            panelDatasetExplorer.id = 'dataset-explorer-tab';
-            panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
-            panelDatasetExplorer.addWidget(
-              new BigQueryWidget(
-                app as JupyterLab,
-                settingRegistry as ISettingRegistry,
-                bqFeature.enable_bigquery_integration as boolean,
-                themeManager
-              )
-            );
-          }
+          panelDatasetExplorer = new Panel();
+          panelDatasetExplorer.id = 'dataset-explorer-tab';
+          panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
+          panelDatasetExplorer.addWidget(
+            new BigQueryWidget(
+              app as JupyterLab,
+              settingRegistry as ISettingRegistry,
+              bqFeature.enable_bigquery_integration as boolean,
+              themeManager
+            )
+          );
           panelGcs = new Panel();
           panelGcs.id = 'GCS-bucket-tab';
           panelGcs.title.caption = 'Google Cloud Storage';
@@ -239,16 +240,18 @@ const extension: JupyterFrontEndPlugin<void> = {
           panelGcs.addWidget(
             new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
           );
-          // Update the icons.
           onThemeChanged();
-          app.shell.add(panelGcs, 'left', { rank: 1002 });
-          if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
-            app.shell.add(panelDatasetExplorer, 'left', { rank: 1000 });
+          if(bqFeature.enable_bigquery_integration){
+          app.shell.add(panelDatasetExplorer, 'left', { rank: 1000 });
           }
+          if(bqFeature.enable_metastore_integration){
           app.shell.add(panelDpms, 'left', { rank: 1001 });
+          }
+          if(bqFeature.enable_cloud_storage_integration){
+          app.shell.add(panelGcs, 'left', { rank: 1002 });
+          }
         }
       }
-    };
 
     onPreviewEnabledChanged();
     // END -- Enable Preview Features.
