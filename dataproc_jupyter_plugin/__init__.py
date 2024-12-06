@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.from ._version import __version__
 import logging
-import sys
+
 
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 from jupyter_server.services.sessions.sessionmanager import SessionManager
 from kernels_mixer.kernels import MixingMappingKernelManager
 from kernels_mixer.kernelspecs import MixingKernelSpecManager
 from kernels_mixer.websockets import DelegatingWebsocketConnection
-from traitlets import Bool
-from jupyter_server.serverapp import ServerApp
+
 
 
 from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
