@@ -378,7 +378,7 @@ const CreateVertexScheduler = ({
             setTimeZoneSelected(selectedTimeZone);
         }
     };
-    console.log({ 'startDate': startDate, 'endDate': endDate });
+    // console.log({ 'startDate': startDate, 'endDate': endDate });
 
     return (
         <>
@@ -603,7 +603,7 @@ const CreateVertexScheduler = ({
                                                 value={primaryNetworkSelected}
                                                 onChange={(_event, val) => handlePrimaryNetwork(val)}
                                                 renderInput={params => (
-                                                    <TextField {...params} label="Primary network" />
+                                                    <TextField {...params} label="Primary network*" />
                                                 )}
                                             //disabled={editMode}
                                             />
@@ -615,25 +615,12 @@ const CreateVertexScheduler = ({
                                                 value={subNetworkSelected}
                                                 onChange={(_event, val) => handleSubNetwork(val)}
                                                 renderInput={params => (
-                                                    <TextField {...params} label="Sub network" />
+                                                    <TextField {...params} label="Sub network*" />
                                                 )}
                                             //disabled={editMode}
                                             />
                                         </div>
                                     </div>
-
-                                    <div className="create-scheduler-form-element">
-                                        <Input
-                                            className="create-scheduler-style"
-                                            //value={jobNameSelected}
-                                            //onChange={e => handleJobNameChange(e)}
-                                            type="text"
-                                            placeholder=""
-                                            Label="Network tags"
-                                        //disabled={editMode}
-                                        />
-                                    </div>
-                                    <span className="tab-description tab-text-sub-cl">Network tabs are text attributes you can add to make firewall rules and routes applicable to specify VM instances</span>
                                 </> :
                                 <>
                                     {/* Network shared from host project */}
@@ -644,13 +631,26 @@ const CreateVertexScheduler = ({
                                             value={sharedNetworkSelected}
                                             onChange={(_event, val) => handleSharedNetwork(val)}
                                             renderInput={params => (
-                                                <TextField {...params} label="Share subnetwork" />
+                                                <TextField {...params} label="Shared subnetwork" />
                                             )}
                                         //disabled={editMode}
                                         />
                                     </div>
                                 </>
                         }
+
+                        <div className="create-scheduler-form-element">
+                            <Input
+                                className="create-scheduler-style"
+                                //value={jobNameSelected}
+                                //onChange={e => handleJobNameChange(e)}
+                                type="text"
+                                placeholder=""
+                                Label="Network tags"
+                            //disabled={editMode}
+                            />
+                        </div>
+                        <span className="tab-description tab-text-sub-cl">Network tabs are text attributes you can add to make firewall rules and routes applicable to specify VM instances</span>
 
                         {/* <Scheduler /> */}
                         <div className="create-scheduler-label">Schedule</div>
@@ -716,6 +716,60 @@ const CreateVertexScheduler = ({
                                     </FormControl>
                                 </div>
                             }
+                            <div className="execution-history-main-wrapper">
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
+                                        <DateTimePicker
+                                            className="create-scheduler-style create-scheduler-form-element-input-fl"
+                                            label="Start Date"
+                                            value={startDate}
+                                            onChange={(newValue) => handleStartDate(newValue)}
+                                            slots={{
+                                                openPickerIcon: CalendarMonthIcon
+                                            }}
+                                            slotProps={{
+                                                actionBar: {
+                                                    actions: ['clear']
+                                                },
+                                                tabs: {
+                                                    hidden: true,
+                                                },
+                                            }}
+                                            disablePast
+                                            closeOnSelect={true}
+                                        />
+                                    </div>
+                                    <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
+                                        <DateTimePicker
+                                            className="create-scheduler-style create-scheduler-form-element-input-fl"
+                                            label="End Date"
+                                            value={endDate}
+                                            onChange={(newValue) => handleEndDate(newValue)}
+                                            slots={{
+                                                openPickerIcon: CalendarMonthIcon
+                                            }}
+                                            slotProps={{
+                                                actionBar: {
+                                                    actions: ['clear']
+                                                },
+                                                field: { clearable: true },
+                                                tabs: {
+                                                    hidden: true,
+                                                },
+                                            }}
+                                            disablePast
+                                            closeOnSelect={true}
+                                        />
+                                    </div>
+                                </LocalizationProvider>
+                            </div>
+                            {
+                                endDateError &&
+                                <div className="error-key-time">
+                                    <iconError.react tag="div" className="logo-alignment-style" />
+                                    <div className="error-key-missing">End date should be greater than Start date</div>
+                                </div>
+                            }
                             {
                                 scheduleMode === 'runSchedule' && internalScheduleMode === 'cronFormat' &&
                                 <div className="create-scheduler-form-element schedule-input-field">
@@ -725,71 +779,15 @@ const CreateVertexScheduler = ({
                                         onChange={e => handleSchedule(e)}
                                         type="text"
                                         placeholder=""
-                                        Label="Schedule"
+                                        Label="Schedule*"
                                     />
                                     <span className="tab-description tab-text-sub-cl">Schedule is specified using unix-cron format. You can define a schedule so that your execution runs multiple times a day, or runs on specific days and months.</span>
                                 </div>
                             }
                             {scheduleMode === 'runSchedule' && internalScheduleMode === 'userFriendly' && (
-                                <>
-                                    <div className="execution-history-main-wrapper">
-                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                            <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
-                                                <DateTimePicker
-                                                    className="create-scheduler-style create-scheduler-form-element-input-fl"
-                                                    label="Start Date"
-                                                    value={startDate}
-                                                    onChange={(newValue) => handleStartDate(newValue)}
-                                                    slots={{
-                                                        openPickerIcon: CalendarMonthIcon
-                                                    }}
-                                                    slotProps={{
-                                                        actionBar: {
-                                                            actions: ['clear']
-                                                        },
-                                                        tabs: {
-                                                            hidden: true,
-                                                        },
-                                                    }}
-                                                    disablePast
-                                                    closeOnSelect={true}
-                                                />
-                                            </div>
-                                            <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
-                                                <DateTimePicker
-                                                    className="create-scheduler-style create-scheduler-form-element-input-fl"
-                                                    label="End Date"
-                                                    value={endDate}
-                                                    onChange={(newValue) => handleEndDate(newValue)}
-                                                    slots={{
-                                                        openPickerIcon: CalendarMonthIcon
-                                                    }}
-                                                    slotProps={{
-                                                        actionBar: {
-                                                            actions: ['clear']
-                                                        },
-                                                        field: { clearable: true },
-                                                        tabs: {
-                                                            hidden: true,
-                                                        },
-                                                    }}
-                                                    disablePast
-                                                    closeOnSelect={true}
-                                                />
-                                            </div>
-                                        </LocalizationProvider>
-                                    </div>
-                                    {
-                                        endDateError &&
-                                        <div className="error-key-time">
-                                            <iconError.react tag="div" className="logo-alignment-style" />
-                                            <div className="error-key-missing">End date should be greater than Start date</div>
-                                        </div>
-                                    }
-                                    <div className="create-scheduler-form-element">
-                                        <Cron value={scheduleValue} setValue={setScheduleValue} />
-                                    </div>
-                                </>
+                                <div className="create-scheduler-form-element">
+                                    <Cron value={scheduleValue} setValue={setScheduleValue} />
+                                </div>
                             )}
                             {
                                 scheduleMode === 'runSchedule' &&
@@ -801,7 +799,7 @@ const CreateVertexScheduler = ({
                                             value={timeZoneSelected}
                                             onChange={(_event, val) => handleTimeZoneSelected(val)}
                                             renderInput={params => (
-                                                <TextField {...params} label="Time Zone" />
+                                                <TextField {...params} label="Time Zone*" />
                                             )}
                                         />
                                     </div>
