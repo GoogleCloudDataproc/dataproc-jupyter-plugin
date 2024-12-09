@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect,
+import React, {
+  useState, useEffect,
 } from 'react';
 import { useTable, usePagination } from 'react-table';
 import TableData from '../../utils/tableData';
@@ -23,7 +24,7 @@ import { PaginationView } from '../../utils/paginationView';
 import { ICellProps } from '../../utils/utils';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import {
-CircularProgress,
+  CircularProgress,
 } from '@mui/material';
 import deleteIcon from '../../../style/icons/scheduler_delete.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -40,383 +41,507 @@ import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
 
 const iconDelete = new LabIcon({
-name: 'launcher:delete-icon',
-svgstr: deleteIcon
+  name: 'launcher:delete-icon',
+  svgstr: deleteIcon
 });
 const iconPlay = new LabIcon({
-name: 'launcher:play-icon',
-svgstr: playIcon
+  name: 'launcher:play-icon',
+  svgstr: playIcon
 });
 const iconPause = new LabIcon({
-name: 'launcher:pause-icon',
-svgstr: pauseIcon
+  name: 'launcher:pause-icon',
+  svgstr: pauseIcon
 });
 const iconEditDag = new LabIcon({
-name: 'launcher:edit-disable-icon',
-svgstr: EditIconDisable
+  name: 'launcher:edit-disable-icon',
+  svgstr: EditIconDisable
 });
 const iconEditNotebook = new LabIcon({
-name: 'launcher:edit-notebook-icon',
-svgstr: EditNotebookIcon
+  name: 'launcher:edit-notebook-icon',
+  svgstr: EditNotebookIcon
 });
 
 const iconTrigger = new LabIcon({
-name: 'launcher:trigger-icon',
-svgstr: triggerIcon
+  name: 'launcher:trigger-icon',
+  svgstr: triggerIcon
 });
 interface IDagList {
-displayName: string;
-schedule: string;
-status: string;
+  displayName: string;
+  schedule: string;
+  status: string;
 }
 
 function listVertexScheduler({
-app,
-settingRegistry,
+  app,
+  settingRegistry,
 }: {
-app: JupyterFrontEnd;
-settingRegistry: ISettingRegistry;
+  app: JupyterFrontEnd;
+  settingRegistry: ISettingRegistry;
 
 }) {
-const [isLoading, setIsLoading] = useState(true);
-const [dagList, setDagList] = useState<IDagList[]>([]);
-const data = dagList;
-const [deletePopupOpen, 
- //setDeletePopupOpen
- ] = useState(false);
-const [selectedDagId, 
- //setSelectedDagId
- ] = useState('');
-const [editDagLoading, 
- //setEditDagLoading
- ] = useState('');
-// const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
-const [editNotebookLoading, 
- //setEditNotebookLoading
- ] = useState('');
-const [deletingNotebook
- //, setDeletingNotebook
-] = useState(false);
-const [isPreviewEnabled, 
- //setIsPreviewEnabled
- ] = useState(false);
-const [nextPageFlag, setNextPageFlag] = useState('');
-console.log(nextPageFlag);
-const [region, setRegion] = useState('');
-const [projectId, setProjectId] = useState('');
-const columns = React.useMemo(
- () => [
-   {
-     Header: 'Job Name',
-     accessor: 'displayName'
-   },
-   {
-     Header: 'Schedule',
-     accessor: 'schedule'
-   },
-   {
-     Header: 'Status',
-     accessor: 'status'
-   },
-   {
-     Header: 'Actions',
-     accessor: 'actions'
-   }
- ],
- []
-);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dagList, setDagList] = useState<IDagList[]>([]);
+  const data = dagList;
+  const [deletePopupOpen,setDeletePopupOpen] = useState(false);
+  const [editDagLoading,
+    //setEditDagLoading
+  ] = useState('');
+  // const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
+  const [editNotebookLoading,
+    //setEditNotebookLoading
+  ] = useState('');
+  const [deletingSchedule, setDeletingSchedule] = useState(false);
+  const [isPreviewEnabled,
+    //setIsPreviewEnabled
+  ] = useState(false);
+  const [nextPageFlag, setNextPageFlag] = useState('');
+  console.log(nextPageFlag);
+  const [region, setRegion] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [uniqueScheduleId, setUniqueScheduleId] = useState('');
+  const [scheduleDisplayName, setScheduleDisplayName] = useState('');
 
-const listDagInfoAPI = async () => {
- await VertexServices.listVertexSchedules(
-   setDagList,
-   region,
-   setIsLoading,
-   setNextPageFlag
- );
-};
+  const columns = React.useMemo(
+    () => [
+      {
+        Header: 'Job Name',
+        accessor: 'displayName'
+      },
+      {
+        Header: 'Schedule',
+        accessor: 'schedule'
+      },
+      {
+        Header: 'Status',
+        accessor: 'status'
+      },
+      {
+        Header: 'Actions',
+        accessor: 'actions'
+      }
+    ],
+    []
+  );
 
-const {
- getTableProps,
- getTableBodyProps,
- headerGroups,
- rows,
- prepareRow,
- page,
- canPreviousPage,
- canNextPage,
- nextPage,
- previousPage,
- setPageSize,
- state: { pageIndex, pageSize }
-} = useTable(
- //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
- { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
- usePagination
-);
+  /**
+  * Get list of schedules
+  * @param {}
+  */
+  const listDagInfoAPI = async () => {
+    await VertexServices.listVertexSchedules(
+      setDagList,
+      region,
+      setIsLoading,
+      setNextPageFlag
+    );
+  };
 
-const renderActions = (data: any) => {
- const is_status_paused = data.status === 'Paused';
- return (
-   <div className="actions-icon">
-     <div
-       role="button"
-       className="icon-buttons-style"
-       title={is_status_paused ? 'Unpause' : 'Pause'}
-     // onClick={e => handleUpdateScheduler(data.jobid, is_status_paused)}
-     >
-       {is_status_paused ? (
-         <iconPlay.react
-           tag="div"
-           className="icon-white logo-alignment-style"
-         />
-       ) : (
-         <iconPause.react
-           tag="div"
-           className="icon-white logo-alignment-style"
-         />
-       )}
-     </div>
-     <div
-       role="button"
-       className={
-         !is_status_paused
-           ? 'icon-buttons-style'
-           : 'icon-buttons-style-disable '
-       }
-       title={
-         !is_status_paused ? 'Trigger the job' : " Can't Trigger Paused job"
-       }
-       data-jobid={data.jobid}
-       // //onClick={e => {
-       //   !is_status_paused ? handleTriggerDag(e) : null;
-       // }}
-     >
-       <iconTrigger.react
-         tag="div"
-         className="icon-white logo-alignment-style"
-       />
-     </div>
-     {data.jobid === editDagLoading ? (
-       <div className="icon-buttons-style">
-         <CircularProgress
-           size={18}
-           aria-label="Loading Spinner"
-           data-testid="loader"
-         />
-       </div>
-     ) : (
-       <div
-         role="button"
-         className="icon-buttons-style"
-         title="Edit Schedule"
-         data-jobid={data.jobid}
-         //onClick={e => handleEditDags(e)}
-       >
-         <iconEditNotebook.react
-           tag="div"
-           className="icon-white logo-alignment-style"
-         />
-       </div>
-     )}
-     {isPreviewEnabled &&
-       (data.jobid === editNotebookLoading ? (
-         <div className="icon-buttons-style">
-           <CircularProgress
-             size={18}
-             aria-label="Loading Spinner"
-             data-testid="loader"
-           />
-         </div>
-       ) : (
-         <div
-           role="button"
-           className="icon-buttons-style"
-           title="Edit Notebook"
-           data-jobid={data.jobid}
-           //onClick={e => handleEditNotebook(e)}
-         >
-           <iconEditDag.react
-             tag="div"
-             className="icon-white logo-alignment-style"
-           />
-         </div>
-       ))}
-     <div
-       role="button"
-       className="icon-buttons-style"
-       title="Delete"
-       //onClick={() => handleDeletePopUp(data.jobid)}
-     >
-       <iconDelete.react
-         tag="div"
-         className="icon-white logo-alignment-style"
-       />
-     </div>
-   </div>
- );
-};
+  /**
+  * Handle resume and pause 
+  * @param {string} scheduleId unique ID for schedule
+  * @param {string} is_status_paused modfied status of schedule
+  * @param {string} displayName name of schedule
+  */
+  const handleUpdateScheduler = async (
+    scheduleId: string,
+    is_status_paused: string,
+    displayName: string
+  ) => {
+    if (is_status_paused === 'ACTIVE') {
+      await VertexServices.handleUpdateSchedulerPauseAPIService(
+        scheduleId,
+        region,
+        setDagList,
+        setIsLoading,
+        setNextPageFlag,
+        displayName
+      );
+    } else {
+      await VertexServices.handleUpdateSchedulerResumeAPIService(
+        scheduleId,
+        region,
+        setDagList,
+        setIsLoading,
+        setNextPageFlag,
+        displayName
+      );
+    }
+  };
 
-const tableDataCondition = (cell: ICellProps) => {
- if (cell.column.Header === 'Actions') {
-   return (
-     <td {...cell.getCellProps()} className="clusters-table-data">
-       {renderActions(cell.row.original)}
-     </td>
-   );
- } else if (cell.column.Header === 'Job Name') {
-   return (
-     <td
-       {...cell.getCellProps()}
-       className="clusters-table-data"
-       //onClick={() => handleDagIdSelection(composerSelectedList, cell.value)}
-     >
-       {cell.value}
-     </td>
-   );
- } else {
-   return (
-     <td {...cell.getCellProps()} className="clusters-table-data">
-       {cell.render('Cell')}
-     </td>
-   );
- }
-};
+  /**
+  * Trigger a job immediately
+  * @param {string} displayName name of schedule
+  */
+  const handleTriggerSchedule = async (event: React.MouseEvent, displayName: string) => {
+    const scheduleId = event.currentTarget.getAttribute('data-scheduleId');
+    if (scheduleId !== null) {
+      await VertexServices.triggerSchedule(region, scheduleId, displayName);
+    }
+  };
 
-// const checkPreviewEnabled = async () => {
-//   const settings = await settingRegistry.load(PLUGIN_ID);
+  /**
+  * Delete pop up
+  * @param {string} schedule_id Id of schedule
+  * @param {string} displayName name of schedule
+  */
+  const handleDeletePopUp = (schedule_id: string, displayName: string) => {
+    setUniqueScheduleId(schedule_id);
+    setScheduleDisplayName(displayName)
+    setDeletePopupOpen(true);
+  };
 
-//   // The current value of whether or not preview features are enabled.
-//   let previewEnabled = settings.get('previewEnabled').composite as boolean;
-//   setIsPreviewEnabled(previewEnabled);
-// };
+  /**
+  * Cancel delete pop up
+  * @param {}
+  */
+  const handleCancelDelete = () => {
+    setDeletePopupOpen(false);
+  };
 
-// const openEditDagNotebookFile = async () => {
-//   let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-//   const openNotebookFile: any = await app.commands.execute('docmanager:open', {
-//     path: filePath
-//   });
-//   setInputNotebookFilePath('');
-//   if (openNotebookFile) {
-//     setEditNotebookLoading('');
-//   }
-// };
+  /**
+  * Delete a schedule
+  * @param {}
+  */
+  const handleDeleteScheduler = async () => {
+    setDeletingSchedule(true);
+    await VertexServices.handleDeleteSchedulerAPIService(
+      region,
+      uniqueScheduleId,
+      scheduleDisplayName,
+      setDagList,
+      setIsLoading,
+      setNextPageFlag,
+    );
+    setDeletePopupOpen(false);
+    setDeletingSchedule(false);
+  };
 
-// useEffect(() => {
-//   if (inputNotebookFilePath !== '') {
-//     openEditDagNotebookFile();
-//   }
-// }, [inputNotebookFilePath]);
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    prepareRow,
+    page,
+    canPreviousPage,
+    canNextPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize }
+  } = useTable(
+    //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
+    { columns, data, autoResetPage: false, initialState: { pageSize: 2 } },
+    usePagination
+  );
 
-useEffect(() => {
- if (region !== '') {
-   setIsLoading(true);
-   listDagInfoAPI();
- }
-}, [region]);
+  const renderActions = (data: any) => {
+    const is_status_paused = data.status;
+    return (
+      <div className="actions-icon">
+        <div
+          role="button"
+          className="icon-buttons-style"
+          title={is_status_paused === "COMPLETED" ? "Completed" : (is_status_paused === "PAUSE" ? 'Unpause' : 'Pause')}
+          onClick={e => {
+            is_status_paused !== "COMPLETED" && handleUpdateScheduler(data.name, is_status_paused, data.displayName)
+          }}
+        >
+          {is_status_paused === 'COMPLETED' ? <iconPlay.react
+            tag="div"
+            className="icon-buttons-style-disable disable-complete-btn"
+          /> : (
+            is_status_paused === 'PAUSED' ?
+              (<iconPlay.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
+              ) : (
+                <iconPause.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              ))}
+        </div>
+        <div
+          role="button"
+          className='icon-buttons-style'
+          title='Trigger the job'
+          data-scheduleId={data.name}
+          onClick={e => handleTriggerSchedule(e, data.displayName)}
+        >
+          <iconTrigger.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+        {data.jobid === editDagLoading ? (
+          <div className="icon-buttons-style">
+            <CircularProgress
+              size={18}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+        ) : (
+          <div
+            role="button"
+            className="icon-buttons-style"
+            title="Edit Schedule"
+            data-jobid={data.jobid}
+          //onClick={e => handleEditDags(e)}
+          >
+            <iconEditNotebook.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          </div>
+        )}
+        {isPreviewEnabled &&
+          (data.jobid === editNotebookLoading ? (
+            <div className="icon-buttons-style">
+              <CircularProgress
+                size={18}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            </div>
+          ) : (
+            <div
+              role="button"
+              className="icon-buttons-style"
+              title="Edit Notebook"
+              data-jobid={data.jobid}
+            //onClick={e => handleEditNotebook(e)}
+            >
+              <iconEditDag.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
+            </div>
+          ))}
+        <div
+          role="button"
+          className="icon-buttons-style"
+          title="Delete"
+          onClick={() => handleDeletePopUp(data.name, data.displayName)}
+        >
+          <iconDelete.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+      </div>
+    );
+  };
 
-useEffect(() => {
- authApi()
-   .then((credentials) => {
-     if (credentials && credentials?.region_id && credentials.project_id) {
-       setRegion(credentials.region_id);
-       setProjectId(credentials.project_id);
-     }
-   })
-   .catch((error) => {
-     console.error(error);
-   });
-}, [projectId])
+  const tableDataCondition = (cell: ICellProps) => {
+    if (cell.column.Header === 'Actions') {
+      return (
+        <td {...cell.getCellProps()} className="clusters-table-data">
+          {renderActions(cell.row.original)}
+        </td>
+      );
+    } else if (cell.column.Header === 'Job Name') {
+      return (
+        <td
+          {...cell.getCellProps()}
+          className="clusters-table-data"
+        //onClick={() => handleDagIdSelection(composerSelectedList, cell.value)}
+        >
+          {cell.value}
+        </td>
+      );
+    } else {
+      return (
+        <td {...cell.getCellProps()} className={cell.column.Header === 'Schedule' ? "clusters-table-data table-cell-width" : "clusters-table-data"}>
+          {cell.render('Cell')}
+        </td>
+      );
+    }
+  };
 
-return (
- <div>
-   <div className="region-overlay create-scheduler-form-element content-pd-space ">
-     <RegionDropdown
-       projectId={projectId}
-       region={region}
-       onRegionChange={region => setRegion(region)}
-     />
-   </div>
-   {/*
-     {importErrorEntries > 0 && (
-       <div className="import-error-parent">
-         <div
-           className="accordion-button"
-           role="button"
-           aria-label="Show Import Errors"
-           title="Show Import Errors"
-           onClick={handleImportErrorPopup}
-         >
-           Show Schedule Errors ({importErrorEntries})
-         </div>
-         {importErrorPopupOpen && (
-           <ImportErrorPopup
-             importErrorData={importErrorData}
-             importErrorEntries={importErrorEntries}
-             importErrorPopupOpen={importErrorPopupOpen}
-             onClose={handleImportErrorClosed}
-             onDelete={(dagId: string) => handleDeleteImportError(dagId)}
-           />
-         )}
-       </div>
-     )}
-   </div> */}
-   {dagList.length > 0 ? (
-     <>
-       <div className="notebook-templates-list-table-parent">
-         <TableData
-           getTableProps={getTableProps}
-           headerGroups={headerGroups}
-           getTableBodyProps={getTableBodyProps}
-           isLoading={isLoading}
-           rows={rows}
-           page={page}
-           prepareRow={prepareRow}
-           tableDataCondition={tableDataCondition}
-           fromPage="Notebook Schedulers"
-         />
-         {dagList.length > 100 && (
-           <PaginationView
-             pageSize={pageSize}
-             setPageSize={setPageSize}
-             pageIndex={pageIndex}
-             allData={dagList}
-             previousPage={previousPage}
-             nextPage={nextPage}
-             canPreviousPage={canPreviousPage}
-             canNextPage={canNextPage}
-             scheduleSelected="vertex"
-           />
-         )}
-         {deletePopupOpen && (
-           <DeletePopup
-             onCancel={() => {}}
-             onDelete={() => {}}
-             deletePopupOpen={deletePopupOpen}
-             DeleteMsg={`This will delete ${selectedDagId} and cannot be undone.`}
-             deletingNotebook={deletingNotebook}
-           />
-         )}
-       </div>
-     </>
-   ) : (
-     <div>
-       {isLoading && (
-         <div className="spin-loader-main">
-           <CircularProgress
-             className="spin-loader-custom-style"
-             size={18}
-             aria-label="Loading Spinner"
-             data-testid="loader"
-           />
-           Loading Vertex Schedulers
-         </div>
-       )}
-       {!isLoading && (
-         <div className="no-data-style">No rows to display</div>
-       )}
-     </div>
-   )}
- </div>
-);
+  // const checkPreviewEnabled = async () => {
+  //   const settings = await settingRegistry.load(PLUGIN_ID);
+
+  //   // The current value of whether or not preview features are enabled.
+  //   let previewEnabled = settings.get('previewEnabled').composite as boolean;
+  //   setIsPreviewEnabled(previewEnabled);
+  // };
+
+  // const openEditDagNotebookFile = async () => {
+  //   let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
+  //   const openNotebookFile: any = await app.commands.execute('docmanager:open', {
+  //     path: filePath
+  //   });
+  //   setInputNotebookFilePath('');
+  //   if (openNotebookFile) {
+  //     setEditNotebookLoading('');
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   if (inputNotebookFilePath !== '') {
+  //     openEditDagNotebookFile();
+  //   }
+  // }, [inputNotebookFilePath]);
+
+  useEffect(() => {
+    if (region !== '') {
+      setIsLoading(true);
+      listDagInfoAPI();
+    }
+  }, [region]);
+
+  useEffect(() => {
+    authApi()
+      .then((credentials) => {
+        if (credentials && credentials?.region_id && credentials.project_id) {
+          setRegion(credentials.region_id);
+          setProjectId(credentials.project_id);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [projectId])
+
+
+  // const checkPreviewEnabled = async () => {
+  //   const settings = await settingRegistry.load(PLUGIN_ID);
+
+  //   // The current value of whether or not preview features are enabled.
+  //   let previewEnabled = settings.get('previewEnabled').composite as boolean;
+  //   setIsPreviewEnabled(previewEnabled);
+  // };
+
+  // const openEditDagNotebookFile = async () => {
+  //   let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
+  //   const openNotebookFile: any = await app.commands.execute('docmanager:open', {
+  //     path: filePath
+  //   });
+  //   setInputNotebookFilePath('');
+  //   if (openNotebookFile) {
+  //     setEditNotebookLoading('');
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   if (inputNotebookFilePath !== '') {
+  //     openEditDagNotebookFile();
+  //   }
+  // }, [inputNotebookFilePath]);
+
+  useEffect(() => {
+    if (region !== '') {
+      setIsLoading(true);
+      listDagInfoAPI();
+    }
+  }, [region]);
+
+  useEffect(() => {
+    authApi()
+      .then((credentials) => {
+        if (credentials && credentials?.region_id && credentials.project_id) {
+          setRegion(credentials.region_id);
+          setProjectId(credentials.project_id);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [projectId])
+
+  return (
+    <div>
+      <div className="region-overlay create-scheduler-form-element content-pd-space ">
+        <RegionDropdown
+          projectId={projectId}
+          region={region}
+          onRegionChange={region => setRegion(region)}
+        />
+      </div>
+      {/*
+        {importErrorEntries > 0 && (
+          <div className="import-error-parent">
+            <div
+              className="accordion-button"
+              role="button"
+              aria-label="Show Import Errors"
+              title="Show Import Errors"
+              onClick={handleImportErrorPopup}
+            >
+              Show Schedule Errors ({importErrorEntries})
+            </div>
+            {importErrorPopupOpen && (
+              <ImportErrorPopup
+                importErrorData={importErrorData}
+                importErrorEntries={importErrorEntries}
+                importErrorPopupOpen={importErrorPopupOpen}
+                onClose={handleImportErrorClosed}
+                onDelete={(dagId: string) => handleDeleteImportError(dagId)}
+              />
+            )}
+          </div>
+        )}
+      </div> */}
+      {dagList.length > 0 ? (
+        <>
+          <div className="notebook-templates-list-table-parent">
+            <TableData
+              getTableProps={getTableProps}
+              headerGroups={headerGroups}
+              getTableBodyProps={getTableBodyProps}
+              isLoading={isLoading}
+              rows={rows}
+              page={page}
+              prepareRow={prepareRow}
+              tableDataCondition={tableDataCondition}
+              fromPage="Vertex schedulers"
+            />
+            {dagList.length > 1 && (
+              <PaginationView
+                pageSize={pageSize}
+                setPageSize={setPageSize}
+                pageIndex={pageIndex}
+                allData={dagList}
+                previousPage={previousPage}
+                nextPage={nextPage}
+                canPreviousPage={canPreviousPage}
+                canNextPage={canNextPage}
+                scheduleSelected="vertex"
+              />
+            )}
+            {deletePopupOpen && (
+              <DeletePopup
+                onCancel={() => handleCancelDelete()}
+                onDelete={() => handleDeleteScheduler()}
+                deletePopupOpen={deletePopupOpen}
+                DeleteMsg={`This will delete ${uniqueScheduleId} and cannot be undone.`}
+                deletingSchedule={deletingSchedule}
+              />
+            )}
+          </div>
+        </>
+      ) : (
+        <div>
+          {isLoading && (
+            <div className="spin-loader-main">
+              <CircularProgress
+                className="spin-loader-custom-style"
+                size={18}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+              Loading Vertex Schedulers
+            </div>
+          )}
+          {!isLoading && (
+            <div className="no-data-style">No rows to display</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 export default listVertexScheduler;
