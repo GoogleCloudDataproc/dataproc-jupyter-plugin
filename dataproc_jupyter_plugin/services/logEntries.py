@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import proto
 from google.cloud import logging
 
 
@@ -30,13 +31,22 @@ class Client:
         self.region_id = credentials["region_id"]
         self.client_session = client_session
 
-    async def list_entries(self, filter_query=None):
+    async def list_log_entries(self, filter_query=None):
         try:
+            logs = []
             client = logging.Client(project=f"projects/{self.project_id}")
             log_entries = client.list_entries(
                 filter=filter_query, page_size=1000, order_by="timestamp desc"
             )
-            return log_entries
+            for item in log_entries:
+                logs.append(
+                    proto.Message.to_dict(
+                        item,
+                        use_integers_for_enums=False,
+                        preserving_proto_field_name=False,
+                    )
+                )
+            return logs
 
         except Exception as e:
             self.log.exception(f"Error fetching log entries: {str(e)}")

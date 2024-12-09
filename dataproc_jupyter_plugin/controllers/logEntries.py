@@ -19,7 +19,7 @@ import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services import logentries
+from dataproc_jupyter_plugin.services import logEntries
 
 
 class ListEntriesController(APIHandler):
@@ -29,10 +29,10 @@ class ListEntriesController(APIHandler):
         try:
             filter_query = self.get_argument("filter_query")
             async with aiohttp.ClientSession() as client_session:
-                client = logentries.Client(
+                client = logEntries.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                logs = await client.list_entries(filter_query)
+                logs = await client.list_log_entries(filter_query)
                 self.finish(json.dumps(logs))
         except Exception as e:
             self.log.exception(f"Error fetching entries: {str(e)}")
