@@ -19,7 +19,10 @@ from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
     VERTEX_STORAGE_BUCKET
 )
-from dataproc_jupyter_plugin.models.models import DescribeVertexJob
+from dataproc_jupyter_plugin.models.models import (
+    DescribeVertexJob,
+    DescribeBucketName
+)
 
 class Client:
     client_session = aiohttp.ClientSession()
@@ -55,7 +58,7 @@ class Client:
             self.log.exception(f"Error checking Bucket: {error}")
             raise IOError(f"Error checking Bucket: {error}")
 
-    async def create_bucket(self, bucket_name):
+    async def create_gcs_bucket(self, bucket_name):
         try:
             if not bucket_name:
                 raise ValueError("Bucket name cannot be empty")
@@ -136,17 +139,26 @@ class Client:
             self.log.exception(f"Error creating schedule: {str(e)}")
             raise Exception(f"Error creating schedule: {str(e)}")
     
-    async def create(self, input_data):
+    async def create_job_schedule(self, input_data):
         try:
             job = DescribeVertexJob(**input_data)
             if await self.check_bucket_exists(VERTEX_STORAGE_BUCKET):
                 print("The bucket exists")
             else:
-                await self.create_bucket(VERTEX_STORAGE_BUCKET)
+                await self.create_gcs_bucket(VERTEX_STORAGE_BUCKET)
                 print("The bucket is created")
             
             file_path = await self.upload_to_gcs(VERTEX_STORAGE_BUCKET, job.input_filename)
             res = await self.create_schedule(job, file_path)
+            return res
+        except Exception as e:
+            return {"error": str(e)}
+
+
+    async def create_new_bucket(self, input_data):
+        try:
+            data = DescribeBucketName(**input_data)
+            res = await self.create_gcs_bucket(data.bucket_name)
             return res
         except Exception as e:
             return {"error": str(e)}

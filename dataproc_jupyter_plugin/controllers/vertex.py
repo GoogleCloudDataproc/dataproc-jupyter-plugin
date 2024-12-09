@@ -31,8 +31,24 @@ class CreateController(APIHandler):
                 client = vertex.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                result = await client.create(input_data)
+                result = await client.create_job_schedule(input_data)
                 self.finish(json.dumps(result))
         except Exception as e:
             self.log.exception(f"Error creating job schedule: {str(e)}")
+            self.finish({"error": str(e)})
+
+
+class CreateNewBucketController(APIHandler):
+    @tornado.web.authenticated
+    async def post(self):
+        try:
+            input_data = self.get_json_body()
+            async with aiohttp.ClientSession() as client_session:
+                client = vertex.Client(
+                    await credentials.get_cached(), self.log, client_session
+                )
+                result = await client.create_new_bucket(input_data)
+                self.finish(json.dumps(result))
+        except Exception as e:
+            self.log.exception(f"Error creating a new bucket: {str(e)}")
             self.finish({"error": str(e)})

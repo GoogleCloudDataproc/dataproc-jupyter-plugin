@@ -211,6 +211,7 @@ def setup_handlers(web_app):
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
         "api/vertex/createJobScheduler": vertex.CreateController,
+        "api/vertex/createNewBucket": vertex.CreateNewBucketController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)
