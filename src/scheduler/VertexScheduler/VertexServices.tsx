@@ -92,6 +92,37 @@ export class VertexServices {
         }
     };
 
+    static serviceAccountAPIService = async (
+        setServiceAccountList: (value: string[]) => void,
+    ) => {
+        try {
+            const formattedResponse: any = await requestAPI(`api/iam/listServiceAccount`);
+            if (formattedResponse.length === 0) {
+                // Handle the case where the list is empty
+                toast.error(
+                    'No service accounts',
+                    toastifyCustomStyle
+                );
+            } else {
+                let serviceAccountList: string[] = [];
+                formattedResponse.forEach((data: { name: string; }) => {
+                    serviceAccountList.push(data.name);
+                });
+                serviceAccountList.sort();
+                setServiceAccountList(serviceAccountList);
+            }
+        } catch (error) {
+            DataprocLoggingService.log(
+                'Error listing service accounts',
+                LOG_LEVEL.ERROR
+            );
+            // toast.error(
+            //     `Failed to fetch service accounts list`,
+            //     toastifyCustomStyle
+            // );
+        }
+    };
+
     static primaryNetworkAPIService = async (
         setPrimaryNetworkList: (value: string[]) => void,
     ) => {
