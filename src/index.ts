@@ -181,10 +181,10 @@ const extension: JupyterFrontEndPlugin<void> = {
 
       let bigqueryDatasetsResponse;
       const credentials = await authApi();
-      if (credentials && credentials?.project_id) {
+      if (credentials?.project_id) {
         bigqueryDatasetsResponse =
           await BigQueryService.listBigQueryDatasetsAPIService(
-            credentials?.project_id
+            credentials.project_id
           );
       }
 
@@ -193,88 +193,67 @@ const extension: JupyterFrontEndPlugin<void> = {
       const dataCatalogResponse =
         await BigQueryService.getBigQuerySearchCatalogAPIService();
 
-      if (
-        dataprocClusterResponse?.error &&
-        dataprocClusterResponse?.error?.message.includes(
-          'Cloud Dataproc API has not been used in project'
-        )
-      ) {
-        Notification.error(`The Cloud Dataproc API is not enabled.`, {
-          actions: [
-            {
-              label: 'Enable',
-              callback: () =>
-                window.open(
-                  'https://console.cloud.google.com/apis/library/dataproc.googleapis.com',
-                  '_blank'
-                ),
-              displayType: 'link'
-            }
-          ],
-          autoClose: false
-        });
-      }
-      if (
-        bigqueryDatasetsResponse?.error &&
-        bigqueryDatasetsResponse?.error.includes('has not enabled BigQuery')
-      ) {
-        Notification.error(`The BigQuery API is not enabled.`, {
-          actions: [
-            {
-              label: 'Enable',
-              callback: () =>
-                window.open(
-                  'https://console.cloud.google.com/apis/library/bigquery.googleapis.com',
-                  '_blank'
-                ),
-              displayType: 'link'
-            }
-          ],
-          autoClose: false
-        });
-      }
-      if (
-        composerListResponse['Error fetching environments list'] &&
-        composerListResponse['Error fetching environments list'].includes(
-          'Cloud Composer API has not been used in project'
-        )
-      ) {
-        Notification.error(`The Cloud Composer API is not enabled.`, {
-          actions: [
-            {
-              label: 'Enable',
-              callback: () =>
-                window.open(
-                  'https://console.cloud.google.com/apis/library/composer.googleapis.com',
-                  '_blank'
-                ),
-              displayType: 'link'
-            }
-          ],
-          autoClose: false
-        });
-      }
-      if (
-        dataCatalogResponse?.error &&
-        dataCatalogResponse?.error.includes(
-          'Google Cloud Data Catalog API has not been used in project'
-        )
-      ) {
-        Notification.error(`Google Cloud Data Catalog API is not enabled.`, {
-          actions: [
-            {
-              label: 'Enable',
-              callback: () =>
-                window.open(
-                  'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com',
-                  '_blank'
-                ),
-              displayType: 'link'
-            }
-          ],
-          autoClose: false
-        });
-      }
+      const apiChecks = [
+        {
+          response: dataprocClusterResponse,
+          errorKey: 'error.message',
+          errorMessage: 'Cloud Dataproc API has not been used in project',
+          notificationMessage: 'The Cloud Dataproc API is not enabled.',
+          enableLink:
+            'https://console.cloud.google.com/apis/library/dataproc.googleapis.com'
+        },
+        {
+          response: bigqueryDatasetsResponse,
+          errorKey: 'error',
+          errorMessage: 'has not enabled BigQuery',
+          notificationMessage: 'The BigQuery API is not enabled.',
+          enableLink:
+            'https://console.cloud.google.com/apis/library/bigquery.googleapis.com'
+        },
+        {
+          response: composerListResponse,
+          errorKey: 'Error fetching environments list',
+          errorMessage: 'Cloud Composer API has not been used in project',
+          notificationMessage: 'The Cloud Composer API is not enabled.',
+          enableLink:
+            'https://console.cloud.google.com/apis/library/composer.googleapis.com'
+        },
+        {
+          response: dataCatalogResponse,
+          errorKey: 'error',
+          errorMessage:
+            'Google Cloud Data Catalog API has not been used in project',
+          notificationMessage: 'Google Cloud Data Catalog API is not enabled.',
+          enableLink:
+            'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com'
+        }
+      ];
+
+      apiChecks.forEach(
+        ({
+          response,
+          errorKey,
+          errorMessage,
+          notificationMessage,
+          enableLink
+        }) => {
+          const errorValue = errorKey
+            .split('.')
+            .reduce((acc, key) => acc?.[key], response);
+          if (errorValue && errorValue.includes(errorMessage)) {
+            Notification.error(notificationMessage, {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () => window.open(enableLink, '_blank'),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          }
+        }
+      );
     };
 
     await checkAllApisEnabled();
