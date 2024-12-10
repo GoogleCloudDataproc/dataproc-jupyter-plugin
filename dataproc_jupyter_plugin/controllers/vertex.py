@@ -135,3 +135,22 @@ class UpdateScheduleController(APIHandler):
         except Exception as e:
             self.log.exception(f"Error updating the schedule: {str(e)}")
             self.finish({"error": str(e)})
+
+
+class GetScheduleController(APIHandler):
+    @tornado.web.authenticated
+    async def get(self):
+        """Get the schedule"""
+        try:
+            region_id = self.get_argument("region_id")
+            schedule_id = self.get_argument("schedule_id")
+            async with aiohttp.ClientSession() as client_session:
+                client = vertex.Client(
+                    await credentials.get_cached(), self.log, client_session
+                )
+
+                resp = await client.get_schedule(region_id, schedule_id)
+                self.finish(json.dumps(resp))
+        except Exception as e:
+            self.log.exception(f"Error getting the schedule: {str(e)}")
+            self.finish({"error": str(e)})
