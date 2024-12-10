@@ -35,6 +35,12 @@ class Client:
         self.region_id = credentials["region_id"]
         self.client_session = client_session
 
+    def create_headers(self):
+        return {
+            "Content-Type": CONTENT_TYPE,
+            "Authorization": f"Bearer {self._access_token}",
+        }
+
     async def list_region(self):
         try:
             regions = []
@@ -96,12 +102,12 @@ class Client:
             self.log.exception(f"Error fetching sub network: {str(e)}")
             return {"Error fetching sub network": str(e)}
 
-    async def get_shared_network(self):
+    async def get_shared_network(self, project_id, region_id):
         try:
             shared_networks = []
             client = compute_v1.SubnetworksClient()
             request = compute_v1.ListUsableSubnetworksRequest(
-                project=self.project_id,
+                project=project_id,
             )
             response = client.list_usable(request=request)
             for item in response:
@@ -117,3 +123,28 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error fetching shared network: {str(e)}")
             return {"Error fetching network shared from host": str(e)}
+
+
+    async def get_xpn_host(self):
+        try:
+            res = {}
+            api_endpoint = f"https://compute.googleapis.com/compute/v1/projects/{self.project_id}/getXpnHost"
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return res
+                    else:
+                        res["name"]: resp.get(name)
+                        return res
+                else:
+                    self.log.exception("Error getting xpn host")
+                    raise Exception(
+                        f"Error getting the xpn host: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error getting xpn host: {str(e)}")
+            return {"Error getting xpn host": str(e)}
