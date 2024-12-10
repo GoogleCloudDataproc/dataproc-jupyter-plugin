@@ -51,9 +51,12 @@ class Client:
         try:
             if not bucket_name:
                 raise ValueError("Bucket name cannot be empty")
+            cloud_storage_buckets = []
             storage_client = storage.Client()
             buckets = storage_client.list_buckets()
-            return bucket_name in buckets
+            for bucket in buckets:
+                cloud_storage_buckets.append(bucket.name)
+            return bucket_name in cloud_storage_buckets
         except Exception as error:
             self.log.exception(f"Error checking Bucket: {error}")
             raise IOError(f"Error checking Bucket: {error}")
