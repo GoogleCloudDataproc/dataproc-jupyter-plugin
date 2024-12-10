@@ -103,7 +103,7 @@ class Client:
                 "maxRunCount": job.max_run_count,
                 "maxConcurrentRunCount": "1",
                 "createNotebookExecutionJobRequest": {
-                    "parent": f"projects/{self.project_id}/locations/{sef.region_id}",
+                    "parent": f"projects/{self.project_id}/locations/{self.region_id}",
                     "notebookExecutionJob": {
                         "displayName": job.display_name,
                         "labels": job.parameters,
