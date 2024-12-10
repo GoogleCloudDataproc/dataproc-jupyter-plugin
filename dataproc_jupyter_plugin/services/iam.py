@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import proto
+
 import google.oauth2.credentials as oauth2
 from google.cloud import iam_admin_v1
 from google.cloud.iam_admin_v1 import types
