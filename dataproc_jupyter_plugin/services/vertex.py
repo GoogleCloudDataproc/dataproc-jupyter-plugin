@@ -61,10 +61,16 @@ class Client:
                         schedule_list = []
                         schedules = resp.get("schedules")
                         for schedule in schedules:
+                            max_run_count = schedule.get("maxRunCount")
+                            cron = schedule.get("cron")
+                            if max_run_count == "1" and cron.split(' ', 1)[1] == "* * * * *":
+                                schedule_value = "run once"
+                            else:
+                                schedule_value = get_description(cron)
                             formatted_schedule = {
                                 "name": schedule.get("name"),
                                 "displayName": schedule.get("displayName"),
-                                "schedule": get_description(schedule.get("cron")),
+                                "schedule": schedule_value,
                                 "status": schedule.get("state"),
                             }
                             schedule_list.append(formatted_schedule)
