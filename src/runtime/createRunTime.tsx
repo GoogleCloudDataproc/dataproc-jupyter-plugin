@@ -1447,7 +1447,7 @@ function CreateRunTime({
                               handleSubNetworkChange(val)
                             }
                             renderInput={params => (
-                              <TextField {...params} label="subnetwork" />
+                              <TextField {...params} label="subnetwork*" />
                             )}
                           />
                         </div>
