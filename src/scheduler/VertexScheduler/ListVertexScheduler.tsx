@@ -490,7 +490,7 @@ function listVertexScheduler({
                 onCancel={() => handleCancelDelete()}
                 onDelete={() => handleDeleteScheduler()}
                 deletePopupOpen={deletePopupOpen}
-                DeleteMsg={`This will delete ${uniqueScheduleId} and cannot be undone.`}
+                DeleteMsg={`This will delete ${scheduleDisplayName} and cannot be undone.`}
                 deletingSchedule={deletingSchedule}
               />
             )}
