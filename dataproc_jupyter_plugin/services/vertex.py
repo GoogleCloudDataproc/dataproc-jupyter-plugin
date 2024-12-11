@@ -63,7 +63,7 @@ class Client:
                         for schedule in schedules:
                             max_run_count = schedule.get("maxRunCount")
                             cron = schedule.get("cron")
-                            if max_run_count == "1" and cron.split(' ', 1)[1] == "* * * * *":
+                            if max_run_count == "1" and cron.split(' ', 1)[1] == "* * * * *" or "* * * *":
                                 schedule_value = "run once"
                             else:
                                 schedule_value = get_description(cron)
