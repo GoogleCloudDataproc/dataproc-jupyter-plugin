@@ -199,18 +199,28 @@ class NotebookButtonExtensionPoint implements IDisposable {
     ) as HTMLElement;
 
     if (kernelStatusValue && kernelStatusLabel) {
-      kernelStatusLabel.textContent = this.context.sessionContext.kernelDisplayName.includes('Local') ||
-      this.context.sessionContext.kernelDisplayName.includes('No Kernel')
-        ? ''
-        : '|';
-      kernelStatusValue.textContent =
-        this.context.sessionContext.kernelDisplayName.includes('Local')
+      kernelStatusLabel.textContent =
+        this.context.sessionContext.kernelDisplayName.includes('Local') ||
+        this.context.sessionContext.kernelDisplayName.includes('No Kernel')
           ? ''
-          : status === 'idle'
-          ? status.charAt(0).toUpperCase() + status.slice(1) + ' (Ready)'
-          : status === 'busy'
-          ? status.charAt(0).toUpperCase() + status.slice(1) + ' (Executing)'
-          : status.charAt(0).toUpperCase() + status.slice(1);
+          : '|';
+
+      let displayStatus = '';
+      if (!this.context.sessionContext.kernelDisplayName.includes('Local')) {
+        switch (status) {
+          case 'idle':
+            displayStatus = 'Idle (Ready)';
+            break;
+          case 'busy':
+            displayStatus = 'Busy (Executing)';
+            break;
+          default:
+            displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+            break;
+        }
+      }
+
+      kernelStatusValue.textContent = displayStatus;
       kernelStatusValue.style.color = color;
       kernelStatusValue.style.marginRight = '5px';
     }
