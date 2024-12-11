@@ -17,12 +17,10 @@ import aiohttp
 from google.cloud import storage
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
-    VERTEX_STORAGE_BUCKET
+    VERTEX_STORAGE_BUCKET,
 )
-from dataproc_jupyter_plugin.models.models import (
-    DescribeVertexJob,
-    DescribeBucketName
-)
+from dataproc_jupyter_plugin.models.models import DescribeVertexJob, DescribeBucketName
+
 
 class Client:
     client_session = aiohttp.ClientSession()
@@ -72,7 +70,7 @@ class Client:
             raise IOError(f"Error in creating Bucket: {error}")
 
     async def upload_to_gcs(self, bucket_name, file_path, job_name):
-        input_notebook = file_path.split('/')[-1]
+        input_notebook = file_path.split("/")[-1]
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
 
@@ -84,19 +82,26 @@ class Client:
         # uploading json file containing the input file path
         json_blob_name = f"{job_name}/{job_name}.json"
         json_blob = bucket.blob(json_blob_name)
-        json_blob.upload_from_string(blob_name)
+        json_blob.upload_from_string(f"gs://{bucket_name}/{blob_name}")
 
         self.log.info(f"File {input_notebook} uploaded to gcs successfully")
         return blob_name
 
-    async def create_schedule(self, job, file_path):
+    async def create_schedule(self, job, file_path, bucket_name):
         try:
-            schedule_value = "* * * * *" if job.schedule_value == "" else job.schedule_value
+            schedule_value = (
+                "* * * * *" if job.schedule_value == "" else job.schedule_value
+            )
+            cron = (
+                schedule_value
+                if job.time_zone == "UTC"
+                else f"TZ={job.time_zone} {schedule_value}"
+            )
             api_endpoint = f"https://{self.region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.region_id}/schedules"
             headers = self.create_headers()
             payload = {
                 "displayName": job.display_name,
-                "cron": f"TZ={job.time_zone} {schedule_value}",
+                "cron": cron,
                 "maxRunCount": job.max_run_count,
                 "maxConcurrentRunCount": "1",
                 "createNotebookExecutionJobRequest": {
@@ -108,7 +113,7 @@ class Client:
                             "machineSpec": {
                                 "machineType": job.machine_type,
                                 "acceleratorType": job.accelerator_type,
-                                "acceleratorCount": job.accelerator_count
+                                "acceleratorCount": job.accelerator_count,
                             },
                             "networkSpec": {
                                 "enableInternetAccess": "TRUE",
@@ -116,14 +121,12 @@ class Client:
                                 "subnetwork": job.subnetwork,
                             },
                         },
-                        "gcsNotebookSource": {
-                            "uri": file_path
-                        },
+                        "gcsNotebookSource": {"uri": f"gs://{bucket_name}/{file_path}"},
                         "gcsOutputUri": job.cloud_storage_bucket,
                         "serviceAccount": job.service_account,
-                        "kernelName": job.kernel_name
-                    }
-                }
+                        "kernelName": job.kernel_name,
+                    },
+                },
             }
             if job.start_time:
                 payload["startTime"]: job.start_time
@@ -144,7 +147,7 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error creating schedule: {str(e)}")
             raise Exception(f"Error creating schedule: {str(e)}")
-    
+
     async def create_job_schedule(self, input_data):
         try:
             job = DescribeVertexJob(**input_data)
@@ -153,13 +156,14 @@ class Client:
             else:
                 await self.create_gcs_bucket(VERTEX_STORAGE_BUCKET)
                 print("The bucket is created")
-            
-            file_path = await self.upload_to_gcs(VERTEX_STORAGE_BUCKET, job.input_filename, job.display_name)
-            res = await self.create_schedule(job, file_path)
+
+            file_path = await self.upload_to_gcs(
+                VERTEX_STORAGE_BUCKET, job.input_filename, job.display_name
+            )
+            res = await self.create_schedule(job, file_path, VERTEX_STORAGE_BUCKET)
             return res
         except Exception as e:
             return {"error": str(e)}
-
 
     async def create_new_bucket(self, input_data):
         try:

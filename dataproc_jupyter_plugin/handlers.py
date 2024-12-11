@@ -37,7 +37,7 @@ from dataproc_jupyter_plugin.controllers import (
     composer,
     dataproc,
     executor,
-    vertex
+    vertex,
 )
 
 _region_not_set_error = """GCP region not set in gcloud.
