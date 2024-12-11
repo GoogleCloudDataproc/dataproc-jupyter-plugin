@@ -369,4 +369,37 @@ export class VertexServices {
       };
 
 
+    static editVertexSchedulerService = async (
+        scheduleId: string,
+        region: string,
+        setInputNotebookFilePath: (value: string) => void,
+        setEditNotebookLoading: (value: string) => void,
+    ) => {
+        setEditNotebookLoading(scheduleId);
+        try {
+            const serviceURL = `api/vertex/getSchedule`;
+            const formattedResponse: any = await requestAPI(serviceURL + `?region_id=${region}&schedule_id=${scheduleId}`
+            );
+            if (formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.hasOwnProperty("gcsNotebookSource")) {
+                setInputNotebookFilePath(formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.gcsNotebookSource.uri);
+            } else {
+                setEditNotebookLoading('');
+                toast.error(
+                    `File path note found`,
+                    toastifyCustomStyle
+                );
+            }
+
+
+            // Error to display if there is not file path
+        } catch (reason) {
+            setEditNotebookLoading('');
+            toast.error(
+                `Error on POST {dataToSend}.\n${reason}`,
+                toastifyCustomStyle
+            );
+        }
+    };
+
+
 }

@@ -34,7 +34,7 @@ import EditIconDisable from '../../../style/icons/scheduler_edit_dag.svg';
 import EditNotebookIcon from '../../../style/icons/scheduler_edit_calendar.svg';
 import DeletePopup from '../../utils/deletePopup';
 import triggerIcon from '../../../style/icons/scheduler_trigger.svg';
-// import { PLUGIN_ID } from '../../utils/const';
+import { PLUGIN_ID } from '../../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { VertexServices } from './VertexServices';
 import { RegionDropdown } from '../../controls/RegionDropdown';
@@ -79,27 +79,24 @@ function listVertexScheduler({
   settingRegistry: ISettingRegistry;
 
 }) {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dagList, setDagList] = useState<IDagList[]>([]);
   const data = dagList;
-  const [deletePopupOpen,setDeletePopupOpen] = useState(false);
-  const [editDagLoading,
-    //setEditDagLoading
-  ] = useState('');
-  // const [inputNotebookFilePath, setInputNotebookFilePath] = useState('');
-  const [editNotebookLoading,
-    //setEditNotebookLoading
-  ] = useState('');
-  const [deletingSchedule, setDeletingSchedule] = useState(false);
-  const [isPreviewEnabled,
-    //setIsPreviewEnabled
-  ] = useState(false);
-  const [nextPageFlag, setNextPageFlag] = useState('');
+  const [deletePopupOpen,setDeletePopupOpen] = useState<boolean>(false);
+  // const [editDagLoading,
+  //   //setEditDagLoading
+  // ] = useState('');
+  const [inputNotebookFilePath, setInputNotebookFilePath] = useState<string>('');
+  const [editNotebookLoading, setEditNotebookLoading] = useState<string>('');
+  const [deletingSchedule, setDeletingSchedule] = useState<boolean>(false);
+  const [isPreviewEnabled, setIsPreviewEnabled] = useState<boolean>(false);
+  console.log(isPreviewEnabled)
+  const [nextPageFlag, setNextPageFlag] = useState<string>('');
   console.log(nextPageFlag);
-  const [region, setRegion] = useState('');
-  const [projectId, setProjectId] = useState('');
-  const [uniqueScheduleId, setUniqueScheduleId] = useState('');
-  const [scheduleDisplayName, setScheduleDisplayName] = useState('');
+  const [region, setRegion] = useState<string>('');
+  const [projectId, setProjectId] = useState<string>('');
+  const [uniqueScheduleId, setUniqueScheduleId] = useState<string>('');
+  const [scheduleDisplayName, setScheduleDisplayName] = useState<string>('');
 
   const columns = React.useMemo(
     () => [
@@ -216,6 +213,22 @@ function listVertexScheduler({
     setDeletingSchedule(false);
   };
 
+  /**
+  * Edit schedule
+  * @param {}
+  */
+  const handleEditVertex = async (event: React.MouseEvent, displayName: string) => {
+    const scheduleId = event.currentTarget.getAttribute('data-scheduleId');
+    if (scheduleId !== null) {
+      await VertexServices.editVertexSchedulerService(
+        scheduleId,
+        region,
+        setInputNotebookFilePath,
+        setEditNotebookLoading,
+      );
+    }
+  };
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -231,7 +244,7 @@ function listVertexScheduler({
     state: { pageIndex, pageSize }
   } = useTable(
     //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
-    { columns, data, autoResetPage: false, initialState: { pageSize: 2 } },
+    { columns, data, autoResetPage: false, initialState: { pageSize: 100 } },
     usePagination
   );
 
@@ -275,7 +288,7 @@ function listVertexScheduler({
             className="icon-white logo-alignment-style"
           />
         </div>
-        {data.jobid === editDagLoading ? (
+        {/* {data.jobid === editDagLoading ? (
           <div className="icon-buttons-style">
             <CircularProgress
               size={18}
@@ -283,7 +296,7 @@ function listVertexScheduler({
               data-testid="loader"
             />
           </div>
-        ) : (
+        ) : ( */}
           <div
             role="button"
             className="icon-buttons-style"
@@ -296,9 +309,10 @@ function listVertexScheduler({
               className="icon-white logo-alignment-style"
             />
           </div>
-        )}
-        {isPreviewEnabled &&
-          (data.jobid === editNotebookLoading ? (
+        {/* )} */}
+        {
+        // isPreviewEnabled &&
+          (data.name === editNotebookLoading ? (
             <div className="icon-buttons-style">
               <CircularProgress
                 size={18}
@@ -311,8 +325,8 @@ function listVertexScheduler({
               role="button"
               className="icon-buttons-style"
               title="Edit Notebook"
-              data-jobid={data.jobid}
-            //onClick={e => handleEditNotebook(e)}
+              data-scheduleId={data.name}
+              onClick={e => handleEditVertex(e, data.displayName)}
             >
               <iconEditDag.react
                 tag="div"
@@ -361,30 +375,34 @@ function listVertexScheduler({
     }
   };
 
-  // const checkPreviewEnabled = async () => {
-  //   const settings = await settingRegistry.load(PLUGIN_ID);
+  const checkPreviewEnabled = async () => {
+    const settings = await settingRegistry.load(PLUGIN_ID);
 
-  //   // The current value of whether or not preview features are enabled.
-  //   let previewEnabled = settings.get('previewEnabled').composite as boolean;
-  //   setIsPreviewEnabled(previewEnabled);
-  // };
+    // The current value of whether or not preview features are enabled.
+    let previewEnabled = settings.get('previewEnabled').composite as boolean;
+    setIsPreviewEnabled(previewEnabled);
+  };
 
-  // const openEditDagNotebookFile = async () => {
-  //   let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-  //   const openNotebookFile: any = await app.commands.execute('docmanager:open', {
-  //     path: filePath
-  //   });
-  //   setInputNotebookFilePath('');
-  //   if (openNotebookFile) {
-  //     setEditNotebookLoading('');
-  //   }
-  // };
+  const openEditDagNotebookFile = async () => {
+    let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
+    const openNotebookFile: any = await app.commands.execute('docmanager:open', {
+      path: filePath
+    });
+    setInputNotebookFilePath('');
+    if (openNotebookFile) {
+      setEditNotebookLoading('');
+    }
+  };
 
-  // useEffect(() => {
-  //   if (inputNotebookFilePath !== '') {
-  //     openEditDagNotebookFile();
-  //   }
-  // }, [inputNotebookFilePath]);
+  useEffect(() => {
+    if (inputNotebookFilePath !== '') {
+      openEditDagNotebookFile();
+    }
+  }, [inputNotebookFilePath]);
+
+  useEffect(() => {
+    checkPreviewEnabled();
+  }, [])
 
   useEffect(() => {
     if (region !== '') {
@@ -406,51 +424,6 @@ function listVertexScheduler({
       });
   }, [projectId])
 
-
-  // const checkPreviewEnabled = async () => {
-  //   const settings = await settingRegistry.load(PLUGIN_ID);
-
-  //   // The current value of whether or not preview features are enabled.
-  //   let previewEnabled = settings.get('previewEnabled').composite as boolean;
-  //   setIsPreviewEnabled(previewEnabled);
-  // };
-
-  // const openEditDagNotebookFile = async () => {
-  //   let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-  //   const openNotebookFile: any = await app.commands.execute('docmanager:open', {
-  //     path: filePath
-  //   });
-  //   setInputNotebookFilePath('');
-  //   if (openNotebookFile) {
-  //     setEditNotebookLoading('');
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   if (inputNotebookFilePath !== '') {
-  //     openEditDagNotebookFile();
-  //   }
-  // }, [inputNotebookFilePath]);
-
-  useEffect(() => {
-    if (region !== '') {
-      setIsLoading(true);
-      listDagInfoAPI();
-    }
-  }, [region]);
-
-  useEffect(() => {
-    authApi()
-      .then((credentials) => {
-        if (credentials && credentials?.region_id && credentials.project_id) {
-          setRegion(credentials.region_id);
-          setProjectId(credentials.project_id);
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, [projectId])
 
   return (
     <div>
@@ -499,7 +472,7 @@ function listVertexScheduler({
               tableDataCondition={tableDataCondition}
               fromPage="Vertex schedulers"
             />
-            {dagList.length > 1 && (
+            {dagList.length > 100 && (
               <PaginationView
                 pageSize={pageSize}
                 setPageSize={setPageSize}
