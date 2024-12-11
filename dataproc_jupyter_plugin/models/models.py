@@ -76,8 +76,8 @@ class DescribeVertexJob(BaseModel):
     service_account: str = None
     network: str = None
     subnetwork: str = None
-    start_time: str = None
-    end_time: str = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data):

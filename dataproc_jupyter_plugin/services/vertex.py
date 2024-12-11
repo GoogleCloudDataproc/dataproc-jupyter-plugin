@@ -71,19 +71,18 @@ class Client:
             self.log.exception(f"Error in creating Bucket: {error}")
             raise IOError(f"Error in creating Bucket: {error}")
 
-    async def upload_to_gcs(self, bucket_name, file_path):
+    async def upload_to_gcs(self, bucket_name, file_path, job_name):
         input_notebook = file_path.split('/')[-1]
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
-        folder_name = input_notebook.split('.')[0]
 
         # uploading the input file
-        blob_name = f"gs://{bucket_name}/{folder_name}/{input_notebook}"
+        blob_name = f"{job_name}/{input_notebook}"
         blob = bucket.blob(blob_name)
         blob.upload_from_filename(input_notebook)
 
         # uploading json file containing the input file path
-        json_blob_name = f"gs://{bucket_name}/{folder_name}/{folder_name}.json"
+        json_blob_name = f"{job_name}/{job_name}.json"
         json_blob = bucket.blob(json_blob_name)
         json_blob.upload_from_string(blob_name)
 
@@ -97,8 +96,6 @@ class Client:
             headers = self.create_headers()
             payload = {
                 "displayName": job.display_name,
-                "startTime": job.start_time,
-                "endTime": job.end_time,
                 "cron": f"TZ={job.time_zone} {schedule_value}",
                 "maxRunCount": job.max_run_count,
                 "maxConcurrentRunCount": "1",
@@ -114,7 +111,7 @@ class Client:
                                 "acceleratorCount": job.accelerator_count
                             },
                             "networkSpec": {
-                                "enableInternetAccess": True,
+                                "enableInternetAccess": "TRUE",
                                 "network": job.network,
                                 "subnetwork": job.subnetwork,
                             },
@@ -128,6 +125,11 @@ class Client:
                     }
                 }
             }
+            if job.start_time:
+                payload["startTime"]: job.start_time
+            if job.end_time:
+                payload["endTime"]: job.end_time
+
             async with self.client_session.post(
                 api_endpoint, headers=headers, json=payload
             ) as response:
@@ -135,8 +137,9 @@ class Client:
                     resp = await response.json()
                     return resp
                 else:
+                    self.log.exception("Error creating the schedule")
                     raise Exception(
-                        f"Error creating schedule"
+                        f"Error creating the schedule: {response.reason} {await response.text()}"
                     )
         except Exception as e:
             self.log.exception(f"Error creating schedule: {str(e)}")
@@ -151,7 +154,7 @@ class Client:
                 await self.create_gcs_bucket(VERTEX_STORAGE_BUCKET)
                 print("The bucket is created")
             
-            file_path = await self.upload_to_gcs(VERTEX_STORAGE_BUCKET, job.input_filename)
+            file_path = await self.upload_to_gcs(VERTEX_STORAGE_BUCKET, job.input_filename, job.display_name)
             res = await self.create_schedule(job, file_path)
             return res
         except Exception as e:
