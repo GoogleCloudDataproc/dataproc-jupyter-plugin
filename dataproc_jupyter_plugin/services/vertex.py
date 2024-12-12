@@ -103,7 +103,6 @@ class Client:
             payload = {
                 "displayName": job.display_name,
                 "cron": cron,
-                "maxRunCount": job.max_run_count,
                 "maxConcurrentRunCount": "1",
                 "createNotebookExecutionJobRequest": {
                     "parent": f"projects/{self.project_id}/locations/{self.region_id}",
@@ -137,6 +136,8 @@ class Client:
                 payload["startTime"]: job.start_time
             if job.end_time:
                 payload["endTime"]: job.end_time
+            if job.max_run_count:
+                payload["maxRunCount"]: job.max_run_count
 
             async with self.client_session.post(
                 api_endpoint, headers=headers, json=payload
