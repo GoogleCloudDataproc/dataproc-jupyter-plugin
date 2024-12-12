@@ -72,6 +72,7 @@ class Client:
                                 "displayName": schedule.get("displayName"),
                                 "schedule": schedule_value,
                                 "status": schedule.get("state"),
+                                "lastScheduledRunResponse": schedule.get("lastScheduledRunResponse")
                             }
                             schedule_list.append(formatted_schedule)
                         resp["schedules"] = schedule_list
