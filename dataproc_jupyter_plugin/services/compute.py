@@ -79,7 +79,7 @@ class Client:
             self.log.exception(f"Error fetching network: {str(e)}")
             return {"Error fetching network": str(e)}
 
-    async def get_subnetwork(self, region_id):
+    async def get_subnetwork(self, region_id, network_id):
         try:
             sub_networks = []
             client = compute_v1.SubnetworksClient()
@@ -89,13 +89,14 @@ class Client:
             )
             response = client.list(request=request)
             for item in response.items:
-                sub_networks.append(
-                    proto.Message.to_dict(
-                        item,
-                        use_integers_for_enums=False,
-                        preserving_proto_field_name=False,
+                if network_id in item.network:
+                    sub_networks.append(
+                        proto.Message.to_dict(
+                            item,
+                            use_integers_for_enums=False,
+                            preserving_proto_field_name=False,
+                        )
                     )
-                )
             return sub_networks
 
         except Exception as e:
@@ -111,13 +112,14 @@ class Client:
             )
             response = client.list_usable(request=request)
             for item in response:
-                shared_networks.append(
-                    proto.Message.to_dict(
-                        item,
-                        use_integers_for_enums=False,
-                        preserving_proto_field_name=False,
+                if region_id in item.subnetwork:
+                    shared_networks.append(
+                        proto.Message.to_dict(
+                            item,
+                            use_integers_for_enums=False,
+                            preserving_proto_field_name=False,
+                        )
                     )
-                )
             return shared_networks
 
         except Exception as e:

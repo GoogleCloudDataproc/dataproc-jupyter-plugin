@@ -60,11 +60,12 @@ class SubNetworkController(APIHandler):
         """Returns sub network"""
         try:
             region_id = self.get_argument("region_id")
+            network_id = self.get_argument("network_id")
             async with aiohttp.ClientSession() as client_session:
                 client = compute.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                sub_network = await client.get_subnetwork(region_id)
+                sub_network = await client.get_subnetwork(region_id, network_id)
                 self.finish(json.dumps(sub_network))
         except Exception as e:
             self.log.exception(f"Error fetching sub network: {str(e)}")
