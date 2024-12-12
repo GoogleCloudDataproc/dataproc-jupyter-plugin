@@ -63,7 +63,10 @@ class Client:
                         for schedule in schedules:
                             max_run_count = schedule.get("maxRunCount")
                             cron = schedule.get("cron")
-                            if max_run_count == "1" and cron.split(' ', 1)[1] == "* * * * *" or "* * * *":
+                            cron_value = (
+                                cron.split(" ", 1)[1] if ("TZ" in cron) else cron
+                            )
+                            if max_run_count == "1" and cron_value == "* * * * *":
                                 schedule_value = "run once"
                             else:
                                 schedule_value = get_description(cron)
@@ -72,7 +75,9 @@ class Client:
                                 "displayName": schedule.get("displayName"),
                                 "schedule": schedule_value,
                                 "status": schedule.get("state"),
-                                "lastScheduledRunResponse": schedule.get("lastScheduledRunResponse")
+                                "lastScheduledRunResponse": schedule.get(
+                                    "lastScheduledRunResponse"
+                                ),
                             }
                             schedule_list.append(formatted_schedule)
                         resp["schedules"] = schedule_list
@@ -89,7 +94,9 @@ class Client:
 
     async def pause_schedule(self, region_id, schedule_id):
         try:
-            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}:pause"
+            api_endpoint = (
+                f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}:pause"
+            )
 
             headers = self.create_headers()
             async with self.client_session.post(
@@ -110,7 +117,9 @@ class Client:
 
     async def resume_schedule(self, region_id, schedule_id):
         try:
-            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}:resume"
+            api_endpoint = (
+                f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}:resume"
+            )
 
             headers = self.create_headers()
             async with self.client_session.post(
@@ -131,7 +140,9 @@ class Client:
 
     async def delete_schedule(self, region_id, schedule_id):
         try:
-            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}"
+            api_endpoint = (
+                f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}"
+            )
 
             headers = self.create_headers()
             async with self.client_session.delete(
@@ -152,7 +163,9 @@ class Client:
 
     async def get_schedule(self, region_id, schedule_id):
         try:
-            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}"
+            api_endpoint = (
+                f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}"
+            )
 
             headers = self.create_headers()
             async with self.client_session.get(
