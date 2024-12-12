@@ -388,12 +388,12 @@ export class VertexServices {
                     setNextPageFlag
                 );
             } else {
-                DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
-                toast.error('Failed to fetch Update api');
+                DataprocLoggingService.log('Error in pausing schedule', LOG_LEVEL.ERROR);
+                toast.error('Failed to pause schedule');
             }
         } catch (error) {
-            DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
-            toast.error(`Failed to fetch Update api : ${error}`, toastifyCustomStyle);
+            DataprocLoggingService.log('Error in pausing schedule', LOG_LEVEL.ERROR);
+            toast.error(`Failed to pause schedule : ${error}`, toastifyCustomStyle);
         }
     };
 
@@ -422,12 +422,12 @@ export class VertexServices {
                     setNextPageFlag
                 );
             } else {
-                DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
-                toast.error('Failed to fetch Update api');
+                DataprocLoggingService.log('Error in resuming schedule', LOG_LEVEL.ERROR);
+                toast.error('Failed to resume schedule');
             }
         } catch (error) {
-            DataprocLoggingService.log('Error in Update api', LOG_LEVEL.ERROR);
-            toast.error(`Failed to fetch Update api : ${error}`, toastifyCustomStyle);
+            DataprocLoggingService.log('Error in resuming shedule', LOG_LEVEL.ERROR);
+            toast.error(`Failed to resume shedule : ${error}`, toastifyCustomStyle);
         }
     };
 
@@ -443,7 +443,7 @@ export class VertexServices {
             );
             if (data.name) {
                 toast.success(`${displayName} triggered successfully `, toastifyCustomStyle);
-            } 
+            }
             else {
                 toast.error(
                     `Failed to Trigger ${displayName}`,
@@ -468,7 +468,7 @@ export class VertexServices {
     ) => {
         try {
             const serviceURL = `api/vertex/deleteSchedule`;
-            const deleteResponse : DeleteSchedulerAPIResponse = await requestAPI(
+            const deleteResponse: DeleteSchedulerAPIResponse = await requestAPI(
                 serviceURL + `?region_id=${region}&schedule_id=${scheduleId}`, { method: 'DELETE' }
             );
             if (deleteResponse.done) {
@@ -518,7 +518,7 @@ export class VertexServices {
         } catch (reason) {
             setEditNotebookLoading('');
             toast.error(
-                `Error on POST {dataToSend}.\n${reason}`,
+                `Error in updating notebook.\n${reason}`,
                 toastifyCustomStyle
             );
         }
