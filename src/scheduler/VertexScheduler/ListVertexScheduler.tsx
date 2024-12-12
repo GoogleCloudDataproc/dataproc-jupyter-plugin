@@ -390,12 +390,12 @@ function listVertexScheduler({
       );
     } else {
       return (
-        <td {...cell.getCellProps()} className={cell.column.Header === 'Schedule' ? "clusters-table-data tab-description" : "clusters-table-data"}>
+        <td {...cell.getCellProps()} className={cell.column.Header === 'Schedule' ? "clusters-table-data table-cell-width" : "clusters-table-data"}>
           {
             cell.column.Header === 'Status' ?
               <>
                 <div className='execution-history-main-wrapper'>
-                  {cell.row.original.lastScheduledRunResponse.runResponse === 'OK' ? (cell.row.original.status === 'COMPLETED' ?
+                  {cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse === 'OK' ? (cell.row.original.status === 'COMPLETED' ?
                     <div>
                       <iconSuccess.react
                         tag="div"
@@ -404,9 +404,9 @@ function listVertexScheduler({
                     </div> : (cell.row.original.status === 'ACTIVE' ?
                       <iconActive.react
                         tag="div"
-                        title={cell.row.original.lastScheduledRunResponse.runResponse}
+                        title={cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
                         className="icon-white logo-alignment-style success_icon icon-size"
-                      /> : 
+                      /> :
                       <iconSuccess.react
                         tag="div"
                         title="Done !"
@@ -416,7 +416,7 @@ function listVertexScheduler({
                     : <div>
                       <iconFailed.react
                         tag="div"
-                        title={cell.row.original.lastScheduledRunResponse.runResponse}
+                        title={cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
                         className="icon-white logo-alignment-style success_icon icon-size"
                       />
                     </div>}
