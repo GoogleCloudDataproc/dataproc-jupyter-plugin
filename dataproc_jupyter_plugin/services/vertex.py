@@ -97,6 +97,7 @@ class Client:
                 if job.time_zone == "UTC"
                 else f"TZ={job.time_zone} {schedule_value}"
             )
+            machine_type = job.machine_type.split(" ", 1)[0]
             api_endpoint = f"https://{self.region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.region_id}/schedules"
             headers = self.create_headers()
             payload = {
@@ -111,7 +112,7 @@ class Client:
                         "labels": job.parameters,
                         "customEnvironmentSpec": {
                             "machineSpec": {
-                                "machineType": job.machine_type,
+                                "machineType": machine_type,
                                 "acceleratorType": job.accelerator_type,
                                 "acceleratorCount": job.accelerator_count,
                             },
