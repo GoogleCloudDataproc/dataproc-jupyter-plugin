@@ -38,16 +38,25 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_notebook_execution_jobs(self, region_id, job_id):
+    async def list_notebook_execution_jobs(self, region_id, schedule_id):
         try:
-            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs?notebookExecutionJob={job_id}&orderBy=createTime desc"
+            execution_jobs = []
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs?filter=schedule={schedule_id}&orderBy=createTime desc"
 
             headers = self.create_headers()
-            async with self.client_session.post(
+            async with self.client_session.get(
                 api_endpoint, headers=headers
             ) as response:
                 if response.status == 200:
-                    return await response.json()
+                    resp = await response.json()
+                    if not resp:
+                        return execution_jobs
+                    else:
+                        jobs = resp.get("notebookExecutionJobs")
+                        for job in jobs:
+                            if start_date == job.createTime.split("T", 1)[0]:
+                                execution_jobs.append(job)
+                        return execution_jobs
                 else:
                     self.log.exception("Error fetching notebook execution jobs")
                     raise Exception(
