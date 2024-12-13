@@ -134,12 +134,12 @@ class Client:
                     },
                 },
             }
-            if job.start_time:
-                payload["startTime"]: job.start_time
-            if job.end_time:
-                payload["endTime"]: job.end_time
             if job.max_run_count:
-                payload["maxRunCount"]: job.max_run_count
+                payload["maxRunCount"] = job.max_run_count
+            if job.start_time:
+                payload["startTime"] = job.start_time
+            if job.end_time:
+                payload["endTime"] = job.end_time
 
             async with self.client_session.post(
                 api_endpoint, headers=headers, json=payload
