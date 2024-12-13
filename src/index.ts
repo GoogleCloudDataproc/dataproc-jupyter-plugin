@@ -64,6 +64,10 @@ import * as path from 'path';
 import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
 import { BigQueryWidget } from './bigQuery/bigQueryWidget';
+import { RunTimeSerive } from './runtime/runtimeService';
+import { Notification } from '@jupyterlab/apputils';
+import { BigQueryService } from './bigQuery/bigQueryService';
+import { SchedulerService } from './scheduler/schedulerServices';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -163,11 +167,95 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', (message: string) => {
+      checkAllApisEnabled();
       if (bqFeature.enable_bigquery_integration) {
         loadBigQueryWidget('');
       }
       onPreviewEnabledChanged();
     });
+
+    const checkAllApisEnabled = async () => {
+      const dataprocClusterResponse =
+        await RunTimeSerive.listClustersDataprocAPIService();
+
+      let bigqueryDatasetsResponse;
+      const credentials = await authApi();
+      if (credentials?.project_id) {
+        bigqueryDatasetsResponse =
+          await BigQueryService.listBigQueryDatasetsAPIService(
+            credentials.project_id
+          );
+      }
+
+      const composerListResponse =
+        await SchedulerService.listComposersAPICheckService();
+      const dataCatalogResponse =
+        await BigQueryService.getBigQuerySearchCatalogAPIService();
+
+      const apiChecks = [
+        {
+          response: dataprocClusterResponse,
+          errorKey: 'error.message',
+          errorMessage: 'Cloud Dataproc API has not been used in project',
+          notificationMessage: 'The Cloud Dataproc API is not enabled.',
+          enableLink:
+            'https://console.cloud.google.com/apis/library/dataproc.googleapis.com'
+        },
+        {
+          response: bigqueryDatasetsResponse,
+          errorKey: 'error',
+          errorMessage: 'has not enabled BigQuery',
+          notificationMessage: 'The BigQuery API is not enabled.',
+          enableLink:
+            'https://console.cloud.google.com/apis/library/bigquery.googleapis.com'
+        },
+        {
+          response: composerListResponse,
+          errorKey: 'Error fetching environments list',
+          errorMessage: 'Cloud Composer API has not been used in project',
+          notificationMessage: 'The Cloud Composer API is not enabled.',
+          enableLink:
+            'https://console.cloud.google.com/apis/library/composer.googleapis.com'
+        },
+        {
+          response: dataCatalogResponse,
+          errorKey: 'error',
+          errorMessage:
+            'Google Cloud Data Catalog API has not been used in project',
+          notificationMessage: 'Google Cloud Data Catalog API is not enabled.',
+          enableLink:
+            'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com'
+        }
+      ];
+
+      apiChecks.forEach(
+        ({
+          response,
+          errorKey,
+          errorMessage,
+          notificationMessage,
+          enableLink
+        }) => {
+          const errorValue = errorKey
+            .split('.')
+            .reduce((acc, key) => acc?.[key], response);
+          if (errorValue && errorValue.includes(errorMessage)) {
+            Notification.error(notificationMessage, {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () => window.open(enableLink, '_blank'),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          }
+        }
+      );
+    };
+
+    await checkAllApisEnabled();
 
     /**
      * Handler for when the Jupyter Lab theme changes.
@@ -483,7 +571,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const openBigQueryNotebook = async () => {
       const template = {
-        url: 'https://raw.githubusercontent.com/GoogleCloudPlatform/dataproc-ml-quickstart-notebooks/main/public_datasets/bigframes/bigframes_quickstart.ipynb'
+        url: 'https://raw.githubusercontent.com/GoogleCloudPlatform/ai-ml-recipes/main/public_datasets/bigframes/bigframes_quickstart.ipynb'
       };
       await NotebookTemplateService.handleClickService(
         template,
