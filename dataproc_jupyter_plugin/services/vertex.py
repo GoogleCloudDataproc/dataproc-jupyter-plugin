@@ -98,6 +98,8 @@ class Client:
                 else f"TZ={job.time_zone} {schedule_value}"
             )
             machine_type = job.machine_type.split(" ", 1)[0]
+            labels = {param.split(":")[0]: param.split(":")[1] for param in job.parameters}
+
             api_endpoint = f"https://{self.region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.region_id}/schedules"
             headers = self.create_headers()
             payload = {
@@ -108,7 +110,7 @@ class Client:
                     "parent": f"projects/{self.project_id}/locations/{self.region_id}",
                     "notebookExecutionJob": {
                         "displayName": job.display_name,
-                        "labels": job.parameters,
+                        "labels": labels,
                         "customEnvironmentSpec": {
                             "machineSpec": {
                                 "machineType": machine_type,

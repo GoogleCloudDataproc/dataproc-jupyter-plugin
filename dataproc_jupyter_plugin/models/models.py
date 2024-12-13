@@ -72,7 +72,7 @@ class DescribeVertexJob(BaseModel):
     max_run_count: Optional[str] = None
     region: str = None
     cloud_storage_bucket: str = None
-    parameters: Optional[dict] = None
+    parameters: Optional[List[str]] = None
     service_account: str = None
     network: str = None
     subnetwork: str = None
