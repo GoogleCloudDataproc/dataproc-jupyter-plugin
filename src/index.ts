@@ -78,7 +78,6 @@ const iconPythonLogo = new LabIcon({
   svgstr: pythonLogo
 });
 
-
 const extension: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_ID,
   autoStart: true,
@@ -162,13 +161,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       panelDatasetExplorer: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
 
-
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', (message: string) => {
       if (bqFeature.enable_bigquery_integration) {
         loadBigQueryWidget('');
       }
-      onPreviewEnabledChanged()
+      onPreviewEnabledChanged();
     });
 
     /**
@@ -201,57 +199,78 @@ const extension: JupyterFrontEndPlugin<void> = {
      * as necessary.
      */
     const onPreviewEnabledChanged = async () => {
-      if (!bqFeature.enable_metastore_integration) {
-     // Preview was disabled, tear everything down.
+      const toBoolean = (value: any): boolean => {
+        if (value === true) return true;
+        if (value === false) return false;
+        if (typeof value === 'string') {
+          const lowercased = value.toLowerCase().trim();
+          return lowercased === 'true' || lowercased === '1';
+        }
+        return false;
+      };
+
+      // Convert configuration values to boolean
+      const enableBigQuery = toBoolean(bqFeature.enable_bigquery_integration);
+      const enableCloudStorage = toBoolean(
+        bqFeature.enable_cloud_storage_integration
+      );
+      const enableMetastore = toBoolean(bqFeature.enable_metastore_integration);
+      if (!enableMetastore) {
+        // Preview was disabled, tear everything down.
         panelDpms?.dispose();
         panelDpms = undefined;
+        console.log('dispose');
       }
-      if (!bqFeature.enable_cloud_storage_integration){
+      if (!enableCloudStorage) {
         panelGcs?.dispose();
         gcsDrive?.dispose();
         panelGcs = undefined;
         gcsDrive = undefined;
       }
-      if(!bqFeature.enable_bigquery_integration){
+      if (!enableBigQuery) {
         panelDatasetExplorer?.dispose();
         panelDatasetExplorer = undefined;
       }
-      if(bqFeature.enable_bigquery_integration || bqFeature.enable_cloud_storage_integration || bqFeature.enable_metastore_integration){
-          panelDpms = new Panel();
-          panelDpms.id = 'dpms-tab';
-          panelDpms.title.caption = 'Dataset Explorer - DPMS';
-          panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-          panelDatasetExplorer = new Panel();
-          panelDatasetExplorer.id = 'dataset-explorer-tab';
-          panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
-          panelDatasetExplorer.addWidget(
-            new BigQueryWidget(
-              app as JupyterLab,
-              settingRegistry as ISettingRegistry,
-              bqFeature.enable_bigquery_integration as boolean,
-              themeManager
-            )
-          );
-          panelGcs = new Panel();
-          panelGcs.id = 'GCS-bucket-tab';
-          panelGcs.title.caption = 'Google Cloud Storage';
-          gcsDrive = new GCSDrive();
-          documentManager.services.contents.addDrive(gcsDrive);
-          panelGcs.addWidget(
-            new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
-          );
-          onThemeChanged();
-          if(bqFeature.enable_bigquery_integration){
+      if (
+        bqFeature.enable_bigquery_integration ||
+        bqFeature.enable_cloud_storage_integration ||
+        bqFeature.enable_metastore_integration
+      ) {
+        panelDpms = new Panel();
+        panelDpms.id = 'dpms-tab';
+        panelDpms.title.caption = 'Dataset Explorer - DPMS';
+        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+        panelDatasetExplorer = new Panel();
+        panelDatasetExplorer.id = 'dataset-explorer-tab';
+        panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
+        panelDatasetExplorer.addWidget(
+          new BigQueryWidget(
+            app as JupyterLab,
+            settingRegistry as ISettingRegistry,
+            bqFeature.enable_bigquery_integration as boolean,
+            themeManager
+          )
+        );
+        panelGcs = new Panel();
+        panelGcs.id = 'GCS-bucket-tab';
+        panelGcs.title.caption = 'Google Cloud Storage';
+        gcsDrive = new GCSDrive();
+        documentManager.services.contents.addDrive(gcsDrive);
+        panelGcs.addWidget(
+          new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
+        );
+        onThemeChanged();
+        if (enableBigQuery) {
           app.shell.add(panelDatasetExplorer, 'left', { rank: 1000 });
-          }
-          if(bqFeature.enable_metastore_integration){
+        }
+        if (enableMetastore) {
           app.shell.add(panelDpms, 'left', { rank: 1001 });
-          }
-          if(bqFeature.enable_cloud_storage_integration){
+        }
+        if (enableCloudStorage) {
           app.shell.add(panelGcs, 'left', { rank: 1002 });
-          }
         }
       }
+    };
 
     onPreviewEnabledChanged();
     // END -- Enable Preview Features.
