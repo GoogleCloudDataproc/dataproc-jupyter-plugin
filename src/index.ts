@@ -288,8 +288,7 @@ const extension: JupyterFrontEndPlugin<void> = {
      */
     const onPreviewEnabledChanged = async () => {
       const toBoolean = (value: any): boolean => {
-        if (value === true) return true;
-        if (value === false) return false;
+        if (typeof value === 'boolean') return value;
         if (typeof value === 'string') {
           const lowercased = value.toLowerCase().trim();
           return lowercased === 'true' || lowercased === '1';
