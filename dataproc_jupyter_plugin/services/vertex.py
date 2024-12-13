@@ -54,7 +54,7 @@ class Client:
                     else:
                         jobs = resp.get("notebookExecutionJobs")
                         for job in jobs:
-                            if start_date == job.createTime.split("T", 1)[0]:
+                            if start_date.split("T", 1)[0] == job.createTime.split("T", 1)[0]:
                                 execution_jobs.append(job)
                         return execution_jobs
                 else:
