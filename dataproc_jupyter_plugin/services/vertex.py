@@ -38,7 +38,7 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_notebook_execution_jobs(self, region_id, schedule_id):
+    async def list_notebook_execution_jobs(self, region_id, schedule_id, start_date):
         try:
             execution_jobs = []
             api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs?filter=schedule={schedule_id}&orderBy=createTime desc"
