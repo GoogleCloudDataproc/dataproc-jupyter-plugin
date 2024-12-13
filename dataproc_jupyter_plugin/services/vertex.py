@@ -38,9 +38,9 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_notebook_execution_jobs(self, region_id):
+    async def list_notebook_execution_jobs(self, region_id, job_id):
         try:
-            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs?orderBy=createTime desc"
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs?notebookExecutionJob={job_id}&orderBy=createTime desc"
 
             headers = self.create_headers()
             async with self.client_session.post(
