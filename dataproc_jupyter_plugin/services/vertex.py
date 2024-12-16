@@ -77,7 +77,7 @@ class Client:
         # uploading the input file
         blob_name = f"{job_name}/{input_notebook}"
         blob = bucket.blob(blob_name)
-        blob.upload_from_filename(input_notebook)
+        blob.upload_from_filename(file_path)
 
         # uploading json file containing the input file path
         json_blob_name = f"{job_name}/{job_name}.json"
