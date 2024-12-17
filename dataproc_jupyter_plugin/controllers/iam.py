@@ -27,12 +27,11 @@ class ServiceAccountController(APIHandler):
     async def get(self):
         """Returns service accounts"""
         try:
-            async with aiohttp.ClientSession() as client_session:
-                client = iam.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                service_account = await client.list_service_account()
-                self.finish(json.dumps(service_account))
+            iam_admin_client = iam.Client(
+                await credentials.get_cached(), self.log
+            )
+            service_account = await iam_admin_client.list_service_account()
+            self.finish(json.dumps(service_account))
         except Exception as e:
             self.log.exception(f"Error fetching service accounts: {str(e)}")
             self.finish({"error": str(e)})

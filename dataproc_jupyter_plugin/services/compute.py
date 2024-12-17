@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import proto
+
 from google.cloud import compute_v1
+import google.oauth2.credentials as oauth2
+
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
@@ -44,11 +47,12 @@ class Client:
     async def list_region(self):
         try:
             regions = []
-            client = compute_v1.RegionsClient()
+            credentials = oauth2.Credentials(token=self._access_token)
+            compute_client = compute_v1.RegionsClient(credentials=credentials)
             request = compute_v1.ListRegionsRequest(
                 project=self.project_id,
             )
-            response = client.list(request=request)
+            response = compute_client.list(request=request)
             for item in response:
                 regions.append(item.name)
             return regions
@@ -60,11 +64,12 @@ class Client:
     async def get_network(self):
         try:
             networks = []
-            client = compute_v1.NetworksClient()
+            credentials = oauth2.Credentials(token=self._access_token)
+            compute_client = compute_v1.NetworksClient(credentials=credentials)
             request = compute_v1.ListNetworksRequest(
                 project=self.project_id,
             )
-            response = client.list(request=request)
+            response = compute_client.list(request=request)
             for item in response.items:
                 networks.append(
                     proto.Message.to_dict(
@@ -82,12 +87,13 @@ class Client:
     async def get_subnetwork(self, region_id, network_id):
         try:
             sub_networks = []
-            client = compute_v1.SubnetworksClient()
+            credentials = oauth2.Credentials(token=self._access_token)
+            compute_client = compute_v1.SubnetworksClient(credentials=credentials)
             request = compute_v1.ListSubnetworksRequest(
                 project=self.project_id,
                 region=region_id,
             )
-            response = client.list(request=request)
+            response = compute_client.list(request=request)
             for item in response.items:
                 if network_id in item.network:
                     sub_networks.append(
@@ -106,11 +112,12 @@ class Client:
     async def get_shared_network(self, project_id, region_id):
         try:
             shared_networks = []
-            client = compute_v1.SubnetworksClient()
+            credentials = oauth2.Credentials(token=self._access_token)
+            compute_client = compute_v1.SubnetworksClient(credentials=credentials)
             request = compute_v1.ListUsableSubnetworksRequest(
                 project=project_id,
             )
-            response = client.list_usable(request=request)
+            response = compute_client.list_usable(request=request)
             for item in response:
                 if region_id in item.subnetwork:
                     shared_networks.append(

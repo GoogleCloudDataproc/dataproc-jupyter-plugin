@@ -27,12 +27,11 @@ class RegionController(APIHandler):
     async def get(self):
         """Returns available regions"""
         try:
-            async with aiohttp.ClientSession() as client_session:
-                client = compute.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                regions = await client.list_region()
-                self.finish(json.dumps(regions))
+            compute_client = compute.Client(
+                await credentials.get_cached(), self.log, None
+            )
+            regions = await compute_client.list_region()
+            self.finish(json.dumps(regions))
         except Exception as e:
             self.log.exception(f"Error fetching regions: {str(e)}")
             self.finish({"error": str(e)})
@@ -43,12 +42,11 @@ class NetworkController(APIHandler):
     async def get(self):
         """Returns network"""
         try:
-            async with aiohttp.ClientSession() as client_session:
-                client = compute.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                network = await client.get_network()
-                self.finish(json.dumps(network))
+            compute_client = compute.Client(
+                await credentials.get_cached(), self.log, None
+            )
+            network = await compute_client.get_network()
+            self.finish(json.dumps(network))
         except Exception as e:
             self.log.exception(f"Error fetching network: {str(e)}")
             self.finish({"error": str(e)})
@@ -61,12 +59,11 @@ class SubNetworkController(APIHandler):
         try:
             region_id = self.get_argument("region_id")
             network_id = self.get_argument("network_id")
-            async with aiohttp.ClientSession() as client_session:
-                client = compute.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                sub_network = await client.get_subnetwork(region_id, network_id)
-                self.finish(json.dumps(sub_network))
+            compute_client = compute.Client(
+                await credentials.get_cached(), self.log, None
+            )
+            sub_network = await compute_client.get_subnetwork(region_id, network_id)
+            self.finish(json.dumps(sub_network))
         except Exception as e:
             self.log.exception(f"Error fetching sub network: {str(e)}")
             self.finish({"error": str(e)})
@@ -79,12 +76,11 @@ class SharedNetworkController(APIHandler):
         try:
             project_id = self.get_argument("project_id")
             region_id = self.get_argument("region_id")
-            async with aiohttp.ClientSession() as client_session:
-                client = compute.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                shared_network = await client.get_shared_network(project_id, region_id)
-                self.finish(json.dumps(shared_network))
+            compute_client = compute.Client(
+                await credentials.get_cached(), self.log, None
+            )
+            shared_network = await compute_client.get_shared_network(project_id, region_id)
+            self.finish(json.dumps(shared_network))
         except Exception as e:
             self.log.exception(f"Error fetching network shared from host: {str(e)}")
             self.finish({"error": str(e)})

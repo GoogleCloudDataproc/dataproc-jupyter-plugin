@@ -28,10 +28,10 @@ class CloudStorageController(APIHandler):
         """Returns cloud storage bucket"""
         try:
             async with aiohttp.ClientSession() as client_session:
-                client = storage.Client(
+                storage_client = storage.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                csb = await client.list_bucket()
+                csb = await storage_client.list_bucket()
                 self.finish(json.dumps(csb))
         except Exception as e:
             self.log.exception(f"Error fetching cloud storage bucket: {str(e)}")
