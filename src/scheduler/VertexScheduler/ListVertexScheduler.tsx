@@ -28,9 +28,11 @@ import {
   Button
 } from '@mui/material';
 import deleteIcon from '../../../style/icons/scheduler_delete.svg';
-import CompletedIcon from '../../../style/icons/dag_task_success_icon.svg'
-import FailedIcon from '../../../style/icons/dag_task_failed_icon.svg'
-import ActiveIcon from '../../../style/icons/cluster_running_icon.svg'
+import CompletedIcon from '../../../style/icons/dag_task_success_icon.svg';
+import FailedIcon from '../../../style/icons/list_error_icon.svg';
+import ActiveIcon from '../../../style/icons/list_active_icon.svg';
+import ListPauseIcon from '../../../style/icons/list_pause_icon.svg';
+import ListCompleteIcon from '../../../style/icons/list_completed_with_error.svg'
 import { LabIcon } from '@jupyterlab/ui-components';
 import playIcon from '../../../style/icons/scheduler_play.svg';
 import pauseIcon from '../../../style/icons/scheduler_pause.svg';
@@ -85,6 +87,16 @@ const iconActive = new LabIcon({
   svgstr: ActiveIcon
 });
 
+const iconListPause = new LabIcon({
+  name: 'launcher:list-pause-icon',
+  svgstr: ListPauseIcon
+});
+
+const iconListComplete = new LabIcon({
+  name: 'launcher:list-complete-icon',
+  svgstr: ListCompleteIcon
+});
+
 
 interface IDagList {
   displayName: string;
@@ -93,12 +105,15 @@ interface IDagList {
 }
 
 function listVertexScheduler({
+  region,
+  setRegion,
   app,
   settingRegistry,
 }: {
+  region: string;
+  setRegion: (value: string) => void;
   app: JupyterFrontEnd;
   settingRegistry: ISettingRegistry;
-
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dagList, setDagList] = useState<IDagList[]>([]);
@@ -114,10 +129,11 @@ function listVertexScheduler({
   console.log(isPreviewEnabled)
   const [nextPageFlag, setNextPageFlag] = useState<string>('');
   console.log(nextPageFlag);
-  const [region, setRegion] = useState<string>('');
+  // const [region, setRegion] = useState<string>('');
   const [projectId, setProjectId] = useState<string>('');
   const [uniqueScheduleId, setUniqueScheduleId] = useState<string>('');
   const [scheduleDisplayName, setScheduleDisplayName] = useState<string>('');
+  // const [vertexSelectedList, setVertexSelectedList] = useState('');
 
   const columns = React.useMemo(
     () => [
@@ -277,7 +293,7 @@ function listVertexScheduler({
         <div
           role="button"
           className="icon-buttons-style"
-          title={is_status_paused === "COMPLETED" ? "Completed" : (is_status_paused === "PAUSE" ? 'Unpause' : 'Pause')}
+          title={is_status_paused === "COMPLETED" ? "Completed" : (is_status_paused === "PAUSED" ? 'Resume' : 'Pause')}
           onClick={e => {
             is_status_paused !== "COMPLETED" && handleUpdateScheduler(data.name, is_status_paused, data.displayName)
           }}
@@ -383,44 +399,55 @@ function listVertexScheduler({
         <td
           {...cell.getCellProps()}
           className="clusters-table-data"
-        //onClick={() => handleDagIdSelection(composerSelectedList, cell.value)}
+          // onClick={() => handleDagIdSelection(cell.row.original, cell.value)}
         >
           {cell.value}
         </td>
       );
     } else {
+      const alignIcon = cell.row.original.status === 'ACTIVE' || cell.row.original.status === 'PAUSED' ||  cell.row.original.status === 'COMPLETED' && cell.row.original.lastScheduledRunResponse.runResponse !== 'OK';
+
       return (
         <td {...cell.getCellProps()} className={cell.column.Header === 'Schedule' ? "clusters-table-data table-cell-width" : "clusters-table-data"}>
           {
             cell.column.Header === 'Status' ?
               <>
                 <div className='execution-history-main-wrapper'>
-                  {cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse === 'OK' ? (cell.row.original.status === 'COMPLETED' ?
+                  {cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse ? (cell.row.original.status === 'COMPLETED' ? (cell.row.original.lastScheduledRunResponse.runResponse === 'OK' ? <div>
+                    <iconSuccess.react
+                      tag="div"
+                      title='Done !'
+                      className="icon-white logo-alignment-style success_icon icon-size"
+                    />
+                  </div> :
                     <div>
-                      <iconSuccess.react
+                      <iconListComplete.react
                         tag="div"
-                        className="icon-white logo-alignment-style success_icon icon-size"
+                        title={cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
+                        className="icon-white logo-alignment-style success_icon icon-size-status"
                       />
-                    </div> : (cell.row.original.status === 'ACTIVE' ?
+                    </div>)
+                    : (cell.row.original.status === 'ACTIVE' ?
                       <iconActive.react
                         tag="div"
                         title={cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
-                        className="icon-white logo-alignment-style success_icon icon-size"
+                        className="icon-white logo-alignment-style success_icon icon-size-status"
                       /> :
-                      <iconSuccess.react
-                        tag="div"
-                        title="Done !"
-                        className="icon-white logo-alignment-style success_icon icon-size"
-                      />
-                    ))
-                    : <div>
-                      <iconFailed.react
+                      <iconListPause.react
                         tag="div"
                         title={cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
                         className="icon-white logo-alignment-style success_icon icon-size"
                       />
+                    ))
+                    :
+                    <div>
+                      <iconFailed.react
+                        tag="div"
+                        title={!cell.row.original.lastScheduledRunResponse ? 'Not started' : cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
+                        className="icon-white logo-alignment-style success_icon icon-size"
+                      />
                     </div>}
-                  {cell.render('Cell')}
+                  <div className={alignIcon ? 'text-icon' : ''}>{cell.render('Cell')}</div>
                 </div>
 
               </>
@@ -460,6 +487,7 @@ function listVertexScheduler({
 
   useEffect(() => {
     checkPreviewEnabled();
+    window.scrollTo(0, 0)
   }, [])
 
   useEffect(() => {

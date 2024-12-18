@@ -20,7 +20,7 @@ import { DataprocWidget } from '../../controls/DataprocWidget';
 import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
 import ListVertexScheduler from '../VertexScheduler/ListVertexScheduler';
-import ExecutionHistory from '../executionHistory';
+// import ExecutionHistory from '../executionHistory';
 // import { scheduleMode } from '../../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
@@ -28,6 +28,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 const NotebookJobComponent = ({
     app,
     settingRegistry,
+    setExecutionPageFlag
     // composerSelectedFromCreate,
     // setCreateCompleted,
     // setJobNameSelected,
@@ -59,6 +60,7 @@ const NotebookJobComponent = ({
     app: JupyterLab;
     themeManager: IThemeManager;
     settingRegistry: ISettingRegistry;
+    setExecutionPageFlag: (value: boolean) => void;
     // composerSelectedFromCreate: string;
     // setCreateCompleted?: (value: boolean) => void;
     // setJobNameSelected?: (value: string) => void;
@@ -87,33 +89,19 @@ const NotebookJobComponent = ({
     // setEditMode?: (value: boolean) => void;
     // setIsLoadingKernelDetail?: (value: boolean) => void;
 }): React.JSX.Element => {
-    const [showExecutionHistory, setShowExecutionHistory] = useState(false);
-    const [composerName, 
-        //setComposerName
-        ] = useState('');
-    const [bucketName, 
-        //setBucketName
-        ] = useState('');
-    const [dagId, 
-        //setDagId
-        ] = useState('');
+    const [showExecutionHistory] = useState(false);
+    const [region, setRegion] = useState<string>('');
 
-    const handleBackButton = () => {
-        setShowExecutionHistory(false);
-    };
 
     return (
         <>
             {showExecutionHistory ? (
-                <ExecutionHistory
-                    composerName={composerName}
-                    dagId={dagId}
-                    handleBackButton={handleBackButton}
-                    bucketName={bucketName}
-                />
+                ''
             ) : (
                 <div>
                     <ListVertexScheduler
+                        region={region}
+                        setRegion={setRegion}
                         app={app}
                         settingRegistry={settingRegistry}
                     />
@@ -126,15 +114,18 @@ const NotebookJobComponent = ({
 export class NotebookJobs extends DataprocWidget {
     app: JupyterLab;
     settingRegistry: ISettingRegistry;
+    setExecutionPageFlag: (value: boolean) => void;
 
     constructor(
         app: JupyterLab,
         settingRegistry: ISettingRegistry,
         themeManager: IThemeManager,
+        setExecutionPageFlag: (value: boolean) => void
     ) {
         super(themeManager);
         this.app = app;
         this.settingRegistry = settingRegistry;
+        this.setExecutionPageFlag = setExecutionPageFlag
     }
     renderInternal(): React.JSX.Element {
         return (
@@ -142,6 +133,7 @@ export class NotebookJobs extends DataprocWidget {
                 app={this.app}
                 settingRegistry={this.settingRegistry}
                 themeManager={this.themeManager}
+                setExecutionPageFlag={this.setExecutionPageFlag}
             />
         );
     }

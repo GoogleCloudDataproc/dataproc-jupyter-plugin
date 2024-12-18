@@ -1,20 +1,3 @@
-/**
- * @license
- * Copyright 2023 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { toast } from 'react-toastify';
 import { JupyterLab } from '@jupyterlab/application';
 import { requestAPI } from '../../handler/handler';
@@ -65,6 +48,35 @@ interface TriggerSchedule {
 }
 
 export class VertexServices {
+    static getParentProjectAPIService = async (
+        setHostProject: (value: string) => void,
+    ) => {
+        try {
+            const formattedResponse: any = await requestAPI(`api/compute/getXpnHost`);
+            if (formattedResponse.length === 0) {
+                // Handle the case where the list is empty
+                toast.error(
+                    'No machine type in this region',
+                    toastifyCustomStyle
+                );
+                setHostProject('')
+            } else {
+                if (formattedResponse) {
+                    setHostProject(formattedResponse);
+                }
+            }
+        } catch (error) {
+            DataprocLoggingService.log(
+                'Error listing machine type',
+                LOG_LEVEL.ERROR
+            );
+            setHostProject('')
+            // toast.error(
+            //     `Failed to fetch machine type list`,
+            //     toastifyCustomStyle
+            // );
+        }
+    };
     static machineTypeAPIService = async (
         region: string,
         setMachineTypeList: (value: string[]) => void,
@@ -75,6 +87,7 @@ export class VertexServices {
             const formattedResponse: any = await requestAPI(`api/vertex/uiConfig?region_id=${region}`);
             if (formattedResponse.length === 0) {
                 // Handle the case where the list is empty
+                setMachineTypeList([])
                 toast.error(
                     'No machine type in this region',
                     toastifyCustomStyle
@@ -86,11 +99,12 @@ export class VertexServices {
             }
             setMachineTypeLoading(false)
         } catch (error) {
+            setMachineTypeList([])
+            setMachineTypeLoading(false)
             DataprocLoggingService.log(
                 'Error listing machine type',
                 LOG_LEVEL.ERROR
             );
-            setMachineTypeLoading(false)
             toast.error(
                 `Failed to fetch machine type list`,
                 toastifyCustomStyle
@@ -105,27 +119,19 @@ export class VertexServices {
         try {
             setCloudStorageLoading(true)
             const formattedResponse: any = await requestAPI(`api/storage/listBucket`);
-            if (formattedResponse.length === 0) {
-                // Handle the case where the list is empty
+            if (formattedResponse.length > 0) {
+                setCloudStorageList(formattedResponse)
+            } else {
+                setCloudStorageList([])
                 toast.error(
                     'No cloud storage buckets',
                     toastifyCustomStyle
                 );
-            } else {
-                // console.log(formattedResponse)
-                // let cloudStorageList: string[] = [];
-                // formattedResponse.forEach((data: { name: string; }) => {
-                //     cloudStorageList.push(data.name);
-                // });
-                // const cloudStorageList = formattedResponse['items'].map((bucket: { name: any; }) => (
-                //     bucket.name
-                // ));
-                // cloudStorageList.sort();
-                // setCloudStorageList(cloudStorageList);
-                setCloudStorageList(formattedResponse)
             }
             setCloudStorageLoading(false)
         } catch (error) {
+            setCloudStorageList([])
+            setCloudStorageLoading(false)
             DataprocLoggingService.log(
                 'Error listing cloud storage bucket',
                 LOG_LEVEL.ERROR
@@ -134,7 +140,6 @@ export class VertexServices {
                 `Failed to fetch cloud storage bucket`,
                 toastifyCustomStyle
             );
-            setCloudStorageLoading(false)
         }
     };
 
@@ -153,6 +158,7 @@ export class VertexServices {
                     'No service accounts',
                     toastifyCustomStyle
                 );
+                setServiceAccountList([])
             } else {
                 const serviceAccountList = formattedResponse.map((account: any) => ({
                     displayName: account.displayName,
@@ -163,6 +169,8 @@ export class VertexServices {
             }
             setServiceAccountLoading(false)
         } catch (error) {
+            setServiceAccountList([])
+            setServiceAccountLoading(false)
             DataprocLoggingService.log(
                 'Error listing service accounts',
                 LOG_LEVEL.ERROR
@@ -171,7 +179,6 @@ export class VertexServices {
                 `Failed to fetch service accounts list`,
                 toastifyCustomStyle
             );
-            setServiceAccountLoading(false)
         }
     };
 
@@ -183,7 +190,7 @@ export class VertexServices {
             setPrimaryNetworkLoading(true)
             const formattedResponse: any = await requestAPI(`api/compute/network`);
             if (formattedResponse.length === 0) {
-                // Handle the case where the list is empty
+                setPrimaryNetworkList([])
                 toast.error(
                     'No primary networks',
                     toastifyCustomStyle
@@ -202,6 +209,8 @@ export class VertexServices {
             }
             setPrimaryNetworkLoading(false)
         } catch (error) {
+            setPrimaryNetworkList([])
+            setPrimaryNetworkLoading(false)
             DataprocLoggingService.log(
                 'Error listing primary network',
                 LOG_LEVEL.ERROR
@@ -210,20 +219,20 @@ export class VertexServices {
                 `Failed to fetch primary network list`,
                 toastifyCustomStyle
             );
-            setPrimaryNetworkLoading(false)
         }
     };
 
     static subNetworkAPIService = async (
         region: string,
+        primaryNetworkSelected: string,
         setSubNetworkList: (value: { name: string; link: string }[]) => void,
         setSubNetworkLoading: (value: boolean) => void
     ) => {
         try {
             setSubNetworkLoading(true)
-            const formattedResponse: any = await requestAPI(`api/compute/subNetwork?region_id=${region}`);
+            const formattedResponse: any = await requestAPI(`api/compute/subNetwork?region_id=${region}&network_id=${primaryNetworkSelected}`);
             if (formattedResponse.length === 0) {
-                // Handle the case where the list is empty
+                setSubNetworkList([])
                 toast.error(
                     'No sub networks',
                     toastifyCustomStyle
@@ -242,6 +251,8 @@ export class VertexServices {
             }
             setSubNetworkLoading(false)
         } catch (error) {
+            setSubNetworkList([])
+            setSubNetworkLoading(false)
             DataprocLoggingService.log(
                 'Error listing sub networks',
                 LOG_LEVEL.ERROR
@@ -250,33 +261,39 @@ export class VertexServices {
                 `Failed to fetch sub networks list`,
                 toastifyCustomStyle
             );
-            setSubNetworkLoading(false)
         }
     };
 
     static sharedNetworkAPIService = async (
-        setSharedNetworkList: (value: string[]) => void,
+        setSharedNetworkList: (value: { name: string; network: string, subnetwork: string }[]) => void,
         setSharedNetworkLoading: (value: boolean) => void
     ) => {
         try {
             setSharedNetworkLoading(true)
             const formattedResponse: any = await requestAPI(`api/compute/sharedNetwork`);
             if (formattedResponse.length === 0) {
-                // Handle the case where the list is empty
+                setSharedNetworkList([])
                 toast.error(
                     'No shared networks',
                     toastifyCustomStyle
                 );
             } else {
-                let sharedNetworkList: string[] = [];
-                formattedResponse.forEach((data: { subnetwork: string }) => {
-                    sharedNetworkList.push(data.subnetwork);
-                });
+                // let sharedNetworkList: string[] = [];
+                // formattedResponse.forEach((data: { subnetwork: string }) => {
+                //     sharedNetworkList.push(data.subnetwork);
+                // });
+                const sharedNetworkList = formattedResponse.map((network: any) => ({
+                    name: network.network.split('/').pop(),
+                    network: network.network,
+                    subnetwork: network.subnetwork
+                }));
                 sharedNetworkList.sort();
                 setSharedNetworkList(sharedNetworkList);
             }
             setSharedNetworkLoading(false)
         } catch (error) {
+            setSharedNetworkList([])
+            setSharedNetworkLoading(false)
             DataprocLoggingService.log(
                 'Error listing shared networks',
                 LOG_LEVEL.ERROR
@@ -285,7 +302,6 @@ export class VertexServices {
                 `Failed to fetch shared networks list`,
                 toastifyCustomStyle
             );
-            setSharedNetworkLoading(false)
         }
     };
 
@@ -308,12 +324,12 @@ export class VertexServices {
             } else {
                 if (editMode) {
                     toast.success(
-                        `Job scheduler successfully updated`,
+                        `Job ${payload.display_name} successfully updated`,
                         toastifyCustomStyle
                     );
                 } else {
                     toast.success(
-                        `Job scheduler successfully created`,
+                        `Job ${payload.display_name} successfully created`,
                         toastifyCustomStyle
                     );
                 }

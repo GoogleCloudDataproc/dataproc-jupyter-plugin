@@ -81,7 +81,8 @@ const CreateNotebookScheduler = ({
   jobNameSpecialValidation,
   jobNameUniqueValidation,
   setJobNameUniqueValidation,
-  notebookSelector
+  notebookSelector,
+  setExecutionPageFlag
 }: {
   themeManager: IThemeManager;
   app: JupyterLab;
@@ -100,6 +101,7 @@ const CreateNotebookScheduler = ({
   jobNameUniqueValidation: boolean;
   setJobNameUniqueValidation: React.Dispatch<React.SetStateAction<boolean>>;
   notebookSelector: string;
+  setExecutionPageFlag: React.Dispatch<React.SetStateAction<boolean>>;
 }): JSX.Element => {
   // const [jobNameSelected, setJobNameSelected] = useState('');
   // const [inputFileSelected, setInputFileSelected] = useState('');
