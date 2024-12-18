@@ -25,9 +25,9 @@ default_args = {
     'retries': '{{retry_count}}',
     'retry_delay': timedelta(minutes=int('{{retry_delay}}')), 
     'email': {{email}}, 
-    'email_on_failure': '{{email_failure}}',     
-    'email_on_retry': '{{email_delay}}',     
-    'email_on_success':'{{email_success}}'
+    'email_on_failure': {{email_failure}},     
+    'email_on_retry': {{email_delay}},     
+    'email_on_success': {{email_success}}
 }
 
 def write_output_to_file(run_id, **kwargs):
