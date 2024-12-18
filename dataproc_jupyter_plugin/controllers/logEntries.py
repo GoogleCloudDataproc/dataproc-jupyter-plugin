@@ -28,12 +28,11 @@ class ListEntriesController(APIHandler):
         """Returns log entries"""
         try:
             filter_query = self.get_argument("filter_query")
-            async with aiohttp.ClientSession() as client_session:
-                client = logEntries.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                logs = await client.list_log_entries(filter_query)
-                self.finish(json.dumps(logs))
+            logging_client = logEntries.Client(
+                await credentials.get_cached(), self.log
+            )
+            logs = await logging_client.list_log_entries(filter_query)
+            self.finish(json.dumps(logs))
         except Exception as e:
             self.log.exception(f"Error fetching entries: {str(e)}")
             self.finish({"error": str(e)})
