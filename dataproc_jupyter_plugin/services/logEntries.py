@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import proto
 from google.cloud import logging
 import google.oauth2.credentials as oauth2
 
@@ -44,41 +43,14 @@ class Client:
     async def list_log_entries(self, filter_query=None):
         try:
             logs = []
-            # api_endpoint = f"https://logging.googleapis.com/v2/entries:list"
-            # headers = self.create_headers()
-            # payload = {
-            #     "resourceNames": [
-            #         f"projects/{self.project_id}"
-            #     ],
-            #     "filter": filter_query,
-            #     "orderBy": "timestamp desc",
-            #     "pageSize": 1000,
-            # }
-
-            # async with self.client_session.post(
-            #     api_endpoint, headers=headers, json=payload
-            # ) as response:
-            #     if response.status == 200:
-            #         return await response.json()
-            #     else:
-            #         self.log.exception("Error fetching log entries")
-            #         raise Exception(
-            #             f"Error fetching log entries: {response.reason} {await response.text()}"
-            #         )
-
             credentials = oauth2.Credentials(token=self._access_token)
             logging_client = logging.Client(project=self.project_id, credentials=credentials)
             log_entries = logging_client.list_entries(
-                filter=filter_query, page_size=1000, order_by="timestamp desc"
+                filter_=filter_query, page_size=1000, order_by="timestamp desc"
             )
             for item in log_entries:
-                logs.append(
-                    proto.Message.to_dict(
-                        item,
-                        use_integers_for_enums=False,
-                        preserving_proto_field_name=False,
-                    )
-                )
+                log_dict = item.to_api_repr()
+                logs.append(log_dict)
             return logs
 
         except Exception as e:
