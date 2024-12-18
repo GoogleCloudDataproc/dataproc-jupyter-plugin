@@ -1,102 +1,17 @@
-/**
- * @license
- * Copyright 2023 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import React, {
-  useState, useEffect,
-} from 'react';
+import React, { useState, useEffect, } from 'react';
 import { useTable, usePagination } from 'react-table';
 import TableData from '../../utils/tableData';
 import { PaginationView } from '../../utils/paginationView';
 import { VertexCellProps } from '../../utils/utils';
 import { JupyterFrontEnd } from '@jupyterlab/application';
-import {
-  CircularProgress,
-  Button
-} from '@mui/material';
-import deleteIcon from '../../../style/icons/scheduler_delete.svg';
-import CompletedIcon from '../../../style/icons/dag_task_success_icon.svg';
-import FailedIcon from '../../../style/icons/list_error_icon.svg';
-import ActiveIcon from '../../../style/icons/list_active_icon.svg';
-import ListPauseIcon from '../../../style/icons/list_pause_icon.svg';
-import ListCompleteIcon from '../../../style/icons/list_completed_with_error.svg'
-import { LabIcon } from '@jupyterlab/ui-components';
-import playIcon from '../../../style/icons/scheduler_play.svg';
-import pauseIcon from '../../../style/icons/scheduler_pause.svg';
-import EditIconDisable from '../../../style/icons/scheduler_edit_dag.svg';
-import EditNotebookIcon from '../../../style/icons/scheduler_edit_calendar.svg';
+import { CircularProgress, Button } from '@mui/material';
 import DeletePopup from '../../utils/deletePopup';
-import triggerIcon from '../../../style/icons/scheduler_trigger.svg';
 import { PLUGIN_ID } from '../../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { VertexServices } from './VertexServices';
 import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
-
-const iconDelete = new LabIcon({
-  name: 'launcher:delete-icon',
-  svgstr: deleteIcon
-});
-const iconPlay = new LabIcon({
-  name: 'launcher:play-icon',
-  svgstr: playIcon
-});
-const iconPause = new LabIcon({
-  name: 'launcher:pause-icon',
-  svgstr: pauseIcon
-});
-const iconEditDag = new LabIcon({
-  name: 'launcher:edit-disable-icon',
-  svgstr: EditIconDisable
-});
-const iconEditNotebook = new LabIcon({
-  name: 'launcher:edit-notebook-icon',
-  svgstr: EditNotebookIcon
-});
-
-const iconTrigger = new LabIcon({
-  name: 'launcher:trigger-icon',
-  svgstr: triggerIcon
-});
-
-const iconSuccess = new LabIcon({
-  name: 'launcher:success-icon',
-  svgstr: CompletedIcon
-});
-
-const iconFailed = new LabIcon({
-  name: 'launcher:failed-icon',
-  svgstr: FailedIcon
-});
-
-const iconActive = new LabIcon({
-  name: 'launcher:active-icon',
-  svgstr: ActiveIcon
-});
-
-const iconListPause = new LabIcon({
-  name: 'launcher:list-pause-icon',
-  svgstr: ListPauseIcon
-});
-
-const iconListComplete = new LabIcon({
-  name: 'launcher:list-complete-icon',
-  svgstr: ListCompleteIcon
-});
-
+import { IconActive, IconDelete, IconEditDag, IconEditNotebook, IconFailed, IconListComplete, IconListPause, IconPause, IconPlay, IconSuccess, IconTrigger } from '../../utils/icons';
 
 interface IDagList {
   displayName: string;
@@ -109,19 +24,19 @@ function listVertexScheduler({
   setRegion,
   app,
   settingRegistry,
+  handleDagIdSelection
 }: {
   region: string;
   setRegion: (value: string) => void;
   app: JupyterFrontEnd;
   settingRegistry: ISettingRegistry;
+  handleDagIdSelection: (scheduleId: any, scheduleName: string) => void;
+  // handleDagIdSelection: (dagId: any) => void;
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dagList, setDagList] = useState<IDagList[]>([]);
   const data = dagList;
   const [deletePopupOpen, setDeletePopupOpen] = useState<boolean>(false);
-  // const [editDagLoading,
-  //   //setEditDagLoading
-  // ] = useState('');
   const [inputNotebookFilePath, setInputNotebookFilePath] = useState<string>('');
   const [editNotebookLoading, setEditNotebookLoading] = useState<string>('');
   const [deletingSchedule, setDeletingSchedule] = useState<boolean>(false);
@@ -129,11 +44,9 @@ function listVertexScheduler({
   console.log(isPreviewEnabled)
   const [nextPageFlag, setNextPageFlag] = useState<string>('');
   console.log(nextPageFlag);
-  // const [region, setRegion] = useState<string>('');
   const [projectId, setProjectId] = useState<string>('');
   const [uniqueScheduleId, setUniqueScheduleId] = useState<string>('');
   const [scheduleDisplayName, setScheduleDisplayName] = useState<string>('');
-  // const [vertexSelectedList, setVertexSelectedList] = useState('');
 
   const columns = React.useMemo(
     () => [
@@ -159,7 +72,6 @@ function listVertexScheduler({
 
   /**
   * Get list of schedules
-  * @param {}
   */
   const listDagInfoAPI = async () => {
     setIsLoading(true);
@@ -227,7 +139,6 @@ function listVertexScheduler({
 
   /**
   * Cancel delete pop up
-  * @param {}
   */
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
@@ -235,7 +146,6 @@ function listVertexScheduler({
 
   /**
   * Delete a schedule
-  * @param {}
   */
   const handleDeleteScheduler = async () => {
     setDeletingSchedule(true);
@@ -253,7 +163,6 @@ function listVertexScheduler({
 
   /**
   * Edit schedule
-  * @param {}
   */
   const handleEditVertex = async (event: React.MouseEvent, displayName: string) => {
     const scheduleId = event.currentTarget.getAttribute('data-scheduleId');
@@ -298,17 +207,17 @@ function listVertexScheduler({
             is_status_paused !== "COMPLETED" && handleUpdateScheduler(data.name, is_status_paused, data.displayName)
           }}
         >
-          {is_status_paused === 'COMPLETED' ? <iconPlay.react
+          {is_status_paused === 'COMPLETED' ? <IconPlay.react
             tag="div"
             className="icon-buttons-style-disable disable-complete-btn"
           /> : (
             is_status_paused === 'PAUSED' ?
-              (<iconPlay.react
+              (<IconPlay.react
                 tag="div"
                 className="icon-white logo-alignment-style"
               />
               ) : (
-                <iconPause.react
+                <IconPause.react
                   tag="div"
                   className="icon-white logo-alignment-style"
                 />
@@ -321,20 +230,11 @@ function listVertexScheduler({
           data-scheduleId={data.name}
           onClick={e => handleTriggerSchedule(e, data.displayName)}
         >
-          <iconTrigger.react
+          <IconTrigger.react
             tag="div"
             className="icon-white logo-alignment-style"
           />
         </div>
-        {/* {data.jobid === editDagLoading ? (
-          <div className="icon-buttons-style">
-            <CircularProgress
-              size={18}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
-          </div>
-        ) : ( */}
         <div
           role="button"
           className="icon-buttons-style"
@@ -342,14 +242,12 @@ function listVertexScheduler({
           data-jobid={data.jobid}
         //onClick={e => handleEditDags(e)}
         >
-          <iconEditNotebook.react
+          <IconEditNotebook.react
             tag="div"
             className="icon-white logo-alignment-style"
           />
         </div>
-        {/* )} */}
         {
-          // isPreviewEnabled &&
           (data.name === editNotebookLoading ? (
             <div className="icon-buttons-style">
               <CircularProgress
@@ -366,7 +264,7 @@ function listVertexScheduler({
               data-scheduleId={data.name}
               onClick={e => handleEditVertex(e, data.displayName)}
             >
-              <iconEditDag.react
+              <IconEditDag.react
                 tag="div"
                 className="icon-white logo-alignment-style"
               />
@@ -378,7 +276,7 @@ function listVertexScheduler({
           title="Delete"
           onClick={() => handleDeletePopUp(data.name, data.displayName)}
         >
-          <iconDelete.react
+          <IconDelete.react
             tag="div"
             className="icon-white logo-alignment-style"
           />
@@ -399,13 +297,13 @@ function listVertexScheduler({
         <td
           {...cell.getCellProps()}
           className="clusters-table-data"
-          // onClick={() => handleDagIdSelection(cell.row.original, cell.value)}
+          onClick={() => handleDagIdSelection(cell.row.original, cell.value)}
         >
           {cell.value}
         </td>
       );
     } else {
-      const alignIcon = cell.row.original.status === 'ACTIVE' || cell.row.original.status === 'PAUSED' ||  cell.row.original.status === 'COMPLETED' && cell.row.original.lastScheduledRunResponse.runResponse !== 'OK';
+      const alignIcon = cell.row.original.status === 'ACTIVE' || cell.row.original.status === 'PAUSED' || cell.row.original.status === 'COMPLETED' && cell.row.original.lastScheduledRunResponse.runResponse !== 'OK';
 
       return (
         <td {...cell.getCellProps()} className={cell.column.Header === 'Schedule' ? "clusters-table-data table-cell-width" : "clusters-table-data"}>
@@ -414,26 +312,26 @@ function listVertexScheduler({
               <>
                 <div className='execution-history-main-wrapper'>
                   {cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse ? (cell.row.original.status === 'COMPLETED' ? (cell.row.original.lastScheduledRunResponse.runResponse === 'OK' ? <div>
-                    <iconSuccess.react
+                    <IconSuccess.react
                       tag="div"
                       title='Done !'
                       className="icon-white logo-alignment-style success_icon icon-size"
                     />
                   </div> :
                     <div>
-                      <iconListComplete.react
+                      <IconListComplete.react
                         tag="div"
                         title={cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
                         className="icon-white logo-alignment-style success_icon icon-size-status"
                       />
                     </div>)
                     : (cell.row.original.status === 'ACTIVE' ?
-                      <iconActive.react
+                      <IconActive.react
                         tag="div"
                         title={cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
                         className="icon-white logo-alignment-style success_icon icon-size-status"
                       /> :
-                      <iconListPause.react
+                      <IconListPause.react
                         tag="div"
                         title={cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
                         className="icon-white logo-alignment-style success_icon icon-size"
@@ -441,7 +339,7 @@ function listVertexScheduler({
                     ))
                     :
                     <div>
-                      <iconFailed.react
+                      <IconFailed.react
                         tag="div"
                         title={!cell.row.original.lastScheduledRunResponse ? 'Not started' : cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
                         className="icon-white logo-alignment-style success_icon icon-size"
@@ -534,30 +432,6 @@ function listVertexScheduler({
         </div>
       </div>
 
-      {/*
-        {importErrorEntries > 0 && (
-          <div className="import-error-parent">
-            <div
-              className="accordion-button"
-              role="button"
-              aria-label="Show Import Errors"
-              title="Show Import Errors"
-              onClick={handleImportErrorPopup}
-            >
-              Show Schedule Errors ({importErrorEntries})
-            </div>
-            {importErrorPopupOpen && (
-              <ImportErrorPopup
-                importErrorData={importErrorData}
-                importErrorEntries={importErrorEntries}
-                importErrorPopupOpen={importErrorPopupOpen}
-                onClose={handleImportErrorClosed}
-                onDelete={(dagId: string) => handleDeleteImportError(dagId)}
-              />
-            )}
-          </div>
-        )}
-      </div> */}
       {dagList.length > 0 ? (
         <>
           <div className="notebook-templates-list-table-parent">

@@ -3,6 +3,7 @@ import { JupyterLab } from '@jupyterlab/application';
 import { requestAPI } from '../../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../../utils/loggingService';
 import { toastifyCustomStyle } from '../../utils/utils';
+import { Dayjs } from 'dayjs';
 
 interface IPayload {
     input_filename: string;
@@ -45,6 +46,16 @@ interface DeleteSchedulerAPIResponse {
 interface TriggerSchedule {
     metedata: object;
     name: string;
+}
+
+interface IDagRunList {
+    dagRunId: string;
+    startDate: string;
+    endDate: string;
+    gcsUrl: string;
+    state: string;
+    date: Date;
+    time: string;
 }
 
 export class VertexServices {
@@ -278,10 +289,6 @@ export class VertexServices {
                     toastifyCustomStyle
                 );
             } else {
-                // let sharedNetworkList: string[] = [];
-                // formattedResponse.forEach((data: { subnetwork: string }) => {
-                //     sharedNetworkList.push(data.subnetwork);
-                // });
                 const sharedNetworkList = formattedResponse.map((network: any) => ({
                     name: network.network.split('/').pop(),
                     network: network.network,
@@ -365,16 +372,11 @@ export class VertexServices {
                 setIsLoading(false);
             }
         } catch (error) {
+            setDagList([]);
             DataprocLoggingService.log(
                 'Error listing vertex schedules',
                 LOG_LEVEL.ERROR
             );
-            // setTimeout(() => {
-            //     toast.error(
-            //         `Failed to fetch vertex schedules list`,
-            //         toastifyCustomStyle
-            //     );
-            // }, 10000);
 
         }
     }
@@ -404,11 +406,11 @@ export class VertexServices {
                     setNextPageFlag
                 );
             } else {
-                DataprocLoggingService.log('Error in pausing schedule', LOG_LEVEL.ERROR);
+                DataprocLoggingService.log('Error in pause schedule', LOG_LEVEL.ERROR);
                 toast.error('Failed to pause schedule');
             }
         } catch (error) {
-            DataprocLoggingService.log('Error in pausing schedule', LOG_LEVEL.ERROR);
+            DataprocLoggingService.log('Error in pause schedule', LOG_LEVEL.ERROR);
             toast.error(`Failed to pause schedule : ${error}`, toastifyCustomStyle);
         }
     };
@@ -438,12 +440,12 @@ export class VertexServices {
                     setNextPageFlag
                 );
             } else {
-                DataprocLoggingService.log('Error in resuming schedule', LOG_LEVEL.ERROR);
+                DataprocLoggingService.log('Error in resume schedule', LOG_LEVEL.ERROR);
                 toast.error('Failed to resume schedule');
             }
         } catch (error) {
-            DataprocLoggingService.log('Error in resuming shedule', LOG_LEVEL.ERROR);
-            toast.error(`Failed to resume shedule : ${error}`, toastifyCustomStyle);
+            DataprocLoggingService.log('Error in resume schedule', LOG_LEVEL.ERROR);
+            toast.error(`Failed to resume schedule : ${error}`, toastifyCustomStyle);
         }
     };
 
@@ -540,5 +542,144 @@ export class VertexServices {
         }
     };
 
+    static executionHistoryServiceList = async (
+        region: string,
+        schedulerData: any,
+        selectedMonth: Dayjs | null,
+        setIsLoading: (value: boolean) => void,
+        setDagRunsList: (value: IDagRunList[]) => void,
+        setBlueListDates: (value: string[]) => void,
+        setGreyListDates: (value: string[]) => void,
+        setOrangeListDates: (value: string[]) => void,
+        setRedListDates: (value: string[]) => void,
+        setGreenListDates: (value: string[]) => void,
+        setDarkGreenListDates: (value: string[]) => void,
+    ) => {
+        setIsLoading(true)
+        let selected_month = selectedMonth && selectedMonth.toISOString()
+        let schedule_id = schedulerData.name.split('/').pop()
+        const serviceURL = `api/vertex/listNotebookExecutionJobs`;
+        // const formattedResponse: any = await requestAPI(serviceURL + `?region_id=${region}&schedule_id=${scheduleId}&start_date=2024-12-12T00:00:00.000Z`
+        const formattedResponse: any = await requestAPI(serviceURL + `?region_id=${region}&schedule_id=${schedule_id}&start_date=${selected_month}`
+        );
+        try {
+            let transformDagRunListDataCurrent = [];
+            if (formattedResponse && formattedResponse.length > 0) {
+                transformDagRunListDataCurrent = formattedResponse.map((dagRun: any) => {
+                    const createTime = new Date(dagRun.createTime);
+                    const updateTime = new Date(dagRun.updateTime);
+                    const timeDifferenceMilliseconds = updateTime.getTime() - createTime.getTime(); // Difference in milliseconds
+                    const totalSeconds = Math.floor(timeDifferenceMilliseconds / 1000); // Convert to seconds
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = totalSeconds % 60;
+                    return {
+                        dagRunId: dagRun.name.split('/').pop(),
+                        startDate: dagRun.createTime,
+                        endDate: dagRun.updateTime,
+                        gcsUrl: dagRun.gcsOutputUri,
+                        state: dagRun.jobState.split('_')[2].toLowerCase(),
+                        date: new Date(dagRun.createTime).toDateString(),
+                        time: `${minutes} min ${seconds} sec`
+                    };
+                });
+            }
+            // Group data by date and state
+            const groupedDataByDateStatus = transformDagRunListDataCurrent.reduce((result: any, item: any) => {
+                const date = item.date; // Group by date
+                const status = item.state; // Group by state
 
+                if (!result[date]) {
+                    result[date] = {};
+                }
+
+                if (!result[date][status]) {
+                    result[date][status] = [];
+                }
+
+                result[date][status].push(item);
+
+                return result;
+            }, {});
+
+            // Initialize grouping lists
+            let blueList: string[] = [];
+            let greyList: string[] = [];
+            let orangeList: string[] = [];
+            let redList: string[] = [];
+            let greenList: string[] = [];
+            let darkGreenList: string[] = [];
+
+            // Process grouped data
+            Object.keys(groupedDataByDateStatus).forEach((dateValue) => {
+                if (groupedDataByDateStatus[dateValue].running) {
+                    blueList.push(dateValue);
+                } else if (groupedDataByDateStatus[dateValue].queued) {
+                    greyList.push(dateValue);
+                } else if (
+                    groupedDataByDateStatus[dateValue].failed &&
+                    groupedDataByDateStatus[dateValue].succeeded
+                ) {
+                    orangeList.push(dateValue);
+                } else if (groupedDataByDateStatus[dateValue].failed) {
+                    redList.push(dateValue);
+                } else if (
+                    groupedDataByDateStatus[dateValue].succeeded &&
+                    groupedDataByDateStatus[dateValue].succeeded.length === 1
+                ) {
+                    greenList.push(dateValue);
+                } else {
+                    darkGreenList.push(dateValue);
+                }
+            });
+            // Update state lists with their respective transformations
+            setBlueListDates(blueList);
+            setGreyListDates(greyList);
+            setOrangeListDates(orangeList);
+            setRedListDates(redList);
+            setGreenListDates(greenList);
+            setDarkGreenListDates(darkGreenList);
+            console.log(transformDagRunListDataCurrent.length)
+            setDagRunsList(transformDagRunListDataCurrent)
+        } catch (error) {
+            toast.error(
+                `Error in fetching the execution history`,
+                toastifyCustomStyle
+            );
+        }
+        setIsLoading(false)
+    };
+
+    static vertexJobTaskLogsListService = async (
+        dagRunId: string,
+        jobRunsData: IDagRunList | undefined,
+        setDagTaskInstancesList: (value: any) => void,
+        setIsLoading: (value: boolean) => void
+    ) => {
+        setDagTaskInstancesList([]);
+        setIsLoading(true);
+        const start_date = encodeURIComponent(jobRunsData?.startDate || '');
+        const end_date = encodeURIComponent(jobRunsData?.endDate || '');
+        try {
+            const data: any = await requestAPI(
+                `api/logEntries/listEntries?filter_query=timestamp >= \"${start_date}" AND timestamp <= \"${end_date}" AND SEARCH(\"${dagRunId}\")`
+            );
+            let transformDagRunTaskInstanceListData = [];
+            transformDagRunTaskInstanceListData = data.entries.map(
+                (dagRunTask: any) => {
+                    return {
+                        severity: dagRunTask.severity,
+                        textPayload: dagRunTask.textPayload && dagRunTask.textPayload ? dagRunTask.textPayload : '',
+                        date: new Date(dagRunTask.timestamp).toDateString(),
+                        time: new Date(dagRunTask.timestamp).toTimeString().split(' ')[0],
+                        fullData: dagRunTask,
+                    };
+                }
+            );
+            setDagTaskInstancesList(transformDagRunTaskInstanceListData);
+            setIsLoading(false);
+        } catch (reason) {
+            setIsLoading(false);
+            setDagTaskInstancesList([]);
+        }
+    };
 }

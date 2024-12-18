@@ -66,6 +66,7 @@
 
 .actions-icon {
   display: flex;
+  justify-content: center;
 }
 
 .cluster-status-parent {
@@ -92,6 +93,7 @@
   padding-right: 5px;
   padding-left: 15px;
 }
+
 .icon-buttons-style-delete-batch-disable {
   cursor: context-menu;
   padding-right: 5px;
@@ -136,6 +138,7 @@
   justify-content: center;
   align-items: center;
 }
+
 .filter-cluster-overlay {
   height: 42px;
   padding-left: 15px;
@@ -149,6 +152,7 @@
   width: 100%;
   background-color: var(--jp-layout-color0);
 }
+
 .filter-section-part:focus {
   outline: none;
 }
@@ -157,6 +161,7 @@
   border: 0px;
   width: 95%;
 }
+
 .gcs-filter-section-part:focus {
   outline: none;
 }

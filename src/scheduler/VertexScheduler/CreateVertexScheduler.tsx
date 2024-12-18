@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Input } from '../../controls/MuiWrappedInput';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
     Autocomplete,
     TextField,
@@ -11,35 +13,26 @@ import {
     Typography,
     Box
 } from '@mui/material';
-import { IThemeManager } from '@jupyterlab/apputils';
-import { JupyterLab } from '@jupyterlab/application';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import LabelProperties from '../../jobs/labelProperties';
-import LearnMore from '../common/LearnMore';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { Cron } from 'react-js-cron';
 import tzdata from 'tzdata';
-// import Scheduler from '../common/Scheduler';
+import dayjs from 'dayjs';
+
+import { Input } from '../../controls/MuiWrappedInput';
 import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
 import VertexScheduleJobs from './VertexScheduleJobs';
 import { internalScheduleMode, scheduleMode, scheduleValueExpression } from '../../utils/const';
 import { VertexServices } from './VertexServices';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-// import { DesktopDateTimePicker } from '@mui/x-date-pickers/DesktopDateTimePicker';
-import dayjs from 'dayjs';
-import { LabIcon } from '@jupyterlab/ui-components';
-import errorIcon from '../../../style/icons/error_icon.svg';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import LabelProperties from '../../jobs/labelProperties';
+import LearnMore from '../common/LearnMore';
 import ErrorMessage from '../common/ErrorMessage';
+import { IconError } from '../../utils/icons';
 
 // export type internalScheduleMode = 'cronFormat' | 'userFriendly';
-const iconError = new LabIcon({
-    name: 'launcher:error-icon',
-    svgstr: errorIcon
-});
-
 const CreateVertexScheduler = ({
     themeManager,
     app,
@@ -101,7 +94,6 @@ const CreateVertexScheduler = ({
     const [kernelSelected, setKernelSelected] = useState(null);
     const [machineTypeList, setMachineTypeList] = useState<string[]>([]);
     const [machineTypeSelected, setMachineTypeSelected] = useState(null);
-    // const [machineTypeValidation, setMachineTypeValidation] = useState<boolean>(false);
     const [acceleratorType, setAcceleratorType] = useState(null);
     const [acceleratedCount, setAcceleratedCount] = useState(null);
     const [networkSelected, setNetworkSelected] = useState('networkInThisProject');
@@ -132,6 +124,10 @@ const CreateVertexScheduler = ({
     const [endDate, setEndDate] = useState(null);
     const [endDateError, setEndDateError] = useState(false)
 
+    /**
+    * Changing the region value and empyting the value of machineType, accelratorType and accelratorCount
+    * @param {string} value selected region
+    */
     const handleRegionChange = (value: React.SetStateAction<string>) => {
         setRegion(value)
         setMachineTypeSelected(null)
@@ -140,28 +136,31 @@ const CreateVertexScheduler = ({
     }
 
     /**
-   * Kernel selection
-   * @param {string} kernelSelected seleted kernel
-   */
+    * Handles Kernel selection
+    * @param {any} kernelValue selected kernel
+    */
     const handleKernel = (kernelValue: any) => {
         setKernelSelected(kernelValue)
     }
 
     /**
-   * Kernel selection
-   * @param {string} kernelSelected seleted kernel
-   */
+    * Handles Disk type selection
+    * @param {any} diskValue selected Disk type
+    */
     const handleDiskType = (diskValue: any) => {
         setDiskTypeSelected(diskValue)
     }
 
+    /**
+    * Setting the default value for Disk type when this field is empty
+    */
     const handleDefaultDiskType = () => {
         setDiskTypeSelected(diskTypeOptions[0])
     }
 
     /**
-    * Max Runs
-    * @param {string} maxRuns seleted machine type
+    * Handles Disk size selection
+    * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
     const handleDiskSize = (e: any | React.ChangeEvent<HTMLInputElement>) => {
         const re = /^[1-9][0-9]*$/;
@@ -170,6 +169,10 @@ const CreateVertexScheduler = ({
         }
     };
 
+    /**
+    * Handles changes to the Disk Size input field when it is empty.
+    * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
+    */
     const handleDefaultDiskSize = (e: any | React.ChangeEvent<HTMLInputElement>) => {
         // const re = /^[1-9][0-9]*$/;
         if (e.target.value === '') {
@@ -177,6 +180,10 @@ const CreateVertexScheduler = ({
         }
     };
 
+    /**
+    * Handles changes to the Schedule input field.
+    * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
+    */
     const handleSchedule = (e: any | React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
 
@@ -184,70 +191,62 @@ const CreateVertexScheduler = ({
         if (newValue === '' || newValue[0] !== ' ' || scheduleField !== '') {
             setScheduleField(newValue);
         }
-        // setScheduleField(e.target.value)
     }
 
     /**
-   * Primary Network selection
-   * @param {string} primaryNetworkSelected seleted kernel
-   */
+     * Handles primary network selection.
+     * @param {{ name: string; link: string; } | null} primaryValue - The selected network kernel or `null` if none is selected.
+     */
     const handlePrimaryNetwork = (primaryValue: React.SetStateAction<{ name: string; link: string; } | null>) => {
         setPrimaryNetworkSelected(primaryValue)
         subNetworkAPI(primaryValue)
-        // if (!subNetworkLoading) {
-        //     setSubNetworkSelected(subNetworkList[0])
-        // }
     }
 
     /**
-   * Service account selection
-   * @param {string} serviceAccountSelected seleted kernel
-   */
+    * Handles Service account selection
+    * @param {any} value selected service account
+    */
     const handleServiceAccountChange = (value: any) => {
         setServiceAccountSelected(value);
     };
+
     /**
-   * Sub Network selection
-   * @param {string} subNetworkSelected seleted kernel
-   */
+    * Handles Sub Network selection
+    * @param {{ name: string; link: string; } | null} subNetworkValue - The selected network kernel or `null` if none is selected.
+    */
     const handleSubNetwork = (subNetworkValue: React.SetStateAction<{ name: string; link: string; } | null>) => {
         setSubNetworkSelected(subNetworkValue)
     }
 
     /**
-   * Primary Network selection
-   * @param {string} primaryNetworkSelected seleted kernel
-   */
+    * Handles Shared Network selection
+    * @param {{ name: string; network: string; subnetwork: string; } | null} shredNetworkValue - The selected network kernel or `null` if none is selected.
+    */
     const handleSharedNetwork = (shredNetworkValue: React.SetStateAction<{ name: string; network: string; subnetwork: string; } | null>) => {
         setSharedNetworkSelected(shredNetworkValue)
     }
 
     /**
-   * Kernel selection
-   * @param {string} cloudStorage seleted kernel
-   */
+    * Handles Cloud storage selection
+    * @param {any} cloudStorageValue selected cloud storage
+    */
     const handleCloudStorageSelected = (cloudStorageValue: any) => {
         setCloudStorage(cloudStorageValue)
     }
 
     /**
-    * Machine Type selection
-    * @param {string} machineTypeSelected seleted machine type
+    * Handles Machine type selection
+    * @param {any} machineType selected machine type
     */
     const handleMachineType = (machineType: any) => {
-        console.log(machineType)
-        // if (machineType === null) {
-        //     setMachineTypeValidation(true)
-        // } else {
         setMachineTypeSelected(machineType)
         setAcceleratedCount(null)
         setAcceleratorType(null)
-        // }
     }
 
     /**
-    * Max Runs
-    * @param {string} maxRuns seleted machine type
+    * Handles changes to the Max Runs input field.
+    * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
     const handleMaxRuns = (e: any | React.ChangeEvent<HTMLInputElement>) => {
         const re = /^[1-9][0-9]*$/;
@@ -257,32 +256,32 @@ const CreateVertexScheduler = ({
     };
 
     /**
-    * Acceleration Type listing
-    * @param {Array} acceleratorConfig acceleratorConfigs data
+    * Handles Acceleration Type listing
+    * @param {any} acceleratorConfig acceleratorConfigs data
     */
     const getAcceleratedType = (acceleratorConfig: any) => {
         return acceleratorConfig.map((item: any) => item.acceleratorType);
     }
 
     /**
-    * Acceleration Type selection
-    * @param {string} acceleratorType accelerationType type selected
+    * Handles Acceleration Type selection
+    * @param {any} acceleratorType accelerationType selected
     */
     const handleAccelerationType = (acceleratorType: any) => {
         setAcceleratorType(acceleratorType);
     }
 
     /**
-    * Acceleration Count selection
-    * @param {string} acceleratorCount accelerationType count selected
+    * Handles Acceleration Count selection
+    * @param {stranying} acceleratorCount accelerationType count selected
     */
     const handleAcceleratorCount = (acceleratorCount: any) => {
         setAcceleratedCount(acceleratorCount);
     }
 
     /**
-    * Network selection
-    * @param {string} networkSelected accelerationType type selected
+    * Handles Network selection
+    * @param {any} eventValue network selected
     */
     const handleNetworkSelection = (eventValue: any) => {
         // console.log('network', eventValue);
@@ -296,18 +295,11 @@ const CreateVertexScheduler = ({
     }
 
     /**
-    * Network tags value
-    * @param {string} networkTags seleted machine type
+    * Handles start date selection and set the endDateError to true if end date is greater than start date
+    * @param {any} val Start date selected
     */
-    // const handleNetworkTags = (e: any | React.ChangeEvent<HTMLInputElement>) => {
-    //     setNetworkTags(e.target.value);
-    // };
-
     const handleStartDate = (val: any) => {
         setStartDate(val.$d)
-        // console.log('startDate', val)
-        // setStartDate(val);
-
         if (val && endDate && dayjs(endDate).isBefore(dayjs(val))) {
             setEndDateError(true);
         } else {
@@ -315,6 +307,10 @@ const CreateVertexScheduler = ({
         }
     }
 
+    /**
+    * Handles end date selection and set the endDateError to true if end date is greater than start date
+    * @param {any} val End date selected
+    */
     const handleEndDate = (val: any) => {
         if (startDate && (dayjs(val).isBefore(dayjs(startDate)) || dayjs(val).isSame(dayjs(startDate), 'minute'))) {
             setEndDateError(true);
@@ -322,10 +318,12 @@ const CreateVertexScheduler = ({
             setEndDateError(false);
         }
         setEndDate(val.$d)
-        // console.log('endDate', val)
-        // setEndDate(val);
     }
 
+    /**
+    * Handles schedule mode selection
+    * @param {React.ChangeEvent<HTMLInputElement>} event - The change event triggered by the radio button field.
+    */
     const handleSchedulerModeChange = (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
@@ -345,6 +343,10 @@ const CreateVertexScheduler = ({
         }
     };
 
+    /**
+    * Handles Internal schedule mode selection
+    * @param {React.ChangeEvent<HTMLInputElement>} event - The change event triggered by the radio button field.
+    */
     const handleInternalSchedulerModeChange = (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
@@ -358,11 +360,12 @@ const CreateVertexScheduler = ({
         setStartDate(null)
         setEndDate(null)
         setMaxRuns('')
-        // if (newValue === 'cronFormat' && scheduleValue === '') {
-        //     setScheduleValue(scheduleValueExpression);
-        // }
     };
 
+    /**
+    * Handles Time zone selection
+    * @param {string | null} data time zone selected
+    */
     const handleTimeZoneSelected = (data: string | null) => {
         if (data) {
             const selectedTimeZone = data.toString();
@@ -370,30 +373,51 @@ const CreateVertexScheduler = ({
         }
     };
 
+    /**
+    * Hosts the parent project API service
+    */
     const hostProjectAPI = async () => {
         await VertexServices.getParentProjectAPIService(setHostProject);
     };
 
+    /**
+    * Hosts the machine type API service
+    */
     const machineTypeAPI = async () => {
         await VertexServices.machineTypeAPIService(region, setMachineTypeList, setMachineTypeLoading);
     };
 
+    /**
+    * Hosts the cloud storage API service
+    */
     const cloudStorageAPI = async () => {
         await VertexServices.cloudStorageAPIService(setCloudStorageList, setCloudStorageLoading);
     };
 
+    /**
+    * Hosts the service account API service
+    */
     const serviceAccountAPI = async () => {
         await VertexServices.serviceAccountAPIService(setServiceAccountList, setServiceAccountLoading);
     };
 
+    /**
+    * Hosts the primary network API service
+    */
     const primaryNetworkAPI = async () => {
         await VertexServices.primaryNetworkAPIService(setPrimaryNetworkList, setPrimaryNetworkLoading);
     };
 
+    /**
+    * Hosts the sub network API service based on the primary network
+    */
     const subNetworkAPI = async (primaryNetwork: any) => {
         await VertexServices.subNetworkAPIService(region, primaryNetwork['name'], setSubNetworkList, setSubNetworkLoading);
     };
 
+    /**
+    * Hosts the shared network API service
+    */
     const sharedNetworkAPI = async () => {
         await VertexServices.sharedNetworkAPIService(setSharedNetworkList, setSharedNetworkLoading);
     };
@@ -418,13 +442,13 @@ const CreateVertexScheduler = ({
             (networkSelected === 'networkInThisProject' && (primaryNetworkSelected === null || subNetworkSelected === null)) ||
             (networkSelected === 'networkShared' && (sharedNetworkSelected === null)) ||
             ((scheduleMode === 'runSchedule' && internalScheduleMode === 'cronFormat') && (scheduleField === '')) ||
-            // (!jobNameValidation && !editMode) ||
-            // (jobNameSpecialValidation && !editMode) ||
-            // (!jobNameUniqueValidation && !editMode) ||
             inputFileSelected === ''
         );
     };
 
+    /**
+    * Handles the schedule mode for the schedule_value field
+    */
     const getScheduleValues = () => {
         if (scheduleMode === 'runNow') {
             return ''
@@ -524,32 +548,6 @@ const CreateVertexScheduler = ({
                         themeManager={themeManager}
                         settingRegistry={settingRegistry}
                         setExecutionPageFlag={setExecutionPageFlag}
-                    // composerSelectedFromCreate='vertex'
-                    // setCreateCompleted={setCreateCompleted}
-                    // setJobNameSelected={setJobNameSelected}
-                    // setComposerSelected={setComposerSelected}
-                    // setScheduleMode={setScheduleMode}
-                    // setScheduleValue={setScheduleValue}
-                    // setInputFileSelected={setInputFileSelected}
-                    // setParameterDetail={setParameterDetail}
-                    // setParameterDetailUpdated={setParameterDetailUpdated}
-                    // setSelectedMode={setSelectedMode}
-                    // setClusterSelected={setClusterSelected}
-                    // setServerlessSelected={setServerlessSelected}
-                    // setServerlessDataSelected={setServerlessDataSelected}
-                    // serverlessDataList={serverlessDataList}
-                    // setServerlessDataList={setServerlessDataList}
-                    // setServerlessList={setServerlessList}
-                    // setRetryCount={setRetryCount}
-                    // setRetryDelay={setRetryDelay}
-                    // setEmailOnFailure={setEmailOnFailure}
-                    // setEmailonRetry={setEmailonRetry}
-                    // setEmailOnSuccess={setEmailOnSuccess}
-                    // setEmailList={setEmailList}
-                    // setStopCluster={setStopCluster}
-                    // setTimeZoneSelected={setTimeZoneSelected}
-                    // setEditMode={setEditMode}
-                    // setIsLoadingKernelDetail={setIsLoadingKernelDetail}
                     />
                     :
                     <div className='submit-job-container'>
@@ -566,7 +564,6 @@ const CreateVertexScheduler = ({
                             <Autocomplete
                                 className="create-scheduler-style"
                                 options={machineTypeList && machineTypeList.map((item: any) => item.machineType)}
-                                // options={machineTypeList && machineTypeList}
                                 value={machineTypeSelected}
                                 onChange={(_event, val) => handleMachineType(val)}
                                 renderInput={params => (
@@ -574,7 +571,6 @@ const CreateVertexScheduler = ({
                                 )}
                                 clearIcon={false}
                                 loading={machineTypeLoading}
-                            //disabled={editMode}
                             />
                         </div>
                         {
@@ -585,7 +581,6 @@ const CreateVertexScheduler = ({
                             machineTypeList && machineTypeList.map((item: any) => {
                                 if ("acceleratorConfigs" in item && item.machineType === machineTypeSelected && item.acceleratorConfigs !== null) {
                                     return (
-                                        // console.log('getAcceleratedType(item.acceleratorConfigs)', getAcceleratedType(item.acceleratorConfigs)),
                                         <div className="execution-history-main-wrapper">
                                             <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
                                                 <Autocomplete
@@ -596,7 +591,6 @@ const CreateVertexScheduler = ({
                                                     renderInput={params => (
                                                         <TextField {...params} label="Accelerator type*" />
                                                     )}
-                                                //disabled={editMode}
                                                 />
                                                 {
                                                     !acceleratorType && <ErrorMessage message="Accelerator type is required" />
@@ -606,7 +600,6 @@ const CreateVertexScheduler = ({
                                             {
                                                 item?.acceleratorConfigs?.map((element: { allowedCounts: any[]; acceleratorType: string; }) => {
                                                     return (
-                                                        // console.log("element.allowedCounts", element.allowedCounts),
                                                         <>
                                                             {
                                                                 element.acceleratorType === acceleratorType ?
@@ -619,7 +612,6 @@ const CreateVertexScheduler = ({
                                                                             renderInput={params => (
                                                                                 <TextField {...params} label="Accelerator count*" />
                                                                             )}
-                                                                        //disabled={editMode}
                                                                         />
                                                                         {
                                                                             !acceleratedCount && <ErrorMessage message="Accelerator count is required" />
@@ -648,7 +640,6 @@ const CreateVertexScheduler = ({
                                     <TextField {...params} label="Kernel*" />
                                 )}
                                 clearIcon={false}
-                            //disabled={editMode}
                             />
                         </div>
                         {
@@ -666,7 +657,6 @@ const CreateVertexScheduler = ({
                                 )}
                                 clearIcon={false}
                                 loading={cloudStorageLoading}
-                            //disabled={editMode}
                             />
                         </div>
                         {
@@ -730,7 +720,6 @@ const CreateVertexScheduler = ({
                                 }
                                 clearIcon={false}
                                 loading={serviceAccountLoading}
-                                // onChange={handleServiceAccountChange}
                                 onChange={(_event, val) => handleServiceAccountChange(val)}
                                 renderInput={params => (
                                     <TextField {...params} label="Service account*" />
@@ -754,16 +743,6 @@ const CreateVertexScheduler = ({
                                     </Box>
                                 )}
                             />
-                            {/* <Autocomplete
-                                className="create-scheduler-style"
-                                options={serviceAccountList && serviceAccountList.map((item: any) => item.displayName)}
-                                value={serviceAccountSelected}
-                                onChange={(_event, val) => handleServiceAccountSelected(val)}
-                                renderInput={params => (
-                                    <TextField {...params} label="Service account" />
-                                )}
-                            //disabled={editMode}
-                            /> */}
                         </div>
 
                         <div className="create-job-scheduler-text-para create-job-scheduler-sub-title">
@@ -828,7 +807,6 @@ const CreateVertexScheduler = ({
                                                 )}
                                                 clearIcon={false}
                                                 loading={primaryNetworkLoading}
-                                            //disabled={editMode}
                                             />
                                             {
                                                 !primaryNetworkSelected && <ErrorMessage message="Primary network is required" />
@@ -839,7 +817,6 @@ const CreateVertexScheduler = ({
                                                 className="create-scheduler-style create-scheduler-form-element-input-fl"
                                                 options={subNetworkList}
                                                 getOptionLabel={option => option.name}
-                                                // value={subNetworkSelected}
                                                 value={subNetworkList.find(
                                                     option => option.name === subNetworkSelected?.name
                                                 ) || null}
@@ -849,7 +826,6 @@ const CreateVertexScheduler = ({
                                                 )}
                                                 clearIcon={false}
                                                 loading={subNetworkLoading}
-                                            //disabled={editMode}
                                             />
                                             {
                                                 !subNetworkSelected && <ErrorMessage message="Sub network is required" />
@@ -1008,7 +984,7 @@ const CreateVertexScheduler = ({
                                             {
                                                 endDateError &&
                                                 <div className="error-key-parent">
-                                                    <iconError.react tag="div" className="logo-alignment-style" />
+                                                    <IconError.react tag="div" className="logo-alignment-style" />
                                                     <div className="error-key-missing">End date should be greater than Start date</div>
                                                 </div>
                                             }
@@ -1065,7 +1041,6 @@ const CreateVertexScheduler = ({
                                             type="number"
                                             placeholder=""
                                             Label="Max runs"
-                                        // disabled={scheduleMode === 'runNow'}
                                         />
                                     </div>
                                 </>
@@ -1074,13 +1049,7 @@ const CreateVertexScheduler = ({
                         </div>
                         <div className="save-overlay">
                             <Button
-                                onClick={
-                                    () => {
-                                        // if (!isSaveDisabled()) {
-                                        handleCreateJobScheduler()
-                                        // }
-                                    }
-                                }
+                                onClick={() => handleCreateJobScheduler()}
                                 variant="contained"
                                 disabled={isSaveDisabled()}
                                 aria-label={editMode ? ' Update Schedule' : 'Create Schedule'}
@@ -1107,9 +1076,7 @@ const CreateVertexScheduler = ({
 
                     </div>
             }
-
         </>
-
     );
 };
 
