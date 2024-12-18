@@ -39,13 +39,11 @@ import { KernelSpecAPI } from '@jupyterlab/services';
 import tzdata from 'tzdata';
 import { SchedulerService } from './schedulerServices';
 import NotebookJobComponent from './notebookJobs';
-// import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import { LabIcon } from '@jupyterlab/ui-components';
-import errorIcon from '../../style/icons/error_icon.svg';
 import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
 import { scheduleValueExpression } from '../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import ErrorMessage from './common/ErrorMessage';
 
 interface IDagList {
   jobid: string;
@@ -53,16 +51,6 @@ interface IDagList {
   schedule: string;
   scheduleInterval: string;
 }
-
-// const iconLeftArrow = new LabIcon({
-//   name: 'launcher:left-arrow-icon',
-//   svgstr: LeftArrowIcon
-// });
-
-const iconError = new LabIcon({
-  name: 'launcher:error-icon',
-  svgstr: errorIcon
-});
 
 const CreateNotebookScheduler = ({
   themeManager,
@@ -309,21 +297,6 @@ const CreateNotebookScheduler = ({
     setEditMode(false);
   };
 
-  // const handleJobNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   event.target.value.length > 0
-  //     ? setJobNameValidation(true)
-  //     : setJobNameValidation(false);
-
-  //   //Regex to check job name must contain only letters, numbers, hyphens, and underscores
-  //   const regexp = /^[a-zA-Z0-9-_]+$/;
-  //   event.target.value.search(regexp)
-  //     ? setJobNameSpecialValidation(true)
-  //     : setJobNameSpecialValidation(false);
-  //   setJobNameSelected(event.target.value);
-
-  //   setJobNameSelected(event.target.value);
-  // };
-
   const isSaveDisabled = () => {
     return (
       dagListCall ||
@@ -469,71 +442,7 @@ const CreateNotebookScheduler = ({
         />
       ) : (
         <div>
-          {/* <div className="cluster-details-header">
-            <div
-              role="button"
-              className="back-arrow-icon"
-              onClick={handleCancel}
-            >
-              <iconLeftArrow.react
-                tag="div"
-                className="icon-white logo-alignment-style"
-              />
-            </div>
-            {editMode ? (
-              <div className="create-job-scheduler-title">
-                Update A Scheduled Job
-              </div>
-            ) : (
-              <div className="create-job-scheduler-title">
-                Create A Scheduled Job
-              </div>
-            )}
-          </div> */}
           <div className="submit-job-container">
-            {/* <div className="create-scheduler-form-element">
-              <Input
-                className="create-scheduler-style"
-                value={jobNameSelected}
-                onChange={e => handleJobNameChange(e)}
-                type="text"
-                placeholder=""
-                Label="Job name*"
-                disabled={editMode}
-              />
-            </div>
-            {!jobNameValidation && !editMode && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">Name is required</div>
-              </div>
-            )}
-            {jobNameSpecialValidation && jobNameValidation && !editMode && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">
-                  Name must contain only letters, numbers, hyphens, and
-                  underscores
-                </div>
-              </div>
-            )}
-            {!jobNameUniqueValidation && !editMode && (
-              <div className="error-key-parent">
-                <iconError.react tag="div" className="logo-alignment-style" />
-                <div className="error-key-missing">
-                  Job name must be unique for the selected environment
-                </div>
-              </div>
-            )}
-
-            <div className="create-scheduler-form-element-input-file">
-              <Input
-                className="create-scheduler-style"
-                value={inputFileSelected}
-                Label="Input file*"
-                disabled={true}
-              />
-            </div> */}
             <div className="create-scheduler-form-element">
               <Autocomplete
                 className="create-scheduler-style"
@@ -751,12 +660,7 @@ const CreateNotebookScheduler = ({
             </div>
             {(emailOnFailure || emailOnRetry || emailOnSuccess) &&
               !emailList.length && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Email recipients is required field
-                  </div>
-                </div>
+                <ErrorMessage message="Email recipients is required field" />
               )}
             <div className="create-scheduler-label">Schedule</div>
             <div className="create-scheduler-form-element">
