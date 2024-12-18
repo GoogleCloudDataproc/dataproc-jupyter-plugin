@@ -155,6 +155,10 @@ const CreateVertexScheduler = ({
         setDiskTypeSelected(diskValue)
     }
 
+    const handleDefaultDiskType = () => {
+        setDiskTypeSelected(diskTypeOptions[0])
+    }
+
     /**
     * Max Runs
     * @param {string} maxRuns seleted machine type
@@ -679,6 +683,7 @@ const CreateVertexScheduler = ({
                                     renderInput={params => (
                                         <TextField {...params} label="Disk Type" />
                                     )}
+                                    onBlur={() => handleDefaultDiskType()}
                                     clearIcon={false}
                                 />
                             </div>
