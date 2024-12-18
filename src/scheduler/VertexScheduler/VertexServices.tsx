@@ -20,69 +20,7 @@ import { requestAPI } from '../../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../../utils/loggingService';
 import { toastifyCustomStyle } from '../../utils/utils';
 import { Dayjs } from 'dayjs';
-
-interface IMachineType {
-    machineType: string
-    acceleratorConfigs: AcceleratorConfig[]
-}
-
-interface AcceleratorConfig {
-    acceleratorType: string
-    allowedCounts: number[]
-}
-
-interface IPayload {
-    input_filename: string;
-    display_name: string;
-    machine_type: string | null;
-    accelerator_type?: string | null;
-    accelerator_count?: string | null;
-    kernel_name: string | null;
-    schedule_value: string | undefined;
-    time_zone?: string;
-    max_run_count: string | number;
-    region: string;
-    cloud_storage_bucket: string | null;
-    parameters: string[];
-    service_account: string | undefined,
-    network: string | undefined;
-    subnetwork: string | undefined;
-    start_time: string | null | undefined;
-    end_time: string | null | undefined;
-}
-
-interface IDagList {
-    displayName: string;
-    schedule: string;
-    status: string;
-}
-
-interface IUpdateSchedulerAPIResponse {
-    status: number;
-    error: string;
-}
-
-interface DeleteSchedulerAPIResponse {
-    done: boolean;
-    metadata: object;
-    name: string;
-    response: object;
-}
-
-interface TriggerSchedule {
-    metedata: object;
-    name: string;
-}
-
-interface IDagRunList {
-    dagRunId: string;
-    startDate: string;
-    endDate: string;
-    gcsUrl: string;
-    state: string;
-    date: Date;
-    time: string;
-}
+import { ICreatePayload, IDagList, IDagRunList, IDeleteSchedulerAPIResponse, IMachineType, ITriggerSchedule, IUpdateSchedulerAPIResponse } from './VertexInterfaces';
 
 export class VertexServices {
     static getParentProjectAPIService = async (
@@ -91,11 +29,6 @@ export class VertexServices {
         try {
             const formattedResponse: any = await requestAPI(`api/compute/getXpnHost`);
             if (formattedResponse.length === 0) {
-                // Handle the case where the list is empty
-                toast.error(
-                    'No machine type in this region',
-                    toastifyCustomStyle
-                );
                 setHostProject('')
             } else {
                 if (formattedResponse) {
@@ -104,14 +37,11 @@ export class VertexServices {
             }
         } catch (error) {
             DataprocLoggingService.log(
-                'Error listing machine type',
+                'Error fetching host project',
                 LOG_LEVEL.ERROR
             );
             setHostProject('')
-            // toast.error(
-            //     `Failed to fetch machine type list`,
-            //     toastifyCustomStyle
-            // );
+            toast.error(`Failed to fetch host project`);
         }
     };
     static machineTypeAPIService = async (
@@ -123,12 +53,7 @@ export class VertexServices {
             setMachineTypeLoading(true)
             const formattedResponse: any = await requestAPI(`api/vertex/uiConfig?region_id=${region}`);
             if (formattedResponse.length === 0) {
-                // Handle the case where the list is empty
                 setMachineTypeList([])
-                toast.error(
-                    'No machine type in this region',
-                    toastifyCustomStyle
-                );
             } else {
                 if (formattedResponse) {
                     setMachineTypeList(formattedResponse);
@@ -160,10 +85,6 @@ export class VertexServices {
                 setCloudStorageList(formattedResponse)
             } else {
                 setCloudStorageList([])
-                toast.error(
-                    'No cloud storage buckets',
-                    toastifyCustomStyle
-                );
             }
             setCloudStorageLoading(false)
         } catch (error) {
@@ -190,11 +111,6 @@ export class VertexServices {
             setServiceAccountLoading(true)
             const formattedResponse: any = await requestAPI(`api/iam/listServiceAccount`);
             if (formattedResponse.length === 0) {
-                // Handle the case where the list is empty
-                toast.error(
-                    'No service accounts',
-                    toastifyCustomStyle
-                );
                 setServiceAccountList([])
             } else {
                 const serviceAccountList = formattedResponse.map((account: any) => ({
@@ -228,19 +144,11 @@ export class VertexServices {
             const formattedResponse: any = await requestAPI(`api/compute/network`);
             if (formattedResponse.length === 0) {
                 setPrimaryNetworkList([])
-                toast.error(
-                    'No primary networks',
-                    toastifyCustomStyle
-                );
             } else {
                 const primaryNetworkList = formattedResponse.map((network: any) => ({
                     name: network.name,
                     link: network.selfLink
                 }));
-                // let primaryList: string[] = [];
-                // formattedResponse.forEach((data: { name: string; }) => {
-                //     primaryList.push(data.name);
-                // });
                 primaryNetworkList.sort();
                 setPrimaryNetworkList(primaryNetworkList);
             }
@@ -270,15 +178,7 @@ export class VertexServices {
             const formattedResponse: any = await requestAPI(`api/compute/subNetwork?region_id=${region}&network_id=${primaryNetworkSelected}`);
             if (formattedResponse.length === 0) {
                 setSubNetworkList([])
-                toast.error(
-                    'No sub networks',
-                    toastifyCustomStyle
-                );
             } else {
-                // let subNetworkList: string[] = [];
-                // formattedResponse.forEach((data: { name: string }) => {
-                //     subNetworkList.push(data.name);
-                // });
                 const subNetworkList = formattedResponse.map((network: any) => ({
                     name: network.name,
                     link: network.selfLink
@@ -310,10 +210,6 @@ export class VertexServices {
             const formattedResponse: any = await requestAPI(`api/compute/sharedNetwork`);
             if (formattedResponse.length === 0) {
                 setSharedNetworkList([])
-                toast.error(
-                    'No shared networks',
-                    toastifyCustomStyle
-                );
             } else {
                 const sharedNetworkList = formattedResponse.map((network: any) => ({
                     name: network.network.split('/').pop(),
@@ -339,7 +235,7 @@ export class VertexServices {
     };
 
     static createVertexSchedulerService = async (
-        payload: IPayload,
+        payload: ICreatePayload,
         app: JupyterLab,
         setCreateCompleted: (value: boolean) => void,
         setCreatingVertexScheduler: (value: boolean) => void,
@@ -482,7 +378,7 @@ export class VertexServices {
     ) => {
         try {
             const serviceURL = 'api/vertex/triggerSchedule';
-            const data: TriggerSchedule = await requestAPI(
+            const data: ITriggerSchedule = await requestAPI(
                 serviceURL + `?region_id=${region}&schedule_id=${scheduleId}`
             );
             if (data.name) {
@@ -512,7 +408,7 @@ export class VertexServices {
     ) => {
         try {
             const serviceURL = `api/vertex/deleteSchedule`;
-            const deleteResponse: DeleteSchedulerAPIResponse = await requestAPI(
+            const deleteResponse: IDeleteSchedulerAPIResponse = await requestAPI(
                 serviceURL + `?region_id=${region}&schedule_id=${scheduleId}`, { method: 'DELETE' }
             );
             if (deleteResponse.done) {
@@ -585,7 +481,6 @@ export class VertexServices {
         let selected_month = selectedMonth && selectedMonth.toISOString()
         let schedule_id = schedulerData.name.split('/').pop()
         const serviceURL = `api/vertex/listNotebookExecutionJobs`;
-        // const formattedResponse: any = await requestAPI(serviceURL + `?region_id=${region}&schedule_id=${scheduleId}&start_date=2024-12-12T00:00:00.000Z`
         const formattedResponse: any = await requestAPI(serviceURL + `?region_id=${region}&schedule_id=${schedule_id}&start_date=${selected_month}`
         );
         try {
@@ -690,7 +585,7 @@ export class VertexServices {
                 `api/logEntries/listEntries?filter_query=timestamp >= \"${start_date}" AND timestamp <= \"${end_date}" AND SEARCH(\"${dagRunId}\")`
             );
             let transformDagRunTaskInstanceListData = [];
-            transformDagRunTaskInstanceListData = data.entries.map(
+            transformDagRunTaskInstanceListData = data.map(
                 (dagRunTask: any) => {
                     return {
                         severity: dagRunTask.severity,

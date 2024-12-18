@@ -16,7 +16,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Input } from '../controls/MuiWrappedInput';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { INotebookModel } from '@jupyterlab/notebook';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
 import {
   FormControl,
   FormControlLabel,
@@ -25,29 +29,12 @@ import {
   Typography
 } from '@mui/material';
 
-import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { JupyterLab } from '@jupyterlab/application';
-import { LabIcon } from '@jupyterlab/ui-components';
+import { IconLeftArrow } from '../utils/icons';
+import { Input } from '../controls/MuiWrappedInput';
 import CreateNotebookScheduler from './createNotebookScheduler';
-import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import errorIcon from '../../style/icons/error_icon.svg';
-
-import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { INotebookModel } from '@jupyterlab/notebook';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import CreateVertexScheduler from './VertexScheduler/CreateVertexScheduler';
 import ErrorMessage from './common/ErrorMessage';
-
-const iconError = new LabIcon({
-  name: 'launcher:error-icon',
-  svgstr: errorIcon
-});
-
-const iconLeftArrow = new LabIcon({
-  name: 'launcher:left-arrow-icon',
-  svgstr: LeftArrowIcon
-});
 
 const NotebookSchedulerComponent = ({
   themeManager,
@@ -90,8 +77,6 @@ const NotebookSchedulerComponent = ({
       ? setJobNameSpecialValidation(true)
       : setJobNameSpecialValidation(false);
     setJobNameSelected(event.target.value);
-
-    // setJobNameSelected(event.target.value);
   };
 
   const handleSchedulerModeChange = (
@@ -121,7 +106,7 @@ const NotebookSchedulerComponent = ({
                 className="back-arrow-icon"
                 onClick={handleCancel}
               >
-                <iconLeftArrow.react
+                <IconLeftArrow.react
                   tag="div"
                   className="icon-white logo-alignment-style"
                 />
@@ -146,27 +131,13 @@ const NotebookSchedulerComponent = ({
                 jobNameSelected === '' && <ErrorMessage message="Name is required" />
               }
               {!jobNameValidation && !editMode && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">Name is required</div>
-                </div>
+                <ErrorMessage message="Name is required" />
               )}
               {jobNameSpecialValidation && jobNameValidation && !editMode && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Name must contain only letters, numbers, hyphens, and
-                    underscores
-                  </div>
-                </div>
+                <ErrorMessage message="Name must contain only letters, numbers, hyphens, and underscores" />
               )}
               {!jobNameUniqueValidation && !editMode && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Job name must be unique for the selected environment
-                  </div>
-                </div>
+                <ErrorMessage message="Job name must be unique for the selected environment" />
               )}
 
               <div className="create-scheduler-form-element-input-file">
@@ -243,7 +214,6 @@ const NotebookSchedulerComponent = ({
           : <CreateVertexScheduler
             themeManager={themeManager}
             app={app}
-            context={context}
             settingRegistry={settingRegistry}
             createCompleted={createCompleted}
             setCreateCompleted={setCreateCompleted}
@@ -253,11 +223,6 @@ const NotebookSchedulerComponent = ({
             setInputFileSelected={setInputFileSelected}
             editMode={editMode}
             setEditMode={setEditMode}
-            jobNameValidation={jobNameValidation}
-            jobNameSpecialValidation={jobNameSpecialValidation}
-            jobNameUniqueValidation={jobNameUniqueValidation}
-            setJobNameUniqueValidation={setJobNameUniqueValidation}
-            notebookSelector={notebookSelector}
             setExecutionPageFlag={setExecutionPageFlag}
           />
       }

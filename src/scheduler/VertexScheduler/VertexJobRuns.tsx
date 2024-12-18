@@ -24,16 +24,7 @@ import { ICellProps, handleDebounce } from '../../utils/utils';
 import { SchedulerService } from '../schedulerServices';
 import { VertexServices } from './VertexServices';
 import { IconDownload } from '../../utils/icons';
-
-interface IDagRunList {
-    dagRunId: string;
-    startDate: string;
-    endDate: string;
-    gcsUrl: string;
-    state: string;
-    date: Date;
-    time: string;
-}
+import { IDagRunList } from './VertexInterfaces';
 
 const VertexJobRuns = ({
     region,

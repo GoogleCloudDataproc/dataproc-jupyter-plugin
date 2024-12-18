@@ -36,9 +36,7 @@ const NotebookJobComponent = ({
     const [showExecutionHistory, setShowExecutionHistory] = useState(false);
     const [region, setRegion] = useState<string>('');
     const [schedulerData, setScheduleData] = useState('');
-    const [bucketName,
-        //setBucketName
-    ] = useState('');
+    const [bucketName] = useState('');
     const [scheduleName, setScheduleName] = useState('');
 
     const handleBackButton = () => {

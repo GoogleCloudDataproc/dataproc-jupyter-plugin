@@ -16,15 +16,14 @@
  */
 import React from 'react';
 
-const LearnMore: React.FC = ({}) => {
+interface IPath {
+  path?: string
+}
+
+const LearnMore: React.FC<IPath> = ({ path }) => {
 
   return (
-    <div
-      className="learn-more-a-tag learn-more-url"
-      // onClick={() => {
-      //   window.open(`${CUSTOM_CONTAINERS}`, '_blank');
-      // }}
-    >
+    <div onClick={() => { window.open(`${path}`, '_blank') }} >
       Learn more
     </div>
   )

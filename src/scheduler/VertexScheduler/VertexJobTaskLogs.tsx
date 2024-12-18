@@ -20,16 +20,7 @@ import { SchedulerService } from '../schedulerServices';
 import { handleDebounce } from '../../utils/utils';
 import { VertexServices } from './VertexServices';
 import { IconExpandLess, IconExpandMore } from '../../utils/icons';
-
-interface IDagRunList {
-    dagRunId: string;
-    startDate: string;
-    endDate: string;
-    gcsUrl: string;
-    state: string;
-    date: Date;
-    time: string;
-}
+import { IDagRunList } from './VertexInterfaces';
 
 const VertexJobTaskLogs = ({
     composerName,

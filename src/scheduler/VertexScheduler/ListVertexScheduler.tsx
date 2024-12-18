@@ -16,6 +16,7 @@
  */
 import React, { useState, useEffect, } from 'react';
 import { useTable, usePagination } from 'react-table';
+import { toast } from 'react-toastify';
 import TableData from '../../utils/tableData';
 import { PaginationView } from '../../utils/paginationView';
 import { VertexCellProps } from '../../utils/utils';
@@ -28,12 +29,7 @@ import { VertexServices } from './VertexServices';
 import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
 import { IconActive, IconDelete, IconEditDag, IconEditNotebook, IconFailed, IconListComplete, IconListPause, IconPause, IconPlay, IconSuccess, IconTrigger } from '../../utils/icons';
-
-interface IDagList {
-  displayName: string;
-  schedule: string;
-  status: string;
-}
+import { IDagList } from './VertexInterfaces';
 
 function listVertexScheduler({
   region,
@@ -56,9 +52,9 @@ function listVertexScheduler({
   const [editNotebookLoading, setEditNotebookLoading] = useState<string>('');
   const [deletingSchedule, setDeletingSchedule] = useState<boolean>(false);
   const [isPreviewEnabled, setIsPreviewEnabled] = useState<boolean>(false);
-  console.log(isPreviewEnabled)
+  console.debug(isPreviewEnabled)
   const [nextPageFlag, setNextPageFlag] = useState<string>('');
-  console.log(nextPageFlag);
+  console.debug(nextPageFlag);
   const [projectId, setProjectId] = useState<string>('');
   const [uniqueScheduleId, setUniqueScheduleId] = useState<string>('');
   const [scheduleDisplayName, setScheduleDisplayName] = useState<string>('');
@@ -420,6 +416,7 @@ function listVertexScheduler({
       })
       .catch((error) => {
         console.error(error);
+        toast.error(error);
       });
   }, [projectId])
 

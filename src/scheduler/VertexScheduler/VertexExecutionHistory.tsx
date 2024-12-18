@@ -26,16 +26,7 @@ import { authApi, handleDebounce } from '../../utils/utils';
 import VertexJobRuns from './VertexJobRuns';
 import VertexJobTaskLogs from './VertexJobTaskLogs';
 import { IconLeftArrow } from '../../utils/icons';
-
-interface IDagRunList {
-    dagRunId: string;
-    startDate: string;
-    endDate: string;
-    gcsUrl: string;
-    state: string;
-    date: Date;
-    time: string;
-}
+import { IDagRunList } from './VertexInterfaces';
 
 const VertexExecutionHistory = ({
     region,
@@ -145,7 +136,6 @@ const VertexExecutionHistory = ({
      * @returns {boolean} - Whether the formatted day exists in the date list.
      */
     const getFormattedDate = (dateList: string[], day: string | number | Date | dayjs.Dayjs | null | undefined) => {
-
         const formattedDay = dayjs(day).format('YYYY-MM-DD');
         const date_list = dateList.map((dateStr: string | number | Date) => new Date(dateStr).toISOString().split('T')[0]).includes(formattedDay);
         return date_list
@@ -169,8 +159,6 @@ const VertexExecutionHistory = ({
         const isRedExecution = getFormattedDate(redListDates, day);
         const isGreenExecution = getFormattedDate(greenListDates, day);
         const isDarkGreenExecution = getFormattedDate(darkGreenListDates, day);
-
-        // const isSelectedExecution = [dayjs().date()].includes(day.date());
 
         return (
             <PickersDay
@@ -256,7 +244,6 @@ const VertexExecutionHistory = ({
                             <DateCalendar
                                 minDate={dayjs().year(2024).startOf('year')}
                                 maxDate={dayjs(currentDate)}
-                                // referenceDate={dayjs(currentDate)}
                                 defaultValue={today}
                                 onChange={newValue => handleDateSelection(newValue)}
                                 onMonthChange={handleMonthChange}

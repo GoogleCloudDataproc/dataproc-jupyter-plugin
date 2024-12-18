@@ -17,11 +17,11 @@
 import React from 'react';
 import { IconError } from '../../utils/icons';
 
-interface ErrorMessageInterface {
+interface IErrorMessageInterface {
     message: string
 }
 
-const ErrorMessage: React.FC<ErrorMessageInterface> = ({ message }) => {
+const ErrorMessage: React.FC<IErrorMessageInterface> = ({ message }) => {
     return (
         <div className="error-key-parent">
             <IconError.react tag="div" className="logo-alignment-style" />

@@ -41,22 +41,14 @@ import { Input } from '../../controls/MuiWrappedInput';
 import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
 import VertexScheduleJobs from './VertexScheduleJobs';
-import { DISK_TYPE_VALUE, internalScheduleMode, KERNEL_VALUE, scheduleMode, scheduleValueExpression } from '../../utils/const';
+import { CORN_EXP_DOC_URL, DISK_TYPE_VALUE, internalScheduleMode, KERNEL_VALUE, scheduleMode, scheduleValueExpression } from '../../utils/const';
 import { VertexServices } from './VertexServices';
 import LabelProperties from '../../jobs/labelProperties';
 import LearnMore from '../common/LearnMore';
 import ErrorMessage from '../common/ErrorMessage';
 import { IconError } from '../../utils/icons';
-
-interface IMachineType {
-    machineType: string
-    acceleratorConfigs: AcceleratorConfig[]
-}
-
-interface AcceleratorConfig {
-    acceleratorType: string
-    allowedCounts: number[]
-}
+import { toast } from 'react-toastify';
+import { AcceleratorConfig, IMachineType } from './VertexInterfaces';
 
 const CreateVertexScheduler = ({
     themeManager,
@@ -129,8 +121,8 @@ const CreateVertexScheduler = ({
         Intl.DateTimeFormat().resolvedOptions().timeZone
     );
     const timezones = Object.keys(tzdata.zones).sort();
-    const [startDate, setStartDate] = useState<string | null>(null);
-    const [endDate, setEndDate] = useState<string | null>(null);
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
     const [endDateError, setEndDateError] = useState<boolean>(false)
 
     /**
@@ -172,6 +164,7 @@ const CreateVertexScheduler = ({
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
     const handleDiskSize = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Regular expression to validate positive integers without leading zeros
         const re = /^[1-9][0-9]*$/;
         if (e.target.value === '' || re.test(e.target.value)) {
             setDiskSize(e.target.value);
@@ -183,7 +176,6 @@ const CreateVertexScheduler = ({
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
     const handleDefaultDiskSize = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // const re = /^[1-9][0-9]*$/;
         if (e.target.value === '') {
             setDiskSize('100');
         }
@@ -258,6 +250,7 @@ const CreateVertexScheduler = ({
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
     const handleMaxRuns = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Regular expression to validate positive integers without leading zeros
         const re = /^[1-9][0-9]*$/;
         if (e.target.value === '' || re.test(e.target.value)) {
             setMaxRuns(e.target.value);
@@ -293,7 +286,6 @@ const CreateVertexScheduler = ({
     * @param {{ target: { value: React.SetStateAction<string>; }; }} eventValue network selected
     */
     const handleNetworkSelection = (eventValue: { target: { value: React.SetStateAction<string>; }; }) => {
-        // console.log('network', eventValue);
         if (networkSelected === 'networkInThisProject') {
             setSharedNetworkSelected(null)
         } if (networkSelected === 'networkShared') {
@@ -305,9 +297,9 @@ const CreateVertexScheduler = ({
 
     /**
     * Handles start date selection and set the endDateError to true if end date is greater than start date
-    * @param {string | null | any} val Start date selected
+    * @param {string | number | Date | dayjs.Dayjs | null | undefined | any} val Start date selected
     */
-    const handleStartDate = (val: string | null | any) => {
+    const handleStartDate = (val: string | number | Date | dayjs.Dayjs | null | undefined | any) => {
         setStartDate(val.$d)
         if (val && endDate && dayjs(endDate).isBefore(dayjs(val))) {
             setEndDateError(true);
@@ -318,9 +310,9 @@ const CreateVertexScheduler = ({
 
     /**
     * Handles end date selection and set the endDateError to true if end date is greater than start date
-    * @param {string | null | any} val End date selected
+    * @param {string | number | Date | dayjs.Dayjs | null | undefined | any} val End date selected
     */
-    const handleEndDate = (val: string | null | any) => {
+    const handleEndDate = (val: string | number | Date | dayjs.Dayjs | null | undefined | any) => {
         if (startDate && (dayjs(val).isBefore(dayjs(startDate)) || dayjs(val).isSame(dayjs(startDate), 'minute'))) {
             setEndDateError(true);
         } else {
@@ -344,7 +336,6 @@ const CreateVertexScheduler = ({
             setScheduleField('')
         }
         if (newValue === 'runSchedule' && scheduleValue === '') {
-            // setScheduleValue(scheduleValueExpression);
             setScheduleValue(scheduleField);
         }
         if (newValue === 'runSchedule') {
@@ -432,8 +423,7 @@ const CreateVertexScheduler = ({
     };
 
     const selectedMachineType = machineTypeList && machineTypeList.find((item) => item.machineType === machineTypeSelected);
-    console.log(primaryNetworkList)
-    console.log(subNetworkList)
+
     /**
     * Disable the create button when the mandatory fields are not filled and the validations is not proper.
     */
@@ -494,7 +484,6 @@ const CreateVertexScheduler = ({
             disk_type: diskTypeSelected,
             disk_size: diskSize
         }
-        console.log(payload)
         await VertexServices.createVertexSchedulerService(
             payload,
             app,
@@ -502,7 +491,6 @@ const CreateVertexScheduler = ({
             setCreatingVertexScheduler,
             editMode
         );
-        // setEditMode(false);
     }
 
     /**
@@ -546,6 +534,7 @@ const CreateVertexScheduler = ({
             })
             .catch((error) => {
                 console.error(error);
+                toast.error(error);
             });
     }, [projectId]);
 
@@ -781,7 +770,9 @@ const CreateVertexScheduler = ({
                                     />
                                     <div>
                                         <span className="sub-para tab-text-sub-cl">Choose a shared VPC network from the project that is different from the clusters project</span>
-                                        <LearnMore />
+                                        <div className="learn-more-a-tag learn-more-url">
+                                            <LearnMore />
+                                        </div>
                                     </div>
                                     <FormControlLabel
                                         value="networkShared"
@@ -792,7 +783,9 @@ const CreateVertexScheduler = ({
                                         }
                                     />
                                     <span className="sub-para tab-text-sub-cl">Choose a shared VPC network from the project that is different from the clusters project</span>
-                                    <LearnMore />
+                                    <div className="learn-more-a-tag learn-more-url">
+                                        <LearnMore />
+                                    </div>
                                 </RadioGroup>
                             </FormControl>
                         </div>
@@ -1004,8 +997,10 @@ const CreateVertexScheduler = ({
                                         <ErrorMessage message="Schedule field is required" />
                                     }
                                     <span className="tab-description tab-text-sub-cl">Schedules are specified using unix-cron format. E.g. every minute: "* * * * *", every 3 hours: "0 */3 * * *", every Monday at 9:00: "0 9 * * 1".
-                                        <LearnMore />
                                     </span>
+                                    <div className="learn-more-url">
+                                        <LearnMore path={CORN_EXP_DOC_URL} />
+                                    </div>
                                 </div>
                             }
                             {scheduleMode === 'runSchedule' && internalScheduleMode === 'userFriendly' && (

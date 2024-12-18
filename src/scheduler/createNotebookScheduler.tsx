@@ -91,8 +91,6 @@ const CreateNotebookScheduler = ({
   notebookSelector: string;
   setExecutionPageFlag: React.Dispatch<React.SetStateAction<boolean>>;
 }): JSX.Element => {
-  // const [jobNameSelected, setJobNameSelected] = useState('');
-  // const [inputFileSelected, setInputFileSelected] = useState('');
   const [composerList, setComposerList] = useState<string[]>([]);
   const [composerSelected, setComposerSelected] = useState('');
 
@@ -126,15 +124,8 @@ const CreateNotebookScheduler = ({
 
   const timezones = Object.keys(tzdata.zones).sort();
 
-  // const [createCompleted, setCreateCompleted] =
-  //   context !== '' ? useState(false) : useState(true);
   const [creatingScheduler, setCreatingScheduler] = useState(false);
-  // const [jobNameValidation] = useState(true);
-  // const [jobNameSpecialValidation] =
-  //   useState(false);
-  // const [jobNameUniqueValidation, setJobNameUniqueValidation] = useState(true);
   const [dagList, setDagList] = useState<IDagList[]>([]);
-  // const [editMode, setEditMode] = useState(false);
   const [dagListCall, setDagListCall] = useState(false);
   const [isLoadingKernelDetail, setIsLoadingKernelDetail] = useState(false);
 
@@ -412,7 +403,6 @@ const CreateNotebookScheduler = ({
           app={app}
           themeManager={themeManager}
           settingRegistry={settingRegistry}
-          // composerSelectedFromCreate={composerSelected}
           setCreateCompleted={setCreateCompleted}
           setJobNameSelected={setJobNameSelected}
           setComposerSelected={setComposerSelected}
