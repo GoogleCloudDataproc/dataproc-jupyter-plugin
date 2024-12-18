@@ -41,18 +41,26 @@ import { Input } from '../../controls/MuiWrappedInput';
 import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
 import VertexScheduleJobs from './VertexScheduleJobs';
-import { internalScheduleMode, scheduleMode, scheduleValueExpression } from '../../utils/const';
+import { DISK_TYPE_VALUE, internalScheduleMode, KERNEL_VALUE, scheduleMode, scheduleValueExpression } from '../../utils/const';
 import { VertexServices } from './VertexServices';
 import LabelProperties from '../../jobs/labelProperties';
 import LearnMore from '../common/LearnMore';
 import ErrorMessage from '../common/ErrorMessage';
 import { IconError } from '../../utils/icons';
 
-// export type internalScheduleMode = 'cronFormat' | 'userFriendly';
+interface IMachineType {
+    machineType: string
+    acceleratorConfigs: AcceleratorConfig[]
+}
+
+interface AcceleratorConfig {
+    acceleratorType: string
+    allowedCounts: number[]
+}
+
 const CreateVertexScheduler = ({
     themeManager,
     app,
-    context,
     settingRegistry,
     createCompleted,
     setCreateCompleted,
@@ -62,16 +70,10 @@ const CreateVertexScheduler = ({
     setInputFileSelected,
     editMode,
     setEditMode,
-    jobNameValidation,
-    jobNameSpecialValidation,
-    jobNameUniqueValidation,
-    setJobNameUniqueValidation,
-    notebookSelector,
     setExecutionPageFlag
 }: {
     themeManager: IThemeManager;
     app: JupyterLab;
-    context: any;
     settingRegistry: ISettingRegistry;
     createCompleted: boolean;
     setCreateCompleted: React.Dispatch<React.SetStateAction<boolean>>;
@@ -81,14 +83,8 @@ const CreateVertexScheduler = ({
     setInputFileSelected: React.Dispatch<React.SetStateAction<string>>;
     editMode: boolean;
     setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
-    jobNameValidation: boolean;
-    jobNameSpecialValidation: boolean;
-    jobNameUniqueValidation: boolean;
-    setJobNameUniqueValidation: React.Dispatch<React.SetStateAction<boolean>>;
-    notebookSelector: string;
     setExecutionPageFlag: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-
     const [parameterDetail, setParameterDetail] = useState(['']);
     const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
     const [keyValidation, setKeyValidation] = useState(-1);
@@ -103,21 +99,19 @@ const CreateVertexScheduler = ({
     const [subNetworkLoading, setSubNetworkLoading] = useState<boolean>(false)
     const [sharedNetworkLoading, setSharedNetworkLoading] = useState<boolean>(false)
 
-    const [hostProject, setHostProject] = useState('');
-    const [region, setRegion] = useState('');
-    const [projectId, setProjectId] = useState('');
-    const [kernel] = useState(['python3', 'pytorch', 'tensorflow']);
-    const [kernelSelected, setKernelSelected] = useState(null);
-    const [machineTypeList, setMachineTypeList] = useState<string[]>([]);
-    const [machineTypeSelected, setMachineTypeSelected] = useState(null);
-    const [acceleratorType, setAcceleratorType] = useState(null);
-    const [acceleratedCount, setAcceleratedCount] = useState(null);
+    const [hostProject, setHostProject] = useState<string>('');
+    const [region, setRegion] = useState<string>('');
+    const [projectId, setProjectId] = useState<string>('');
+    const [kernelSelected, setKernelSelected] = useState<string | null>(null);
+    const [machineTypeList, setMachineTypeList] = useState<IMachineType[]>([]);
+    const [machineTypeSelected, setMachineTypeSelected] = useState<string | null>(null);
+    const [acceleratorType, setAcceleratorType] = useState<string | null>(null);
+    const [acceleratedCount, setAcceleratedCount] = useState<string | null>(null);
     const [networkSelected, setNetworkSelected] = useState('networkInThisProject');
     const [cloudStorageList, setCloudStorageList] = useState<string[]>([]);
-    const [cloudStorage, setCloudStorage] = useState(null);
-    const [diskTypeOptions] = useState(["pd-standard (Persistent Disk Standard", "pd-ssd (Persistent Disk Solid state Drive)", "pd-standard (Persistent Disk Hard Disk Drive)", "pd-balanced (Balanced Persistent Disk)", "pd-extreme (Extreme Persistent Disk)"]);
-    const [diskTypeSelected, setDiskTypeSelected] = useState(diskTypeOptions[0]);
-    const [diskSize, setDiskSize] = useState('100');
+    const [cloudStorage, setCloudStorage] = useState<string | null>(null);
+    const [diskTypeSelected, setDiskTypeSelected] = useState<string | null>(DISK_TYPE_VALUE[0]);
+    const [diskSize, setDiskSize] = useState<string>('100');
     const [serviceAccountList, setServiceAccountList] = useState<{ displayName: string; email: string }[]>([]);
     const [serviceAccountSelected, setServiceAccountSelected] = useState<{ displayName: string; email: string } | null>(null);
     const [primaryNetworkList, setPrimaryNetworkList] = useState<{ name: string; link: string }[]>([]);
@@ -126,8 +120,7 @@ const CreateVertexScheduler = ({
     const [subNetworkSelected, setSubNetworkSelected] = useState<{ name: string; link: string } | null>(null);
     const [sharedNetworkList, setSharedNetworkList] = useState<{ name: string; network: string, subnetwork: string }[]>([]);
     const [sharedNetworkSelected, setSharedNetworkSelected] = useState<{ name: string; network: string, subnetwork: string } | null>(null);
-    // const [networkTags, setNetworkTags] = useState<string>('');
-    const [maxRuns, setMaxRuns] = useState('');
+    const [maxRuns, setMaxRuns] = useState<string>('');
     const [scheduleField, setScheduleField] = useState<string>('');
     const [scheduleMode, setScheduleMode] = useState<scheduleMode>('runNow');
     const [internalScheduleMode, setInternalScheduleMode] = useState<internalScheduleMode>('cronFormat');
@@ -136,9 +129,9 @@ const CreateVertexScheduler = ({
         Intl.DateTimeFormat().resolvedOptions().timeZone
     );
     const timezones = Object.keys(tzdata.zones).sort();
-    const [startDate, setStartDate] = useState(null);
-    const [endDate, setEndDate] = useState(null);
-    const [endDateError, setEndDateError] = useState(false)
+    const [startDate, setStartDate] = useState<string | null>(null);
+    const [endDate, setEndDate] = useState<string | null>(null);
+    const [endDateError, setEndDateError] = useState<boolean>(false)
 
     /**
     * Changing the region value and empyting the value of machineType, accelratorType and accelratorCount
@@ -153,17 +146,17 @@ const CreateVertexScheduler = ({
 
     /**
     * Handles Kernel selection
-    * @param {any} kernelValue selected kernel
+    * @param {React.SetStateAction<string | null>} kernelValue selected kernel
     */
-    const handleKernel = (kernelValue: any) => {
+    const handleKernel = (kernelValue: React.SetStateAction<string | null>) => {
         setKernelSelected(kernelValue)
     }
 
     /**
     * Handles Disk type selection
-    * @param {any} diskValue selected Disk type
+    * @param {React.SetStateAction<string | null>} diskValue selected Disk type
     */
-    const handleDiskType = (diskValue: any) => {
+    const handleDiskType = (diskValue: React.SetStateAction<string | null>) => {
         setDiskTypeSelected(diskValue)
     }
 
@@ -171,14 +164,14 @@ const CreateVertexScheduler = ({
     * Setting the default value for Disk type when this field is empty
     */
     const handleDefaultDiskType = () => {
-        setDiskTypeSelected(diskTypeOptions[0])
+        setDiskTypeSelected(DISK_TYPE_VALUE[0])
     }
 
     /**
     * Handles Disk size selection
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
-    const handleDiskSize = (e: any | React.ChangeEvent<HTMLInputElement>) => {
+    const handleDiskSize = (e: React.ChangeEvent<HTMLInputElement>) => {
         const re = /^[1-9][0-9]*$/;
         if (e.target.value === '' || re.test(e.target.value)) {
             setDiskSize(e.target.value);
@@ -189,7 +182,7 @@ const CreateVertexScheduler = ({
     * Handles changes to the Disk Size input field when it is empty.
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
-    const handleDefaultDiskSize = (e: any | React.ChangeEvent<HTMLInputElement>) => {
+    const handleDefaultDiskSize = (e: React.ChangeEvent<HTMLInputElement>) => {
         // const re = /^[1-9][0-9]*$/;
         if (e.target.value === '') {
             setDiskSize('100');
@@ -200,7 +193,7 @@ const CreateVertexScheduler = ({
     * Handles changes to the Schedule input field.
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
-    const handleSchedule = (e: any | React.ChangeEvent<HTMLInputElement>) => {
+    const handleSchedule = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
 
         // Prevent space as the first character
@@ -215,14 +208,14 @@ const CreateVertexScheduler = ({
      */
     const handlePrimaryNetwork = (primaryValue: React.SetStateAction<{ name: string; link: string; } | null>) => {
         setPrimaryNetworkSelected(primaryValue)
-        subNetworkAPI(primaryValue)
+        subNetworkAPI(primaryValue?.name)
     }
 
     /**
     * Handles Service account selection
-    * @param {any} value selected service account
+    * @param {{ displayName: string; email: string; } | null} value selected service account
     */
-    const handleServiceAccountChange = (value: any) => {
+    const handleServiceAccountChange = (value: { displayName: string; email: string; } | ((prevState: { displayName: string; email: string; } | null) => { displayName: string; email: string; } | null) | null) => {
         setServiceAccountSelected(value);
     };
 
@@ -244,17 +237,17 @@ const CreateVertexScheduler = ({
 
     /**
     * Handles Cloud storage selection
-    * @param {any} cloudStorageValue selected cloud storage
+    * @param {React.SetStateAction<string | null>} cloudStorageValue selected cloud storage
     */
-    const handleCloudStorageSelected = (cloudStorageValue: any) => {
+    const handleCloudStorageSelected = (cloudStorageValue: React.SetStateAction<string | null>) => {
         setCloudStorage(cloudStorageValue)
     }
 
     /**
     * Handles Machine type selection
-    * @param {any} machineType selected machine type
+    * @param {React.SetStateAction<string | null>} machineType selected machine type
     */
-    const handleMachineType = (machineType: any) => {
+    const handleMachineType = (machineType: React.SetStateAction<string | null>) => {
         setMachineTypeSelected(machineType)
         setAcceleratedCount(null)
         setAcceleratorType(null)
@@ -264,7 +257,7 @@ const CreateVertexScheduler = ({
     * Handles changes to the Max Runs input field.
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
-    const handleMaxRuns = (e: any | React.ChangeEvent<HTMLInputElement>) => {
+    const handleMaxRuns = (e: React.ChangeEvent<HTMLInputElement>) => {
         const re = /^[1-9][0-9]*$/;
         if (e.target.value === '' || re.test(e.target.value)) {
             setMaxRuns(e.target.value);
@@ -273,33 +266,33 @@ const CreateVertexScheduler = ({
 
     /**
     * Handles Acceleration Type listing
-    * @param {any} acceleratorConfig acceleratorConfigs data
+    * @param {AcceleratorConfig} acceleratorConfig acceleratorConfigs data
     */
-    const getAcceleratedType = (acceleratorConfig: any) => {
-        return acceleratorConfig.map((item: any) => item.acceleratorType);
+    const getAcceleratedType = (acceleratorConfig: AcceleratorConfig[]) => {
+        return acceleratorConfig.map((item: { acceleratorType: string; }) => item.acceleratorType);
     }
 
     /**
     * Handles Acceleration Type selection
-    * @param {any} acceleratorType accelerationType selected
+    * @param {React.SetStateAction<string | null>} acceleratorType accelerationType selected
     */
-    const handleAccelerationType = (acceleratorType: any) => {
+    const handleAccelerationType = (acceleratorType: React.SetStateAction<string | null>) => {
         setAcceleratorType(acceleratorType);
     }
 
     /**
     * Handles Acceleration Count selection
-    * @param {stranying} acceleratorCount accelerationType count selected
+    * @param {React.SetStateAction<string | null>} acceleratorCount accelerationType count selected
     */
-    const handleAcceleratorCount = (acceleratorCount: any) => {
+    const handleAcceleratorCount = (acceleratorCount: React.SetStateAction<string | null>) => {
         setAcceleratedCount(acceleratorCount);
     }
 
     /**
     * Handles Network selection
-    * @param {any} eventValue network selected
+    * @param {{ target: { value: React.SetStateAction<string>; }; }} eventValue network selected
     */
-    const handleNetworkSelection = (eventValue: any) => {
+    const handleNetworkSelection = (eventValue: { target: { value: React.SetStateAction<string>; }; }) => {
         // console.log('network', eventValue);
         if (networkSelected === 'networkInThisProject') {
             setSharedNetworkSelected(null)
@@ -312,9 +305,9 @@ const CreateVertexScheduler = ({
 
     /**
     * Handles start date selection and set the endDateError to true if end date is greater than start date
-    * @param {any} val Start date selected
+    * @param {string | null | any} val Start date selected
     */
-    const handleStartDate = (val: any) => {
+    const handleStartDate = (val: string | null | any) => {
         setStartDate(val.$d)
         if (val && endDate && dayjs(endDate).isBefore(dayjs(val))) {
             setEndDateError(true);
@@ -325,9 +318,9 @@ const CreateVertexScheduler = ({
 
     /**
     * Handles end date selection and set the endDateError to true if end date is greater than start date
-    * @param {any} val End date selected
+    * @param {string | null | any} val End date selected
     */
-    const handleEndDate = (val: any) => {
+    const handleEndDate = (val: string | null | any) => {
         if (startDate && (dayjs(val).isBefore(dayjs(startDate)) || dayjs(val).isSame(dayjs(startDate), 'minute'))) {
             setEndDateError(true);
         } else {
@@ -427,8 +420,8 @@ const CreateVertexScheduler = ({
     /**
     * Hosts the sub network API service based on the primary network
     */
-    const subNetworkAPI = async (primaryNetwork: any) => {
-        await VertexServices.subNetworkAPIService(region, primaryNetwork['name'], setSubNetworkList, setSubNetworkLoading);
+    const subNetworkAPI = async (primaryNetwork: string | undefined) => {
+        await VertexServices.subNetworkAPIService(region, primaryNetwork, setSubNetworkList, setSubNetworkLoading);
     };
 
     /**
@@ -438,8 +431,9 @@ const CreateVertexScheduler = ({
         await VertexServices.sharedNetworkAPIService(setSharedNetworkList, setSharedNetworkLoading);
     };
 
-    const selectedMachineType: any = machineTypeList && machineTypeList.find((item: any) => item.machineType === machineTypeSelected);
-
+    const selectedMachineType = machineTypeList && machineTypeList.find((item) => item.machineType === machineTypeSelected);
+    console.log(primaryNetworkList)
+    console.log(subNetworkList)
     /**
     * Disable the create button when the mandatory fields are not filled and the validations is not proper.
     */
@@ -579,7 +573,7 @@ const CreateVertexScheduler = ({
                         <div className="create-scheduler-form-element">
                             <Autocomplete
                                 className="create-scheduler-style"
-                                options={machineTypeList && machineTypeList.map((item: any) => item.machineType)}
+                                options={machineTypeList && machineTypeList.map((item) => item.machineType)}
                                 value={machineTypeSelected}
                                 onChange={(_event, val) => handleMachineType(val)}
                                 renderInput={params => (
@@ -594,7 +588,7 @@ const CreateVertexScheduler = ({
                         }
 
                         {
-                            machineTypeList && machineTypeList.map((item: any) => {
+                            machineTypeList && machineTypeList.map((item) => {
                                 if ("acceleratorConfigs" in item && item.machineType === machineTypeSelected && item.acceleratorConfigs !== null) {
                                     return (
                                         <div className="execution-history-main-wrapper">
@@ -614,7 +608,7 @@ const CreateVertexScheduler = ({
                                             </div>
 
                                             {
-                                                item?.acceleratorConfigs?.map((element: { allowedCounts: any[]; acceleratorType: string; }) => {
+                                                item?.acceleratorConfigs?.map((element: { allowedCounts: number[]; acceleratorType: string; }) => {
                                                     return (
                                                         <>
                                                             {
@@ -649,7 +643,7 @@ const CreateVertexScheduler = ({
                         <div className="create-scheduler-form-element">
                             <Autocomplete
                                 className="create-scheduler-style"
-                                options={kernel}
+                                options={KERNEL_VALUE}
                                 value={kernelSelected}
                                 onChange={(_event, val) => handleKernel(val)}
                                 renderInput={params => (
@@ -683,7 +677,7 @@ const CreateVertexScheduler = ({
                             <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
                                 <Autocomplete
                                     className="create-scheduler-style create-scheduler-form-element-input-fl"
-                                    options={diskTypeOptions}
+                                    options={DISK_TYPE_VALUE}
                                     value={diskTypeSelected}
                                     onChange={(_event, val) => handleDiskType(val)}
                                     renderInput={params => (
@@ -698,7 +692,7 @@ const CreateVertexScheduler = ({
                                     className="create-scheduler-style create-scheduler-form-element-input-fl"
                                     value={diskSize}
                                     onChange={e => handleDiskSize(e)}
-                                    onBlur={(e: any) => handleDefaultDiskSize(e)}
+                                    onBlur={(e: React.ChangeEvent<HTMLInputElement>) => handleDefaultDiskSize(e)}
                                     type="number"
                                     placeholder=""
                                     Label="Disk Size (in GB)"
@@ -873,20 +867,6 @@ const CreateVertexScheduler = ({
                                     )}
                                 </>
                         }
-
-                        {/* <div className="create-scheduler-form-element">
-                            <Input
-                                className="create-scheduler-style"
-                                value={networkTags}
-                                onChange={e => handleNetworkTags(e)}
-                                type="text"
-                                placeholder=""
-                                Label="Network tags"
-                            //disabled={editMode}
-                            />
-                        </div>
-                        <span className="tab-description tab-text-sub-cl">Network tabs are text attributes you can add to make firewall rules and routes applicable to specify VM instances</span> */}
-
                         <div className="create-scheduler-label">Schedule</div>
                         <div className="create-scheduler-form-element">
                             <FormControl>

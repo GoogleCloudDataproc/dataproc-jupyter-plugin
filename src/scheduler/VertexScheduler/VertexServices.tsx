@@ -21,13 +21,23 @@ import { DataprocLoggingService, LOG_LEVEL } from '../../utils/loggingService';
 import { toastifyCustomStyle } from '../../utils/utils';
 import { Dayjs } from 'dayjs';
 
+interface IMachineType {
+    machineType: string
+    acceleratorConfigs: AcceleratorConfig[]
+}
+
+interface AcceleratorConfig {
+    acceleratorType: string
+    allowedCounts: number[]
+}
+
 interface IPayload {
     input_filename: string;
     display_name: string;
-    machine_type: null;
-    accelerator_type?: null;
-    accelerator_count?: number | null;
-    kernel_name: null;
+    machine_type: string | null;
+    accelerator_type?: string | null;
+    accelerator_count?: string | null;
+    kernel_name: string | null;
     schedule_value: string | undefined;
     time_zone?: string;
     max_run_count: string | number;
@@ -37,8 +47,8 @@ interface IPayload {
     service_account: string | undefined,
     network: string | undefined;
     subnetwork: string | undefined;
-    start_time: null | undefined;
-    end_time: null | undefined;
+    start_time: string | null | undefined;
+    end_time: string | null | undefined;
 }
 
 interface IDagList {
@@ -106,7 +116,7 @@ export class VertexServices {
     };
     static machineTypeAPIService = async (
         region: string,
-        setMachineTypeList: (value: string[]) => void,
+        setMachineTypeList: (value: IMachineType[]) => void,
         setMachineTypeLoading: (value: boolean) => void,
     ) => {
         try {
@@ -251,7 +261,7 @@ export class VertexServices {
 
     static subNetworkAPIService = async (
         region: string,
-        primaryNetworkSelected: string,
+        primaryNetworkSelected: string | undefined,
         setSubNetworkList: (value: { name: string; link: string }[]) => void,
         setSubNetworkLoading: (value: boolean) => void
     ) => {

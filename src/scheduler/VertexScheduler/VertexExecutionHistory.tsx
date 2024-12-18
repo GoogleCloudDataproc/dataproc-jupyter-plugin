@@ -57,7 +57,7 @@ const VertexExecutionHistory = ({
 
     const today = dayjs()
 
-    const [dagRunId, setDagRunId] = useState('');
+    const [dagRunId, setDagRunId] = useState<string>('');
     const [jobRunsData, setJobRunsData] = useState<IDagRunList | undefined>();
     const currentDate = new Date().toLocaleDateString();
     const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
@@ -107,39 +107,47 @@ const VertexExecutionHistory = ({
 
     /**
     * Handles Date selection
-    * @param {any} selectedValue selected kernel
+    * @param {React.SetStateAction<dayjs.Dayjs | null>} selectedValue selected kernel
     */
-    const handleDateSelection = (selectedValue: any) => {
+    const handleDateSelection = (selectedValue: React.SetStateAction<dayjs.Dayjs | null>) => {
         setDagRunId('');
         setSelectedDate(selectedValue);
     };
 
     /**
     * Handles Month selection
-    * @param {any} newMonth selected kernel
+    * @param {React.SetStateAction<dayjs.Dayjs | null>} newMonth selected kernel
     */
-    const handleMonthChange = (newMonth: any) => {
-        // Check if the new month is different from the current month
-        if (newMonth.month() !== today.month()) {
-            // Reset selected date if the month changes
+    const handleMonthChange = (newMonth: React.SetStateAction<dayjs.Dayjs | null>) => {
+        const resolvedMonth = typeof newMonth === 'function' ? newMonth(today) : newMonth;
+
+        if (!resolvedMonth) {
+            setSelectedDate(null);
+            setSelectedMonth(null);
+            return;
+        }
+
+        if (resolvedMonth.month() !== today.month()) {
+            setDagRunId('')
             setSelectedDate(null);
         } else {
-            // Keep the selected date unchanged if we're still in the current month
             setSelectedDate(today);
         }
-        setSelectedMonth(newMonth)
+
+        setSelectedMonth(resolvedMonth);
     };
+
 
     /**
      * Checks if the given day is included in the provided date list.
-     * @param {any[]} dateList - List of dates in any valid date string/format.
+     * @param {string[]} dateList - List of dates in any valid date string/format.
      * @param {string | number | Date | dayjs.Dayjs | null | undefined} day - The date to format and check.
      * @returns {boolean} - Whether the formatted day exists in the date list.
      */
-    const getFormattedDate = (dateList: any[], day: string | number | Date | dayjs.Dayjs | null | undefined) => {
+    const getFormattedDate = (dateList: string[], day: string | number | Date | dayjs.Dayjs | null | undefined) => {
 
         const formattedDay = dayjs(day).format('YYYY-MM-DD');
-        const date_list = dateList.map(dateStr => new Date(dateStr).toISOString().split('T')[0]).includes(formattedDay);
+        const date_list = dateList.map((dateStr: string | number | Date) => new Date(dateStr).toISOString().split('T')[0]).includes(formattedDay);
         return date_list
     }
 

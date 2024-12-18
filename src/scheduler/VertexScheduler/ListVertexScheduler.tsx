@@ -47,7 +47,6 @@ function listVertexScheduler({
   app: JupyterFrontEnd;
   settingRegistry: ISettingRegistry;
   handleDagIdSelection: (scheduleId: any, scheduleName: string) => void;
-  // handleDagIdSelection: (dagId: any) => void;
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dagList, setDagList] = useState<IDagList[]>([]);
@@ -384,7 +383,7 @@ function listVertexScheduler({
 
   const openEditDagNotebookFile = async () => {
     let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-    const openNotebookFile: any = await app.commands.execute('docmanager:open', {
+    const openNotebookFile = await app.commands.execute('docmanager:open', {
       path: filePath
     });
     setInputNotebookFilePath('');

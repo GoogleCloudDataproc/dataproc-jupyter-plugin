@@ -215,8 +215,10 @@ const VertexJobRuns = ({
         );
     };
 
-    const handleDagRunStateClick = (data: any) => {
-        setDagRunId(data.dagRunId);
+    const handleDagRunStateClick = (data: { id?: string; status?: string; dagRunId?: string; }) => {
+        if (data.dagRunId) {
+            setDagRunId(data.dagRunId);
+        }
     };
 
     const handleDownloadOutput = async (event: React.MouseEvent) => {
@@ -230,7 +232,7 @@ const VertexJobRuns = ({
         );
     };
 
-    const renderActions = (data: any) => {
+    const renderActions = (data: { id?: string; status?: string; dagRunId?: string; state?: string; }) => {
         return (
             <div className="actions-icon">
                 {data.dagRunId === downloadOutputDagRunId ? (
