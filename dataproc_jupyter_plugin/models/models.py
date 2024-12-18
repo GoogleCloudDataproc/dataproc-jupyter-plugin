@@ -78,6 +78,8 @@ class DescribeVertexJob(BaseModel):
     subnetwork: str = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
+    disk_type: str = None
+    disk_size: str = None
 
     @classmethod
     def from_dict(cls, data):
