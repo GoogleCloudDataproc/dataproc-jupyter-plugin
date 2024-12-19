@@ -98,7 +98,10 @@ class Client:
                 else f"TZ={job.time_zone} {schedule_value}"
             )
             machine_type = job.machine_type.split(" ", 1)[0]
-            labels = {param.split(":")[0]: param.split(":")[1] for param in job.parameters}
+            labels = {
+                param.split(":")[0]: param.split(":")[1] for param in job.parameters
+            }
+            disk_type = job.disk_type.split(" ", 1)[0]
 
             api_endpoint = f"https://{self.region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.region_id}/schedules"
             headers = self.create_headers()
@@ -118,7 +121,7 @@ class Client:
                                 "acceleratorCount": job.accelerator_count,
                             },
                             "persistentDiskSpec": {
-                                "diskType": job.disk_type,
+                                "diskType": disk_type,
                                 "diskSizeGb": job.disk_size,
                             },
                             "networkSpec": {
