@@ -51,21 +51,28 @@ interface IDagList {
   schedule: string;
   scheduleInterval: string;
 }
+interface IVertexDagList {
+  displayName: string;
+  schedule: string;
+  status: string;
+}
 
 interface IPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
   pageIndex: number;
   allData:
-    | IBatch[]
-    | ITemplate[]
-    | ICluster[]
-    | ISessionTemplateDisplay[]
-    | IDagList[];
+  | IBatch[]
+  | ITemplate[]
+  | ICluster[]
+  | ISessionTemplateDisplay[]
+  | IDagList[]
+  | IVertexDagList[];
   previousPage: () => void;
   nextPage: () => void;
   canPreviousPage: boolean;
   canNextPage: boolean;
+  scheduleSelected?: string;
 }
 const iconPrevious = new LabIcon({
   name: 'launcher:previous-icon',
@@ -84,24 +91,32 @@ export const PaginationView = ({
   previousPage,
   nextPage,
   canPreviousPage,
-  canNextPage
+  canNextPage,
+  scheduleSelected
+
 }: IPaginationViewProps) => {
   return (
     <div className="pagination-parent-view">
-      <div>Rows per page: </div>
-      <Select
-        className="page-size-selection"
-        value={pageSize.toString()} // Convert pageSize to string for compatibility
-        onChange={(e, { value }) => {
-          const selectedPageSize = parseInt(value as string, 10); // Parse the value to a number
-          setPageSize(selectedPageSize); // Use the parsed number as the new pageSize
-        }}
-        options={[
-          { key: '50', value: '50', text: '50' },
-          { key: '100', value: '100', text: '100' },
-          { key: '200', value: '200', text: '200' }
-        ]}
-      />
+      {
+        !scheduleSelected &&
+          <>
+            <div>Rows per page: </div>
+            <Select
+              className="page-size-selection"
+              value={pageSize.toString()} // Convert pageSize to string for compatibility
+              onChange={(e, { value }) => {
+                const selectedPageSize = parseInt(value as string, 10); // Parse the value to a number
+                setPageSize(selectedPageSize); // Use the parsed number as the new pageSize
+              }}
+              options={[
+                { key: '50', value: '50', text: '50' },
+                { key: '100', value: '100', text: '100' },
+                { key: '200', value: '200', text: '200' }
+              ]}
+            />
+          </>
+      }
+
       {(pageIndex + 1) * pageSize > allData.length ? (
         <div className="page-display-part">
           {pageIndex * pageSize + 1} - {allData.length} of {allData.length}
