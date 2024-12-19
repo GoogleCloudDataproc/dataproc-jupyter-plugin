@@ -18,9 +18,9 @@ import React, { useEffect, useState } from 'react';
 import { Typography, CircularProgress } from '@mui/material';
 import { SchedulerService } from '../schedulerServices';
 import { handleDebounce } from '../../utils/utils';
-import { VertexServices } from './VertexServices';
 import { IconExpandLess, IconExpandMore } from '../../utils/icons';
 import { IDagRunList } from './VertexInterfaces';
+import { LogEntriesServices } from '../../Services/LogEntries';
 
 const VertexJobTaskLogs = ({
     composerName,
@@ -60,7 +60,7 @@ const VertexJobTaskLogs = ({
     }, []);
 
     const listDagTaskInstancesRunsList = async () => {
-        await VertexServices.vertexJobTaskLogsListService(
+        await LogEntriesServices.vertexJobTaskLogsListService(
             dagRunId,
             jobRunsData,
             setDagTaskInstancesList,

@@ -25,11 +25,11 @@ import { CircularProgress, Button } from '@mui/material';
 import DeletePopup from '../../utils/deletePopup';
 import { PLUGIN_ID } from '../../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { VertexServices } from './VertexServices';
 import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
 import { IconActive, IconDelete, IconEditDag, IconEditNotebook, IconFailed, IconListComplete, IconListPause, IconPause, IconPlay, IconSuccess, IconTrigger } from '../../utils/icons';
 import { IDagList } from './VertexInterfaces';
+import { VertexServices } from '../../Services/Vertex';
 
 function listVertexScheduler({
   region,

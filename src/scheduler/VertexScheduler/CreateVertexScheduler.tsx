@@ -42,13 +42,16 @@ import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
 import VertexScheduleJobs from './VertexScheduleJobs';
 import { CORN_EXP_DOC_URL, DISK_TYPE_VALUE, internalScheduleMode, KERNEL_VALUE, scheduleMode, scheduleValueExpression } from '../../utils/const';
-import { VertexServices } from './VertexServices';
 import LabelProperties from '../../jobs/labelProperties';
 import LearnMore from '../common/LearnMore';
 import ErrorMessage from '../common/ErrorMessage';
 import { IconError } from '../../utils/icons';
 import { toast } from 'react-toastify';
 import { AcceleratorConfig, IMachineType } from './VertexInterfaces';
+import { ComputeServices } from '../../Services/Compute';
+import { VertexServices } from '../../Services/Vertex';
+import { StorageServices } from '../../Services/Storage';
+import { IamServices } from '../../Services/Iam';
 
 const CreateVertexScheduler = ({
     themeManager,
@@ -377,7 +380,7 @@ const CreateVertexScheduler = ({
     * Hosts the parent project API service
     */
     const hostProjectAPI = async () => {
-        await VertexServices.getParentProjectAPIService(setHostProject);
+        await ComputeServices.getParentProjectAPIService(setHostProject);
     };
 
     /**
@@ -391,35 +394,35 @@ const CreateVertexScheduler = ({
     * Hosts the cloud storage API service
     */
     const cloudStorageAPI = async () => {
-        await VertexServices.cloudStorageAPIService(setCloudStorageList, setCloudStorageLoading);
+        await StorageServices.cloudStorageAPIService(setCloudStorageList, setCloudStorageLoading);
     };
 
     /**
     * Hosts the service account API service
     */
     const serviceAccountAPI = async () => {
-        await VertexServices.serviceAccountAPIService(setServiceAccountList, setServiceAccountLoading);
+        await IamServices.serviceAccountAPIService(setServiceAccountList, setServiceAccountLoading);
     };
 
     /**
     * Hosts the primary network API service
     */
     const primaryNetworkAPI = async () => {
-        await VertexServices.primaryNetworkAPIService(setPrimaryNetworkList, setPrimaryNetworkLoading);
+        await ComputeServices.primaryNetworkAPIService(setPrimaryNetworkList, setPrimaryNetworkLoading);
     };
 
     /**
     * Hosts the sub network API service based on the primary network
     */
     const subNetworkAPI = async (primaryNetwork: string | undefined) => {
-        await VertexServices.subNetworkAPIService(region, primaryNetwork, setSubNetworkList, setSubNetworkLoading);
+        await ComputeServices.subNetworkAPIService(region, primaryNetwork, setSubNetworkList, setSubNetworkLoading);
     };
 
     /**
     * Hosts the shared network API service
     */
     const sharedNetworkAPI = async () => {
-        await VertexServices.sharedNetworkAPIService(setSharedNetworkList, setSharedNetworkLoading);
+        await ComputeServices.sharedNetworkAPIService(setSharedNetworkList, setSharedNetworkLoading);
     };
 
     const selectedMachineType = machineTypeList && machineTypeList.find((item) => item.machineType === machineTypeSelected);

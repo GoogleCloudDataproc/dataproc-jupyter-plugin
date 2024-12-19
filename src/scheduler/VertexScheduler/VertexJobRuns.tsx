@@ -22,9 +22,9 @@ import { Dayjs } from 'dayjs';
 import TableData from '../../utils/tableData';
 import { ICellProps, handleDebounce } from '../../utils/utils';
 import { SchedulerService } from '../schedulerServices';
-import { VertexServices } from './VertexServices';
 import { IconDownload } from '../../utils/icons';
 import { IDagRunList } from './VertexInterfaces';
+import { VertexServices } from '../../Services/Vertex';
 
 const VertexJobRuns = ({
     region,
