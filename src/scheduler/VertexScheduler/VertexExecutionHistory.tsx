@@ -49,6 +49,7 @@ const VertexExecutionHistory = ({
     const today = dayjs()
 
     const [dagRunId, setDagRunId] = useState<string>('');
+    const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
     const [jobRunsData, setJobRunsData] = useState<IDagRunList | undefined>();
     const currentDate = new Date().toLocaleDateString();
     const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
@@ -119,12 +120,12 @@ const VertexExecutionHistory = ({
         }
 
         if (resolvedMonth.month() !== today.month()) {
-            setDagRunId('')
             setSelectedDate(null);
         } else {
             setSelectedDate(today);
         }
-
+        setDagRunId('')
+        setDagRunsList([])
         setSelectedMonth(resolvedMonth);
     };
 
@@ -269,6 +270,8 @@ const VertexExecutionHistory = ({
                             bucketName={bucketName}
                             setIsLoading={setIsLoading}
                             isLoading={isLoading}
+                            dagRunsList={dagRunsList}
+                            setDagRunsList={setDagRunsList}
                         />
                     </div>
                     <div className="execution-history-right-wrapper">

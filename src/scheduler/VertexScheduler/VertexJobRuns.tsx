@@ -42,7 +42,9 @@ const VertexJobRuns = ({
     setDarkGreenListDates,
     bucketName,
     setIsLoading,
-    isLoading
+    isLoading,
+    dagRunsList,
+    setDagRunsList
 }: {
     region: string;
     schedulerData: string;
@@ -60,8 +62,9 @@ const VertexJobRuns = ({
     bucketName: string;
     setIsLoading: (value: boolean) => void;
     isLoading: boolean;
+    dagRunsList: IDagRunList[];
+    setDagRunsList: (value: IDagRunList[]) => void;
 }): JSX.Element => {
-    const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
     const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
     const [listDagRunHeight, setListDagRunHeight] = useState(
         window.innerHeight - 485
