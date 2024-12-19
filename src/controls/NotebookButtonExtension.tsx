@@ -163,28 +163,8 @@ class NotebookButtonExtensionPoint implements IDisposable {
    * Fetch and update kernel status from the KernelAPI.
    */
   private async fetchAndUpdateKernelStatus() {
-    try {
-      const currentKernelId = this.context.sessionContext.session?.kernel?.id;
-      if (!currentKernelId) {
-        this.setKernelStatus('Initializing', '#455A64');
-        return;
-      }
-
-      const runningKernels = await KernelAPI.listRunning();
-      const currentKernel = runningKernels.find(
-        kernel => kernel.id === currentKernelId
-      );
-
-      if (currentKernel) {
-        const kernelStatus = currentKernel?.execution_state ?? 'Unknown';
-        this.setKernelStatus(kernelStatus, this.getStatusColor(kernelStatus));
-      } else {
-        this.setKernelStatus('Failed', '#D93025');
-      }
-    } catch (error) {
-      console.error('Error fetching kernel status:', error);
-      this.setKernelStatus('Failed', '#D93025');
-    }
+    const kernelStatus = this.context.sessionContext.kernelDisplayStatus;
+    this.setKernelStatus(kernelStatus, this.getStatusColor(kernelStatus));
   }
 
   /**
@@ -241,7 +221,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
         return ' #455A64';
       case 'restarting':
         return '#9747FF';
-      case 'Unknown':
+      case 'unknown':
         return '#C9C9C9';
       default:
         return '#FF9800';
