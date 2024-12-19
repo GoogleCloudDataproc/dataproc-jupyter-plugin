@@ -35,8 +35,11 @@ from dataproc_jupyter_plugin.controllers import (
     airflow,
     bigquery,
     composer,
+    compute,
     dataproc,
     executor,
+    iam,
+    storage,
     vertex,
 )
 
@@ -212,6 +215,14 @@ def setup_handlers(web_app):
         "bigQuerySearch": bigquery.SearchController,
         "api/vertex/createJobScheduler": vertex.CreateController,
         "api/vertex/createNewBucket": vertex.CreateNewBucketController,
+        "api/vertex/uiConfig": vertex.UIConfigController,
+        "api/compute/region": compute.RegionController,
+        "api/compute/network": compute.NetworkController,
+        "api/compute/subNetwork": compute.SubNetworkController,
+        "api/compute/sharedNetwork": compute.SharedNetworkController,
+        "api/storage/listBucket": storage.CloudStorageController,
+        "api/iam/listServiceAccount": iam.ServiceAccountController,
+        "api/compute/getXpnHost": compute.GetXpnHostController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)
