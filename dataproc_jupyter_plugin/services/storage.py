@@ -16,7 +16,7 @@ from google.cloud import storage
 
 
 class Client:
-    def __init__(self, credentials, log, client_session):
+    def __init__(self, credentials, log):
         self.log = log
         if not (
             ("access_token" in credentials)
@@ -28,7 +28,6 @@ class Client:
         self._access_token = credentials["access_token"]
         self.project_id = credentials["project_id"]
         self.region_id = credentials["region_id"]
-        self.client_session = client_session
 
     async def list_bucket(self):
         try:

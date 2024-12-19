@@ -14,7 +14,6 @@
 
 import json
 
-import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
 
@@ -27,12 +26,11 @@ class CloudStorageController(APIHandler):
     async def get(self):
         """Returns cloud storage bucket"""
         try:
-            async with aiohttp.ClientSession() as client_session:
-                storage_client = storage.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                csb = await storage_client.list_bucket()
-                self.finish(json.dumps(csb))
+            storage_client = storage.Client(
+                await credentials.get_cached(), self.log
+            )
+            csb = await storage_client.list_bucket()
+            self.finish(json.dumps(csb))
         except Exception as e:
             self.log.exception(f"Error fetching cloud storage bucket: {str(e)}")
             self.finish({"error": str(e)})

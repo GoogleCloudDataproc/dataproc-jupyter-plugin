@@ -14,7 +14,6 @@
 
 import json
 
-import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
 

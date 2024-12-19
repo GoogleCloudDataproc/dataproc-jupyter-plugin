@@ -48,11 +48,11 @@ class Client:
         try:
             regions = []
             credentials = oauth2.Credentials(token=self._access_token)
-            compute_client = compute_v1.RegionsClient(credentials=credentials)
+            regions_client = compute_v1.RegionsClient(credentials=credentials)
             request = compute_v1.ListRegionsRequest(
                 project=self.project_id,
             )
-            response = compute_client.list(request=request)
+            response = regions_client.list(request=request)
             for item in response:
                 regions.append(item.name)
             return regions
@@ -65,11 +65,11 @@ class Client:
         try:
             networks = []
             credentials = oauth2.Credentials(token=self._access_token)
-            compute_client = compute_v1.NetworksClient(credentials=credentials)
+            networks_client = compute_v1.NetworksClient(credentials=credentials)
             request = compute_v1.ListNetworksRequest(
                 project=self.project_id,
             )
-            response = compute_client.list(request=request)
+            response = networks_client.list(request=request)
             for item in response.items:
                 networks.append(
                     proto.Message.to_dict(
@@ -88,12 +88,12 @@ class Client:
         try:
             sub_networks = []
             credentials = oauth2.Credentials(token=self._access_token)
-            compute_client = compute_v1.SubnetworksClient(credentials=credentials)
+            subnetworks_client = compute_v1.SubnetworksClient(credentials=credentials)
             request = compute_v1.ListSubnetworksRequest(
                 project=self.project_id,
                 region=region_id,
             )
-            response = compute_client.list(request=request)
+            response = subnetworks_client.list(request=request)
             for item in response.items:
                 if network_id in item.network:
                     sub_networks.append(
@@ -113,11 +113,11 @@ class Client:
         try:
             shared_networks = []
             credentials = oauth2.Credentials(token=self._access_token)
-            compute_client = compute_v1.SubnetworksClient(credentials=credentials)
+            subnetworks_client = compute_v1.SubnetworksClient(credentials=credentials)
             request = compute_v1.ListUsableSubnetworksRequest(
                 project=project_id,
             )
-            response = compute_client.list_usable(request=request)
+            response = subnetworks_client.list_usable(request=request)
             for item in response:
                 if region_id in item.subnetwork:
                     shared_networks.append(

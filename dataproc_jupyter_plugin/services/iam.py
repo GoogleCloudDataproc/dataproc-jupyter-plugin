@@ -37,11 +37,11 @@ class Client:
     async def list_service_account(self):
         try:
             credentials = oauth2.Credentials(self._access_token)
-            iam_admin_client = iam_admin_v1.IAMAsyncClient(credentials=credentials)
+            iam_client = iam_admin_v1.IAMAsyncClient(credentials=credentials)
             request = types.ListServiceAccountsRequest()
             request.name = f"projects/{self.project_id}"
 
-            accounts = await iam_admin_client.list_service_accounts(request=request)
+            accounts = await iam_client.list_service_accounts(request=request)
             account_list = []
             async for account in accounts:
                 account_list.append(json.loads(proto.Message.to_json(account)))
