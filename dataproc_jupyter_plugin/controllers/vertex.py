@@ -40,7 +40,7 @@ class UIConfigController(APIHandler):
             self.finish({"error": str(e)})
 
 
-class CreateController(APIHandler):
+class CreateVertexScheduleController(APIHandler):
     @tornado.web.authenticated
     async def post(self):
         try:
@@ -56,7 +56,7 @@ class CreateController(APIHandler):
             self.finish({"error": str(e)})
 
 
-class CreateNewBucketController(APIHandler):
+class CreateBucketController(APIHandler):
     @tornado.web.authenticated
     async def post(self):
         try:
