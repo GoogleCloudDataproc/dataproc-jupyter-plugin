@@ -214,7 +214,7 @@ def setup_handlers(web_app):
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
         "api/vertex/createJobScheduler": vertex.CreateVertexScheduleController,
-        "api/vertex/createNewBucket": vertex.CreateBucketController,
+        "api/storage/createNewBucket": vertex.CreateBucketController,
         "api/vertex/uiConfig": vertex.UIConfigController,
         "api/compute/region": compute.RegionController,
         "api/compute/network": compute.NetworkController,

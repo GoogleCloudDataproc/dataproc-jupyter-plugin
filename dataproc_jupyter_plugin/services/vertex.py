@@ -14,7 +14,9 @@
 
 import aiohttp
 
+import google.oauth2.credentials as oauth2
 from google.cloud import storage
+
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
     VERTEX_STORAGE_BUCKET,
@@ -63,7 +65,8 @@ class Client:
         try:
             if not bucket_name:
                 raise ValueError("Bucket name cannot be empty")
-            storage_client = storage.Client()
+            credentials = oauth2.Credentials(token=self._access_token)
+            storage_client = storage.Client(credentials=credentials)
             bucket = storage_client.create_bucket(bucket_name)
         except Exception as error:
             self.log.exception(f"Error in creating Bucket: {error}")
