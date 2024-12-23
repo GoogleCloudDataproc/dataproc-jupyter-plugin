@@ -192,6 +192,7 @@ class Client:
             payload = data.get("createNotebookExecutionJobRequest").get(
                 "notebookExecutionJob"
             )
+            payload["scheduleResourceName"] = data.get("name")
             async with self.client_session.post(
                 api_endpoint, headers=headers, json=payload
             ) as response:
