@@ -34,7 +34,9 @@ class ListNotebookExecutionJobsController(APIHandler):
                 client = vertex.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                jobs = await client.list_notebook_execution_jobs(region_id, schedule_id, start_date)
+                jobs = await client.list_notebook_execution_jobs(
+                    region_id, schedule_id, start_date
+                )
                 self.finish(json.dumps(jobs))
         except Exception as e:
             self.log.exception(f"Error fetching notebook execution jobs: {str(e)}")

@@ -28,9 +28,7 @@ class ListEntriesController(APIHandler):
         """Returns log entries"""
         try:
             filter_query = self.get_argument("filter_query")
-            logging_client = logEntries.Client(
-                await credentials.get_cached(), self.log
-            )
+            logging_client = logEntries.Client(await credentials.get_cached(), self.log)
             logs = await logging_client.list_log_entries(filter_query)
             self.finish(json.dumps(logs))
         except Exception as e:

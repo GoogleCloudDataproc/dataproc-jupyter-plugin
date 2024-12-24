@@ -54,7 +54,10 @@ class Client:
                     else:
                         jobs = resp.get("notebookExecutionJobs")
                         for job in jobs:
-                            if if start_date.rsplit('-',1)[0] == job.get('createTime').rsplit('-',1)[0]:
+                            if (
+                                start_date.rsplit("-", 1)[0]
+                                == job.get("createTime").rsplit("-", 1)[0]
+                            ):
                                 execution_jobs.append(job)
                         return execution_jobs
                 else:
@@ -63,5 +66,7 @@ class Client:
                         f"Error fetching notebook execution jobs: {response.reason} {await response.text()}"
                     )
         except Exception as e:
-            self.log.exception(f"Error fetching list of notebook execution jobs: {str(e)}")
+            self.log.exception(
+                f"Error fetching list of notebook execution jobs: {str(e)}"
+            )
             return {"Error fetching list of notebook execution jobs": str(e)}

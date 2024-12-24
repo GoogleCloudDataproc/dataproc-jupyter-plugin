@@ -44,7 +44,9 @@ class Client:
         try:
             logs = []
             credentials = oauth2.Credentials(token=self._access_token)
-            logging_client = logging.Client(project=self.project_id, credentials=credentials)
+            logging_client = logging.Client(
+                project=self.project_id, credentials=credentials
+            )
             log_entries = logging_client.list_entries(
                 filter_=filter_query, page_size=1000, order_by="timestamp desc"
             )
