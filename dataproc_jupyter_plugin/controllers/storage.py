@@ -26,9 +26,7 @@ class CloudStorageController(APIHandler):
     async def get(self):
         """Returns cloud storage bucket"""
         try:
-            storage_client = storage.Client(
-                await credentials.get_cached(), self.log
-            )
+            storage_client = storage.Client(await credentials.get_cached(), self.log)
             csb = await storage_client.list_bucket()
             self.finish(json.dumps(csb))
         except Exception as e:

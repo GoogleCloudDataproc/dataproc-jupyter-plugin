@@ -189,7 +189,6 @@ class Client:
         except Exception as e:
             return {"error": str(e)}
 
-            
     async def list_uiconfig(self, region_id):
         try:
             uiconfig = []

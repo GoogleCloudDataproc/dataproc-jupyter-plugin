@@ -133,7 +133,6 @@ class Client:
             self.log.exception(f"Error fetching shared network: {str(e)}")
             return {"Error fetching network shared from host": str(e)}
 
-
     async def get_xpn_host(self):
         try:
             res = {}

@@ -79,7 +79,9 @@ class SharedNetworkController(APIHandler):
             compute_client = compute.Client(
                 await credentials.get_cached(), self.log, None
             )
-            shared_network = await compute_client.get_shared_network(project_id, region_id)
+            shared_network = await compute_client.get_shared_network(
+                project_id, region_id
+            )
             self.finish(json.dumps(shared_network))
         except Exception as e:
             self.log.exception(f"Error fetching network shared from host: {str(e)}")
