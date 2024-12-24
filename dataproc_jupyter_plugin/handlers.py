@@ -224,6 +224,7 @@ def setup_handlers(web_app):
         "api/storage/listBucket": storage.CloudStorageController,
         "api/iam/listServiceAccount": iam.ServiceAccountController,
         "api/compute/getXpnHost": compute.GetXpnHostController,
+        "api/storage/downloadOutput": storage.DownloadOutputController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

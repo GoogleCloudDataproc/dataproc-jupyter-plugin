@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from google.cloud import storage
+import google.oauth2.credentials as oauth2
+import aiofiles
 
 
 class Client:
@@ -41,3 +44,23 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error fetching cloud storage buckets: {str(e)}")
             return {"Error fetching cloud storage buckets": str(e)}
+
+    async def download_output(self, output_uri, bucket_name):
+        try:
+            credentials = oauth2.Credentials(self._access_token)
+            storage_client = storage.Client(credentials=credentials)
+            blob_name = output_uri.split("//", 1)[1]
+            bucket = storage_client.bucket(bucket_name)
+            blob = bucket.blob(blob_name)
+            original_file_name = os.path.basename(blob_name)
+            destination_file_name = os.path.join(".", original_file_name)
+            async with aiofiles.open(destination_file_name, "wb") as f:
+                file_data = blob.download_as_bytes()
+                await f.write(file_data)
+            self.log.info(
+                f"Output notebook file '{original_file_name}' downloaded successfully"
+            )
+            return 0
+        except Exception as error:
+            self.log.exception(f"Error downloading output notebook file: {str(error)}")
+            return {"error": str(error)}

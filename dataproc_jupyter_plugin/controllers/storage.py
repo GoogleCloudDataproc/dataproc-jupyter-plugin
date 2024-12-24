@@ -32,3 +32,19 @@ class CloudStorageController(APIHandler):
         except Exception as e:
             self.log.exception(f"Error fetching cloud storage bucket: {str(e)}")
             self.finish({"error": str(e)})
+
+
+class DownloadOutputController(APIHandler):
+    @tornado.web.authenticated
+    async def post(self):
+        try:
+            output_uri = self.get_argument("output_uri")
+            bucket_name = self.get_argument("bucket_name")
+            client = storage.Client(
+                await credentials.get_cached(), self.log
+            )
+            download_status = await client.download_output(output_uri)
+            self.finish(json.dumps({"status": download_status}))
+        except Exception as e:
+            self.log.exception("Error in downloading output file")
+            self.finish({"error": str(e)})
