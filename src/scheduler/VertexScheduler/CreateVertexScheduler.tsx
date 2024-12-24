@@ -27,7 +27,8 @@ import {
     RadioGroup,
     FormControlLabel,
     Typography,
-    Box
+    Box,
+    CircularProgress
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -105,6 +106,9 @@ const CreateVertexScheduler = ({
     const [networkSelected, setNetworkSelected] = useState('networkInThisProject');
     const [cloudStorageList, setCloudStorageList] = useState<string[]>([]);
     const [cloudStorage, setCloudStorage] = useState<string | null>(null);
+    const [searchValue, setSearchValue] = useState<string>('');
+    const [isCreatingNewBucket, setIsCreatingNewBucket] = useState(false);
+    const [bucketError, setBucketError] = useState<string>('');
     const [diskTypeSelected, setDiskTypeSelected] = useState<string | null>(DISK_TYPE_VALUE[0]);
     const [diskSize, setDiskSize] = useState<string>('100');
     const [serviceAccountList, setServiceAccountList] = useState<{ displayName: string; email: string }[]>([]);
@@ -230,13 +234,51 @@ const CreateVertexScheduler = ({
         setSharedNetworkSelected(shredNetworkValue)
     }
 
+    const createNewBucket = () => {
+        if (!searchValue.trim()) {
+            // If search value is empty, show an error or prevent creation
+            return;
+        }
+        console.log('Creating new bucket with name:', searchValue);
+        // calling an API to create a new cloud storage bucket here
+        newCloudStorageAPI()
+        // Reset the cloud storage value
+        setCloudStorage(searchValue);
+        // fetch the cloud storage API again to list down all the values with newly created bucket name
+        cloudStorageAPI()
+    };
+
     /**
     * Handles Cloud storage selection
     * @param {React.SetStateAction<string | null>} cloudStorageValue selected cloud storage
     */
-    const handleCloudStorageSelected = (cloudStorageValue: React.SetStateAction<string | null>) => {
-        setCloudStorage(cloudStorageValue)
-    }
+    const handleCloudStorageSelected = (value: string | null) => {
+        if (value === `Create and Select "${searchValue}"`) {
+            // if (value === '') {
+            createNewBucket();
+        } else {
+            setCloudStorage(value);
+        }
+    };
+
+    const handleSearchChange = (event: React.ChangeEvent<{}>, newValue: string) => {
+        setSearchValue(newValue);
+    };
+
+    // Filter the cloud storage bucket options based on the user search
+    const filterOptions = (options: string[], state: any) => {
+        // Filter out the list based on the search value
+        const filteredOptions = options.filter(option =>
+            option.toLowerCase().includes(state.inputValue.toLowerCase())
+        );
+
+        // If no match found, add the "Create new bucket" option
+        if (filteredOptions.length === 0 && state.inputValue.trim() !== '') {
+            filteredOptions.push(`Create and Select "${searchValue}"`);
+        }
+
+        return filteredOptions;
+    };
 
     /**
     * Handles Machine type selection
@@ -395,6 +437,13 @@ const CreateVertexScheduler = ({
     */
     const cloudStorageAPI = async () => {
         await StorageServices.cloudStorageAPIService(setCloudStorageList, setCloudStorageLoading);
+    };
+
+    /**
+    * To create the new cloud storage bucket API service
+    */
+    const newCloudStorageAPI = async () => {
+        await StorageServices.newCloudStorageAPIService(searchValue, setIsCreatingNewBucket, setBucketError);
     };
 
     /**
@@ -561,7 +610,9 @@ const CreateVertexScheduler = ({
                                 onRegionChange={region => handleRegionChange(region)}
                             />
                         </div>
-
+                        {
+                            !region && <ErrorMessage message="Region is required" />
+                        }
                         <div className="create-scheduler-form-element">
                             <Autocomplete
                                 className="create-scheduler-style"
@@ -654,17 +705,54 @@ const CreateVertexScheduler = ({
                                 options={cloudStorageList}
                                 value={cloudStorage}
                                 onChange={(_event, val) => handleCloudStorageSelected(val)}
+                                onInputChange={handleSearchChange}
+                                filterOptions={filterOptions}
                                 renderInput={params => (
-                                    <TextField {...params} label="Cloud Storage Bucket*" />
+                                    <TextField
+                                        {...params}
+                                        label="Cloud Storage Bucket*"
+                                        InputProps={{
+                                            ...params.InputProps,
+                                            endAdornment: (
+                                                <>
+                                                    {isCreatingNewBucket ? (
+                                                        <CircularProgress aria-label="Loading Spinner"
+                                                            data-testid="loader" size={18} />
+                                                    ) : null}
+                                                    {params.InputProps.endAdornment}
+                                                </>
+                                            ),
+                                        }}
+                                    />
                                 )}
                                 clearIcon={false}
                                 loading={cloudStorageLoading}
+                                getOptionLabel={(option) => option}
+                                // open={true}
+                                renderOption={(props, option) => {
+                                    // Custom rendering for the "Create new bucket" option
+                                    if (option === `Create and Select`) {
+                                        return (
+                                            <li {...props} className='custom-add-bucket'>
+                                                {option}
+                                            </li>
+                                        );
+                                    }
+
+                                    return <li {...props}>{option}</li>;
+                                }}
                             />
                         </div>
                         {
                             !cloudStorage && <ErrorMessage message="Cloud storage bucket is required" />
                         }
-                        <span className="tab-description tab-text-sub-cl">Where results are stored. Select an existing bucket or create a new one.</span>
+                        <span className="tab-description tab-text-sub-cl">
+                            {
+                                bucketError && bucketError !== "" ?
+                                    <span className='error-message'>{bucketError}</span> :
+                                    <span>Where results are stored. Select an existing bucket or create a new one.</span>
+                            }
+                        </span>
                         <div className="execution-history-main-wrapper">
                             <div className="create-scheduler-form-element create-scheduler-form-element-input-fl create-pr">
                                 <Autocomplete
@@ -746,7 +834,9 @@ const CreateVertexScheduler = ({
                                 )}
                             />
                         </div>
-
+                        {
+                            !serviceAccountSelected && <ErrorMessage message="Machine type is required" />
+                        }
                         <div className="create-job-scheduler-text-para create-job-scheduler-sub-title">
                             Network Configuration
                         </div>

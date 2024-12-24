@@ -31,12 +31,10 @@ export class VertexServices {
         try {
             setMachineTypeLoading(true)
             const formattedResponse: any = await requestAPI(`api/vertex/uiConfig?region_id=${region}`);
-            if (formattedResponse.length === 0) {
-                setMachineTypeList([])
+            if (formattedResponse.length > 0) {
+                setMachineTypeList(formattedResponse);
             } else {
-                if (formattedResponse) {
-                    setMachineTypeList(formattedResponse);
-                }
+                setMachineTypeList([])
             }
             setMachineTypeLoading(false)
         } catch (error) {

@@ -16,10 +16,9 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Typography, CircularProgress } from '@mui/material';
-import { SchedulerService } from '../schedulerServices';
 import { handleDebounce } from '../../utils/utils';
 import { IconExpandLess, IconExpandMore } from '../../utils/icons';
-import { IDagRunList } from './VertexInterfaces';
+import { IDagRunList, ISchedulerData } from './VertexInterfaces';
 import { LogEntriesServices } from '../../Services/LogEntries';
 
 const VertexJobTaskLogs = ({
@@ -28,16 +27,16 @@ const VertexJobTaskLogs = ({
     dagRunId,
     jobRunsData,
 }: {
-    composerName: string;
+    composerName: ISchedulerData | undefined;
     dagId: string;
     dagRunId: string;
     jobRunsData: IDagRunList | undefined;
 }): JSX.Element => {
     const [dagTaskInstancesList, setDagTaskInstancesList] = useState<any>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+    const [isLoadingLogs] = useState(false);
     const [expanded, setExpanded] = useState<string | false>(false);
-    const [loglist, setLogList] = useState('');
+    const [loglist] = useState('');
 
     const [height, setHeight] = useState(window.innerHeight - 320);
     console.log(dagTaskInstancesList)
@@ -96,15 +95,8 @@ const VertexJobTaskLogs = ({
     };
 
     const listDagTaskLogList = async (index: string, iconIndex: number) => {
-        await SchedulerService.listDagTaskLogsListService(
-            composerName,
-            dagId,
-            dagRunId,
-            dagTaskInstancesList[index].taskId,
-            iconIndex,
-            setLogList,
-            setIsLoadingLogs
-        );
+        // To do
+        console.debug(index, iconIndex)
     };
     return (
         <div>

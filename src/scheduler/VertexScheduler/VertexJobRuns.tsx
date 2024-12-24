@@ -21,9 +21,8 @@ import { Dayjs } from 'dayjs';
 
 import TableData from '../../utils/tableData';
 import { ICellProps, handleDebounce } from '../../utils/utils';
-import { SchedulerService } from '../schedulerServices';
 import { IconDownload } from '../../utils/icons';
-import { IDagRunList } from './VertexInterfaces';
+import { IDagRunList, ISchedulerData } from './VertexInterfaces';
 import { VertexServices } from '../../Services/Vertex';
 
 const VertexJobRuns = ({
@@ -47,7 +46,7 @@ const VertexJobRuns = ({
     setDagRunsList
 }: {
     region: string;
-    schedulerData: string;
+    schedulerData: ISchedulerData | undefined;
     dagId: string;
     setJobRunsData: React.Dispatch<React.SetStateAction<IDagRunList | undefined>>;
     setDagRunId: (value: string) => void;
@@ -65,7 +64,7 @@ const VertexJobRuns = ({
     dagRunsList: IDagRunList[];
     setDagRunsList: (value: IDagRunList[]) => void;
 }): JSX.Element => {
-    const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
+    const [downloadOutputDagRunId] = useState('');
     const [listDagRunHeight, setListDagRunHeight] = useState(
         window.innerHeight - 485
     );
@@ -217,13 +216,8 @@ const VertexJobRuns = ({
 
     const handleDownloadOutput = async (event: React.MouseEvent) => {
         const dagRunId = event.currentTarget.getAttribute('data-dag-run-id')!;
-        await SchedulerService.handleDownloadOutputNotebookAPIService(
-            schedulerData,
-            dagRunId,
-            bucketName,
-            dagId,
-            setDownloadOutputDagRunId
-        );
+        // To do
+        console.debug(dagRunId)
     };
 
     const renderActions = (data: { id?: string; status?: string; dagRunId?: string; state?: string; }) => {

@@ -47,4 +47,37 @@ export class StorageServices {
             );
         }
     };
+    static newCloudStorageAPIService = async (
+        bucketName: string,
+        setIsCreatingNewBucket: (value: boolean) => void,
+        setBucketError: (value: string) => void
+    ) => {
+        const payload = {
+            bucket_name: bucketName
+        }
+        try {
+            setIsCreatingNewBucket(true)
+            const formattedResponse: any = await requestAPI(`api/storage/createNewBucket`, {
+                body: JSON.stringify(payload),
+                method: 'POST'
+            });
+            console.log(formattedResponse)
+            setBucketError(formattedResponse.error)
+            setIsCreatingNewBucket(false)
+            toast.success(
+                `Bucket created successfully`,
+                toastifyCustomStyle
+            );
+        } catch (error) {
+            setIsCreatingNewBucket(false)
+            DataprocLoggingService.log(
+                'Error creating the cloud storage bucket',
+                LOG_LEVEL.ERROR
+            );
+            // toast.error(
+            //     `Failed to create cloud storage bucket`,
+            //     toastifyCustomStyle
+            // );
+        }
+    };
 }

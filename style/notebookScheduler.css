@@ -385,6 +385,10 @@
   padding-top: 5px;
 }
 
+.tab-text-sub-cl .error-message {
+  color: #b71c1c;
+}
+
 .learn-more-a-tag {
   padding-left: 27px;
 }
