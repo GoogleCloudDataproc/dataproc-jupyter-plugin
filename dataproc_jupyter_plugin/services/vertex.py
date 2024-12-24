@@ -75,7 +75,6 @@ class Client:
             self.log.exception(f"Error fetching ui config: {str(e)}")
             return {"Error fetching ui config": str(e)}
 
-
     async def list_notebook_execution_jobs(self, region_id, schedule_id, start_date):
         try:
             execution_jobs = []
