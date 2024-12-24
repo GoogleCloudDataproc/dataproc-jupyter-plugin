@@ -835,7 +835,7 @@ const CreateVertexScheduler = ({
                             />
                         </div>
                         {
-                            !serviceAccountSelected && <ErrorMessage message="Machine type is required" />
+                            !serviceAccountSelected && <ErrorMessage message="Service account is required" />
                         }
                         <div className="create-job-scheduler-text-para create-job-scheduler-sub-title">
                             Network Configuration
