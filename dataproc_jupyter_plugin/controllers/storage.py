@@ -40,9 +40,7 @@ class DownloadOutputController(APIHandler):
         try:
             output_uri = self.get_argument("output_uri")
             bucket_name = self.get_argument("bucket_name")
-            client = storage.Client(
-                await credentials.get_cached(), self.log
-            )
+            client = storage.Client(await credentials.get_cached(), self.log)
             download_status = await client.download_output(output_uri)
             self.finish(json.dumps({"status": download_status}))
         except Exception as e:
