@@ -70,12 +70,19 @@ class Client:
                                 schedule_value = "run once"
                             else:
                                 schedule_value = get_description(cron)
+
                             formatted_schedule = {
                                 "name": schedule.get("name"),
                                 "displayName": schedule.get("displayName"),
                                 "schedule": schedule_value,
                                 "status": schedule.get("state"),
                                 "createTime": schedule.get("createTime"),
+                                "gcsNotebookSourceUri": schedule.get(
+                                    "createNotebookExecutionJobRequest"
+                                )
+                                .get("notebookExecutionJob")
+                                .get("gcsNotebookSource")
+                                .get("uri"),
                                 "lastScheduledRunResponse": schedule.get(
                                     "lastScheduledRunResponse"
                                 ),
