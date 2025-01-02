@@ -35,7 +35,8 @@ class Client:
     async def list_bucket(self):
         try:
             cloud_storage_buckets = []
-            storage_client = storage.Client()
+            credentials = oauth2.Credentials(self._access_token)
+            storage_client = storage.Client(credentials=credentials)
             buckets = storage_client.list_buckets()
             for bucket in buckets:
                 cloud_storage_buckets.append(bucket.name)
