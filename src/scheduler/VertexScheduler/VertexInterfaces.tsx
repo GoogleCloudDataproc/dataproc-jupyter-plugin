@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export interface IMachineType {
     machineType: string
     acceleratorConfigs: AcceleratorConfig[]
@@ -40,8 +42,8 @@ export interface ICreatePayload {
     service_account: string | undefined,
     network: string | undefined;
     subnetwork: string | undefined;
-    start_time: Date | null | undefined;
-    end_time: Date | null | undefined;
+    start_time: dayjs.Dayjs | null;
+    end_time: dayjs.Dayjs | null;
 }
 
 export interface IUpdateSchedulerAPIResponse {
