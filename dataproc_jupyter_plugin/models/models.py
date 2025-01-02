@@ -78,6 +78,7 @@ class DescribeUpdateVertexJob(BaseModel):
     subnetwork: Optional[str] = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
+    gcs_notebook_source: str = None
 
     @classmethod
     def from_dict(cls, data):

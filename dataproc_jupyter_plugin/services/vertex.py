@@ -213,12 +213,12 @@ class Client:
             self.log.exception(f"Error triggering schedule: {str(e)}")
             return {"Error triggering schedule": str(e)}
 
-    def get_keys(data, parent_key=""):
+    def get_keys(self, data, parent_key):
         keys = []
         for key, value in data.items():
             full_key = f"{parent_key}.{key}" if parent_key else key
             if isinstance(value, dict):
-                keys.extend(get_keys(value, full_key))
+                keys.extend(self.get_keys(value, full_key))
             else:
                 keys.append(full_key)
         return keys
@@ -226,7 +226,7 @@ class Client:
     async def update_schedule(self, region_id, schedule_id, input_data):
         try:
             data = DescribeUpdateVertexJob(**input_data)
-            notebook_execution_job = {"displayName": data.display_name}
+            notebook_execution_job = {"displayName": data.display_name, "gcsNotebookSource": {"uri": data.gcs_notebook_source}}
             schedule_value = (
                 "* * * * *" if data.schedule_value == "" else data.schedule_value
             )
@@ -272,10 +272,10 @@ class Client:
 
             if data.start_time:
                 payload["startTime"] = data.start_time
-            if data.end_date:
+            if data.end_time:
                 payload["endTime"] = data.end_time
 
-            keys = get_keys(payload)
+            keys = self.get_keys(payload, "")
             filtered_keys = [item for item in keys if "displayName" not in item]
             update_mask = ", ".join(filtered_keys)
             api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}?updateMask={update_mask}"
