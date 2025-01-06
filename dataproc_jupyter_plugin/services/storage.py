@@ -46,12 +46,11 @@ class Client:
             self.log.exception(f"Error fetching cloud storage buckets: {str(e)}")
             return {"Error fetching cloud storage buckets": str(e)}
 
-    async def download_output(self, output_uri, file_name):
+    async def download_output(self, bucket_name, file_name, job_run_id):
         try:
             credentials = oauth2.Credentials(self._access_token)
             storage_client = storage.Client(credentials=credentials)
-            bucket_name = output_uri.split("//", 1)[1]
-            blob_name = f"{output_uri}/{file_name}"
+            blob_name = f"{job_run_id}/{file_name}"
             bucket = storage_client.bucket(bucket_name)
             blob = bucket.blob(blob_name)
             original_file_name = os.path.basename(blob_name)

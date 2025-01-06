@@ -38,10 +38,11 @@ class DownloadOutputController(APIHandler):
     @tornado.web.authenticated
     async def post(self):
         try:
-            output_uri = self.get_argument("output_uri")
+            bucket_name = self.get_argument("bucket_name")
+            job_run_id = self.get_argument("job_run_id")
             file_name = self.get_argument("file_name")
             client = storage.Client(await credentials.get_cached(), self.log)
-            download_status = await client.download_output(output_uri, file_name)
+            download_status = await client.download_output(bucket_name, file_name, job_run_id)
             self.finish(json.dumps({"status": download_status}))
         except Exception as e:
             self.log.exception("Error in downloading output file")
