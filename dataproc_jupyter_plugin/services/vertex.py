@@ -213,12 +213,15 @@ class Client:
             self.log.exception(f"Error triggering schedule: {str(e)}")
             return {"Error triggering schedule": str(e)}
 
-
     async def update_schedule(self, region_id, schedule_id, input_data):
         try:
             data = DescribeUpdateVertexJob(**input_data)
             custom_environment_spec = {}
-            notebook_execution_job = {"displayName": data.display_name, "gcsNotebookSource": {"uri": data.gcs_notebook_source}, "customEnvironmentSpec": custom_environment_spec}
+            notebook_execution_job = {
+                "displayName": data.display_name,
+                "gcsNotebookSource": {"uri": data.gcs_notebook_source},
+                "customEnvironmentSpec": custom_environment_spec,
+            }
             schedule_value = (
                 "* * * * *" if data.schedule_value == "" else data.schedule_value
             )
@@ -270,7 +273,9 @@ class Client:
 
             keys = payload.keys()
             keys_to_filter = ["displayName", "maxConcurrentRunCount"]
-            filtered_keys = [item for item in keys if not any(key in item for key in keys_to_filter)]
+            filtered_keys = [
+                item for item in keys if not any(key in item for key in keys_to_filter)
+            ]
             update_mask = ",".join(filtered_keys)
             api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/{schedule_id}?updateMask={update_mask}"
 
