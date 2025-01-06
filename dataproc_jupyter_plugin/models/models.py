@@ -79,6 +79,8 @@ class DescribeUpdateVertexJob(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     gcs_notebook_source: str = None
+    disk_type: Optional[str] = None
+    disk_size: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data):
