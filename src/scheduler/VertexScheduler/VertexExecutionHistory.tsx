@@ -48,7 +48,7 @@ const VertexExecutionHistory = ({
 
     const today = dayjs()
 
-    const [dagRunId, setDagRunId] = useState<string>('');
+    const [jobRunId, setJobRunId] = useState<string>('');
     const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
     const [jobRunsData, setJobRunsData] = useState<IDagRunList | undefined>();
     const currentDate = new Date().toLocaleDateString();
@@ -102,7 +102,7 @@ const VertexExecutionHistory = ({
     * @param {React.SetStateAction<dayjs.Dayjs | null>} selectedValue selected kernel
     */
     const handleDateSelection = (selectedValue: React.SetStateAction<dayjs.Dayjs | null>) => {
-        setDagRunId('');
+        setJobRunId('');
         setSelectedDate(selectedValue);
     };
 
@@ -124,7 +124,7 @@ const VertexExecutionHistory = ({
         } else {
             setSelectedDate(today);
         }
-        setDagRunId('')
+        setJobRunId('')
         setDagRunsList([])
         setSelectedMonth(resolvedMonth);
     };
@@ -287,7 +287,7 @@ const VertexExecutionHistory = ({
                             schedulerData={schedulerData}
                             dagId={scheduleName}
                             setJobRunsData={setJobRunsData}
-                            setDagRunId={setDagRunId}
+                            setJobRunId={setJobRunId}
                             selectedMonth={selectedMonth}
                             selectedDate={selectedDate}
                             setBlueListDates={setBlueListDates}
@@ -304,11 +304,11 @@ const VertexExecutionHistory = ({
                         />
                     </div>
                     <div className="execution-history-right-wrapper">
-                        {dagRunId !== '' && (
+                        {jobRunId !== '' && (
                             <VertexJobTaskLogs
                                 composerName={schedulerData}
                                 dagId={scheduleName}
-                                dagRunId={dagRunId}
+                                jobRunId={jobRunId}
                                 jobRunsData={jobRunsData}
                             />
                         )}

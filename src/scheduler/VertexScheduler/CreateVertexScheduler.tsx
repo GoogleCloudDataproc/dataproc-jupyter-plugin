@@ -234,12 +234,16 @@ const CreateVertexScheduler = ({
         setSharedNetworkSelected(shredNetworkValue)
     }
 
+    /** 
+     * Creates a new cloud storage bucket.
+     * It calls an API to create the bucket, updates the state with the bucket name,
+     * and then refetches the list of cloud storage buckets.
+     */
     const createNewBucket = () => {
         if (!searchValue.trim()) {
-            // If search value is empty, show an error or prevent creation
+            // If search value is empty
             return;
         }
-        console.log('Creating new bucket with name:', searchValue);
         // calling an API to create a new cloud storage bucket here
         newCloudStorageAPI()
         // Reset the cloud storage value
@@ -250,22 +254,34 @@ const CreateVertexScheduler = ({
 
     /**
     * Handles Cloud storage selection
-    * @param {React.SetStateAction<string | null>} cloudStorageValue selected cloud storage
+    * @param {React.SetStateAction<string | null>} value - Selected cloud storage or "Create and Select" option.
+    * @returns {void}
     */
     const handleCloudStorageSelected = (value: string | null) => {
         if (value === `Create and Select "${searchValue}"`) {
-            // if (value === '') {
             createNewBucket();
         } else {
             setCloudStorage(value);
         }
     };
 
+    /**
+     * Handles the change in the search input value.
+     * Updates the search value state based on the user's input.
+     *
+     * @param {React.ChangeEvent<{}>} event - The event triggered by the input field change.
+     * @param {string} newValue - The new value entered by the user in the search field.
+     */
     const handleSearchChange = (event: React.ChangeEvent<{}>, newValue: string) => {
         setSearchValue(newValue);
     };
 
-    // Filter the cloud storage bucket options based on the user search
+    /**
+     * Filters the cloud storage bucket options based on the user's search input.
+     * If no matches are found, adds the option to create a new bucket.
+     * @param {string[]} options - The list of available cloud storage buckets.
+     * @param {any} state - The state object containing the search input value.
+     */
     const filterOptions = (options: string[], state: any) => {
         // Filter out the list based on the search value
         const filteredOptions = options.filter(option =>

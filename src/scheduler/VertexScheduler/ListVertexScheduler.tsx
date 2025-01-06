@@ -30,6 +30,7 @@ import { authApi } from '../../utils/utils';
 import { IconActive, IconDelete, IconEditDag, IconEditNotebook, IconFailed, IconListComplete, IconListPause, IconPause, IconPlay, IconSuccess, IconTrigger } from '../../utils/icons';
 import { IDagList } from './VertexInterfaces';
 import { VertexServices } from '../../Services/Vertex';
+import ErrorMessage from '../common/ErrorMessage';
 
 function listVertexScheduler({
   region,
@@ -52,8 +53,10 @@ function listVertexScheduler({
   const [editNotebookLoading, setEditNotebookLoading] = useState<string>('');
   const [deletingSchedule, setDeletingSchedule] = useState<boolean>(false);
   const [isPreviewEnabled, setIsPreviewEnabled] = useState<boolean>(false);
+  // To do
   console.debug(isPreviewEnabled)
   const [nextPageFlag, setNextPageFlag] = useState<string>('');
+  // To do
   console.debug(nextPageFlag);
   const [projectId, setProjectId] = useState<string>('');
   const [uniqueScheduleId, setUniqueScheduleId] = useState<string>('');
@@ -155,9 +158,9 @@ function listVertexScheduler({
     setDeletePopupOpen(false);
   };
 
-  /**
-  * Delete a schedule
-  */
+  /** 
+   * Handles the deletion of a scheduler by invoking the API service to delete it.
+   */
   const handleDeleteScheduler = async () => {
     setDeletingSchedule(true);
     await VertexServices.handleDeleteSchedulerAPIService(
@@ -172,9 +175,12 @@ function listVertexScheduler({
     setDeletingSchedule(false);
   };
 
-  /**
-  * Edit schedule
-  */
+  /** 
+   * Handles the editing of a vertex by triggering the editVertexSchedulerService.
+   * 
+   * @param {React.MouseEvent} event - The mouse click event triggered when the vertex is clicked.
+   * @param {string} displayName - The display name of the vertex being edited.
+   */
   const handleEditVertex = async (event: React.MouseEvent, displayName: string) => {
     const scheduleId = event.currentTarget.getAttribute('data-scheduleId');
     if (scheduleId !== null) {
@@ -430,6 +436,9 @@ function listVertexScheduler({
             region={region}
             onRegionChange={region => setRegion(region)}
           />
+          {
+            !isLoading && !region && <ErrorMessage message="Region is required" />
+          }
         </div>
         <div className="btn-refresh">
           <Button

@@ -299,20 +299,21 @@ export class VertexServices {
         try {
             let transformDagRunListDataCurrent = [];
             if (formattedResponse && formattedResponse.length > 0) {
-                transformDagRunListDataCurrent = formattedResponse.map((dagRun: any) => {
-                    const createTime = new Date(dagRun.createTime);
-                    const updateTime = new Date(dagRun.updateTime);
+                transformDagRunListDataCurrent = formattedResponse.map((jobRun: any) => {
+                    const createTime = new Date(jobRun.createTime);
+                    const updateTime = new Date(jobRun.updateTime);
                     const timeDifferenceMilliseconds = updateTime.getTime() - createTime.getTime(); // Difference in milliseconds
                     const totalSeconds = Math.floor(timeDifferenceMilliseconds / 1000); // Convert to seconds
                     const minutes = Math.floor(totalSeconds / 60);
                     const seconds = totalSeconds % 60;
                     return {
-                        dagRunId: dagRun.name.split('/').pop(),
-                        startDate: dagRun.createTime,
-                        endDate: dagRun.updateTime,
-                        gcsUrl: dagRun.gcsOutputUri,
-                        state: dagRun.jobState.split('_')[2].toLowerCase(),
-                        date: new Date(dagRun.createTime).toDateString(),
+                        jobRunId: jobRun.name.split('/').pop(),
+                        startDate: jobRun.createTime,
+                        endDate: jobRun.updateTime,
+                        gcsUrl: jobRun.gcsOutputUri,
+                        state: jobRun.jobState.split('_')[2].toLowerCase(),
+                        date: new Date(jobRun.createTime).toDateString(),
+                        fileName: jobRun.gcsNotebookSource.uri.split('/').pop(),
                         time: `${minutes} min ${seconds} sec`
                     };
                 });
@@ -372,7 +373,6 @@ export class VertexServices {
             setRedListDates(redList);
             setGreenListDates(greenList);
             setDarkGreenListDates(darkGreenList);
-            console.log(transformDagRunListDataCurrent.length)
             setDagRunsList(transformDagRunListDataCurrent)
         } catch (error) {
             toast.error(

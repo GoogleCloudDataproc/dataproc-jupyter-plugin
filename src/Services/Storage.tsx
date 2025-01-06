@@ -61,7 +61,6 @@ export class StorageServices {
                 body: JSON.stringify(payload),
                 method: 'POST'
             });
-            console.log(formattedResponse)
             setBucketError(formattedResponse.error)
             setIsCreatingNewBucket(false)
             toast.success(
@@ -74,10 +73,46 @@ export class StorageServices {
                 'Error creating the cloud storage bucket',
                 LOG_LEVEL.ERROR
             );
-            // toast.error(
-            //     `Failed to create cloud storage bucket`,
-            //     toastifyCustomStyle
-            // );
+        }
+    };
+    static downloadJobAPIService = async (
+        gcsUrl: string | undefined,
+        fileName: string | undefined,
+        jobRunId: string | undefined,
+        setJobDownloadLoading: (value: boolean) => void,
+    ) => {
+        try {
+            const bucketName = gcsUrl?.split('//')[1];
+            setJobDownloadLoading(true)
+            const formattedResponse: any = await requestAPI(`api/storage/downloadOutput?bucket_name=${bucketName}&job_run_id=${jobRunId}&file_name=${fileName}`, {
+                method: 'POST'
+            });
+            if (formattedResponse.status === 0) {
+                toast.success(
+                    `Job history downloaded successfully`,
+                    toastifyCustomStyle
+                );
+            } else {
+                DataprocLoggingService.log(
+                    'Error in downloading the job history',
+                    LOG_LEVEL.ERROR
+                );
+                toast.success(
+                    `Error in downloading the job history`,
+                    toastifyCustomStyle
+                );
+            }
+            setJobDownloadLoading(false)
+        } catch (error) {
+            setJobDownloadLoading(false)
+            DataprocLoggingService.log(
+                'Error in downloading the job history',
+                LOG_LEVEL.ERROR
+            );
+            toast.success(
+                `Error in downloading the job history`,
+                toastifyCustomStyle
+            );
         }
     };
 }

@@ -24,12 +24,12 @@ import { LogEntriesServices } from '../../Services/LogEntries';
 const VertexJobTaskLogs = ({
     composerName,
     dagId,
-    dagRunId,
+    jobRunId,
     jobRunsData,
 }: {
     composerName: ISchedulerData | undefined;
     dagId: string;
-    dagRunId: string;
+    jobRunId: string;
     jobRunsData: IDagRunList | undefined;
 }): JSX.Element => {
     const [dagTaskInstancesList, setDagTaskInstancesList] = useState<any>([]);
@@ -39,7 +39,7 @@ const VertexJobTaskLogs = ({
     const [loglist] = useState('');
 
     const [height, setHeight] = useState(window.innerHeight - 320);
-    console.log(dagTaskInstancesList)
+
     function handleUpdateHeight() {
         let updateHeight = window.innerHeight - 320;
         setHeight(updateHeight);
@@ -58,9 +58,12 @@ const VertexJobTaskLogs = ({
         };
     }, []);
 
+    /** 
+     * Fetches and lists the task instances for a specific job run.
+     */
     const listDagTaskInstancesRunsList = async () => {
         await LogEntriesServices.vertexJobTaskLogsListService(
-            dagRunId,
+            jobRunId,
             jobRunsData,
             setDagTaskInstancesList,
             setIsLoading
@@ -68,11 +71,11 @@ const VertexJobTaskLogs = ({
     };
 
     useEffect(() => {
-        if (dagRunId && jobRunsData) {
+        if (jobRunId && jobRunsData) {
             listDagTaskInstancesRunsList();
             setExpanded(false);
         }
-    }, [dagRunId, jobRunsData]);
+    }, [jobRunId, jobRunsData]);
 
     useEffect(() => {
         if (dagTaskInstancesList.length > 0) {
@@ -98,6 +101,7 @@ const VertexJobTaskLogs = ({
         // To do
         console.debug(index, iconIndex)
     };
+
     return (
         <div>
             {dagTaskInstancesList.length > 0 ? (
