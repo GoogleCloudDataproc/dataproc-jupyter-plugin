@@ -41,6 +41,44 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
+    async def list_uiconfig(self, region_id):
+        try:
+            uiconfig = []
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/ui/projects/{self.project_id}/locations/{region_id}/uiConfig"
+
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return uiconfig
+                    else:
+                        for machineconfig in resp.get("notebookRuntimeConfig").get(
+                            "machineConfigs"
+                        ):
+                            ramBytes_in_gb = round(
+                                int(machineconfig.get("ramBytes")) / 1000000000, 2
+                            )
+                            formatted_config = {
+                                "machineType": f"{machineconfig.get('machineType')} ({machineconfig.get('cpuCount')} CPUs, {ramBytes_in_gb} GB RAM)",
+                                "acceleratorConfigs": machineconfig.get(
+                                    "acceleratorConfigs"
+                                ),
+                            }
+                            uiconfig.append(formatted_config)
+                        return uiconfig
+                else:
+                    self.log.exception("Error listing ui config")
+                    raise Exception(
+                        f"Error getting vertex ui config: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error fetching ui config: {str(e)}")
+            return {"Error fetching ui config": str(e)}
+
+
     async def list_schedules(self, region_id, next_page_token=None):
         try:
             result = {}

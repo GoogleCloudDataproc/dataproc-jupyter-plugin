@@ -14,25 +14,23 @@
 
 import json
 
-import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services import composer
+from dataproc_jupyter_plugin.services import storage
 
 
-class EnvironmentListController(APIHandler):
+class CloudStorageController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
-        """Returns names of available composer environments"""
+        """Returns cloud storage bucket"""
         try:
-            async with aiohttp.ClientSession() as client_session:
-                client = composer.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                environments = await client.list_environments()
-                self.finish(json.dumps(environments, default=lambda x: x.dict()))
+            storage_client = storage.Client(
+                await credentials.get_cached(), self.log
+            )
+            csb = await storage_client.list_bucket()
+            self.finish(json.dumps(csb))
         except Exception as e:
-            self.log.exception(f"Error fetching composer environments: {str(e)}")
+            self.log.exception(f"Error fetching cloud storage bucket: {str(e)}")
             self.finish({"error": str(e)})

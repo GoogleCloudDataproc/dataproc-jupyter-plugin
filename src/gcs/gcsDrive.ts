@@ -70,6 +70,8 @@ export class GCSDrive implements Contents.IDrive {
       const para = document.createElement('p');
       para.id = 'gcs-list-bucket-error';
       para.style.color = '#ff0000';
+      para.style.maxWidth= '100%';
+      para.style.whiteSpace='normal';
       para.textContent = content?.error?.message;
       paragraph = document.getElementById('filter-buckets-objects');
       paragraph?.after(para);
