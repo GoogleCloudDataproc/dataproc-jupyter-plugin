@@ -78,7 +78,6 @@ class Client:
             self.log.exception(f"Error fetching ui config: {str(e)}")
             return {"Error fetching ui config": str(e)}
 
-
     async def list_schedules(self, region_id, next_page_token=None):
         try:
             result = {}
