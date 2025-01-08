@@ -92,7 +92,7 @@ class DataprocPluginConfig(SingletonConfigurable):
     enable_metastore_integration = Bool(
         False,
         config=True,
-        help="Enable integration with gcs in JupyterLab",
+        help="Enable integration with metastore in JupyterLab",
     )
 
 
