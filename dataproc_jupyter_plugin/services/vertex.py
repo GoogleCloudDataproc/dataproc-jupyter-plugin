@@ -91,6 +91,8 @@ class Client:
                     else:
                         jobs = resp.get("notebookExecutionJobs")
                         for job in jobs:
+                            # getting only the jobs whose create time is equal to start date
+                            # splitting it in order to get only the date part from the values which is in zulu format
                             if (
                                 start_date.rsplit("-", 1)[0]
                                 == job.get("createTime").rsplit("-", 1)[0]
@@ -98,7 +100,7 @@ class Client:
                                 execution_jobs.append(job)
                         return execution_jobs
                 else:
-                    self.log.exception("Error fetching notebook execution jobs")
+                    self.log.exception(f"Error fetching notebook execution jobs: {response.reason} {await response.text()}")
                     raise Exception(
                         f"Error fetching notebook execution jobs: {response.reason} {await response.text()}"
                     )
