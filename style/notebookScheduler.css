@@ -426,3 +426,7 @@
 .icon-size {
   width: 14px;
 }
+
+.icon-completed {
+  padding-top: 4px;
+}

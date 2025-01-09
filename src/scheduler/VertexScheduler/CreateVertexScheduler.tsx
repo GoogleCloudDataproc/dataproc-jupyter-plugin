@@ -480,8 +480,8 @@ const CreateVertexScheduler = ({
             cloud_storage_bucket: `gs://${cloudStorage}`,
             parameters: parameterDetailUpdated,
             service_account: serviceAccountSelected?.email,
-            network: networkSelected === "networkInThisProject" ? primaryNetworkSelected?.link.split('/v1/')[1] : sharedNetworkSelected?.network.split('/v1/')[1],
-            subnetwork: networkSelected === "networkInThisProject" ? subNetworkSelected?.link.split('/v1/')[1] : sharedNetworkSelected?.subnetwork.split('/v1/')[1],
+            network: networkSelected === "networkInThisProject" ? (editMode? primaryNetworkSelected?.link : primaryNetworkSelected?.link.split('/v1/')[1]) : sharedNetworkSelected?.network.split('/v1/')[1],
+            subnetwork: networkSelected === "networkInThisProject" ? (editMode ? subNetworkSelected?.link : subNetworkSelected?.link.split('/v1/')[1]) : sharedNetworkSelected?.subnetwork.split('/v1/')[1],
             start_time: startDate,
             end_time: endDate,
             disk_type: diskTypeSelected,
@@ -772,9 +772,7 @@ const CreateVertexScheduler = ({
                                 options={serviceAccountList}
                                 getOptionLabel={option => option.displayName}
                                 value={
-                                    !editMode ? serviceAccountList.find(
-                                        option => option.displayName === serviceAccountSelected?.displayName
-                                    ) || null : serviceAccountList.find(
+                                    serviceAccountList.find(
                                         option => option.email === serviceAccountSelected?.email
                                     ) || null
                                 }
