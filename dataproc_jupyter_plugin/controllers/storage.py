@@ -45,5 +45,5 @@ class DownloadOutputController(APIHandler):
             download_status = await client.download_output(bucket_name, file_name, job_run_id)
             self.finish(json.dumps({"status": download_status}))
         except Exception as e:
-            self.log.exception("Error in downloading output file")
-            self.finish({"error": str(e)})
+            self.log.exception({"Error in downloading output file": str(e)})
+            self.finish({"Error in downloading output file": str(e)})

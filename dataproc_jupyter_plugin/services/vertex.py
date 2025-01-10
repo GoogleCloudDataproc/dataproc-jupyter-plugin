@@ -92,7 +92,7 @@ class Client:
                         jobs = resp.get("notebookExecutionJobs")
                         for job in jobs:
                             # getting only the jobs whose create time is equal to start date
-                            # splitting it in order to get only the date part from the values which is in zulu format
+                            # splitting it in order to get only the date part from the values which is in zulu format (2011-08-12T20:17:46.384Z)
                             if (
                                 start_date.rsplit("-", 1)[0]
                                 == job.get("createTime").rsplit("-", 1)[0]
