@@ -12,15 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import aiohttp
 from cron_descriptor import get_description
+
+import google.oauth2.credentials as oauth2
+from google.cloud import storage
 
 from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
+    VERTEX_STORAGE_BUCKET,
 )
-from dataproc_jupyter_plugin.models.models import DescribeUpdateVertexJob
+from dataproc_jupyter_plugin.models.models import DescribeVertexJob, DescribeBucketName, DescribeUpdateVertexJob
 
 
 class Client:
+    client_session = aiohttp.ClientSession()
+
     def __init__(self, credentials, log, client_session):
         self.log = log
         if not (
@@ -40,6 +47,148 @@ class Client:
             "Content-Type": CONTENT_TYPE,
             "Authorization": f"Bearer {self._access_token}",
         }
+
+    async def check_bucket_exists(self, bucket_name):
+        try:
+            if not bucket_name:
+                raise ValueError("Bucket name cannot be empty")
+            cloud_storage_buckets = []
+            storage_client = storage.Client()
+            buckets = storage_client.list_buckets()
+            for bucket in buckets:
+                cloud_storage_buckets.append(bucket.name)
+            return bucket_name in cloud_storage_buckets
+        except Exception as error:
+            self.log.exception(f"Error checking Bucket: {error}")
+            raise IOError(f"Error checking Bucket: {error}")
+
+    async def create_gcs_bucket(self, bucket_name):
+        try:
+            if not bucket_name:
+                raise ValueError("Bucket name cannot be empty")
+            credentials = oauth2.Credentials(token=self._access_token)
+            storage_client = storage.Client(credentials=credentials)
+            bucket = storage_client.create_bucket(bucket_name)
+        except Exception as error:
+            self.log.exception(f"Error in creating Bucket: {error}")
+            raise IOError(f"Error in creating Bucket: {error}")
+
+    async def upload_to_gcs(self, bucket_name, file_path, job_name):
+        input_notebook = file_path.split("/")[-1]
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+
+        # uploading the input file
+        blob_name = f"{job_name}/{input_notebook}"
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(file_path)
+
+        # uploading json file containing the input file path
+        json_blob_name = f"{job_name}/{job_name}.json"
+        json_blob = bucket.blob(json_blob_name)
+        json_blob.upload_from_string(f"gs://{bucket_name}/{blob_name}")
+
+        self.log.info(f"File {input_notebook} uploaded to gcs successfully")
+        return blob_name
+
+    async def create_schedule(self, job, file_path, bucket_name):
+        try:
+            schedule_value = (
+                "* * * * *" if job.schedule_value == "" else job.schedule_value
+            )
+            cron = (
+                schedule_value
+                if job.time_zone == "UTC"
+                else f"TZ={job.time_zone} {schedule_value}"
+            )
+            machine_type = job.machine_type.split(" ", 1)[0]
+            disk_type = job.disk_type.split(" ", 1)[0]
+
+            # getting list of strings from UI, the api accepts dictionary, so converting it
+            labels = {
+                param.split(":")[0]: param.split(":")[1] for param in job.parameters
+            }
+
+            api_endpoint = f"https://{self.region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.region_id}/schedules"
+            headers = self.create_headers()
+            payload = {
+                "displayName": job.display_name,
+                "cron": cron,
+                "maxConcurrentRunCount": "1",
+                "createNotebookExecutionJobRequest": {
+                    "parent": f"projects/{self.project_id}/locations/{self.region_id}",
+                    "notebookExecutionJob": {
+                        "displayName": job.display_name,
+                        "labels": labels,
+                        "customEnvironmentSpec": {
+                            "machineSpec": {
+                                "machineType": machine_type,
+                                "acceleratorType": job.accelerator_type,
+                                "acceleratorCount": job.accelerator_count,
+                            },
+                            "persistentDiskSpec": {
+                                "diskType": disk_type,
+                                "diskSizeGb": job.disk_size,
+                            },
+                            "networkSpec": {
+                                "enableInternetAccess": "TRUE",
+                                "network": job.network,
+                                "subnetwork": job.subnetwork,
+                            },
+                        },
+                        "gcsNotebookSource": {"uri": f"gs://{bucket_name}/{file_path}"},
+                        "gcsOutputUri": job.cloud_storage_bucket,
+                        "serviceAccount": job.service_account,
+                        "kernelName": job.kernel_name,
+                    },
+                },
+            }
+            if job.max_run_count:
+                payload["maxRunCount"] = job.max_run_count
+            if job.start_time:
+                payload["startTime"] = job.start_time
+            if job.end_time:
+                payload["endTime"] = job.end_time
+
+            async with self.client_session.post(
+                api_endpoint, headers=headers, json=payload
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    return resp
+                else:
+                    self.log.exception("Error creating the schedule")
+                    raise Exception(
+                        f"Error creating the schedule: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(f"Error creating schedule: {str(e)}")
+            raise Exception(f"Error creating schedule: {str(e)}")
+
+    async def create_job_schedule(self, input_data):
+        try:
+            job = DescribeVertexJob(**input_data)
+            if await self.check_bucket_exists(VERTEX_STORAGE_BUCKET):
+                print("The bucket exists")
+            else:
+                await self.create_gcs_bucket(VERTEX_STORAGE_BUCKET)
+                print("The bucket is created")
+
+            file_path = await self.upload_to_gcs(
+                VERTEX_STORAGE_BUCKET, job.input_filename, job.display_name
+            )
+            res = await self.create_schedule(job, file_path, VERTEX_STORAGE_BUCKET)
+            return res
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def create_new_bucket(self, input_data):
+        try:
+            data = DescribeBucketName(**input_data)
+            res = await self.create_gcs_bucket(data.bucket_name)
+            return res
+        except Exception as e:
+            return {"error": str(e)}
 
     async def list_uiconfig(self, region_id):
         try:

@@ -220,6 +220,8 @@ def setup_handlers(web_app):
         "api/vertex/triggerSchedule": vertex.TriggerScheduleController,
         "api/vertex/updateSchedule": vertex.UpdateScheduleController,
         "api/vertex/getSchedule": vertex.GetScheduleController,
+        "api/vertex/createJobScheduler": vertex.CreateVertexScheduleController,
+        "api/storage/createNewBucket": vertex.CreateBucketController,
         "api/vertex/uiConfig": vertex.UIConfigController,
         "api/compute/region": compute.RegionController,
         "api/compute/network": compute.NetworkController,
