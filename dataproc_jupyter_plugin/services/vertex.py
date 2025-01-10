@@ -22,7 +22,11 @@ from dataproc_jupyter_plugin.commons.constants import (
     CONTENT_TYPE,
     VERTEX_STORAGE_BUCKET,
 )
-from dataproc_jupyter_plugin.models.models import DescribeVertexJob, DescribeBucketName, DescribeUpdateVertexJob
+from dataproc_jupyter_plugin.models.models import (
+    DescribeVertexJob,
+    DescribeBucketName,
+    DescribeUpdateVertexJob,
+)
 
 
 class Client:
@@ -277,7 +281,9 @@ class Client:
                         result.update(resp)
                         return result
                 else:
-                    self.log.exception(f"Error listing schedules: {response.reason} {await response.text()}")
+                    self.log.exception(
+                        f"Error listing schedules: {response.reason} {await response.text()}"
+                    )
                     raise Exception(
                         f"Error listing schedules: {response.reason} {await response.text()}"
                     )
@@ -300,7 +306,9 @@ class Client:
                 elif response.status == 204:
                     return {"message": "Schedule paused successfully"}
                 else:
-                    self.log.exception(f"Error pausing the schedule: {response.reason} {await response.text()}")
+                    self.log.exception(
+                        f"Error pausing the schedule: {response.reason} {await response.text()}"
+                    )
                     raise Exception(
                         f"Error pausing the schedule: {response.reason} {await response.text()}"
                     )
@@ -323,7 +331,9 @@ class Client:
                 elif response.status == 204:
                     return {"message": "Schedule resumed successfully"}
                 else:
-                    self.log.exception(f"Error resuming the schedule: {response.reason} {await response.text()}")
+                    self.log.exception(
+                        f"Error resuming the schedule: {response.reason} {await response.text()}"
+                    )
                     raise Exception(
                         f"Error resuming the schedule: {response.reason} {await response.text()}"
                     )
@@ -346,7 +356,9 @@ class Client:
                 elif response.status == 204:
                     return {"message": "Schedule deleted successfully"}
                 else:
-                    self.log.exception(f"Error deleting the schedule: {response.reason} {await response.text()}")
+                    self.log.exception(
+                        f"Error deleting the schedule: {response.reason} {await response.text()}"
+                    )
                     raise Exception(
                         f"Error deleting the schedule: {response.reason} {await response.text()}"
                     )
@@ -367,7 +379,9 @@ class Client:
                 if response.status == 200:
                     return await response.json()
                 else:
-                    self.log.exception(f"Error getting the schedule: {response.reason} {await response.text()}")
+                    self.log.exception(
+                        f"Error getting the schedule: {response.reason} {await response.text()}"
+                    )
                     raise Exception(
                         f"Error getting the schedule: {response.reason} {await response.text()}"
                     )
@@ -391,7 +405,9 @@ class Client:
                 if response.status == 200:
                     return await response.json()
                 else:
-                    self.log.exception(f"Error triggering the schedule: {response.reason} {await response.text()}")
+                    self.log.exception(
+                        f"Error triggering the schedule: {response.reason} {await response.text()}"
+                    )
                     raise Exception(
                         f"Error triggering the schedule: {response.reason} {await response.text()}"
                     )
@@ -472,7 +488,9 @@ class Client:
                 if response.status == 200:
                     return await response.json()
                 else:
-                    self.log.exception(f"Error updating the schedule: {response.reason} {await response.text()}")
+                    self.log.exception(
+                        f"Error updating the schedule: {response.reason} {await response.text()}"
+                    )
                     raise Exception(
                         f"Error updating the schedule: {response.reason} {await response.text()}"
                     )
