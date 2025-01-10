@@ -213,6 +213,8 @@ def setup_handlers(web_app):
         "bigQueryPreview": bigquery.PreviewController,
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
+        "api/vertex/createJobScheduler": vertex.CreateVertexScheduleController,
+        "api/storage/createNewBucket": vertex.CreateBucketController,
         "api/vertex/uiConfig": vertex.UIConfigController,
         "api/compute/region": compute.RegionController,
         "api/compute/network": compute.NetworkController,
