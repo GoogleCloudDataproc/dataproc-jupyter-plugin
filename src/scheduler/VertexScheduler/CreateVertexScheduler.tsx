@@ -339,7 +339,6 @@ const CreateVertexScheduler = ({
             setScheduleField('')
         }
         if (newValue === 'runSchedule' && scheduleValue === '') {
-            // setScheduleValue(scheduleValueExpression);
             setScheduleValue(scheduleField);
         }
         if (newValue === 'runSchedule') {
@@ -487,7 +486,7 @@ const CreateVertexScheduler = ({
             disk_type: diskTypeSelected,
             disk_size: diskSize
         }
-        console.log(payload)
+
         if (editMode) {
             await VertexServices.editVertexJobSchedulerService(
                 jobId,
@@ -505,7 +504,7 @@ const CreateVertexScheduler = ({
         }
         setEditMode(false);
     }
-    console.log(jobId)
+
     /**
     * Cancel a job schedule
     */
@@ -597,7 +596,6 @@ const CreateVertexScheduler = ({
                         setSubNetworkList={setSubNetworkList}
                         setSharedNetworkSelected={setSharedNetworkSelected}
                         setScheduleMode={setScheduleMode}
-                        setScheduleValue={setScheduleValue}
                         setScheduleField={setScheduleField}
                         setStartDate={setStartDate}
                         setEndDate={setEndDate}
@@ -859,7 +857,6 @@ const CreateVertexScheduler = ({
                                                 className="create-scheduler-style create-scheduler-form-element-input-fl"
                                                 options={primaryNetworkList}
                                                 getOptionLabel={option => option.name}
-                                                // value={primaryNetworkSelected.name}
                                                 value={primaryNetworkList.find(
                                                     option => option.name === primaryNetworkSelected?.name
                                                 ) || null}

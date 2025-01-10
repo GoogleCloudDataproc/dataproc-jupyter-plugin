@@ -502,6 +502,7 @@ export class VertexServices {
                     darkGreenList.push(dateValue);
                 }
             });
+            
             // Update state lists with their respective transformations
             setBlueListDates(blueList);
             setGreyListDates(greyList);

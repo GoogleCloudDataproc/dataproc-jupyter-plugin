@@ -61,7 +61,6 @@ function ListVertexScheduler({
   setSubNetworkList,
   setSharedNetworkSelected,
   setScheduleMode,
-  setScheduleValue,
   setScheduleField,
   setStartDate,
   setEndDate,
@@ -97,7 +96,6 @@ function ListVertexScheduler({
   setSubNetworkList: (value: { name: string; link: string }[]) => void;
   setSharedNetworkSelected: (value: { name: string; network: string, subnetwork: string } | null) => void;
   setScheduleMode: (value: scheduleMode) => void;
-  setScheduleValue: (value: string) => void;
   setScheduleField: (value: string) => void;
   setStartDate: (value: dayjs.Dayjs | null) => void;
   setEndDate: (value: dayjs.Dayjs | null) => void;
@@ -118,8 +116,7 @@ function ListVertexScheduler({
   const [inputNotebookFilePath, setInputNotebookFilePath] = useState<string>('');
   const [editNotebookLoading, setEditNotebookLoading] = useState<string>('');
   const [deletingSchedule, setDeletingSchedule] = useState<boolean>(false);
-  const [isPreviewEnabled, setIsPreviewEnabled] = useState<boolean>(false);
-  console.log(isPreviewEnabled)
+  const [, setIsPreviewEnabled] = useState<boolean>(false);
   const [nextPageFlag, setNextPageFlag] = useState<string>('');
   console.log(nextPageFlag);
   const [projectId, setProjectId] = useState<string>('');
@@ -198,6 +195,7 @@ function ListVertexScheduler({
 
   /**
   * Trigger a job immediately
+  * @param {React.ChangeEvent<HTMLInputElement>} e - event triggered by the trigger button.
   * @param {string} displayName name of schedule
   */
   const handleTriggerSchedule = async (event: React.MouseEvent, displayName: string) => {
@@ -244,7 +242,7 @@ function ListVertexScheduler({
 
   /**
   * Edit schedule
-  * @param {}
+  * @param {React.ChangeEvent<HTMLInputElement>} e - event triggered by the edit vertex button.
   */
   const handleEditVertex = async (event: React.MouseEvent) => {
     const scheduleId = event.currentTarget.getAttribute('data-scheduleId');
@@ -260,11 +258,10 @@ function ListVertexScheduler({
 
   /**
   * Edit job
-  * @param {}
+  * @param {React.ChangeEvent<HTMLInputElement>} e - event triggered by the edit job button.
   */
   const handleEditJob = async (event: React.MouseEvent, displayName: string) => {
     const job_id = event.currentTarget.getAttribute('data-jobid');
-    console.log(job_id)
     if (job_id) {
       setJobId(job_id)
     }
@@ -523,6 +520,10 @@ function ListVertexScheduler({
     setIsPreviewEnabled(previewEnabled);
   };
 
+   /**
+  * Opens edit notebook
+  * @param {}
+  */
   const openEditDagNotebookFile = async () => {
     let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
     const openNotebookFile: any = await app.commands.execute('docmanager:open', {

@@ -50,7 +50,6 @@ const VertexScheduleJobs = ({
     setSubNetworkList,
     setSharedNetworkSelected,
     setScheduleMode,
-    setScheduleValue,
     setScheduleField,
     setStartDate,
     setEndDate,
@@ -87,7 +86,6 @@ const VertexScheduleJobs = ({
     setSubNetworkList: (value: { name: string; link: string }[]) => void;
     setSharedNetworkSelected: (value: { name: string; network: string, subnetwork: string } | null) => void;
     setScheduleMode: (value: scheduleMode) => void;
-    setScheduleValue: (value: string) => void;
     setScheduleField: (value: string) => void;
     setStartDate: (value: dayjs.Dayjs | null) => void;
     setEndDate: (value: dayjs.Dayjs | null) => void;
@@ -98,12 +96,15 @@ const VertexScheduleJobs = ({
     setServiceAccountList: (value: { displayName: string; email: string }[]) => void;
     setNetworkSelected: (value: string) => void;
 }): React.JSX.Element => {
-    const [showExecutionHistory, setShowExecutionHistory] = useState(false);
-    const [schedulerData, setScheduleData] = useState('');
+    const [showExecutionHistory, setShowExecutionHistory] = useState<boolean>(false);
+    const [schedulerData, setScheduleData] = useState<string>('');
     const [bucketName,
-    ] = useState('');
-    const [scheduleName, setScheduleName] = useState('');
+    ] = useState<string>('');
+    const [scheduleName, setScheduleName] = useState<string>('');
 
+    /**
+    * Handler to move back page back
+    */
     const handleBackButton = () => {
         setShowExecutionHistory(false);
         setExecutionPageFlag(true);
@@ -153,7 +154,6 @@ const VertexScheduleJobs = ({
                         setSubNetworkList={setSubNetworkList}
                         setSharedNetworkSelected={setSharedNetworkSelected}
                         setScheduleMode={setScheduleMode}
-                        setScheduleValue={setScheduleValue}
                         setScheduleField={setScheduleField}
                         setStartDate={setStartDate}
                         setEndDate={setEndDate}
@@ -232,8 +232,6 @@ export class NotebookJobs extends DataprocWidget {
                 } } setSharedNetworkSelected={function (value: { name: string; network: string; subnetwork: string; } | null): void {
                     throw new Error('Function not implemented.');
                 } } setScheduleMode={function (value: scheduleMode): void {
-                    throw new Error('Function not implemented.');
-                } } setScheduleValue={function (value: string): void {
                     throw new Error('Function not implemented.');
                 } } setScheduleField={function (value: string): void {
                     throw new Error('Function not implemented.');
