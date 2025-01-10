@@ -498,7 +498,6 @@ class Client:
             self.log.exception(f"Error updating schedule: {str(e)}")
             return {"Error updating schedule": str(e)}
 
-
     async def list_notebook_execution_jobs(self, region_id, schedule_id, start_date):
         try:
             execution_jobs = []
@@ -524,7 +523,9 @@ class Client:
                                 execution_jobs.append(job)
                         return execution_jobs
                 else:
-                    self.log.exception(f"Error fetching notebook execution jobs: {response.reason} {await response.text()}")
+                    self.log.exception(
+                        f"Error fetching notebook execution jobs: {response.reason} {await response.text()}"
+                    )
                     raise Exception(
                         f"Error fetching notebook execution jobs: {response.reason} {await response.text()}"
                     )
