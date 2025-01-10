@@ -744,7 +744,6 @@ const CreateVertexScheduler = ({
                                 clearIcon={false}
                                 loading={cloudStorageLoading}
                                 getOptionLabel={(option) => option}
-                                // open={true}
                                 renderOption={(props, option) => {
                                     // Custom rendering for the "Create new bucket" option
                                     if (option === `Create and Select`) {

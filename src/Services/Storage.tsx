@@ -97,7 +97,7 @@ export class StorageServices {
                     'Error in downloading the job history',
                     LOG_LEVEL.ERROR
                 );
-                toast.success(
+                toast.error(
                     `Error in downloading the job history`,
                     toastifyCustomStyle
                 );
