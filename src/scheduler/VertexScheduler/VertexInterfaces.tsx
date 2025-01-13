@@ -62,3 +62,16 @@ export interface ITriggerSchedule {
     metedata: object;
     name: string;
 }
+export interface ISchedulerData {
+    name: string
+    displayName: string
+    schedule: string
+    status: string
+    createTime: string
+    lastScheduledRunResponse: LastScheduledRunResponse
+}
+
+export interface LastScheduledRunResponse {
+    scheduledRunTime: string
+    runResponse: string
+}

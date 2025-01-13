@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import {
   Button
 } from '@mui/material';
 import DeletePopup from '../../utils/deletePopup';
-import { PLUGIN_ID, scheduleMode } from '../../utils/const';
+import { scheduleMode } from '../../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { RegionDropdown } from '../../controls/RegionDropdown';
 import { authApi } from '../../utils/utils';
@@ -116,9 +116,6 @@ function ListVertexScheduler({
   const [inputNotebookFilePath, setInputNotebookFilePath] = useState<string>('');
   const [editNotebookLoading, setEditNotebookLoading] = useState<string>('');
   const [deletingSchedule, setDeletingSchedule] = useState<boolean>(false);
-  const [, setIsPreviewEnabled] = useState<boolean>(false);
-  const [nextPageFlag, setNextPageFlag] = useState<string>('');
-  console.log(nextPageFlag);
   const [projectId, setProjectId] = useState<string>('');
   const [uniqueScheduleId, setUniqueScheduleId] = useState<string>('');
   const [scheduleDisplayName, setScheduleDisplayName] = useState<string>('');
@@ -154,8 +151,7 @@ function ListVertexScheduler({
     await VertexServices.listVertexSchedules(
       setDagList,
       region,
-      setIsLoading,
-      setNextPageFlag
+      setIsLoading
     );
   };
 
@@ -176,7 +172,6 @@ function ListVertexScheduler({
         region,
         setDagList,
         setIsLoading,
-        setNextPageFlag,
         displayName,
         setResumeLoading
       );
@@ -186,7 +181,6 @@ function ListVertexScheduler({
         region,
         setDagList,
         setIsLoading,
-        setNextPageFlag,
         displayName,
         setResumeLoading
       );
@@ -233,8 +227,7 @@ function ListVertexScheduler({
       uniqueScheduleId,
       scheduleDisplayName,
       setDagList,
-      setIsLoading,
-      setNextPageFlag,
+      setIsLoading
     );
     setDeletePopupOpen(false);
     setDeletingSchedule(false);
@@ -512,21 +505,13 @@ function ListVertexScheduler({
     }
   };
 
-  const checkPreviewEnabled = async () => {
-    const settings = await settingRegistry.load(PLUGIN_ID);
-
-    // The current value of whether or not preview features are enabled.
-    let previewEnabled = settings.get('previewEnabled').composite as boolean;
-    setIsPreviewEnabled(previewEnabled);
-  };
-
    /**
   * Opens edit notebook
   * @param {}
   */
   const openEditDagNotebookFile = async () => {
     let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-    const openNotebookFile: any = await app.commands.execute('docmanager:open', {
+    const openNotebookFile = await app.commands.execute('docmanager:open', {
       path: filePath
     });
     setInputNotebookFilePath('');
@@ -542,7 +527,6 @@ function ListVertexScheduler({
   }, [inputNotebookFilePath]);
 
   useEffect(() => {
-    checkPreviewEnabled();
     window.scrollTo(0, 0)
   }, [])
 

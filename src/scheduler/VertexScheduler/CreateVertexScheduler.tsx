@@ -252,6 +252,7 @@ const CreateVertexScheduler = ({
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
     const handleMaxRuns = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Regular expression to validate positive integers without leading zeros
         const re = /^[1-9][0-9]*$/;
         if (e.target.value === '' || re.test(e.target.value)) {
             setMaxRuns(e.target.value);
