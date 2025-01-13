@@ -458,7 +458,14 @@ function ListVertexScheduler({
             cell.column.Header === 'Status' ?
               <>
                 <div className='execution-history-main-wrapper'>
-                  {cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse ? (cell.row.original.status === 'COMPLETED' ? (cell.row.original.lastScheduledRunResponse.runResponse === 'OK' ? <div>
+                  {cell.row.original.lastScheduledRunResponse === null ? 
+                    <IconActive.react
+                        tag="div"
+                        title=''
+                        className="icon-white logo-alignment-style success_icon icon-size-status"
+                      /> 
+                  : 
+                  (cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse ? (cell.row.original.status === 'COMPLETED' ? (cell.row.original.lastScheduledRunResponse.runResponse === 'OK' ? <div>
                     <IconSuccess.react
                       tag="div"
                       title='Done !'
@@ -491,7 +498,7 @@ function ListVertexScheduler({
                         title={!cell.row.original.lastScheduledRunResponse ? 'Not started' : cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse}
                         className="icon-white logo-alignment-style success_icon icon-size"
                       />
-                    </div>}
+                    </div>)}
                   <div className={alignIcon ? 'text-icon' : ''}>{cell.render('Cell')}</div>
                 </div>
 
