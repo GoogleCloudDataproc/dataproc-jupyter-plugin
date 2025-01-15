@@ -144,7 +144,6 @@ function ListVertexScheduler({
 
   /**
   * Get list of schedules
-  * @param {}
   */
   const listDagInfoAPI = async () => {
     setIsLoading(true);
@@ -514,7 +513,6 @@ function ListVertexScheduler({
 
    /**
   * Opens edit notebook
-  * @param {}
   */
   const openEditDagNotebookFile = async () => {
     let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
