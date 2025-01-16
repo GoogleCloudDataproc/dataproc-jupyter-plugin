@@ -306,8 +306,6 @@ const VertexExecutionHistory = ({
                     <div className="execution-history-right-wrapper">
                         {jobRunId !== '' && (
                             <VertexJobTaskLogs
-                                composerName={schedulerData}
-                                dagId={scheduleName}
                                 jobRunId={jobRunId}
                                 jobRunsData={jobRunsData}
                             />

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2024 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,190 +15,99 @@
  * limitations under the License.
  */
 import React, { useEffect, useState } from 'react';
-import { Typography, CircularProgress } from '@mui/material';
-import { handleDebounce } from '../../utils/utils';
-import { IconExpandLess, IconExpandMore } from '../../utils/icons';
-import { IDagRunList, ISchedulerData } from './VertexInterfaces';
+import {
+  CircularProgress,
+  Button
+} from '@mui/material';
+import { IDagRunList } from './VertexInterfaces';
 import { LogEntriesServices } from '../../Services/LogEntries';
 
 const VertexJobTaskLogs = ({
-    composerName,
-    dagId,
-    jobRunId,
-    jobRunsData,
+  jobRunId,
+  jobRunsData,
 }: {
-    composerName: ISchedulerData | undefined;
-    dagId: string;
-    jobRunId: string;
-    jobRunsData: IDagRunList | undefined;
+  jobRunId: string;
+  jobRunsData: IDagRunList | undefined;
 }): JSX.Element => {
-    const [dagTaskInstancesList, setDagTaskInstancesList] = useState<any>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingLogs] = useState(false);
-    const [expanded, setExpanded] = useState<string | false>(false);
-    const [loglist] = useState('');
+  const [dagTaskInstancesList, setDagTaskInstancesList] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    const [height, setHeight] = useState(window.innerHeight - 320);
-
-    function handleUpdateHeight() {
-        let updateHeight = window.innerHeight - 320;
-        setHeight(updateHeight);
-    }
-
-    // Debounce the handleUpdateHeight function
-    const debouncedHandleUpdateHeight = handleDebounce(handleUpdateHeight, 500);
-
-    // Add event listener for window resize using useEffect
-    useEffect(() => {
-        window.addEventListener('resize', debouncedHandleUpdateHeight);
-
-        // Cleanup function to remove event listener on component unmount
-        return () => {
-            window.removeEventListener('resize', debouncedHandleUpdateHeight);
-        };
-    }, []);
-
-    /** 
-     * Fetches and lists the task instances for a specific job run.
-     */
-    const listDagTaskInstancesRunsList = async () => {
-        await LogEntriesServices.vertexJobTaskLogsListService(
-            jobRunId,
-            jobRunsData,
-            setDagTaskInstancesList,
-            setIsLoading
-        );
-    };
-
-    useEffect(() => {
-        if (jobRunId && jobRunsData) {
-            listDagTaskInstancesRunsList();
-            setExpanded(false);
-        }
-    }, [jobRunId, jobRunsData]);
-
-    useEffect(() => {
-        if (dagTaskInstancesList.length > 0) {
-            setExpanded('0');
-            listDagTaskLogList('0', dagTaskInstancesList[0].tryNumber);
-        }
-    }, [dagTaskInstancesList]);
-
-    const handleChange = (
-        index: string,
-        iconIndex: number,
-        fromClick: string
-    ) => {
-        if (`${index}` === expanded && fromClick === 'expandClick') {
-            setExpanded(false);
-        } else {
-            setExpanded(`${index}`);
-            listDagTaskLogList(index, iconIndex);
-        }
-    };
-
-    const listDagTaskLogList = async (index: string, iconIndex: number) => {
-        // To do
-        console.debug(index, iconIndex)
-    };
-
-    return (
-        <div>
-            {dagTaskInstancesList.length > 0 ? (
-                <div>
-                    <div className="accordion-vertex-row-parent-header">
-                        <div className="accordion-vertex-row-data">Severity</div>
-                        {/* <div className="accordion-vertex-row-data">Date</div> */}
-                        <div className="accordion-vertex-row-data">Time Stamp</div>
-                        <div className="accordion-vertex-row-data">Summary</div>
-                        <div className="accordion-row-data-expand-logo"></div>
-                    </div>
-                    {dagTaskInstancesList.length > 0 &&
-                        dagTaskInstancesList.map((taskInstance: { severity: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; date: string; time: string; textPayload: string; tryNumber: number; }, index: string) => (
-                            <div>
-                                <div className="accordion-vertex-row-parent">
-                                    <div className="accordion-vertex-row-data">
-                                        {taskInstance.severity}
-                                    </div>
-                                    <div className="accordion-vertex-row-data">
-                                        {taskInstance.date + " " + taskInstance.time}
-                                    </div>
-                                    <div className="accordion-vertex-row-data">
-                                        {taskInstance.textPayload.split(']')[1]}
-                                    </div>
-                                    {taskInstance.tryNumber !== 0 ? (
-                                        <div
-                                            className="accordion-row-data-expand-logo"
-                                            onClick={() =>
-                                                handleChange(
-                                                    index,
-                                                    taskInstance.tryNumber,
-                                                    'expandClick'
-                                                )
-                                            }
-                                        >
-                                            {expanded === `${index}` ? (
-                                                <IconExpandLess.react
-                                                    tag="div"
-                                                    className="icon-white logo-alignment-style-accordion"
-                                                />
-                                            ) : (
-                                                <IconExpandMore.react
-                                                    tag="div"
-                                                    className="icon-white logo-alignment-style-accordion"
-                                                />
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="accordion-row-data-expand-logo"></div>
-                                    )}
-                                </div>
-
-                                {isLoadingLogs && expanded === `${index}` ? (
-                                    <div className="spin-loader-main">
-                                        <CircularProgress
-                                            className="spin-loader-custom-style"
-                                            color="primary"
-                                            size={18}
-                                        />
-                                        Loading Dag Runs Task Logs
-                                    </div>
-                                ) : (
-                                    expanded === `${index}` && (
-                                        <div>
-                                            {' '}
-                                            <Typography>
-                                                <pre
-                                                    className="logs-content-style"
-                                                    style={{ maxHeight: height }}
-                                                >
-                                                    {loglist}
-                                                </pre>
-                                            </Typography>{' '}
-                                        </div>
-                                    )
-                                )}
-                            </div>
-                        ))}
-                </div>
-            ) : (
-                <div>
-                    {isLoading ? (
-                        <div className="spin-loader-main">
-                            <CircularProgress
-                                className="spin-loader-custom-style"
-                                color="primary"
-                                size={18}
-                            />
-                            Loading Dag Runs Task Instances
-                        </div>
-                    ) : (
-                        <div className="no-data-style">No rows to display</div>
-                    )}
-                </div>
-            )}
-        </div>
+  /** 
+   * Fetches and lists the task instances for a specific job run.
+   */
+  const listDagTaskInstancesRunsList = async () => {
+    await LogEntriesServices.vertexJobTaskLogsListService(
+      jobRunId,
+      jobRunsData,
+      setDagTaskInstancesList,
+      setIsLoading
     );
+  };
+
+  useEffect(() => {
+    if (jobRunId && jobRunsData) {
+      listDagTaskInstancesRunsList();
+    }
+  }, [jobRunId, jobRunsData]);
+
+  return (
+    <div>
+      <div className="btn-refresh log-btn">
+        <Button
+          disabled={isLoading}
+          className="btn-refresh-text"
+          variant="outlined"
+          aria-label="cancel Batch"
+        >
+          <div>LOGS</div>
+        </Button>
+      </div>
+      {dagTaskInstancesList.length > 0 ? (
+        <div>
+          <div className="accordion-vertex-row-parent-header">
+            <div className="accordion-vertex-row-data">Severity</div>
+            <div className="accordion-vertex-row-data">Time Stamp</div>
+            <div className="accordion-vertex-row-data">Summary</div>
+            <div className="accordion-row-data-expand-logo"></div>
+          </div>
+          {dagTaskInstancesList.length > 0 &&
+            dagTaskInstancesList.map((taskInstance: { severity: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; date: string; time: string; textPayload: string; tryNumber: number; }, index: string) => (
+              <div>
+                {
+                  taskInstance.severity === 'ERROR' || taskInstance.severity === "WARNING" &&
+                  <div className="accordion-vertex-row-parent">
+                    <div className="accordion-vertex-row-data">
+                      {taskInstance.severity}
+                    </div>
+                    <div className="accordion-vertex-row-data">
+                      {taskInstance.date + " " + taskInstance.time}
+                    </div>
+                    <div className="accordion-vertex-row-data">
+                      {taskInstance.textPayload.split(']')[1]}
+                    </div>
+                  </div>
+                }
+              </div>
+            ))}
+        </div>
+      ) : (
+        <div>
+          {isLoading ? (
+            <div className="spin-loader-main">
+              <CircularProgress
+                className="spin-loader-custom-style"
+                color="primary"
+                size={18}
+              />
+              Loading Dag Runs Task Instances
+            </div>
+          ) : (
+            <div className="no-data-style">No rows to display</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default VertexJobTaskLogs;

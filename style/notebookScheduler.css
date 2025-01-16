@@ -430,3 +430,9 @@
 .icon-size {
   width: 14px;
 }
+
+.log-btn {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px;
+}
