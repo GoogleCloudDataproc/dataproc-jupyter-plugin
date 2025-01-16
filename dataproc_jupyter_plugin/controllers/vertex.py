@@ -204,3 +204,24 @@ class GetScheduleController(APIHandler):
         except Exception as e:
             self.log.exception(f"Error getting the schedule: {str(e)}")
             self.finish({"error": str(e)})
+
+
+class ListNotebookExecutionJobsController(APIHandler):
+    @tornado.web.authenticated
+    async def get(self):
+        """Returns list of notebook execution jobs"""
+        try:
+            region_id = self.get_argument("region_id")
+            schedule_id = self.get_argument("schedule_id")
+            start_date = self.get_argument("start_date")
+            async with aiohttp.ClientSession() as client_session:
+                client = vertex.Client(
+                    await credentials.get_cached(), self.log, client_session
+                )
+                jobs = await client.list_notebook_execution_jobs(
+                    region_id, schedule_id, start_date
+                )
+                self.finish(json.dumps(jobs))
+        except Exception as e:
+            self.log.exception(f"Error fetching notebook execution jobs: {str(e)}")
+            self.finish({"error": str(e)})

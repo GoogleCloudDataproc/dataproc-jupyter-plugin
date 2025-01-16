@@ -38,6 +38,7 @@ from dataproc_jupyter_plugin.controllers import (
     compute,
     dataproc,
     executor,
+    logEntries,
     iam,
     storage,
     vertex,
@@ -213,6 +214,8 @@ def setup_handlers(web_app):
         "bigQueryPreview": bigquery.PreviewController,
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
+        "api/logEntries/listEntries": logEntries.ListEntriesController,
+        "api/vertex/listNotebookExecutionJobs": vertex.ListNotebookExecutionJobsController,
         "api/vertex/listSchedules": vertex.ListSchedulesController,
         "api/vertex/pauseSchedule": vertex.PauseScheduleController,
         "api/vertex/resumeSchedule": vertex.ResumeScheduleController,
@@ -230,6 +233,7 @@ def setup_handlers(web_app):
         "api/storage/listBucket": storage.CloudStorageController,
         "api/iam/listServiceAccount": iam.ServiceAccountController,
         "api/compute/getXpnHost": compute.GetXpnHostController,
+        "api/storage/downloadOutput": storage.DownloadOutputController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

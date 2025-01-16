@@ -497,3 +497,40 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error updating schedule: {str(e)}")
             return {"Error updating schedule": str(e)}
+
+    async def list_notebook_execution_jobs(self, region_id, schedule_id, start_date):
+        try:
+            execution_jobs = []
+            api_endpoint = f"https://{region_id}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{region_id}/notebookExecutionJobs?filter=schedule={schedule_id}&orderBy=createTime desc"
+
+            headers = self.create_headers()
+            async with self.client_session.get(
+                api_endpoint, headers=headers
+            ) as response:
+                if response.status == 200:
+                    resp = await response.json()
+                    if not resp:
+                        return execution_jobs
+                    else:
+                        jobs = resp.get("notebookExecutionJobs")
+                        for job in jobs:
+                            # getting only the jobs whose create time is equal to start date
+                            # splitting it in order to get only the date part from the values which is in zulu format (2011-08-12T20:17:46.384Z)
+                            if (
+                                start_date.rsplit("-", 1)[0]
+                                == job.get("createTime").rsplit("-", 1)[0]
+                            ):
+                                execution_jobs.append(job)
+                        return execution_jobs
+                else:
+                    self.log.exception(
+                        f"Error fetching notebook execution jobs: {response.reason} {await response.text()}"
+                    )
+                    raise Exception(
+                        f"Error fetching notebook execution jobs: {response.reason} {await response.text()}"
+                    )
+        except Exception as e:
+            self.log.exception(
+                f"Error fetching list of notebook execution jobs: {str(e)}"
+            )
+            return {"Error fetching list of notebook execution jobs": str(e)}
