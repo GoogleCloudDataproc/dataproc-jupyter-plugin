@@ -50,6 +50,7 @@ import { ComputeServices } from '../../Services/Compute';
 import { IamServices } from '../../Services/Iam';
 import { StorageServices } from '../../Services/Storage';
 import { AcceleratorConfig, IMachineType } from './VertexInterfaces';
+import { toast } from 'react-toastify';
 
 const CreateVertexScheduler = ({
     themeManager,
@@ -177,7 +178,6 @@ const CreateVertexScheduler = ({
     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event triggered by the input field.
     */
     const handleDefaultDiskSize = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // const re = /^[1-9][0-9]*$/;
         if (e.target.value === '') {
             setDiskSize('100');
         }
@@ -548,7 +548,7 @@ const CreateVertexScheduler = ({
                 }
             })
             .catch((error) => {
-                console.error(error);
+                toast.error(error);
             });
     }, [projectId]);
 
