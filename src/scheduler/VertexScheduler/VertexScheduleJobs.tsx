@@ -21,6 +21,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import ListVertexScheduler from '../VertexScheduler/ListVertexScheduler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import VertexExecutionHistory from './VertexExecutionHistory';
+import { ISchedulerData } from './VertexInterfaces';
 
 
 const NotebookJobComponent = ({
@@ -35,15 +36,23 @@ const NotebookJobComponent = ({
 }): React.JSX.Element => {
     const [showExecutionHistory, setShowExecutionHistory] = useState(false);
     const [region, setRegion] = useState<string>('');
-    const [schedulerData, setScheduleData] = useState('');
+    const [schedulerData, setScheduleData] = useState<ISchedulerData>();
     const [bucketName] = useState('');
     const [scheduleName, setScheduleName] = useState('');
 
+    /** 
+     * Handles the back button click event.
+     */
     const handleBackButton = () => {
         setShowExecutionHistory(false);
         setExecutionPageFlag(true);
     };
 
+    /** 
+     * Handles the selection of a DAG ID and updates the state with the selected scheduler data.
+     * @param {any} schedulerData - The data related to the selected scheduler.
+     * @param {string} scheduleName - The name of the selected schedule.
+     */
     const handleDagIdSelection = (schedulerData: any, scheduleName: string) => {
         setShowExecutionHistory(true);
         setScheduleName(scheduleName)

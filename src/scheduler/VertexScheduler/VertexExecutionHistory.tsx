@@ -26,7 +26,7 @@ import { authApi, handleDebounce } from '../../utils/utils';
 import VertexJobRuns from './VertexJobRuns';
 import VertexJobTaskLogs from './VertexJobTaskLogs';
 import { IconLeftArrow } from '../../utils/icons';
-import { IDagRunList } from './VertexInterfaces';
+import { IDagRunList, ISchedulerData } from './VertexInterfaces';
 
 const VertexExecutionHistory = ({
     region,
@@ -39,7 +39,7 @@ const VertexExecutionHistory = ({
 }: {
     region: string;
     setRegion: (value: string) => void;
-    schedulerData: string;
+    schedulerData: ISchedulerData | undefined;
     scheduleName: string;
     handleBackButton: () => void;
     bucketName: string;
@@ -48,7 +48,7 @@ const VertexExecutionHistory = ({
 
     const today = dayjs()
 
-    const [dagRunId, setDagRunId] = useState<string>('');
+    const [jobRunId, setJobRunId] = useState<string>('');
     const [dagRunsList, setDagRunsList] = useState<IDagRunList[]>([]);
     const [jobRunsData, setJobRunsData] = useState<IDagRunList | undefined>();
     const currentDate = new Date().toLocaleDateString();
@@ -102,7 +102,7 @@ const VertexExecutionHistory = ({
     * @param {React.SetStateAction<dayjs.Dayjs | null>} selectedValue selected kernel
     */
     const handleDateSelection = (selectedValue: React.SetStateAction<dayjs.Dayjs | null>) => {
-        setDagRunId('');
+        setJobRunId('');
         setSelectedDate(selectedValue);
     };
 
@@ -124,7 +124,7 @@ const VertexExecutionHistory = ({
         } else {
             setSelectedDate(today);
         }
-        setDagRunId('')
+        setJobRunId('')
         setDagRunsList([])
         setSelectedMonth(resolvedMonth);
     };
@@ -148,7 +148,7 @@ const VertexExecutionHistory = ({
      * @returns JSX.Element
      */
     const CustomDay = (props: PickersDayProps<Dayjs>) => {
-        const { day } = props;
+        const { day, disabled } = props;
 
         // Format day into a string that matches the date strings in the lists
         const isSelectedExecution = selectedDate ? selectedDate.date() === day.date() && selectedDate.month() === day.month() : false;
@@ -160,47 +160,76 @@ const VertexExecutionHistory = ({
         const isRedExecution = getFormattedDate(redListDates, day);
         const isGreenExecution = getFormattedDate(greenListDates, day);
         const isDarkGreenExecution = getFormattedDate(darkGreenListDates, day);
+        // Check if the day is today
+        const isToday = day.isSame(new Date(), 'day');
+
+        // Background and text color based on conditions
+        let backgroundColor = 'transparent'; // Default transparent
+        let borderColor = 'none';
+        let textColor = 'inherit';
+        let opacity = 1;
+
+        // Case 1: If today is selected
+        if (isToday && isSelectedExecution) {
+            backgroundColor = '#3B78E7';
+            borderColor = 'none';
+            textColor = 'white';
+        }
+        // Case 2: If today is not selected but it's today
+        else if (isToday) {
+            backgroundColor = '#3B78E7';
+            textColor = 'white';
+        }
+        // Case 3: If selected date has a background color (blue, green, etc.)
+        else if (isBlueExecution) {
+            backgroundColor = '#00BFA5';
+            textColor = 'white';
+        } else if (isDarkGreenExecution) {
+            backgroundColor = '#1E6631';
+            textColor = 'white';
+        } else if (isGreenExecution) {
+            backgroundColor = '#34A853';
+            textColor = 'white';
+        } else if (isOrangeExecution) {
+            backgroundColor = '#FFA52C';
+            textColor = 'white';
+        } else if (isRedExecution) {
+            backgroundColor = '#EA3323';
+            textColor = 'white';
+        } else if (isGreyExecution) {
+            backgroundColor = '#AEAEAE';
+            textColor = 'white';
+        }
+
+        // Case 4: If the day is selected but without a background color (i.e., transparent background)
+        if (isSelectedExecution && backgroundColor === 'transparent') {
+            backgroundColor = 'transparent';
+            borderColor = '2px solid #3B78E7';
+        }
+
+        // Case 5: If the day is selected and has an existing background color (e.g., blue, green, etc.)
+        if (isSelectedExecution && backgroundColor !== 'transparent') {
+            borderColor = '2px solid #3B78E7';
+            textColor = 'white';
+        }
+
+        // Reduce opacity for past and future dates
+        if (disabled) {
+            opacity = 0.5;
+        }
 
         return (
             <PickersDay
                 {...props}
                 style={{
-                    border: 'none',
+                    background: backgroundColor,
+                    border: borderColor,
                     borderRadius:
-                        isSelectedExecution ||
-                            isDarkGreenExecution ||
-                            isGreenExecution ||
-                            isRedExecution ||
-                            isOrangeExecution ||
-                            isGreyExecution ||
-                            isBlueExecution
+                        backgroundColor !== 'transparent' || isSelectedExecution || isToday
                             ? '50%'
                             : 'none',
-                    backgroundColor: isSelectedExecution
-                        ? '#3B78E7'
-                        : isDarkGreenExecution
-                            ? '#1E6631'
-                            : isGreenExecution
-                                ? '#34A853'
-                                : isOrangeExecution
-                                    ? '#FFA52C'
-                                    : isRedExecution
-                                        ? '#EA3323'
-                                        : isBlueExecution
-                                            ? '#00BFA5'
-                                            : isGreyExecution
-                                                ? '#AEAEAE'
-                                                : 'transparent',
-                    color:
-                        isSelectedExecution ||
-                            isDarkGreenExecution ||
-                            isGreenExecution ||
-                            isRedExecution ||
-                            isOrangeExecution ||
-                            isGreyExecution ||
-                            isBlueExecution
-                            ? 'white'
-                            : 'inherit',
+                    color: textColor,
+                    opacity: opacity,
                 }}
             />
         );
@@ -243,7 +272,7 @@ const VertexExecutionHistory = ({
                                 ></div>
                             )}
                             <DateCalendar
-                                minDate={dayjs().year(2024).startOf('year')}
+                                minDate={dayjs(schedulerData?.createTime)}
                                 maxDate={dayjs(currentDate)}
                                 defaultValue={today}
                                 onChange={newValue => handleDateSelection(newValue)}
@@ -258,7 +287,7 @@ const VertexExecutionHistory = ({
                             schedulerData={schedulerData}
                             dagId={scheduleName}
                             setJobRunsData={setJobRunsData}
-                            setDagRunId={setDagRunId}
+                            setJobRunId={setJobRunId}
                             selectedMonth={selectedMonth}
                             selectedDate={selectedDate}
                             setBlueListDates={setBlueListDates}
@@ -275,11 +304,9 @@ const VertexExecutionHistory = ({
                         />
                     </div>
                     <div className="execution-history-right-wrapper">
-                        {dagRunId !== '' && (
+                        {jobRunId !== '' && (
                             <VertexJobTaskLogs
-                                composerName={schedulerData}
-                                dagId={scheduleName}
-                                dagRunId={dagRunId}
+                                jobRunId={jobRunId}
                                 jobRunsData={jobRunsData}
                             />
                         )}

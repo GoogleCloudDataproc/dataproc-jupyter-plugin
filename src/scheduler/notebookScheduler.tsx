@@ -127,11 +127,8 @@ const NotebookSchedulerComponent = ({
                   disabled={editMode}
                 />
               </div>
-              {
-                jobNameSelected === '' && <ErrorMessage message="Name is required" />
-              }
-              {!jobNameValidation && !editMode && (
-                <ErrorMessage message="Name is required" />
+              {jobNameSelected === '' && !editMode && (
+                <ErrorMessage message="Job name is required" />
               )}
               {jobNameSpecialValidation && jobNameValidation && !editMode && (
                 <ErrorMessage message="Name must contain only letters, numbers, hyphens, and underscores" />

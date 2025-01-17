@@ -15,13 +15,14 @@ export interface IDagList {
 }
 
 export interface IDagRunList {
-    dagRunId: string;
+    jobRunId: string;
     startDate: string;
     endDate: string;
     gcsUrl: string;
     state: string;
     date: Date;
     time: string;
+    fileName: string;
 }
 
 export interface ICreatePayload {
@@ -59,4 +60,18 @@ export interface IDeleteSchedulerAPIResponse {
 export interface ITriggerSchedule {
     metedata: object;
     name: string;
+}
+
+export interface ISchedulerData {
+    name: string
+    displayName: string
+    schedule: string
+    status: string
+    createTime: string
+    lastScheduledRunResponse: LastScheduledRunResponse
+}
+
+export interface LastScheduledRunResponse {
+    scheduledRunTime: string
+    runResponse: string
 }

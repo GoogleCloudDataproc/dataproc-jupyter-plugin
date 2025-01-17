@@ -21,17 +21,17 @@ import { Dayjs } from 'dayjs';
 
 import TableData from '../../utils/tableData';
 import { ICellProps, handleDebounce } from '../../utils/utils';
-import { SchedulerService } from '../schedulerServices';
 import { IconDownload } from '../../utils/icons';
-import { IDagRunList } from './VertexInterfaces';
+import { IDagRunList, ISchedulerData } from './VertexInterfaces';
 import { VertexServices } from '../../Services/Vertex';
+import { StorageServices } from '../../Services/Storage';
 
 const VertexJobRuns = ({
     region,
     schedulerData,
     dagId,
     setJobRunsData,
-    setDagRunId,
+    setJobRunId,
     selectedMonth,
     selectedDate,
     setBlueListDates,
@@ -47,10 +47,10 @@ const VertexJobRuns = ({
     setDagRunsList
 }: {
     region: string;
-    schedulerData: string;
+    schedulerData: ISchedulerData | undefined;
     dagId: string;
     setJobRunsData: React.Dispatch<React.SetStateAction<IDagRunList | undefined>>;
-    setDagRunId: (value: string) => void;
+    setJobRunId: (value: string) => void;
     selectedMonth: Dayjs | null;
     selectedDate: Dayjs | null;
     setBlueListDates: (value: string[]) => void;
@@ -65,7 +65,8 @@ const VertexJobRuns = ({
     dagRunsList: IDagRunList[];
     setDagRunsList: (value: IDagRunList[]) => void;
 }): JSX.Element => {
-    const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState('');
+    const [jobDownloadLoading, setJobDownloadLoading] = useState(false);
+    const [downloadOutputDagRunId, setDownloadOutputDagRunId] = useState<string | undefined>('');
     const [listDagRunHeight, setListDagRunHeight] = useState(
         window.innerHeight - 485
     );
@@ -98,14 +99,14 @@ const VertexJobRuns = ({
                 return new Date(dagRun.date).toDateString() === selectedDateString;
             });
         }
-        return dagRunsList;
+        return [];
     }, [dagRunsList, selectedDate]);
 
     // Sync filtered data with the parent component's state
     useEffect(() => {
         if (filteredData.length > 0) {
             setJobRunsData(filteredData[0]);
-            setDagRunId(filteredData[0].dagRunId)
+            setJobRunId(filteredData[0].jobRunId)
         }
     }, [filteredData, setJobRunsData]);
 
@@ -209,27 +210,44 @@ const VertexJobRuns = ({
         );
     };
 
-    const handleDagRunStateClick = (data: { id?: string; status?: string; dagRunId?: string; }) => {
-        if (data.dagRunId) {
-            setDagRunId(data.dagRunId);
+    /** 
+     * @param {Object} data - The data object containing information about the DAG run.
+     * @param {string} data.id - The optional ID of the DAG run.
+     * @param {string} data.status - The optional status of the DAG run.
+     * @param {string} data.jobRunId - The optional jobRunId of the DAG run.
+     * 
+     * @description Updates the jobRunId state if a jobRunId is provided in the data object.
+     * Triggered when a DAG run state is clicked.
+     */
+    const handleDagRunStateClick = (data: { id?: string; status?: string; jobRunId?: string; }) => {
+        if (data.jobRunId) {
+            setJobRunId(data.jobRunId);
         }
     };
-
-    const handleDownloadOutput = async (event: React.MouseEvent) => {
-        const dagRunId = event.currentTarget.getAttribute('data-dag-run-id')!;
-        await SchedulerService.handleDownloadOutputNotebookAPIService(
-            schedulerData,
-            dagRunId,
-            bucketName,
-            dagId,
-            setDownloadOutputDagRunId
+    /** 
+     * Handles the download of a job's output by triggering the download API service.
+     * @param {Object} data - The data related to the job run and output.
+     * @param {string} data.id - The optional ID of the job run.
+     * @param {string} data.status - The optional status of the job run.
+     * @param {string} data.jobRunId - The optional job run ID associated with the job output.
+     * @param {string} data.state - The optional state of the job run.
+     * @param {string} data.gcsUrl - The URL of the output file in Google Cloud Storage (GCS).
+     * @param {string} data.fileName - The name of the file to be downloaded.
+     */
+    const handleDownloadOutput = async (data: { id?: string; status?: string; jobRunId?: string; state?: string; gcsUrl?: string; fileName?: string; }) => {
+        setDownloadOutputDagRunId(data.jobRunId)
+        await StorageServices.downloadJobAPIService(
+            data.gcsUrl,
+            data.fileName,
+            data.jobRunId,
+            setJobDownloadLoading
         );
     };
 
-    const renderActions = (data: { id?: string; status?: string; dagRunId?: string; state?: string; }) => {
+    const renderActions = (data: { id?: string; status?: string; jobRunId?: string; state?: string; }) => {
         return (
             <div className="actions-icon">
-                {data.dagRunId === downloadOutputDagRunId ? (
+                {jobDownloadLoading && data.jobRunId === downloadOutputDagRunId ? (
                     <div className="icon-buttons-style">
                         <CircularProgress
                             size={18}
@@ -246,10 +264,10 @@ const VertexJobRuns = ({
                                 : 'icon-buttons-style-disable'
                         }
                         title="Download Output"
-                        data-dag-run-id={data.dagRunId}
+                        data-dag-run-id={data}
                         onClick={
                             data.state === 'succeeded'
-                                ? e => handleDownloadOutput(e)
+                                ? e => handleDownloadOutput(data)
                                 : undefined
                         }
                     >
