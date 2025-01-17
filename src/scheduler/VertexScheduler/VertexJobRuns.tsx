@@ -40,7 +40,6 @@ const VertexJobRuns = ({
     setRedListDates,
     setGreenListDates,
     setDarkGreenListDates,
-    bucketName,
     setIsLoading,
     isLoading,
     dagRunsList,
@@ -59,7 +58,6 @@ const VertexJobRuns = ({
     setRedListDates: (value: string[]) => void;
     setGreenListDates: (value: string[]) => void;
     setDarkGreenListDates: (value: string[]) => void;
-    bucketName: string;
     setIsLoading: (value: boolean) => void;
     isLoading: boolean;
     dagRunsList: IDagRunList[];
