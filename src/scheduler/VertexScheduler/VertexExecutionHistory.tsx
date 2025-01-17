@@ -34,7 +34,6 @@ const VertexExecutionHistory = ({
     schedulerData,
     scheduleName,
     handleBackButton,
-    bucketName,
     setExecutionPageFlag
 }: {
     region: string;
@@ -42,7 +41,6 @@ const VertexExecutionHistory = ({
     schedulerData: ISchedulerData | undefined;
     scheduleName: string;
     handleBackButton: () => void;
-    bucketName: string;
     setExecutionPageFlag: (value: boolean) => void;
 }): JSX.Element => {
 
@@ -296,7 +294,6 @@ const VertexExecutionHistory = ({
                             setRedListDates={setRedListDates}
                             setGreenListDates={setGreenListDates}
                             setDarkGreenListDates={setDarkGreenListDates}
-                            bucketName={bucketName}
                             setIsLoading={setIsLoading}
                             isLoading={isLoading}
                             dagRunsList={dagRunsList}
