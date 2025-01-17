@@ -24,6 +24,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import VertexExecutionHistory from './VertexExecutionHistory';
 import { scheduleMode } from '../../utils/const';
 import dayjs from 'dayjs';
+import { ISchedulerData } from './VertexInterfaces';
 
 
 const VertexScheduleJobs = ({
@@ -97,19 +98,22 @@ const VertexScheduleJobs = ({
     setNetworkSelected: (value: string) => void;
 }): React.JSX.Element => {
     const [showExecutionHistory, setShowExecutionHistory] = useState<boolean>(false);
-    const [schedulerData, setScheduleData] = useState<string>('');
-    const [bucketName,
-    ] = useState<string>('');
-    const [scheduleName, setScheduleName] = useState<string>('');
+    const [schedulerData, setScheduleData] = useState<ISchedulerData>();
+    const [scheduleName, setScheduleName] = useState('');
 
-    /**
-    * Handler to move back page back
-    */
+    /** 
+     * Handles the back button click event.
+     */
     const handleBackButton = () => {
         setShowExecutionHistory(false);
         setExecutionPageFlag(true);
     };
 
+    /** 
+     * Handles the selection of a DAG ID and updates the state with the selected scheduler data.
+     * @param {any} schedulerData - The data related to the selected scheduler.
+     * @param {string} scheduleName - The name of the selected schedule.
+     */
     const handleDagIdSelection = (schedulerData: any, scheduleName: string) => {
         setShowExecutionHistory(true);
         setScheduleName(scheduleName)
@@ -125,7 +129,6 @@ const VertexScheduleJobs = ({
                     schedulerData={schedulerData}
                     scheduleName={scheduleName}
                     handleBackButton={handleBackButton}
-                    bucketName={bucketName}
                     setExecutionPageFlag={setExecutionPageFlag}
                 />
             ) : (

@@ -36,6 +36,7 @@ import { IconActive, IconDelete, IconEditDag, IconEditNotebook, IconFailed, Icon
 import { VertexServices } from '../../Services/Vertex';
 import { IDagList } from './VertexInterfaces';
 import dayjs from 'dayjs';
+import ErrorMessage from '../common/ErrorMessage';
 
 function ListVertexScheduler({
   region,
@@ -216,9 +217,9 @@ function ListVertexScheduler({
     setDeletePopupOpen(false);
   };
 
-  /**
-  * Delete a schedule
-  */
+  /** 
+   * Handles the deletion of a scheduler by invoking the API service to delete it.
+   */
   const handleDeleteScheduler = async () => {
     setDeletingSchedule(true);
     await VertexServices.handleDeleteSchedulerAPIService(
@@ -233,8 +234,8 @@ function ListVertexScheduler({
   };
 
   /**
-  * Edit schedule
-  * @param {React.ChangeEvent<HTMLInputElement>} e - event triggered by the edit vertex button.
+  * Handles the editing of a vertex by triggering the editVertexSchedulerService.
+  * @param {React.ChangeEvent<HTMLInputElement>} event - event triggered by the edit vertex button.
   */
   const handleEditVertex = async (event: React.MouseEvent) => {
     const scheduleId = event.currentTarget.getAttribute('data-scheduleId');
@@ -575,6 +576,9 @@ function ListVertexScheduler({
             region={region}
             onRegionChange={region => setRegion(region)}
           />
+          {
+            !isLoading && !region && <ErrorMessage message="Region is required" />
+          }
         </div>
         <div className="btn-refresh">
           <Button

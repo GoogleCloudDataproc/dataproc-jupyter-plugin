@@ -385,6 +385,10 @@
   padding-top: 5px;
 }
 
+.tab-text-sub-cl .error-message {
+  color: #b71c1c;
+}
+
 .learn-more-a-tag {
   padding-left: 27px;
 }
@@ -429,4 +433,10 @@
 
 .icon-completed {
   padding-top: 4px;
+}
+
+.log-btn {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px;
 }

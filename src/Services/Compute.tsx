@@ -25,12 +25,12 @@ export class ComputeServices {
     ) => {
         try {
             const formattedResponse: any = await requestAPI(`api/compute/getXpnHost`);
-            if (formattedResponse.length === 0) {
-                setHostProject('')
-            } else {
+            if (formattedResponse.length > 0) {
                 if (formattedResponse) {
                     setHostProject(formattedResponse);
                 }
+            } else {
+                setHostProject('')
             }
         } catch (error) {
             DataprocLoggingService.log(
@@ -48,15 +48,15 @@ export class ComputeServices {
         try {
             setPrimaryNetworkLoading(true)
             const formattedResponse: any = await requestAPI(`api/compute/network`);
-            if (formattedResponse.length === 0) {
-                setPrimaryNetworkList([])
-            } else {
+            if (formattedResponse.length > 0) {
                 const primaryNetworkList = formattedResponse.map((network: any) => ({
                     name: network.name,
                     link: network.selfLink
                 }));
                 primaryNetworkList.sort();
                 setPrimaryNetworkList(primaryNetworkList);
+            } else {
+                setPrimaryNetworkList([])
             }
             setPrimaryNetworkLoading(false)
         } catch (error) {
@@ -82,15 +82,15 @@ export class ComputeServices {
         try {
             setSubNetworkLoading(true)
             const formattedResponse: any = await requestAPI(`api/compute/subNetwork?region_id=${region}&network_id=${primaryNetworkSelected}`);
-            if (formattedResponse.length === 0) {
-                setSubNetworkList([])
-            } else {
+            if (formattedResponse.length > 0) {
                 const subNetworkList = formattedResponse.map((network: any) => ({
                     name: network.name,
                     link: network.selfLink
                 }));
                 subNetworkList.sort();
                 setSubNetworkList(subNetworkList);
+            } else {
+                setSubNetworkList([])
             }
             setSubNetworkLoading(false)
         } catch (error) {
@@ -114,9 +114,7 @@ export class ComputeServices {
         try {
             setSharedNetworkLoading(true)
             const formattedResponse: any = await requestAPI(`api/compute/sharedNetwork`);
-            if (formattedResponse.length === 0) {
-                setSharedNetworkList([])
-            } else {
+            if (formattedResponse.length > 0) {
                 const sharedNetworkList = formattedResponse.map((network: any) => ({
                     name: network.network.split('/').pop(),
                     network: network.network,
@@ -124,6 +122,8 @@ export class ComputeServices {
                 }));
                 sharedNetworkList.sort();
                 setSharedNetworkList(sharedNetworkList);
+            } else {
+                setSharedNetworkList([])
             }
             setSharedNetworkLoading(false)
         } catch (error) {

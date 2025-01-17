@@ -17,13 +17,14 @@ export interface IDagList {
 }
 
 export interface IDagRunList {
-    dagRunId: string;
+    jobRunId: string;
     startDate: string;
     endDate: string;
     gcsUrl: string;
     state: string;
     date: Date;
     time: string;
+    fileName: string;
 }
 
 export interface ICreatePayload {

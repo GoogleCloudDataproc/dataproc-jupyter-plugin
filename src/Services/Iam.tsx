@@ -30,15 +30,15 @@ export class IamServices {
         try {
             setServiceAccountLoading(true)
             const formattedResponse: any = await requestAPI(`api/iam/listServiceAccount`);
-            if (formattedResponse.length === 0) {
-                setServiceAccountList([])
-            } else {
+            if (formattedResponse.length > 0) {
                 const serviceAccountList = formattedResponse.map((account: any) => ({
                     displayName: account.displayName,
                     email: account.email
                 }));
                 serviceAccountList.sort();
                 setServiceAccountList(serviceAccountList);
+            } else {
+                setServiceAccountList([])
             }
             setServiceAccountLoading(false)
         } catch (error) {

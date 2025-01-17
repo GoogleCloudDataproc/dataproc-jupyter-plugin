@@ -14,21 +14,23 @@
 
 import json
 
+import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
 
 from dataproc_jupyter_plugin import credentials
-from dataproc_jupyter_plugin.services import iam
+from dataproc_jupyter_plugin.services import logEntries
 
 
-class ServiceAccountController(APIHandler):
+class ListEntriesController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
-        """Returns service accounts"""
+        """Returns log entries"""
         try:
-            iam_admin_client = iam.Client(await credentials.get_cached(), self.log)
-            service_account = await iam_admin_client.list_service_account()
-            self.finish(json.dumps(service_account))
+            filter_query = self.get_argument("filter_query")
+            logging_client = logEntries.Client(await credentials.get_cached(), self.log)
+            logs = await logging_client.list_log_entries(filter_query)
+            self.finish(json.dumps(logs))
         except Exception as e:
-            self.log.exception(f"Error fetching service accounts: {str(e)}")
+            self.log.exception(f"Error fetching entries: {str(e)}")
             self.finish({"error": str(e)})

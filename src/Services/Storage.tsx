@@ -47,4 +47,72 @@ export class StorageServices {
             );
         }
     };
+    static newCloudStorageAPIService = async (
+        bucketName: string,
+        setIsCreatingNewBucket: (value: boolean) => void,
+        setBucketError: (value: string) => void
+    ) => {
+        const payload = {
+            bucket_name: bucketName
+        }
+        try {
+            setIsCreatingNewBucket(true)
+            const formattedResponse: any = await requestAPI(`api/storage/createNewBucket`, {
+                body: JSON.stringify(payload),
+                method: 'POST'
+            });
+            setBucketError(formattedResponse.error)
+            setIsCreatingNewBucket(false)
+            toast.success(
+                `Bucket created successfully`,
+                toastifyCustomStyle
+            );
+        } catch (error) {
+            setIsCreatingNewBucket(false)
+            DataprocLoggingService.log(
+                'Error creating the cloud storage bucket',
+                LOG_LEVEL.ERROR
+            );
+        }
+    };
+    static downloadJobAPIService = async (
+        gcsUrl: string | undefined,
+        fileName: string | undefined,
+        jobRunId: string | undefined,
+        setJobDownloadLoading: (value: boolean) => void,
+    ) => {
+        try {
+            const bucketName = gcsUrl?.split('//')[1];
+            setJobDownloadLoading(true)
+            const formattedResponse: any = await requestAPI(`api/storage/downloadOutput?bucket_name=${bucketName}&job_run_id=${jobRunId}&file_name=${fileName}`, {
+                method: 'POST'
+            });
+            if (formattedResponse.status === 0) {
+                toast.success(
+                    `Job history downloaded successfully`,
+                    toastifyCustomStyle
+                );
+            } else {
+                DataprocLoggingService.log(
+                    'Error in downloading the job history',
+                    LOG_LEVEL.ERROR
+                );
+                toast.error(
+                    `Error in downloading the job history`,
+                    toastifyCustomStyle
+                );
+            }
+            setJobDownloadLoading(false)
+        } catch (error) {
+            setJobDownloadLoading(false)
+            DataprocLoggingService.log(
+                'Error in downloading the job history',
+                LOG_LEVEL.ERROR
+            );
+            toast.error(
+                `Error in downloading the job history`,
+                toastifyCustomStyle
+            );
+        }
+    };
 }

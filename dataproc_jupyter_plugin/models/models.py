@@ -58,3 +58,64 @@ class DescribeJob(BaseModel):
     @classmethod
     def from_dict(cls, data):
         return cls(**data)
+
+
+class DescribeVertexJob(BaseModel):
+    input_filename: str = None
+    display_name: str = None
+    machine_type: str = None
+    accelerator_type: Optional[str] = None
+    accelerator_count: Optional[int] = None
+    kernel_name: str = None
+    schedule_value: str = None
+    time_zone: str = None
+    max_run_count: Optional[str] = None
+    region: str = None
+    cloud_storage_bucket: str = None
+    parameters: Optional[List[str]] = None
+    service_account: str = None
+    network: str = None
+    subnetwork: str = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    disk_type: str = None
+    disk_size: str = None
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
+
+
+class DescribeBucketName(BaseModel):
+    bucket_name: str = None
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)
+
+
+class DescribeUpdateVertexJob(BaseModel):
+    input_filename: str = None
+    display_name: str = None
+    machine_type: Optional[str] = None
+    accelerator_type: Optional[str] = None
+    accelerator_count: Optional[int] = None
+    kernel_name: Optional[str] = None
+    schedule_value: str = None
+    time_zone: str = None
+    max_run_count: str = None
+    region: Optional[str] = None
+    cloud_storage_bucket: Optional[str] = None
+    parameters: Optional[dict] = None
+    service_account: Optional[str] = None
+    network: Optional[str] = None
+    subnetwork: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    gcs_notebook_source: str = None
+    disk_type: Optional[str] = None
+    disk_size: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(**data)

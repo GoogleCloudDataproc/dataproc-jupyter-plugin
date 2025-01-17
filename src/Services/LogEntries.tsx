@@ -33,19 +33,23 @@ export class LogEntriesServices {
             const data: any = await requestAPI(
                 `api/logEntries/listEntries?filter_query=timestamp >= \"${start_date}" AND timestamp <= \"${end_date}" AND SEARCH(\"${dagRunId}\")`
             );
-            let transformDagRunTaskInstanceListData = [];
-            transformDagRunTaskInstanceListData = data.map(
-                (dagRunTask: any) => {
-                    return {
-                        severity: dagRunTask.severity,
-                        textPayload: dagRunTask.textPayload && dagRunTask.textPayload ? dagRunTask.textPayload : '',
-                        date: new Date(dagRunTask.timestamp).toDateString(),
-                        time: new Date(dagRunTask.timestamp).toTimeString().split(' ')[0],
-                        fullData: dagRunTask,
-                    };
-                }
-            );
-            setDagTaskInstancesList(transformDagRunTaskInstanceListData);
+            if (data.length > 0) {
+                let transformDagRunTaskInstanceListData = [];
+                transformDagRunTaskInstanceListData = data.map(
+                    (dagRunTask: any) => {
+                        return {
+                            severity: dagRunTask.severity,
+                            textPayload: dagRunTask.textPayload && dagRunTask.textPayload ? dagRunTask.textPayload : '',
+                            date: new Date(dagRunTask.timestamp).toDateString(),
+                            time: new Date(dagRunTask.timestamp).toTimeString().split(' ')[0],
+                            fullData: dagRunTask,
+                        };
+                    }
+                );
+                setDagTaskInstancesList(transformDagRunTaskInstanceListData);
+            } else {
+                setDagTaskInstancesList([])
+            }
             setIsLoading(false);
         } catch (reason) {
             setIsLoading(false);
