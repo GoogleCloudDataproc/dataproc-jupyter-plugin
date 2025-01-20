@@ -444,3 +444,7 @@
 .icon-size-status {
   width: 12px;
 }
+
+.text-icon {
+  line-height: 2;
+}
