@@ -627,7 +627,7 @@ const CreateVertexScheduler = ({
     }, [editMode]);
 
     useEffect(() => {
-        if(editMode) {
+        if(!editMode) {
             setStartDate(null);
             setEndDate(null);
         }

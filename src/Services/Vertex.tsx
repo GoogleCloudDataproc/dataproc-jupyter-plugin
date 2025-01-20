@@ -370,9 +370,9 @@ export class VertexServices {
 
                 // Network
                 const primaryNetwork = formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.networkSpec.network.split('/');
-                setPrimaryNetworkSelected({ name: primaryNetwork[primaryNetwork.length - 1], link: primaryNetwork[primaryNetwork.length - 1] });
+                setPrimaryNetworkSelected({ name: primaryNetwork[primaryNetwork.length - 1], link: formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.networkSpec.network });
                 const subnetwork = formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.networkSpec.subnetwork.split('/');
-                setSubNetworkSelected({ name: subnetwork[subnetwork.length - 1], link: subnetwork[subnetwork.length - 1] })
+                setSubNetworkSelected({ name: subnetwork[subnetwork.length - 1], link: formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.networkSpec.subnetwork })
 
                 setSubNetworkList([{ name: subnetwork[subnetwork.length - 1], link: subnetwork[subnetwork.length - 1] }])
                 if (formattedResponse.cron === '* * * * *' && formattedResponse.maxRunCount === '1') {
