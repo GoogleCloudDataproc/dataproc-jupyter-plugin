@@ -45,6 +45,7 @@ export interface ICreatePayload {
     subnetwork: string | undefined;
     start_time: dayjs.Dayjs | null;
     end_time: dayjs.Dayjs | null;
+    gcs_notebook_source?: string;
 }
 
 export interface IUpdateSchedulerAPIResponse {

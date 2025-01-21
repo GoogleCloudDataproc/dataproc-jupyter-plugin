@@ -60,7 +60,8 @@ const VertexScheduleJobs = ({
     setJobNameSelected,
     setServiceAccountList,
     setPrimaryNetworkList,
-    setNetworkSelected
+    setNetworkSelected,
+    setGcsPath
 }: {
     app: JupyterLab;
     themeManager: IThemeManager;
@@ -96,6 +97,7 @@ const VertexScheduleJobs = ({
     setJobNameSelected?: (value: string) => void;
     setServiceAccountList: (value: { displayName: string; email: string }[]) => void;
     setNetworkSelected: (value: string) => void;
+    setGcsPath: (value: string) => void;
 }): React.JSX.Element => {
     const [showExecutionHistory, setShowExecutionHistory] = useState<boolean>(false);
     const [schedulerData, setScheduleData] = useState<ISchedulerData>();
@@ -167,6 +169,7 @@ const VertexScheduleJobs = ({
                         setServiceAccountList={setServiceAccountList}
                         setPrimaryNetworkList={setPrimaryNetworkList}
                         setNetworkSelected={setNetworkSelected}
+                        setGcsPath={setGcsPath}
                     />
                 </div>
             )}
@@ -251,6 +254,8 @@ export class NotebookJobs extends DataprocWidget {
                 } } setServiceAccountList={function (value: { displayName: string; email: string; }[]): void {
                     throw new Error('Function not implemented.');
                 } } setJobId={function (value: string): void {
+                    throw new Error('Function not implemented.');
+                } } setGcsPath={function (value: string): void {
                     throw new Error('Function not implemented.');
                 } }/>
         );
