@@ -55,12 +55,8 @@ const VertexScheduleJobs = ({
     setStartDate,
     setEndDate,
     setMaxRuns,
-    setTimeZoneSelected,
     setEditMode,
     setJobNameSelected,
-    setServiceAccountList,
-    setPrimaryNetworkList,
-    setNetworkSelected,
     setGcsPath
 }: {
     app: JupyterLab;
@@ -83,7 +79,6 @@ const VertexScheduleJobs = ({
     setParameterDetailUpdated: (value: string[]) => void;
     setServiceAccountSelected: (value: { displayName: string; email: string } | null) => void;
     setPrimaryNetworkSelected: (value: { name: string; link: string } | null) => void;
-    setPrimaryNetworkList: (value: { name: string; link: string }[]) => void;
     setSubNetworkSelected: (value: { name: string; link: string } | null) => void;
     setSubNetworkList: (value: { name: string; link: string }[]) => void;
     setSharedNetworkSelected: (value: { name: string; network: string, subnetwork: string } | null) => void;
@@ -92,11 +87,8 @@ const VertexScheduleJobs = ({
     setStartDate: (value: dayjs.Dayjs | null) => void;
     setEndDate: (value: dayjs.Dayjs | null) => void;
     setMaxRuns: (value: string) => void;
-    setTimeZoneSelected: (value: string) => void;
     setEditMode: (value: boolean) => void;
     setJobNameSelected?: (value: string) => void;
-    setServiceAccountList: (value: { displayName: string; email: string }[]) => void;
-    setNetworkSelected: (value: string) => void;
     setGcsPath: (value: string) => void;
 }): React.JSX.Element => {
     const [showExecutionHistory, setShowExecutionHistory] = useState<boolean>(false);
@@ -163,12 +155,8 @@ const VertexScheduleJobs = ({
                         setStartDate={setStartDate}
                         setEndDate={setEndDate}
                         setMaxRuns={setMaxRuns}
-                        setTimeZoneSelected={setTimeZoneSelected}
                         setEditMode={setEditMode}
                         setJobNameSelected={setJobNameSelected!}
-                        setServiceAccountList={setServiceAccountList}
-                        setPrimaryNetworkList={setPrimaryNetworkList}
-                        setNetworkSelected={setNetworkSelected}
                         setGcsPath={setGcsPath}
                     />
                 </div>
@@ -225,11 +213,7 @@ export class NotebookJobs extends DataprocWidget {
                     throw new Error('Function not implemented.');
                 } } setServiceAccountSelected={function (value: { displayName: string; email: string; } | null): void {
                     throw new Error('Function not implemented.');
-                } } setNetworkSelected={function (value: string): void {
-                    throw new Error('Function not implemented.');
                 } } setPrimaryNetworkSelected={function (value: { name: string; link: string; } | null): void {
-                    throw new Error('Function not implemented.');
-                } } setPrimaryNetworkList={function (value: { name: string; link: string; }[]): void {
                     throw new Error('Function not implemented.');
                 } } setSubNetworkSelected={function (value: { name: string; link: string; } | null): void {
                     throw new Error('Function not implemented.');
@@ -247,11 +231,7 @@ export class NotebookJobs extends DataprocWidget {
                     throw new Error('Function not implemented.');
                 } } setMaxRuns={function (value: string): void {
                     throw new Error('Function not implemented.');
-                } } setTimeZoneSelected={function (value: string): void {
-                    throw new Error('Function not implemented.');
                 } } setEditMode={function (value: boolean): void {
-                    throw new Error('Function not implemented.');
-                } } setServiceAccountList={function (value: { displayName: string; email: string; }[]): void {
                     throw new Error('Function not implemented.');
                 } } setJobId={function (value: string): void {
                     throw new Error('Function not implemented.');

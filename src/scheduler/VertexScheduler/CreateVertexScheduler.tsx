@@ -668,12 +668,8 @@ const CreateVertexScheduler = ({
                         setStartDate={setStartDate}
                         setEndDate={setEndDate}
                         setMaxRuns={setMaxRuns}
-                        setTimeZoneSelected={setTimeZoneSelected}
                         setEditMode={setEditMode}
                         setJobNameSelected={setJobNameSelected}
-                        setServiceAccountList={setServiceAccountList}
-                        setPrimaryNetworkList={setPrimaryNetworkList}
-                        setNetworkSelected={setNetworkSelected}
                         setGcsPath = {setGcsPath}
                     />
                     :

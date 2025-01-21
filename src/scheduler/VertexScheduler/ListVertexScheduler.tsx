@@ -66,12 +66,8 @@ function ListVertexScheduler({
   setStartDate,
   setEndDate,
   setMaxRuns,
-  setTimeZoneSelected,
   setEditMode,
   setJobNameSelected,
-  setServiceAccountList,
-  setPrimaryNetworkList,
-  setNetworkSelected,
   setGcsPath
 }: {
   region: string;
@@ -93,7 +89,6 @@ function ListVertexScheduler({
   setParameterDetailUpdated: (value: string[]) => void;
   setServiceAccountSelected: (value: { displayName: string; email: string } | null) => void;
   setPrimaryNetworkSelected: (value: { name: string; link: string } | null) => void;
-  setPrimaryNetworkList: (value: { name: string; link: string }[]) => void;
   setSubNetworkSelected: (value: { name: string; link: string } | null) => void;
   setSubNetworkList: (value: { name: string; link: string }[]) => void;
   setSharedNetworkSelected: (value: { name: string; network: string, subnetwork: string } | null) => void;
@@ -102,11 +97,8 @@ function ListVertexScheduler({
   setStartDate: (value: dayjs.Dayjs | null) => void;
   setEndDate: (value: dayjs.Dayjs | null) => void;
   setMaxRuns: (value: string) => void;
-  setTimeZoneSelected: (value: string) => void;
   setEditMode: (value: boolean) => void;
   setJobNameSelected: (value: string) => void;
-  setServiceAccountList: (value: { displayName: string; email: string }[]) => void;
-  setNetworkSelected: (value: string) => void;
   setGcsPath: (value: string) => void;
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
