@@ -187,6 +187,7 @@ export const LOGIN_ERROR_MESSAGE =
 export const NOTEBOOK_TEMPLATES_LIST_URL =
   'https://api.github.com/repos/GoogleCloudPlatform/ai-ml-recipes/contents/.ci/index.json';
 export type scheduleMode = 'runNow' | 'runSchedule';
+export type internalScheduleMode = 'cronFormat' | 'userFriendly';
 export const scheduleValueExpression = '30 17 * * 1-5'; //Expression for schedule Value in Scheduler Jobs
 export const PLUGIN_ID = 'dataproc_jupyter_plugin:plugin';
 export const SPARK_RESOURCE_ALLOCATION_INFO_URL =
@@ -257,3 +258,7 @@ export const TIER_SELECT_OPTIONS = [
   { key: 'standard', value: 'standard', text: 'standard' },
   { key: 'premium', value: 'premium', text: 'premium' }
 ];
+
+export const KERNEL_VALUE = ['python3', 'pytorch', 'tensorflow'];
+export const DISK_TYPE_VALUE = ["pd-standard (Persistent Disk Standard", "pd-ssd (Persistent Disk Solid state Drive)", "pd-standard (Persistent Disk Hard Disk Drive)", "pd-balanced (Balanced Persistent Disk)", "pd-extreme (Extreme Persistent Disk)"];
+export const CORN_EXP_DOC_URL = "https://cloud.google.com/scheduler/docs/configuring/cron-job-schedules"

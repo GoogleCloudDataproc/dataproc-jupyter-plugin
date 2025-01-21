@@ -30,13 +30,15 @@ interface IDeletePopupProps {
   deletePopupOpen: boolean;
   DeleteMsg: string;
   deletingNotebook?: boolean;
+  deletingSchedule?: boolean;
 }
 function DeletePopup({
   onCancel,
   onDelete,
   deletePopupOpen,
   DeleteMsg,
-  deletingNotebook
+  deletingNotebook,
+  deletingSchedule
 }: IDeletePopupProps) {
   return (
     <Dialog open={deletePopupOpen} onClose={onCancel}>
@@ -46,7 +48,7 @@ function DeletePopup({
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
-        {deletingNotebook ? (
+        {deletingNotebook || deletingSchedule? (
           <div className="submit-button-disable-style">DELETING</div>
         ) : (
           <Button onClick={onDelete}>Delete</Button>
