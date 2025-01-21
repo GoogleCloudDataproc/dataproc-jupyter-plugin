@@ -440,3 +440,11 @@
   justify-content: flex-end;
   padding: 15px;
 }
+
+.icon-size-status {
+  width: 12px;
+}
+
+.text-icon {
+  line-height: 2;
+}

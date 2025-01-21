@@ -66,12 +66,9 @@ function ListVertexScheduler({
   setStartDate,
   setEndDate,
   setMaxRuns,
-  setTimeZoneSelected,
   setEditMode,
   setJobNameSelected,
-  setServiceAccountList,
-  setPrimaryNetworkList,
-  setNetworkSelected
+  setGcsPath
 }: {
   region: string;
   setRegion: (value: string) => void;
@@ -92,7 +89,6 @@ function ListVertexScheduler({
   setParameterDetailUpdated: (value: string[]) => void;
   setServiceAccountSelected: (value: { displayName: string; email: string } | null) => void;
   setPrimaryNetworkSelected: (value: { name: string; link: string } | null) => void;
-  setPrimaryNetworkList: (value: { name: string; link: string }[]) => void;
   setSubNetworkSelected: (value: { name: string; link: string } | null) => void;
   setSubNetworkList: (value: { name: string; link: string }[]) => void;
   setSharedNetworkSelected: (value: { name: string; network: string, subnetwork: string } | null) => void;
@@ -101,11 +97,9 @@ function ListVertexScheduler({
   setStartDate: (value: dayjs.Dayjs | null) => void;
   setEndDate: (value: dayjs.Dayjs | null) => void;
   setMaxRuns: (value: string) => void;
-  setTimeZoneSelected: (value: string) => void;
   setEditMode: (value: boolean) => void;
   setJobNameSelected: (value: string) => void;
-  setServiceAccountList: (value: { displayName: string; email: string }[]) => void;
-  setNetworkSelected: (value: string) => void;
+  setGcsPath: (value: string) => void;
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dagList, setDagList] = useState<IDagList[]>([]);
@@ -286,6 +280,7 @@ function ListVertexScheduler({
         setMaxRuns,
         setEditMode,
         setJobNameSelected,
+        setGcsPath
       );
     }
   };
@@ -469,11 +464,19 @@ function ListVertexScheduler({
               <>
                 <div className='execution-history-main-wrapper'>
                   {cell.row.original.lastScheduledRunResponse === null ? 
-                    <IconActive.react
-                        tag="div"
-                        title=''
-                        className="icon-white logo-alignment-style success_icon icon-size-status"
-                      /> 
+                    (cell.row.original.status === 'ACTIVE' ? 
+                      <IconActive.react
+                          tag="div"
+                          title='ACTIVE'
+                          className="icon-white logo-alignment-style success_icon icon-size-status"
+                        />  
+                        :
+                        <IconListPause.react
+                          tag="div"
+                          title='PAUSE'
+                          className="icon-white logo-alignment-style success_icon icon-size"
+                        />
+                      )
                   : 
                   (cell.row.original.lastScheduledRunResponse && cell.row.original.lastScheduledRunResponse.runResponse ? (cell.row.original.status === 'COMPLETED' ? (cell.row.original.lastScheduledRunResponse.runResponse === 'OK' ? <div>
                     <IconSuccess.react

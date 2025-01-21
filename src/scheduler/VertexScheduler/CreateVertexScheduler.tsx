@@ -130,7 +130,8 @@ const CreateVertexScheduler = ({
     const timezones = Object.keys(tzdata.zones).sort();
     const [startDate, setStartDate] = useState<dayjs.Dayjs | null>(dayjs());
     const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(dayjs());
-    const [endDateError, setEndDateError] = useState<boolean>(false)
+    const [endDateError, setEndDateError] = useState<boolean>(false);
+    const [gcsPath, setGcsPath] = useState('');
 
     /**
     * Changing the region value and empyting the value of machineType, accelratorType and accelratorCount
@@ -560,6 +561,7 @@ const CreateVertexScheduler = ({
                 payload,
                 setCreateCompleted,
                 setCreatingVertexScheduler,
+                gcsPath
             );
         } else {
             await VertexServices.createVertexSchedulerService(
@@ -627,7 +629,7 @@ const CreateVertexScheduler = ({
     }, [editMode]);
 
     useEffect(() => {
-        if(editMode) {
+        if(!editMode) {
             setStartDate(null);
             setEndDate(null);
         }
@@ -666,12 +668,9 @@ const CreateVertexScheduler = ({
                         setStartDate={setStartDate}
                         setEndDate={setEndDate}
                         setMaxRuns={setMaxRuns}
-                        setTimeZoneSelected={setTimeZoneSelected}
                         setEditMode={setEditMode}
                         setJobNameSelected={setJobNameSelected}
-                        setServiceAccountList={setServiceAccountList}
-                        setPrimaryNetworkList={setPrimaryNetworkList}
-                        setNetworkSelected={setNetworkSelected}
+                        setGcsPath = {setGcsPath}
                     />
                     :
                     <div className='submit-job-container'>

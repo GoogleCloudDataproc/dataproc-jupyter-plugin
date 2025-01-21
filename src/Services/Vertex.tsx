@@ -86,8 +86,13 @@ export class VertexServices {
         payload: ICreatePayload,
         setCreateCompleted: (value: boolean) => void,
         setCreatingVertexScheduler: (value: boolean) => void,
+        gcsPath: string
     ) => {
         setCreatingVertexScheduler(true);
+        if(gcsPath) {
+            payload.gcs_notebook_source = gcsPath;
+        }
+        
         try {
             const data: any = await requestAPI(`api/vertex/updateSchedule?region_id=${region}&schedule_id=${jobId}`, {
                 body: JSON.stringify(payload),
@@ -335,6 +340,7 @@ export class VertexServices {
         setMaxRuns: (value: string) => void,
         setEditMode: (value: boolean) => void,
         setJobNameSelected: (value: string) => void,
+        setGcsPath: (value: string) => void
     ) => {
         setEditDagLoading(job_id);
         try {
@@ -348,6 +354,7 @@ export class VertexServices {
                 setCreateCompleted(false);
                 setRegion(region);
                 setJobNameSelected(formattedResponse.displayName);
+                setGcsPath(formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.gcsNotebookSource.uri);
 
                 // Machine type selection
                 setMachineTypeSelected(formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.machineSpec.machineType)
@@ -370,9 +377,9 @@ export class VertexServices {
 
                 // Network
                 const primaryNetwork = formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.networkSpec.network.split('/');
-                setPrimaryNetworkSelected({ name: primaryNetwork[primaryNetwork.length - 1], link: primaryNetwork[primaryNetwork.length - 1] });
+                setPrimaryNetworkSelected({ name: primaryNetwork[primaryNetwork.length - 1], link: formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.networkSpec.network });
                 const subnetwork = formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.networkSpec.subnetwork.split('/');
-                setSubNetworkSelected({ name: subnetwork[subnetwork.length - 1], link: subnetwork[subnetwork.length - 1] })
+                setSubNetworkSelected({ name: subnetwork[subnetwork.length - 1], link: formattedResponse.createNotebookExecutionJobRequest.notebookExecutionJob.customEnvironmentSpec.networkSpec.subnetwork })
 
                 setSubNetworkList([{ name: subnetwork[subnetwork.length - 1], link: subnetwork[subnetwork.length - 1] }])
                 if (formattedResponse.cron === '* * * * *' && formattedResponse.maxRunCount === '1') {
