@@ -283,6 +283,7 @@ const VertexExecutionHistory = ({
                         <VertexJobRuns
                             region={region}
                             schedulerData={schedulerData}
+                            scheduleName={scheduleName}
                             dagId={scheduleName}
                             setJobRunsData={setJobRunsData}
                             setJobRunId={setJobRunId}

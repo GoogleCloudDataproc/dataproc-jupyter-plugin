@@ -29,6 +29,7 @@ import { StorageServices } from '../../Services/Storage';
 const VertexJobRuns = ({
     region,
     schedulerData,
+    scheduleName,
     dagId,
     setJobRunsData,
     setJobRunId,
@@ -47,6 +48,7 @@ const VertexJobRuns = ({
 }: {
     region: string;
     schedulerData: ISchedulerData | undefined;
+    scheduleName: string;
     dagId: string;
     setJobRunsData: React.Dispatch<React.SetStateAction<IDagRunList | undefined>>;
     setJobRunId: (value: string) => void;
@@ -238,7 +240,8 @@ const VertexJobRuns = ({
             data.gcsUrl,
             data.fileName,
             data.jobRunId,
-            setJobDownloadLoading
+            setJobDownloadLoading,
+            scheduleName
         );
     };
 

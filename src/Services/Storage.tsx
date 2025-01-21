@@ -80,6 +80,7 @@ export class StorageServices {
         fileName: string | undefined,
         jobRunId: string | undefined,
         setJobDownloadLoading: (value: boolean) => void,
+        scheduleName: string
     ) => {
         try {
             const bucketName = gcsUrl?.split('//')[1];
@@ -89,7 +90,7 @@ export class StorageServices {
             });
             if (formattedResponse.status === 0) {
                 toast.success(
-                    `Job history downloaded successfully`,
+                    `${scheduleName} job history downloaded successfully`,
                     toastifyCustomStyle
                 );
             } else {
