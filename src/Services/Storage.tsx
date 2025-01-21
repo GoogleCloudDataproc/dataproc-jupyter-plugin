@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2024 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,47 +72,6 @@ export class StorageServices {
             DataprocLoggingService.log(
                 'Error creating the cloud storage bucket',
                 LOG_LEVEL.ERROR
-            );
-        }
-    };
-    static downloadJobAPIService = async (
-        gcsUrl: string | undefined,
-        fileName: string | undefined,
-        jobRunId: string | undefined,
-        setJobDownloadLoading: (value: boolean) => void,
-        scheduleName: string
-    ) => {
-        try {
-            const bucketName = gcsUrl?.split('//')[1];
-            setJobDownloadLoading(true)
-            const formattedResponse: any = await requestAPI(`api/storage/downloadOutput?bucket_name=${bucketName}&job_run_id=${jobRunId}&file_name=${fileName}`, {
-                method: 'POST'
-            });
-            if (formattedResponse.status === 0) {
-                toast.success(
-                    `${scheduleName} job history downloaded successfully`,
-                    toastifyCustomStyle
-                );
-            } else {
-                DataprocLoggingService.log(
-                    'Error in downloading the job history',
-                    LOG_LEVEL.ERROR
-                );
-                toast.error(
-                    `Error in downloading the job history`,
-                    toastifyCustomStyle
-                );
-            }
-            setJobDownloadLoading(false)
-        } catch (error) {
-            setJobDownloadLoading(false)
-            DataprocLoggingService.log(
-                'Error in downloading the job history',
-                LOG_LEVEL.ERROR
-            );
-            toast.error(
-                `Error in downloading the job history`,
-                toastifyCustomStyle
             );
         }
     };

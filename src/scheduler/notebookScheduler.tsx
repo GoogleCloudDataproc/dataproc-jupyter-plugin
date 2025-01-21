@@ -209,18 +209,10 @@ const NotebookSchedulerComponent = ({
             notebookSelector={notebookSelector}
           />
           : <CreateVertexScheduler
-            themeManager={themeManager}
-            app={app}
-            settingRegistry={settingRegistry}
             createCompleted={createCompleted}
             setCreateCompleted={setCreateCompleted}
             jobNameSelected={jobNameSelected}
-            setJobNameSelected={setJobNameSelected}
             inputFileSelected={inputFileSelected}
-            setInputFileSelected={setInputFileSelected}
-            editMode={editMode}
-            setEditMode={setEditMode}
-            setExecutionPageFlag={setExecutionPageFlag}
           />
       }
     </div>

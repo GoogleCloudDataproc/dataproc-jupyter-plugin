@@ -9,24 +9,6 @@ export interface AcceleratorConfig {
     acceleratorType: string
     allowedCounts: number[]
 }
-
-export interface IDagList {
-    displayName: string;
-    schedule: string;
-    status: string;
-}
-
-export interface IDagRunList {
-    jobRunId: string;
-    startDate: string;
-    endDate: string;
-    gcsUrl: string;
-    state: string;
-    date: Date;
-    time: string;
-    fileName: string;
-}
-
 export interface ICreatePayload {
     input_filename: string;
     display_name: string;
@@ -46,34 +28,4 @@ export interface ICreatePayload {
     start_time: dayjs.Dayjs | null;
     end_time: dayjs.Dayjs | null;
     gcs_notebook_source?: string;
-}
-
-export interface IUpdateSchedulerAPIResponse {
-    status: number;
-    error: string;
-}
-
-export interface IDeleteSchedulerAPIResponse {
-    done: boolean;
-    metadata: object;
-    name: string;
-    response: object;
-}
-
-export interface ITriggerSchedule {
-    metedata: object;
-    name: string;
-}
-export interface ISchedulerData {
-    name: string
-    displayName: string
-    schedule: string
-    status: string
-    createTime: string
-    lastScheduledRunResponse: LastScheduledRunResponse
-}
-
-export interface LastScheduledRunResponse {
-    scheduledRunTime: string
-    runResponse: string
 }
