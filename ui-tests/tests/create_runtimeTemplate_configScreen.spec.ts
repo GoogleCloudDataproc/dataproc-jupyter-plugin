@@ -39,8 +39,11 @@ test.describe('Create serverless notebook from config screen', () => {
         const bigQuerySettings = page.getByText('Google BigQuery Settings');
         await dataprocSettings.or(bigQuerySettings).click();
 
+        await page.getByText('Loading Config Setup').waitFor({ state: "detached" });
+
         // Click on Create button
         await page.getByText('Create', { exact: true }).click();
+        await page.getByText('Loading Runtime').waitFor({ state: "detached" });
 
         // Enter all the details to create Severless runtime template
         await page.getByLabel('Display name*').click();
@@ -50,8 +53,8 @@ test.describe('Create serverless notebook from config screen', () => {
 
         // Select the project
         await page.getByRole('combobox', { name: 'Project ID' }).click();
-        await page.getByRole('combobox', { name: 'Project ID' }).fill('kokoro');
-        await page.getByRole('option', { name: 'dataproc-kokoro-tests' }).click();
+        await page.getByRole('combobox', { name: 'Project ID' }).fill('dataproc-jupyter-extension-dev');
+        await page.getByRole('option', { name: 'dataproc-jupyter-extension-dev' }).click();
         await page.waitForTimeout(5000);
 
         // Select Metastore service
@@ -66,5 +69,39 @@ test.describe('Create serverless notebook from config screen', () => {
 
         // Check the notebook created confirmation message
         await expect(page.getByText('Runtime Template ' + templateName + ' successfully created')).toBeVisible();
+    });
+
+    test('Can edit created serverless notebook', async ({ page }) => {
+        test.setTimeout(5 * 60 * 1000);
+
+        // Goto menu and click on Google setting
+        await page
+            .getByLabel('main menu', { exact: true })
+            .getByText('Settings')
+            .click();
+        const dataprocSettings = page.getByText('Google Dataproc Settings');
+        const bigQuerySettings = page.getByText('Google BigQuery Settings');
+        await dataprocSettings.or(bigQuerySettings).click();
+
+        // Wait till the page loaded
+        await page.getByText('Loading Config Setup').waitFor({ state: "detached" });
+        await page.getByText('Loading Runtime Templates').waitFor({ state: "detached" });
+
+        await page.getByPlaceholder('Filter Table').first().fill(templateName);
+
+        await page.getByRole('cell', { name: templateName }).click();
+        await page.getByText('Loading Runtime').waitFor({ state: "detached" });
+
+        await page.getByLabel('Description*').clear();
+        await page.getByLabel('Description*').fill('testing for edit runtime template');
+        await page.getByRole('progressbar').waitFor({ state: "detached" });
+        await page.waitForTimeout(3000);
+
+        // Click on save button to update a notebook
+        await page.getByText('SAVE', { exact: true }).click();
+        await page.waitForTimeout(5000);
+
+        // Check the notebook updated confirmation message
+        await expect(page.getByText('Runtime Template ' + templateName + ' successfully updated')).toBeVisible();
     });
 });

@@ -17,7 +17,88 @@
 
 import { expect, test, galata } from '@jupyterlab/galata';
 
-test.describe('Create serverless notebook from launcher screen', () => {
+test.describe('Serverless notebook from launcher screen', () => {
+
+    test('Sanity: Can perform field validation', async ({ page }) => {
+        test.setTimeout(5 * 60 * 1000);
+
+        // Click on Severless New Runtime Template
+        await page
+            .locator('.jp-LauncherCard:visible', {
+                hasText: 'New Runtime Template'
+            })
+            .click();
+        await page.getByText('Loading Runtime').waitFor({ state: "detached" });
+
+        await page.getByLabel('Display name*').click();
+        await page.getByLabel('Display name*').fill('testing246');
+        await page.getByLabel('Display name*').clear();
+        await expect(page.getByText('Name is required')).toBeVisible(); // Error should appear for empty Display name
+
+        // Fill Display name and check if error is hidden
+        await page.getByLabel('Display name*').fill('testing246');
+        await expect(page.getByText('Name is required')).toBeHidden();
+
+        await page.getByLabel('Runtime ID*').clear();
+        await expect(page.getByText('ID is required')).toBeVisible(); // Error should appear for empty Runtime ID
+
+        // Fill Runtime ID and check if error is hidden
+        await page.getByLabel('Runtime ID*').fill('runtime123');
+        await expect(page.getByText('ID is required')).toBeHidden();
+
+        await page.getByLabel('Description*').fill('test description');
+        await page.getByLabel('Description*').clear();
+        await expect(page.getByText('Description is required')).toBeVisible(); // Error should appear for empty Description
+
+        // Fill Description and check if error is hidden
+        await page.getByLabel('Description*').fill('test description');
+        await expect(page.getByText('Description is required')).toBeHidden();
+
+        await page.getByLabel('Runtime version*').clear();
+        await expect(page.getByText('Version is required')).toBeVisible(); // Error should appear for empty Runtime version
+
+        // Fill Runtime version and check if error is hidden
+        await page.getByLabel('Runtime version*').fill('2.2');
+        await expect(page.getByText('Version is required')).toBeHidden();
+
+        // Add property validation: Empty key should show an error
+        await page.getByRole('button', { name: 'ADD PROPERTY' }).click();
+        await expect(page.getByText('key is required')).toBeVisible(); // Key field should be required
+
+        // Check if the ADD PROPERTY button is disabled
+        let isDisabled = await page.getByRole('button', { name: 'ADD PROPERTY' }).getAttribute('class');
+        expect(isDisabled).toContain('disabled'); // Button should be disabled initially
+
+        // Fill the key field and ensure the error is hidden
+        await page.getByLabel('Key 1*').first().fill('key');
+        await expect(page.getByText('key is required')).toBeHidden(); // Error should disappear after entering the key
+
+        // Click on the value field and ensure the ADD PROPERTY button is enabled
+        await page.getByLabel('Value').first().click();
+        isDisabled = await page.getByRole('button', { name: 'ADD PROPERTY' }).getAttribute('class');
+        expect(isDisabled).not.toContain('disabled'); // Button should now be enabled
+
+        // Delete added property
+        await page.locator('.labels-delete-icon').click();
+
+        // Check labels section
+        await expect(page.getByText('Labels',{ exact: true })).toBeVisible();
+        await expect(page.locator('//label[text()="Key 1*"]/following-sibling::div/input[@value="client"]')).toBeVisible();
+        await expect(page.locator('//label[text()="Value 1"]/following-sibling::div/input[@value="dataproc-jupyter-plugin"]')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'ADD LABEL' })).toBeVisible();
+        await page.getByRole('button', { name: 'ADD LABEL' }).click();
+        await expect(page.getByText('key is required')).toBeVisible(); // Key field should be required
+
+        // Fill the key field and ensure the error is hidden
+        await page.getByLabel('Key 2*').first().fill('key');
+        await expect(page.getByText('key is required')).toBeHidden(); // Error should disappear after entering the key
+        await page.getByLabel('Value 2').first().click();
+
+        // Delete added label
+        await page.locator('.labels-delete-icon').click();
+
+    });
+
     test('Sanity: Can create serverless notebook', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
 
@@ -27,6 +108,7 @@ test.describe('Create serverless notebook from launcher screen', () => {
                 hasText: 'New Runtime Template'
             })
             .click();
+        await page.getByText('Loading Runtime').waitFor({ state: "detached" });
 
         // Generate formatted current date string
         const now = new Date();
@@ -36,7 +118,7 @@ test.describe('Create serverless notebook from launcher screen', () => {
         // Create template name
         const templateName = 'auto-test-' + dateTimeStr;
 
-        // Fill in template details
+        // Fill the template details
         await page.getByLabel('Display name*').click();
         await page.getByLabel('Display name*').fill(templateName);
         await page.getByLabel('Description*').click();
@@ -61,6 +143,13 @@ test.describe('Create serverless notebook from launcher screen', () => {
 
         // Check the notebook created confirmation message
         await expect(page.getByText('Runtime Template ' + templateName + ' successfully created')).toBeVisible();
+        await page.waitForTimeout(5000);
+
+        // Check the created notebook on launcher screen
+        await expect(page
+            .locator('.jp-LauncherCard:visible', {
+                hasText: templateName +' on Serverless Spark (Remote)'
+            })).toBeVisible();
     });
 
     // Navigate to config setup page and click on create template button
@@ -231,8 +320,4 @@ test.describe('Create serverless notebook from launcher screen', () => {
 
     });
 
-    //Add new property
-    // Labels
-    //Edit scenario
-    //Check the card is avaialble on the launcher screen
 });
