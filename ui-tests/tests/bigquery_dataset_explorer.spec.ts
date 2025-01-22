@@ -18,7 +18,7 @@
 import { test, expect, galata } from '@jupyterlab/galata';
 
 test.describe('bigquery-dataset-explorer', () => {
-  test('Dataset Explorer', async ({ page, request }) => {
+  test('Sanity : Dataset Explorer', async ({ page, request }) => {
     // Fetch Dataproc plugin settings
     const issues = await page.request.get('http://localhost:8888/dataproc-plugin/settings');
     expect(issues.ok()).toBeTruthy();
@@ -122,6 +122,7 @@ test.describe('bigquery-dataset-explorer', () => {
 
       await page.waitForSelector('div[role="treeitem"].caret-icon.down');
 
+      // Check austin_311 is not visible before search
       await expect(page.locator('[role="treeitem"][title="austin_311"]')).not.toBeVisible();
 
       await page.getByPlaceholder('Enter your keyword to search').first().click();
@@ -131,8 +132,12 @@ test.describe('bigquery-dataset-explorer', () => {
 
       await page.waitForTimeout(5000);
 
+      // Check austin_311 is visible after search
       await expect(page.locator('[role="treeitem"][title="austin_311"]')).toBeVisible();
 
+      // Click on refresh button and check austin_311 is not visible
+      await page.locator('.dataset-explorer-refresh > .icon-white > svg').first().click();
+      await expect(page.locator('[role="treeitem"][title="austin_311"]')).not.toBeVisible();
     }
   });
 });
