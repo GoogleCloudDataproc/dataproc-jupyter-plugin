@@ -210,7 +210,7 @@ test.describe('Clusters & Jobs tests', () => {
         }
     });
 
-    test('Sanity: Can verify jobs table headers', async ({ page }) => {
+    test('Can verify jobs table headers', async ({ page }) => {
         test.setTimeout(timeout);
 
         // Navigate to Clusters page

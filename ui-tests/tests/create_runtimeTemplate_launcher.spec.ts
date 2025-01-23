@@ -84,7 +84,7 @@ test.describe('Serverless notebook from launcher screen', () => {
         // Check labels section
         await expect(page.getByText('Labels',{ exact: true })).toBeVisible();
         await expect(page.locator('//label[text()="Key 1*"]/following-sibling::div/input[@value="client"]')).toBeVisible();
-        await expect(page.locator('//label[text()="Value 1"]/following-sibling::div/input[@value="dataproc-jupyter-plugin"]')).toBeVisible();
+        await expect(page.locator('//label[text()="Value 1"]/following-sibling::div/input[@value="bigquery-jupyter-plugin"]')).toBeVisible();
         await expect(page.getByRole('button', { name: 'ADD LABEL' })).toBeVisible();
         await page.getByRole('button', { name: 'ADD LABEL' }).click();
         await expect(page.getByText('key is required')).toBeVisible(); // Key field should be required
@@ -184,7 +184,7 @@ test.describe('Serverless notebook from launcher screen', () => {
         }
     }
 
-    test('Sanity: Can check all spark properties are displayed', async ({ page }) => {
+    test('Can check all spark properties are displayed', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
 
         await navigateToRuntimeTemplate(page);

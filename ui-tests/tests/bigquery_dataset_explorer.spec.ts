@@ -56,6 +56,10 @@ test.describe('bigquery-dataset-explorer', () => {
         await expect(page.getByRole('cell', { name: header, exact: true })).toBeVisible();
       }
 
+      // Click on expand icon
+      await page.locator('div[role="treeitem"].caret-icon.down').nth(1).click();
+      await page.getByTestId('loader').waitFor({ state: "detached" });
+
       // Click on the first table
       await page.locator('div[role="treeitem"][aria-level="3"]').first().click();
 
