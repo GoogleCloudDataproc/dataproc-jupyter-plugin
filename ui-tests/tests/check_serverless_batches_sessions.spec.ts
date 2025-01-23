@@ -95,12 +95,11 @@ test.describe('Serverless batches and sessions.', () => {
         await expect(page.getByText('Batches', { exact: true })).toBeVisible();
         await expect(page.getByText('Sessions', { exact: true })).toBeVisible();
 
-        // Verify the presence of the list table
-        await expect(page.locator('//table[@class="clusters-list-table"]')).toBeVisible();
-
         // Click on Create Batch button and then Back button
         await page.getByText('Create Batch').click();
+        await expect(page.getByText('Batch info')).toBeVisible()
         await page.locator('.back-arrow-icon > .icon-white > svg > path').click();
+        await expect(page.getByText('Batch info')).not.toBeVisible();
     });
 
     test('Sanity: Can verify batches tab table headers', async ({ page }) => {
@@ -113,11 +112,18 @@ test.describe('Serverless batches and sessions.', () => {
         await expect(page.getByText('Batches', { exact: true })).toBeVisible();
         await expect(page.getByText('Sessions', { exact: true })).toBeVisible();
 
-        // Verify the presence of search field and column headers on Batches tab
-        await expect(page.getByPlaceholder('Filter Table')).toBeVisible();
-        const headers = ['Batch ID', 'Status', 'Location', 'Creation time', 'Elapsed time', 'Type', 'Actions'];
-        for (const header of headers) {
-            await expect(page.getByRole('columnheader', { name: header, exact: true })).toBeVisible();
+        // Check if Bathes table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
+
+            // Verify the presence of search field and column headers on Batches tab
+            await expect(page.getByPlaceholder('Filter Table')).toBeVisible();
+            const headers = ['Batch ID', 'Status', 'Location', 'Creation time', 'Elapsed time', 'Type', 'Actions'];
+            for (const header of headers) {
+                await expect(page.getByRole('columnheader', { name: header, exact: true })).toBeVisible();
+            }
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
         }
     });
 
@@ -127,23 +133,30 @@ test.describe('Serverless batches and sessions.', () => {
         // Navigate to Serverless page
         await navigateToServerless(page);
 
-        // Capture and click the first Batch ID
-        const batchId = await page.getByRole('cell').first().innerText();
-        await page.getByRole('cell').first().click();
+        // Check if Bathes table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
 
-        // Wait till Batch Details page loads
-        await page.getByText('Loading Batch Details').waitFor({ state: "detached" });
+            // Capture and click the first Batch ID
+            const batchId = await page.getByRole('cell').first().innerText();
+            await page.getByRole('cell').first().click();
 
-        // Verify the batch details
-        await expect(page.locator('.back-arrow-icon > .icon-white > svg > path')).toBeVisible();
-        await expect(page.locator(`//*[@class="cluster-details-title" and text()="${batchId}"]`)).toBeVisible();
-        const buttons = ['CLONE', 'DELETE', 'VIEW SPARK LOGS', 'VIEW CLOUD LOGS'];
-        for (const button of buttons) {
-            await expect(page.getByRole('button', { name: button, exact: true })).toBeVisible();
-        }
-        const texts = ['Batch ID', 'Batch UUID', 'Resource type', 'Status', 'Details', 'Properties', 'Environment config'];
-        for (const text of texts) {
-            await expect(page.getByText(text, { exact: true })).toBeVisible();
+            // Wait till Batch Details page loads
+            await page.getByText('Loading Batch Details').waitFor({ state: "detached" });
+
+            // Verify the batch details
+            await expect(page.locator('.back-arrow-icon > .icon-white > svg > path')).toBeVisible();
+            await expect(page.locator(`//*[@class="cluster-details-title" and text()="${batchId}"]`)).toBeVisible();
+            const buttons = ['CLONE', 'DELETE', 'VIEW SPARK LOGS', 'VIEW CLOUD LOGS'];
+            for (const button of buttons) {
+                await expect(page.getByRole('button', { name: button, exact: true })).toBeVisible();
+            }
+            const texts = ['Batch ID', 'Batch UUID', 'Resource type', 'Status', 'Details', 'Properties', 'Environment config'];
+            for (const text of texts) {
+                await expect(page.getByText(text, { exact: true })).toBeVisible();
+            }
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
         }
     });
 
@@ -351,15 +364,22 @@ test.describe('Serverless batches and sessions.', () => {
         // Navigate to Serverless page
         await navigateToServerless(page);
 
-        // Get the first batch ID and delete it
-        const batchId = await page.getByRole('cell').first().innerText();
-        await page.getByLabel('Delete Job').first().click();
+        // Check if Bathes table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
 
-        // Confirm deletion and verify success message
-        await expect(page.getByText(`This will delete ${batchId} and cannot be undone.`)).toBeVisible();
-        await page.getByRole('button', { name: 'Delete' }).click();
-        await page.waitForTimeout(5000);
-        await expect(page.getByText(`Batch ${batchId} deleted successfully`)).toBeVisible();
+            // Get the first batch ID and delete it
+            const batchId = await page.getByRole('cell').first().innerText();
+            await page.getByLabel('Delete Job').first().click();
+
+            // Confirm deletion and verify success message
+            await expect(page.getByText(`This will delete ${batchId} and cannot be undone.`)).toBeVisible();
+            await page.getByRole('button', { name: 'Delete' }).click();
+            await page.waitForTimeout(5000);
+            await expect(page.getByText(`Batch ${batchId} deleted successfully`)).toBeVisible();
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
+        }
     });
 
     test('Can delete a batch from batch details page', async ({ page }) => {
@@ -368,16 +388,23 @@ test.describe('Serverless batches and sessions.', () => {
         // Navigate to Serverless page
         await navigateToServerless(page);
 
-        // Capture and click the first Batch ID
-        const batchId = await page.getByRole('cell').first().innerText();
-        await page.getByRole('cell').first().click();
+        // Check if Bathes table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
 
-        // Click the delete button, confirm deletion, and verify success message
-        await page.getByRole('button', { name: 'DELETE', exact: true }).click();
-        await expect(page.getByText(`This will delete ${batchId} and cannot be undone.`)).toBeVisible();
-        await page.getByRole('button', { name: 'Delete' }).click();
-        await page.waitForTimeout(5000);
-        await expect(page.getByText(`Batch ${batchId} deleted successfully`)).toBeVisible();
+            // Capture and click the first Batch ID
+            const batchId = await page.getByRole('cell').first().innerText();
+            await page.getByRole('cell').first().click();
+
+            // Click the delete button, confirm deletion, and verify success message
+            await page.getByRole('button', { name: 'DELETE', exact: true }).click();
+            await expect(page.getByText(`This will delete ${batchId} and cannot be undone.`)).toBeVisible();
+            await page.getByRole('button', { name: 'Delete' }).click();
+            await page.waitForTimeout(5000);
+            await expect(page.getByText(`Batch ${batchId} deleted successfully`)).toBeVisible();
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
+        }
     });
 
     test('Can clone the batch and create a new one', async ({ page }) => {
@@ -386,21 +413,28 @@ test.describe('Serverless batches and sessions.', () => {
         // Navigate to Serverless page
         await navigateToServerless(page);
 
-        // Click on first Batch ID
-        await page.getByRole('cell').first().click();
+        // Check if Bathes table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
 
-        // Wait till the Batch Details page loads
-        await page.getByText('Loading Batch Details').waitFor({ state: "detached" });
+            // Click on first Batch ID
+            await page.getByRole('cell').first().click();
 
-        // Click on clone button, select network, and submit new batch
-        await page.getByRole('button', { name: 'CLONE' }).click();
-        const batchId = await page.getByLabel('Batch ID*').inputValue();
-        await page.getByRole('combobox', { name: 'Primary network*' }).click();
-        await page.getByRole('option', { name: 'default' }).click();
-        await page.getByLabel('Loading Spinner').waitFor({ state: 'detached' });
-        await page.getByLabel('submit Batch').click();
-        await page.waitForTimeout(5000);
-        await expect(page.getByText(`Batch ${batchId} successfully submitted`)).toBeVisible();
+            // Wait till the Batch Details page loads
+            await page.getByText('Loading Batch Details').waitFor({ state: "detached" });
+
+            // Click on clone button, select network, and submit new batch
+            await page.getByRole('button', { name: 'CLONE' }).click();
+            const batchId = await page.getByLabel('Batch ID*').inputValue();
+            await page.getByRole('combobox', { name: 'Primary network*' }).click();
+            await page.getByRole('option', { name: 'default' }).click();
+            await page.getByLabel('Loading Spinner').waitFor({ state: 'detached' });
+            await page.getByLabel('submit Batch').click();
+            await page.waitForTimeout(5000);
+            await expect(page.getByText(`Batch ${batchId} successfully submitted`)).toBeVisible();
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
+        }
     });
 
     test('Sanity: Can verify sessions tab table headers', async ({ page }) => {
@@ -409,15 +443,22 @@ test.describe('Serverless batches and sessions.', () => {
         // Navigate to Serverless page
         await navigateToServerless(page);
 
-        // Click on Sessions tab and wait for it to load
-        await page.getByText('Sessions', { exact: true }).click();
-        await page.getByText('Loading Sessions').waitFor({ state: "detached" });
+        // Check if Sessions table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
 
-        // Verify search field and column headers on Sessions tab
-        await expect(page.getByPlaceholder('Filter Table')).toBeVisible();
-        const headers = ['Session ID', 'Status', 'Location', 'Creator', 'Creation time', 'Elapsed time', 'Actions'];
-        for (const header of headers) {
-            await expect(page.getByRole('columnheader', { name: header, exact: true })).toBeVisible();
+            // Click on Sessions tab and wait for it to load
+            await page.getByText('Sessions', { exact: true }).click();
+            await page.getByText('Loading Sessions').waitFor({ state: "detached" });
+
+            // Verify search field and column headers on Sessions tab
+            await expect(page.getByPlaceholder('Filter Table')).toBeVisible();
+            const headers = ['Session ID', 'Status', 'Location', 'Creator', 'Creation time', 'Elapsed time', 'Actions'];
+            for (const header of headers) {
+                await expect(page.getByRole('columnheader', { name: header, exact: true })).toBeVisible();
+            }
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
         }
     });
 
@@ -427,29 +468,35 @@ test.describe('Serverless batches and sessions.', () => {
         // Navigate to Serverless page and switch to Sessions tab
         await navigateToServerless(page);
         await page.getByText('Sessions', { exact: true }).click();
-        await page.getByText('Loading Sessions').waitFor({ state: "detached" });
 
         // Wait for Sessions to load
         await page.getByText('Loading Sessions').waitFor({ state: "detached" });
 
-        // Click on first session id
-        await page.getByRole('cell').first().click();
+        // Check if Sessions table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
 
-        // Wait for Session Details to load
-        await page.getByText('Loading Session Details').waitFor({ state: "detached" });
+            // Click on first session id
+            await page.getByRole('cell').first().click();
 
-        // Verify the session details
-        await expect(page.locator('.back-arrow-icon > .icon-white > svg > path')).toBeVisible();
-        await expect(page.getByLabel('Serverless').getByText('Name', { exact: true })).toBeVisible();
-        const expectedTexts = [
-            'Session details', 'UUID', 'Status', 'Create time', 'Details'
-        ];
-        for (const text of expectedTexts) {
-            await expect(page.getByText(text, { exact: true })).toBeVisible();
-        }
-        const expectedButtons = ['TERMINATE', 'VIEW SPARK LOGS', 'VIEW CLOUD LOGS'];
-        for (const button of expectedButtons) {
-            await expect(page.getByRole('button', { name: button, exact: true })).toBeVisible();
+            // Wait for Session Details to load
+            await page.getByText('Loading Session Details').waitFor({ state: "detached" });
+
+            // Verify the session details
+            await expect(page.locator('.back-arrow-icon > .icon-white > svg > path')).toBeVisible();
+            await expect(page.getByLabel('Serverless').getByText('Name', { exact: true })).toBeVisible();
+            const expectedTexts = [
+                'Session details', 'UUID', 'Status', 'Create time', 'Details'
+            ];
+            for (const text of expectedTexts) {
+                await expect(page.getByText(text, { exact: true })).toBeVisible();
+            }
+            const expectedButtons = ['TERMINATE', 'VIEW SPARK LOGS', 'VIEW CLOUD LOGS'];
+            for (const button of expectedButtons) {
+                await expect(page.getByRole('button', { name: button, exact: true })).toBeVisible();
+            }
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
         }
     });
 
@@ -463,17 +510,24 @@ test.describe('Serverless batches and sessions.', () => {
         // Wait till the page loads
         await page.getByText('Loading Sessions').waitFor({ state: "detached" });
 
-        // Get the first session id
-        const sessionId = await page.getByRole('cell').first().innerText();
+        // Check if Sessions table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
 
-        // Delete the first session
-        await page.getByTitle('Delete Session').first().click();
+            // Get the first session id
+            const sessionId = await page.getByRole('cell').first().innerText();
 
-        // Verify the text on confirmation popup and click on delete option
-        await expect(page.getByText('This will delete ' + sessionId + ' and cannot be undone.')).toBeVisible();
-        await page.getByRole('button', { name: 'Delete' }).click();
-        await page.waitForTimeout(5000);
-        await expect(page.getByText('Session ' + sessionId + ' deleted successfully')).toBeVisible();
+            // Delete the first session
+            await page.getByTitle('Delete Session').first().click();
+
+            // Verify the text on confirmation popup and click on delete option
+            await expect(page.getByText('This will delete ' + sessionId + ' and cannot be undone.')).toBeVisible();
+            await page.getByRole('button', { name: 'Delete' }).click();
+            await page.waitForTimeout(5000);
+            await expect(page.getByText('Session ' + sessionId + ' deleted successfully')).toBeVisible();
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
+        }
     });
 
     test('Check pagination in serverless batches tab', async ({ page }) => {

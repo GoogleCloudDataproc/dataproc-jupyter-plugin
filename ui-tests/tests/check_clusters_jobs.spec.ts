@@ -18,7 +18,7 @@
 import { expect, test, galata } from '@jupyterlab/galata';
 import { Locator } from '@playwright/test';
 
-test.describe('Clusters tests', () => {
+test.describe('Clusters & Jobs tests', () => {
 
     // Set a common timeout for all tests
     const timeout = 5 * 60 * 1000;
@@ -125,6 +125,31 @@ test.describe('Clusters tests', () => {
         }
     });
 
+    test('Can validate Filter Table search field on cluster listing page', async ({ page }) => {
+        test.setTimeout(timeout);
+
+        // Navigate to Clusters page
+        await navigateToClusters(page);
+
+        // Check if jobs table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
+
+            // Capture first Job id
+            const firstClusterLocator = page.locator('//*[@class="cluster-name"]').nth(1);
+            const clusterName = await firstClusterLocator.innerText();
+
+            await page.getByPlaceholder('Filter Table').fill(clusterName);
+
+            // Check only one job is displayed
+            const rowCount = await page.locator('//table[@class="clusters-list-table"]//tr').count();
+            expect(rowCount).toEqual(2);
+
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
+        }
+    });
+
     test.skip('Can start, restart, and stop the cluster', async ({ page }) => {
         test.setTimeout(timeout);
 
@@ -185,7 +210,7 @@ test.describe('Clusters tests', () => {
         }
     });
 
-    test('Can verify jobs table headers', async ({ page }) => {
+    test('Sanity: Can verify jobs table headers', async ({ page }) => {
         test.setTimeout(timeout);
 
         // Navigate to Clusters page
@@ -320,7 +345,7 @@ test.describe('Clusters tests', () => {
         }
     });
 
-    test.skip('Can delete a job using actions delete icon', async ({ page }) => { // Dut to atribute aria-disabled="true", automation script not able to perform delete action
+    test.skip('Can delete a job using actions delete icon', async ({ page }) => { // Due to atribute aria-disabled="true", automation script not able to perform delete action
         test.setTimeout(5 * 60 * 1000);
 
         // Navigate to Clusters page and switch to Jobs tab
@@ -669,7 +694,34 @@ test.describe('Clusters tests', () => {
         }
     });
 
-    test('Sanity: Check pagination in serverless batches tab', async ({ page }) => {
+    test('Can validate Filter Table search field on jobs listing page', async ({ page }) => {
+        test.setTimeout(timeout);
+
+        // Navigate to Clusters page and switch to Jobs tab
+        await navigateToClusters(page);
+        await page.getByRole('tabpanel').getByText('Jobs', { exact: true }).click();
+        await page.getByText('Loading Jobs').waitFor({ state: "detached" });
+
+        // Check if jobs table data is present
+        const tableExists = await page.locator('//table[@class="clusters-list-table"]').isVisible();
+        if (tableExists) {
+
+            // Capture first Job id
+            const firstJobLocator = page.locator('//*[@class="cluster-name"]').nth(1);
+            const jobName = await firstJobLocator.innerText();
+
+            await page.getByPlaceholder('Filter Table').fill(jobName);
+
+            // Check only one job is displayed
+            const rowCount = await page.locator('//table[@class="clusters-list-table"]//tr').count();
+            expect(rowCount).toEqual(2);
+
+        } else {
+            await expect(page.getByText('No rows to display')).toBeVisible();
+        }
+    });
+
+    test('Sanity: Check pagination in jobs tab', async ({ page }) => {
         test.setTimeout(5 * 60 * 1000);
 
         // Navigate to Serverless page
