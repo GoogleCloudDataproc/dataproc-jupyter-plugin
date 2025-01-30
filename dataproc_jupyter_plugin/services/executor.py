@@ -278,6 +278,54 @@ class Client:
             self.log.exception(f"Error uploading dag file to gcs: {error.decode()}")
             raise IOError(error.decode)
 
+    async def install_to_composer_environment(
+        self, local_kernel, composer_environment_name
+    ):
+        packages = ["apache-airflow-providers-papermill", "ipykernel"]
+        try:
+            if local_kernel:
+                cmd = f"gcloud beta composer environments list-packages {composer_environment_name} --location {self.region_id}"
+                process = subprocess.Popen(
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+                )
+                stdout, stderr = process.communicate()
+                if stderr:
+                    self.log.info(f"Error fetching list of packages: {stderr}")
+                else:
+                    decoded_output = stdout.decode("utf-8")
+                    installed_packages = set(
+                        line.split()[0].lower()
+                        for line in decoded_output.splitlines()[2:]
+                    )
+                    for package in packages:
+                        if package.lower() not in installed_packages:
+                            self.log.info(f"{package} is not installed. Installing...")
+                            install_cmd = f"gcloud composer environments update {composer_environment_name} --location {self.region_id} --update-pypi-package {package}"
+                            install_process = subprocess.Popen(
+                                install_cmd,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                shell=True,
+                            )
+                            install_stdout, install_stderr = (
+                                install_process.communicate()
+                            )
+                            if install_process.returncode == 0:
+                                self.log.info(f"{package} installed successfully.")
+                            else:
+                                # decoding bytes class to string and taking out the error part
+                                decoded_message = install_stderr.decode("utf-8")
+                                start_index = decoded_message.find("ERROR")
+                                error = decoded_message[start_index:]
+                                raise Exception(
+                                    f"can not create schedule, error in installing the packages, error: {error}"
+                                )
+                        else:
+                            self.log.info(f"{package} is already installed.")
+        except Exception as e:
+            self.log.exception(f"error installing {package}: {install_stderr}")
+            return {"error": str(e)}
+
     async def execute(self, input_data):
         try:
             job = DescribeJob(**input_data)
@@ -289,41 +337,11 @@ class Client:
             gcs_dag_bucket = await self.get_bucket(job.composer_environment_name)
             wrapper_pappermill_file_path = WRAPPER_PAPPERMILL_FILE
 
-            packages = ["apache-airflow-providers-papermill", "ipykernel"]
-            if job.local_kernel:
-                cmd = f"gcloud beta composer environments list-packages {job.composer_environment_name} --location {self.region_id}"
-                process = subprocess.Popen(
-                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-                )
-                stdout, stderr = process.communicate()
-                if stderr:
-                    print(f"Error fetching list of packages: {stderr}")
-                else:
-                    installed_packages = set(
-                        line.split()[0].lower() for line in stdout.splitlines()[2:]
-                    )
-                    for package in packages:
-                        if package.lower() not in installed_packages:
-                            print(f"{package} is not installed. Installing...")
-                            install_cmd = f"gcloud composer environments update {job.composer_environment_name} --location {self.region_id} --update-pypi-package {package}"
-                            install_process = subprocess.Popen(
-                                install_cmd,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                shell=True,
-                            )
-                            install_stdout, install_stderr = install_process.communicate()
-                            if install_process.returncode == 0:
-                                print(f"{package} installed successfully.")
-                            else:
-                                # decoding bytes class to string and taking out the error part
-                                decoded_message = install_stderr.decode('utf-8')
-                                start_index = decoded_message.find('ERROR')
-                                error = decoded_message[start_index:]
-                                print(f"error installing {package}: {install_stderr}")
-                                return {"error": f"can not create schedule, error in installing the packages, error: {error}"}
-                        else:
-                            print(f"{package} is already installed.")
+            install_packages = await self.install_to_composer_environment(
+                job.local_kernel, job.composer_environment_name
+            )
+            if install_packages["error"]:
+                raise Exception(install_packages)
 
             if await self.check_file_exists(
                 gcs_dag_bucket, wrapper_pappermill_file_path
