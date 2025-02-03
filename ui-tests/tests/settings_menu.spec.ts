@@ -18,7 +18,7 @@
 import { test, expect, galata } from '@jupyterlab/galata';
 
 test.describe('Settings Menu', () => {
-  test('Can find settings menu', async ({ page }) => {
+  test('Sanity: Can find settings menu', async ({ page }) => {
     await page
       .getByLabel('main menu', { exact: true })
       .getByText('Settings')
@@ -28,7 +28,7 @@ test.describe('Settings Menu', () => {
     await dataprocSettings.or(bigQuerySettings).click();
   });
 
-  test('Can change project', async ({ page }) => {
+  test('Sanity: Can change project', async ({ page }) => {
     await page
       .getByLabel('main menu', { exact: true })
       .getByText('Settings')

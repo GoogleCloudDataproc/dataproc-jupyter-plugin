@@ -467,7 +467,7 @@ function SessionDetails({
                           </div>
                         </div>
                         <div className="row-details" key={DATAPROC_CLUSTER_KEY}>
-                          <div className="batch-details-label-level-three">
+                          <div className="batch-details-label-level-three session-details-label-width">
                             {DATAPROC_CLUSTER_LABEL}
                           </div>
                           <div className="session-env-details-value">
