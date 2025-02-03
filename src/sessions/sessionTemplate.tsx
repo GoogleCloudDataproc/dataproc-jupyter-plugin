@@ -37,7 +37,7 @@ const [detailedSessionView,setDetailedSessionView] = useState(true);
   useEffect(() => {
   });
   return (
-    <div className="session-template-container">
+    <div>
      {detailedSessionView && (
         <SessionDetails
           sessionSelected={sessionId}
