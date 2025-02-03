@@ -84,6 +84,16 @@ class DataprocPluginConfig(SingletonConfigurable):
         config=True,
         help="Enable integration with BigQuery in JupyterLab",
     )
+    enable_cloud_storage_integration = Bool(
+        False,
+        config=True,
+        help="Enable integration with gcs in JupyterLab",
+    )
+    enable_metastore_integration = Bool(
+        False,
+        config=True,
+        help="Enable integration with metastore in JupyterLab",
+    )
 
 
 class SettingsHandler(APIHandler):
