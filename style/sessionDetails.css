@@ -75,10 +75,3 @@
   padding-left: 15px;
   border-bottom: 1px solid var(--jp-layout-color3);
 }
-.session-template-container {
-  height: 100%;
-  overflow: auto;
-}
-.session-details-label-width {
-  width: 33%;
-}

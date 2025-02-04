@@ -56,7 +56,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { GCSDrive } from './gcs/gcsDrive';
 import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
-import { DataprocLoggingService } from './utils/loggingService';
+import { DataprocLoggingService, LOG_LEVEL } from './utils/loggingService';
 import { NotebookScheduler } from './scheduler/notebookScheduler';
 import pythonLogo from '../third_party/icons/python_logo.svg';
 import NotebookTemplateService from './notebookTemplates/notebookTemplatesService';
@@ -151,6 +151,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       localStorage.removeItem('notebookValue');
     });
     interface SettingsResponse {
+      enable_metastore_integration?: boolean;
+      enable_cloud_storage_integration?: boolean;
       enable_bigquery_integration?: boolean;
     }
     let bqFeature: SettingsResponse = await requestAPI('settings');
@@ -158,14 +160,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     const settings = await settingRegistry.load(PLUGIN_ID);
 
     // The current value of whether or not preview features are enabled.
-    let previewEnabled = settings.get('previewEnabled').composite as boolean;
     let panelDpms: Panel | undefined,
       panelGcs: Panel | undefined,
       panelDatasetExplorer: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
-    settings.changed.connect(() => {
-      onPreviewEnabledChanged();
-    });
 
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', (message: string) => {
@@ -173,6 +171,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       if (bqFeature.enable_bigquery_integration) {
         loadBigQueryWidget('');
       }
+      onSidePanelEnabled();
     });
 
     const checkAllApisEnabled = async () => {
@@ -262,84 +261,121 @@ const extension: JupyterFrontEndPlugin<void> = {
      * Handler for when the Jupyter Lab theme changes.
      */
     const onThemeChanged = () => {
-      if (!panelDpms || !panelGcs) return;
+      if (!panelDpms && !panelGcs && !panelDatasetExplorer) return;
       const isLightTheme = themeManager.theme
         ? themeManager.isLight(themeManager.theme)
         : true;
       if (isLightTheme) {
-        panelDpms.title.icon = iconDpms;
+        if (bqFeature.enable_metastore_integration && panelDpms) {
+          panelDpms.title.icon = iconDpms;
+        }
         if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
           panelDatasetExplorer.title.icon = iconDatasetExplorer;
         }
-        panelGcs.title.icon = iconStorage;
+        if (bqFeature.enable_cloud_storage_integration && panelGcs) {
+          panelGcs.title.icon = iconStorage;
+        }
       } else {
-        panelDpms.title.icon = iconDpmsDark;
+        if (bqFeature.enable_metastore_integration && panelDpms) {
+          panelDpms.title.icon = iconDpmsDark;
+        }
         if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
           panelDatasetExplorer.title.icon = iconDatasetExplorerDark;
         }
-        panelGcs.title.icon = iconStorageDark;
+        if (bqFeature.enable_cloud_storage_integration && panelGcs) {
+          panelGcs.title.icon = iconStorageDark;
+        }
       }
     };
     themeManager.themeChanged.connect(onThemeChanged);
 
     /**
-     * Helper method for when the preview flag gets updated.  This reads the
-     * previewEnabled flag and hides or shows the GCS browser or DPMS explorer
-     * as necessary.
+     * Enables and disables the side panel sections DPMS, GCS and Datasset Explorer based on the flags.
      */
-    const onPreviewEnabledChanged = () => {
-      previewEnabled = settings.get('previewEnabled').composite as boolean;
-      if (!previewEnabled) {
-        // Preview was disabled, tear everything down.
-        panelDpms?.dispose();
-        panelDatasetExplorer?.dispose();
-        panelGcs?.dispose();
-        gcsDrive?.dispose();
-        panelDpms = undefined;
-        panelDatasetExplorer = undefined;
-        panelGcs = undefined;
-        gcsDrive = undefined;
-      } else {
-        // Preview was enabled, (re)create DPMS and GCS.
-        if (!panelDpms && !panelGcs) {
-          panelDpms = new Panel();
-          panelDpms.id = 'dpms-tab';
-          panelDpms.title.caption = 'Dataset Explorer - DPMS';
-          panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
-          if (bqFeature.enable_bigquery_integration && !panelDatasetExplorer) {
-            panelDatasetExplorer = new Panel();
-            panelDatasetExplorer.id = 'dataset-explorer-tab';
-            panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
-            panelDatasetExplorer.addWidget(
-              new BigQueryWidget(
-                app as JupyterLab,
-                settingRegistry as ISettingRegistry,
-                bqFeature.enable_bigquery_integration as boolean,
-                themeManager
-              )
-            );
-          }
-          panelGcs = new Panel();
-          panelGcs.id = 'GCS-bucket-tab';
-          panelGcs.title.caption = 'Google Cloud Storage';
-          gcsDrive = new GCSDrive();
-          documentManager.services.contents.addDrive(gcsDrive);
-          panelGcs.addWidget(
-            new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
-          );
-          // Update the icons.
-          onThemeChanged();
-          app.shell.add(panelGcs, 'left', { rank: 1002 });
-          if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
-            app.shell.add(panelDatasetExplorer, 'left', { rank: 1000 });
-          }
-          app.shell.add(panelDpms, 'left', { rank: 1001 });
+    const onSidePanelEnabled = async () => {
+      const toBoolean = (value: any): boolean => {
+        if (typeof value === 'boolean') return value;
+        if (typeof value === 'string') {
+          const lowercased = value.toLowerCase().trim();
+          return lowercased === 'true' || lowercased === '1';
         }
+        return false;
+      };
+
+      // Convert configuration values to boolean
+      const enableBigQuery = toBoolean(bqFeature.enable_bigquery_integration);
+      const enableCloudStorage = toBoolean(
+        bqFeature.enable_cloud_storage_integration
+      );
+      const enableMetastore = toBoolean(bqFeature.enable_metastore_integration);
+
+      // Clear any existing panels first
+      panelDatasetExplorer?.dispose();
+      panelDatasetExplorer = undefined;
+
+      panelGcs?.dispose();
+      gcsDrive?.dispose();
+      panelGcs = undefined;
+      gcsDrive = undefined;
+
+      panelDpms?.dispose();
+      panelDpms = undefined;
+
+      // Reinitialize panels based on individual flags
+      if (enableBigQuery) {
+        panelDatasetExplorer = new Panel();
+        panelDatasetExplorer.id = 'dataset-explorer-tab';
+        panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
+        panelDatasetExplorer.title.className = 'panel-icons-custom-style';
+        panelDatasetExplorer.addWidget(
+          new BigQueryWidget(
+            app as JupyterLab,
+            settingRegistry as ISettingRegistry,
+            bqFeature.enable_bigquery_integration as boolean,
+            themeManager
+          )
+        );
+        onThemeChanged();
+        app.shell.add(panelDatasetExplorer, 'left', { rank: 1000 });
+        DataprocLoggingService.log(
+          'Bigquery dataset explorer is enabled',
+          LOG_LEVEL.INFO
+        );
+      }
+
+      if (enableMetastore) {
+        panelDpms = new Panel();
+        panelDpms.id = 'dpms-tab';
+        panelDpms.title.caption = 'Dataset Explorer - DPMS';
+        panelDpms.title.className = 'panel-icons-custom-style';
+        panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
+        onThemeChanged();
+        app.shell.add(panelDpms, 'left', { rank: 1001 });
+        DataprocLoggingService.log(
+          'Metastore is enabled',
+          LOG_LEVEL.INFO
+        );
+      }
+
+      if (enableCloudStorage) {
+        panelGcs = new Panel();
+        panelGcs.id = 'GCS-bucket-tab';
+        panelGcs.title.caption = 'Google Cloud Storage';
+        panelGcs.title.className = 'panel-icons-custom-style';
+        gcsDrive = new GCSDrive();
+        documentManager.services.contents.addDrive(gcsDrive);
+        panelGcs.addWidget(
+          new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
+        );
+        onThemeChanged();
+        app.shell.add(panelGcs, 'left', { rank: 1002 });
+        DataprocLoggingService.log(
+          'Cloud storage is enabled',
+          LOG_LEVEL.INFO
+        );
       }
     };
-
-    onPreviewEnabledChanged();
-    // END -- Enable Preview Features.
+    onSidePanelEnabled();
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
