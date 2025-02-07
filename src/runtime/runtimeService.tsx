@@ -285,7 +285,7 @@ export class RunTimeSerive {
             */
 
       const transformedSharedvpcSubNetworkList: string[] = responseResult.items
-        .map((data: { subnetwork: string }) => {
+        ?.map((data: { subnetwork: string }) => {
           // Extract region and subnet from the subnet URI.
           const matches =
             /\/compute\/v1\/projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
@@ -711,22 +711,22 @@ export class RunTimeSerive {
                       setSubNetworkSelected(transformedServiceList[0]);
                     } else {
                       DataprocLoggingService.log(
-                        'There are no subnetworks with google private access enabled',
+                        `There are no subnetworks with google private access enabled for network ${subnetwork}`,
                         LOG_LEVEL.ERROR
                       );
                       toast.error(
-                        `There are no subnetworks with google private access enabled`,
+                        `There are no subnetworks with google private access enabled for network ${subnetwork}`,
                         toastifyCustomStyle
                       );
                     }
                   }
                 } else {
                   DataprocLoggingService.log(
-                    'No subNetworks found',
+                    `No subNetworks found for network ${subnetwork}`,
                     LOG_LEVEL.ERROR
                   );
                   toast.error(
-                    `No subNetworks found`,
+                    `No subNetworks found  for network ${subnetwork}`,
                     toastifyCustomStyle
                   );
                 }
