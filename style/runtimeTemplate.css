@@ -182,3 +182,8 @@
 .spark-properties-select-style {
   width: 90%;
 }
+.select-text-overlay-textbox{
+  position: relative;
+  width: 512px;
+  margin-bottom: 15px;
+}
