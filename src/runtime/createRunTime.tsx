@@ -513,9 +513,9 @@ function CreateRunTime({
           }
           if (
             executionConfig.authentication_config
-              .user_workload_authentication_type
           ) {
             setSelectedAccountRadio('userAccount');
+            setServiceAccountSelected('');
           }
           const sharedVpcMatches =
             /projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
@@ -828,10 +828,7 @@ function CreateRunTime({
       (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
       (selectedNetworkRadio === 'projectNetwork' &&
         networkList.length !== 0 &&
-        subNetworkList.length === 0) ||
-      (selectedAccountRadio === 'serviceAccount' &&
-        serviceAccountSelected === '') ||
-      (selectedAccountRadio === 'userAccount' && userAccountSelected === '')
+        subNetworkList.length === 0) 
     );
   }
   const createRuntimeApi = async (payload: any) => {
