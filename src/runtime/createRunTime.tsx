@@ -511,9 +511,7 @@ function CreateRunTime({
           if (executionConfig.serviceAccount) {
             setServiceAccountSelected(executionConfig.serviceAccount);
           }
-          if (
-            executionConfig.authentication_config
-          ) {
+          if (executionConfig.authenticationConfig) {
             setSelectedAccountRadio('userAccount');
             setServiceAccountSelected('');
           }
@@ -828,7 +826,7 @@ function CreateRunTime({
       (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
       (selectedNetworkRadio === 'projectNetwork' &&
         networkList.length !== 0 &&
-        subNetworkList.length === 0) 
+        subNetworkList.length === 0)
     );
   }
   const createRuntimeApi = async (payload: any) => {
@@ -1114,7 +1112,6 @@ function CreateRunTime({
       if (selectedRuntimeClone !== undefined) {
         updateRuntimeApi(payload);
       } else {
-        console.log(payload);
         createRuntimeApi(payload);
       }
     }
@@ -1381,9 +1378,18 @@ function CreateRunTime({
                     checked={selectedAccountRadio === 'serviceAccount'}
                     onChange={e => handleServiceAccountRadioChange(e)}
                   />
-                  <div className="create-batch-message">Service Account</div>
+                  <div className="create-batch-message-acc">
+                    Service Account
+                  </div>
+                  <Radio
+                    className="select-runtime-radio-style"
+                    value={userAccountSelected}
+                    checked={selectedAccountRadio === 'userAccount'}
+                    onChange={e => handleUserAccountRadioChange(e)}
+                  />
+                  <div className="create-batch-message">User Account</div>
                 </div>
-                <div className="create-runtime-sub-message-network">
+                <div className="create-custom-messagelist">
                   If not provided, the default GCE service account will be used.
                   <div
                     className="submit-job-learn-more"
@@ -1395,26 +1401,33 @@ function CreateRunTime({
                   </div>
                 </div>
                 {selectedAccountRadio === 'serviceAccount' && (
-                  <div className="select-text-overlay-textbox">
-                    <Input
-                      className="create-batch-style"
-                      value={serviceAccountSelected}
-                      onChange={e => setServiceAccountSelected(e.target.value)}
-                      type="text"
-                      placeholder=""
-                      Label="Service account"
-                    />
-                  </div>
+                  <>
+                    <div className="create-custom-messagelist">
+                      If not provided, the default GCE service account will be
+                      used.
+                      <div
+                        className="submit-job-learn-more"
+                        onClick={() => {
+                          window.open(`${SERVICE_ACCOUNT}`, '_blank');
+                        }}
+                      >
+                        Learn more
+                      </div>
+                    </div>
+                    <div className="select-text-overlay-textbox">
+                      <Input
+                        className="create-batch-style"
+                        value={serviceAccountSelected}
+                        onChange={e =>
+                          setServiceAccountSelected(e.target.value)
+                        }
+                        type="text"
+                        placeholder=""
+                        Label="Service account"
+                      />
+                    </div>
+                  </>
                 )}
-                <div className="create-runtime-radio">
-                  <Radio
-                    className="select-runtime-radio-style"
-                    value={userAccountSelected}
-                    checked={selectedAccountRadio === 'userAccount'}
-                    onChange={e => handleUserAccountRadioChange(e)}
-                  />
-                  <div className="create-batch-message">User Account</div>
-                </div>
               </div>
               <div className="submit-job-label-header">
                 Network Configuration
