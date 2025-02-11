@@ -613,7 +613,7 @@ export class RunTimeSerive {
                   message: string;
                 };
               }) => {
-                let transformedRegionList = responseResult.items.map(
+                let transformedRegionList = responseResult?.items?.map(
                   (data: Region) => {
                     return data.name;
                   }
@@ -622,7 +622,7 @@ export class RunTimeSerive {
                 const filteredServicesArray: never[] = []; // Create an array to store filtered services
 
                 // Use Promise.all to fetch services from all locations concurrently
-                const servicePromises = transformedRegionList.map(location => {
+                const servicePromises = transformedRegionList?.map(location => {
                   return this.listMetaStoreAPIService(
                     setIsLoadingService,
                     setServicesList,
@@ -669,6 +669,7 @@ export class RunTimeSerive {
     setIsloadingNetwork: (value: boolean) => void
   ) => {
     setIsloadingNetwork(true);
+ 
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
@@ -691,7 +692,7 @@ export class RunTimeSerive {
                   network: string;
                   privateIpGoogleAccess: boolean;
                 }[];
-                error?: {
+                error: {
                   message: string;
                   code: number;
                 };
@@ -701,7 +702,7 @@ export class RunTimeSerive {
                     item.network.split('/')[9] === subnetwork &&
                     item.privateIpGoogleAccess === true
                 );
-                if (filteredServices && filteredServices.length > 0) {
+                if (filteredServices) {
                   const transformedServiceList = filteredServices.map(
                     (data: { name: string }) => data.name
                   );
@@ -709,29 +710,33 @@ export class RunTimeSerive {
                   if (selectedRuntimeClone === undefined) {
                     if (transformedServiceList.length > 0) {
                       setSubNetworkSelected(transformedServiceList[0]);
+                    } else {
+                     const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
+                     if (!toast.isActive("no-subnetworks")) {
+                        toast.error(errorMessage, {
+                          toastId: "no-subnetworks-google-access",
+                          ...toastifyCustomStyle,
+                        });
+                        DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);             
+                      }
                     }
                   }
                 } else {
-                  const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
-                  DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
-                  // Show toast only if it isn't already active
-                  if (!toast.isActive("no-subnetworks")) {
-                    toast.error(errorMessage, {
-                      toastId: "no-subnetworks",
-                      ...toastifyCustomStyle,
-                    });
-                  }
+                  const errorMessage = `No subNetworks found  for network ${subnetwork}`
+                     if (!toast.isActive("no-subnetworks")) {
+                      DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
+                        toast.error(errorMessage, {
+                          toastId: "no-subnetworks",
+                          ...toastifyCustomStyle,
+                        });
+                      }
                 }
                 setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
-                  const errorMessage = responseResult.error.message;
-
-                  if (!toast.isActive("api-error")) {
-                    toast.error(errorMessage, {
-                      toastId: "api-error",
-                      ...toastifyCustomStyle,
-                    });
-                  }
+                  toast.error(
+                    responseResult?.error?.message,
+                    toastifyCustomStyle
+                  );
                 }
               }
             )
@@ -740,15 +745,15 @@ export class RunTimeSerive {
             });
         })
         .catch((err: Error) => {
-          DataprocLoggingService.log("Error listing subNetworks", LOG_LEVEL.ERROR);
+          DataprocLoggingService.log(
+            'Error listing subNetworks',
+            LOG_LEVEL.ERROR
+          );
           setIsloadingNetwork(false);
-          const errorMessage = `Error listing subNetworks: ${err}`;
-          if (!toast.isActive("fetch-error")) {
-            toast.error(errorMessage, {
-              toastId: "fetch-error",
-              ...toastifyCustomStyle,
-            });
-          }
+          toast.error(
+            `Error listing subNetworks : ${err}`,
+            toastifyCustomStyle
+          );
         });
     }
   };
