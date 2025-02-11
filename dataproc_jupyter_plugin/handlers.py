@@ -155,11 +155,14 @@ class ConfigHandler(APIHandler):
         project_id = input_data["projectId"]
         region = input_data["region"]
         # Validate inputs before processing
-        if not re.fullmatch(constants.PRJECT_REGEXP, project_id):
-            raise ValueError(f"Invalid project ID: {project_id}")
+        if not re.fullmatch(constants.PROJECT_REGEXP, project_id):
+            self.set_status(400)
+            self.finish({"error": f"Invalid project ID: {project_id}"})
+            return
         if not re.fullmatch(constants.REGION_REGEXP, region):
-            raise ValueError(f"Invalid region: {region}")
-
+            self.set_status(400)
+            self.finish({"error": f"Invalid region: {region}"})
+            return
         try:
             await async_run_gcloud_subcommand(f"config set project {project_id}")
             await async_run_gcloud_subcommand(f"config set dataproc/region {region}")
