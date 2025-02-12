@@ -1453,7 +1453,7 @@ function CreateRunTime({
                     onChange={() => handleNetworkSharedVpcRadioChange()}
                   />
                   <div className="create-batch-message">
-                    Networks shared from host project: "{projectInfo}"
+                    Networks shared from host project:
                   </div>
                 </div>
                 <div className="create-runtime-sub-message-network">
