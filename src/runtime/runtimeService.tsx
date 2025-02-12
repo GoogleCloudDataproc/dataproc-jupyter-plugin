@@ -613,7 +613,7 @@ export class RunTimeSerive {
                   message: string;
                 };
               }) => {
-                let transformedRegionList = responseResult?.items?.map(
+                let transformedRegionList = responseResult.items?.map(
                   (data: Region) => {
                     return data.name;
                   }
@@ -669,7 +669,6 @@ export class RunTimeSerive {
     setIsloadingNetwork: (value: boolean) => void
   ) => {
     setIsloadingNetwork(true);
- 
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
