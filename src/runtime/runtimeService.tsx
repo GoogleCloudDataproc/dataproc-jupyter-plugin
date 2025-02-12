@@ -710,25 +710,28 @@ export class RunTimeSerive {
                     if (transformedServiceList.length > 0) {
                       setSubNetworkSelected(transformedServiceList[0]);
                     } else {
-                     const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
-                     if (!toast.isActive("no-subnetworks")) {
+                      const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
+                      if (!toast.isActive('no-subnetworks')) {
                         toast.error(errorMessage, {
-                          toastId: "no-subnetworks-google-access",
-                          ...toastifyCustomStyle,
+                          toastId: 'no-subnetworks-google-access',
+                          ...toastifyCustomStyle
                         });
-                        DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);             
+                        DataprocLoggingService.log(
+                          errorMessage,
+                          LOG_LEVEL.ERROR
+                        );
                       }
                     }
                   }
                 } else {
-                  const errorMessage = `No subNetworks found  for network ${subnetwork}`
-                     if (!toast.isActive("no-subnetworks")) {
-                      DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
-                        toast.error(errorMessage, {
-                          toastId: "no-subnetworks",
-                          ...toastifyCustomStyle,
-                        });
-                      }
+                  const errorMessage = `No subNetworks found  for network ${subnetwork}`;
+                  if (!toast.isActive('no-subnetworks')) {
+                    DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
+                    toast.error(errorMessage, {
+                      toastId: 'no-subnetworks',
+                      ...toastifyCustomStyle
+                    });
+                  }
                 }
                 setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
