@@ -1372,6 +1372,9 @@ function CreateRunTime({
               <div className="submit-job-label-header">
                 Execution Configuration
               </div>
+              <div className="runtime-message">
+              Execute notebooks with:
+              </div>
               <div>
                 <div className="create-runtime-radio">
                   <Radio
