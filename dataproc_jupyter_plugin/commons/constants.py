@@ -55,3 +55,9 @@ DAG_RUN_ID_REGEXP = re.compile("[a-zA-Z0-9_:\\+.-]+")
 
 # This matches the requirements set by the scheduler form.
 AIRFLOW_JOB_REGEXP = re.compile("[a-zA-Z0-9_-]+")
+
+# Project ID pattern: 6-30 chars, must start with letter, can contain letters, numbers, and hyphens
+PROJECT_REGEXP = re.compile("^[a-z0-9.:-]+$")
+
+# Region pattern: standard GCP region format
+REGION_REGEXP = re.compile("^[a-z]+-[a-z]+\d+$")
