@@ -67,7 +67,6 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
-import { SchedulerService } from './scheduler/schedulerServices';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -187,8 +186,6 @@ const extension: JupyterFrontEndPlugin<void> = {
           );
       }
 
-      const composerListResponse =
-        await SchedulerService.listComposersAPICheckService();
       const dataCatalogResponse =
         await BigQueryService.getBigQuerySearchCatalogAPIService();
 
@@ -208,14 +205,6 @@ const extension: JupyterFrontEndPlugin<void> = {
           notificationMessage: 'The BigQuery API is not enabled.',
           enableLink:
             'https://console.cloud.google.com/apis/library/bigquery.googleapis.com'
-        },
-        {
-          response: composerListResponse,
-          errorKey: 'Error fetching environments list',
-          errorMessage: 'Cloud Composer API has not been used in project',
-          notificationMessage: 'The Cloud Composer API is not enabled.',
-          enableLink:
-            'https://console.cloud.google.com/apis/library/composer.googleapis.com'
         },
         {
           response: dataCatalogResponse,
