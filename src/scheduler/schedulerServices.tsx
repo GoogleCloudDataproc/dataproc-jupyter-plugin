@@ -242,11 +242,15 @@ export class SchedulerService {
         }
       } else {
         let composerEnvironmentList: string[] = [];
+        //console.log("check the object or list",typeof(formattedResponse), formattedResponse)
+        if (Array.isArray(formattedResponse)){
+          // console.log("@@@@check")
         formattedResponse.forEach((data: IComposerAPIResponse) => {
           composerEnvironmentList.push(data.name);
         });
         composerEnvironmentList.sort();
         setComposerList(composerEnvironmentList);
+      }
       }
     } catch (error) {
       DataprocLoggingService.log(
