@@ -451,6 +451,13 @@ export const toastifyCustomStyle: ToastOptions<{}> = {
   theme: 'dark',
   position: toast.POSITION.BOTTOM_CENTER
 };
+
+export const showToast = (message: string, id?: string) => {
+  if (!id || !toast.isActive(id)) {
+    toast.error(message, { toastId: id, ...toastifyCustomStyle });
+  }
+};
+
 export function assumeNeverHit(_: never): void {}
 export interface IBatchInfoResponse {
   uuid: string;
