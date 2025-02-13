@@ -18,7 +18,7 @@
 import { toast } from 'react-toastify';
 import { requestAPI } from '../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import { toastifyCustomStyle } from '../utils/utils';
+import { toastifyCustomStyle, showToast } from '../utils/utils';
 import { JupyterLab } from '@jupyterlab/application';
 import { scheduleMode } from '../utils/const';
 
@@ -241,16 +241,36 @@ export class SchedulerService {
           setIsLoading(false);
         }
       } else {
-        let composerEnvironmentList: string[] = [];
-        //console.log("check the object or list",typeof(formattedResponse), formattedResponse)
-        if (Array.isArray(formattedResponse)){
-          // console.log("@@@@check")
-        formattedResponse.forEach((data: IComposerAPIResponse) => {
-          composerEnvironmentList.push(data.name);
-        });
-        composerEnvironmentList.sort();
-        setComposerList(composerEnvironmentList);
-      }
+        if (formattedResponse.length === undefined) {
+          try {
+            const errorObject = JSON.parse(
+              formattedResponse['Error fetching environments list'].slice(
+                formattedResponse['Error fetching environments list'].indexOf(
+                  '{'
+                )
+              )
+            );
+            if (errorObject.error.code === 403)
+              showToast(errorObject.error.message, 'error-fetching-env-list');
+            toast.error(
+              `Error fetching environments list: ${errorObject.error.message}`,
+              toastifyCustomStyle
+            );
+          } catch (error) {
+            console.error('Error parsing error message:', error);
+            toast.error(
+              'Error fetching environments list. Please try again later.',
+              toastifyCustomStyle
+            );
+          }
+        } else {
+          let composerEnvironmentList: string[] = [];
+          formattedResponse.forEach((data: IComposerAPIResponse) => {
+            composerEnvironmentList.push(data.name);
+          });
+          composerEnvironmentList.sort();
+          setComposerList(composerEnvironmentList);
+        }
       }
     } catch (error) {
       DataprocLoggingService.log(
