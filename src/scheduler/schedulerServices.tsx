@@ -252,10 +252,6 @@ export class SchedulerService {
             );
             if (errorObject.error.code === 403)
               showToast(errorObject.error.message, 'error-fetching-env-list');
-            toast.error(
-              `Error fetching environments list: ${errorObject.error.message}`,
-              toastifyCustomStyle
-            );
           } catch (error) {
             console.error('Error parsing error message:', error);
             toast.error(
