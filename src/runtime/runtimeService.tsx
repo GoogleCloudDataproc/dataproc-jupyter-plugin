@@ -28,7 +28,8 @@ import {
   toastifyCustomStyle,
   loggedFetch,
   authenticatedFetch,
-  jobTimeFormat
+  jobTimeFormat,
+  showToast
 } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -711,27 +712,14 @@ export class RunTimeSerive {
                       setSubNetworkSelected(transformedServiceList[0]);
                     } else {
                       const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
-                      if (!toast.isActive('no-subnetworks')) {
-                        toast.error(errorMessage, {
-                          toastId: 'no-subnetworks-google-access',
-                          ...toastifyCustomStyle
-                        });
-                        DataprocLoggingService.log(
-                          errorMessage,
-                          LOG_LEVEL.ERROR
-                        );
-                      }
+                      showToast(errorMessage, 'no-subnetworks-google-access');
+                      DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                     }
                   }
                 } else {
                   const errorMessage = `No subNetworks found  for network ${subnetwork}`;
-                  if (!toast.isActive('no-subnetworks')) {
-                    DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
-                    toast.error(errorMessage, {
-                      toastId: 'no-subnetworks',
-                      ...toastifyCustomStyle
-                    });
-                  }
+                  showToast(errorMessage, 'no-subnetworks');
+                  DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                 }
                 setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
