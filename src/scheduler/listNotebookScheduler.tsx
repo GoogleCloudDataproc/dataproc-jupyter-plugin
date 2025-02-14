@@ -36,6 +36,7 @@ import ImportErrorPopup from '../utils/importErrorPopup';
 import triggerIcon from '../../style/icons/scheduler_trigger.svg';
 import { PLUGIN_ID, scheduleMode } from '../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import errorIcon from '../../style/icons/error_icon.svg';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -62,6 +63,12 @@ const iconTrigger = new LabIcon({
   name: 'launcher:trigger-icon',
   svgstr: triggerIcon
 });
+
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
+});
+
 interface IDagList {
   jobid: string;
   notebookname: string;
@@ -155,6 +162,8 @@ function listNotebookScheduler({
   const [importErrorData, setImportErrorData] = useState<string[]>([]);
   const [importErrorEntries, setImportErrorEntries] = useState<number>(0);
   const [isPreviewEnabled, setIsPreviewEnabled] = useState(false);
+  const [isApiError, setIsApiError] = useState(false);
+  const [apiError, setApiError] = useState('');
   const columns = React.useMemo(
     () => [
       {
@@ -309,6 +318,8 @@ function listNotebookScheduler({
   const listComposersAPI = async () => {
     await SchedulerService.listComposersAPIService(
       setComposerList,
+      setIsApiError,
+      setApiError,
       setIsLoading
     );
   };
@@ -333,6 +344,25 @@ function listNotebookScheduler({
       composerSelectedList,
       setImportErrorData,
       setImportErrorEntries
+    );
+  };
+
+  const extractLink = (message: any) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return message.split(urlRegex).map((part: any, index: number) =>
+      urlRegex.test(part) ? (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'blue', textDecoration: 'underline' }}
+        >
+          {part}
+        </a>
+      ) : (
+        part
+      )
     );
   };
 
@@ -493,9 +523,12 @@ function listNotebookScheduler({
 
   const openEditDagNotebookFile = async () => {
     let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-    const openNotebookFile: any = await app.commands.execute('docmanager:open', {
-      path: filePath
-    });
+    const openNotebookFile: any = await app.commands.execute(
+      'docmanager:open',
+      {
+        path: filePath
+      }
+    );
     setInputNotebookFilePath('');
     if (openNotebookFile) {
       setEditNotebookLoading('');
@@ -597,6 +630,14 @@ function listNotebookScheduler({
                 onDelete={(dagId: string) => handleDeleteImportError(dagId)}
               />
             )}
+          </div>
+        )}
+      </div>
+      <div className="create-scheduler-form-element">
+        {isApiError && (
+          <div className="error-key-parent">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div className="error-key-missing">{extractLink(apiError)}</div>
           </div>
         )}
       </div>

@@ -124,6 +124,9 @@ const CreateNotebookScheduler = ({
 
   const [isBigQueryNotebook, setIsBigQueryNotebook] = useState(false);
 
+  const [isApiError, setIsApiError] = useState(false);
+  const [apiError, setApiError] = useState('');
+
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(
       setClusterList,
@@ -140,7 +143,11 @@ const CreateNotebookScheduler = ({
   };
 
   const listComposersAPI = async () => {
-    await SchedulerService.listComposersAPIService(setComposerList);
+    await SchedulerService.listComposersAPIService(
+      setComposerList,
+      setIsApiError,
+      setApiError
+    );
   };
 
   const handleComposerSelected = (data: string | null) => {
@@ -364,6 +371,25 @@ const CreateNotebookScheduler = ({
     }
   };
 
+  const extractLink = (message: any) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return message.split(urlRegex).map((part: any, index: number) =>
+      urlRegex.test(part) ? (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'blue', textDecoration: 'underline' }}
+        >
+          {part}
+        </a>
+      ) : (
+        part
+      )
+    );
+  };
+
   useEffect(() => {
     listComposersAPI();
 
@@ -517,6 +543,12 @@ const CreateNotebookScheduler = ({
                 disabled={editMode}
               />
             </div>
+            {isApiError && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">{extractLink(apiError)}</div>
+              </div>
+            )}
             <div className="create-scheduler-label">Output formats</div>
             <div className="create-scheduler-form-element">
               <FormGroup row={true}>
