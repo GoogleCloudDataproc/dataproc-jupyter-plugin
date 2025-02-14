@@ -346,23 +346,25 @@ function listNotebookScheduler({
       setImportErrorEntries
     );
   };
-
-  const extractLink = (message: any) => {
+  const extractLink = (message: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return message.split(urlRegex).map((part: any, index: number) =>
-      urlRegex.test(part) ? (
+    const match = message.match(urlRegex);
+    const url = match ? match[0] : '';
+    if (!url) return message;
+    const beforeLink = message.split('Click here ')[0] || '';
+    return (
+      <>
+        {beforeLink}
         <a
-          key={index}
-          href={part}
+          href={url}
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: 'blue', textDecoration: 'underline' }}
         >
-          {part}
-        </a>
-      ) : (
-        part
-      )
+          Click here
+        </a>{' '}
+        to enable it
+      </>
     );
   };
 
@@ -635,7 +637,7 @@ function listNotebookScheduler({
       </div>
       <div className="create-scheduler-form-element">
         {isApiError && (
-          <div className="error-key-parent">
+          <div className="error-api">
             <iconError.react tag="div" className="logo-alignment-style" />
             <div className="error-key-missing">{extractLink(apiError)}</div>
           </div>

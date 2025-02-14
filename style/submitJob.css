@@ -155,7 +155,6 @@
   padding-right: 6px !important;
 }
 
-
 .submit-job-cluster-message {
   font-style: normal;
   font-weight: 400;
@@ -259,6 +258,14 @@
   color: var(--jp-error-color0);
   padding-left: 5px;
   font-size: 10px;
+}
+
+.error-api {
+  padding-top: 5px;
+  display: flex;
+  align-items: center;
+  width: 90%;
+  padding-left: 5px;
 }
 
 /* Highlight tags input field when focus */
