@@ -691,7 +691,7 @@ function listNotebookScheduler({
               Loading Notebook Schedulers
             </div>
           )}
-          {!isLoading && (
+          {!isLoading && !apiError && (
             <div className="no-data-style">No rows to display</div>
           )}
         </div>
