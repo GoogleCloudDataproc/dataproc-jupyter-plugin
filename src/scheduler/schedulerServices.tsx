@@ -18,7 +18,7 @@
 import { toast } from 'react-toastify';
 import { requestAPI } from '../handler/handler';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import { toastifyCustomStyle,showToast } from '../utils/utils';
+import { toastifyCustomStyle, showToast } from '../utils/utils';
 import { JupyterLab } from '@jupyterlab/application';
 import { scheduleMode } from '../utils/const';
 
@@ -257,10 +257,16 @@ export class SchedulerService {
               setApiError(
                 'Cloud Composer API is not enabled in the project . Click here to enable the API: - https://console.developers.google.com/apis/api/composer.googleapis.com/overview?project=dataproc-jupyter-extension-dev '
               );
+              if (setIsLoading) {
+                setIsLoading(false);
+              }
             }
           } catch (error) {
             console.error('Error parsing error message:', error);
-            showToast( 'Error fetching environments list. Please try again later.', 'error-featching-env-list')
+            showToast(
+              'Error fetching environments list. Please try again later.',
+              'error-featching-env-list'
+            );
           }
         } else {
           setIsApiError(false);

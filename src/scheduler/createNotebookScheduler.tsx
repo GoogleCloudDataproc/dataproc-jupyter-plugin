@@ -388,7 +388,7 @@ const CreateNotebookScheduler = ({
         >
           Click here
         </a>{' '}
-        to enable it
+        to enable it.
       </>
     );
   };

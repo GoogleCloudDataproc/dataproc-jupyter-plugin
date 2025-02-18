@@ -363,7 +363,7 @@ function listNotebookScheduler({
         >
           Click here
         </a>{' '}
-        to enable it
+        to enable it.
       </>
     );
   };
