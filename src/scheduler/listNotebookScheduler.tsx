@@ -19,7 +19,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTable, usePagination } from 'react-table';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, extractUrl } from '../utils/utils';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Autocomplete, CircularProgress, TextField } from '@mui/material';
 import deleteIcon from '../../style/icons/scheduler_delete.svg';
@@ -346,12 +346,13 @@ function listNotebookScheduler({
       setImportErrorEntries
     );
   };
+
   const extractLink = (message: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const match = message.match(urlRegex);
-    const url = match ? match[0] : '';
+    const url = extractUrl(message);
     if (!url) return message;
+
     const beforeLink = message.split('Click here ')[0] || '';
+
     return (
       <>
         {beforeLink}

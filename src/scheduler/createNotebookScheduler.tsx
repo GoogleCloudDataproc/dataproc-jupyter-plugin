@@ -46,6 +46,7 @@ import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
 import { scheduleValueExpression } from '../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { extractUrl } from '../utils/utils';
 
 interface IDagList {
   jobid: string;
@@ -372,11 +373,11 @@ const CreateNotebookScheduler = ({
   };
 
   const extractLink = (message: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const match = message.match(urlRegex);
-    const url = match ? match[0] : '';
+    const url = extractUrl(message);
     if (!url) return message;
-    const beforeLink = message.split('Click here')[0] || '';
+
+    const beforeLink = message.split('Click here ')[0] || '';
+
     return (
       <>
         {beforeLink}

@@ -458,6 +458,12 @@ export const showToast = (message: string, id?: string) => {
   }
 };
 
+export const extractUrl = (message: string): string | null => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const match = message.match(urlRegex);
+  return match ? match[0] : null;
+};
+
 export function assumeNeverHit(_: never): void {}
 export interface IBatchInfoResponse {
   uuid: string;
