@@ -129,7 +129,7 @@ async def test_invalid_project_ids(jp_fetch, monkeypatch, invalid_project_id):
     assert response.code == 400
     payload = json.loads(response.body)
     print("sss", payload)
-    assert "Invalid project ID:" in payload["error"]
+    assert "Unsupported project ID:" in payload["error"]
 
 
 @pytest.mark.parametrize(
@@ -182,7 +182,7 @@ async def test_invalid_regions(jp_fetch, monkeypatch, invalid_region):
 
     assert response.code == 400
     payload = json.loads(response.body)
-    assert "Invalid region:" in payload["error"]
+    assert "Unsupported region:" in payload["error"]
 
 
 async def test_post_config_handler_gcloud_error(jp_fetch, monkeypatch):
