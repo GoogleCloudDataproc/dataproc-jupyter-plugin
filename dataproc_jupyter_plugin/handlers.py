@@ -157,11 +157,11 @@ class ConfigHandler(APIHandler):
         # Validate inputs before processing
         if not re.fullmatch(constants.PROJECT_REGEXP, project_id):
             self.set_status(400)
-            self.finish({"error": f"Invalid project ID: {project_id}"})
+            self.finish({"error": f"Unsupported project ID: {project_id}"})
             return
         if not re.fullmatch(constants.REGION_REGEXP, region):
             self.set_status(400)
-            self.finish({"error": f"Invalid region: {region}"})
+            self.finish({"error": f"Unsupported region: {region}"})
             return
         try:
             await async_run_gcloud_subcommand(f"config set project {project_id}")
