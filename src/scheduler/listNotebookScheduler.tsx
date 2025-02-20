@@ -19,7 +19,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTable, usePagination } from 'react-table';
 import TableData from '../utils/tableData';
 import { PaginationView } from '../utils/paginationView';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, extractUrl } from '../utils/utils';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Autocomplete, CircularProgress, TextField } from '@mui/material';
 import deleteIcon from '../../style/icons/scheduler_delete.svg';
@@ -36,6 +36,7 @@ import ImportErrorPopup from '../utils/importErrorPopup';
 import triggerIcon from '../../style/icons/scheduler_trigger.svg';
 import { PLUGIN_ID, scheduleMode } from '../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import errorIcon from '../../style/icons/error_icon.svg';
 
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
@@ -62,6 +63,12 @@ const iconTrigger = new LabIcon({
   name: 'launcher:trigger-icon',
   svgstr: triggerIcon
 });
+
+const iconError = new LabIcon({
+  name: 'launcher:error-icon',
+  svgstr: errorIcon
+});
+
 interface IDagList {
   jobid: string;
   notebookname: string;
@@ -155,6 +162,8 @@ function listNotebookScheduler({
   const [importErrorData, setImportErrorData] = useState<string[]>([]);
   const [importErrorEntries, setImportErrorEntries] = useState<number>(0);
   const [isPreviewEnabled, setIsPreviewEnabled] = useState(false);
+  const [isApiError, setIsApiError] = useState(false);
+  const [apiError, setApiError] = useState('');
   const columns = React.useMemo(
     () => [
       {
@@ -309,6 +318,8 @@ function listNotebookScheduler({
   const listComposersAPI = async () => {
     await SchedulerService.listComposersAPIService(
       setComposerList,
+      setIsApiError,
+      setApiError,
       setIsLoading
     );
   };
@@ -333,6 +344,28 @@ function listNotebookScheduler({
       composerSelectedList,
       setImportErrorData,
       setImportErrorEntries
+    );
+  };
+
+  const extractLink = (message: string) => {
+    const url = extractUrl();
+    if (!url) return message;
+
+    const beforeLink = message.split('Click here ')[0] || '';
+
+    return (
+      <>
+        {beforeLink}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'blue', textDecoration: 'underline' }}
+        >
+          Click here
+        </a>{' '}
+        to enable it.
+      </>
     );
   };
 
@@ -493,9 +526,12 @@ function listNotebookScheduler({
 
   const openEditDagNotebookFile = async () => {
     let filePath = inputNotebookFilePath.replace('gs://', 'gs:');
-    const openNotebookFile: any = await app.commands.execute('docmanager:open', {
-      path: filePath
-    });
+    const openNotebookFile: any = await app.commands.execute(
+      'docmanager:open',
+      {
+        path: filePath
+      }
+    );
     setInputNotebookFilePath('');
     if (openNotebookFile) {
       setEditNotebookLoading('');
@@ -600,6 +636,14 @@ function listNotebookScheduler({
           </div>
         )}
       </div>
+      <div className="create-scheduler-form-element">
+        {isApiError && (
+          <div className="error-api">
+            <iconError.react tag="div" className="logo-alignment-style" />
+            <div className="error-key-missing">{extractLink(apiError)}</div>
+          </div>
+        )}
+      </div>
       {dagList.length > 0 ? (
         <div className="notebook-templates-list-table-parent">
           <TableData
@@ -648,7 +692,7 @@ function listNotebookScheduler({
               Loading Notebook Schedulers
             </div>
           )}
-          {!isLoading && (
+          {!isLoading && !apiError && (
             <div className="no-data-style">No rows to display</div>
           )}
         </div>
