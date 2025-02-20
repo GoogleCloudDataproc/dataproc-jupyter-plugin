@@ -24,6 +24,7 @@ import { requestAPI } from '../handler/handler';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
+  CLOUD_COMPOSER_API,
   DCU_HOURS,
   GB_MONTHS,
   HTTP_METHOD,
@@ -458,10 +459,9 @@ export const showToast = (message: string, id?: string) => {
   }
 };
 
-export const extractUrl = (message: string): string | null => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const match = message.match(urlRegex);
-  return match ? match[0] : null;
+export const extractUrl = () => {
+  const url = CLOUD_COMPOSER_API;
+  return url;
 };
 
 export function assumeNeverHit(_: never): void {}

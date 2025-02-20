@@ -255,7 +255,7 @@ export class SchedulerService {
             if (errorObject.error.code === 403) {
               setIsApiError(true);
               setApiError(
-                'Cloud Composer API is not enabled in the project. Click here to enable the API: - https://console.developers.google.com/apis/api/composer.googleapis.com/overview?project=dataproc-jupyter-extension-dev '
+                'Cloud Composer API is not enabled in the project. Click here to enable the API.'
               );
               if (setIsLoading) {
                 setIsLoading(false);

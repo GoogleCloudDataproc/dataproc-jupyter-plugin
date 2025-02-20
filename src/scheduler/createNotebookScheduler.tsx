@@ -373,11 +373,9 @@ const CreateNotebookScheduler = ({
   };
 
   const extractLink = (message: string) => {
-    const url = extractUrl(message);
+    const url = extractUrl();
     if (!url) return message;
-
     const beforeLink = message.split('Click here ')[0] || '';
-
     return (
       <>
         {beforeLink}
