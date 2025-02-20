@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import re
 import subprocess
 
 
@@ -31,6 +32,7 @@ from traitlets import Bool, Undefined, Unicode
 from traitlets.config import SingletonConfigurable
 
 from dataproc_jupyter_plugin import credentials, urls
+from dataproc_jupyter_plugin.commons import constants
 from dataproc_jupyter_plugin.controllers import (
     airflow,
     bigquery,
@@ -152,6 +154,15 @@ class ConfigHandler(APIHandler):
         input_data = self.get_json_body()
         project_id = input_data["projectId"]
         region = input_data["region"]
+        # Validate inputs before processing
+        if not re.fullmatch(constants.PROJECT_REGEXP, project_id):
+            self.set_status(400)
+            self.finish({"error": f"Unsupported project ID: {project_id}"})
+            return
+        if not re.fullmatch(constants.REGION_REGEXP, region):
+            self.set_status(400)
+            self.finish({"error": f"Unsupported region: {region}"})
+            return
         try:
             await async_run_gcloud_subcommand(f"config set project {project_id}")
             await async_run_gcloud_subcommand(f"config set dataproc/region {region}")
