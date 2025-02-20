@@ -460,8 +460,7 @@ export const showToast = (message: string, id?: string) => {
 };
 
 export const extractUrl = () => {
-  const url = CLOUD_COMPOSER_API;
-  return url;
+  return CLOUD_COMPOSER_API;
 };
 
 export function assumeNeverHit(_: never): void {}
