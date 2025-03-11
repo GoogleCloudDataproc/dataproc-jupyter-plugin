@@ -201,6 +201,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         {
           response: bigqueryDatasetsResponse,
           errorKey: 'error',
+          checkType: 'bigquery',
           errorMessage: 'has not enabled BigQuery',
           notificationMessage: 'The BigQuery API is not enabled.',
           enableLink:
@@ -216,24 +217,34 @@ const extension: JupyterFrontEndPlugin<void> = {
             'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com'
         }
       ];
-
-      apiChecks.forEach(
-        ({
-          response,
-          errorKey,
-          errorMessage,
-          notificationMessage,
-          enableLink
-        }) => {
-          const errorValue = errorKey
-            .split('.')
-            .reduce((acc, key) => acc?.[key], response);
-          if (errorValue && errorValue.includes(errorMessage)) {
-            Notification.error(notificationMessage, {
+      apiChecks.forEach(check => {
+        if (check.checkType === 'bigquery') {
+          if (
+            check.response &&
+            check.response.success &&
+            check.response.is_enabled === false
+          ) {
+            Notification.error(check.notificationMessage, {
               actions: [
                 {
                   label: 'Enable',
-                  callback: () => window.open(enableLink, '_blank'),
+                  callback: () => window.open(check.enableLink, '_blank'),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          }
+        } else {
+          const errorValue = check.errorKey
+            .split('.')
+            .reduce((acc, key) => acc?.[key], check.response);
+          if (errorValue && errorValue.includes(check.errorMessage)) {
+            Notification.error(check.notificationMessage, {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () => window.open(check.enableLink, '_blank'),
                   displayType: 'link'
                 }
               ],
@@ -241,7 +252,31 @@ const extension: JupyterFrontEndPlugin<void> = {
             });
           }
         }
-      );
+      });
+      //   ({
+      //     response,
+      //     errorKey,
+      //     errorMessage,
+      //     notificationMessage,
+      //     enableLink
+      //   }) => {
+      //     const errorValue = errorKey
+      //       .split('.')
+      //       .reduce((acc, key) => acc?.[key], response);
+      //     if (errorValue && errorValue.includes(errorMessage)) {
+      //       Notification.error(notificationMessage, {
+      //         actions: [
+      //           {
+      //             label: 'Enable',
+      //             callback: () => window.open(enableLink, '_blank'),
+      //             displayType: 'link'
+      //           }
+      //         ],
+      //         autoClose: false
+      //       });
+      //     }
+      //   }
+      // );
     };
 
     await checkAllApisEnabled();
@@ -340,10 +375,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
         onThemeChanged();
         app.shell.add(panelDpms, 'left', { rank: 1001 });
-        DataprocLoggingService.log(
-          'Metastore is enabled',
-          LOG_LEVEL.INFO
-        );
+        DataprocLoggingService.log('Metastore is enabled', LOG_LEVEL.INFO);
       }
 
       if (enableCloudStorage) {
@@ -358,10 +390,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         );
         onThemeChanged();
         app.shell.add(panelGcs, 'left', { rank: 1002 });
-        DataprocLoggingService.log(
-          'Cloud storage is enabled',
-          LOG_LEVEL.INFO
-        );
+        DataprocLoggingService.log('Cloud storage is enabled', LOG_LEVEL.INFO);
       }
     };
     onSidePanelEnabled();

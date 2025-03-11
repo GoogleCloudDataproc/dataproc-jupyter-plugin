@@ -14,6 +14,7 @@
 
 
 import json
+import subprocess
 
 import aiohttp
 import tornado
@@ -158,3 +159,20 @@ class SearchController(APIHandler):
         except Exception as e:
             self.log.exception("Error fetching search data")
             self.finish({"error": str(e)})
+
+
+class CheckApiController(APIHandler):
+    async def get(self):
+        try:
+            cmd = "gcloud services list | grep bigquery.googleapis.com"
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+            if result.stdout.strip():
+                is_enabled = False
+            else:
+                is_enabled = False
+
+            self.finish({"success": True, "is_enabled": is_enabled})
+
+        except Exception as e:
+            self.finish({"success": False, "error": str(e)})
