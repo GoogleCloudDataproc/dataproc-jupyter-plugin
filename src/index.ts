@@ -256,30 +256,6 @@ const extension: JupyterFrontEndPlugin<void> = {
           }
         }
       });
-      //   ({
-      //     response,
-      //     errorKey,
-      //     errorMessage,
-      //     notificationMessage,
-      //     enableLink
-      //   }) => {
-      //     const errorValue = errorKey
-      //       .split('.')
-      //       .reduce((acc, key) => acc?.[key], response);
-      //     if (errorValue && errorValue.includes(errorMessage)) {
-      //       Notification.error(notificationMessage, {
-      //         actions: [
-      //           {
-      //             label: 'Enable',
-      //             callback: () => window.open(enableLink, '_blank'),
-      //             displayType: 'link'
-      //           }
-      //         ],
-      //         autoClose: false
-      //       });
-      //     }
-      //   }
-      // );
     };
 
     await checkAllApisEnabled();
