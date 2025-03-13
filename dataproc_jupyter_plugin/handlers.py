@@ -170,7 +170,7 @@ class ConfigHandler(APIHandler):
             configure_gateway_client_url(self.config, self.log)
             self.finish({"config": ERROR_MESSAGE + "successful"})
         except subprocess.CalledProcessError as er:
-            self.finish({"config": ERROR_MESSAGE + "failed","error": str(er)})
+            self.finish({"config": ERROR_MESSAGE + "failed", "error": str(er)})
 
 
 class UrlHandler(APIHandler):
@@ -191,6 +191,19 @@ class LogHandler(APIHandler):
         log_body = self.get_json_body()
         logger.log(log_body["level"], log_body["message"])
         self.finish({"status": "OK"})
+
+
+class ResourceManagerHandler(APIHandler):
+    @tornado.web.authenticated
+    async def get(self):
+        try:
+            project = await credentials._gcp_project()
+            await async_run_gcloud_subcommand(
+                f'projects describe {project} --format="value(projectNumber)"'
+            )
+            self.finish({"status": "OK"})
+        except subprocess.CalledProcessError as er:
+            self.finish({"status": "ERROR"})
 
 
 def setup_handlers(web_app):
@@ -230,6 +243,7 @@ def setup_handlers(web_app):
         "bigQueryPreview": bigquery.PreviewController,
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
+        "checkResourceManager": ResourceManagerHandler,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

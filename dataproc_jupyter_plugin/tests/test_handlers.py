@@ -202,3 +202,54 @@ async def test_post_config_handler_gcloud_error(jp_fetch, monkeypatch):
     assert response.code == 200
     payload = json.loads(response.body)
     assert payload == {"config": "Project and region update failed"}
+
+
+async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
+    # Mock the project ID retrieval
+    mock_gcp_project = AsyncMock(return_value="my-project-123")
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
+    )
+
+    # Mock the gcloud command execution
+    mock_run_gcloud = AsyncMock(return_value="123456789")
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
+    )
+
+    # Call the handler
+    response = await jp_fetch("dataproc-plugin", "checkResourceManager")
+
+    # Validate the response
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert payload["status"] == "OK"
+
+    # Verify the correct gcloud command was called
+    mock_run_gcloud.assert_called_once_with(
+        'projects describe my-project-123 --format="value(projectNumber)"'
+    )
+
+
+async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
+    # Mock the project ID retrieval
+    mock_gcp_project = AsyncMock(return_value="my-project-123")
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
+    )
+
+    # Mock a failure in the gcloud command execution
+    mock_run_gcloud = AsyncMock(
+        side_effect=subprocess.CalledProcessError(1, "gcloud projects describe")
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
+    )
+
+    # Call the handler
+    response = await jp_fetch("dataproc-plugin", "checkResourceManager")
+
+    # Validate the response
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert payload["status"] == "ERROR"
