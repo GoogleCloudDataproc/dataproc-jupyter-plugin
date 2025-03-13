@@ -342,10 +342,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         panelDpms.addWidget(new dpmsWidget(app as JupyterLab, themeManager));
         onThemeChanged();
         app.shell.add(panelDpms, 'left', { rank: 1001 });
-        DataprocLoggingService.log(
-          'Metastore is enabled',
-          LOG_LEVEL.INFO
-        );
+        DataprocLoggingService.log('Metastore is enabled', LOG_LEVEL.INFO);
       }
 
       if (enableCloudStorage) {
@@ -360,10 +357,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         );
         onThemeChanged();
         app.shell.add(panelGcs, 'left', { rank: 1002 });
-        DataprocLoggingService.log(
-          'Cloud storage is enabled',
-          LOG_LEVEL.INFO
-        );
+        DataprocLoggingService.log('Cloud storage is enabled', LOG_LEVEL.INFO);
       }
     };
     onSidePanelEnabled();
