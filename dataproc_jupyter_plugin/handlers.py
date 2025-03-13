@@ -71,7 +71,7 @@ def configure_gateway_client_url(c, log):
         log.error(
             f"Error constructing the kernel gateway URL; configure your project, region, and credentials using gcloud: {e}"
         )
-        return e
+        return False
 
 
 class DataprocPluginConfig(SingletonConfigurable):
@@ -170,7 +170,7 @@ class ConfigHandler(APIHandler):
             configure_gateway_client_url(self.config, self.log)
             self.finish({"config": ERROR_MESSAGE + "successful"})
         except subprocess.CalledProcessError as er:
-            self.finish({"config": ERROR_MESSAGE + "failed", "error": str(er)})
+            self.finish({"config": ERROR_MESSAGE + "failed"})
 
 
 class UrlHandler(APIHandler):
