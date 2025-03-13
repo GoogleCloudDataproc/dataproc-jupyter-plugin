@@ -164,7 +164,8 @@ class SearchController(APIHandler):
 class CheckApiController(APIHandler):
     async def get(self):
         try:
-            cmd = "gcloud services list | grep bigquery.googleapis.com"
+            project_id = self.get_argument("project_id")
+            cmd = f'gcloud services list --enabled --project={project_id} | grep bigquery.googleapis.com'
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
             if result.stdout.strip():
