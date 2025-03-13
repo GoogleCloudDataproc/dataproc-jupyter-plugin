@@ -169,7 +169,7 @@ class CheckApiController(APIHandler):
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
             if result.stdout.strip():
-                is_enabled = False
+                is_enabled = True
             else:
                 is_enabled = False
 
