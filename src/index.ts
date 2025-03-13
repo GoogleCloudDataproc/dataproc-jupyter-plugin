@@ -163,6 +163,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       panelGcs: Panel | undefined,
       panelDatasetExplorer: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
+    await checkResourceManager();
 
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', (message: string) => {
@@ -365,6 +366,30 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     };
     onSidePanelEnabled();
+
+    async function checkResourceManager() {
+      try {
+        const credentials = await authApi();
+        const notificationMessage = 'The Resource Manager API is not enabled.';
+        const enableLink = `https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com?project=${credentials?.project_id}`;
+        const data = await requestAPI('checkResourceManager');
+        if ((data as { status: string }).status === 'ERROR') {
+          Notification.error(notificationMessage, {
+            actions: [
+              {
+                label: 'Enable',
+                callback: () => window.open(enableLink, '_blank'),
+                displayType: 'link'
+              }
+            ],
+            autoClose: false
+          });
+        }
+      } catch (error) {
+        console.error('Resource manager Api not enabled:', error);
+        return [];
+      }
+    }
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
