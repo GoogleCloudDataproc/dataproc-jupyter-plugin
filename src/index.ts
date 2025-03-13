@@ -198,8 +198,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           errorKey: 'error.message',
           errorMessage: 'Cloud Dataproc API has not been used in project',
           notificationMessage: 'The Cloud Dataproc API is not enabled.',
-          enableLink:
-            'https://console.cloud.google.com/apis/library/dataproc.googleapis.com'
+          enableLink: `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`
         },
         {
           response: bigqueryDatasetsResponse,
@@ -207,8 +206,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           checkType: 'bigquery',
           errorMessage: 'has not enabled BigQuery',
           notificationMessage: 'The BigQuery API is not enabled.',
-          enableLink:
-            'https://console.cloud.google.com/apis/library/bigquery.googleapis.com'
+          enableLink: `https://console.cloud.google.com/apis/library/bigquery.googleapis.com?project=${credentials?.project_id}`
         },
         {
           response: dataCatalogResponse,
@@ -216,8 +214,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           errorMessage:
             'Google Cloud Data Catalog API has not been used in project',
           notificationMessage: 'Google Cloud Data Catalog API is not enabled.',
-          enableLink:
-            'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com'
+          enableLink: `https://console.cloud.google.com/apis/library/datacatalog.googleapis.com?project=${credentials?.project_id}`
         }
       ];
       apiChecks.forEach(check => {
