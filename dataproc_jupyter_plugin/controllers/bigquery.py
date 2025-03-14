@@ -165,14 +165,9 @@ class CheckApiController(APIHandler):
     async def get(self):
         try:
             project_id = self.get_argument("project_id")
-            cmd = f'gcloud services list --enabled --project={project_id} | grep bigquery.googleapis.com'
+            cmd = f"gcloud services list --enabled --project={project_id} | grep bigquery.googleapis.com"
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
-            if result.stdout.strip():
-                is_enabled = True
-            else:
-                is_enabled = False
-
+            is_enabled = bool(result.stdout.strip())
             self.finish({"success": True, "is_enabled": is_enabled})
 
         except Exception as e:
