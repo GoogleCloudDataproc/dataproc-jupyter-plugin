@@ -365,7 +365,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     async function checkResourceManager() {
       try {
         const credentials = await authApi();
-        const notificationMessage = 'The Resource Manager API is not enabled.';
+        const notificationMessage =
+          'Cloud Resource Manager API is not enabled. Please enable it to view Dataproc Serverless Notebooks.';
         const enableLink = `https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com?project=${credentials?.project_id}`;
         const data = await requestAPI('checkResourceManager');
         if ((data as { status: string }).status === 'ERROR') {
