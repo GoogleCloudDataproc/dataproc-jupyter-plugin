@@ -421,7 +421,7 @@ export class BigQueryService {
     }
   };
 
-  static listBigQueryDatasetsAPIService = async (projectId: string) => {
+  static checkBigQueryDatasetsAPIService = async (projectId: string) => {
     try {
       const data: any = await requestAPI(
         `bigQueryApiEnabled?project_id=${projectId}`
