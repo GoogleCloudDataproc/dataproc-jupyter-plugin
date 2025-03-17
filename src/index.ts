@@ -184,9 +184,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       const credentials = await authApi();
       if (credentials?.project_id) {
         bigqueryDatasetsResponse =
-          await BigQueryService.listBigQueryDatasetsAPIService(
-            credentials.project_id
-          );
+          await BigQueryService.checkBigQueryDatasetsAPIService();
       }
 
       const dataCatalogResponse =
@@ -198,16 +196,15 @@ const extension: JupyterFrontEndPlugin<void> = {
           errorKey: 'error.message',
           errorMessage: 'Cloud Dataproc API has not been used in project',
           notificationMessage: 'The Cloud Dataproc API is not enabled.',
-          enableLink:
-            'https://console.cloud.google.com/apis/library/dataproc.googleapis.com'
+          enableLink: `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`
         },
         {
           response: bigqueryDatasetsResponse,
           errorKey: 'error',
+          checkType: 'bigquery',
           errorMessage: 'has not enabled BigQuery',
           notificationMessage: 'The BigQuery API is not enabled.',
-          enableLink:
-            'https://console.cloud.google.com/apis/library/bigquery.googleapis.com'
+          enableLink: `https://console.cloud.google.com/apis/library/bigquery.googleapis.com?project=${credentials?.project_id}`
         },
         {
           response: dataCatalogResponse,
@@ -215,28 +212,33 @@ const extension: JupyterFrontEndPlugin<void> = {
           errorMessage:
             'Google Cloud Data Catalog API has not been used in project',
           notificationMessage: 'Google Cloud Data Catalog API is not enabled.',
-          enableLink:
-            'https://console.cloud.google.com/apis/library/datacatalog.googleapis.com'
+          enableLink: `https://console.cloud.google.com/apis/library/datacatalog.googleapis.com?project=${credentials?.project_id}`
         }
       ];
-
-      apiChecks.forEach(
-        ({
-          response,
-          errorKey,
-          errorMessage,
-          notificationMessage,
-          enableLink
-        }) => {
-          const errorValue = errorKey
-            .split('.')
-            .reduce((acc, key) => acc?.[key], response);
-          if (errorValue && errorValue.includes(errorMessage)) {
-            Notification.error(notificationMessage, {
+      apiChecks.forEach(check => {
+        if (check.checkType === 'bigquery') {
+          if (check.response && check.response.is_enabled === false) {
+            Notification.error(check.notificationMessage, {
               actions: [
                 {
                   label: 'Enable',
-                  callback: () => window.open(enableLink, '_blank'),
+                  callback: () => window.open(check.enableLink, '_blank'),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          }
+        } else {
+          const errorValue = check.errorKey
+            .split('.')
+            .reduce((acc, key) => acc?.[key], check.response);
+          if (errorValue && errorValue.includes(check.errorMessage)) {
+            Notification.error(check.notificationMessage, {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () => window.open(check.enableLink, '_blank'),
                   displayType: 'link'
                 }
               ],
@@ -244,7 +246,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             });
           }
         }
-      );
+      });
     };
 
     await checkAllApisEnabled();
