@@ -162,6 +162,7 @@ class SearchController(APIHandler):
 
 
 class CheckApiController(APIHandler):
+    @tornado.web.authenticated
     async def post(self):
         try:
             project_id = await credentials._gcp_project()
