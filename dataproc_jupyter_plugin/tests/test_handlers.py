@@ -218,7 +218,12 @@ async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
     )
 
     # Call the handler
-    response = await jp_fetch("dataproc-plugin", "checkResourceManager")
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "checkResourceManager",
+        method="POST",
+        allow_nonstandard_methods=True,
+    )
 
     # Validate the response
     assert response.code == 200
@@ -247,7 +252,12 @@ async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
     )
 
     # Call the handler
-    response = await jp_fetch("dataproc-plugin", "checkResourceManager")
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "checkResourceManager",
+        method="POST",
+        allow_nonstandard_methods=True,
+    )
 
     # Validate the response
     assert response.code == 200
