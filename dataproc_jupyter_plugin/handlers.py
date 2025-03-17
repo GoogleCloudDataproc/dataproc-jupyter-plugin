@@ -203,7 +203,7 @@ class ResourceManagerHandler(APIHandler):
             )
             self.finish({"status": "OK"})
         except subprocess.CalledProcessError as er:
-            self.finish({"status": "ERROR"})
+            self.finish({"status": "ERROR", "error": str(er)})
 
 
 def setup_handlers(web_app):
