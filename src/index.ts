@@ -37,7 +37,7 @@ import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
-import { authApi, iconDisplay } from './utils/utils';
+import { authApi, iconDisplay, toastifyCustomStyle } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
@@ -67,6 +67,7 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
+import { toast } from 'react-toastify';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -163,10 +164,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       panelGcs: Panel | undefined,
       panelDatasetExplorer: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
+    await checkResourceManager();
 
     // Capture the signal
-    eventEmitter.on('dataprocConfigChange', (message: string) => {
+    eventEmitter.on('dataprocConfigChange', async (message: string) => {
       checkAllApisEnabled();
+      await checkResourceManager();
       if (bqFeature.enable_bigquery_integration) {
         loadBigQueryWidget('');
       }
@@ -361,6 +364,45 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     };
     onSidePanelEnabled();
+
+    async function checkResourceManager() {
+      try {
+        const notificationMessage =
+          'Cloud Resource Manager API is not enabled. Please enable the API and restart the instance to view Dataproc Serverless Notebooks.';
+        const credentials = await authApi();
+        const enableLink = `https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com?project=${credentials?.project_id}`;
+        const data = await requestAPI('checkResourceManager', {
+          method: 'POST'
+        });
+        const { status, error } = data as { status: string; error?: string };
+        if (status === 'ERROR') {
+          if (
+            error?.includes(
+              'API [cloudresourcemanager.googleapis.com] not enabled on project'
+            )
+          ) {
+            Notification.error(notificationMessage, {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () => window.open(enableLink, '_blank'),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          } else {
+            toast.error(
+              `'Error in running gcloud command': ${error}`,
+              toastifyCustomStyle
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Resource manager Api not enabled:', error);
+        return [];
+      }
+    }
 
     app.docRegistry.addWidgetExtension(
       'Notebook',

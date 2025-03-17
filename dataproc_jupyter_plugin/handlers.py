@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import json
 import re
 import subprocess
+import sys
+import tempfile
 
 
 import tornado
@@ -193,6 +196,34 @@ class LogHandler(APIHandler):
         self.finish({"status": "OK"})
 
 
+class ResourceManagerHandler(APIHandler):
+    @tornado.web.authenticated
+    async def post(self):
+        try:
+            project = await credentials._gcp_project()
+            subcmd = f'projects describe {project} --format="value(projectNumber)"'
+            with tempfile.TemporaryFile() as t:
+                with tempfile.TemporaryFile() as errt:
+                    p = await asyncio.create_subprocess_shell(
+                        f"gcloud {subcmd}",
+                        stdin=subprocess.DEVNULL,
+                        stderr=errt,
+                        stdout=t,
+                    )
+                    await p.wait()
+                    if p.returncode != 0:
+                        errt.seek(0)
+                        stderr_str = errt.read().decode("UTF-8").strip()
+                        raise subprocess.CalledProcessError(
+                            p.returncode, f"gcloud {subcmd}", None, stderr_str
+                        )
+                    t.seek(0)
+                    t.read().decode("UTF-8").strip()
+            self.finish({"status": "OK"})
+        except subprocess.CalledProcessError as er:
+            self.finish({"status": "ERROR", "error": er.stderr})
+
+
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
@@ -231,6 +262,7 @@ def setup_handlers(web_app):
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
         "bigQueryApiEnabled": bigquery.CheckApiController,
+        "checkResourceManager": ResourceManagerHandler,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

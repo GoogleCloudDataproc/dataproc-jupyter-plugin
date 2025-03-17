@@ -202,3 +202,91 @@ async def test_post_config_handler_gcloud_error(jp_fetch, monkeypatch):
     assert response.code == 200
     payload = json.loads(response.body)
     assert payload == {"config": "Project and region update failed"}
+
+
+async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
+    # Mock the project ID retrieval
+    mock_gcp_project = AsyncMock(return_value="my-project-123")
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
+    )
+
+    async def mock_create_subprocess_shell(*args, **kwargs):
+        class MockProcess:
+            def __init__(self):
+                self.returncode = 0
+
+            async def wait(self):
+                pass
+
+        return MockProcess()
+
+    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
+
+    # Call the handler
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "checkResourceManager",
+        method="POST",
+        allow_nonstandard_methods=True,
+    )
+
+    # Validate the response
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert payload["status"] == "OK"
+
+
+async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
+    # Mock the project ID retrieval
+    mock_gcp_project = AsyncMock(return_value="my-project-123")
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
+    )
+
+    # Mock the subprocess for gcloud command execution to simulate an error
+    async def mock_create_subprocess_shell(*args, **kwargs):
+        class MockProcess:
+            def __init__(self):
+                self.returncode = 1
+
+            async def wait(self):
+                pass
+
+        return MockProcess()
+
+    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
+
+    # Mock the error output from the subprocess
+    def mock_tempfile():
+        class MockTempFile:
+            def __enter__(self):
+                self.content = b"Simulated gcloud error"
+                return self
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                pass
+
+            def seek(self, pos):
+                pass
+
+            def read(self):
+                return self.content
+
+        return MockTempFile()
+
+    monkeypatch.setattr("tempfile.TemporaryFile", mock_tempfile)
+
+    # Call the handler
+    response = await jp_fetch(
+        "dataproc-plugin",
+        "checkResourceManager",
+        method="POST",
+        allow_nonstandard_methods=True,
+    )
+
+    # Validate the response
+    assert response.code == 200
+    payload = json.loads(response.body)
+    assert payload["status"] == "ERROR"
+    assert payload["error"] == "Simulated gcloud error"
