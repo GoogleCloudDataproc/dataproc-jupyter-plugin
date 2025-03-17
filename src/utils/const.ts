@@ -257,3 +257,5 @@ export const TIER_SELECT_OPTIONS = [
   { key: 'standard', value: 'standard', text: 'standard' },
   { key: 'premium', value: 'premium', text: 'premium' }
 ];
+export const CLOUD_COMPOSER_API =
+  'https://console.developers.google.com/apis/api/composer.googleapis.com';

@@ -46,6 +46,7 @@ import { Button } from '@mui/material';
 import { scheduleMode } from '../utils/const';
 import { scheduleValueExpression } from '../utils/const';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { extractUrl } from '../utils/utils';
 
 interface IDagList {
   jobid: string;
@@ -124,6 +125,9 @@ const CreateNotebookScheduler = ({
 
   const [isBigQueryNotebook, setIsBigQueryNotebook] = useState(false);
 
+  const [isApiError, setIsApiError] = useState(false);
+  const [apiError, setApiError] = useState('');
+
   const listClustersAPI = async () => {
     await SchedulerService.listClustersAPIService(
       setClusterList,
@@ -140,7 +144,11 @@ const CreateNotebookScheduler = ({
   };
 
   const listComposersAPI = async () => {
-    await SchedulerService.listComposersAPIService(setComposerList);
+    await SchedulerService.listComposersAPIService(
+      setComposerList,
+      setIsApiError,
+      setApiError
+    );
   };
 
   const handleComposerSelected = (data: string | null) => {
@@ -364,6 +372,26 @@ const CreateNotebookScheduler = ({
     }
   };
 
+  const extractLink = (message: string) => {
+    const url = extractUrl();
+    if (!url) return message;
+    const beforeLink = message.split('Click here ')[0] || '';
+    return (
+      <>
+        {beforeLink}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'blue', textDecoration: 'underline' }}
+        >
+          Click here
+        </a>{' '}
+        to enable it.
+      </>
+    );
+  };
+
   useEffect(() => {
     listComposersAPI();
 
@@ -517,6 +545,12 @@ const CreateNotebookScheduler = ({
                 disabled={editMode}
               />
             </div>
+            {isApiError && (
+              <div className="error-key-parent">
+                <iconError.react tag="div" className="logo-alignment-style" />
+                <div className="error-key-missing">{extractLink(apiError)}</div>
+              </div>
+            )}
             <div className="create-scheduler-label">Output formats</div>
             <div className="create-scheduler-form-element">
               <FormGroup row={true}>

@@ -28,7 +28,8 @@ import {
   toastifyCustomStyle,
   loggedFetch,
   authenticatedFetch,
-  jobTimeFormat
+  jobTimeFormat,
+  showToast
 } from '../utils/utils';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -285,7 +286,7 @@ export class RunTimeSerive {
             */
 
       const transformedSharedvpcSubNetworkList: string[] = responseResult.items
-        .map((data: { subnetwork: string }) => {
+        ?.map((data: { subnetwork: string }) => {
           // Extract region and subnet from the subnet URI.
           const matches =
             /\/compute\/v1\/projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
@@ -613,7 +614,7 @@ export class RunTimeSerive {
                   message: string;
                 };
               }) => {
-                let transformedRegionList = responseResult.items.map(
+                let transformedRegionList = responseResult.items?.map(
                   (data: Region) => {
                     return data.name;
                   }
@@ -622,7 +623,7 @@ export class RunTimeSerive {
                 const filteredServicesArray: never[] = []; // Create an array to store filtered services
 
                 // Use Promise.all to fetch services from all locations concurrently
-                const servicePromises = transformedRegionList.map(location => {
+                const servicePromises = transformedRegionList?.map(location => {
                   return this.listMetaStoreAPIService(
                     setIsLoadingService,
                     setServicesList,
@@ -710,25 +711,15 @@ export class RunTimeSerive {
                     if (transformedServiceList.length > 0) {
                       setSubNetworkSelected(transformedServiceList[0]);
                     } else {
-                      DataprocLoggingService.log(
-                        'There are no subnetworks with google private access enabled',
-                        LOG_LEVEL.ERROR
-                      );
-                      toast.error(
-                        `There are no subnetworks with google private access enabled`,
-                        toastifyCustomStyle
-                      );
+                      const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
+                      showToast(errorMessage, 'no-subnetworks-google-access');
+                      DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                     }
                   }
                 } else {
-                  DataprocLoggingService.log(
-                    'No subNetworks found',
-                    LOG_LEVEL.ERROR
-                  );
-                  toast.error(
-                    `No subNetworks found`,
-                    toastifyCustomStyle
-                  );
+                  const errorMessage = `No subNetworks found  for network ${subnetwork}`;
+                  showToast(errorMessage, 'no-subnetworks');
+                  DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                 }
                 setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {

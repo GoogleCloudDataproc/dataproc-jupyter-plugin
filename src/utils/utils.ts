@@ -24,6 +24,7 @@ import { requestAPI } from '../handler/handler';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
+  CLOUD_COMPOSER_API,
   DCU_HOURS,
   GB_MONTHS,
   HTTP_METHOD,
@@ -451,6 +452,17 @@ export const toastifyCustomStyle: ToastOptions<{}> = {
   theme: 'dark',
   position: toast.POSITION.BOTTOM_CENTER
 };
+
+export const showToast = (message: string, id?: string) => {
+  if (!id || !toast.isActive(id)) {
+    toast.error(message, { toastId: id, ...toastifyCustomStyle });
+  }
+};
+
+export const extractUrl = () => {
+  return CLOUD_COMPOSER_API;
+};
+
 export function assumeNeverHit(_: never): void {}
 export interface IBatchInfoResponse {
   uuid: string;
