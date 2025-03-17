@@ -19,7 +19,7 @@ import subprocess
 import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
-
+from google.cloud.jupyter_config.config import async_run_gcloud_subcommand
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import bigquery
 
@@ -162,11 +162,13 @@ class SearchController(APIHandler):
 
 
 class CheckApiController(APIHandler):
-    async def get(self):
+    async def post(self):
         try:
-            project_id = self.get_argument("project_id")
-            cmd = f"gcloud services list --enabled --project={project_id} | grep bigquery.googleapis.com"
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            project_id = await credentials._gcp_project()
+            await async_run_gcloud_subcommand(
+                f"services list --enabled --project={project_id} | grep bigquery.googleapis.com"
+            )
+            result = f"gcloud services list --enabled --project={project_id} | grep bigquery.googleapis.com"
             is_enabled = bool(result.stdout.strip())
             self.finish({"success": True, "is_enabled": is_enabled})
 

@@ -424,7 +424,8 @@ export class BigQueryService {
   static checkBigQueryDatasetsAPIService = async (projectId: string) => {
     try {
       const data: any = await requestAPI(
-        `bigQueryApiEnabled?project_id=${projectId}`
+        `bigQueryApiEnabled`,
+        { method: 'POST' }
       );
       return data;
     } catch (reason) {
