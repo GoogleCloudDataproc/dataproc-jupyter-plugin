@@ -421,17 +421,17 @@ export class BigQueryService {
     }
   };
 
-  static listBigQueryDatasetsAPIService = async (projectId: string) => {
-    const pageToken = '';
+  static checkBigQueryDatasetsAPIService = async () => {
     try {
-      const data: any = await requestAPI(
-        `bigQueryDataset?project_id=${projectId}&pageToken=${pageToken}`
-      );
+      const data: any = await requestAPI(`bigQueryApiEnabled`, {
+        method: 'POST'
+      });
       return data;
     } catch (reason) {
       return reason;
     }
   };
+
   static getBigQuerySearchCatalogAPIService = async () => {
     try {
       const data: any = await requestAPI(
