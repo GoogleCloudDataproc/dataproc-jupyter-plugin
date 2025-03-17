@@ -195,7 +195,7 @@ class LogHandler(APIHandler):
 
 class ResourceManagerHandler(APIHandler):
     @tornado.web.authenticated
-    async def get(self):
+    async def post(self):
         try:
             project = await credentials._gcp_project()
             await async_run_gcloud_subcommand(
