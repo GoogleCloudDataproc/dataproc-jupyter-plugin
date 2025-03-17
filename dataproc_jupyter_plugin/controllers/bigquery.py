@@ -165,12 +165,10 @@ class CheckApiController(APIHandler):
     async def post(self):
         try:
             project_id = await credentials._gcp_project()
-            await async_run_gcloud_subcommand(
-                f"services list --enabled --project={project_id} | grep bigquery.googleapis.com"
-            )
-            result = f"gcloud services list --enabled --project={project_id} | grep bigquery.googleapis.com"
-            is_enabled = bool(result.stdout.strip())
+            cmd = f"services list --enabled --project={project_id} | grep bigquery.googleapis.com"
+            result = await async_run_gcloud_subcommand(cmd)
+            is_enabled = bool(result.strip())
             self.finish({"success": True, "is_enabled": is_enabled})
 
         except Exception as e:
-            self.finish({"success": False, "error": str(e)})
+            self.finish({"success": False, "is_enabled": False, "error": str(e)})
