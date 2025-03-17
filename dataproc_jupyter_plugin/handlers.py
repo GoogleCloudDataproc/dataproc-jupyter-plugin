@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import json
 import re
 import subprocess
+import sys
+import tempfile
 
 
 import tornado
@@ -198,12 +201,27 @@ class ResourceManagerHandler(APIHandler):
     async def post(self):
         try:
             project = await credentials._gcp_project()
-            await async_run_gcloud_subcommand(
-                f'projects describe {project} --format="value(projectNumber)"'
-            )
+            subcmd = f'projects describe {project} --format="value(projectNumber)"'
+            with tempfile.TemporaryFile() as t:
+                with tempfile.TemporaryFile() as errt:
+                    p = await asyncio.create_subprocess_shell(
+                        f"gcloud {subcmd}",
+                        stdin=subprocess.DEVNULL,
+                        stderr=errt,
+                        stdout=t,
+                    )
+                    await p.wait()
+                    if p.returncode != 0:
+                        errt.seek(0)
+                        stderr_str = errt.read().decode("UTF-8").strip()
+                        raise subprocess.CalledProcessError(
+                            p.returncode, f"gcloud {subcmd}", None, stderr_str
+                        )
+                    t.seek(0)
+                    t.read().decode("UTF-8").strip()
             self.finish({"status": "OK"})
         except subprocess.CalledProcessError as er:
-            self.finish({"status": "ERROR", "error": str(er)})
+            self.finish({"status": "ERROR", "error": er.stderr})
 
 
 def setup_handlers(web_app):

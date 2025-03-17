@@ -389,7 +389,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             });
           } else {
             toast.error(
-              `'Error resourceManager API': ${error}`,
+              `'Error in running gcloud command': ${error}`,
               toastifyCustomStyle
             );
           }
