@@ -158,6 +158,7 @@ function CreateRunTime({
   const [region, setRegion] = useState('');
   const [containerImageSelected, setContainerImageSelected] = useState('');
   const [serviceAccountSelected, setServiceAccountSelected] = useState('');
+  const [userAccountSelected, setUserAccountSelected] = useState('');
   const [networkList, setNetworklist] = useState([{}]);
   const [subNetworkList, setSubNetworklist] = useState<string[]>([]);
   const [networkSelected, setNetworkSelected] = useState('');
@@ -184,6 +185,9 @@ function CreateRunTime({
   const [selectedNetworkRadio, setSelectedNetworkRadio] = useState<
     'sharedVpc' | 'projectNetwork'
   >('projectNetwork');
+  const [selectedAccountRadio, setSelectedAccountRadio] = useState<
+    'userAccount' | 'serviceAccount'
+  >('serviceAccount');
   const [projectInfo, setProjectInfo] = useState('');
   const [configError, setConfigError] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -507,6 +511,10 @@ function CreateRunTime({
           if (executionConfig.serviceAccount) {
             setServiceAccountSelected(executionConfig.serviceAccount);
           }
+          if (executionConfig.authenticationConfig) {
+            setSelectedAccountRadio('userAccount');
+            setServiceAccountSelected('');
+          }
           const sharedVpcMatches =
             /projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
               executionConfig.subnetworkUri
@@ -737,6 +745,16 @@ function CreateRunTime({
   const handleSubNetworkRadioChange = () => {
     setSelectedNetworkRadio('projectNetwork');
     setSharedvpcSelected('');
+  };
+  const handleServiceAccountRadioChange = (e: any) => {
+    setSelectedAccountRadio('serviceAccount');
+    setUserAccountSelected('');
+    setServiceAccountSelected(e.target.value);
+  };
+  const handleUserAccountRadioChange = (e: any) => {
+    setSelectedAccountRadio('userAccount');
+    setServiceAccountSelected('');
+    setUserAccountSelected(e.target.value);
   };
   const handleSubNetworkChange = (data: string | null) => {
     if (data !== null) {
@@ -1031,9 +1049,10 @@ function CreateRunTime({
         },
         environmentConfig: {
           executionConfig: {
-            ...(serviceAccountSelected !== '' && {
-              serviceAccount: serviceAccountSelected
-            }),
+            ...(serviceAccountSelected !== '' &&
+              selectedAccountRadio === 'serviceAccount' && {
+                serviceAccount: serviceAccountSelected
+              }),
             ...(networkTagSelected.length > 0 && {
               networkTags: networkTagSelected
             }),
@@ -1071,7 +1090,12 @@ function CreateRunTime({
             ...(autoSelected === 's' &&
               autoTimeSelected && {
                 ttl: autoTimeSelected + 's'
-              })
+              }),
+            ...(selectedAccountRadio === 'userAccount' && {
+              authentication_config: {
+                user_workload_authentication_type: 'END_USER_CREDENTIALS'
+              }
+            })
           },
           peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
@@ -1348,26 +1372,54 @@ function CreateRunTime({
               <div className="submit-job-label-header">
                 Execution Configuration
               </div>
-              <div className="select-text-overlay">
-                <Input
-                  className="create-batch-style "
-                  value={serviceAccountSelected}
-                  onChange={e => setServiceAccountSelected(e.target.value)}
-                  type="text"
-                  placeholder=""
-                  Label="Service account"
-                />
-              </div>
-              <div className="create-custom-messagelist">
-                If not provided, the default GCE service account will be used.
-                <div
-                  className="submit-job-learn-more"
-                  onClick={() => {
-                    window.open(`${SERVICE_ACCOUNT}`, '_blank');
-                  }}
-                >
-                  Learn more
+              <div className="runtime-message">Execute notebooks with:</div>
+              <div>
+                <div className="create-runtime-radio">
+                  <Radio
+                    className="select-runtime-radio-style"
+                    value={serviceAccountSelected}
+                    checked={selectedAccountRadio === 'serviceAccount'}
+                    onChange={e => handleServiceAccountRadioChange(e)}
+                  />
+                  <div className="create-batch-message-acc">
+                    Service Account
+                  </div>
+                  <Radio
+                    className="select-runtime-radio-style"
+                    value={userAccountSelected}
+                    checked={selectedAccountRadio === 'userAccount'}
+                    onChange={e => handleUserAccountRadioChange(e)}
+                  />
+                  <div className="create-batch-message">User Account</div>
                 </div>
+                {selectedAccountRadio === 'serviceAccount' && (
+                  <>
+                    <div className="create-custom-messagelist">
+                      If not provided, the default GCE service account will be
+                      used.
+                      <div
+                        className="submit-job-learn-more"
+                        onClick={() => {
+                          window.open(`${SERVICE_ACCOUNT}`, '_blank');
+                        }}
+                      >
+                        Learn more
+                      </div>
+                    </div>
+                    <div className="select-text-overlay-textbox">
+                      <Input
+                        className="create-batch-style"
+                        value={serviceAccountSelected}
+                        onChange={e =>
+                          setServiceAccountSelected(e.target.value)
+                        }
+                        type="text"
+                        placeholder=""
+                        Label="Service account"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
               <div className="submit-job-label-header">
                 Network Configuration
@@ -1399,7 +1451,7 @@ function CreateRunTime({
                     onChange={() => handleNetworkSharedVpcRadioChange()}
                   />
                   <div className="create-batch-message">
-                    Networks shared from host project: "{projectInfo}"
+                    Networks shared from host project:
                   </div>
                 </div>
                 <div className="create-runtime-sub-message-network">

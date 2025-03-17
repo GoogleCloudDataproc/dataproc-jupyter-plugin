@@ -182,3 +182,17 @@
 .spark-properties-select-style {
   width: 90%;
 }
+.select-text-overlay-textbox {
+  position: relative;
+  width: 512px;
+  margin-bottom: 15px;
+}
+
+.create-batch-message-acc {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  margin: auto 0;
+  color: var(--jp-ui-font-color0);
+  margin-right: 15px;
+}
