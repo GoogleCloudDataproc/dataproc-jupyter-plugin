@@ -372,28 +372,28 @@ const extension: JupyterFrontEndPlugin<void> = {
           method: 'POST'
         });
         const { status, error } = data as { status: string; error?: string };
-
-        if (
-          status === 'ERROR' &&
-          error?.includes(
-            'API [cloudresourcemanager.googleapis.com] not enabled on project'
-          )
-        ) {
-          Notification.error(error, {
-            actions: [
-              {
-                label: 'Enable',
-                callback: () => window.open(enableLink, '_blank'),
-                displayType: 'link'
-              }
-            ],
-            autoClose: false
-          });
-        } else {
-          toast.error(
-            `'Error resourceManager API': ${error}`,
-            toastifyCustomStyle
-          );
+        if (status === 'ERROR') {
+          if (
+            error?.includes(
+              'API [cloudresourcemanager.googleapis.com] not enabled on project'
+            )
+          ) {
+            Notification.error(error, {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () => window.open(enableLink, '_blank'),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          } else {
+            toast.error(
+              `'Error resourceManager API': ${error}`,
+              toastifyCustomStyle
+            );
+          }
         }
       } catch (error) {
         console.error('Resource manager Api not enabled:', error);
