@@ -37,7 +37,7 @@ import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
-import { authApi, iconDisplay } from './utils/utils';
+import { authApi, iconDisplay, toastifyCustomStyle } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
@@ -67,6 +67,8 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
+import { error } from 'console';
+import { toast } from 'react-toastify';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -365,14 +367,19 @@ const extension: JupyterFrontEndPlugin<void> = {
     async function checkResourceManager() {
       try {
         const credentials = await authApi();
-        const notificationMessage =
-          'Cloud Resource Manager API is not enabled. Please enable the API and restart the instance to view Dataproc Serverless Notebooks.';
         const enableLink = `https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com?project=${credentials?.project_id}`;
         const data = await requestAPI('checkResourceManager', {
           method: 'POST'
         });
-        if ((data as { status: string }).status === 'ERROR') {
-          Notification.error(notificationMessage, {
+        const { status, error } = data as { status: string; error?: string };
+
+        if (
+          status === 'ERROR' &&
+          error?.includes(
+            'API [cloudresourcemanager.googleapis.com] not enabled on project'
+          )
+        ) {
+          Notification.error(error, {
             actions: [
               {
                 label: 'Enable',
@@ -382,6 +389,11 @@ const extension: JupyterFrontEndPlugin<void> = {
             ],
             autoClose: false
           });
+        } else {
+          toast.error(
+            `'Error resourceManager API': ${error}`,
+            toastifyCustomStyle
+          );
         }
       } catch (error) {
         console.error('Resource manager Api not enabled:', error);
