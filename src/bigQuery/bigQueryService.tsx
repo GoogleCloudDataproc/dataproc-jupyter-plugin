@@ -421,12 +421,11 @@ export class BigQueryService {
     }
   };
 
-  static checkBigQueryDatasetsAPIService = async (projectId: string) => {
+  static checkBigQueryDatasetsAPIService = async () => {
     try {
-      const data: any = await requestAPI(
-        `bigQueryApiEnabled`,
-        { method: 'POST' }
-      );
+      const data: any = await requestAPI(`bigQueryApiEnabled`, {
+        method: 'POST'
+      });
       return data;
     } catch (reason) {
       return reason;

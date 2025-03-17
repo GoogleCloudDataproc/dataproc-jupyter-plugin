@@ -181,9 +181,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       const credentials = await authApi();
       if (credentials?.project_id) {
         bigqueryDatasetsResponse =
-          await BigQueryService.checkBigQueryDatasetsAPIService(
-            credentials.project_id
-          );
+          await BigQueryService.checkBigQueryDatasetsAPIService();
       }
 
       const dataCatalogResponse =
@@ -216,11 +214,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       ];
       apiChecks.forEach(check => {
         if (check.checkType === 'bigquery') {
-          if (
-            check.response &&
-            check.response.success &&
-            check.response.is_enabled === false
-          ) {
+          if (check.response && check.response.is_enabled === false) {
             Notification.error(check.notificationMessage, {
               actions: [
                 {
