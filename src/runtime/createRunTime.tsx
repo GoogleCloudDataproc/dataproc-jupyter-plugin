@@ -1091,12 +1091,11 @@ function CreateRunTime({
               autoTimeSelected && {
                 ttl: autoTimeSelected + 's'
               }),
-            ...(serviceAccountSelected !== '' &&
-              selectedAccountRadio === 'userAccount' && {
-                authentication_config: {
-                  user_workload_authentication_type: 'END_USER_CREDENTIALS'
-                }
-              })
+            ...(selectedAccountRadio === 'userAccount' && {
+              authentication_config: {
+                user_workload_authentication_type: 'END_USER_CREDENTIALS'
+              }
+            })
           },
           peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
