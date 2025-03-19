@@ -21,6 +21,15 @@ from kernels_mixer.websockets import DelegatingWebsocketConnection
 
 from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
 
+# In seconds
+MIN_GATEWAY_REQUEST_TIMEOUT = 600
+
+# In seconds
+MIN_GATEWAY_RETRY_INTERVAL = 20
+
+# In number of iterations
+MIN_GATEWAY_RETRY_MAX = 45
+
 
 def _jupyter_labextension_paths():
     return [{"src": "labextension", "dest": "dataproc_jupyter_plugin"}]
@@ -37,7 +46,8 @@ def _link_jupyter_server_extension(server_app):
             plugin_config.log_path, maxBytes=2 * 1024 * 1024, backupCount=5
         )
         file_handler.setFormatter(
-            logging.Formatter("[%(levelname)s %(asctime)s %(name)s] %(message)s")
+            logging.Formatter(
+                "[%(levelname)s %(asctime)s %(name)s] %(message)s")
         )
         server_app.log.addHandler(file_handler)
 
@@ -64,6 +74,21 @@ def _link_jupyter_server_extension(server_app):
     c.CommandTokenRenewer.token_command = (
         'gcloud config config-helper --format="value(credential.access_token)"'
     )
+
+    # The default gateway retry intervals and gateway retry max's were too short compared to
+    # Dataproc s8s instance start up time, so we want to extend them to be at least the values
+    # posted below.
+    if not c.GatewayClient.gateway_retry_interval or c.GatewayClient.gateway_retry_interval < MIN_GATEWAY_RETRY_INTERVAL:
+        c.GatewayClient.gateway_retry_interval = MIN_GATEWAY_RETRY_INTERVAL
+
+    if not c.GatewayClient.gateway_retry_max or c.GatewayClient.gateway_retry_max < MIN_GATEWAY_RETRY_MAX:
+        c.GatewayClient.gateway_retry_max = MIN_GATEWAY_RETRY_MAX
+
+    # The default gateway client request timeout is 42 seconds but the POST request to
+    # create a batch can take upwards to 600 seconds, so we want to increase the timeout
+    # so that the minimum is 600 seconds.
+    if not c.GatewayClient.gateway_request_timeout or c.GatewayClient.gateway_request_timeout < MIN_GATEWAY_REQUEST_TIMEOUT:
+        c.GatewayClient.gateway_request_timeout = MIN_GATEWAY_REQUEST_TIMEOUT
 
     # Version 2.8.0 of the `jupyter_server` package requires the `auth_token`
     # value to be set to a non-empty value or else it will never invoke the
