@@ -30,7 +30,7 @@ test.describe('Run a notebook multiple times', () => {
           await page.getByRole('region', { name: 'notebook content' }).click();
           await page
             .locator('.jp-LauncherCard:visible', {
-              hasText: 'session-template-spark-logs on Serverless Spark (Remote)'
+              hasText: 'Jupyter Plugin Kokoro Template on Serverless Spark (Remote)'
             })
             .click();
           const startTime = Date.now(); // Capture start time
