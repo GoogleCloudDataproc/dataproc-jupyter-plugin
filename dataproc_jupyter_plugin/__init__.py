@@ -39,6 +39,15 @@ def _jupyter_server_extension_points():
     return [{"module": "dataproc_jupyter_plugin"}]
 
 
+# Helper method to set a config flag value to be at least the min value.
+# Assumes the config flag takes an int
+def _set_config_with_min_value(config, min_value):
+    if not isinstance(config, int):
+        config = min_value
+    else:
+        config = max(config, min_value)
+
+
 def _link_jupyter_server_extension(server_app):
     plugin_config = DataprocPluginConfig.instance(parent=server_app)
     if plugin_config.log_path != "":
@@ -78,23 +87,17 @@ def _link_jupyter_server_extension(server_app):
     # The default gateway retry intervals and gateway retry max's were too short compared to
     # Dataproc s8s instance start up time, so we want to extend them to be at least the values
     # posted below.
-    c.GatewayClient.gateway_retry_interval = max(
-        c.GatewayClient.gateway_retry_interval or 0,
-        MIN_GATEWAY_RETRY_INTERVAL
-    )
 
-    c.GatewayClient.gateway_retry_max = max(
-        c.GatewayClient.gateway_retry_max or 0,
-        MIN_GATEWAY_RETRY_MAX
-    )
+    _set_config_with_min_value(
+        c.GatewayClient.gateway_retry_interval, MIN_GATEWAY_RETRY_INTERVAL)
+    _set_config_with_min_value(
+        c.GatewayClient.gateway_retry_max, MIN_GATEWAY_RETRY_MAX)
 
     # The default gateway client request timeout is 42 seconds but the POST request to
     # create a batch can take upwards to 600 seconds, so we want to increase the timeout
     # so that the minimum is 600 seconds.
-    c.GatewayClient.gateway_request_timeout = max(
-        c.GatewayClient.gateway_request_timeout or 0,
-        MIN_GATEWAY_REQUEST_TIMEOUT
-    )
+    _set_config_with_min_value(
+        c.GatewayClient.request_timeout, MIN_GATEWAY_REQUEST_TIMEOUT)
 
     # Version 2.8.0 of the `jupyter_server` package requires the `auth_token`
     # value to be set to a non-empty value or else it will never invoke the
