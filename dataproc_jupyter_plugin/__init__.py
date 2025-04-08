@@ -83,7 +83,7 @@ def _link_jupyter_server_extension(server_app):
     c.CommandTokenRenewer.token_command = (
         'gcloud config config-helper --format="value(credential.access_token)"'
     )
-    
+
     # The default gateway retry intervals and gateway retry max's were too short compared to
     # Dataproc s8s instance start up time, so we want to extend them to be at least the values
     # posted below.
@@ -98,7 +98,7 @@ def _link_jupyter_server_extension(server_app):
     # so that the minimum is 600 seconds.
     _set_config_with_min_value(
         c.GatewayClient.request_timeout, MIN_GATEWAY_REQUEST_TIMEOUT)
-    
+
     # Version 2.8.0 of the `jupyter_server` package requires the `auth_token`
     # value to be set to a non-empty value or else it will never invoke the
     # token renewer. To accommodate this, we set it to an invalid initial
