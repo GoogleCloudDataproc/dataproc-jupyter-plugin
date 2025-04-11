@@ -108,7 +108,6 @@ def _link_jupyter_server_extension(server_app):
     # details and discussion.
     c.GatewayClient.auth_token = "Initial, invalid value"
     
-    return c
 
 
 def _load_jupyter_server_extension(server_app):
