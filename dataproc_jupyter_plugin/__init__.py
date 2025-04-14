@@ -41,11 +41,11 @@ def _jupyter_server_extension_points():
 
 # Helper method to set a config flag value to be at least the min value.
 # Assumes the config flag takes an int
-def _set_config_with_min_value(config, min_value):
+def _get_config_value_to_assign(config, min_value):
     if not isinstance(config, int):
-        config = min_value
+        return min_value
     else:
-        config = max(config, min_value)
+        return max(config, min_value)
 
 
 def _link_jupyter_server_extension(server_app):
@@ -88,15 +88,15 @@ def _link_jupyter_server_extension(server_app):
     # Dataproc s8s instance start up time, so we want to extend them to be at least the values
     # posted below.
 
-    _set_config_with_min_value(
+    c.GatewayClient.gateway_retry_interval = _get_config_value_to_assign(
         c.GatewayClient.gateway_retry_interval, MIN_GATEWAY_RETRY_INTERVAL)
-    _set_config_with_min_value(
+    c.GatewayClient.gateway_retry_max = _get_config_value_to_assign(
         c.GatewayClient.gateway_retry_max, MIN_GATEWAY_RETRY_MAX)
 
     # The default gateway client request timeout is 42 seconds but the POST request to
     # create a batch can take upwards to 600 seconds, so we want to increase the timeout
     # so that the minimum is 600 seconds.
-    _set_config_with_min_value(
+    c.GatewayClient.request_timeout = _get_config_value_to_assign(
         c.GatewayClient.request_timeout, MIN_GATEWAY_REQUEST_TIMEOUT)
 
     # Version 2.8.0 of the `jupyter_server` package requires the `auth_token`
@@ -107,6 +107,7 @@ def _link_jupyter_server_extension(server_app):
     # See https://github.com/jupyter-server/jupyter_server/issues/1339 for more
     # details and discussion.
     c.GatewayClient.auth_token = "Initial, invalid value"
+    
 
 
 def _load_jupyter_server_extension(server_app):

@@ -43,6 +43,13 @@ async def test_get_modified_settings(jp_fetch, jp_serverapp):
     assert payload["log_path"] is ""
 
 
+async def test_get_default_config(jp_serverapp):
+    server_config = jp_serverapp.config
+    assert server_config.GatewayClient.gateway_retry_interval == 20
+    assert server_config.GatewayClient.gateway_retry_max == 45
+    assert server_config.GatewayClient.request_timeout == 600
+
+
 async def test_post_config_handler_success(jp_fetch, monkeypatch):
     mock_run_gcloud = AsyncMock()
     mock_clear_cache = Mock()
@@ -221,7 +228,8 @@ async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
 
         return MockProcess()
 
-    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
+    monkeypatch.setattr("asyncio.create_subprocess_shell",
+                        mock_create_subprocess_shell)
 
     # Call the handler
     response = await jp_fetch(
@@ -255,7 +263,8 @@ async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
 
         return MockProcess()
 
-    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
+    monkeypatch.setattr("asyncio.create_subprocess_shell",
+                        mock_create_subprocess_shell)
 
     # Mock the error output from the subprocess
     def mock_tempfile():
