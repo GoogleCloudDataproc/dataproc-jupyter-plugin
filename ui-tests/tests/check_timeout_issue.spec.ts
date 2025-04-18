@@ -19,10 +19,10 @@ import { test } from '@jupyterlab/galata';
 
 const numOfIterations = 20;
 
-test.describe('Run a notebook multiple times', () => {
+test.describe.parallel('Run a notebook multiple times', () => {
 
     for (let i = 1; i <= numOfIterations; i++) {
-        test.only(`Test-1 Iteration ${i}: Can run print() command`, async ({ page }) => {
+        test(`Iteration ${i}: Can run print() command`, async ({ page }) => {
           
           // Set timeout for each test iteration
           test.setTimeout(10 * 60 * 1000);
@@ -33,6 +33,7 @@ test.describe('Run a notebook multiple times', () => {
               hasText: 'Jupyter Plugin Kokoro Template on Serverless Spark (Remote)'
             })
             .click();
+            //Jupyter Plugin Kokoro Template on Serverless Spark (Remote)
           const startTime = Date.now(); // Capture start time
           const firstCodeBox = page.locator('//div[@role="textbox"]/div').first();
           
