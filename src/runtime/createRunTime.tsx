@@ -555,7 +555,10 @@ function CreateRunTime({
           }
           if (executionConfig.authenticationConfig) {
             setSelectedAccountRadio('userAccount');
-            setServiceAccountSelected('');
+            if (executionConfig.authenticationConfig.serviceAccount)
+              setServiceAccountSelected(
+                executionConfig.authenticationConfig.serviceAccount
+              );
           }
           const sharedVpcMatches =
             /projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
@@ -596,6 +599,20 @@ function CreateRunTime({
               ? executionConfig.networkTags
               : []
           );
+          if (executionConfig.kmsKey) {
+            setSelectedEncryptionRadio('customerManaged');
+            keyType = environmentConfig?.executionConfig?.kmsKey || '';
+            const keyringValues = keyType.split('/');
+            // splitting keyrings and key form projects/projectName/locations/regionName/keyRings/keyRing/cryptoKeys/key
+            if (keyringValues) {
+              keyRing = keyringValues[5] ? keyringValues[5] : '';
+              setKeyRingSelected(keyRing);
+              keys = keyringValues[7] ? keyringValues[7] : '';
+              setKeySelected(keys);
+            } else {
+              setManualKeySelected(executionConfig.kmsKey);
+            }
+          }
         }
 
         if (
@@ -1099,13 +1116,24 @@ function CreateRunTime({
         },
         environmentConfig: {
           executionConfig: {
-            ...(serviceAccountSelected !== '' &&
-              selectedAccountRadio === 'serviceAccount' && {
-                serviceAccount: serviceAccountSelected
-              }),
+            ...(serviceAccountSelected !==
+              '' && //  && selectedAccountRadio === 'serviceAccount' //as user account also need this for operation
+            {
+              serviceAccount: serviceAccountSelected
+            }),
             ...(networkTagSelected.length > 0 && {
               networkTags: networkTagSelected
             }),
+
+            ...(keySelected !== '' &&
+              selectedRadioValue === 'key' &&
+              keySelected !== undefined && {
+                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+              }),
+            ...(manualKeySelected !== '' &&
+              selectedRadioValue === 'manually' && {
+                kmsKey: manualKeySelected
+              }),
 
             ...(subNetworkSelected &&
               selectedNetworkRadio === 'projectNetwork' && {
@@ -1330,6 +1358,7 @@ function CreateRunTime({
           </div>
           <div className="runtime-container">
             <form>
+              <div className="submit-job-label-header">Template Info</div>
               <div className="select-text-overlay">
                 <Input
                   className="create-runtime-style "
@@ -1386,6 +1415,84 @@ function CreateRunTime({
               )}
               <div className="submit-job-label-header">
                 Execution Configuration
+              </div>
+
+              <div>
+                <div className="runtime-message">Execute notebooks with: </div>
+                <div className="create-runtime-radio">
+                  <Radio
+                    className="select-runtime-radio-style"
+                    value={serviceAccountSelected}
+                    checked={selectedAccountRadio === 'serviceAccount'}
+                    onChange={e => handleServiceAccountRadioChange(e)}
+                  />
+                  <div className="create-batch-message-acc">
+                    Service Account
+                  </div>
+                  <Radio
+                    className="select-runtime-radio-style"
+                    value={userAccountSelected}
+                    checked={selectedAccountRadio === 'userAccount'}
+                    onChange={e => handleUserAccountRadioChange(e)}
+                  />
+                  <div className="create-batch-message">User Account</div>
+                </div>
+                {selectedAccountRadio === 'serviceAccount' && (
+                  <>
+                    <div className="select-text-overlay-textbox">
+                      <Input
+                        className="create-batch-style"
+                        value={serviceAccountSelected}
+                        onChange={e =>
+                          setServiceAccountSelected(e.target.value)
+                        }
+                        type="text"
+                        placeholder=""
+                        Label="Service account"
+                      />
+                    </div>
+                    <div className="create-custom-messagelist">
+                      If not provided, the default GCE service account will be
+                      used.
+                      <div
+                        className="submit-job-learn-more"
+                        onClick={() => {
+                          window.open(`${SERVICE_ACCOUNT}`, '_blank');
+                        }}
+                      >
+                        Learn more
+                      </div>
+                    </div>
+                  </>
+                )}
+                {selectedAccountRadio === 'userAccount' && (
+                  <>
+                    <div className="select-text-overlay-textbox">
+                      <Input
+                        className="create-batch-style"
+                        value={serviceAccountSelected}
+                        onChange={e =>
+                          setServiceAccountSelected(e.target.value)
+                        }
+                        type="text"
+                        placeholder=""
+                        Label="Service account for system operations"
+                      />
+                    </div>
+                    <div className="create-custom-messagelist">
+                      If not provided, the default GCE service account will be
+                      used.
+                      <div
+                        className="submit-job-learn-more"
+                        onClick={() => {
+                          window.open(`${SERVICE_ACCOUNT}`, '_blank');
+                        }}
+                      >
+                        Learn more
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="select-text-overlay">
                 <Input
@@ -1447,55 +1554,6 @@ function CreateRunTime({
                   Learn more
                 </div>
               </div>
-              <div>
-                <div className="create-runtime-radio">
-                <div className="runtime-message">Execute notebooks with:  </div>
-                  <Radio
-                    className="select-runtime-radio-style"
-                    value={serviceAccountSelected}
-                    checked={selectedAccountRadio === 'serviceAccount'}
-                    onChange={e => handleServiceAccountRadioChange(e)}
-                  />
-                  <div className="create-batch-message-acc">
-                    Service Account
-                  </div>
-                  <Radio
-                    className="select-runtime-radio-style"
-                    value={userAccountSelected}
-                    checked={selectedAccountRadio === 'userAccount'}
-                    onChange={e => handleUserAccountRadioChange(e)}
-                  />
-                  <div className="create-batch-message">User Account</div>
-                </div>
-                {selectedAccountRadio === 'serviceAccount' && (
-                  <>
-                    <div className="create-custom-messagelist">
-                      If not provided, the default GCE service account will be
-                      used.
-                      <div
-                        className="submit-job-learn-more"
-                        onClick={() => {
-                          window.open(`${SERVICE_ACCOUNT}`, '_blank');
-                        }}
-                      >
-                        Learn more
-                      </div>
-                    </div>
-                    <div className="select-text-overlay-textbox">
-                      <Input
-                        className="create-batch-style"
-                        value={serviceAccountSelected}
-                        onChange={e =>
-                          setServiceAccountSelected(e.target.value)
-                        }
-                        type="text"
-                        placeholder=""
-                        Label="Service account"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
               <div className="select-text-overlay">
                 <Input
                   className="create-runtime-style "
@@ -1512,7 +1570,7 @@ function CreateRunTime({
               </div>
               <div>
                 <div>
-                <div className="submit-job-label-header">Encryption</div>
+                  <div className="submit-job-label-header">Encryption</div>
                   <div className="create-batch-radio">
                     <Radio
                       size="small"
