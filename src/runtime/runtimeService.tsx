@@ -72,6 +72,30 @@ interface Network {
 interface Region {
   name: string;
 }
+
+type IKeyRings = {
+  keyRings: Array<{
+    name: string;
+  }>;
+  error: {
+    message: string;
+    code: number;
+  };
+};
+
+interface IKey {
+  primary: {
+    state: string;
+  };
+  name: string;
+}
+interface IKeyListResponse {
+  cryptoKeys: IKey[];
+  error: {
+    message: string;
+    code: number;
+  };
+}
 export class RunTimeSerive {
   static deleteRuntimeTemplateAPI = async (
     selectedRuntimeTemplate: string,
@@ -798,6 +822,110 @@ export class RunTimeSerive {
             `Failed to update the template : ${err}`,
             toastifyCustomStyle
           );
+        });
+    }
+  };
+
+  static listKeyRingsAPIService = async (
+    setKeyRinglist: (value: string[]) => void
+  ) => {
+    const credentials = await authApi();
+    const { CLOUD_KMS } = await gcpServiceUrls;
+    if (credentials) {
+      loggedFetch(
+        `${CLOUD_KMS}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: IKeyRings) => {
+              let transformedKeyList = [];
+              /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
+      */
+
+              transformedKeyList = responseResult.keyRings.map(
+                (data: { name: string }) => {
+                  return data.name.split('/')[5];
+                }
+              );
+              setKeyRinglist(transformedKeyList);
+              if (responseResult?.error?.code) {
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
+              }
+            })
+
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+          toast.error(`Error listing Networks : ${err}`, toastifyCustomStyle);
+        });
+    }
+  };
+
+  static listKeysAPIService = async (
+    keyRing: string,
+    setKeylist: (value: string[]) => void,
+    setKeySelected: (value: string) => void
+  ) => {
+    const credentials = await authApi();
+    const { CLOUD_KMS } = await gcpServiceUrls;
+    if (credentials) {
+      loggedFetch(
+        `${CLOUD_KMS}/projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRing}/cryptoKeys`,
+        {
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
+          }
+        }
+      )
+        .then((response: Response) => {
+          response
+            .json()
+            .then((responseResult: IKeyListResponse) => {
+              let transformedKeyList = [];
+              /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
+      */
+
+              transformedKeyList = responseResult.cryptoKeys
+                .filter(
+                  (data: IKey) =>
+                    data.primary && data.primary.state === 'ENABLED'
+                )
+                .map((data: { name: string }) => data.name.split('/')[7]);
+              setKeylist(transformedKeyList);
+              setKeySelected(transformedKeyList[0]);
+              if (responseResult?.error?.code) {
+                toast.error(
+                  responseResult?.error?.message,
+                  toastifyCustomStyle
+                );
+              }
+            })
+
+            .catch((e: Error) => {
+              console.log(e);
+            });
+        })
+        .catch((err: Error) => {
+          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+          toast.error(`Error listing Networks : ${err}`), toastifyCustomStyle;
         });
     }
   };
