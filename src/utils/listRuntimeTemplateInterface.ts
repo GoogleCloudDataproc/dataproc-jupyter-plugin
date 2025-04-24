@@ -13,7 +13,7 @@ export interface ISessionTemplate {
   jupyterSession: IJupyterSession;
   creator: string;
   labels: ILabels;
-  environmentConfig: IEnvironmentConfig;
+  environmentConfig?: IEnvironmentConfig;
   description: string;
   updateTime: string;
 }
@@ -28,17 +28,20 @@ export interface ILabels {
 }
 
 export interface IEnvironmentConfig {
-  executionConfig: IExecutionConfig;
+  executionConfig?: IExecutionConfig;
 }
-
 export interface IExecutionConfig {
   subnetworkUri: string;
+  authenticationConfig?: {
+    userWorkloadAuthenticationType: string;
+  };
 }
 
 export interface ISessionTemplateDisplay {
   name: string;
   owner: string;
   description: string;
+  authentication: string;
   lastModified: string;
   id: string;
 }

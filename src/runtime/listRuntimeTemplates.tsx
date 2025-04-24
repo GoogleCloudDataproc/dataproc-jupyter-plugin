@@ -124,6 +124,10 @@ function ListRuntimeTemplates({
         accessor: 'description'
       },
       {
+        Header: 'Authentication',
+        accessor: 'authentication'
+      },
+      {
         Header: 'Last Modified',
         accessor: 'lastModified'
       },
@@ -343,7 +347,7 @@ function ListRuntimeTemplates({
           {isLoading && (
             <div className="spin-loader-runtime">
               <CircularProgress
-                className = "spin-loader-custom-style"
+                className="spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"
