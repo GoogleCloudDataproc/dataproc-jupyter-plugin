@@ -176,9 +176,6 @@ export class RunTimeSerive {
             if (data.jupyterSession && data.jupyterSession.displayName) {
               displayName = data.jupyterSession.displayName;
             }
-
-            console.log('@@@@@@@@@@@@', data);
-
             let authentication = '';
 
             const authType =
