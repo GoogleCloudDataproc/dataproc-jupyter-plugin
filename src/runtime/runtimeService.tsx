@@ -177,6 +177,19 @@ export class RunTimeSerive {
               displayName = data.jupyterSession.displayName;
             }
 
+            console.log('@@@@@@@@@@@@', data);
+
+            let authentication = '';
+
+            const authType =
+              data.environmentConfig?.executionConfig?.authenticationConfig
+                ?.userWorkloadAuthenticationType;
+
+            if (authType === 'END_USER_CREDENTIALS') {
+              authentication = 'User Account';
+            } else {
+              authentication = 'Service Account';
+            }
             // Extracting runtimeId from name
             // Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
 
@@ -184,6 +197,7 @@ export class RunTimeSerive {
               name: displayName,
               owner: data.creator,
               description: data.description,
+              authentication: authentication,
               lastModified: startTimeDisplay,
               actions: renderActions(data),
               id: data.name.split('/')[5]
