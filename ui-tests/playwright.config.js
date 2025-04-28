@@ -29,6 +29,7 @@ module.exports = {
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI
   },
+  workers: 3, // Limit execution to 3 workers
   use: {
     viewport: {
       width: 1280,
