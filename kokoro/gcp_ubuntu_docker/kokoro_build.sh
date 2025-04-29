@@ -48,7 +48,7 @@ jupyter server extension enable dataproc_jupyter_plugin
 cd ./ui-tests
 jlpm install
 jlpm playwright install
-PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-latest/sponge_log.xml jlpm playwright test --reporter=junit --output="test-results-latest"
+PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-latest/sponge_log.xml TEST_TAG=Sanity jlpm playwright test --reporter=junit --output="test-results-latest"
 deactivate
 
 # Test 3.6.6
