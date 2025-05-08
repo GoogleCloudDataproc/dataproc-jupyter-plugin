@@ -53,6 +53,7 @@ import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { BatchService } from './batchService';
+import { Select } from '../controls/MuiWrappedSelect';
 import { MuiChipsInput } from 'mui-chips-input';
 
 const iconLeftArrow = new LabIcon({
@@ -286,6 +287,29 @@ function CreateBatch({
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
   const [projectInfo, setProjectInfo] = useState('');
+  const runtimeOptions = [
+    {
+      value: '2.2',
+      text: '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)'
+    },
+    {
+      value: '2.1',
+      text: '2.1 (Spark 3.4, Java 17, Scala 2.13)'
+    },
+    {
+      value: '2.0',
+      text: '2.0 (Spark 3.3, Java 17, Scala 2.13)'
+    },
+    {
+      value: '1.2',
+      text: '1.2 LTS (Spark 3.5, Java 17, Scala 2.12)'
+    },
+    {
+      value: '1.1',
+      text: '1.1 LTS (Spark 3.3, Java 11, Scala 2.12)'
+    }
+  ];
+
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -1001,6 +1025,14 @@ function CreateBatch({
 
     setManualKeySelected(inputValue);
   };
+
+  const handleVersionChange = (
+    event: React.SyntheticEvent<HTMLElement, Event>,
+    data: DropdownProps
+  ) => {
+    setVersionSelected(data.value as string);
+  };
+
   return (
     <div>
       <div className="cluster-details-header">
@@ -1055,12 +1087,16 @@ function CreateBatch({
             />
           </div>
           <div className="select-text-overlay">
-            <Input
-              className="create-batch-style "
+            <Select
+              className="create-runtime-style"
               value={versionSelected}
-              onChange={e => setVersionSelected(e.target.value)}
-              type="text"
-              Label="Runtime version*"
+              onChange={handleVersionChange}
+              options={runtimeOptions.map(option => ({
+                key: option.value,
+                value: option.value,
+                text: option.text
+              }))}
+              label="Runtime version*"
             />
           </div>
           {batchTypeSelected === 'Spark' && (
