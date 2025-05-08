@@ -53,7 +53,6 @@ import { DropdownProps } from 'semantic-ui-react';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { BatchService } from './batchService';
-import { Select } from '../controls/MuiWrappedSelect';
 import { MuiChipsInput } from 'mui-chips-input';
 
 const iconLeftArrow = new LabIcon({
@@ -1025,14 +1024,6 @@ function CreateBatch({
 
     setManualKeySelected(inputValue);
   };
-
-  const handleVersionChange = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setVersionSelected(data.value as string);
-  };
-
   return (
     <div>
       <div className="cluster-details-header">
@@ -1087,16 +1078,21 @@ function CreateBatch({
             />
           </div>
           <div className="select-text-overlay">
-            <Select
+            <Autocomplete
               className="create-runtime-style"
-              value={versionSelected}
-              onChange={handleVersionChange}
-              options={runtimeOptions.map(option => ({
-                key: option.value,
-                value: option.value,
-                text: option.text
-              }))}
-              label="Runtime version*"
+              value={
+                runtimeOptions.find(
+                  option => option.value === versionSelected
+                ) || null
+              }
+              onChange={(event, newValue) => {
+                setVersionSelected(newValue?.value || '');
+              }}
+              options={runtimeOptions}
+              getOptionLabel={option => option.text}
+              renderInput={params => (
+                <TextField {...params} label="Runtime version*" />
+              )}
             />
           </div>
           {batchTypeSelected === 'Spark' && (

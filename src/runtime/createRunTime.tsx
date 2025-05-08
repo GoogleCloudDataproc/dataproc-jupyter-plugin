@@ -1331,14 +1331,6 @@ function CreateRunTime({
       setKeySelected(data!.toString());
     }
   };
-
-  const handleVersionChange = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
-    data: DropdownProps
-  ) => {
-    setVersionSelected(data.value as string);
-  };
-
   return (
     <div>
       {configLoading && !loggedIn && !configError && !loginError && (
@@ -1505,16 +1497,21 @@ function CreateRunTime({
                 )}
               </div>
               <div className="select-text-overlay">
-                <Select
+                <Autocomplete
                   className="create-runtime-style"
-                  label="Runtime version*"
-                  value={versionSelected}
-                  onChange={handleVersionChange}
-                  options={runtimeOptions.map(option => ({
-                    key: option.value,
-                    value: option.value,
-                    text: option.text
-                  }))}
+                  value={
+                    runtimeOptions.find(
+                      option => option.value === versionSelected
+                    ) || null
+                  }
+                  onChange={(event, newValue) => {
+                    setVersionSelected(newValue?.value || '');
+                  }}
+                  options={runtimeOptions}
+                  getOptionLabel={option => option.text}
+                  renderInput={params => (
+                    <TextField {...params} label="Runtime version*" />
+                  )}
                 />
               </div>
               <div className="select-text-overlay">
