@@ -223,13 +223,15 @@ function ConfigSelection({
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);
-
-      if (credentials && credentials.project_id && credentials.region_id) {
-        setProjectId(credentials.project_id);
-        setRegion(credentials.region_id);
+      if (
+        credentials &&
+        credentials.project_id &&
+        Object.keys(credentials.project_id).length > 0 &&
+        credentials.region_id !== ''
+      ) {
+        setProjectId(credentials?.project_id ?? '');
+        setRegion(credentials?.region_id ?? '');
         setConfigError(false);
-      } else {
-        setConfigError(true);
       }
     });
   }, []);
@@ -270,7 +272,7 @@ function ConfigSelection({
             <div className="config-form">
               <div className="project-overlay">
                 <DynamicDropdown
-                  value={projectId}
+                  value={projectId ?? ''}
                   onChange={(_, projectId) => setProjectId(projectId ?? '')}
                   fetchFunc={projectListAPI}
                   label="Project ID*"
@@ -378,29 +380,35 @@ function ConfigSelection({
             </div>
           </div>
           <div>
-            <div className="dataproc-settings-header">Dataproc Settings </div>
-            <div className="runtime-title-section">
-              <div className="runtime-title-part">
-                Serverless Runtime Templates
-              </div>
-              <div
-                className="expand-icon"
-                onClick={() => handleRuntimeExpand()}
-              >
-                {expandRuntimeTemplate ? (
-                  <iconExpandLess.react
-                    tag="div"
-                    className="logo-alignment-style"
-                  />
-                ) : (
-                  <iconExpandMore.react
-                    tag="div"
-                    className="logo-alignment-style"
-                  />
-                )}
-              </div>
-            </div>
-            {expandRuntimeTemplate && (
+            {!configError && (
+              <>
+                <div className="dataproc-settings-header">
+                  Dataproc Settings{' '}
+                </div>
+                <div className="runtime-title-section">
+                  <div className="runtime-title-part">
+                    Serverless Runtime Templates
+                  </div>
+                  <div
+                    className="expand-icon"
+                    onClick={() => handleRuntimeExpand()}
+                  >
+                    {expandRuntimeTemplate ? (
+                      <iconExpandLess.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                    ) : (
+                      <iconExpandMore.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+            {expandRuntimeTemplate && !configError && (
               <ListRuntimeTemplates
                 openCreateTemplate={openCreateTemplate}
                 setOpenCreateTemplate={setOpenCreateTemplate}
@@ -408,6 +416,7 @@ function ConfigSelection({
               />
             )}
           </div>
+          )
         </div>
       )}
     </div>

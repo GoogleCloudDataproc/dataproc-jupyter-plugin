@@ -35,7 +35,6 @@ const IconsigninGoogle = new LabIcon({
   svgstr: signinGoogleIcon
 });
 
-
 const AuthLoginComponent = ({
   app,
   launcher,
@@ -53,11 +52,11 @@ const AuthLoginComponent = ({
   const [loginError, setLoginError] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
 
-   const login = async () => {
+  const login = async () => {
     setIsloginDisabled(true);
     const data = await requestAPI('login', {
       method: 'POST'
-    });;
+    });
     if (typeof data === 'object' && data !== null) {
       const loginStatus = (data as { login: string }).login;
       if (loginStatus === STATUS_SUCCESS) {
@@ -65,7 +64,8 @@ const AuthLoginComponent = ({
         setLoginError(false);
       } else {
         setLoginState(false);
-        setLoginError(true);}
+        setLoginError(true);
+      }
     }
   };
 
@@ -82,7 +82,7 @@ const AuthLoginComponent = ({
       {configLoading && !loginState && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -125,11 +125,6 @@ const AuthLoginComponent = ({
             </div>
           </div>
         </>
-      )}
-      {configError && (
-        <div className="login-error">
-          Please configure gcloud with account, project-id and region
-        </div>
       )}
     </div>
   );

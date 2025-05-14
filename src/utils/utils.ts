@@ -300,6 +300,7 @@ export const login = async (
     const loginStatus = (data as { login: string }).login;
     if (loginStatus === STATUS_SUCCESS) {
       setLoginError(false);
+      window.location.reload();
     } else {
       setLoginError(true);
     }
