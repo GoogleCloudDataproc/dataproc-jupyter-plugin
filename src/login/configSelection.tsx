@@ -66,6 +66,7 @@ interface IConfigSelectionProps {
   app?: JupyterLab;
   launcher?: ILauncher;
   settingRegistry?: ISettingRegistry;
+  fromPage?: string;
 }
 
 function ConfigSelection({
@@ -73,7 +74,8 @@ function ConfigSelection({
   setConfigError,
   app,
   launcher,
-  settingRegistry
+  settingRegistry,
+  fromPage
 }: IConfigSelectionProps) {
   const IconGoogleCloud = new LabIcon({
     name: 'launcher:google_cloud_icon',
@@ -123,6 +125,9 @@ function ConfigSelection({
               'dataprocConfigChange',
               `${configStatus} - Configuration updated successfully.`
             );
+            if (fromPage === 'loginError') {
+              window.location.reload();
+            }
           }
         }
       }
@@ -416,7 +421,6 @@ function ConfigSelection({
               />
             )}
           </div>
-          )
         </div>
       )}
     </div>

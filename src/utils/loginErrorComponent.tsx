@@ -1,7 +1,25 @@
-import React from 'react';
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import React, { useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import signinGoogleIcon from '../../style/icons/signin_google_icon.svg';
 import { login } from './utils';
+import ConfigSelection from '../login/configSelection';
 
 // Create the Google Sign-in Icon
 const IconsigninGoogle = new LabIcon({
@@ -13,18 +31,43 @@ interface LoginErrorProps {
   loginError?: boolean;
   configError?: boolean;
   setLoginError: React.Dispatch<React.SetStateAction<boolean>>;
+  setConfigError: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const LoginErrorComponent: React.FC<LoginErrorProps> = ({ 
-  loginError = false, 
-  configError = false, 
-  setLoginError 
+const LoginErrorComponent: React.FC<LoginErrorProps> = ({
+  loginError = false,
+  configError = false,
+  setLoginError,
+  setConfigError
 }) => {
+  const [showConfigSelection, setShowConfigSelection] = useState(false);
+
+  const handleConfigButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowConfigSelection(true);
+  };
+
   if (configError) {
+    if (showConfigSelection) {
+      return (
+        <ConfigSelection
+          configError={configError}
+          setConfigError={setConfigError}
+          fromPage="loginError"
+        />
+      );
+    }
+
     return (
-      <div className="login-error">
-        Please configure gcloud with account, project-id and region
-      </div>
+      <>
+        <div className="login-error">
+          Please configure gcloud with account, project-id and region
+        </div>
+        <button className="config-button" onClick={handleConfigButtonClick}>
+          Configure Settings
+        </button>
+      </>
     );
   }
 
@@ -35,7 +78,7 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
         <div style={{ alignItems: 'center' }}>
           <div
             role="button"
-            className='signin-google-icon'
+            className="signin-google-icon"
             onClick={() => login(setLoginError)}
           >
             <IconsigninGoogle.react

@@ -25,8 +25,6 @@ import { DataprocWidget } from '../controls/DataprocWidget';
 import { CircularProgress } from '@mui/material';
 import LoginErrorComponent from '../utils/loginErrorComponent';
 
-
-
 const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
 
@@ -66,7 +64,7 @@ const ClusterComponent = (): React.JSX.Element => {
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -135,10 +133,12 @@ const ClusterComponent = (): React.JSX.Element => {
       ) : (
         (loginError || configError) && (
           <div className="login-error">
-            <LoginErrorComponent 
-            setLoginError={setLoginError}
-            loginError={loginError}
-             configError={configError} />
+            <LoginErrorComponent
+              setLoginError={setLoginError}
+              loginError={loginError}
+              configError={configError}
+              setConfigError={setConfigError}
+            />
           </div>
         )
       )}

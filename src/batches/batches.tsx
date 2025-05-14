@@ -54,10 +54,10 @@ const BatchesComponent = (): React.JSX.Element => {
 
   return (
     <div className="component-level">
-{configLoading && !loggedIn && !configError && !loginError && (
+      {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -67,10 +67,11 @@ const BatchesComponent = (): React.JSX.Element => {
       )}
       {(loginError || configError) && (
         <div className="login-error">
-          <LoginErrorComponent 
+          <LoginErrorComponent
             setLoginError={setLoginError}
             loginError={loginError}
-            configError={configError} 
+            configError={configError}
+            setConfigError={setConfigError}
           />
         </div>
       )}

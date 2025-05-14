@@ -50,6 +50,7 @@ const NotebookTemplatesComponent = ({
             setLoginError={setLoginError}
             loginError={loginError}
             configError={configError}
+            setConfigError={setConfigError}
           />
         </div>
       )}
