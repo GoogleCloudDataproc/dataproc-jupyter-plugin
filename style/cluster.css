@@ -303,7 +303,7 @@
 .login-error {
   align-items: center;
   justify-content: center;
-  display: flex;
+  display: grid;
   font-size: 20px;
   font-weight: 600;
   padding: 50px;

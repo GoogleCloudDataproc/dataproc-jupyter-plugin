@@ -63,9 +63,9 @@ const iconExpandMore = new LabIcon({
 interface IConfigSelectionProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
-  app: JupyterLab;
-  launcher: ILauncher;
-  settingRegistry: ISettingRegistry;
+  app?: JupyterLab;
+  launcher?: ILauncher;
+  settingRegistry?: ISettingRegistry;
 }
 
 function ConfigSelection({
@@ -111,8 +111,8 @@ function ConfigSelection({
             toast.error(configStatus, toastifyCustomStyle);
           } else {
             if (bigQueryFeatureEnable) {
-              const settings = await settingRegistry.load(PLUGIN_ID);
-              settings.set('bqRegion', bigQueryRegion);
+              const settings = await settingRegistry?.load(PLUGIN_ID);
+              settings?.set('bqRegion', bigQueryRegion);
             }
             toast.success(
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
@@ -201,8 +201,8 @@ function ConfigSelection({
   };
 
   const handleSettingsRegistry = async () => {
-    const settings = await settingRegistry.load(PLUGIN_ID);
-    setBigQueryRegion(settings.get('bqRegion')['composite']);
+    const settings = await settingRegistry?.load(PLUGIN_ID);
+    setBigQueryRegion(settings?.get('bqRegion')['composite']);
   };
 
   const handleBigQueryFeature = async () => {
@@ -249,8 +249,8 @@ function ConfigSelection({
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
-          launcher={launcher}
-          app={app}
+          launcher={launcher!}
+          app={app!}
           fromPage="config"
         />
       ) : (

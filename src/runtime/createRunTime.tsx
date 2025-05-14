@@ -27,7 +27,6 @@ import {
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
-  LOGIN_ERROR_MESSAGE,
   LOGIN_STATE,
   SHARED_VPC,
   SERVICE_ACCOUNT,
@@ -77,6 +76,7 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -218,8 +218,7 @@ function CreateRunTime({
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
+    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
     }
@@ -1116,9 +1115,7 @@ function CreateRunTime({
         },
         environmentConfig: {
           executionConfig: {
-            ...(serviceAccountSelected !==
-              '' && //  && selectedAccountRadio === 'serviceAccount' //as user account also need this for operation
-            {
+            ...(serviceAccountSelected !== '' && { //  && selectedAccountRadio === 'serviceAccount' //as user account also need this for operation
               serviceAccount: serviceAccountSelected
             }),
             ...(networkTagSelected.length > 0 && {
@@ -2202,17 +2199,15 @@ function CreateRunTime({
           </div>
         </>
       ) : (
-        loginError && (
-          <div role="alert" className="login-error">
-            {LOGIN_ERROR_MESSAGE}
+        (loginError || configError) && (
+          <div className="login-error">
+            <LoginErrorComponent
+              setLoginError={setLoginError}
+              loginError={loginError}
+              configError={configError}
+            />
           </div>
         )
-      )}
-
-      {configError && (
-        <div role="alert" className="login-error">
-          Please configure gcloud with account, project-id and region
-        </div>
       )}
     </div>
   );

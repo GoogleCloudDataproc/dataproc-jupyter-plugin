@@ -19,9 +19,10 @@ import React, { useEffect, useState } from 'react';
 import ListBatches from './listBatches';
 import ListSessions from '../sessions/listSessions';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
+import { LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import { CircularProgress } from '@mui/material';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const BatchesComponent = (): React.JSX.Element => {
   const [selectedMode, setSelectedMode] = useState('Batches');
@@ -45,8 +46,7 @@ const BatchesComponent = (): React.JSX.Element => {
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
+    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
     }
@@ -54,7 +54,7 @@ const BatchesComponent = (): React.JSX.Element => {
 
   return (
     <div className="component-level">
-      {configLoading && !loggedIn && !configError && !loginError && (
+{configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
             className = "spin-loader-custom-style"
@@ -65,14 +65,13 @@ const BatchesComponent = (): React.JSX.Element => {
           Loading Batches
         </div>
       )}
-      {loginError && (
-        <div role="alert" className="login-error">
-          {LOGIN_ERROR_MESSAGE}
-        </div>
-      )}
-      {configError && (
-        <div role="alert" className="login-error">
-          Please configure gcloud with account, project-id and region
+      {(loginError || configError) && (
+        <div className="login-error">
+          <LoginErrorComponent 
+            setLoginError={setLoginError}
+            loginError={loginError}
+            configError={configError} 
+          />
         </div>
       )}
       {loggedIn && !configError && !loginError && (

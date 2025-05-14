@@ -278,19 +278,34 @@ export const checkConfig = async (
 ): Promise<void> => {
   const credentials = await authApi();
   if (credentials) {
-    if (credentials.access_token === '') {
-      localStorage.removeItem('loginState');
       if (credentials.config_error === 1) {
         setConfigError(true);
       }
       if (credentials.login_error === 1) {
         setLoginError(true);
       }
-    } else {
+     else {
       setLoginState(true);
     }
   }
 };
+
+export const login = async (
+  setLoginError: React.Dispatch<React.SetStateAction<boolean>>
+) => {
+  const data = await requestAPI('login', {
+    method: 'POST'
+  });
+  if (typeof data === 'object' && data !== null) {
+    const loginStatus = (data as { login: string }).login;
+    if (loginStatus === STATUS_SUCCESS) {
+      setLoginError(false);
+    } else {
+      setLoginError(true);
+    }
+  }
+};
+
 export const statusMessageBatch = (data: { state: string }) => {
   if (data.state === STATUS_DONE) {
     return STATUS_SUCCESS;

@@ -35,6 +35,7 @@ const IconsigninGoogle = new LabIcon({
   svgstr: signinGoogleIcon
 });
 
+
 const AuthLoginComponent = ({
   app,
   launcher,
@@ -52,7 +53,7 @@ const AuthLoginComponent = ({
   const [loginError, setLoginError] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
 
-  const login = async () => {
+   const login = async () => {
     setIsloginDisabled(true);
     const data = await requestAPI('login', {
       method: 'POST'
@@ -62,18 +63,15 @@ const AuthLoginComponent = ({
       if (loginStatus === STATUS_SUCCESS) {
         setLoginState(true);
         setLoginError(false);
-        localStorage.setItem('loginState', LOGIN_STATE);
       } else {
         setLoginState(false);
-        localStorage.removeItem('loginState');
-      }
+        setLoginError(true);}
     }
   };
 
   useEffect(() => {
     checkConfig(setLoginState, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoginState(localstorageGetInformation === LOGIN_STATE);
+    setLoginState((!loginError && !configError).toString() === LOGIN_STATE);
     if (loginState) {
       setConfigLoading(false);
     }
@@ -112,7 +110,13 @@ const AuthLoginComponent = ({
                   ? 'signin-google-icon disabled'
                   : 'signin-google-icon'
               }
-              onClick={isloginDisabled ? undefined : login}
+              onClick={
+                isloginDisabled
+                  ? undefined
+                  : () => {
+                      login();
+                    }
+              }
             >
               <IconsigninGoogle.react
                 tag="div"
