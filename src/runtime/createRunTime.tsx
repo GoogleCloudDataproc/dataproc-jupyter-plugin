@@ -189,7 +189,7 @@ function CreateRunTime({
   >('projectNetwork');
   const [selectedAccountRadio, setSelectedAccountRadio] = useState<
     'userAccount' | 'serviceAccount'
-  >('serviceAccount');
+  >('userAccount');
   const [projectInfo, setProjectInfo] = useState('');
   const [configError, setConfigError] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -1116,9 +1116,7 @@ function CreateRunTime({
         },
         environmentConfig: {
           executionConfig: {
-            ...(serviceAccountSelected !==
-              '' && //  && selectedAccountRadio === 'serviceAccount' //as user account also need this for operation
-            {
+            ...(serviceAccountSelected !== '' && { //  && selectedAccountRadio === 'serviceAccount' //as user account also need this for operation
               serviceAccount: serviceAccountSelected
             }),
             ...(networkTagSelected.length > 0 && {
