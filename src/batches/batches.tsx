@@ -23,8 +23,17 @@ import { LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import { CircularProgress } from '@mui/material';
 import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
 
-const BatchesComponent = (): React.JSX.Element => {
+const BatchesComponent = ({
+  settingRegistry,
+  app
+}: {
+  settingRegistry: ISettingRegistry;
+  app: JupyterLab;
+}): React.JSX.Element => {
   const [selectedMode, setSelectedMode] = useState('Batches');
 
   const [loggedIn, setLoggedIn] = useState(false);
@@ -72,6 +81,8 @@ const BatchesComponent = (): React.JSX.Element => {
             loginError={loginError}
             configError={configError}
             setConfigError={setConfigError}
+            settingRegistry={settingRegistry}
+            app ={app}
           />
         </div>
       )}
@@ -109,7 +120,15 @@ const BatchesComponent = (): React.JSX.Element => {
 };
 
 export class Batches extends DataprocWidget {
+  settingRegistry: ISettingRegistry;
+  app: JupyterLab;
+  constructor(settingRegistry: ISettingRegistry, app: JupyterLab, themeManager: IThemeManager) {
+    super(themeManager);
+    this.settingRegistry = settingRegistry;
+    this.app = app;
+  }
+
   renderInternal(): React.JSX.Element {
-    return <BatchesComponent />;
+    return <BatchesComponent settingRegistry={this.settingRegistry} app={this.app} />;
   }
 }

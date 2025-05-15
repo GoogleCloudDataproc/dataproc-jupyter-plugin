@@ -8,15 +8,18 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { CircularProgress } from '@mui/material';
 import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const NotebookTemplatesComponent = ({
   app,
   themeManager,
-  factory
+  factory,
+  settingRegistry
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
   factory: IFileBrowserFactory;
+  settingRegistry: ISettingRegistry;
 }): JSX.Element => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [configError, setConfigError] = useState(false);
@@ -51,6 +54,8 @@ const NotebookTemplatesComponent = ({
             loginError={loginError}
             configError={configError}
             setConfigError={setConfigError}
+            settingRegistry={settingRegistry}
+            app={app}
           />
         </div>
       )}
@@ -72,15 +77,18 @@ const NotebookTemplatesComponent = ({
 export class NotebookTemplates extends DataprocWidget {
   app: JupyterLab;
   factory: IFileBrowserFactory;
+  settingRegistry: ISettingRegistry;
 
   constructor(
     app: JupyterLab,
     themeManager: IThemeManager,
-    factory: IFileBrowserFactory
+    factory: IFileBrowserFactory,
+    settingRegistry: ISettingRegistry
   ) {
     super(themeManager);
     this.app = app;
     this.factory = factory;
+    this.settingRegistry = settingRegistry;
   }
 
   renderInternal(): React.JSX.Element {
@@ -90,6 +98,7 @@ export class NotebookTemplates extends DataprocWidget {
           app={this.app}
           themeManager={this.themeManager}
           factory={this.factory}
+          settingRegistry={this.settingRegistry}
         />
       </div>
     );

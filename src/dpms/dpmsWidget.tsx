@@ -43,6 +43,12 @@ import {
 } from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { DpmsService } from './dpmsService';
+import { checkConfig } from '../utils/utils';
+import { LOGIN_STATE } from '../utils/const';
+// import LoginErrorComponent from '../utils/loginErrorComponent';
+// import signinGoogleIcon2 from '../../style/icons/google_icon.svg';
+// import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -60,6 +66,11 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
+// const IconsigninGoogle2 = new LabIcon({
+//   name: 'launcher:signin_google_icon_panel',
+//   svgstr: signinGoogleIcon2
+// });
+
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
@@ -97,6 +108,10 @@ const DpmsComponent = ({
     name: 'launcher:search-icon',
     svgstr: searchIcon
   });
+  // const iconSubmitJob = new LabIcon({
+  //   name: 'launcher:submit-job-icon',
+  //   svgstr: SubmitJobIcon
+  // });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
@@ -120,7 +135,9 @@ const DpmsComponent = ({
     Record<string, string>
   >({});
   const [apiMessage, setApiMessage] = useState('');
-
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [configError, setConfigError] = useState(false);
+  const [loginError, setLoginError] = useState(false);
   const getColumnDetails = async (name: string) => {
     await DpmsService.getColumnDetailsAPIService(
       name,
@@ -505,6 +522,14 @@ const DpmsComponent = ({
       setNoDpmsInstance(true);
     }
   };
+
+    useEffect(() => {
+      checkConfig(setLoggedIn, setConfigError, setLoginError);
+      setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
+      if (loggedIn) {
+        setIsLoading(false);
+      }
+    }, []);
   useEffect(() => {
     getActiveNotebook();
     return () => {
@@ -631,6 +656,33 @@ const DpmsComponent = ({
       ) : (
         <div className="dpms-error">DPMS schema explorer not set up</div>
       )}
+        {(loginError || configError) && (
+        <div className="login-error">
+          <LoginErrorComponent
+            setLoginError={setLoginError}
+            loginError={loginError}
+            configError={configError}
+            setConfigError={setConfigError}
+            app={app}
+          />
+        </div>
+        )}
+        {/* {loginError && (
+          <div className="login-error">
+              <div className="login-error">Please login to continue</div>
+                    <div style={{ alignItems: 'center' }}>
+                      <div
+                        role="button"
+                        className="signin-google-icon"
+                        onClick={() => login(setLoginError)}
+                      >
+                        <iconSubmitJob.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
+                      </div>
+                    </div>
+                    </div>)} */}
     </div>
   );
 };

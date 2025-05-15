@@ -224,7 +224,7 @@ function ConfigSelection({
   useEffect(() => {
     handleSettingsRegistry();
     handleBigQueryFeature();
-
+ console.log('BigQuery Feature Enable:', bigQueryRegion);
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);
@@ -259,6 +259,7 @@ function ConfigSelection({
           launcher={launcher!}
           app={app!}
           fromPage="config"
+          settingRegistry={settingRegistry!}
         />
       ) : (
         <div className="settings-component">

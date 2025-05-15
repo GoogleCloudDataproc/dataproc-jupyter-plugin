@@ -77,6 +77,7 @@ import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
 import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -108,13 +109,15 @@ function CreateRunTime({
   selectedRuntimeClone,
   launcher,
   app,
-  fromPage
+  fromPage,
+  settingRegistry
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
   launcher: ILauncher;
   app: JupyterLab;
   fromPage: string;
+  settingRegistry: ISettingRegistry;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -2207,6 +2210,8 @@ function CreateRunTime({
               loginError={loginError}
               configError={configError}
               setConfigError={setConfigError}
+              settingRegistry={settingRegistry}
+              app={app}
             />
           </div>
         )

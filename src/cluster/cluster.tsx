@@ -24,8 +24,17 @@ import ListCluster from './listCluster';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { CircularProgress } from '@mui/material';
 import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
 
-const ClusterComponent = (): React.JSX.Element => {
+const ClusterComponent = ({
+  settingRegistry,
+  app
+}: {
+  settingRegistry: ISettingRegistry;
+  app: JupyterLab;
+}): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
 
   const [detailedJobView, setDetailedJobView] = useState(false);
@@ -138,6 +147,8 @@ const ClusterComponent = (): React.JSX.Element => {
               loginError={loginError}
               configError={configError}
               setConfigError={setConfigError}
+              settingRegistry={settingRegistry}
+              app = {app}
             />
           </div>
         )
@@ -147,7 +158,15 @@ const ClusterComponent = (): React.JSX.Element => {
 };
 
 export class Cluster extends DataprocWidget {
+  settingRegistry: ISettingRegistry;
+  app: JupyterLab
+  constructor(settingRegistry: ISettingRegistry, app:JupyterLab, themeManager: IThemeManager) {
+    super(themeManager);
+    this.settingRegistry = settingRegistry;
+    this.app =app
+  }
+  
   renderInternal(): React.JSX.Element {
-    return <ClusterComponent />;
+return <ClusterComponent settingRegistry = {this.settingRegistry} app = {this.app}/>;
   }
 }

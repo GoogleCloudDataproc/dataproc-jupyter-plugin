@@ -642,7 +642,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new RuntimeTemplate(
           app as JupyterLab,
           launcher as ILauncher,
-          themeManager
+          themeManager,
+          settingRegistry
         );
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
@@ -658,7 +659,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
-        const content = new Cluster(themeManager);
+        const content = new Cluster(settingRegistry, app as JupyterLab, themeManager);
         const widget = new MainAreaWidget<Cluster>({ content });
         widget.title.label = 'Clusters';
         widget.title.icon = iconCluster;
@@ -673,7 +674,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-        const content = new Batches(themeManager);
+        const content = new Batches(settingRegistry,app as JupyterLab, themeManager);
         const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;
@@ -709,7 +710,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new NotebookTemplates(
           app as JupyterLab,
           themeManager,
-          factory as IFileBrowserFactory
+          factory as IFileBrowserFactory,
+          settingRegistry as ISettingRegistry
         );
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'Notebook Templates';

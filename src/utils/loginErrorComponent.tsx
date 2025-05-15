@@ -15,11 +15,14 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import signinGoogleIcon from '../../style/icons/signin_google_icon.svg';
 import { login } from './utils';
-import ConfigSelection from '../login/configSelection';
+// import ConfigSelection from '../login/configSelection';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { JupyterLab } from '@jupyterlab/application';
+// import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 
 // Create the Google Sign-in Icon
 const IconsigninGoogle = new LabIcon({
@@ -32,33 +35,27 @@ interface LoginErrorProps {
   configError?: boolean;
   setLoginError: React.Dispatch<React.SetStateAction<boolean>>;
   setConfigError: React.Dispatch<React.SetStateAction<boolean>>;
+  settingRegistry?: ISettingRegistry;
+  app?: JupyterLab;
 }
 
 const LoginErrorComponent: React.FC<LoginErrorProps> = ({
   loginError = false,
   configError = false,
   setLoginError,
-  setConfigError
+  setConfigError,
+  app
 }) => {
-  const [showConfigSelection, setShowConfigSelection] = useState(false);
 
   const handleConfigButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShowConfigSelection(true);
+    if (app) {
+      app.commands.execute('cloud-dataproc-settings:configure');
+    }
   };
 
   if (configError) {
-    if (showConfigSelection) {
-      return (
-        <ConfigSelection
-          configError={configError}
-          setConfigError={setConfigError}
-          fromPage="loginError"
-        />
-      );
-    }
-
     return (
       <>
         <div className="login-error">
@@ -85,6 +82,10 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
               tag="div"
               className="logo-alignment-style"
             />
+                {/* <iconSubmitJob.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        /> */}
           </div>
         </div>
       </>
