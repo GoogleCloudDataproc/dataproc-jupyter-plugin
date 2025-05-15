@@ -131,6 +131,8 @@
   white-space: nowrap;
   overflow: hidden;
   width: 50%;
+  margin-top: 3px;
+  margin-left: 5px;
 }
 
 .db-icon {
