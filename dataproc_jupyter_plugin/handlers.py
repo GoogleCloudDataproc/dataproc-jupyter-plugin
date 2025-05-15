@@ -43,6 +43,7 @@ from dataproc_jupyter_plugin.controllers import (
     dataproc,
     executor,
 )
+from dataproc_jupyter_plugin.controllers.version import VersionCheckController, UpdatePackage
 
 _region_not_set_error = """GCP region not set in gcloud.
 
@@ -85,7 +86,7 @@ class DataprocPluginConfig(SingletonConfigurable):
     )
 
     enable_bigquery_integration = Bool(
-        False,
+        True,
         config=True,
         help="Enable integration with BigQuery in JupyterLab",
     )
@@ -263,6 +264,8 @@ def setup_handlers(web_app):
         "bigQuerySearch": bigquery.SearchController,
         "bigQueryApiEnabled": bigquery.CheckApiController,
         "checkResourceManager": ResourceManagerHandler,
+        "jupyterlabVersion": VersionCheckController,
+        "updatePlugin": UpdatePackage,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

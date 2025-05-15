@@ -42,7 +42,7 @@ import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
-import { PLUGIN_ID, TITLE_LAUNCHER_CATEGORY } from './utils/const';
+import { PLUGIN_ID, PLUGIN_NAME, TITLE_LAUNCHER_CATEGORY, VERSION_DETAIL } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import {
   IFileBrowserFactory,
@@ -365,6 +365,61 @@ const extension: JupyterFrontEndPlugin<void> = {
     };
     onSidePanelEnabled();
 
+    async function jupyterVersionCheck() {
+      try {
+        const notificationMessage = 'There is a newer version of Dataproc Plugin available. Would you like to update it?';
+        const response = await requestAPI('jupyterlabVersion', {
+          method: 'GET'
+        });
+
+        console.log("version", VERSION_DETAIL);
+        console.log("project name", PLUGIN_NAME);
+        console.log('JupyterLab Version Response:', response);
+
+        if (Array.isArray(response) && response[0] === true) {
+          Notification.info(notificationMessage, {
+            actions: [
+              {
+                label: 'Update',
+                callback: async () => {
+                  console.log('Update JupyterLab to the latest version');
+                  try {
+                    const result = await requestAPI('updatePlugin', {
+                      method: 'POST',
+                      // body: JSON.stringify({
+                      //   cmd: "install",
+                      //   extension_name: PLUGIN_NAME,
+                      //   extension_version: latestVersion
+                      // })
+                    });
+                    console.log('Update Result:', result);
+                    // After successful update, refresh the application
+                    window.location.reload();
+                  } catch (updateError) {
+                    console.error('Update failed:', updateError);
+                    Notification.error('Update failed. Please check the console for details.');
+                  }
+                },
+                displayType: 'warn'
+              },
+              {
+                label: 'Ignore',
+                callback: () => {
+                  // The notification will automatically close as there are no further actions
+                  console.log('Update cancelled by user.');
+                },
+                displayType: 'default'
+              }
+            ],
+            autoClose: false,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch JupyterLab version:', error);
+        throw error;
+      }
+    }
+
     async function checkResourceManager() {
       try {
         const notificationMessage =
@@ -583,16 +638,14 @@ const extension: JupyterFrontEndPlugin<void> = {
       // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
 
       const urlParts = notebookUrl.split('/');
-      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
-        urlParts[urlParts.length - 1]
-      }`;
+      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${urlParts[urlParts.length - 1]
+        }`;
 
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] = `REGION = '${
-          settings.get('bqRegion')['composite']
-        }'\n`;
+        notebookContent.cells[2].source[2] = `REGION = '${settings.get('bqRegion')['composite']
+          }'\n`;
       }
 
       // Save the file to the workspace
@@ -853,6 +906,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         rank: 4
       });
     }
+
+    await jupyterVersionCheck();
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
     // loads one when a notification occurs.  Let's hackily fire off a notification
