@@ -805,10 +805,16 @@ function CreateBatch({
     } as RuntimeConfig;
 
     payload.environmentConfig = {
-      executionConfig: {
-        ...(serviceAccountSelected !== '' && {
-          serviceAccount: serviceAccountSelected
-        }),
+        executionConfig: {
+          ...(selectedAccountRadio === 'serviceAccount' && serviceAccountSelected !== '' && {
+            serviceAccount: serviceAccountSelected
+          }),
+          ...(selectedAccountRadio === 'userAccount' && serviceAccountSelected !== '' && {
+            serviceAccount: serviceAccountSelected,
+            authenticationConfig: {
+              userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+            }
+          }),
         ...(sharedvpcSelected &&
           selectedNetworkRadio === 'sharedVpc' && {
             subnetworkUri: `projects/${projectInfo}/regions/${regionName}/subnetworks/${sharedvpcSelected}`
