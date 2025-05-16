@@ -664,25 +664,10 @@ const DpmsComponent = ({
             configError={configError}
             setConfigError={setConfigError}
             app={app}
+            fromPage='sidepanel'
           />
         </div>
         )}
-        {/* {loginError && (
-          <div className="login-error">
-              <div className="login-error">Please login to continue</div>
-                    <div style={{ alignItems: 'center' }}>
-                      <div
-                        role="button"
-                        className="signin-google-icon"
-                        onClick={() => login(setLoginError)}
-                      >
-                        <iconSubmitJob.react
-                          tag="div"
-                          className="logo-alignment-style"
-                        />
-                      </div>
-                    </div>
-                    </div>)} */}
     </div>
   );
 };

@@ -47,7 +47,7 @@ import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { checkConfig, handleDebounce } from '../utils/utils';
 import { LOGIN_STATE } from '../utils/const';
-// import LoginErrorComponent from '../utils/loginErrorComponent';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -878,7 +878,7 @@ const BigQueryComponent = ({
               )}
             </div>
           )}
-          {/* {(loginError || configError) && (
+          {(loginError || configError) && (
             <div className="login-error">
               <LoginErrorComponent
                 setLoginError={setLoginError}
@@ -886,9 +886,10 @@ const BigQueryComponent = ({
                 configError={configError}
                 setConfigError={setConfigError}
                 app={app}
+                fromPage="sidepanel"
               />
             </div>
-          )} */}
+          )}
         </div>
       </div>
     </div>

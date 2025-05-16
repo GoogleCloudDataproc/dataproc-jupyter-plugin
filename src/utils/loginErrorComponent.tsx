@@ -37,6 +37,7 @@ interface LoginErrorProps {
   setConfigError: React.Dispatch<React.SetStateAction<boolean>>;
   settingRegistry?: ISettingRegistry;
   app?: JupyterLab;
+  fromPage?: string;
 }
 
 const LoginErrorComponent: React.FC<LoginErrorProps> = ({
@@ -44,9 +45,9 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
   configError = false,
   setLoginError,
   setConfigError,
-  app
+  app,
+  fromPage
 }) => {
-
   const handleConfigButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -58,7 +59,11 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
   if (configError) {
     return (
       <>
-        <div className="login-error">
+        <div
+          className={
+            fromPage === 'sidepanel' ? 'sidepanel-login-error' : 'login-error'
+          }
+        >
           Please configure gcloud with account, project-id and region
         </div>
         <button className="config-button" onClick={handleConfigButtonClick}>
@@ -71,7 +76,13 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
   if (loginError) {
     return (
       <>
-        <div className="login-error">Please login to continue</div>
+        <div
+          className={
+            fromPage === 'sidepanel' ? 'sidepanel-login-error' : 'login-error'
+          }
+        >
+          Please login to continue
+        </div>
         <div style={{ alignItems: 'center' }}>
           <div
             role="button"
@@ -82,10 +93,6 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
               tag="div"
               className="logo-alignment-style"
             />
-                {/* <iconSubmitJob.react
-                          tag="div"
-                          className="logo-alignment-style"
-                        /> */}
           </div>
         </div>
       </>

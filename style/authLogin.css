@@ -4,7 +4,6 @@
   align-items: center;
   display: flex;
   justify-content: center;
-  margin-top: -20px;
   cursor: pointer;
 }
 
@@ -318,6 +317,5 @@
   font-weight: bold;
   cursor: pointer;
   margin: 10px 0;
-  margin-left: 16em;
-  width: 12em;
+ width: fit-content;
 }
