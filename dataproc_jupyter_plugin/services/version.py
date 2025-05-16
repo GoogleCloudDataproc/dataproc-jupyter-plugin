@@ -12,18 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import aiohttp
-import json
-import os
 import subprocess
 import sys
-import pkg_resources
 from jupyter_server.base.handlers import APIHandler
-import tornado
- 
-from dataproc_jupyter_plugin import urls
-from dataproc_jupyter_plugin.commons.constants import (
-    CONTENT_TYPE,
-)
 
 class Client:
 
@@ -41,42 +32,11 @@ class Client:
         self.region_id = credentials["region_id"]
         self.client_session = client_session
 
-        # Load package name during initialization
-        self.package_name = self.load_package_name()
-        self.package_version = self.load_package_version()
 
-    def load_package_name(self):
-        try:
-            root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-            file_path = os.path.join(root_path, "package.json")
-            with open(file_path, "r") as f:
-                package_data = json.load(f)
-                return package_data.get("name", "unknown-package")
-        except Exception as e:
-            self.log.exception("Failed to load package.json")
-            return "unknown-package"
-        
-    def load_package_version(self):
-        try:
-            root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-            file_path = os.path.join(root_path, "package.json")
-            with open(file_path, "r") as f:
-                package_data = json.load(f)
-                return package_data.get("version", "unknown-version")
-        except Exception as e:
-            self.log.exception("Failed to load package.json")
-            return "unknown-package"
-        
-    def create_headers(self):
-        return {
-            "Content-Type": CONTENT_TYPE,
-            "Authorization": f"Bearer {self._access_token}",
-        }
-
-    async def get_latest_version(self):
+    async def get_latest_version(self, package_name):
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://pypi.org/pypi/{self.package_name}/json", timeout=3) as response:
+                async with session.get(f"https://pypi.org/pypi/{package_name}/json", timeout=3) as response:
                     response.raise_for_status()
                     data = await response.json()
                     return data["info"]["version"]
@@ -86,21 +46,16 @@ class Client:
             return {"error": str(e)}
 
 
-    async def is_update_available(self):
+    def upgrade_package(self, package_name):
         try:
-            installed = self.package_version
-            latest = await self.get_latest_version()
-            return latest > self.package_version, installed, latest
-        except Exception:
-            return False, None, None
-    
+            print("installing...................")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
+        except subprocess.CalledProcessError as e:
+            self.log.exception(f"Failed to upgrade package: {package_name}")
+            raise e
 
-    def upgrade_package(self):
-        print("installing...................")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", self.package_name])
- 
 
-    async def updatePlugin(self):
-        self.upgrade_package()
-        self.finish({"status": "ok"})
+    async def updatePlugin(self, package_name):
+        self.upgrade_package(package_name)
+        return {"status": "ok"}
  

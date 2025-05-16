@@ -22,16 +22,17 @@ from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import version
 
 
-class VersionCheckController(APIHandler):
+class LatestVersionController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            package_name = self.get_argument("packageName")
             async with aiohttp.ClientSession() as client_session:
                 client = version.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                version_id = await client.is_update_available()
-                print("version_id", version_id)
+                version_id = await client.get_latest_version(package_name)
+            
             self.finish(json.dumps(version_id))
         except Exception as e:
             self.log.exception("Error fetching version")
@@ -42,14 +43,15 @@ class UpdatePackage(APIHandler):
     @tornado.web.authenticated
     async def post(self):
         try:
+            package_name = self.get_argument("packageName")
             async with aiohttp.ClientSession() as client_session:
                 client = version.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                is_updated = await client.updatePlugin()
-                print("is_updated", is_updated)
+                is_updated = await client.updatePlugin(package_name)
+            
             self.finish(json.dumps(is_updated))
         except Exception as e:
-            self.log.exception("Error fetching version")
+            self.log.exception("Error updating package")
             self.finish({"error": str(e)})
 

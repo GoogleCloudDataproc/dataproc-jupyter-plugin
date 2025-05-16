@@ -368,15 +368,11 @@ const extension: JupyterFrontEndPlugin<void> = {
     async function jupyterVersionCheck() {
       try {
         const notificationMessage = 'There is a newer version of Dataproc Plugin available. Would you like to update it?';
-        const response = await requestAPI('jupyterlabVersion', {
+        const latestVersion = await requestAPI(`jupyterlabVersion?packageName=${PLUGIN_NAME}`, {
           method: 'GET'
         });
 
-        console.log("version", VERSION_DETAIL);
-        console.log("project name", PLUGIN_NAME);
-        console.log('JupyterLab Version Response:', response);
-
-        if (Array.isArray(response) && response[0] === true) {
+        if (typeof latestVersion === 'string' && latestVersion > VERSION_DETAIL) {
           Notification.info(notificationMessage, {
             actions: [
               {
@@ -384,7 +380,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 callback: async () => {
                   console.log('Update JupyterLab to the latest version');
                   try {
-                    const result = await requestAPI('updatePlugin', {
+                    const result = await requestAPI(`updatePlugin?packageName=${PLUGIN_NAME}`, {
                       method: 'POST',
                       // body: JSON.stringify({
                       //   cmd: "install",
