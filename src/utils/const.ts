@@ -16,8 +16,9 @@
  */
 
 import { requestAPI } from '../handler/handler';
-const { version } = require('../../package.json');
+const { version, name } = require('../../package.json');
 export const VERSION_DETAIL = version;
+export const PLUGIN_NAME = name;
 export const CREATE_CLUSTER_URL =
   'https://console.cloud.google.com/dataproc/clusters';
 export const CREATE_BATCH_URL =
