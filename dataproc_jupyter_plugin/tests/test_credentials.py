@@ -51,5 +51,5 @@ class TestGetCached(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(cached["project_number"], None)
         self.assertEqual(cached["access_token"], "example-token")
         self.assertEqual(cached["region_id"], "example-region")
-        self.assertEqual(cached["config_error"], 0)
-        self.assertEqual(cached["login_error"], 1)
+        self.assertEqual(cached["config_error"], 1)
+        self.assertEqual(cached["login_error"], 0)
