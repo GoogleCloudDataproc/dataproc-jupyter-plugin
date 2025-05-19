@@ -66,10 +66,6 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
-// const IconsigninGoogle2 = new LabIcon({
-//   name: 'launcher:signin_google_icon_panel',
-//   svgstr: signinGoogleIcon2
-// });
 
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
