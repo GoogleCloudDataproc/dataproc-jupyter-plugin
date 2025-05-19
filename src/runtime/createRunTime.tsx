@@ -217,6 +217,10 @@ function CreateRunTime({
 
   const runtimeOptions = [
     {
+      value: '2.3',
+      text: '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)'
+    },
+    {
       value: '2.2',
       text: '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)'
     },
