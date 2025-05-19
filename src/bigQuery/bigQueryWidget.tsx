@@ -585,7 +585,7 @@ const BigQueryComponent = ({
         // Create cell with query
         await app.commands.execute('notebook:run-cell-and-insert-below');
         await app.commands.execute('notebook:replace-selection', {
-          text: `%%bqsql\nselect * from ${fullTableName} limit 100`
+          text: `%%bqsql\nselect * from ${fullTableName} limit 20`
         });
       } catch (error) {
         console.error('Error creating notebook:', error);
