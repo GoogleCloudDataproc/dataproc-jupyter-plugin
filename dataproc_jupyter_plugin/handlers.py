@@ -86,7 +86,7 @@ class DataprocPluginConfig(SingletonConfigurable):
     )
 
     enable_bigquery_integration = Bool(
-        True,
+        False,
         config=True,
         help="Enable integration with BigQuery in JupyterLab",
     )

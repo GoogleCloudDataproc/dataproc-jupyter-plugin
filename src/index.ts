@@ -380,20 +380,13 @@ const extension: JupyterFrontEndPlugin<void> = {
                 callback: async () => {
                   console.log('Update JupyterLab to the latest version');
                   try {
-                    const result = await requestAPI(`updatePlugin?packageName=${PLUGIN_NAME}`, {
+                    await requestAPI(`updatePlugin?packageName=${PLUGIN_NAME}`, {
                       method: 'POST',
-                      // body: JSON.stringify({
-                      //   cmd: "install",
-                      //   extension_name: PLUGIN_NAME,
-                      //   extension_version: latestVersion
-                      // })
                     });
-                    console.log('Update Result:', result);
                     // After successful update, refresh the application
                     window.location.reload();
                   } catch (updateError) {
-                    console.error('Update failed:', updateError);
-                    Notification.error('Update failed. Please check the console for details.');
+                    Notification.error(`Update failed.${updateError}`);
                   }
                 },
                 displayType: 'warn'
@@ -401,8 +394,7 @@ const extension: JupyterFrontEndPlugin<void> = {
               {
                 label: 'Ignore',
                 callback: () => {
-                  // The notification will automatically close as there are no further actions
-                  console.log('Update cancelled by user.');
+                  Notification.warning('Update Cancelled bu user');
                 },
                 displayType: 'default'
               }
@@ -411,7 +403,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           });
         }
       } catch (error) {
-        console.error('Failed to fetch JupyterLab version:', error);
+        Notification.error(`Failed to fetch JupyterLab version:${error}`);
         throw error;
       }
     }
