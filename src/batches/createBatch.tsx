@@ -387,6 +387,21 @@ function CreateBatch({
       const { environmentConfig } = batchInfoResponse;
       if (environmentConfig) {
         const executionConfig = environmentConfig.executionConfig;
+        // Determine account type based on authentication config
+        if (
+          executionConfig?.authenticationConfig
+            ?.userWorkloadAuthenticationType === 'END_USER_CREDENTIALS'
+        ) {
+          // User account case
+          setSelectedAccountRadio('userAccount');
+          setServiceAccountSelected(
+            executionConfig?.authenticationConfig?.serviceAccount || ''
+          );
+        } else {
+          // Service account case (either direct serviceAccount or no auth config)
+          setSelectedAccountRadio('serviceAccount');
+          setServiceAccountSelected(executionConfig?.serviceAccount || '');
+        }
 
         if (executionConfig) {
           const sharedVpcMatches =
@@ -805,15 +820,18 @@ function CreateBatch({
     } as RuntimeConfig;
 
     payload.environmentConfig = {
-        executionConfig: {
-          ...(selectedAccountRadio === 'serviceAccount' && serviceAccountSelected !== '' && {
+      executionConfig: {
+        ...(selectedAccountRadio === 'userAccount' && {
+          authenticationConfig: {
+            userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+          },
+          ...(serviceAccountSelected !== '' && {
             serviceAccount: serviceAccountSelected
-          }),
-          ...(selectedAccountRadio === 'userAccount' && serviceAccountSelected !== '' && {
-            serviceAccount: serviceAccountSelected,
-            authenticationConfig: {
-              userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
-            }
+          })
+        }),
+        ...(selectedAccountRadio === 'serviceAccount' &&
+          serviceAccountSelected !== '' && {
+            serviceAccount: serviceAccountSelected
           }),
         ...(sharedvpcSelected &&
           selectedNetworkRadio === 'sharedVpc' && {
@@ -852,7 +870,6 @@ function CreateBatch({
         })
       }
     };
-
     return payload;
   };
 
