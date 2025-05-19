@@ -46,7 +46,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { authApi, handleDebounce } from '../utils/utils';
+import { handleDebounce } from '../utils/utils';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -551,7 +551,7 @@ const BigQueryComponent = ({
       app: JupyterLab,
       fullTableName: string
     ) => {
-      const credentials = await authApi();
+      // const credentials = await authApi();
       try {
         // Create a new notebook
         const notebookPanel = await app.commands.execute('notebook:create-new', {
@@ -564,22 +564,20 @@ const BigQueryComponent = ({
         // Activate the notebook
         app.shell.activateById(notebookPanel.id);
 
-        // Create cell with commented pip install
+        // First, delete the initial code cell that comes with new notebooks
+        await app.commands.execute('notebook:delete-cell');
+
+        // Create cell with markdown
         await app.commands.execute('notebook:run-cell-and-insert-below');
+        // await app.commands.execute('notebook:change-cell-to-markdown');
         await app.commands.execute('notebook:replace-selection', {
-          text: "#Please uncomment the below cell and execute if bigquery-magics is not installed in the system\n#!pip install bigquery-magics"
+          text: "#Please uncomment the first line in the below cell and execute if bigquery-magics is not installed in the system."
         });
 
-        // Create cell to load the extension
+        // Create cell with commented pip install and to load the extension
         await app.commands.execute('notebook:run-cell-and-insert-below');
         await app.commands.execute('notebook:replace-selection', {
-          text: "%load_ext bigquery_magics"
-        });
-
-        // Create cell to set Google Cloud Project
-        await app.commands.execute('notebook:run-cell-and-insert-below');
-        await app.commands.execute('notebook:replace-selection', {
-          text: `import os\nos.environ["GOOGLE_CLOUD_PROJECT"] = "${credentials?.project_id}"`
+          text: "#!pip install bigquery-magics\n%load_ext bigquery_magics"
         });
 
         // Create cell with query
