@@ -42,7 +42,7 @@ import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
-import { PLUGIN_ID, TITLE_LAUNCHER_CATEGORY } from './utils/const';
+import { PLUGIN_ID, PLUGIN_NAME, TITLE_LAUNCHER_CATEGORY, VERSION_DETAIL } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import {
   IFileBrowserFactory,
@@ -365,6 +365,49 @@ const extension: JupyterFrontEndPlugin<void> = {
     };
     onSidePanelEnabled();
 
+    async function jupyterVersionCheck() {
+      try {
+        const notificationMessage = 'There is a newer version of Dataproc Plugin available. Would you like to update it?';
+        const latestVersion = await requestAPI(`jupyterlabVersion?packageName=${PLUGIN_NAME}`, {
+          method: 'GET'
+        });
+
+        if (typeof latestVersion === 'string' && latestVersion > VERSION_DETAIL) {
+          Notification.info(notificationMessage, {
+            actions: [
+              {
+                label: 'Update',
+                callback: async () => {
+                  console.log('Update JupyterLab to the latest version');
+                  try {
+                    await requestAPI(`updatePlugin?packageName=${PLUGIN_NAME}`, {
+                      method: 'POST',
+                    });
+                    // After successful update, refresh the application
+                    window.location.reload();
+                  } catch (updateError) {
+                    Notification.error(`Update failed.${updateError}`);
+                  }
+                },
+                displayType: 'warn'
+              },
+              {
+                label: 'Ignore',
+                callback: () => {
+                  Notification.warning('Update Cancelled bu user');
+                },
+                displayType: 'default'
+              }
+            ],
+            autoClose: false,
+          });
+        }
+      } catch (error) {
+        Notification.error(`Failed to fetch JupyterLab version:${error}`);
+        throw error;
+      }
+    }
+
     async function checkResourceManager() {
       try {
         const notificationMessage =
@@ -583,16 +626,14 @@ const extension: JupyterFrontEndPlugin<void> = {
       // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
 
       const urlParts = notebookUrl.split('/');
-      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
-        urlParts[urlParts.length - 1]
-      }`;
+      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${urlParts[urlParts.length - 1]
+        }`;
 
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] = `REGION = '${
-          settings.get('bqRegion')['composite']
-        }'\n`;
+        notebookContent.cells[2].source[2] = `REGION = '${settings.get('bqRegion')['composite']
+          }'\n`;
       }
 
       // Save the file to the workspace
@@ -853,6 +894,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         rank: 4
       });
     }
+
+    await jupyterVersionCheck();
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
     // loads one when a notification occurs.  Let's hackily fire off a notification
