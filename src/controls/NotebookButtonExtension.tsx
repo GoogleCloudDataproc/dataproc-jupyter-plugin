@@ -106,8 +106,10 @@ class NotebookButtonExtensionPoint implements IDisposable {
     this.kernelStatusWidget.node.appendChild(kernelStatusLabel);
     this.kernelStatusWidget.node.appendChild(kernelStatusValue);
 
+    // Keeping this line for the future changes or for the reference.
+    // this.panel.toolbar.insertItem(12, 'kernel-status', this.kernelStatusWidget);
     // Add the widget to the toolbar
-    this.panel.toolbar.insertItem(12, 'kernel-status', this.kernelStatusWidget);
+    this.panel.toolbar.insertBefore('executionProgress', 'kernel-status', this.kernelStatusWidget);
 
     // Initial fetch of kernel status
     this.fetchAndUpdateKernelStatus();
