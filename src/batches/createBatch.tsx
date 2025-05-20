@@ -156,9 +156,6 @@ function CreateBatch({
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
         pythonFileUris = batchInfoResponse[batchKeys[0]].pythonFileUris;
       }
-      // serviceAccount =
-      //   batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount ||
-      //   '';
       networkUris =
         batchInfoResponse?.environmentConfig?.executionConfig?.networkTags ||
         '';

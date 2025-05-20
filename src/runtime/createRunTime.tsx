@@ -1119,7 +1119,6 @@ function CreateRunTime({
         environmentConfig: {
           executionConfig: {
             ...(serviceAccountSelected !== '' && {
-              //  && selectedAccountRadio === 'serviceAccount' //as user account also need this for operation
               serviceAccount: serviceAccountSelected
             }),
             ...(networkTagSelected.length > 0 && {
