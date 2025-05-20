@@ -188,7 +188,7 @@ function CreateRunTime({
   >('projectNetwork');
   const [selectedAccountRadio, setSelectedAccountRadio] = useState<
     'userAccount' | 'serviceAccount'
-  >('serviceAccount');
+  >('userAccount');
   const [projectInfo, setProjectInfo] = useState('');
   const [configError, setConfigError] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -565,18 +565,19 @@ function CreateRunTime({
       if (environmentConfig) {
         const executionConfig = environmentConfig.executionConfig;
         const peripheralsConfig = environmentConfig.peripheralsConfig;
-
+        if (
+          executionConfig?.authenticationConfig
+            ?.userWorkloadAuthenticationType === 'END_USER_CREDENTIALS'
+        ) {
+          // User account case
+          setSelectedAccountRadio('userAccount');
+          setServiceAccountSelected(executionConfig?.serviceAccount || '');
+        } else {
+          // Service account case (either direct serviceAccount or no auth config)
+          setSelectedAccountRadio('serviceAccount');
+          setServiceAccountSelected(executionConfig?.serviceAccount || '');
+        }
         if (executionConfig) {
-          if (executionConfig.serviceAccount) {
-            setServiceAccountSelected(executionConfig.serviceAccount);
-          }
-          if (executionConfig.authenticationConfig) {
-            setSelectedAccountRadio('userAccount');
-            if (executionConfig.authenticationConfig.serviceAccount)
-              setServiceAccountSelected(
-                executionConfig.authenticationConfig.serviceAccount
-              );
-          }
           const sharedVpcMatches =
             /projects\/(?<project>[\w\-]+)\/regions\/(?<region>[\w\-]+)\/subnetworks\/(?<subnetwork>[\w\-]+)/.exec(
               executionConfig.subnetworkUri
@@ -1125,7 +1126,6 @@ function CreateRunTime({
         environmentConfig: {
           executionConfig: {
             ...(serviceAccountSelected !== '' && {
-              //  && selectedAccountRadio === 'serviceAccount' //as user account also need this for operation
               serviceAccount: serviceAccountSelected
             }),
             ...(networkTagSelected.length > 0 && {
