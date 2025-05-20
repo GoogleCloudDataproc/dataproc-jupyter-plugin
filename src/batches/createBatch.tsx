@@ -287,6 +287,29 @@ function CreateBatch({
   const [serviceAccountSelected, setServiceAccountSelected] = useState('');
   const [userAccountSelected, setUserAccountSelected] = useState('');
 
+  const runtimeOptions = [
+    {
+      value: '2.2',
+      text: '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)'
+    },
+    {
+      value: '2.1',
+      text: '2.1 (Spark 3.4, Java 17, Scala 2.13)'
+    },
+    {
+      value: '2.0',
+      text: '2.0 (Spark 3.3, Java 17, Scala 2.13)'
+    },
+    {
+      value: '1.2',
+      text: '1.2 LTS (Spark 3.5, Java 17, Scala 2.12)'
+    },
+    {
+      value: '1.1',
+      text: '1.1 LTS (Spark 3.3, Java 11, Scala 2.12)'
+    }
+  ];
+
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -1089,12 +1112,21 @@ function CreateBatch({
             />
           </div>
           <div className="select-text-overlay">
-            <Input
-              className="create-batch-style "
-              value={versionSelected}
-              onChange={e => setVersionSelected(e.target.value)}
-              type="text"
-              Label="Runtime version*"
+            <Autocomplete
+              className="create-runtime-style"
+              value={
+                runtimeOptions.find(
+                  option => option.value === versionSelected
+                ) || null
+              }
+              onChange={(event, newValue) => {
+                setVersionSelected(newValue?.value || '');
+              }}
+              options={runtimeOptions}
+              getOptionLabel={option => option.text}
+              renderInput={params => (
+                <TextField {...params} label="Runtime version*" />
+              )}
             />
           </div>
           {batchTypeSelected === 'Spark' && (

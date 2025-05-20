@@ -171,7 +171,6 @@ function CreateRunTime({
   const [runTimeValidation, setRuntimeValidation] = useState(false);
   const [descriptionValidation, setDescriptionValidation] = useState(false);
   const [displayNameValidation, setDisplayNameValidation] = useState(false);
-  const [versionValidation, setVersionValidation] = useState(false);
   const [idleValidation, setIdleValidation] = useState(false);
   const [autoValidation, setAutoValidation] = useState(false);
   const [defaultValue, setDefaultValue] = useState('');
@@ -216,6 +215,21 @@ function CreateRunTime({
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
 
+  const runtimeOptions = [
+    {
+      value: '2.2',
+      text: '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)'
+    },
+    {
+      value: '1.2',
+      text: '1.2 LTS (Spark 3.5, Java 17, Scala 2.12)'
+    },
+    {
+      value: '1.1',
+      text: '1.1 LTS (Spark 3.3, Java 11, Scala 2.12)'
+    }
+  ];
+
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
     const localstorageGetInformation = localStorage.getItem('loginState');
@@ -247,7 +261,6 @@ function CreateRunTime({
     valueValidation,
     duplicateKeyError,
     displayNameValidation,
-    versionValidation,
     idleValidation,
     autoValidation,
     descriptionValidation,
@@ -742,14 +755,6 @@ function CreateRunTime({
     const newDescription = event.target.value;
     setDescriptionSelected(newDescription);
   };
-  const handleVersionChange = (event: ChangeEvent<HTMLInputElement>) => {
-    event.target.value.length > 0
-      ? setVersionValidation(false)
-      : setVersionValidation(true);
-    const newVersion = event.target.value;
-    setVersionSelected(newVersion);
-  };
-
   const handleServiceSelected = (data: string | null) => {
     if (data !== null) {
       setServicesSelected(data!.toString());
@@ -884,7 +889,6 @@ function CreateRunTime({
       desciptionSelected === '' ||
       versionSelected === '' ||
       displayNameValidation ||
-      versionValidation ||
       descriptionValidation ||
       idleValidation ||
       runTimeValidation ||
@@ -1328,7 +1332,6 @@ function CreateRunTime({
       setKeySelected(data!.toString());
     }
   };
-
   return (
     <div>
       {configLoading && !loggedIn && !configError && !loginError && (
@@ -1495,21 +1498,23 @@ function CreateRunTime({
                 )}
               </div>
               <div className="select-text-overlay">
-                <Input
-                  className="create-runtime-style "
-                  value={versionSelected}
-                  onChange={e => handleVersionChange(e)}
-                  type="text"
-                  Label="Runtime version*"
+                <Autocomplete
+                  className="create-runtime-style"
+                  value={
+                    runtimeOptions.find(
+                      option => option.value === versionSelected
+                    ) || null
+                  }
+                  onChange={(event, newValue) => {
+                    setVersionSelected(newValue?.value || '');
+                  }}
+                  options={runtimeOptions}
+                  getOptionLabel={option => option.text}
+                  renderInput={params => (
+                    <TextField {...params} label="Runtime version*" />
+                  )}
                 />
               </div>
-
-              {versionValidation && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">Version is required</div>
-                </div>
-              )}
               <div className="select-text-overlay">
                 <Input
                   className="create-batch-style "
