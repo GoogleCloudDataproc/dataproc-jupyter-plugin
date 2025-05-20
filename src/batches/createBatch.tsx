@@ -106,7 +106,6 @@ function CreateBatch({
   let mainRFileUri = '';
   let mainPythonFileUri = '';
   let queryFileUri = '';
-  // let serviceAccount = '';
   let subNetwork = '';
   let network = '';
   let historyServer = '';

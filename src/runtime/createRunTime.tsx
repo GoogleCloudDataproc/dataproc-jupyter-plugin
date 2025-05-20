@@ -559,7 +559,6 @@ function CreateRunTime({
       }
 
       if (environmentConfig) {
-        //let authentication
         const executionConfig = environmentConfig.executionConfig;
         const peripheralsConfig = environmentConfig.peripheralsConfig;
         if (
