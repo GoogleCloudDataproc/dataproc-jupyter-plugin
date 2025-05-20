@@ -40,5 +40,7 @@ module.exports = {
     trace: 'on-first-retry',
     // Record video only when retrying a test for the first time.
     video: 'on-first-retry'
-  }
+  },
+  // Add support for tags using TEST_TAG environment variable
+  grep: process.env.TEST_TAG ? new RegExp(process.env.TEST_TAG, 'i') : undefined,
 };
