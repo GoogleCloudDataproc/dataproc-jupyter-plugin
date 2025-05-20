@@ -551,7 +551,6 @@ const BigQueryComponent = ({
       app: JupyterLab,
       fullTableName: string
     ) => {
-      // const credentials = await authApi();
       try {
         // Create a new notebook
         const notebookPanel = await app.commands.execute('notebook:create-new', {
@@ -569,7 +568,6 @@ const BigQueryComponent = ({
 
         // Create cell with markdown
         await app.commands.execute('notebook:run-cell-and-insert-below');
-        // await app.commands.execute('notebook:change-cell-to-markdown');
         await app.commands.execute('notebook:replace-selection', {
           text: "#Please uncomment the first line in the below cell and execute if bigquery-magics is not installed in the system."
         });
