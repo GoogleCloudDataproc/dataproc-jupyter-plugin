@@ -563,26 +563,17 @@ const BigQueryComponent = ({
         // Activate the notebook
         app.shell.activateById(notebookPanel.id);
 
-        // First, delete the initial code cell that comes with new notebooks
-        await app.commands.execute('notebook:delete-cell');
-
-        // Create cell with markdown
-        await app.commands.execute('notebook:run-cell-and-insert-below');
+       // Insert packages to first cell in the notebook
         await app.commands.execute('notebook:replace-selection', {
-          text: "#Please uncomment the first line in the below cell and execute if bigquery-magics is not installed in the system."
+          text: "#Uncomment if bigquery-magics is not installed \n#!pip install bigquery-magics\n%load_ext bigquery_magics"
         });
 
-        // Create cell with commented pip install and to load the extension
-        await app.commands.execute('notebook:run-cell-and-insert-below');
-        await app.commands.execute('notebook:replace-selection', {
-          text: "#!pip install bigquery-magics\n%load_ext bigquery_magics"
-        });
-
-        // Create cell with query
+        // Run the first cell and and another cell with select query
         await app.commands.execute('notebook:run-cell-and-insert-below');
         await app.commands.execute('notebook:replace-selection', {
           text: `%%bqsql\nselect * from ${fullTableName} limit 20`
         });
+        
       } catch (error) {
         console.error('Error creating notebook:', error);
       }
