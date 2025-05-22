@@ -881,7 +881,7 @@ const BigQueryComponent = ({
     <div className="dpms-Wrapper">
       <TitleComponent
         titleStr="Dataset Explorer"
-        isPreview
+        isPreview={false}
         getBigQueryProjects={getBigQueryProjects}
       />
       <>
