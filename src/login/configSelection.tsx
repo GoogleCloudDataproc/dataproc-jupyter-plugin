@@ -224,19 +224,30 @@ function ConfigSelection({
   useEffect(() => {
     handleSettingsRegistry();
     handleBigQueryFeature();
- console.log('BigQuery Feature Enable:', bigQueryRegion);
+    console.log('BigQuery Feature Enable:', bigQueryRegion);
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);
-      if (
-        credentials &&
-        credentials.project_id &&
-        Object.keys(credentials.project_id).length > 0 &&
-        credentials.region_id !== ''
-      ) {
-        setProjectId(credentials?.project_id ?? '');
-        setRegion(credentials?.region_id ?? '');
-        setConfigError(false);
+      if (credentials) {
+        // Set project ID if it exists and is not empty
+        if (
+          credentials.project_id &&
+          Object.keys(credentials.project_id).length > 0
+        ) {
+          setProjectId(credentials.project_id);
+        }
+
+        // Set region if it exists and is not empty
+        if (
+          credentials.region_id &&
+          Object.keys(credentials.region_id).length > 0
+        ) {
+          setRegion(credentials.region_id);
+          console.log('region_id:', credentials.region_id);
+        }
+
+        // Set config error based on error flags
+        setConfigError(!!(credentials.config_error || credentials.login_error));
       }
     });
   }, []);

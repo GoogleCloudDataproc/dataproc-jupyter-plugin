@@ -224,19 +224,19 @@ function CreateRunTime({
     setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
-    }
-    const timeData = [
-      { key: 'h', value: 'h', text: 'hour' },
-      { key: 'm', value: 'm', text: 'min' },
-      { key: 's', value: 's', text: 'sec' }
-    ];
+      const timeData = [
+        { key: 'h', value: 'h', text: 'hour' },
+        { key: 'm', value: 'm', text: 'min' },
+        { key: 's', value: 's', text: 'sec' }
+      ];
 
-    setTimeList(timeData);
-    updateLogic();
-    listClustersAPI();
-    listNetworksAPI();
-    listKeyRingsAPI();
-    runtimeSharedProject();
+      setTimeList(timeData);
+      updateLogic();
+      listClustersAPI();
+      listNetworksAPI();
+      listKeyRingsAPI();
+      runtimeSharedProject();
+    }
   }, []);
 
   useEffect(() => {
@@ -260,8 +260,10 @@ function CreateRunTime({
   ]);
 
   useEffect(() => {
-    if (networkSelected !== '') {
-      listSubNetworksAPI(networkSelected);
+    if (loggedIn && !configError && !loginError) {
+      if (networkSelected !== '') {
+        listSubNetworksAPI(networkSelected);
+      }
     }
   }, [networkSelected]);
 
@@ -391,8 +393,10 @@ function CreateRunTime({
   };
 
   useEffect(() => {
-    if (keyRingSelected !== '') {
-      listKeysAPI(keyRingSelected);
+    if (loggedIn) {
+      if (keyRingSelected !== '') {
+        listKeysAPI(keyRingSelected);
+      }
     }
   }, [keyRingSelected]);
 

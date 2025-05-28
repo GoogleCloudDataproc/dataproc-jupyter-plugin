@@ -171,18 +171,18 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     const checkAllApisEnabled = async () => {
-      const dataprocClusterResponse =
-        await RunTimeSerive.listClustersDataprocAPIService();
-
+      let dataprocClusterResponse;
+      let dataCatalogResponse;
       let bigqueryDatasetsResponse;
       const credentials = await authApi();
-      if (credentials?.project_id) {
+      if (!credentials?.config_error && !credentials?.login_error) {
         bigqueryDatasetsResponse =
           await BigQueryService.checkBigQueryDatasetsAPIService();
+        dataprocClusterResponse =
+          await RunTimeSerive.listClustersDataprocAPIService();
+        dataCatalogResponse =
+          await BigQueryService.getBigQuerySearchCatalogAPIService();
       }
-
-      const dataCatalogResponse =
-        await BigQueryService.getBigQuerySearchCatalogAPIService();
 
       const apiChecks = [
         {
@@ -365,31 +365,33 @@ const extension: JupyterFrontEndPlugin<void> = {
           'Cloud Resource Manager API is not enabled. Please enable the API and restart the instance to view Dataproc Serverless Notebooks.';
         const credentials = await authApi();
         const enableLink = `https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com?project=${credentials?.project_id}`;
-        const data = await requestAPI('checkResourceManager', {
-          method: 'POST'
-        });
-        const { status, error } = data as { status: string; error?: string };
-        if (status === 'ERROR') {
-          if (
-            error?.includes(
-              'API [cloudresourcemanager.googleapis.com] not enabled on project'
-            )
-          ) {
-            Notification.error(notificationMessage, {
-              actions: [
-                {
-                  label: 'Enable',
-                  callback: () => window.open(enableLink, '_blank'),
-                  displayType: 'link'
-                }
-              ],
-              autoClose: false
-            });
-          } else {
-            toast.error(
-              `'Error in running gcloud command': ${error}`,
-              toastifyCustomStyle
-            );
+        if (!credentials?.config_error && !credentials?.login_error) {
+          const data = await requestAPI('checkResourceManager', {
+            method: 'POST'
+          });
+          const { status, error } = data as { status: string; error?: string };
+          if (status === 'ERROR') {
+            if (
+              error?.includes(
+                'API [cloudresourcemanager.googleapis.com] not enabled on project'
+              )
+            ) {
+              Notification.error(notificationMessage, {
+                actions: [
+                  {
+                    label: 'Enable',
+                    callback: () => window.open(enableLink, '_blank'),
+                    displayType: 'link'
+                  }
+                ],
+                autoClose: false
+              });
+            } else {
+              toast.error(
+                `'Error in running gcloud command': ${error}`,
+                toastifyCustomStyle
+              );
+            }
           }
         }
       } catch (error) {
@@ -400,11 +402,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-      new NotebookButtonExtension(
-        app as JupyterLab,
-        launcher,
-        themeManager
-      )
+      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
     );
 
     const loadDpmsWidget = (value: string) => {
@@ -648,7 +646,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
-        const content = new Cluster(settingRegistry, app as JupyterLab, themeManager);
+        const content = new Cluster(
+          settingRegistry,
+          app as JupyterLab,
+          themeManager
+        );
         const widget = new MainAreaWidget<Cluster>({ content });
         widget.title.label = 'Clusters';
         widget.title.icon = iconCluster;
@@ -663,14 +665,17 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-        const content = new Batches(settingRegistry,app as JupyterLab, themeManager);
+        const content = new Batches(
+          settingRegistry,
+          app as JupyterLab,
+          themeManager
+        );
         const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;
         app.shell.add(widget, 'main');
       }
     });
-
 
     const createTemplateComponentCommand = 'create-template-component';
     commands.addCommand(createTemplateComponentCommand, {
