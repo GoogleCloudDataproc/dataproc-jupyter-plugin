@@ -21,8 +21,6 @@ test.describe('Create and run notebook', () => {
   test('Can create, attach and run print() command', async ({ page }) => {
     // This is a slow integration test because it waits for a session to spin up.
     test.setTimeout(5 * 60 * 1000);
-    await page.getByRole('region', { name: 'notebook content' }).click();
-
     await page
       .locator('.jp-LauncherCard:visible', {
         hasText: 'Jupyter Plugin Kokoro Template on Serverless Spark (Remote)'
