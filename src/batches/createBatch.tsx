@@ -282,7 +282,7 @@ function CreateBatch({
   const [projectInfo, setProjectInfo] = useState('');
   const [selectedAccountRadio, setSelectedAccountRadio] = useState<
     'userAccount' | 'serviceAccount'
-  >('userAccount');
+  >('serviceAccount');
   const [serviceAccountSelected, setServiceAccountSelected] = useState('');
   const [userAccountSelected, setUserAccountSelected] = useState('');
 

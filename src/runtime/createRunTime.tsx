@@ -188,7 +188,7 @@ function CreateRunTime({
   >('projectNetwork');
   const [selectedAccountRadio, setSelectedAccountRadio] = useState<
     'userAccount' | 'serviceAccount'
-  >('userAccount');
+  >('serviceAccount');
   const [projectInfo, setProjectInfo] = useState('');
   const [configError, setConfigError] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
