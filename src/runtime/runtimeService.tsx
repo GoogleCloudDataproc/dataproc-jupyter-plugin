@@ -40,6 +40,7 @@ import {
   ISessionTemplateRoot
 } from '../utils/listRuntimeTemplateInterface';
 import { JupyterLab } from '@jupyterlab/application';
+import { requestAPI } from '../handler/handler';
 
 interface IUserInfoResponse {
   email: string;
@@ -486,19 +487,15 @@ export class RunTimeSerive {
       );
     }
   };
+
   static listClustersDataprocAPIService = async () => {
     try {
-      const queryParams = new URLSearchParams({ pageSize: '100' });
-      const response = await authenticatedFetch({
-        uri: 'clusters',
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'regions',
-        queryParams: queryParams
+      const data: any = await requestAPI(`DataprocApiEnabled`, {
+        method: 'POST'
       });
-      const formattedResponse = await response.json();
-      return formattedResponse;
-    } catch (error) {
-      return error;
+      return data;
+    } catch (reason) {
+      return reason;
     }
   };
   static listNetworksAPIService = async (
