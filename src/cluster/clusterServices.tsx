@@ -138,19 +138,19 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        Notification.error(formattedResponse?.error?.message, {
-          autoClose: false
-        });
-        DataprocLoggingService.log(
-          'Error fetching clusters list',
-          LOG_LEVEL.ERROR
+        Notification.emit(
+          `Failed to fetch clusters list : ${formattedResponse?.error?.message}`,
+          'error',
+          {
+            autoClose: 5000
+          }
         );
       }
     } catch (error) {
       setIsLoading(false);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      Notification.error(`Failed to fetch clusters list : ${error}`, {
-        autoClose: false
+      Notification.emit(`Failed to fetch clusters list : ${error}`, 'error', {
+        autoClose: 5000
       });
     }
   };
@@ -184,9 +184,13 @@ export class ClusterService {
                 setErrorView(true);
               }
               if (responseResult?.error?.code) {
-                Notification.error(responseResult?.error?.message, {
-                  autoClose: false
-                });
+                Notification.emit(
+                  `Failed to fetch cluster details : ${responseResult?.error?.message}`,
+                  'error',
+                  {
+                    autoClose: 5000
+                  }
+                );
               }
               setClusterInfo(responseResult);
               setIsLoading(false);
@@ -202,9 +206,13 @@ export class ClusterService {
             'Error listing clusters Details',
             LOG_LEVEL.ERROR
           );
-          Notification.error(`Failed to fetch cluster details : ${err}`, {
-            autoClose: false
-          });
+          Notification.emit(
+            `Failed to fetch cluster details : ${err}`,
+            'error',
+            {
+              autoClose: 5000
+            }
+          );
         });
     }
   };
@@ -227,16 +235,23 @@ export class ClusterService {
         clearInterval(timer.current);
       }
       if (formattedResponse?.error?.code) {
-        Notification.error(formattedResponse?.error?.message, {
-          autoClose: false
-        });
+        Notification.emit(
+          `Failed to fetch status for cluster ${selectedCluster} : ${formattedResponse?.error?.message}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
       }
       listClustersAPI();
     } catch (error) {
       DataprocLoggingService.log('Error fetching status', LOG_LEVEL.ERROR);
-      Notification.error(
+      Notification.emit(
         `Failed to fetch status for cluster ${selectedCluster} : ${error}`,
-        { autoClose: false }
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -263,9 +278,13 @@ export class ClusterService {
         statusApi(selectedCluster);
       }, POLLING_TIME_LIMIT);
       if (formattedResponse?.error?.code) {
-        Notification.error(formattedResponse?.error?.message, {
-          autoClose: false
-        });
+        Notification.emit(
+          `Failed to restart cluster ${selectedCluster} : ${formattedResponse?.error?.message}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
       }
       // This is an artifact of the refactoring
       listClustersAPI();
@@ -273,9 +292,12 @@ export class ClusterService {
       setRestartEnabled(false);
     } catch (error) {
       DataprocLoggingService.log('Error restarting cluster', LOG_LEVEL.ERROR);
-      Notification.error(
+      Notification.emit(
         `Failed to restart cluster ${selectedCluster} : ${error}`,
-        { autoClose: false }
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -301,14 +323,19 @@ export class ClusterService {
               console.log(responseResult);
               const formattedResponse = await responseResult.json();
               if (formattedResponse?.error?.code) {
-                Notification.error(formattedResponse?.error?.message, {
-                  autoClose: false
-                });
-              } else {
-                Notification.success(
-                  `Cluster ${selectedcluster} deleted successfully`,
+                Notification.emit(
+                  `Error deleting cluster : ${formattedResponse?.error?.message}`,
+                  'error',
                   {
-                    autoClose: false
+                    autoClose: 5000
+                  }
+                );
+              } else {
+                Notification.emit(
+                  `Cluster ${selectedcluster} deleted successfully`,
+                  'success',
+                  {
+                    autoClose: 5000
                   }
                 );
               }
@@ -317,8 +344,9 @@ export class ClusterService {
         })
         .catch((err: Error) => {
           DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
-          Notification.error(`Error deleting cluster : ${err}`, {
-            autoClose: false
+
+          Notification.emit(`Error deleting cluster : ${err}`, 'error', {
+            autoClose: 5000
           });
         });
     }
@@ -348,8 +376,8 @@ export class ClusterService {
               console.log(responseResult);
               const formattedResponse = await responseResult.json();
               if (formattedResponse?.error?.code) {
-                Notification.error(formattedResponse?.error?.message, {
-                  autoClose: false
+                Notification.emit(formattedResponse?.error?.message, 'error', {
+                  autoClose: 5000
                 });
               }
             })
@@ -360,8 +388,9 @@ export class ClusterService {
             `Error ${operation} cluster`,
             LOG_LEVEL.ERROR
           );
-          Notification.error(`Error ${operation} cluster : ${err}`, {
-            autoClose: false
+
+          Notification.emit(`Error ${operation} cluster : ${err}`, 'error', {
+            autoClose: 5000
           });
         });
     }
