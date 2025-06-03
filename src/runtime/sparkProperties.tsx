@@ -43,7 +43,8 @@ function SparkProperties({
   sparkValueValidation,
   setSparkValueValidation,
   sparkSection,
-  setGpuDetailChangeDone
+  setGpuDetailChangeDone,
+  gpuDetailChangeDone
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
@@ -71,9 +72,6 @@ function SparkProperties({
 
   const handleEditLabelSwitch = () => {
     setLabelDetail(labelDetailUpdated);
-    if (sparkSection === 'gpu') {
-      setGpuDetailChangeDone(false);
-    }
   };
 
   const updateErrorIndexes = (index: number, hasError: boolean) => {
@@ -254,11 +252,12 @@ function SparkProperties({
                               ? true
                               : false
                           }
-                          defaultValue={
-                            labelSplit.length > 2
-                              ? labelSplit[1] + ':' + labelSplit[2]
-                              : labelSplit[1]
-                          }
+                          // defaultValue={
+                          //   labelSplit.length > 2
+                          //     ? labelSplit[1] + ':' + labelSplit[2]
+                          //     : labelSplit[1]
+                          // }
+                          value={labelDetailUpdated[index].split(':')[1]}
                           Label={`Value ${index + 1}`}
                         />
                       )}
