@@ -17,6 +17,7 @@
 
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
+import { Notification } from '@jupyterlab/apputils';
 import 'react-toastify/dist/ReactToastify.css';
 import {
   API_HEADER_BEARER,
@@ -924,9 +925,12 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-            toast.success(
+            Notification.emit(
               `Runtime Template ${displayNameSelected} successfully created`,
-              toastifyCustomStyle
+              'success',
+              {
+                autoClose: 5000
+              }
             );
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
@@ -1039,10 +1043,10 @@ function CreateRunTime({
             'Error Creating template',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Failed to create the template : ${err}`,
-            toastifyCustomStyle
-          );
+
+          Notification.emit(`Failed to create the template : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
