@@ -28,8 +28,7 @@ import {
   authApi,
   loggedFetch,
   authenticatedFetch,
-  jobTimeFormat,
-  showToast
+  jobTimeFormat
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
@@ -776,13 +775,17 @@ export class RunTimeSerive {
                       setSubNetworkSelected(transformedServiceList[0]);
                     } else {
                       const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
-                      showToast(errorMessage, 'no-subnetworks-google-access');
+                      Notification.emit(errorMessage, 'error', {
+                        autoClose: 5000
+                      });
                       DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                     }
                   }
                 } else {
                   const errorMessage = `No subNetworks found  for network ${subnetwork}`;
-                  showToast(errorMessage, 'no-subnetworks');
+                  Notification.emit(errorMessage, 'error', {
+                    autoClose: 5000
+                  });
                   DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                 }
                 setIsloadingNetwork(false);
