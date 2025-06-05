@@ -214,6 +214,7 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
+  const [stagingBucket, setStagingBucket] = useState('');
 
   const runtimeOptions = [
     {
@@ -454,7 +455,6 @@ function CreateRunTime({
           runtimeConfig.repositoryConfig.pypiRepositoryConfig.pypiRepository;
         setPythonRepositorySelected(pythonRepositorySelected);
       }
-
       setDisplayNameSelected(displayName);
       /*
          Extracting runtimeId from name
@@ -630,6 +630,9 @@ function CreateRunTime({
             } else {
               setManualKeySelected(executionConfig.kmsKey);
             }
+          }
+          if (executionConfig.stagingBucket) {
+            setStagingBucket(executionConfig.stagingBucket);
           }
         }
 
@@ -1180,7 +1183,8 @@ function CreateRunTime({
               authentication_config: {
                 user_workload_authentication_type: 'END_USER_CREDENTIALS'
               }
-            })
+            }),
+            ...(stagingBucket && { stagingBucket: stagingBucket })
           },
           peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
@@ -1561,6 +1565,15 @@ function CreateRunTime({
                 >
                   Learn more
                 </div>
+              </div>
+              <div className="select-text-overlay">
+                <Input
+                  className="create-runtime-style "
+                  value={stagingBucket}
+                  onChange={e => setStagingBucket(e.target.value)}
+                  type="text"
+                  Label="Staging Bucket"
+                />
               </div>
               <div className="select-text-overlay">
                 <Input
