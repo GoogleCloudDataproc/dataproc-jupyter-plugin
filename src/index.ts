@@ -160,6 +160,27 @@ const extension: JupyterFrontEndPlugin<void> = {
       enable_cloud_storage_integration?: boolean;
       enable_bigquery_integration?: boolean;
     }
+
+    const executeApiChecks = async () => {
+      try {
+        await checkAllApisEnabled();
+        await checkResourceManager();
+        await jupyterVersionCheck();
+      } catch (error) {
+        console.error('Failed to check API status:', error);
+      }
+    };
+    app.restored
+      .then(() => {
+        if (document.readyState === 'complete') {
+          executeApiChecks();
+        } else {
+          window.addEventListener('load', executeApiChecks, { once: true });
+        }
+      })
+      .catch(error => {
+        console.error('Error during app restoration:', error);
+      });
     let bqFeature: SettingsResponse = await requestAPI('settings');
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
@@ -169,7 +190,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       panelGcs: Panel | undefined,
       panelDatasetExplorer: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
-    await checkResourceManager();
 
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', async (message: string) => {
@@ -182,68 +202,73 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     const checkAllApisEnabled = async () => {
-      const dataprocClusterResponse =
-        await RunTimeSerive.listClustersDataprocAPIService();
-
-      let bigqueryDatasetsResponse;
       const credentials = await authApi();
-      if (credentials?.project_id) {
-        bigqueryDatasetsResponse =
-          await BigQueryService.checkBigQueryDatasetsAPIService();
+      let bigqueryDatasetsResponse;
+      let dataprocClusterResponse;
+
+      if (credentials?.project_id !== '' || credentials?.access_token != '') {
+        dataprocClusterResponse =
+          await RunTimeSerive.listClustersDataprocAPIService();
+        if (bqFeature.enable_bigquery_integration) {
+          bigqueryDatasetsResponse =
+            await BigQueryService.checkBigQueryDatasetsAPIService();
+        }
+
+        const apiChecks = [
+          {
+            response: dataprocClusterResponse,
+            errorKey: 'error.message',
+            errorMessage: 'Cloud Dataproc API has not been used in project',
+            checkType: 'dataproc',
+            notificationMessage: 'The Cloud Dataproc API is not enabled.',
+            enableLink: `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`
+          },
+          {
+            response: bigqueryDatasetsResponse,
+            errorKey: 'error',
+            checkType: 'bigquery',
+            errorMessage: 'has not enabled BigQuery',
+            notificationMessage: 'The BigQuery API is not enabled.',
+            enableLink: `https://console.cloud.google.com/apis/library/bigquery.googleapis.com?project=${credentials?.project_id}`
+          }
+        ];
+        apiChecks.forEach(check => {
+          if (
+            check.checkType === 'bigquery' ||
+            check.checkType === 'dataproc'
+          ) {
+            if (check.response && check.response.is_enabled === false) {
+              Notification.error(check.notificationMessage, {
+                actions: [
+                  {
+                    label: 'Enable',
+                    callback: () => window.open(check.enableLink, '_blank'),
+                    displayType: 'link'
+                  }
+                ],
+                autoClose: false
+              });
+            }
+          } else {
+            const errorValue = check.errorKey
+              .split('.')
+              .reduce((acc, key) => acc?.[key], check.response);
+            if (errorValue && errorValue.includes(check.errorMessage)) {
+              Notification.error(check.notificationMessage, {
+                actions: [
+                  {
+                    label: 'Enable',
+                    callback: () => window.open(check.enableLink, '_blank'),
+                    displayType: 'link'
+                  }
+                ],
+                autoClose: false
+              });
+            }
+          }
+        });
       }
-
-      const apiChecks = [
-        {
-          response: dataprocClusterResponse,
-          errorKey: 'error.message',
-          errorMessage: 'Cloud Dataproc API has not been used in project',
-          notificationMessage: 'The Cloud Dataproc API is not enabled.',
-          enableLink: `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`
-        },
-        {
-          response: bigqueryDatasetsResponse,
-          errorKey: 'error',
-          checkType: 'bigquery',
-          errorMessage: 'has not enabled BigQuery',
-          notificationMessage: 'The BigQuery API is not enabled.',
-          enableLink: `https://console.cloud.google.com/apis/library/bigquery.googleapis.com?project=${credentials?.project_id}`
-        }
-      ];
-      apiChecks.forEach(check => {
-        if (check.checkType === 'bigquery') {
-          if (check.response && check.response.is_enabled === false) {
-            Notification.error(check.notificationMessage, {
-              actions: [
-                {
-                  label: 'Enable',
-                  callback: () => window.open(check.enableLink, '_blank'),
-                  displayType: 'link'
-                }
-              ],
-              autoClose: false
-            });
-          }
-        } else {
-          const errorValue = check.errorKey
-            .split('.')
-            .reduce((acc, key) => acc?.[key], check.response);
-          if (errorValue && errorValue.includes(check.errorMessage)) {
-            Notification.error(check.notificationMessage, {
-              actions: [
-                {
-                  label: 'Enable',
-                  callback: () => window.open(check.enableLink, '_blank'),
-                  displayType: 'link'
-                }
-              ],
-              autoClose: false
-            });
-          }
-        }
-      });
     };
-
-    await checkAllApisEnabled();
 
     /**
      * Handler for when the Jupyter Lab theme changes.
@@ -900,8 +925,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         rank: 4
       });
     }
-
-    await jupyterVersionCheck();
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
     // loads one when a notification occurs.  Let's hackily fire off a notification
