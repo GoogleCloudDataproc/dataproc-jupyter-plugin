@@ -42,7 +42,6 @@ import {
   STATUS_SUCCESS,
   gcpServiceUrls
 } from './const';
-import { ToastOptions, toast } from 'react-toastify';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { DataprocLoggingService } from './loggingService';
 export interface IAuthCredentials {
@@ -444,19 +443,6 @@ export const lastModifiedFormat = (lastModifiedDate: Date) => {
     return Math.floor(interval) + ' minutes ago';
   }
   return Math.floor(seconds) + ' seconds ago';
-};
-
-export const toastifyCustomStyle: ToastOptions<{}> = {
-  hideProgressBar: true,
-  autoClose: 600000,
-  theme: 'dark',
-  position: toast.POSITION.BOTTOM_CENTER
-};
-
-export const showToast = (message: string, id?: string) => {
-  if (!id || !toast.isActive(id)) {
-    toast.error(message, { toastId: id, ...toastifyCustomStyle });
-  }
 };
 
 export const extractUrl = () => {

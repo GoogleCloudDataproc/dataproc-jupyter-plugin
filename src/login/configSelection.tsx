@@ -31,7 +31,6 @@ import {
   loggedFetch
 } from '../utils/utils';
 import { Notification } from '@jupyterlab/apputils';
-import 'react-toastify/dist/ReactToastify.css';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';

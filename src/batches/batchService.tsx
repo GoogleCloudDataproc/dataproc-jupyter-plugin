@@ -32,7 +32,6 @@ import {
   authenticatedFetch,
   IAuthCredentials
 } from '../utils/utils';
-import 'react-toastify/dist/ReactToastify.css';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
 
