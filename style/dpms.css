@@ -131,6 +131,20 @@
   white-space: nowrap;
   overflow: hidden;
   width: 50%;
+  margin-top: 3px;
+  margin-left: 5px;
+}
+
+.dataset-tree
+  div[role='treeitem'][aria-level='4']
+> div:first-child{
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+ 
+.dataset-tree div[role='treeitem'][aria-level='4'] > div > div:nth-last-child(2){
+  width: 50%;
 }
 
 .db-icon {
