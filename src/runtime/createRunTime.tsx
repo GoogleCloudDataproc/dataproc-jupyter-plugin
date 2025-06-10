@@ -17,7 +17,7 @@
 
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import 'react-toastify/dist/ReactToastify.css';
+import { Notification } from '@jupyterlab/apputils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -41,16 +41,9 @@ import {
   KEY_MESSAGE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import {
-  authApi,
-  toastifyCustomStyle,
-  iconDisplay,
-  loggedFetch,
-  checkConfig
-} from '../utils/utils';
+import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { toast } from 'react-toastify';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
@@ -924,9 +917,12 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-            toast.success(
+            Notification.emit(
               `Runtime Template ${displayNameSelected} successfully created`,
-              toastifyCustomStyle
+              'success',
+              {
+                autoClose: 5000
+              }
             );
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
@@ -1030,7 +1026,13 @@ function CreateRunTime({
             const errorResponse = await response.json();
             console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
-            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
+            Notification.emit(
+              `Failed to create the template : ${errorResponse.error.message}`,
+              'error',
+              {
+                autoClose: 5000
+              }
+            );
           }
         })
         .catch((err: Error) => {
@@ -1039,10 +1041,10 @@ function CreateRunTime({
             'Error Creating template',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Failed to create the template : ${err}`,
-            toastifyCustomStyle
-          );
+
+          Notification.emit(`Failed to create the template : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };

@@ -49,7 +49,6 @@ import {
   statusMessageBatch
 } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import 'react-toastify/dist/ReactToastify.css';
 import { BatchService } from './batchService';
 import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';

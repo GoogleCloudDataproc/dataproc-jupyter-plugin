@@ -17,6 +17,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
+import { Notification } from '@jupyterlab/apputils';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import CloneJobIcon from '../../style/icons/clone_job_icon.svg';
 import StopClusterIcon from '../../style/icons/stop_cluster_icon.svg';
@@ -33,16 +34,13 @@ import {
   jobTypeDisplay,
   jobTypeValue,
   jobTypeValueArguments,
-  statusMessage,
-  toastifyCustomStyle
+  statusMessage
 } from '../utils/utils';
 
 import ClusterDetails from '../cluster/clusterDetails';
 import LabelProperties from './labelProperties';
 import SubmitJob from './submitJob';
 import ViewLogs from '../utils/viewLogs';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { statusDisplay } from '../utils/statusDisplay';
 import { JobService } from './jobServices';
 import errorIcon from '../../style/icons/error_icon.svg';
@@ -242,9 +240,12 @@ function JobDetails({
     });
     payload.labels = labelObject;
     updateJobDetails(payload);
-    toast.success(
+    Notification.emit(
       `Request to update job ${jobSelected} submitted`,
-      toastifyCustomStyle
+      'success',
+      {
+        autoClose: 5000
+      }
     );
     setLabelEditMode(false);
     getJobDetails();
@@ -701,7 +702,7 @@ function JobDetails({
               {isLoading && (
                 <div className="spin-loader-main">
                   <CircularProgress
-                    className = "spin-loader-custom-style"
+                    className="spin-loader-custom-style"
                     size={18}
                     aria-label="Loading Spinner"
                     data-testid="loader"

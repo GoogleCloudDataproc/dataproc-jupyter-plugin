@@ -17,9 +17,9 @@
 
 
 import { useEffect, useRef, useState } from 'react';
+import { Notification } from '@jupyterlab/apputils';
 import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE, gcpServiceUrls } from '../utils/const';
-import { authApi, toastifyCustomStyle } from '../utils/utils';
-import { toast } from 'react-toastify';
+import { authApi } from '../utils/utils';
 
 interface IRegions {
   name: string;
@@ -72,7 +72,9 @@ export function useRegion(projectId: string) {
       })
       .catch((error) => {
         console.error(error);
-        toast.error(error.message,toastifyCustomStyle)
+        Notification.emit(error.message, 'error', {
+          autoClose: 5000,
+        });
       });
   }, [projectId]);
 

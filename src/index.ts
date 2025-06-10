@@ -37,12 +37,17 @@ import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
-import { authApi, iconDisplay, toastifyCustomStyle } from './utils/utils';
+import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
-import { PLUGIN_ID, PLUGIN_NAME, TITLE_LAUNCHER_CATEGORY, VERSION_DETAIL } from './utils/const';
+import {
+  PLUGIN_ID,
+  PLUGIN_NAME,
+  TITLE_LAUNCHER_CATEGORY,
+  VERSION_DETAIL
+} from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import {
   IFileBrowserFactory,
@@ -67,7 +72,6 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
-import { toast } from 'react-toastify';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -367,12 +371,19 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     async function jupyterVersionCheck() {
       try {
-        const notificationMessage = 'There is a newer version of Dataproc Plugin available. Would you like to update it?';
-        const latestVersion = await requestAPI(`jupyterlabVersion?packageName=${PLUGIN_NAME}`, {
-          method: 'GET'
-        });
+        const notificationMessage =
+          'There is a newer version of Dataproc Plugin available. Would you like to update it?';
+        const latestVersion = await requestAPI(
+          `jupyterlabVersion?packageName=${PLUGIN_NAME}`,
+          {
+            method: 'GET'
+          }
+        );
 
-        if (typeof latestVersion === 'string' && latestVersion > VERSION_DETAIL) {
+        if (
+          typeof latestVersion === 'string' &&
+          latestVersion > VERSION_DETAIL
+        ) {
           Notification.info(notificationMessage, {
             actions: [
               {
@@ -380,9 +391,12 @@ const extension: JupyterFrontEndPlugin<void> = {
                 callback: async () => {
                   console.log('Update JupyterLab to the latest version');
                   try {
-                    await requestAPI(`updatePlugin?packageName=${PLUGIN_NAME}`, {
-                      method: 'POST',
-                    });
+                    await requestAPI(
+                      `updatePlugin?packageName=${PLUGIN_NAME}`,
+                      {
+                        method: 'POST'
+                      }
+                    );
                     // After successful update, refresh the application
                     window.location.reload();
                   } catch (updateError) {
@@ -399,7 +413,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 displayType: 'default'
               }
             ],
-            autoClose: false,
+            autoClose: false
           });
         }
       } catch (error) {
@@ -435,10 +449,9 @@ const extension: JupyterFrontEndPlugin<void> = {
               autoClose: false
             });
           } else {
-            toast.error(
-              `'Error in running gcloud command': ${error}`,
-              toastifyCustomStyle
-            );
+            Notification.error(`Error in running gcloud command: ${error}`, {
+              autoClose: false
+            });
           }
         }
       } catch (error) {
@@ -626,14 +639,16 @@ const extension: JupyterFrontEndPlugin<void> = {
       // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
 
       const urlParts = notebookUrl.split('/');
-      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${urlParts[urlParts.length - 1]
-        }`;
+      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
+        urlParts[urlParts.length - 1]
+      }`;
 
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] = `REGION = '${settings.get('bqRegion')['composite']
-          }'\n`;
+        notebookContent.cells[2].source[2] = `REGION = '${
+          settings.get('bqRegion')['composite']
+        }'\n`;
       }
 
       // Save the file to the workspace

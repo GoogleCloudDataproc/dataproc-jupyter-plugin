@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import { Notification } from '@jupyterlab/apputils';
 import {
   API_HEADER_CONTENT_TYPE,
   API_HEADER_BEARER,
@@ -26,14 +27,11 @@ import {
 } from '../utils/const';
 import {
   authApi,
-  toastifyCustomStyle,
   loggedFetch,
   authenticatedFetch,
   jobTimeFormat,
   elapsedTime
 } from '../utils/utils';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
 interface IRenderActionsData {
@@ -60,19 +58,27 @@ export class SessionService {
           console.log(response);
           const formattedResponse = await response.json();
           if (formattedResponse?.error?.code) {
-            toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+            Notification.emit(formattedResponse?.error?.message, 'error', {
+              autoClose: 5000
+            });
           } else {
-            toast.success(
+            Notification.emit(
               `Session ${selectedSession} deleted successfully`,
-              toastifyCustomStyle
+              'success',
+              {
+                autoClose: 5000
+              }
             );
           }
         })
         .catch((err: Error) => {
           DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
-          toast.error(
+          Notification.emit(
             `Failed to delete the session ${selectedSession} : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }
@@ -98,9 +104,12 @@ export class SessionService {
               console.log(responseResult);
               const formattedResponse = await responseResult.json();
               if (formattedResponse?.error?.code) {
-                toast.error(
-                  formattedResponse?.error?.message,
-                  toastifyCustomStyle
+                Notification.emit(
+                  `Failed to terminate session ${selectedSession} : ${formattedResponse?.error?.message}`,
+                  'error',
+                  {
+                    autoClose: 5000
+                  }
                 );
               }
             })
@@ -111,9 +120,13 @@ export class SessionService {
             'Error terminating session',
             LOG_LEVEL.ERROR
           );
-          toast.error(
+
+          Notification.emit(
             `Failed to terminate session ${selectedSession} : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }
@@ -147,7 +160,13 @@ export class SessionService {
       setLabelDetail(labelValue);
       setIsLoading(false);
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        Notification.emit(
+          `Failed to fetch session details ${sessionSelected} : ${formattedResponse?.error?.message}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
       }
     } catch (error) {
       setIsLoading(false);
@@ -155,9 +174,13 @@ export class SessionService {
         'Error loading session details',
         LOG_LEVEL.ERROR
       );
-      toast.error(
+
+      Notification.emit(
         `Failed to fetch session details ${sessionSelected} : ${error}`,
-        toastifyCustomStyle
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -241,23 +264,22 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        if (!toast.isActive('sessionError')) {
-          toast.error(formattedResponse?.error?.message, {
-            ...toastifyCustomStyle,
-            toastId: 'sessionError'
-          });
-        }
+        Notification.emit(
+          `Failed to fetch sessions : ${formattedResponse?.error?.message}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
         setIsLoading(false);
       }
     } catch (error) {
       setIsLoading(false);
       DataprocLoggingService.log('Error listing Sessions', LOG_LEVEL.ERROR);
-      if (!toast.isActive('sessionError')) {
-        toast.error(`Failed to fetch sessions : ${error}`, {
-          ...toastifyCustomStyle,
-          toastId: 'sessionError'
-        });
-      }
+
+      Notification.emit(`Failed to fetch sessions : ${error}`, 'error', {
+        autoClose: 5000
+      });
     }
   };
 }

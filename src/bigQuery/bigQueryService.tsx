@@ -15,10 +15,8 @@
  * limitations under the License.
  */
 
-import 'react-toastify/dist/ReactToastify.css';
+import { Notification } from '@jupyterlab/apputils';
 import { requestAPI } from '../handler/handler';
-import { toast } from 'react-toastify';
-import { toastifyCustomStyle } from '../utils/utils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { PLUGIN_ID } from '../utils/const';
 
@@ -47,7 +45,9 @@ export class BigQueryService {
       );
 
       if (data.error) {
-        toast.error(data.error, toastifyCustomStyle);
+        Notification.emit(data.error, 'error', {
+          autoClose: 5000
+        });
         setIsLoading(false);
       } else if (data.totalRows == 0) {
         setIsLoading(false);
@@ -68,9 +68,12 @@ export class BigQueryService {
         setTotalRowSize(data.totalRows);
       }
     } catch (reason) {
-      toast.error(
+      Notification.emit(
         `Error in calling BigQuery Preview API : ${reason}`,
-        toastifyCustomStyle
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -89,9 +92,12 @@ export class BigQueryService {
       setSchemaResponse(data);
       setIsIconLoading(false);
     } catch (reason) {
-      toast.error(
+      Notification.emit(
         `Failed to fetch big query schema : ${reason}`,
-        toastifyCustomStyle
+        'error',
+        {
+          autoClose: 5000
+        }
       );
       setIsIconLoading(false);
     }
@@ -113,9 +119,12 @@ export class BigQueryService {
         setSchemaInfoResponse([]);
       }
     } catch (reason) {
-      toast.error(
+      Notification.emit(
         `Failed to fetch big query schema : ${reason}`,
-        toastifyCustomStyle
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -198,10 +207,9 @@ export class BigQueryService {
           setIsIconLoading(false);
         }
       } catch (reason) {
-        toast.error(
-          `Failed to fetch datasets : ${reason}`,
-          toastifyCustomStyle
-        );
+        Notification.emit(`Failed to fetch datasets : ${reason}`, 'error', {
+          autoClose: 5000
+        });
         setIsLoading(false);
         setIsIconLoading(false);
       }
@@ -273,13 +281,11 @@ export class BigQueryService {
           setIsIconLoading(false);
         }
       } catch (reason) {
-        if (!toast.isActive('datasetError')) {
-          setIsIconLoading(false);
-          toast.error(`Failed to fetch datasets : ${reason}`, {
-            ...toastifyCustomStyle,
-            toastId: 'datasetError'
-          });
-        }
+        setIsIconLoading(false);
+
+        Notification.emit(`Failed to fetch datasets : ${reason}`, 'error', {
+          autoClose: 5000
+        });
       }
     }
   };
@@ -297,9 +303,12 @@ export class BigQueryService {
       datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive;
       setDatasetInfo(datasetInfoTemp);
     } catch (reason) {
-      toast.error(
+      Notification.emit(
         `Error in calling BigQurey Dataset API : ${reason}`,
-        toastifyCustomStyle
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -338,9 +347,12 @@ export class BigQueryService {
       setTableInfo(tableInfoTemp);
       setIsLoading(false);
     } catch (reason) {
-      toast.error(
+      Notification.emit(
         `Error in calling BigQurey Table API : ${reason}`,
-        toastifyCustomStyle
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -381,9 +393,12 @@ export class BigQueryService {
       setDatasetInfo(datasetInfoTemp);
       setIsLoading(false);
     } catch (reason) {
-      toast.error(
+      Notification.emit(
         `Error in calling BigQurey Dataset Details API : ${reason}`,
-        toastifyCustomStyle
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -395,7 +410,13 @@ export class BigQueryService {
       const data: any = await requestAPI(`bigQueryProjectsList`);
       setProjectNameInfo(data);
     } catch (reason) {
-      toast.error(`Error on GET credentials.\n${reason}`, toastifyCustomStyle);
+      Notification.emit(
+        `Error in calling BigQurey Project List API : ${reason}`,
+        'error',
+        {
+          autoClose: 5000
+        }
+      );
     }
   };
 
@@ -414,9 +435,12 @@ export class BigQueryService {
       );
       setSearchResponse(data);
     } catch (reason) {
-      toast.error(
+      Notification.emit(
         `Error in calling BigQurey Project List API : ${reason}`,
-        toastifyCustomStyle
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };

@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -27,13 +25,13 @@ import {
 } from '../utils/const';
 import {
   authApi,
-  toastifyCustomStyle,
   loggedFetch,
   getProjectId,
   authenticatedFetch,
   statusValue
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { Notification } from '@jupyterlab/apputils';
 
 interface IClusterRenderData {
   status: { state: ClusterStatus };
@@ -140,22 +138,20 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        if (!toast.isActive('clusterListingError')) {
-          toast.error(formattedResponse?.error?.message, {
-            ...toastifyCustomStyle,
-            toastId: 'clusterListingError'
-          });
-        }
+        Notification.emit(
+          `Failed to fetch clusters list : ${formattedResponse?.error?.message}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
       }
     } catch (error) {
       setIsLoading(false);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      if (!toast.isActive('clusterListingError')) {
-        toast.error(`Failed to fetch clusters : ${error}`, {
-          ...toastifyCustomStyle,
-          toastId: 'clusterListingError'
-        });
-      }
+      Notification.emit(`Failed to fetch clusters list : ${error}`, 'error', {
+        autoClose: 5000
+      });
     }
   };
 
@@ -188,9 +184,12 @@ export class ClusterService {
                 setErrorView(true);
               }
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
+                Notification.emit(
+                  `Failed to fetch cluster details : ${responseResult?.error?.message}`,
+                  'error',
+                  {
+                    autoClose: 5000
+                  }
                 );
               }
               setClusterInfo(responseResult);
@@ -207,9 +206,12 @@ export class ClusterService {
             'Error listing clusters Details',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Failed to fetch cluster details ${clusterSelected} : ${err}`,
-            toastifyCustomStyle
+          Notification.emit(
+            `Failed to fetch cluster details : ${err}`,
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }
@@ -233,14 +235,23 @@ export class ClusterService {
         clearInterval(timer.current);
       }
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        Notification.emit(
+          `Failed to fetch status for cluster ${selectedCluster} : ${formattedResponse?.error?.message}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
       }
       listClustersAPI();
     } catch (error) {
       DataprocLoggingService.log('Error fetching status', LOG_LEVEL.ERROR);
-      toast.error(
-        `Failed to fetch the status ${selectedCluster} : ${error}`,
-        toastifyCustomStyle
+      Notification.emit(
+        `Failed to fetch status for cluster ${selectedCluster} : ${error}`,
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -267,7 +278,13 @@ export class ClusterService {
         statusApi(selectedCluster);
       }, POLLING_TIME_LIMIT);
       if (formattedResponse?.error?.code) {
-        toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+        Notification.emit(
+          `Failed to restart cluster ${selectedCluster} : ${formattedResponse?.error?.message}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
       }
       // This is an artifact of the refactoring
       listClustersAPI();
@@ -275,9 +292,12 @@ export class ClusterService {
       setRestartEnabled(false);
     } catch (error) {
       DataprocLoggingService.log('Error restarting cluster', LOG_LEVEL.ERROR);
-      toast.error(
-        `Failed to restart the cluster ${selectedCluster} : ${error}`,
-        toastifyCustomStyle
+      Notification.emit(
+        `Failed to restart cluster ${selectedCluster} : ${error}`,
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -303,14 +323,20 @@ export class ClusterService {
               console.log(responseResult);
               const formattedResponse = await responseResult.json();
               if (formattedResponse?.error?.code) {
-                toast.error(
-                  formattedResponse?.error?.message,
-                  toastifyCustomStyle
+                Notification.emit(
+                  `Error deleting cluster : ${formattedResponse?.error?.message}`,
+                  'error',
+                  {
+                    autoClose: 5000
+                  }
                 );
               } else {
-                toast.success(
+                Notification.emit(
                   `Cluster ${selectedcluster} deleted successfully`,
-                  toastifyCustomStyle
+                  'success',
+                  {
+                    autoClose: 5000
+                  }
                 );
               }
             })
@@ -318,7 +344,10 @@ export class ClusterService {
         })
         .catch((err: Error) => {
           DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
-          toast.error(`Error deleting cluster : ${err}`, toastifyCustomStyle);
+
+          Notification.emit(`Error deleting cluster : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -347,10 +376,9 @@ export class ClusterService {
               console.log(responseResult);
               const formattedResponse = await responseResult.json();
               if (formattedResponse?.error?.code) {
-                toast.error(
-                  formattedResponse?.error?.message,
-                  toastifyCustomStyle
-                );
+                Notification.emit(formattedResponse?.error?.message, 'error', {
+                  autoClose: 5000
+                });
               }
             })
             .catch((e: Error) => console.log(e));
@@ -360,10 +388,10 @@ export class ClusterService {
             `Error ${operation} cluster`,
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Failed to ${operation} the cluster ${selectedcluster} : ${err}`,
-            toastifyCustomStyle
-          );
+
+          Notification.emit(`Error ${operation} cluster : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };

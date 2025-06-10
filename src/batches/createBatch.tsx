@@ -18,7 +18,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import 'react-toastify/dist/ReactToastify.css';
 import {
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
