@@ -199,7 +199,6 @@ function CreateRunTime({
     []
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
-  const [gpuDetailChangeDone, setGpuDetailChangeDone] = useState(false);
 
   let keyType = '';
   let keyRing = '';
@@ -214,6 +213,8 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
+
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const runtimeOptions = [
     {
@@ -279,112 +280,6 @@ function CreateRunTime({
       listSubNetworksAPI(networkSelected);
     }
   }, [networkSelected]);
-
-  const modifyResourceAllocation = () => {
-    let resourceAllocationModify = [...resourceAllocationDetailUpdated];
-    gpuDetailUpdated.forEach(item => {
-      const [key, value] = item.split(':');
-      if (key === 'spark.dataproc.executor.resource.accelerator.type') {
-        if (value === 'l4') {
-          resourceAllocationModify = resourceAllocationModify
-            .map((item: string) => {
-              if (item.includes('spark.dataproc.executor.disk.size')) {
-                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
-                return null;
-              } else if (item === 'spark.executor.cores:12') {
-                return 'spark.executor.cores:4';
-              }
-              return item;
-            })
-            .filter((item): item is string => item !== null); // To filter out null values.'
-          setResourceAllocationDetail(resourceAllocationModify);
-          setResourceAllocationDetailUpdated(resourceAllocationModify);
-
-          let gpuDetailModify = [...gpuDetailUpdated];
-          resourceAllocationModify.forEach(item => {
-            const [key, value] = item.split(':');
-            if (key === 'spark.executor.cores') {
-              const cores = Number(value);
-              const gpuValue = (1 / cores).toFixed(2);
-              gpuDetailModify = gpuDetailModify.map(gpuItem => {
-                const [gpuKey] = gpuItem.split(':');
-                if (gpuKey === 'spark.task.resource.gpu.amount') {
-                  return `spark.task.resource.gpu.amount:${gpuValue}`;
-                }
-                return gpuItem;
-              });
-            }
-          });
-          setGpuDetail(gpuDetailModify);
-          setGpuDetailUpdated(gpuDetailModify);
-          setGpuDetailChangeDone(true);
-        } else {
-          resourceAllocationModify = resourceAllocationModify
-            .map((item: string) => {
-              if (item === 'spark.executor.cores:4') {
-                return 'spark.executor.cores:12';
-              }
-              return item;
-            })
-            .filter((item): item is string => item !== null); // To filter out null values.
-          setResourceAllocationDetail(resourceAllocationModify);
-          setResourceAllocationDetailUpdated(resourceAllocationModify);
-
-          if (
-            resourceAllocationModify.filter(property =>
-              property.includes('spark.dataproc.executor.disk.size')
-            ).length === 0
-          ) {
-            // To add the spark.dataproc.executor.disk.size:750g at index 9.
-            resourceAllocationModify.splice(
-              8,
-              0,
-              'spark.dataproc.executor.disk.size:750g'
-            );
-            const updatedArray = [...resourceAllocationModify];
-            setResourceAllocationDetail(updatedArray);
-            setResourceAllocationDetailUpdated(updatedArray);
-          }
-
-          let gpuDetailModify = [...gpuDetailUpdated];
-          resourceAllocationModify.forEach(item => {
-            const [key, value] = item.split(':');
-            if (key === 'spark.executor.cores') {
-              const cores = Number(value);
-              const gpuValue = (1 / cores).toFixed(2);
-              gpuDetailModify = gpuDetailModify.map(gpuItem => {
-                const [gpuKey] = gpuItem.split(':');
-                if (gpuKey === 'spark.task.resource.gpu.amount') {
-                  return `spark.task.resource.gpu.amount:${gpuValue}`;
-                }
-                return gpuItem;
-              });
-            }
-          });
-          setGpuDetail(gpuDetailModify);
-          setGpuDetailUpdated(gpuDetailModify);
-          setGpuDetailChangeDone(true);
-        }
-      }
-    });
-    setResourceAllocationDetail(resourceAllocationModify);
-    setResourceAllocationDetailUpdated(resourceAllocationModify);
-  };
-  useEffect(() => {
-    if (
-      !gpuDetailChangeDone &&
-      (!selectedRuntimeClone ||
-        selectedRuntimeClone.runtimeConfig.properties[
-          'spark.dataproc.executor.resource.accelerator.type'
-        ] === 'l4' ||
-        gpuDetailUpdated.includes(
-          'spark.dataproc.executor.resource.accelerator.type:l4'
-        ) ||
-        resourceAllocationDetailUpdated.length === 9)
-    ) {
-      modifyResourceAllocation();
-    }
-  }, [gpuDetailUpdated, gpuDetailChangeDone]);
 
   const handlekeyRingRadio = () => {
     setSelectedRadioValue('key');
@@ -531,11 +426,9 @@ function CreateRunTime({
             if (gpuChecked || gpuDetailList.length > 0) {
               setGpuDetail(gpuDetailList);
               setGpuDetailUpdated(gpuDetailList);
-              setGpuDetailChangeDone(false);
             } else {
               setGpuDetail(['']);
               setGpuDetailUpdated(['']);
-              setGpuDetailChangeDone(false);
             }
 
             setPropertyDetail(prevPropertyDetail => {
@@ -1059,148 +952,155 @@ function CreateRunTime({
   };
 
   const handleSave = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      const labelObject: { [key: string]: string } = {};
-      labelDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        labelObject[key] = value;
-      });
-      const propertyObject: { [key: string]: string } = {};
-      resourceAllocationDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      autoScalingDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      gpuDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      propertyDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(/:(.+)/);
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      const inputValueHour = Number(idleTimeSelected) * 3600;
-      const inputValueMin = Number(idleTimeSelected) * 60;
-      const inputValueHourAuto = Number(autoTimeSelected) * 3600;
-      const inputValueMinAuto = Number(autoTimeSelected) * 60;
+    setIsSaving(true);
+    try {
+      const credentials = await authApi();
+      if (credentials) {
+        const labelObject: { [key: string]: string } = {};
+        labelDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(':');
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          labelObject[key] = value;
+        });
+        const propertyObject: { [key: string]: string } = {};
+        resourceAllocationDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(':');
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        autoScalingDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(':');
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        gpuDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(':');
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        propertyDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(/:(.+)/);
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        const inputValueHour = Number(idleTimeSelected) * 3600;
+        const inputValueMin = Number(idleTimeSelected) * 60;
+        const inputValueHourAuto = Number(autoTimeSelected) * 3600;
+        const inputValueMinAuto = Number(autoTimeSelected) * 60;
 
-      const payload = {
-        name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
-        description: desciptionSelected,
-        creator: userInfo,
-        createTime: createTime,
-        jupyterSession: {
-          kernel: 'PYTHON',
-          displayName: displayNameSelected
-        },
-        labels: labelObject,
-        runtimeConfig: {
-          ...(versionSelected && { version: versionSelected }),
-          ...(containerImageSelected !== '' && {
-            containerImage: containerImageSelected
-          }),
-          ...(propertyObject && { properties: propertyObject }),
-
-          ...(pythonRepositorySelected && {
-            repositoryConfig: {
-              pypiRepositoryConfig: {
-                pypiRepository: pythonRepositorySelected
-              }
-            }
-          })
-        },
-        environmentConfig: {
-          executionConfig: {
-            ...(serviceAccountSelected !== '' && {
-              serviceAccount: serviceAccountSelected
+        const payload = {
+          name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
+          description: desciptionSelected,
+          creator: userInfo,
+          createTime: createTime,
+          jupyterSession: {
+            kernel: 'PYTHON',
+            displayName: displayNameSelected
+          },
+          labels: labelObject,
+          runtimeConfig: {
+            ...(versionSelected && { version: versionSelected }),
+            ...(containerImageSelected !== '' && {
+              containerImage: containerImageSelected
             }),
-            ...(networkTagSelected.length > 0 && {
-              networkTags: networkTagSelected
-            }),
+            ...(propertyObject && { properties: propertyObject }),
 
-            ...(keySelected !== '' &&
-              selectedRadioValue === 'key' &&
-              keySelected !== undefined && {
-                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-              }),
-            ...(manualKeySelected !== '' &&
-              selectedRadioValue === 'manually' && {
-                kmsKey: manualKeySelected
-              }),
-
-            ...(subNetworkSelected &&
-              selectedNetworkRadio === 'projectNetwork' && {
-                subnetworkUri: subNetworkSelected
-              }),
-            ...(sharedvpcSelected &&
-              selectedNetworkRadio === 'sharedVpc' && {
-                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
-              }),
-            ...(timeSelected === 'h' &&
-              idleTimeSelected && {
-                idleTtl: inputValueHour.toString() + 's'
-              }),
-            ...(timeSelected === 'm' &&
-              idleTimeSelected && {
-                idleTtl: inputValueMin.toString() + 's'
-              }),
-            ...(timeSelected === 's' &&
-              idleTimeSelected && {
-                idleTtl: idleTimeSelected + 's'
-              }),
-
-            ...(autoSelected === 'h' &&
-              autoTimeSelected && {
-                ttl: inputValueHourAuto.toString() + 's'
-              }),
-            ...(autoSelected === 'm' &&
-              autoTimeSelected && {
-                ttl: inputValueMinAuto.toString() + 's'
-              }),
-
-            ...(autoSelected === 's' &&
-              autoTimeSelected && {
-                ttl: autoTimeSelected + 's'
-              }),
-            ...(selectedAccountRadio === 'userAccount' && {
-              authentication_config: {
-                user_workload_authentication_type: 'END_USER_CREDENTIALS'
+            ...(pythonRepositorySelected && {
+              repositoryConfig: {
+                pypiRepositoryConfig: {
+                  pypiRepository: pythonRepositorySelected
+                }
               }
             })
           },
-          peripheralsConfig: {
-            ...(servicesSelected !== 'None' && {
-              metastoreService: servicesSelected
-            }),
-            ...(clusterSelected !== '' && {
-              sparkHistoryServerConfig: {
-                dataprocCluster: `projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`
-              }
-            })
-          }
-        },
+          environmentConfig: {
+            executionConfig: {
+              ...(serviceAccountSelected !== '' && {
+                serviceAccount: serviceAccountSelected
+              }),
+              ...(networkTagSelected.length > 0 && {
+                networkTags: networkTagSelected
+              }),
 
-        updateTime: new Date().toISOString()
-      };
-      if (selectedRuntimeClone !== undefined) {
-        updateRuntimeApi(payload);
-      } else {
-        createRuntimeApi(payload);
+              ...(keySelected !== '' &&
+                selectedRadioValue === 'key' &&
+                keySelected !== undefined && {
+                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+              }),
+              ...(manualKeySelected !== '' &&
+                selectedRadioValue === 'manually' && {
+                kmsKey: manualKeySelected
+              }),
+
+              ...(subNetworkSelected &&
+                selectedNetworkRadio === 'projectNetwork' && {
+                subnetworkUri: subNetworkSelected
+              }),
+              ...(sharedvpcSelected &&
+                selectedNetworkRadio === 'sharedVpc' && {
+                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
+              }),
+              ...(timeSelected === 'h' &&
+                idleTimeSelected && {
+                idleTtl: inputValueHour.toString() + 's'
+              }),
+              ...(timeSelected === 'm' &&
+                idleTimeSelected && {
+                idleTtl: inputValueMin.toString() + 's'
+              }),
+              ...(timeSelected === 's' &&
+                idleTimeSelected && {
+                idleTtl: idleTimeSelected + 's'
+              }),
+
+              ...(autoSelected === 'h' &&
+                autoTimeSelected && {
+                ttl: inputValueHourAuto.toString() + 's'
+              }),
+              ...(autoSelected === 'm' &&
+                autoTimeSelected && {
+                ttl: inputValueMinAuto.toString() + 's'
+              }),
+
+              ...(autoSelected === 's' &&
+                autoTimeSelected && {
+                ttl: autoTimeSelected + 's'
+              }),
+              ...(selectedAccountRadio === 'userAccount' && {
+                authentication_config: {
+                  user_workload_authentication_type: 'END_USER_CREDENTIALS'
+                }
+              })
+            },
+            peripheralsConfig: {
+              ...(servicesSelected !== 'None' && {
+                metastoreService: servicesSelected
+              }),
+              ...(clusterSelected !== '' && {
+                sparkHistoryServerConfig: {
+                  dataprocCluster: `projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`
+                }
+              })
+            }
+          },
+
+          updateTime: new Date().toISOString()
+        };
+        if (selectedRuntimeClone !== undefined) {
+          updateRuntimeApi(payload);
+        } else {
+          createRuntimeApi(payload);
+        }
       }
+    } catch (error) {
+      console.error('Error saving runtime:', error);
+    } finally {
+      setIsSaving(false); // Stop loading regardless of success/failure
     }
   };
 
@@ -1254,7 +1154,6 @@ function CreateRunTime({
       });
       setGpuDetail(gpuDetailModify);
       setGpuDetailUpdated(gpuDetailModify);
-      setGpuDetailChangeDone(false);
     } else {
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
       resourceAllocationModify = resourceAllocationModify.map(
@@ -1306,7 +1205,6 @@ function CreateRunTime({
       setExpandGpu(false);
       setGpuDetail(['']);
       setGpuDetailUpdated(['']);
-      setGpuDetailChangeDone(false);
     }
   };
 
@@ -1383,9 +1281,8 @@ function CreateRunTime({
 
               <div className="select-text-overlay">
                 <Input
-                  className={`create-runtime-style ${
-                    selectedRuntimeClone !== undefined ? ' disable-text' : ''
-                  }`}
+                  className={`create-runtime-style ${selectedRuntimeClone !== undefined ? ' disable-text' : ''
+                    }`}
                   value={runTimeSelected}
                   onChange={e => handleInputChange(e)}
                   type="text"
@@ -2043,7 +1940,6 @@ function CreateRunTime({
                   sparkValueValidation={sparkValueValidation}
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="resourceallocation"
-                  setGpuDetailChangeDone={setGpuDetailChangeDone}
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -2088,7 +1984,6 @@ function CreateRunTime({
                   sparkValueValidation={sparkValueValidation}
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="autoscaling"
-                  setGpuDetailChangeDone={setGpuDetailChangeDone}
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -2142,7 +2037,6 @@ function CreateRunTime({
                   sparkValueValidation={sparkValueValidation}
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="gpu"
-                  setGpuDetailChangeDone={setGpuDetailChangeDone}
                 />
               )}
               <div className="spark-properties-sub-header">Others</div>
@@ -2178,18 +2072,18 @@ function CreateRunTime({
               <div className="job-button-style-parent">
                 <div
                   onClick={() => {
-                    if (!isSaveDisabled()) {
+                    if (!isSaveDisabled() && !isSaving) {
                       handleSave();
                     }
                   }}
                   className={
-                    isSaveDisabled()
+                    isSaveDisabled() || isSaving
                       ? 'submit-button-disable-style'
                       : 'submit-button-style'
                   }
                   aria-label="submit Batch"
                 >
-                  <div>SAVE</div>
+                  <div>{isSaving ? 'SAVING...' : 'SAVE'}</div>
                 </div>
                 <div
                   className="job-cancel-button-style"
