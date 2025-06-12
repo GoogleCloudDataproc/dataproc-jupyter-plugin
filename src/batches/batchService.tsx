@@ -355,6 +355,11 @@ export class BatchService {
                 setNextPageTokens([...nextPageTokens, responseResult.nextPageToken])
                 setIsLoading(false);
                 setLoggedIn(true);
+              } else {
+                setBatchesList(allBatchesData);
+                setNextPageTokens([]);
+                setIsLoading(false);
+                setLoggedIn(true);
               }
             })
             .catch((e: Error) => {

@@ -119,7 +119,9 @@ function ListBatches({ setLoggedIn }: any) {
       timer.current
     );
   };
+
   const data = batchesList;
+
   const columns = React.useMemo(
     () => [
       {
