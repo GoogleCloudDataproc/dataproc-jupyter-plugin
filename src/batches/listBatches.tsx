@@ -324,7 +324,10 @@ function ListBatches({ setLoggedIn }: any) {
       const newPageIndex = currentPageIndex - 1;
       setCurrentPageIndex(newPageIndex);
 
+      // Remove the last token from the nextPageTokens array to go back to the previous page
       nextPageTokens.pop();
+      // need to remove the current page token
+      // This assumes that the last token in nextPageTokens corresponds to the current page
       nextPageTokens.pop();
 
       listBatchAPI(nextPageTokens);
@@ -338,7 +341,6 @@ function ListBatches({ setLoggedIn }: any) {
       setCurrentPageIndex(newPageIndex);
 
       // Use the last token in the array for the next page
-      // const pageToken = nextPageTokens[nextPageTokens.length - 1];
       listBatchAPI(nextPageTokens);
     }
   };
@@ -348,8 +350,17 @@ function ListBatches({ setLoggedIn }: any) {
   const canNextPage = nextPageTokens.length > currentPageIndex;
 
   const startIndex = currentPageIndex * pageSize + 1;
-  const endIndex = (currentPageIndex + 1) * pageSize;
-  const estimatedTotal = (currentPageIndex + 2) * pageSize;
+  const actualRecordsOnCurrentPage = rows.length; // This gives the actual number of records displayed
+
+  // Calculate the end index - either full pageSize or actual records if less than pageSize
+  const endIndex = Math.min((currentPageIndex + 1) * pageSize, startIndex - 1 + actualRecordsOnCurrentPage);
+
+  // Calculate estimated total:
+  // If there's a next page available, show current page + next potential page (+ pageSize)
+  // If no next page, show actual end index as total
+  const estimatedTotal = canNextPage
+    ? (currentPageIndex + 2) * pageSize
+    : endIndex;
 
   return (
     <div>
@@ -431,7 +442,11 @@ function ListBatches({ setLoggedIn }: any) {
                 <div className="pagination-parent-view">
                   <div>Rows per page: 50</div>
                   <div className="page-display-part">
-                    {startIndex} - {endIndex} of {estimatedTotal}
+                    {batchesList.length > 0 ? (
+                      `${startIndex} - ${endIndex} of ${estimatedTotal}`
+                    ) : (
+                      "0 - 0 of 0"
+                    )}
                   </div>
                   <div
                     role="button"
