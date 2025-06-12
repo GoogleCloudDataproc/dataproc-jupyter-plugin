@@ -280,17 +280,18 @@ export class BatchService {
     setBatchesList: (value: IBatchesList[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
-    nextPageToken?: string,
+    nextPageTokens: string[],
+    setNextPageTokens: (value: string[]) => void,
     previousBatchesList?: object
   ) => {
     const credentials = await authApi();
     const { DATAPROC } = await gcpServiceUrls;
-    const pageToken = nextPageToken ?? '';
+    const pageToken = nextPageTokens.length > 0 ? nextPageTokens[nextPageTokens.length - 1] : '';
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=500&pageToken=${pageToken}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -349,19 +350,9 @@ export class BatchService {
                 ...transformBatchListData
               ];
 
-              if (responseResult.nextPageToken) {
-                this.listBatchAPIService(
-                  setRegionName,
-                  setProjectName,
-                  renderActions,
-                  setBatchesList,
-                  setIsLoading,
-                  setLoggedIn,
-                  responseResult.nextPageToken,
-                  allBatchesData
-                );
-              } else {
+              if (responseResult?.nextPageToken) {
                 setBatchesList(allBatchesData);
+                setNextPageTokens([...nextPageTokens, responseResult.nextPageToken])
                 setIsLoading(false);
                 setLoggedIn(true);
               }

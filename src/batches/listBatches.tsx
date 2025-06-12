@@ -35,16 +35,26 @@ import {
   STATUS_SUCCESS
 } from '../utils/const';
 import TableData from '../utils/tableData';
-import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
 import { BatchService } from './batchService';
 import PollingTimer from '../utils/pollingTimer';
 import DeletePopup from '../utils/deletePopup';
 import BatchDetails from './batchDetails';
 import CreateBatch from './createBatch';
+import PreviousIcon from '../../style/icons/previous_page.svg';
+import NextIcon from '../../style/icons/next_page.svg';
 
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { CircularProgress } from '@mui/material';
+
+const iconPrevious = new LabIcon({
+  name: 'launcher:previous-icon',
+  svgstr: PreviousIcon
+});
+const iconNext = new LabIcon({
+  name: 'launcher:next-icon',
+  svgstr: NextIcon
+});
 
 const iconSubmitJob = new LabIcon({
   name: 'launcher:submit-job-icon',
@@ -96,6 +106,9 @@ function ListBatches({ setLoggedIn }: any) {
   const [regionName, setRegionName] = useState('');
   const [projectName, setProjectName] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [nextPageTokens, setNextPageTokens] = useState<string[]>([]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+
   const pollingBatches = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -151,12 +164,7 @@ function ListBatches({ setLoggedIn }: any) {
     preGlobalFilteredRows,
     setGlobalFilter,
     page,
-    canPreviousPage,
-    canNextPage,
-    nextPage,
-    previousPage,
-    setPageSize,
-    state: { pageIndex, pageSize }
+    state: { pageSize }
   } = useTable(
     //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
@@ -203,12 +211,12 @@ function ListBatches({ setLoggedIn }: any) {
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_DELETING) && (
-              <CircularProgress
-                size={15}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            )}
+                <CircularProgress
+                  size={15}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>
@@ -231,14 +239,16 @@ function ListBatches({ setLoggedIn }: any) {
     stateTime: Date;
   }
 
-  const listBatchAPI = async () => {
+  const listBatchAPI = async (pageToken?: string[]) => {
     await BatchService.listBatchAPIService(
       setRegionName,
       setProjectName,
       renderActions,
       setBatchesList,
       setIsLoading,
-      setLoggedIn
+      setLoggedIn,
+      pageToken ? pageToken : nextPageTokens,
+      setNextPageTokens,
     );
   };
 
@@ -305,16 +315,39 @@ function ListBatches({ setLoggedIn }: any) {
     if (!pollingDisable) {
       listBatchAPI();
     }
+  }, []);
 
-    return () => {
-      pollingBatches(listBatchAPI, true);
-    };
-  }, [pollingDisable, detailedBatchView]);
-  useEffect(() => {
-    if (!detailedBatchView && !isLoading) {
-      pollingBatches(listBatchAPI, pollingDisable);
+  const handlePreviousPage = () => {
+    if (currentPageIndex > 0) {
+      const newPageIndex = currentPageIndex - 1;
+      setCurrentPageIndex(newPageIndex);
+
+      nextPageTokens.pop();
+      nextPageTokens.pop();
+
+      listBatchAPI(nextPageTokens);
     }
-  }, [isLoading]);
+  };
+
+  const handleNextPage = () => {
+    // Check if we have a next page token available
+    if (nextPageTokens.length > currentPageIndex) {
+      const newPageIndex = currentPageIndex + 1;
+      setCurrentPageIndex(newPageIndex);
+
+      // Use the last token in the array for the next page
+      // const pageToken = nextPageTokens[nextPageTokens.length - 1];
+      listBatchAPI(nextPageTokens);
+    }
+  };
+
+  // Check if we can navigate to previous/next pages
+  const canPreviousPage = currentPageIndex > 0;
+  const canNextPage = nextPageTokens.length > currentPageIndex;
+
+  const startIndex = currentPageIndex * pageSize + 1;
+  const endIndex = (currentPageIndex + 1) * pageSize;
+  const estimatedTotal = (currentPageIndex + 2) * pageSize;
 
   return (
     <div>
@@ -393,18 +426,30 @@ function ListBatches({ setLoggedIn }: any) {
                   tableDataCondition={tableDataCondition}
                   fromPage="Batches"
                 />
-                {batchesList.length > 50 && (
-                  <PaginationView
-                    pageSize={pageSize}
-                    setPageSize={setPageSize}
-                    pageIndex={pageIndex}
-                    allData={batchesList}
-                    previousPage={previousPage}
-                    nextPage={nextPage}
-                    canPreviousPage={canPreviousPage}
-                    canNextPage={canNextPage}
-                  />
-                )}
+                <div className="pagination-parent-view">
+                  <div>Rows per page: 50</div>
+                  <div className="page-display-part">
+                    {startIndex} - {endIndex} of {estimatedTotal}
+                  </div>
+                  <div
+                    role="button"
+                    className={
+                      !canPreviousPage ? 'page-move-button disabled' : 'page-move-button'
+                    }
+                    onClick={() => handlePreviousPage()}
+                  >
+                    <iconPrevious.react tag="div" className="icon-white logo-alignment-style" />
+                  </div>
+                  <div
+                    role="button"
+                    onClick={() => handleNextPage()}
+                    className={
+                      !canNextPage ? 'page-move-button disabled' : 'page-move-button'
+                    }
+                  >
+                    <iconNext.react tag="div" className="icon-white logo-alignment-style" />
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
@@ -412,7 +457,7 @@ function ListBatches({ setLoggedIn }: any) {
               {isLoading && (
                 <div className="spin-loader-main">
                   <CircularProgress
-                    className = "spin-loader-custom-style"
+                    className="spin-loader-custom-style"
                     size={18}
                     aria-label="Loading Spinner"
                     data-testid="loader"
