@@ -97,6 +97,12 @@ interface IKeyListResponse {
     code: number;
   };
 }
+
+interface DataprocApiStatusResponse {
+  success: boolean;
+  is_enabled: boolean;
+  error?: string;
+}
 export class RunTimeSerive {
   static deleteRuntimeTemplateAPI = async (
     selectedRuntimeTemplate: string,
@@ -488,9 +494,9 @@ export class RunTimeSerive {
     }
   };
 
-  static listClustersDataprocAPIService = async () => {
+  static checkDataprocApiEnabledService = async () => {
     try {
-      const data: any = await requestAPI(`DataprocApiEnabled`, {
+      const data: DataprocApiStatusResponse = await requestAPI(`DataprocApiEnabled`, {
         method: 'POST'
       });
       return data;

@@ -208,7 +208,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
       if (credentials?.project_id !== '' || credentials?.access_token != '') {
         dataprocClusterResponse =
-          await RunTimeSerive.listClustersDataprocAPIService();
+          await RunTimeSerive.checkDataprocApiEnabledService();
         if (bqFeature.enable_bigquery_integration) {
           bigqueryDatasetsResponse =
             await BigQueryService.checkBigQueryDatasetsAPIService();
@@ -249,23 +249,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 autoClose: false
               });
             }
-          } else {
-            const errorValue = check.errorKey
-              .split('.')
-              .reduce((acc, key) => acc?.[key], check.response);
-            if (errorValue && errorValue.includes(check.errorMessage)) {
-              Notification.error(check.notificationMessage, {
-                actions: [
-                  {
-                    label: 'Enable',
-                    callback: () => window.open(check.enableLink, '_blank'),
-                    displayType: 'link'
-                  }
-                ],
-                autoClose: false
-              });
-            }
-          }
+          } 
         });
       }
     };
