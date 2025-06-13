@@ -173,3 +173,17 @@ class CheckApiController(APIHandler):
 
         except Exception as e:
             self.finish({"success": False, "is_enabled": False, "error": str(e)})
+
+
+class CheckDataprocApiController(APIHandler):
+    @tornado.web.authenticated
+    async def post(self):
+        try:
+            project_id = await credentials._gcp_project()
+            cmd = f"services list --enabled --project={project_id} | grep dataproc.googleapis.com"
+            result = await async_run_gcloud_subcommand(cmd)
+            is_enabled = bool(result.strip())
+            self.finish({"success": True, "is_enabled": is_enabled})
+
+        except Exception as e:
+            self.finish({"success": False, "is_enabled": False, "error": str(e)})

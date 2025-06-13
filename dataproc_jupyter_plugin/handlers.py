@@ -43,7 +43,10 @@ from dataproc_jupyter_plugin.controllers import (
     dataproc,
     executor,
 )
-from dataproc_jupyter_plugin.controllers.version import LatestVersionController, UpdatePackage
+from dataproc_jupyter_plugin.controllers.version import (
+    LatestVersionController,
+    UpdatePackage,
+)
 
 _region_not_set_error = """GCP region not set in gcloud.
 
@@ -266,6 +269,7 @@ def setup_handlers(web_app):
         "checkResourceManager": ResourceManagerHandler,
         "jupyterlabVersion": LatestVersionController,
         "updatePlugin": UpdatePackage,
+        "DataprocApiEnabled": bigquery.CheckDataprocApiController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)
