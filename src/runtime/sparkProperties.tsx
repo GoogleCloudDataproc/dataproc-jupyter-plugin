@@ -49,6 +49,7 @@ function SparkProperties({
   labelDetail used to store the permanent label details when onblur
   labelDetailUpdated used to store the temporay label details when onchange
   */
+
   const handleLabelDetailSelected = (
     event: React.SyntheticEvent<HTMLElement, Event>,
     data: string,
@@ -71,9 +72,6 @@ function SparkProperties({
 
   const handleEditLabelSwitch = () => {
     setLabelDetail(labelDetailUpdated);
-    if (sparkSection === 'gpu') {
-      setGpuDetailChangeDone(false);
-    }
   };
 
   const updateErrorIndexes = (index: number, hasError: boolean) => {
@@ -225,7 +223,7 @@ function SparkProperties({
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
                       {SELECT_FIELDS.includes(labelSplit[0]) &&
-                      sparkSection !== 'gpu' ? (
+                        sparkSection !== 'gpu' ? (
                         <Select
                           className="spark-properties-select-style"
                           value={labelSplit[1]}
@@ -234,7 +232,7 @@ function SparkProperties({
                           }
                           options={
                             labelSplit[1] === 'true' ||
-                            labelSplit[1] === 'false'
+                              labelSplit[1] === 'false'
                               ? BOOLEAN_SELECT_OPTIONS
                               : TIER_SELECT_OPTIONS
                           }
@@ -250,15 +248,11 @@ function SparkProperties({
                           }
                           disabled={
                             labelSplit[0] ===
-                            'spark.dataproc.executor.compute.tier'
+                              'spark.dataproc.executor.compute.tier'
                               ? true
                               : false
                           }
-                          defaultValue={
-                            labelSplit.length > 2
-                              ? labelSplit[1] + ':' + labelSplit[2]
-                              : labelSplit[1]
-                          }
+                          value={labelDetailUpdated[index].split(':')[1]}
                           Label={`Value ${index + 1}`}
                         />
                       )}
