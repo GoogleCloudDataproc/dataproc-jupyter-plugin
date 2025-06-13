@@ -23,7 +23,7 @@ async function checkInputNotEmpty(page, label) {
   return value.trim() !== '';
 }
 
-test('Job Scheduler', async ({ page }) => {
+test('Sanity: Job Scheduler', async ({ page }) => {
   test.setTimeout(150 * 1000);
   let clusterNotEmpty = true;
   await page.getByRole('region', { name: 'notebook content' }).click();
