@@ -43,6 +43,7 @@ function SparkProperties({
   sparkValueValidation,
   setSparkValueValidation,
   sparkSection,
+  setGpuDetailChangeDone
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur

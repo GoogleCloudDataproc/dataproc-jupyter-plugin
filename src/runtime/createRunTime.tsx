@@ -199,6 +199,7 @@ function CreateRunTime({
     []
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
+  const [gpuDetailChangeDone, setGpuDetailChangeDone] = useState(false);
 
   let keyType = '';
   let keyRing = '';
@@ -213,7 +214,6 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
-
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const runtimeOptions = [
@@ -280,6 +280,112 @@ function CreateRunTime({
       listSubNetworksAPI(networkSelected);
     }
   }, [networkSelected]);
+
+  const modifyResourceAllocation = () => {
+    let resourceAllocationModify = [...resourceAllocationDetailUpdated];
+    gpuDetailUpdated.forEach(item => {
+      const [key, value] = item.split(':');
+      if (key === 'spark.dataproc.executor.resource.accelerator.type') {
+        if (value === 'l4') {
+          resourceAllocationModify = resourceAllocationModify
+            .map((item: string) => {
+              if (item.includes('spark.dataproc.executor.disk.size')) {
+                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
+                return null;
+              } else if (item === 'spark.executor.cores:12') {
+                return 'spark.executor.cores:4';
+              }
+              return item;
+            })
+            .filter((item): item is string => item !== null); // To filter out null values.'
+          setResourceAllocationDetail(resourceAllocationModify);
+          setResourceAllocationDetailUpdated(resourceAllocationModify);
+
+          let gpuDetailModify = [...gpuDetailUpdated];
+          resourceAllocationModify.forEach(item => {
+            const [key] = item.split(':');
+            if (key === 'spark.executor.cores') {
+              // const cores = Number(value);
+              // const gpuValue = (1 / cores).toFixed(2);
+              gpuDetailModify = gpuDetailModify.map(gpuItem => {
+                const [gpuKey, value] = gpuItem.split(':');
+                if (gpuKey === 'spark.task.resource.gpu.amount') {
+                  return `spark.task.resource.gpu.amount:${value}`;
+                }
+                return gpuItem;
+              });
+            }
+          });
+          setGpuDetail(gpuDetailModify);
+          setGpuDetailUpdated(gpuDetailModify);
+          setGpuDetailChangeDone(true);
+        } else {
+          resourceAllocationModify = resourceAllocationModify
+            .map((item: string) => {
+              if (item === 'spark.executor.cores:4') {
+                return 'spark.executor.cores:12';
+              }
+              return item;
+            })
+            .filter((item): item is string => item !== null); // To filter out null values.
+          setResourceAllocationDetail(resourceAllocationModify);
+          setResourceAllocationDetailUpdated(resourceAllocationModify);
+
+          if (
+            resourceAllocationModify.filter(property =>
+              property.includes('spark.dataproc.executor.disk.size')
+            ).length === 0
+          ) {
+            // To add the spark.dataproc.executor.disk.size:750g at index 9.
+            resourceAllocationModify.splice(
+              8,
+              0,
+              'spark.dataproc.executor.disk.size:750g'
+            );
+            const updatedArray = [...resourceAllocationModify];
+            setResourceAllocationDetail(updatedArray);
+            setResourceAllocationDetailUpdated(updatedArray);
+          }
+
+          let gpuDetailModify = [...gpuDetailUpdated];
+          resourceAllocationModify.forEach(item => {
+            const [key] = item.split(':');
+            if (key === 'spark.executor.cores') {
+              // const cores = Number(value);
+              // const gpuValue = (1 / cores).toFixed(2);
+              gpuDetailModify = gpuDetailModify.map(gpuItem => {
+                const [gpuKey, value] = gpuItem.split(':');
+                if (gpuKey === 'spark.task.resource.gpu.amount') {
+                  return `spark.task.resource.gpu.amount:${value}`;
+                }
+                return gpuItem;
+              });
+            }
+          });
+          setGpuDetail(gpuDetailModify);
+          setGpuDetailUpdated(gpuDetailModify);
+          setGpuDetailChangeDone(true);
+        }
+      }
+    });
+    setResourceAllocationDetail(resourceAllocationModify);
+    setResourceAllocationDetailUpdated(resourceAllocationModify);
+  };
+  useEffect(() => {
+    if (
+      !gpuDetailChangeDone &&
+      (!selectedRuntimeClone ||
+        selectedRuntimeClone.runtimeConfig.properties[
+        'spark.dataproc.executor.resource.accelerator.type'
+        ] === 'l4' ||
+        gpuDetailUpdated.includes(
+          'spark.dataproc.executor.resource.accelerator.type:l4'
+        ) ||
+        resourceAllocationDetailUpdated.length === 9)
+    ) {
+      modifyResourceAllocation();
+    }
+  }, [gpuDetailUpdated, gpuDetailChangeDone]);
 
   const handlekeyRingRadio = () => {
     setSelectedRadioValue('key');
@@ -426,9 +532,11 @@ function CreateRunTime({
             if (gpuChecked || gpuDetailList.length > 0) {
               setGpuDetail(gpuDetailList);
               setGpuDetailUpdated(gpuDetailList);
+              setGpuDetailChangeDone(false);
             } else {
               setGpuDetail(['']);
               setGpuDetailUpdated(['']);
+              setGpuDetailChangeDone(false);
             }
 
             setPropertyDetail(prevPropertyDetail => {
@@ -1154,6 +1262,7 @@ function CreateRunTime({
       });
       setGpuDetail(gpuDetailModify);
       setGpuDetailUpdated(gpuDetailModify);
+      setGpuDetailChangeDone(false);
     } else {
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
       resourceAllocationModify = resourceAllocationModify.map(
@@ -1205,6 +1314,7 @@ function CreateRunTime({
       setExpandGpu(false);
       setGpuDetail(['']);
       setGpuDetailUpdated(['']);
+      setGpuDetailChangeDone(false);
     }
   };
 
@@ -1940,6 +2050,7 @@ function CreateRunTime({
                   sparkValueValidation={sparkValueValidation}
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="resourceallocation"
+                  setGpuDetailChangeDone={setGpuDetailChangeDone}
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -1984,6 +2095,7 @@ function CreateRunTime({
                   sparkValueValidation={sparkValueValidation}
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="autoscaling"
+                  setGpuDetailChangeDone={setGpuDetailChangeDone}
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -2037,6 +2149,7 @@ function CreateRunTime({
                   sparkValueValidation={sparkValueValidation}
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="gpu"
+                  setGpuDetailChangeDone={setGpuDetailChangeDone}
                 />
               )}
               <div className="spark-properties-sub-header">Others</div>
