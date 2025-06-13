@@ -224,7 +224,6 @@ function ConfigSelection({
   useEffect(() => {
     handleSettingsRegistry();
     handleBigQueryFeature();
-    console.log('BigQuery Feature Enable:', bigQueryRegion);
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);
@@ -243,7 +242,6 @@ function ConfigSelection({
           Object.keys(credentials.region_id).length > 0
         ) {
           setRegion(credentials.region_id);
-          console.log('region_id:', credentials.region_id);
         }
 
         // Set config error based on error flags

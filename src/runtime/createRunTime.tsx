@@ -410,7 +410,7 @@ function CreateRunTime({
   };
 
   useEffect(() => {
-    if (loggedIn) {
+    if (loggedIn && !configError && !loginError) {
       if (keyRingSelected !== '') {
         listKeysAPI(keyRingSelected);
       }
