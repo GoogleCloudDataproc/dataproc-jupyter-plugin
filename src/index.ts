@@ -32,7 +32,6 @@ import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
 import notebookTemplateIcon from '../style/icons/notebook_template_icon.svg';
-import scheduledNotebooksIcon from '../style/icons/scheduled_notebooks_icon.svg';
 import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
@@ -57,7 +56,6 @@ import { IDocumentManager } from '@jupyterlab/docmanager';
 import { GCSDrive } from './gcs/gcsDrive';
 import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
 import { DataprocLoggingService, LOG_LEVEL } from './utils/loggingService';
-import { NotebookScheduler } from './scheduler/notebookScheduler';
 import pythonLogo from '../third_party/icons/python_logo.svg';
 import NotebookTemplateService from './notebookTemplates/notebookTemplatesService';
 import * as path from 'path';
@@ -123,10 +121,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
-    const iconScheduledNotebooks = new LabIcon({
-      name: 'launcher:scheduled-notebooks-icon',
-      svgstr: scheduledNotebooksIcon
-    });
     const iconNotebookTemplate = new LabIcon({
       name: 'launcher:notebook-template-icon',
       svgstr: notebookTemplateIcon
@@ -177,18 +171,18 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     const checkAllApisEnabled = async () => {
-      const dataprocClusterResponse =
-        await RunTimeSerive.listClustersDataprocAPIService();
-
+      let dataprocClusterResponse;
+      let dataCatalogResponse;
       let bigqueryDatasetsResponse;
       const credentials = await authApi();
-      if (credentials?.project_id) {
+      if (!credentials?.config_error && !credentials?.login_error) {
         bigqueryDatasetsResponse =
           await BigQueryService.checkBigQueryDatasetsAPIService();
+        dataprocClusterResponse =
+          await RunTimeSerive.listClustersDataprocAPIService();
+        dataCatalogResponse =
+          await BigQueryService.getBigQuerySearchCatalogAPIService();
       }
-
-      const dataCatalogResponse =
-        await BigQueryService.getBigQuerySearchCatalogAPIService();
 
       const apiChecks = [
         {
@@ -414,31 +408,33 @@ const extension: JupyterFrontEndPlugin<void> = {
           'Cloud Resource Manager API is not enabled. Please enable the API and restart the instance to view Dataproc Serverless Notebooks.';
         const credentials = await authApi();
         const enableLink = `https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com?project=${credentials?.project_id}`;
-        const data = await requestAPI('checkResourceManager', {
-          method: 'POST'
-        });
-        const { status, error } = data as { status: string; error?: string };
-        if (status === 'ERROR') {
-          if (
-            error?.includes(
-              'API [cloudresourcemanager.googleapis.com] not enabled on project'
-            )
-          ) {
-            Notification.error(notificationMessage, {
-              actions: [
-                {
-                  label: 'Enable',
-                  callback: () => window.open(enableLink, '_blank'),
-                  displayType: 'link'
-                }
-              ],
-              autoClose: false
-            });
-          } else {
-            toast.error(
-              `'Error in running gcloud command': ${error}`,
-              toastifyCustomStyle
-            );
+        if (!credentials?.config_error && !credentials?.login_error) {
+          const data = await requestAPI('checkResourceManager', {
+            method: 'POST'
+          });
+          const { status, error } = data as { status: string; error?: string };
+          if (status === 'ERROR') {
+            if (
+              error?.includes(
+                'API [cloudresourcemanager.googleapis.com] not enabled on project'
+              )
+            ) {
+              Notification.error(notificationMessage, {
+                actions: [
+                  {
+                    label: 'Enable',
+                    callback: () => window.open(enableLink, '_blank'),
+                    displayType: 'link'
+                  }
+                ],
+                autoClose: false
+              });
+            } else {
+              toast.error(
+                `'Error in running gcloud command': ${error}`,
+                toastifyCustomStyle
+              );
+            }
           }
         }
       } catch (error) {
@@ -449,12 +445,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-      new NotebookButtonExtension(
-        app as JupyterLab,
-        settingRegistry as ISettingRegistry,
-        launcher,
-        themeManager
-      )
+      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
     );
 
     const loadDpmsWidget = (value: string) => {
@@ -568,9 +559,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label === 'Clusters' ||
             newValue.title.label === 'Serverless' ||
             newValue.title.label === 'Settings' ||
-            newValue.title.label === 'Notebook Templates' ||
-            newValue.title.label === 'Scheduled Jobs' ||
-            newValue.title.label === 'Job Scheduler') &&
+            newValue.title.label === 'Notebook Templates') &&
           lastClusterName !== ''
         ) {
           localStorage.setItem('oldNotebookValue', lastClusterName || '');
@@ -586,9 +575,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             newValue.title.label !== 'Serverless' &&
             newValue.title.label !== 'Runtime template' &&
             newValue.title.label !== 'Settings' &&
-            newValue.title.label !== 'Notebook Templates' &&
-            newValue.title.label !== 'Scheduled Jobs' &&
-            newValue.title.label !== 'Job Scheduler'
+            newValue.title.label !== 'Notebook Templates'
           ) {
             let oldNotebook = localStorage.getItem('oldNotebookValue');
             localStorage.setItem('notebookValue', oldNotebook || '');
@@ -683,7 +670,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new RuntimeTemplate(
           app as JupyterLab,
           launcher as ILauncher,
-          themeManager
+          themeManager,
+          settingRegistry
         );
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
@@ -699,7 +687,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
-        const content = new Cluster(themeManager);
+        const content = new Cluster(
+          settingRegistry,
+          app as JupyterLab,
+          themeManager
+        );
         const widget = new MainAreaWidget<Cluster>({ content });
         widget.title.label = 'Clusters';
         widget.title.icon = iconCluster;
@@ -714,28 +706,14 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-        const content = new Batches(themeManager);
+        const content = new Batches(
+          settingRegistry,
+          app as JupyterLab,
+          themeManager
+        );
         const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;
-        app.shell.add(widget, 'main');
-      }
-    });
-    const createNotebookJobsComponentCommand = 'create-notebook-jobs-component';
-    commands.addCommand(createNotebookJobsComponentCommand, {
-      caption: 'Scheduled Jobs',
-      label: 'Scheduled Jobs',
-      icon: iconScheduledNotebooks,
-      execute: () => {
-        const content = new NotebookScheduler(
-          app as JupyterLab,
-          themeManager,
-          settingRegistry as ISettingRegistry,
-          ''
-        );
-        const widget = new MainAreaWidget<NotebookScheduler>({ content });
-        widget.title.label = 'Scheduled Jobs';
-        widget.title.icon = iconScheduledNotebooks;
         app.shell.add(widget, 'main');
       }
     });
@@ -750,7 +728,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new NotebookTemplates(
           app as JupyterLab,
           themeManager,
-          factory as IFileBrowserFactory
+          factory as IFileBrowserFactory,
+          settingRegistry as ISettingRegistry
         );
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'Notebook Templates';
@@ -887,11 +866,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         command: createTemplateComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 3
-      });
-      launcher.add({
-        command: createNotebookJobsComponentCommand,
-        category: TITLE_LAUNCHER_CATEGORY,
-        rank: 4
       });
     }
 

@@ -4,7 +4,6 @@
   align-items: center;
   display: flex;
   justify-content: center;
-  margin-top: -20px;
   cursor: pointer;
 }
 
@@ -306,4 +305,17 @@
   font-weight: 500;
   font-size: 20px;
   color: var(--jp-ui-font-color0);
+}
+
+.config-button {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 10px 0;
+ width: fit-content;
 }
