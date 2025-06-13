@@ -106,7 +106,6 @@ function CreateBatch({
   let mainRFileUri = '';
   let mainPythonFileUri = '';
   let queryFileUri = '';
-  let serviceAccount = '';
   let subNetwork = '';
   let network = '';
   let historyServer = '';
@@ -156,9 +155,6 @@ function CreateBatch({
       if (batchInfoResponse[batchTypeKey].hasOwnProperty('pythonFileUris')) {
         pythonFileUris = batchInfoResponse[batchKeys[0]].pythonFileUris;
       }
-      serviceAccount =
-        batchInfoResponse?.environmentConfig?.executionConfig?.serviceAccount ||
-        '';
       networkUris =
         batchInfoResponse?.environmentConfig?.executionConfig?.networkTags ||
         '';
@@ -216,8 +212,6 @@ function CreateBatch({
   const [argumentsSelected, setArgumentsSelected] = useState([
     ...argumentsUris
   ]);
-  const [serviceAccountSelected, setServiceAccountSelected] =
-    useState(serviceAccount);
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
   ]);
@@ -286,6 +280,39 @@ function CreateBatch({
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
   const [projectInfo, setProjectInfo] = useState('');
+  const [selectedAccountRadio, setSelectedAccountRadio] = useState<
+    'userAccount' | 'serviceAccount'
+  >('serviceAccount');
+  const [serviceAccountSelected, setServiceAccountSelected] = useState('');
+  const [userAccountSelected, setUserAccountSelected] = useState('');
+
+  const runtimeOptions = [
+    {
+      value: '2.3',
+      text: '2.3 LTS (Spark 3.5, Java 17, Scala 2.13)'
+    },
+    {
+      value: '2.2',
+      text: '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)'
+    },
+    {
+      value: '2.1',
+      text: '2.1 (Spark 3.4, Java 17, Scala 2.13)'
+    },
+    {
+      value: '2.0',
+      text: '2.0 (Spark 3.3, Java 17, Scala 2.13)'
+    },
+    {
+      value: '1.2',
+      text: '1.2 LTS (Spark 3.5, Java 17, Scala 2.12)'
+    },
+    {
+      value: '1.1',
+      text: '1.1 LTS (Spark 3.3, Java 11, Scala 2.12)'
+    }
+  ];
+
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
       setCreateBatchView(false);
@@ -311,6 +338,16 @@ function CreateBatch({
     setSelectedRadioValue('manually');
     setKeyRingSelected('');
     setKeySelected('');
+  };
+  const handleServiceAccountRadioChange = (e: any) => {
+    setSelectedAccountRadio('serviceAccount');
+    setUserAccountSelected('');
+    setServiceAccountSelected(e.target.value);
+  };
+  const handleUserAccountRadioChange = (e: any) => {
+    setSelectedAccountRadio('userAccount');
+    setServiceAccountSelected('');
+    setUserAccountSelected(e.target.value);
   };
   useEffect(() => {
     if (keyRingSelected !== '') {
@@ -373,6 +410,21 @@ function CreateBatch({
       const { environmentConfig } = batchInfoResponse;
       if (environmentConfig) {
         const executionConfig = environmentConfig.executionConfig;
+        // Determine account type based on authentication config
+        if (
+          executionConfig?.authenticationConfig
+            ?.userWorkloadAuthenticationType === 'END_USER_CREDENTIALS'
+        ) {
+          // User account case
+          setSelectedAccountRadio('userAccount');
+          setServiceAccountSelected(
+            executionConfig?.authenticationConfig?.serviceAccount || ''
+          );
+        } else {
+          // Service account case (either direct serviceAccount or no auth config)
+          setSelectedAccountRadio('serviceAccount');
+          setServiceAccountSelected(executionConfig?.serviceAccount || '');
+        }
 
         if (executionConfig) {
           const sharedVpcMatches =
@@ -792,9 +844,18 @@ function CreateBatch({
 
     payload.environmentConfig = {
       executionConfig: {
-        ...(serviceAccountSelected !== '' && {
-          serviceAccount: serviceAccountSelected
+        ...(selectedAccountRadio === 'userAccount' && {
+          authenticationConfig: {
+            userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+          },
+          ...(serviceAccountSelected !== '' && {
+            serviceAccount: serviceAccountSelected
+          })
         }),
+        ...(selectedAccountRadio === 'serviceAccount' &&
+          serviceAccountSelected !== '' && {
+            serviceAccount: serviceAccountSelected
+          }),
         ...(sharedvpcSelected &&
           selectedNetworkRadio === 'sharedVpc' && {
             subnetworkUri: `projects/${projectInfo}/regions/${regionName}/subnetworks/${sharedvpcSelected}`
@@ -832,7 +893,6 @@ function CreateBatch({
         })
       }
     };
-
     return payload;
   };
 
@@ -1055,12 +1115,21 @@ function CreateBatch({
             />
           </div>
           <div className="select-text-overlay">
-            <Input
-              className="create-batch-style "
-              value={versionSelected}
-              onChange={e => setVersionSelected(e.target.value)}
-              type="text"
-              Label="Runtime version*"
+            <Autocomplete
+              className="create-runtime-style"
+              value={
+                runtimeOptions.find(
+                  option => option.value === versionSelected
+                ) || null
+              }
+              onChange={(event, newValue) => {
+                setVersionSelected(newValue?.value || '');
+              }}
+              options={runtimeOptions}
+              getOptionLabel={option => option.text}
+              renderInput={params => (
+                <TextField {...params} label="Runtime version*" />
+              )}
             />
           </div>
           {batchTypeSelected === 'Spark' && (
@@ -1534,26 +1603,74 @@ function CreateBatch({
             </>
           )}
           <div className="submit-job-label-header">Execution Configuration</div>
-          <div className="select-text-overlay">
-            <Input
-              className="create-batch-style "
-              value={serviceAccountSelected}
-              onChange={e => setServiceAccountSelected(e.target.value)}
-              type="text"
-              placeholder=""
-              Label="Service account"
-            />
-          </div>
-          <div className="create-custom-messagelist">
-            If not provided, the default GCE service account will be used.
-            <div
-              className="submit-job-learn-more"
-              onClick={() => {
-                window.open(`${SERVICE_ACCOUNT}`, '_blank');
-              }}
-            >
-              Learn more
+          <div>
+            <div className="runtime-message">Execute notebooks with: </div>
+            <div className="create-runtime-radio">
+              <Radio
+                className="select-runtime-radio-style"
+                value={serviceAccountSelected}
+                checked={selectedAccountRadio === 'serviceAccount'}
+                onChange={e => handleServiceAccountRadioChange(e)}
+              />
+              <div className="create-batch-message-acc">Service Account</div>
+              <Radio
+                className="select-runtime-radio-style"
+                value={userAccountSelected}
+                checked={selectedAccountRadio === 'userAccount'}
+                onChange={e => handleUserAccountRadioChange(e)}
+              />
+              <div className="create-batch-message">User Account</div>
             </div>
+            {selectedAccountRadio === 'serviceAccount' && (
+              <>
+                <div className="select-text-overlay-textbox">
+                  <Input
+                    className="create-batch-style"
+                    value={serviceAccountSelected}
+                    onChange={e => setServiceAccountSelected(e.target.value)}
+                    type="text"
+                    placeholder=""
+                    Label="Service account"
+                  />
+                </div>
+                <div className="create-custom-messagelist">
+                  If not provided, the default GCE service account will be used.
+                  <div
+                    className="submit-job-learn-more"
+                    onClick={() => {
+                      window.open(`${SERVICE_ACCOUNT}`, '_blank');
+                    }}
+                  >
+                    Learn more
+                  </div>
+                </div>
+              </>
+            )}
+            {selectedAccountRadio === 'userAccount' && (
+              <>
+                <div className="select-text-overlay-textbox">
+                  <Input
+                    className="create-batch-style"
+                    value={serviceAccountSelected}
+                    onChange={e => setServiceAccountSelected(e.target.value)}
+                    type="text"
+                    placeholder=""
+                    Label="Service account for system operations"
+                  />
+                </div>
+                <div className="create-custom-messagelist">
+                  If not provided, the default GCE service account will be used.
+                  <div
+                    className="submit-job-learn-more"
+                    onClick={() => {
+                      window.open(`${SERVICE_ACCOUNT}`, '_blank');
+                    }}
+                  >
+                    Learn more
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <div className="submit-job-label-header">Network Configuration</div>
           <div className="runtime-message">

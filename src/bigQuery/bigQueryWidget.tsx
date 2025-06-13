@@ -30,6 +30,7 @@ import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
 import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
 import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import { MainAreaWidget } from '@jupyterlab/apputils';
+import { Menu, MenuItem } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
 import { IThemeManager } from '@jupyterlab/apputils';
@@ -305,12 +306,12 @@ const BigQueryComponent = ({
                 name: searchData.linkedResource.split('/')[6],
                 children: searchData.linkedResource.split('/')[8]
                   ? [
-                      {
-                        id: uuidv4(),
-                        name: searchData.linkedResource.split('/')[8],
-                        children: []
-                      }
-                    ]
+                    {
+                      id: uuidv4(),
+                      name: searchData.linkedResource.split('/')[8],
+                      children: []
+                    }
+                  ]
                   : []
               }
             ]
@@ -340,9 +341,9 @@ const BigQueryComponent = ({
                   projectData['children'].forEach((datasetData: any) => {
                     if (
                       datasetData.name ===
-                        searchData.linkedResource.split('/')[6] &&
+                      searchData.linkedResource.split('/')[6] &&
                       projectData.name ===
-                        searchData.linkedResource.split('/')[4]
+                      searchData.linkedResource.split('/')[4]
                     ) {
                       if (searchData.linkedResource.split('/')[8]) {
                         datasetData['children'].push({
@@ -360,12 +361,12 @@ const BigQueryComponent = ({
                     name: searchData.linkedResource.split('/')[6],
                     children: searchData.linkedResource.split('/')[8]
                       ? [
-                          {
-                            id: uuidv4(),
-                            name: searchData.linkedResource.split('/')[8],
-                            children: []
-                          }
-                        ]
+                        {
+                          id: uuidv4(),
+                          name: searchData.linkedResource.split('/')[8],
+                          children: []
+                        }
+                      ]
                       : []
                   });
                 }
@@ -383,12 +384,12 @@ const BigQueryComponent = ({
                   name: searchData.linkedResource.split('/')[6],
                   children: searchData.linkedResource.split('/')[8]
                     ? [
-                        {
-                          id: uuidv4(),
-                          name: searchData.linkedResource.split('/')[8],
-                          children: []
-                        }
-                      ]
+                      {
+                        id: uuidv4(),
+                        name: searchData.linkedResource.split('/')[8],
+                        children: []
+                      }
+                    ]
                     : []
                 }
               ]
@@ -467,6 +468,7 @@ const BigQueryComponent = ({
       openedWidgets[widgetTitle] = node.data.name;
     }
   };
+
   const handleSearchClear = () => {
     setSearchTerm('');
     getBigQueryProjects();
@@ -475,6 +477,10 @@ const BigQueryComponent = ({
     onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
   };
   const Node = ({ node, style, onClick }: NodeProps) => {
+    const [contextMenu, setContextMenu] = useState<{
+      mouseX: number;
+      mouseY: number;
+    } | null>(null);
     const handleToggle = () => {
       if (calculateDepth(node) === 1 && !node.isOpen) {
         setCurrentNode(node);
@@ -505,6 +511,90 @@ const BigQueryComponent = ({
       event.stopPropagation();
       onClick(node);
     };
+
+    const handleContextMenu = (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      // Only show context menu for tables (depth 3)
+      const depth = calculateDepth(node);
+      if (depth === 3) {
+        setContextMenu(
+          contextMenu === null
+            ? {
+              mouseX: event.clientX + 2,
+              mouseY: event.clientY - 6,
+            }
+            : null,
+        );
+      }
+    };
+
+    const handleClose = () => {
+      setContextMenu(null);
+    };
+
+    const handleCopyId = () => {
+      const projectName = node.parent?.parent?.data.name;
+      const datasetName = node.parent?.data.name;
+      const tableName = node.data.name;
+      const fullTableName = `${projectName}.${datasetName}.${tableName}`;
+      navigator.clipboard.writeText(fullTableName);
+      handleClose();
+    };
+
+    const handleOpenTableDetails = () => {
+      onClick(node);
+      handleClose();
+    };
+
+    /**
+     * Creates a new notebook with BigQuery code to query the specified table
+     * Uses JupyterLab commands API for reliability
+     */
+    const createBigQueryNotebookWithQuery = async (
+      app: JupyterLab,
+      fullTableName: string
+    ) => {
+      try {
+        // Create a new notebook
+        const notebookPanel = await app.commands.execute('notebook:create-new', {
+          kernelName: 'python3'
+        });
+
+        // Wait briefly for the notebook to initialize
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Activate the notebook
+        app.shell.activateById(notebookPanel.id);
+
+       // Insert packages to first cell in the notebook
+        await app.commands.execute('notebook:replace-selection', {
+          text: "#Uncomment if bigquery-magics is not installed \n#!pip install bigquery-magics\n%load_ext bigquery_magics"
+        });
+
+        // Run the first cell and and another cell with select query
+        await app.commands.execute('notebook:run-cell-and-insert-below');
+        await app.commands.execute('notebook:replace-selection', {
+          text: `%%bqsql\nselect * from ${fullTableName} limit 20`
+        });
+        
+      } catch (error) {
+        console.error('Error creating notebook:', error);
+      }
+
+      handleClose();
+    };
+
+    const handleQueryTable = async () => {
+      const projectId = node.parent?.parent?.data.name;
+      const datasetId = node.parent?.data.name;
+      const tableId = node.data.name;
+      const fullTableName = `\`${projectId}.${datasetId}.${tableId}\``;
+
+      await createBigQueryNotebookWithQuery(app, fullTableName);
+    };
+
     const renderNodeIcon = () => {
       const depth = calculateDepth(node);
       const hasChildren =
@@ -683,12 +773,26 @@ const BigQueryComponent = ({
     return (
       <div style={style}>
         {renderNodeIcon()}
-        <div role="treeitem" title={node.data.name} onClick={handleTextClick}>
+        <div role="treeitem" title={node.data.name} onClick={handleTextClick} onContextMenu={handleContextMenu}>
           {node.data.name}
         </div>
         <div title={node?.data?.type} className="dpms-column-type-text">
           {node.data.type}
         </div>
+        <Menu
+          open={contextMenu !== null}
+          onClose={handleClose}
+          anchorReference="anchorPosition"
+          anchorPosition={
+            contextMenu !== null
+              ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+              : undefined
+          }
+        >
+          <MenuItem onClick={handleQueryTable}>Query table</MenuItem>
+          <MenuItem onClick={handleOpenTableDetails}>Open table details</MenuItem>
+          <MenuItem onClick={handleCopyId}>Copy table ID</MenuItem>
+        </Menu>
       </div>
     );
   };
@@ -790,7 +894,7 @@ const BigQueryComponent = ({
     <div className="dpms-Wrapper">
       <TitleComponent
         titleStr="Dataset Explorer"
-        isPreview
+        isPreview={false}
         getBigQueryProjects={getBigQueryProjects}
       />
       <div>
