@@ -313,11 +313,27 @@ function ListBatches({ setLoggedIn }: any) {
     );
   };
 
+
+  // useEffect(() => {
+  //   if (!pollingDisable) {
+  //     listBatchAPI();
+  //   }
+
+  //   return () => {
+  //     pollingBatches(listBatchAPI, true);
+  //   };
+  // }, [pollingDisable, detailedBatchView]);
+  // useEffect(() => {
+  //   if (!detailedBatchView && !isLoading) {
+  //     pollingBatches(listBatchAPI, pollingDisable);
+  //   }
+  // }, [isLoading]);
+
   useEffect(() => {
     if (!pollingDisable) {
       listBatchAPI();
     }
-  }, []);
+  }, [isLoading]);
 
   const handlePreviousPage = () => {
     if (currentPageIndex > 0) {
