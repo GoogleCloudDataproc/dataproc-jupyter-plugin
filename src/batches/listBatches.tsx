@@ -313,27 +313,15 @@ function ListBatches({ setLoggedIn }: any) {
     );
   };
 
-
-  // useEffect(() => {
-  //   if (!pollingDisable) {
-  //     listBatchAPI();
-  //   }
-
-  //   return () => {
-  //     pollingBatches(listBatchAPI, true);
-  //   };
-  // }, [pollingDisable, detailedBatchView]);
-  // useEffect(() => {
-  //   if (!detailedBatchView && !isLoading) {
-  //     pollingBatches(listBatchAPI, pollingDisable);
-  //   }
-  // }, [isLoading]);
-
   useEffect(() => {
-    if (!pollingDisable) {
+    if (!createBatchView) {
       listBatchAPI();
     }
-  }, [isLoading]);
+  }, [createBatchView, pollingDisable]);
+
+  useEffect(() => {
+    listBatchAPI();
+  }, []);
 
   const handlePreviousPage = () => {
     if (currentPageIndex > 0) {
@@ -402,6 +390,7 @@ function ListBatches({ setLoggedIn }: any) {
           setCreateBatchView={setCreateBatchView}
           regionName={regionName}
           projectName={projectName}
+          setNextPageTokens={setNextPageTokens}
         />
       )}
 
