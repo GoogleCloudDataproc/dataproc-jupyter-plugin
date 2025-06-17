@@ -23,7 +23,7 @@ test.describe('Settings Menu', () => {
       .getByLabel('main menu', { exact: true })
       .getByText('Settings')
       .click();
-    const cloudSettings = page.getByText('Google cloud Settings');
+    const cloudSettings = page.getByText('Google Cloud Settings');
     await cloudSettings.click();
   });
 
@@ -32,7 +32,7 @@ test.describe('Settings Menu', () => {
       .getByLabel('main menu', { exact: true })
       .getByText('Settings')
       .click();
-      const cloudSettings = page.getByText('Google cloud Settings');
+      const cloudSettings = page.getByText('Google Cloud Settings');
       await cloudSettings.click();
 
     // Assert clearing the Project ID disables the save button.
