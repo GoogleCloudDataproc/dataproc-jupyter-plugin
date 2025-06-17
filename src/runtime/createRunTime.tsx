@@ -305,8 +305,6 @@ function CreateRunTime({
           resourceAllocationModify.forEach(item => {
             const [key] = item.split(':');
             if (key === 'spark.executor.cores') {
-              // const cores = Number(value);
-              // const gpuValue = (1 / cores).toFixed(2);
               gpuDetailModify = gpuDetailModify.map(gpuItem => {
                 const [gpuKey, value] = gpuItem.split(':');
                 if (gpuKey === 'spark.task.resource.gpu.amount') {
@@ -351,8 +349,6 @@ function CreateRunTime({
           resourceAllocationModify.forEach(item => {
             const [key] = item.split(':');
             if (key === 'spark.executor.cores') {
-              // const cores = Number(value);
-              // const gpuValue = (1 / cores).toFixed(2);
               gpuDetailModify = gpuDetailModify.map(gpuItem => {
                 const [gpuKey, value] = gpuItem.split(':');
                 if (gpuKey === 'spark.task.resource.gpu.amount') {
