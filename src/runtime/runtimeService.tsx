@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import { Notification } from '@jupyterlab/apputils';
 import {
   API_HEADER_CONTENT_TYPE,
   API_HEADER_BEARER,
@@ -25,14 +26,10 @@ import {
 } from '../utils/const';
 import {
   authApi,
-  toastifyCustomStyle,
   loggedFetch,
   authenticatedFetch,
-  jobTimeFormat,
-  showToast
+  jobTimeFormat
 } from '../utils/utils';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ISessionTemplate,
@@ -121,20 +118,29 @@ export class RunTimeSerive {
         .then(async (response: Response) => {
           const formattedResponse = await response.json();
           if (formattedResponse?.error?.code) {
-            toast.error(formattedResponse?.error?.message, toastifyCustomStyle);
+            Notification.emit(formattedResponse?.error?.message, 'error', {
+              autoClose: 5000
+            });
           } else {
-            toast.success(
+            Notification.emit(
               `${selectedRuntimeTemplateDisplayName} is deleted successfully`,
-              toastifyCustomStyle
+              'success',
+              {
+                autoClose: 5000
+              }
             );
             console.log(response);
           }
         })
         .catch((err: Error) => {
           DataprocLoggingService.log('Error deleting session', LOG_LEVEL.ERROR);
-          toast.error(
+
+          Notification.emit(
             `Failed to delete the session ${selectedRuntimeTemplateDisplayName} : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }
@@ -244,12 +250,9 @@ export class RunTimeSerive {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        if (!toast.isActive('runtimeTemplateError')) {
-          toast.error(formattedResponse?.error?.message, {
-            ...toastifyCustomStyle,
-            toastId: 'runtimeTemplateError'
-          });
-        }
+        Notification.emit(formattedResponse?.error?.message, 'error', {
+          autoClose: 5000
+        });
       }
     } catch (error) {
       setIsLoading(false);
@@ -257,12 +260,14 @@ export class RunTimeSerive {
         'Error listing runtime templates',
         LOG_LEVEL.ERROR
       );
-      if (!toast.isActive('runtimeTemplateError')) {
-        toast.error('Failed to fetch runtime templates', {
-          ...toastifyCustomStyle,
-          toastId: 'runtimeTemplateError'
-        });
-      }
+
+      Notification.emit(
+        `Failed to fetch runtime templates : ${error}`,
+        'error',
+        {
+          autoClose: 5000
+        }
+      );
     }
   };
   static displayUserInfoService = async (
@@ -283,10 +288,9 @@ export class RunTimeSerive {
             .then((responseResult: IUserInfoResponse) => {
               setUserInfo(responseResult.email);
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                Notification.emit(responseResult?.error?.message, 'error', {
+                  autoClose: 5000
+                });
               }
             })
             .catch((e: Error) => console.error(e));
@@ -296,9 +300,12 @@ export class RunTimeSerive {
             'Error displaying user info',
             LOG_LEVEL.ERROR
           );
-          toast.error(
+          Notification.emit(
             `Failed to fetch user information : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }
@@ -346,7 +353,9 @@ export class RunTimeSerive {
 
       setSharedSubNetworkList(transformedSharedvpcSubNetworkList);
       if (responseResult?.error?.code) {
-        toast.error(responseResult?.error?.message, toastifyCustomStyle);
+        Notification.emit(responseResult?.error?.message, 'error', {
+          autoClose: 5000
+        });
       }
     } catch (err) {
       console.error('Error displaying sharedVPC subNetwork', err);
@@ -354,9 +363,12 @@ export class RunTimeSerive {
         'Error displaying sharedVPC subNetwork',
         LOG_LEVEL.ERROR
       );
-      toast.error(
-        `Failed to fetch  sharedVPC subNetwork : ${err}`,
-        toastifyCustomStyle
+      Notification.emit(
+        `Failed to fetch sharedVPC subNetwork : ${err}`,
+        'error',
+        {
+          autoClose: 5000
+        }
       );
     }
   };
@@ -385,10 +397,9 @@ export class RunTimeSerive {
                 setSharedSubNetworkList
               );
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                Notification.emit(responseResult?.error?.message, 'error', {
+                  autoClose: 5000
+                });
               }
             })
             .catch((e: Error) => console.error(e));
@@ -398,9 +409,13 @@ export class RunTimeSerive {
             'Error displaying user info',
             LOG_LEVEL.ERROR
           );
-          toast.error(
+
+          Notification.emit(
             `Failed to fetch user information : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }
@@ -440,10 +455,9 @@ export class RunTimeSerive {
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                Notification.emit(responseResult?.error?.message, 'error', {
+                  autoClose: 5000
+                });
               }
             })
 
@@ -456,7 +470,9 @@ export class RunTimeSerive {
             'Error selecting Network',
             LOG_LEVEL.ERROR
           );
-          toast.error(`Error selecting Network : ${err}`, toastifyCustomStyle);
+          Notification.emit(`Error selecting Network : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -487,10 +503,10 @@ export class RunTimeSerive {
       }
     } catch (error) {
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      toast.error(
-        `Failed to list the clusters : ${error}`,
-        toastifyCustomStyle
-      );
+
+      Notification.emit(`Failed to list the clusters : ${error}`, 'error', {
+        autoClose: 5000
+      });
     }
   };
 
@@ -539,15 +555,21 @@ export class RunTimeSerive {
             'No networks found. Account may lack access to list networks',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `No networks found. Account may lack access to list networks.`,
-            toastifyCustomStyle
+
+          Notification.emit(
+            'No networks found. Account may lack access to list networks.',
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         }
       }
     } catch (error) {
       DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-      toast.error(`Error listing Networks : ${error}`, toastifyCustomStyle);
+      Notification.emit(`Error listing Networks : ${error}`, 'error', {
+        autoClose: 5000
+      });
     }
   };
   static listMetaStoreAPIService = async (
@@ -607,10 +629,9 @@ export class RunTimeSerive {
 
                 setIsLoadingService(false);
                 if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
+                  Notification.emit(responseResult?.error?.message, 'error', {
+                    autoClose: 5000
+                  });
                 }
               }
             )
@@ -622,7 +643,9 @@ export class RunTimeSerive {
         .catch((err: Error) => {
           DataprocLoggingService.log('Error listing services', LOG_LEVEL.ERROR);
           setIsLoadingService(false);
-          toast.error(`Error listing services : ${err}`, toastifyCustomStyle);
+          Notification.emit(`Error listing services : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -677,9 +700,12 @@ export class RunTimeSerive {
                   .then(() => {
                     // All services have been fetched, and filtered services are in filteredServicesArray
                     if (responseResult?.error?.code) {
-                      toast.error(
+                      Notification.emit(
                         responseResult?.error?.message,
-                        toastifyCustomStyle
+                        'error',
+                        {
+                          autoClose: 5000
+                        }
                       );
                     }
                     console.log(filteredServicesArray);
@@ -696,7 +722,9 @@ export class RunTimeSerive {
         })
         .catch((err: Error) => {
           DataprocLoggingService.log('Error listing regions', LOG_LEVEL.ERROR);
-          toast.error(`Error listing regions : ${err}`, toastifyCustomStyle);
+          Notification.emit(`Error listing regions : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -750,21 +778,24 @@ export class RunTimeSerive {
                       setSubNetworkSelected(transformedServiceList[0]);
                     } else {
                       const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
-                      showToast(errorMessage, 'no-subnetworks-google-access');
+                      Notification.emit(errorMessage, 'error', {
+                        autoClose: 5000
+                      });
                       DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                     }
                   }
                 } else {
                   const errorMessage = `No subNetworks found  for network ${subnetwork}`;
-                  showToast(errorMessage, 'no-subnetworks');
+                  Notification.emit(errorMessage, 'error', {
+                    autoClose: 5000
+                  });
                   DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                 }
                 setIsloadingNetwork(false);
                 if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
+                  Notification.emit(responseResult?.error?.message, 'error', {
+                    autoClose: 5000
+                  });
                 }
               }
             )
@@ -778,10 +809,10 @@ export class RunTimeSerive {
             LOG_LEVEL.ERROR
           );
           setIsloadingNetwork(false);
-          toast.error(
-            `Error listing subNetworks : ${err}`,
-            toastifyCustomStyle
-          );
+
+          Notification.emit(`Error listing subNetworks : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -812,9 +843,13 @@ export class RunTimeSerive {
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-            toast.success(
+
+            Notification.emit(
               `Runtime Template ${displayNameSelected} successfully updated`,
-              toastifyCustomStyle
+              'success',
+              {
+                autoClose: 5000
+              }
             );
             if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
@@ -824,7 +859,9 @@ export class RunTimeSerive {
             const errorResponse = await response.json();
             console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
-            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
+            Notification.emit(errorResponse?.error?.message, 'error', {
+              autoClose: 5000
+            });
           }
         })
         .catch((err: Error) => {
@@ -832,10 +869,10 @@ export class RunTimeSerive {
             'Error updating template',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Failed to update the template : ${err}`,
-            toastifyCustomStyle
-          );
+
+          Notification.emit(`Failed to update the template : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -872,10 +909,9 @@ export class RunTimeSerive {
               );
               setKeyRinglist(transformedKeyList);
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                Notification.emit(responseResult?.error?.message, 'error', {
+                  autoClose: 5000
+                });
               }
             })
 
@@ -885,7 +921,9 @@ export class RunTimeSerive {
         })
         .catch((err: Error) => {
           DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-          toast.error(`Error listing Networks : ${err}`, toastifyCustomStyle);
+          Notification.emit(`Error listing Networks : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -926,10 +964,9 @@ export class RunTimeSerive {
               setKeylist(transformedKeyList);
               setKeySelected(transformedKeyList[0]);
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                Notification.emit(responseResult?.error?.message, 'error', {
+                  autoClose: 5000
+                });
               }
             })
 
@@ -939,7 +976,9 @@ export class RunTimeSerive {
         })
         .catch((err: Error) => {
           DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-          toast.error(`Error listing Networks : ${err}`), toastifyCustomStyle;
+          Notification.emit(`Error listing Networks : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };

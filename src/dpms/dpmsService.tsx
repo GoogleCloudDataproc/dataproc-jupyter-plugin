@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-import 'react-toastify/dist/ReactToastify.css';
-import { authApi, loggedFetch, toastifyCustomStyle } from '../utils/utils';
+import { Notification } from '@jupyterlab/apputils';
+import { authApi, loggedFetch } from '../utils/utils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -25,7 +25,6 @@ import {
   gcpServiceUrls
 } from '../utils/const';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import { toast } from 'react-toastify';
 
 interface IColumn {
   name: string;
@@ -128,10 +127,10 @@ export class DpmsService {
             'Error getting column details',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Error getting column details : ${err}`,
-            toastifyCustomStyle
-          );
+
+          Notification.emit(`Error getting column details : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -209,10 +208,9 @@ export class DpmsService {
             'Error getting table details',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Error getting table details : ${err}`,
-            toastifyCustomStyle
-          );
+          Notification.emit(`Error getting table details : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -290,9 +288,13 @@ export class DpmsService {
             'Error getting database details',
             LOG_LEVEL.ERROR
           );
-          toast.error(
+
+          Notification.emit(
             `Error getting database details : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }
@@ -337,10 +339,9 @@ export class DpmsService {
                 setNoDpmsInstance(true);
                 setCluster(true);
                 if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
+                  Notification.emit(responseResult?.error?.message, 'error', {
+                    autoClose: 5000
+                  });
                 }
               }
             })
@@ -354,9 +355,13 @@ export class DpmsService {
             'Error listing session details',
             LOG_LEVEL.ERROR
           );
-          toast.error(
+
+          Notification.emit(
             `Failed to fetch session details : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }
@@ -401,10 +406,9 @@ export class DpmsService {
                 setNoDpmsInstance(true);
                 setSession(true);
                 if (responseResult?.error?.code) {
-                  toast.error(
-                    responseResult?.error?.message,
-                    toastifyCustomStyle
-                  );
+                  Notification.emit(responseResult?.error?.message, 'error', {
+                    autoClose: 5000
+                  });
                 }
               }
             })
@@ -418,9 +422,13 @@ export class DpmsService {
             'Error listing clusters details',
             LOG_LEVEL.ERROR
           );
-          toast.error(
+
+          Notification.emit(
             `Failed to fetch cluster details : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }

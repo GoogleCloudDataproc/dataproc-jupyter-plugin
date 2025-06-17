@@ -28,11 +28,9 @@ import {
 import {
   IAuthCredentials,
   authApi,
-  toastifyCustomStyle,
   loggedFetch
 } from '../utils/utils';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Notification } from '@jupyterlab/apputils';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';
@@ -106,17 +104,22 @@ function ConfigSelection({
       });
       if (typeof data === 'object' && data !== null) {
         const configStatus = (data as { config: string }).config;
-        if (configStatus && !toast.isActive('custom-toast')) {
+        if (configStatus) {
           if (configStatus.includes('Failed')) {
-            toast.error(configStatus, toastifyCustomStyle);
+            Notification.emit(configStatus, 'error', {
+              autoClose: 5000
+            });
           } else {
             if (bigQueryFeatureEnable) {
               const settings = await settingRegistry.load(PLUGIN_ID);
               settings.set('bqRegion', bigQueryRegion);
             }
-            toast.success(
+            Notification.emit(
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
-              toastifyCustomStyle
+              'success',
+              {
+                autoClose: 5000
+              }
             );
             // Emit signal after toast success
             eventEmitter.emit(
@@ -127,9 +130,12 @@ function ConfigSelection({
         }
       }
     } catch (reason) {
-      toast.error(
+      Notification.emit(`Error on POST {dataToSend}.\n${reason}`, 'error', {
+        autoClose: 5000
+      });
+      DataprocLoggingService.log(
         `Error on POST {dataToSend}.\n${reason}`,
-        toastifyCustomStyle
+        LOG_LEVEL.ERROR
       );
     } finally {
       setIsSaving(false);
@@ -158,10 +164,9 @@ function ConfigSelection({
             .json()
             .then((responseResult: IUserInfoResponse) => {
               if (responseResult?.error?.code) {
-                toast.error(
-                  responseResult?.error?.message,
-                  toastifyCustomStyle
-                );
+                Notification.emit(responseResult?.error?.message, 'error', {
+                  autoClose: 5000
+                });
               } else {
                 setUserInfo(responseResult);
                 setIsLoadingUser(false);
@@ -175,9 +180,12 @@ function ConfigSelection({
             'Error displaying user info',
             LOG_LEVEL.ERROR
           );
-          toast.error(
+          Notification.emit(
             `Failed to fetch user information : ${err}`,
-            toastifyCustomStyle
+            'error',
+            {
+              autoClose: 5000
+            }
           );
         });
     }

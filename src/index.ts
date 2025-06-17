@@ -37,7 +37,7 @@ import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
-import { authApi, iconDisplay, toastifyCustomStyle } from './utils/utils';
+import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
@@ -72,7 +72,6 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
-import { toast } from 'react-toastify';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -448,10 +447,9 @@ const extension: JupyterFrontEndPlugin<void> = {
               autoClose: false
             });
           } else {
-            toast.error(
-              `'Error in running gcloud command': ${error}`,
-              toastifyCustomStyle
-            );
+            Notification.error(`Error in running gcloud command: ${error}`, {
+              autoClose: false
+            });
           }
         }
       } catch (error) {
