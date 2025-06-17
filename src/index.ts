@@ -401,7 +401,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                     Notification.error(`Update failed.${updateError}`);
                   }
                 },
-                displayType: 'warn'
+                displayType: 'accent'
               },
               {
                 label: 'Ignore',
@@ -774,9 +774,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
-      label: bqFeature.enable_bigquery_integration
-        ? 'Google BigQuery Settings'
-        : 'Google Dataproc Settings',
+      label: 'Google Cloud Settings',
       execute: () => {
         const content = new AuthLogin(
           app as JupyterLab,
