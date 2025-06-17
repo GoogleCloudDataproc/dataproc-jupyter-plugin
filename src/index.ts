@@ -834,7 +834,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
           launcher.add({
             command: commandNotebook,
-            category: 'Dataproc Serverless Notebooks',
+            category: 'Dataproc Serverless Spark',
             //@ts-ignore jupyter lab Launcher type issue
             metadata: kernelsData?.metadata,
             rank: index + 1,
@@ -883,7 +883,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
       launcher.add({
         command: createRuntimeTemplateComponentCommand,
-        category: 'Dataproc Serverless Notebooks',
+        category: 'Dataproc Serverless Spark',
         rank: serverlessIndex + 2
       });
       launcher.add({
