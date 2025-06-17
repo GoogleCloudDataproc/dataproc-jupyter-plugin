@@ -252,3 +252,10 @@ body[data-jp-theme-name='JupyterLab Dark']
   rect {
   fill: transparent !important;
 }
+
+body[data-jp-theme-name='JupyterLab Dark High Contrast']
+  .jp-LauncherCard-icon
+  svg[data-icon='launcher:add-runtime-icon']
+  rect {
+  fill: transparent !important;
+}
