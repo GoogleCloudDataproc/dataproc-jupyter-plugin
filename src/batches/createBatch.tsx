@@ -73,6 +73,8 @@ interface ICreateBatchProps {
   createBatch?: boolean;
   setCreateBatch?: (value: boolean) => void;
   setNextPageTokens?: (value: string[]) => void;
+  batchCreatedFromDetails?: boolean;
+  setBatchCreatedFromDetails?: (value: boolean) => void;
 }
 
 function batchTypeFunction(batchKey: string) {
@@ -99,7 +101,9 @@ function CreateBatch({
   batchInfoResponse,
   setCreateBatch,
   createBatch,
-  setNextPageTokens
+  setNextPageTokens,
+  batchCreatedFromDetails,
+  setBatchCreatedFromDetails
 }: ICreateBatchProps) {
   let batchKeys: string[] = [];
   let batchType = 'Spark';
@@ -900,6 +904,11 @@ function CreateBatch({
 
   const handleSubmit = async () => {
     const credentials = await authApi();
+    if (!batchCreatedFromDetails) {
+      if (setBatchCreatedFromDetails) {
+        setBatchCreatedFromDetails(true);
+      }
+    }
     if (setNextPageTokens) {
       setNextPageTokens([]); // Reset next page tokens
     }

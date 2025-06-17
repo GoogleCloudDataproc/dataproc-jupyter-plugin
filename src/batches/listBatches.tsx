@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
@@ -37,7 +37,7 @@ import {
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import { BatchService } from './batchService';
-import PollingTimer from '../utils/pollingTimer';
+// import PollingTimer from '../utils/pollingTimer';
 import DeletePopup from '../utils/deletePopup';
 import BatchDetails from './batchDetails';
 import CreateBatch from './createBatch';
@@ -105,20 +105,23 @@ function ListBatches({ setLoggedIn }: any) {
   const [selectedBatch, setSelectedBatch] = useState('');
   const [regionName, setRegionName] = useState('');
   const [projectName, setProjectName] = useState('');
-  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
+  // const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [nextPageTokens, setNextPageTokens] = useState<string[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
-  const pollingBatches = async (
-    pollingFunction: () => void,
-    pollingDisable: boolean
-  ) => {
-    timer.current = PollingTimer(
-      pollingFunction,
-      pollingDisable,
-      timer.current
-    );
-  };
+  // New state to track if a batch was created from batch details
+  const [batchCreatedFromDetails, setBatchCreatedFromDetails] = useState<boolean>(false);
+
+  // const pollingBatches = async (
+  //   pollingFunction: () => void,
+  //   pollingDisable: boolean
+  // ) => {
+  //   timer.current = PollingTimer(
+  //     pollingFunction,
+  //     pollingDisable,
+  //     timer.current
+  //   );
+  // };
 
   const data = batchesList;
 
@@ -241,7 +244,7 @@ function ListBatches({ setLoggedIn }: any) {
     stateTime: Date;
   }
 
-  const listBatchAPI = async (pageToken?: string[]) => {
+  const listBatchAPI = async (pageToken?: string[], shouldUpdatePagination: boolean = true) => {
     await BatchService.listBatchAPIService(
       setRegionName,
       setProjectName,
@@ -251,14 +254,19 @@ function ListBatches({ setLoggedIn }: any) {
       setLoggedIn,
       pageToken ? pageToken : nextPageTokens,
       setNextPageTokens,
+      undefined,
+      // Only update nextPageTokens if shouldUpdatePagination is true
+      shouldUpdatePagination
     );
   };
 
   const handleBatchDetails = (selectedName: string) => {
-    pollingBatches(listBatchAPI, true);
+    // Stop polling and don't update pagination when viewing details
+    setPollingDisable(true);
     setBatchSelected(selectedName);
     setDetailedBatchView(true);
   };
+
   const handleDeleteBatch = (data: IBatchData) => {
     if (data.state !== BatchStatus.STATUS_PENDING) {
       /*
@@ -269,6 +277,7 @@ function ListBatches({ setLoggedIn }: any) {
       setDeletePopupOpen(true);
     }
   };
+
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
   };
@@ -313,12 +322,42 @@ function ListBatches({ setLoggedIn }: any) {
     );
   };
 
+  // // Callback function to be called when a batch is successfully created from details
+  // const onBatchCreatedFromDetails = () => {
+  //   setBatchCreatedFromDetails(true);
+  // };
+
+  console.log('nextPageTokens', nextPageTokens);
+  console.log('detailedBatchView', detailedBatchView);
+  console.log('createBatchView', createBatchView);
+  console.log('batchCreatedFromDetails', batchCreatedFromDetails);
+  // Updated useEffect - prevent API call when returning from detailed view
   useEffect(() => {
-    if (!createBatchView) {
-      listBatchAPI();
+    if (!createBatchView && !detailedBatchView) {
+      // Only call API when not in detailed view and not creating batch
+      // Don't update pagination when coming back from detailed view
+      listBatchAPI(undefined, false);
     }
   }, [createBatchView, pollingDisable]);
 
+  // Separate useEffect for when detailedBatchView changes to false (coming back)
+  useEffect(() => {
+    if (!detailedBatchView && !createBatchView) {
+      // Check if a batch was created from details
+      if (batchCreatedFromDetails) {
+        // Case 1: Batch was created from details - reset pagination and clear tokens
+        setNextPageTokens([]);
+        setCurrentPageIndex(0);
+        listBatchAPI([], true); // Reset to first page with pagination enabled
+        setBatchCreatedFromDetails(false); // Reset the flag
+      } else if (batchesList.length > 0) {
+        // Case 2 & 3: No batch created - just refresh data without updating pagination
+        listBatchAPI(undefined, false);
+      }
+    }
+  }, [detailedBatchView, createBatchView, batchCreatedFromDetails]);
+
+  // Keep the initial load with pagination enabled
   useEffect(() => {
     listBatchAPI();
   }, []);
@@ -334,7 +373,7 @@ function ListBatches({ setLoggedIn }: any) {
       // This assumes that the last token in nextPageTokens corresponds to the current page
       nextPageTokens.pop();
 
-      listBatchAPI(nextPageTokens);
+      listBatchAPI(nextPageTokens, true);
     }
   };
 
@@ -345,7 +384,7 @@ function ListBatches({ setLoggedIn }: any) {
       setCurrentPageIndex(newPageIndex);
 
       // Use the last token in the array for the next page
-      listBatchAPI(nextPageTokens);
+      listBatchAPI(nextPageTokens, true);
     }
   };
 
@@ -383,6 +422,8 @@ function ListBatches({ setLoggedIn }: any) {
           batchSelected={batchSelected}
           setDetailedBatchView={setDetailedBatchView}
           setCreateBatchView={setCreateBatchView}
+          batchCreatedFromDetails={batchCreatedFromDetails}
+          setBatchCreatedFromDetails={setBatchCreatedFromDetails}
         />
       )}
       {createBatchView && (
@@ -391,6 +432,8 @@ function ListBatches({ setLoggedIn }: any) {
           regionName={regionName}
           projectName={projectName}
           setNextPageTokens={setNextPageTokens}
+          batchCreatedFromDetails={batchCreatedFromDetails}
+          setBatchCreatedFromDetails={setBatchCreatedFromDetails}
         />
       )}
 
