@@ -55,7 +55,8 @@ def _link_jupyter_server_extension(server_app):
             plugin_config.log_path, maxBytes=2 * 1024 * 1024, backupCount=5
         )
         file_handler.setFormatter(
-            logging.Formatter("[%(levelname)s %(asctime)s %(name)s] %(message)s")
+            logging.Formatter(
+                "[%(levelname)s %(asctime)s %(name)s] %(message)s")
         )
         server_app.log.addHandler(file_handler)
 
@@ -88,18 +89,15 @@ def _link_jupyter_server_extension(server_app):
     # posted below.
 
     c.GatewayClient.gateway_retry_interval = _get_config_value_to_assign(
-        c.GatewayClient.gateway_retry_interval, MIN_GATEWAY_RETRY_INTERVAL
-    )
+        c.GatewayClient.gateway_retry_interval, MIN_GATEWAY_RETRY_INTERVAL)
     c.GatewayClient.gateway_retry_max = _get_config_value_to_assign(
-        c.GatewayClient.gateway_retry_max, MIN_GATEWAY_RETRY_MAX
-    )
+        c.GatewayClient.gateway_retry_max, MIN_GATEWAY_RETRY_MAX)
 
     # The default gateway client request timeout is 42 seconds but the POST request to
     # create a batch can take upwards to 600 seconds, so we want to increase the timeout
     # so that the minimum is 600 seconds.
     c.GatewayClient.request_timeout = _get_config_value_to_assign(
-        c.GatewayClient.request_timeout, MIN_GATEWAY_REQUEST_TIMEOUT
-    )
+        c.GatewayClient.request_timeout, MIN_GATEWAY_REQUEST_TIMEOUT)
 
     # Version 2.8.0 of the `jupyter_server` package requires the `auth_token`
     # value to be set to a non-empty value or else it will never invoke the
@@ -109,6 +107,7 @@ def _link_jupyter_server_extension(server_app):
     # See https://github.com/jupyter-server/jupyter_server/issues/1339 for more
     # details and discussion.
     c.GatewayClient.auth_token = "Initial, invalid value"
+    
 
 
 def _load_jupyter_server_extension(server_app):

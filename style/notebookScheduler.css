@@ -1,0 +1,281 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+
+.select-text-overlay-scheduler {
+  width: 95%;
+  margin: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.execution-history-parent {
+  margin: 20px;
+}
+
+.input-style-scheduler {
+  width: 100%;
+  background: var(--jp-layout-color0);
+  min-height: 40px;
+  outline: none;
+}
+
+.select-job-style-scheduler {
+  background: var(--jp-layout-color0);
+  border-radius: 4px;
+  width: 100%;
+  min-height: 36px;
+  outline: none;
+}
+
+.create-scheduler-label-style {
+  font-size: 14px;
+}
+
+.create-scheduler-form-element {
+  margin-top: 15px;
+  width: 512px;
+}
+
+.create-scheduler-form-element-input-file {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.edit-notebook-style {
+  cursor: pointer;
+  margin-top: 10px;
+  padding-left: 15px;
+}
+
+.create-job-scheduler-title {
+  padding: 0px 15px;
+  height: 48px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color0);
+}
+
+.create-scheduler-label {
+  margin-top: 15px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 28px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color0);
+}
+
+.create-scheduler-style {
+  width: 512px;
+  height: 36px;
+  background: var(--jp-layout-color0);
+  margin-top: 10px;
+  outline: none;
+}
+
+.execution-history-left-wrapper {
+  width: 400px;
+  border: 1px solid var(--jp-layout-color3);
+}
+.execution-history-main-wrapper {
+  display: flex;
+}
+
+.execution-history-right-wrapper {
+  width: calc(100% - 400px);
+  border: 1px solid var(--jp-layout-color3);
+  border-left: none;
+}
+
+.dag-runs-list-table-parent {
+  overflow: auto;
+}
+
+.scheduler-back-arrow-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding-left: 10px;
+}
+
+.dag-runs-table-body {
+  overflow-y: auto;
+  max-height: 55vh;
+}
+
+.dag-runs-row-data-parent:hover {
+  background: var(--jp-layout-color2);
+}
+
+.dag-runs-row-data-parent-selected {
+  height: 29px;
+  background: var(--jp-brand-color4);
+  color: var(--jp-brand-color1);
+}
+
+.dag-runs-row-data-parent {
+  background: var(--jp-layout-color0);
+  height: 29px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--jp-ui-font-color1);
+  cursor: pointer;
+}
+
+.execution-history-title {
+  display: flex;
+}
+
+.accordion-row-parent {
+  display: flex;
+  width: 100%;
+  height: 30px;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid var(--jp-layout-color3);
+}
+
+.accordion-row-parent-header {
+  background: rgba(0, 0, 0, 0.04);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  height: 29px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  line-height: 18px;
+  color: var(--jp-ui-font-color0);
+  border-bottom: 1px solid var(--jp-layout-color3);
+}
+
+.accordion-row-data {
+  padding-left: 15px;
+  width: 33%;
+}
+
+.logo-row-container {
+  display: flex;
+}
+
+.logo-alignment-style-accordion {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+}
+
+.logs-content-style {
+  overflow: auto;
+  margin: 10px;
+  border-bottom: 1px solid var(--jp-layout-color3);
+}
+
+.accordion-row-data-expand-logo {
+  width: 30px;
+}
+
+.dag-runs-table-data-state-success {
+  background-color: #34a853;
+  color: var(--jp-border-color3);
+  border-radius: 22px;
+  margin: 5px 15px;
+  display: flex;
+  width: 71px;
+  text-transform: capitalize;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.dag-runs-table-data-state-failure {
+  background-color: #ea3323;
+  color: var(--jp-border-color3);
+  border-radius: 22px;
+  margin: 5px 15px;
+  display: flex;
+  width: 71px;
+  text-transform: capitalize;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.dag-runs-table-data-state-queued {
+  background-color: #AEAEAE;
+  color: var(--jp-border-color3);
+  border-radius: 22px;
+  margin: 5px 15px;
+  display: flex;
+  width: 71px;
+  text-transform: capitalize;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.dag-runs-table-data-state-running {
+  background-color: #00BFA5;
+  color: var(--jp-border-color3);
+  border-radius: 22px;
+  margin: 5px 15px;
+  display: flex;
+  width: 71px;
+  text-transform: capitalize;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.dag-run-state-parent {
+  border-bottom: 1px solid var(--jp-layout-color3);
+  height: 24px;
+}
+
+.execution-history-header {
+  height: 48px;
+  display: flex;
+}
+.accordion-section{
+  background: #f2dede;
+  margin: 10px 0px;
+}
+.accordion-title {
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #e43921;
+}
+
+.accordion-button {
+  background-color: #f2dede;
+  color: #e43921;cursor: pointer;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.accordion-content {
+  padding: 10px;
+  color: #e43921;
+}
+
+.import-error-parent {
+  margin-top: 12px;
+}
+.filename {
+  flex: 1;
+}
+
+.timestamp {
+  margin-left: 10px;
+  margin-right: 10px;
+}
