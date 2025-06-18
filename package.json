@@ -1,6 +1,6 @@
 {
     "name": "dataproc_jupyter_plugin",
-    "version": "0.1.87",
+    "version": "0.1.88",
     "description": "It is a plugin to work with dataproc services in Jupyterlab",
     "keywords": [
         "jupyter",
@@ -81,7 +81,6 @@
         "react-js-cron": "^5.0.1",
         "react-spinners": "^0.13.8",
         "react-table": "^7.8.0",
-        "react-toastify": "^9.1.3",
         "tzdata": "^1.0.39",
         "yup": "^1.2.0"
     },
