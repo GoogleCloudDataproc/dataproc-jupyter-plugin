@@ -19,9 +19,10 @@ import subprocess
 import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
-from google.cloud.jupyter_config.config import async_run_gcloud_subcommand
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import bigquery
+from google.cloud import service_usage_v1
+from google.cloud.service_usage_v1.types import GetServiceRequest
 
 # GCP project holding BigQuery public datasets.
 BQ_PUBLIC_DATASET_PROJECT_ID = "bigquery-public-data"
@@ -162,14 +163,20 @@ class SearchController(APIHandler):
 
 
 class CheckApiController(APIHandler):
-    @tornado.web.authenticated
-    async def post(self):
+    async def post(self, service_name):
+        """
+        Check if a specific GCP API service is enabled for the current project.
+        """
+        project_id = await credentials._gcp_project()
+        client = service_usage_v1.ServiceUsageAsyncClient()
+        full_service_name = f"projects/{project_id}/services/{service_name}"
         try:
-            project_id = await credentials._gcp_project()
-            cmd = f"services list --enabled --project={project_id} | grep bigquery.googleapis.com"
-            result = await async_run_gcloud_subcommand(cmd)
-            is_enabled = bool(result.strip())
+            request = GetServiceRequest(name=full_service_name)
+            service = await client.get_service(request=request)
+            is_enabled = service.state == service_usage_v1.types.State.ENABLED
             self.finish({"success": True, "is_enabled": is_enabled})
 
-        except Exception as e:
+        except Exception as e:  
             self.finish({"success": False, "is_enabled": False, "error": str(e)})
+
+        
