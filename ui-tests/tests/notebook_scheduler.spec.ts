@@ -26,6 +26,7 @@ async function checkInputNotEmpty(page, label) {
 test('Job Scheduler', async ({ page }) => {
   test.setTimeout(150 * 1000);
   let clusterNotEmpty = true;
+  await page.getByRole('region', { name: 'notebook content' }).click();
   const locator = page.locator('.jp-LauncherCard:visible', {
     hasText: 'Python 3 (ipykernel) (Local)'
   });
