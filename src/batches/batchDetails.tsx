@@ -165,7 +165,6 @@ function BatchDetails({
   };
 
   const handleDetailedBatchView = () => {
-    // pollingBatchDetails(getBatchDetails, true);
     setDetailedBatchView(false);
   };
 

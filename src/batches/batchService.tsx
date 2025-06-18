@@ -21,7 +21,8 @@ import {
   BatchStatus,
   HTTP_METHOD,
   STATUS_RUNNING,
-  gcpServiceUrls
+  gcpServiceUrls,
+  PAGE_SIZE
 } from '../utils/const';
 import {
   authApi,
@@ -291,9 +292,8 @@ export class BatchService {
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
-      console.log('batches URL', `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`)
       loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=50&pageToken=${pageToken}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=${PAGE_SIZE}&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -351,18 +351,6 @@ export class BatchService {
                 ...(existingBatchData as []),
                 ...transformBatchListData
               ];
-
-              // if (responseResult?.nextPageToken) {
-              //   setBatchesList(allBatchesData);
-              //   setNextPageTokens([...nextPageTokens, responseResult.nextPageToken])
-              //   setIsLoading(false);
-              //   setLoggedIn(true);
-              // } else {
-              //   setBatchesList(allBatchesData);
-              //   setNextPageTokens([]);
-              //   setIsLoading(false);
-              //   setLoggedIn(true);
-              // }
               // Only update pagination tokens if shouldUpdatePagination is true
               if (shouldUpdatePagination) {
                 if (responseResult?.nextPageToken) {
@@ -377,15 +365,6 @@ export class BatchService {
                   setLoggedIn(true);
                 }
               } 
-//                1. if i go to the batchdaetails page and clone the batch and creataed a batch and comes back from the batchdetails page need to make the shouldUpdatePagination to true but need to clear the setNextPageTokens([])
-//  2. if i go to the batchdetails page and clone the batch but not created the batch and comes back from the batchdetails page need to make the shouldUpdatePagination to false
-//  3. if I only see the batchdetails but will not clone the batch in this case no need to make the shouldUpdatePagination to true
-              // else {
-              //   // Don't update pagination tokens, just set the data
-              //   setBatchesList(allBatchesData);
-              //   setIsLoading(false);
-              //   setLoggedIn(true);
-              // }
             })
             .catch((e: Error) => {
               console.log(e);

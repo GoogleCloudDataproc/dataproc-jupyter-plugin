@@ -37,7 +37,6 @@ import {
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import { BatchService } from './batchService';
-// import PollingTimer from '../utils/pollingTimer';
 import DeletePopup from '../utils/deletePopup';
 import BatchDetails from './batchDetails';
 import CreateBatch from './createBatch';
@@ -105,23 +104,11 @@ function ListBatches({ setLoggedIn }: any) {
   const [selectedBatch, setSelectedBatch] = useState('');
   const [regionName, setRegionName] = useState('');
   const [projectName, setProjectName] = useState('');
-  // const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [nextPageTokens, setNextPageTokens] = useState<string[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
   // New state to track if a batch was created from batch details
   const [batchCreatedFromDetails, setBatchCreatedFromDetails] = useState<boolean>(false);
-
-  // const pollingBatches = async (
-  //   pollingFunction: () => void,
-  //   pollingDisable: boolean
-  // ) => {
-  //   timer.current = PollingTimer(
-  //     pollingFunction,
-  //     pollingDisable,
-  //     timer.current
-  //   );
-  // };
 
   const data = batchesList;
 
@@ -322,15 +309,6 @@ function ListBatches({ setLoggedIn }: any) {
     );
   };
 
-  // // Callback function to be called when a batch is successfully created from details
-  // const onBatchCreatedFromDetails = () => {
-  //   setBatchCreatedFromDetails(true);
-  // };
-
-  console.log('nextPageTokens', nextPageTokens);
-  console.log('detailedBatchView', detailedBatchView);
-  console.log('createBatchView', createBatchView);
-  console.log('batchCreatedFromDetails', batchCreatedFromDetails);
   // Updated useEffect - prevent API call when returning from detailed view
   useEffect(() => {
     if (!createBatchView && !detailedBatchView) {
@@ -348,8 +326,8 @@ function ListBatches({ setLoggedIn }: any) {
         // Case 1: Batch was created from details - reset pagination and clear tokens
         setNextPageTokens([]);
         setCurrentPageIndex(0);
-        listBatchAPI([], true); // Reset to first page with pagination enabled
-        setBatchCreatedFromDetails(false); // Reset the flag
+        listBatchAPI([], true);
+        setBatchCreatedFromDetails(false);
       } else if (batchesList.length > 0) {
         // Case 2 & 3: No batch created - just refresh data without updating pagination
         listBatchAPI(undefined, false);
@@ -367,11 +345,8 @@ function ListBatches({ setLoggedIn }: any) {
       const newPageIndex = currentPageIndex - 1;
       setCurrentPageIndex(newPageIndex);
 
-      // Remove the last token from the nextPageTokens array to go back to the previous page
-      nextPageTokens.pop();
-      // need to remove the current page token
-      // This assumes that the last token in nextPageTokens corresponds to the current page
-      nextPageTokens.pop();
+      const tokensForPreviousPage = nextPageTokens.slice(0, nextPageTokens.length - 2);
+      listBatchAPI(tokensForPreviousPage);
 
       listBatchAPI(nextPageTokens, true);
     }
@@ -393,7 +368,7 @@ function ListBatches({ setLoggedIn }: any) {
   const canNextPage = nextPageTokens.length > currentPageIndex;
 
   const startIndex = currentPageIndex * pageSize + 1;
-  const actualRecordsOnCurrentPage = rows.length; // This gives the actual number of records displayed
+  const actualRecordsOnCurrentPage = rows.length;
 
   // Calculate the end index - either full pageSize or actual records if less than pageSize
   const endIndex = Math.min((currentPageIndex + 1) * pageSize, startIndex - 1 + actualRecordsOnCurrentPage);

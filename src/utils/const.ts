@@ -260,3 +260,5 @@ export const TIER_SELECT_OPTIONS = [
 ];
 export const CLOUD_COMPOSER_API =
   'https://console.developers.google.com/apis/api/composer.googleapis.com';
+
+export const PAGE_SIZE = 50;
