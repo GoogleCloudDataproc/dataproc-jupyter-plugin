@@ -983,13 +983,6 @@ export class BatchService {
           );
         } else {
           const errorResponse = await response.json();
-          Notification.emit(
-            `Failed to submit the Batch : ${errorResponse?.error?.message}`,
-            'error',
-            {
-              autoClose: 5000
-            }
-          );
           setError({ isOpen: true, message: errorResponse.error.message });
           console.log(error);
         }
