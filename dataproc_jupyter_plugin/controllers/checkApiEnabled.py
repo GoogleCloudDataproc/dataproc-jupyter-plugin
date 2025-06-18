@@ -21,19 +21,18 @@ from dataproc_jupyter_plugin import credentials
 
 class CheckApiController(APIHandler):
 
-    async def post(self, service_name):
+    async def post(self):
         """
         Check if a specific GCP API service is enabled for the current project.
         """
         service_name = self.get_argument("service_name")
         project_id = await credentials._gcp_project()
-        client = service_usage_v1.ServiceUsageAsyncClient()
         full_service_name = f"projects/{project_id}/services/{service_name}"
         try:
-            request = GetServiceRequest(name=full_service_name)
-            service = await client.get_service(request=request)
-            is_enabled = service.state == service_usage_v1.types.State.ENABLED
-            self.finish({"success": True, "is_enabled": is_enabled})
-
+            async with service_usage_v1.ServiceUsageAsyncClient() as client:
+                request = GetServiceRequest(name=full_service_name)
+                service = await client.get_service(request=request)
+                is_enabled = service.state == service_usage_v1.types.State.ENABLED
+                self.finish({"success": True, "is_enabled": is_enabled})
         except Exception as e:
             self.finish({"success": False, "is_enabled": False, "error": str(e)})
