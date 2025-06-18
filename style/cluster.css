@@ -198,6 +198,18 @@
   margin-top: -1px;
 }
 
+.batch-refresh-icon {
+  display: flex;
+  height: 18px;
+  width: 18px;
+  color: #3367d6;
+  margin-top: -1px;
+}
+
+.batch-refresh-icon .logo-alignment-style svg path {
+  fill: #3367d6;
+}
+
 .filter-cluster-icon {
   display: flex;
   height: 18px;

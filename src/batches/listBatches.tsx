@@ -23,6 +23,7 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
+import refreshBatchIcon from '../../style/icons/refresh_cluster_icon.svg';
 import GlobalFilter from '../utils/globalFilter';
 import {
   BatchStatus,
@@ -79,6 +80,11 @@ const iconClusterError = new LabIcon({
 const iconDelete = new LabIcon({
   name: 'launcher:delete-icon',
   svgstr: deleteIcon
+});
+
+const iconRefreshBatch = new LabIcon({
+  name: 'launcher:refresh-dataset-explorer-icon',
+  svgstr: refreshBatchIcon
 });
 
 interface IBatchesList {
@@ -167,6 +173,18 @@ function ListBatches({ setLoggedIn }: any) {
   const handleCreateBatchOpen = () => {
     setCreateBatchView(true);
   };
+
+  const handleRefreshBatches = () => {
+    // If we're on the first page (index 0), refresh with no tokens
+    if (currentPageIndex === 0) {
+      listBatchAPI([], true);
+    } else {
+      // For any other page, use the current page's tokens to stay on the same page
+      // Get tokens up to the current page
+      const tokensForCurrentPage = nextPageTokens.slice(0, currentPageIndex);
+      listBatchAPI(tokensForCurrentPage, false); // false to maintain current pagination state
+    }
+  }
 
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Batch ID') {
@@ -346,9 +364,7 @@ function ListBatches({ setLoggedIn }: any) {
       setCurrentPageIndex(newPageIndex);
 
       const tokensForPreviousPage = nextPageTokens.slice(0, nextPageTokens.length - 2);
-      listBatchAPI(tokensForPreviousPage);
-
-      listBatchAPI(nextPageTokens, true);
+      listBatchAPI(tokensForPreviousPage, true);
     }
   };
 
@@ -428,6 +444,20 @@ function ListBatches({ setLoggedIn }: any) {
                 />
               </div>
               <div className="create-text">Create Batch</div>
+            </div>
+            <div
+              className="create-batch-overlay"
+              onClick={() => {
+                handleRefreshBatches();
+              }}
+            >
+              <div className="batch-refresh-icon">
+                <iconRefreshBatch.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
+              </div>
+              <div className="create-text">Refresh</div>
             </div>
           </div>
 
