@@ -17,7 +17,7 @@
 
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import 'react-toastify/dist/ReactToastify.css';
+import { Notification } from '@jupyterlab/apputils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -40,16 +40,9 @@ import {
   KEY_MESSAGE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import {
-  authApi,
-  toastifyCustomStyle,
-  iconDisplay,
-  loggedFetch,
-  checkConfig
-} from '../utils/utils';
+import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { toast } from 'react-toastify';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
@@ -217,6 +210,7 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
+  const [stagingBucket, setStagingBucket] = useState('');
 
   const runtimeOptions = [
     {
@@ -460,7 +454,6 @@ function CreateRunTime({
           runtimeConfig.repositoryConfig.pypiRepositoryConfig.pypiRepository;
         setPythonRepositorySelected(pythonRepositorySelected);
       }
-
       setDisplayNameSelected(displayName);
       /*
          Extracting runtimeId from name
@@ -636,6 +629,9 @@ function CreateRunTime({
             } else {
               setManualKeySelected(executionConfig.kmsKey);
             }
+          }
+          if (executionConfig.stagingBucket) {
+            setStagingBucket(executionConfig.stagingBucket);
           }
         }
 
@@ -930,9 +926,12 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-            toast.success(
+            Notification.emit(
               `Runtime Template ${displayNameSelected} successfully created`,
-              toastifyCustomStyle
+              'success',
+              {
+                autoClose: 5000
+              }
             );
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
@@ -974,7 +973,7 @@ function CreateRunTime({
 
                   launcher.add({
                     command: commandNotebook,
-                    category: 'Dataproc Serverless Notebooks',
+                    category: 'Dataproc Serverless Spark',
                     //@ts-ignore jupyter lab Launcher type issue
                     metadata: kernelsData?.metadata,
                     rank: index + 1,
@@ -1036,7 +1035,13 @@ function CreateRunTime({
             const errorResponse = await response.json();
             console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
-            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
+            Notification.emit(
+              `Failed to create the template : ${errorResponse.error.message}`,
+              'error',
+              {
+                autoClose: 5000
+              }
+            );
           }
         })
         .catch((err: Error) => {
@@ -1045,10 +1050,10 @@ function CreateRunTime({
             'Error Creating template',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Failed to create the template : ${err}`,
-            toastifyCustomStyle
-          );
+
+          Notification.emit(`Failed to create the template : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -1186,7 +1191,8 @@ function CreateRunTime({
               authentication_config: {
                 user_workload_authentication_type: 'END_USER_CREDENTIALS'
               }
-            })
+            }),
+            ...(stagingBucket && { stagingBucket: stagingBucket })
           },
           peripheralsConfig: {
             ...(servicesSelected !== 'None' && {
@@ -1567,6 +1573,15 @@ function CreateRunTime({
                 >
                   Learn more
                 </div>
+              </div>
+              <div className="select-text-overlay">
+                <Input
+                  className="create-runtime-style "
+                  value={stagingBucket}
+                  onChange={e => setStagingBucket(e.target.value)}
+                  type="text"
+                  Label="Staging Bucket"
+                />
               </div>
               <div className="select-text-overlay">
                 <Input

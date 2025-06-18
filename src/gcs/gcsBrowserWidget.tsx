@@ -17,7 +17,6 @@
 import { Widget, PanelLayout } from '@lumino/widgets';
 import { Dialog, ToolbarButton, showDialog } from '@jupyterlab/apputils';
 import { FileBrowser, IFileBrowserFactory } from '@jupyterlab/filebrowser';
-import 'react-toastify/dist/ReactToastify.css';
 import { LabIcon } from '@jupyterlab/ui-components';
 import gcsNewFolderIcon from '../../style/icons/gcs_folder_new_icon.svg';
 import gcsUploadIcon from '../../style/icons/gcs_upload_icon.svg';

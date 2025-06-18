@@ -23,7 +23,7 @@ test.describe('Settings Menu', () => {
       .getByLabel('main', { exact: true })
       .getByText('Settings')
       .click();
-    await page.getByText('Google Dataproc Settings').click();
+    await page.getByText('Google Cloud Settings').click();
   });
 
   test('Can change project', async ({ page }) => {
@@ -31,7 +31,7 @@ test.describe('Settings Menu', () => {
       .getByLabel('main', { exact: true })
       .getByText('Settings')
       .click();
-    await page.getByText('Google Dataproc Settings').click();
+    await page.getByText('Google Cloud Settings').click();
 
     // Assert clearing the Project ID disables the save button.
     await page.getByRole('combobox', { name: 'Project ID' }).click();

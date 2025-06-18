@@ -246,3 +246,16 @@ body[data-jp-theme-name='JupyterLab Dark'] .job-cancel-button-style:hover {
   display: flex;
   align-items: center;
 }
+body[data-jp-theme-name='JupyterLab Dark']
+  .jp-LauncherCard-icon
+  svg[data-icon='launcher:add-runtime-icon']
+  rect {
+  fill: transparent !important;
+}
+
+body[data-jp-theme-name='JupyterLab Dark High Contrast']
+  .jp-LauncherCard-icon
+  svg[data-icon='launcher:add-runtime-icon']
+  rect {
+  fill: transparent !important;
+}

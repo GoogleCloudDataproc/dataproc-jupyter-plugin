@@ -37,12 +37,17 @@ import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
-import { authApi, iconDisplay, toastifyCustomStyle } from './utils/utils';
+import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
 import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
-import { PLUGIN_ID, PLUGIN_NAME, TITLE_LAUNCHER_CATEGORY, VERSION_DETAIL } from './utils/const';
+import {
+  PLUGIN_ID,
+  PLUGIN_NAME,
+  TITLE_LAUNCHER_CATEGORY,
+  VERSION_DETAIL
+} from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import {
   IFileBrowserFactory,
@@ -67,7 +72,6 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
-import { toast } from 'react-toastify';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -155,6 +159,27 @@ const extension: JupyterFrontEndPlugin<void> = {
       enable_cloud_storage_integration?: boolean;
       enable_bigquery_integration?: boolean;
     }
+
+    const executeApiChecks = async () => {
+      try {
+        await checkAllApisEnabled();
+        await checkResourceManager();
+        await jupyterVersionCheck();
+      } catch (error) {
+        console.error('Failed to check API status:', error);
+      }
+    };
+    app.restored
+      .then(() => {
+        if (document.readyState === 'complete') {
+          executeApiChecks();
+        } else {
+          window.addEventListener('load', executeApiChecks, { once: true });
+        }
+      })
+      .catch(error => {
+        console.error('Error during app restoration:', error);
+      });
     let bqFeature: SettingsResponse = await requestAPI('settings');
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
@@ -164,7 +189,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       panelGcs: Panel | undefined,
       panelDatasetExplorer: Panel | undefined;
     let gcsDrive: GCSDrive | undefined;
-    await checkResourceManager();
 
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', async (message: string) => {
@@ -177,79 +201,57 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     const checkAllApisEnabled = async () => {
-      let dataprocClusterResponse;
-      let dataCatalogResponse;
-      let bigqueryDatasetsResponse;
       const credentials = await authApi();
-      if (!credentials?.config_error && !credentials?.login_error) {
-        bigqueryDatasetsResponse =
-          await BigQueryService.checkBigQueryDatasetsAPIService();
+      let bigqueryDatasetsResponse;
+      let dataprocClusterResponse;
+
+      if (credentials?.project_id !== '' || credentials?.access_token != '') {
         dataprocClusterResponse =
-          await RunTimeSerive.listClustersDataprocAPIService();
-        dataCatalogResponse =
-          await BigQueryService.getBigQuerySearchCatalogAPIService();
+          await RunTimeSerive.checkDataprocApiEnabledService();
+        if (bqFeature.enable_bigquery_integration) {
+          bigqueryDatasetsResponse =
+            await BigQueryService.checkBigQueryDatasetsAPIService();
+        }
+
+        const apiChecks = [
+          {
+            response: dataprocClusterResponse,
+            errorKey: 'error.message',
+            errorMessage: 'Cloud Dataproc API has not been used in project',
+            checkType: 'dataproc',
+            notificationMessage: 'The Cloud Dataproc API is not enabled.',
+            enableLink: `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`
+          },
+          {
+            response: bigqueryDatasetsResponse,
+            errorKey: 'error',
+            checkType: 'bigquery',
+            errorMessage: 'has not enabled BigQuery',
+            notificationMessage: 'The BigQuery API is not enabled.',
+            enableLink: `https://console.cloud.google.com/apis/library/bigquery.googleapis.com?project=${credentials?.project_id}`
+          }
+        ];
+        apiChecks.forEach(check => {
+          if (
+            check.checkType === 'bigquery' ||
+            check.checkType === 'dataproc'
+          ) {
+            if (check.response && check.response.is_enabled === false) {
+              Notification.error(check.notificationMessage, {
+                actions: [
+                  {
+                    label: 'Enable',
+                    callback: () => window.open(check.enableLink, '_blank'),
+                    displayType: 'link'
+                  }
+                ],
+                autoClose: false
+              });
+            }
+          } 
+        });
       }
-
-      const apiChecks = [
-        {
-          response: dataprocClusterResponse,
-          errorKey: 'error.message',
-          errorMessage: 'Cloud Dataproc API has not been used in project',
-          notificationMessage: 'The Cloud Dataproc API is not enabled.',
-          enableLink: `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`
-        },
-        {
-          response: bigqueryDatasetsResponse,
-          errorKey: 'error',
-          checkType: 'bigquery',
-          errorMessage: 'has not enabled BigQuery',
-          notificationMessage: 'The BigQuery API is not enabled.',
-          enableLink: `https://console.cloud.google.com/apis/library/bigquery.googleapis.com?project=${credentials?.project_id}`
-        },
-        {
-          response: dataCatalogResponse,
-          errorKey: 'error',
-          errorMessage:
-            'Google Cloud Data Catalog API has not been used in project',
-          notificationMessage: 'Google Cloud Data Catalog API is not enabled.',
-          enableLink: `https://console.cloud.google.com/apis/library/datacatalog.googleapis.com?project=${credentials?.project_id}`
-        }
-      ];
-      apiChecks.forEach(check => {
-        if (check.checkType === 'bigquery') {
-          if (check.response && check.response.is_enabled === false) {
-            Notification.error(check.notificationMessage, {
-              actions: [
-                {
-                  label: 'Enable',
-                  callback: () => window.open(check.enableLink, '_blank'),
-                  displayType: 'link'
-                }
-              ],
-              autoClose: false
-            });
-          }
-        } else {
-          const errorValue = check.errorKey
-            .split('.')
-            .reduce((acc, key) => acc?.[key], check.response);
-          if (errorValue && errorValue.includes(check.errorMessage)) {
-            Notification.error(check.notificationMessage, {
-              actions: [
-                {
-                  label: 'Enable',
-                  callback: () => window.open(check.enableLink, '_blank'),
-                  displayType: 'link'
-                }
-              ],
-              autoClose: false
-            });
-          }
-        }
-      });
     };
-
-    await checkAllApisEnabled();
 
     /**
      * Handler for when the Jupyter Lab theme changes.
@@ -367,12 +369,19 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     async function jupyterVersionCheck() {
       try {
-        const notificationMessage = 'There is a newer version of Dataproc Plugin available. Would you like to update it?';
-        const latestVersion = await requestAPI(`jupyterlabVersion?packageName=${PLUGIN_NAME}`, {
-          method: 'GET'
-        });
+        const notificationMessage =
+          'There is a newer version of Dataproc Plugin available. Would you like to update it?';
+        const latestVersion = await requestAPI(
+          `jupyterlabVersion?packageName=${PLUGIN_NAME}`,
+          {
+            method: 'GET'
+          }
+        );
 
-        if (typeof latestVersion === 'string' && latestVersion > VERSION_DETAIL) {
+        if (
+          typeof latestVersion === 'string' &&
+          latestVersion > VERSION_DETAIL
+        ) {
           Notification.info(notificationMessage, {
             actions: [
               {
@@ -380,16 +389,19 @@ const extension: JupyterFrontEndPlugin<void> = {
                 callback: async () => {
                   console.log('Update JupyterLab to the latest version');
                   try {
-                    await requestAPI(`updatePlugin?packageName=${PLUGIN_NAME}`, {
-                      method: 'POST',
-                    });
+                    await requestAPI(
+                      `updatePlugin?packageName=${PLUGIN_NAME}`,
+                      {
+                        method: 'POST'
+                      }
+                    );
                     // After successful update, refresh the application
                     window.location.reload();
                   } catch (updateError) {
                     Notification.error(`Update failed.${updateError}`);
                   }
                 },
-                displayType: 'warn'
+                displayType: 'accent'
               },
               {
                 label: 'Ignore',
@@ -399,7 +411,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 displayType: 'default'
               }
             ],
-            autoClose: false,
+            autoClose: false
           });
         }
       } catch (error) {
@@ -414,33 +426,30 @@ const extension: JupyterFrontEndPlugin<void> = {
           'Cloud Resource Manager API is not enabled. Please enable the API and restart the instance to view Dataproc Serverless Notebooks.';
         const credentials = await authApi();
         const enableLink = `https://console.cloud.google.com/apis/library/cloudresourcemanager.googleapis.com?project=${credentials?.project_id}`;
-        if (!credentials?.config_error && !credentials?.login_error) {
-          const data = await requestAPI('checkResourceManager', {
-            method: 'POST'
-          });
-          const { status, error } = data as { status: string; error?: string };
-          if (status === 'ERROR') {
-            if (
-              error?.includes(
-                'API [cloudresourcemanager.googleapis.com] not enabled on project'
-              )
-            ) {
-              Notification.error(notificationMessage, {
-                actions: [
-                  {
-                    label: 'Enable',
-                    callback: () => window.open(enableLink, '_blank'),
-                    displayType: 'link'
-                  }
-                ],
-                autoClose: false
-              });
-            } else {
-              toast.error(
-                `'Error in running gcloud command': ${error}`,
-                toastifyCustomStyle
-              );
-            }
+        const data = await requestAPI('checkResourceManager', {
+          method: 'POST'
+        });
+        const { status, error } = data as { status: string; error?: string };
+        if (status === 'ERROR') {
+          if (
+            error?.includes(
+              'API [cloudresourcemanager.googleapis.com] not enabled on project'
+            )
+          ) {
+            Notification.error(notificationMessage, {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () => window.open(enableLink, '_blank'),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          } else {
+            Notification.error(`Error in running gcloud command: ${error}`, {
+              autoClose: false
+            });
           }
         }
       } catch (error) {
@@ -628,14 +637,16 @@ const extension: JupyterFrontEndPlugin<void> = {
       // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
 
       const urlParts = notebookUrl.split('/');
-      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${urlParts[urlParts.length - 1]
-        }`;
+      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
+        urlParts[urlParts.length - 1]
+      }`;
 
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] = `REGION = '${settings.get('bqRegion')['composite']
-          }'\n`;
+        notebookContent.cells[2].source[2] = `REGION = '${
+          settings.get('bqRegion')['composite']
+        }'\n`;
       }
 
       // Save the file to the workspace
@@ -773,9 +784,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const createAuthLoginComponentCommand = 'cloud-dataproc-settings:configure';
     commands.addCommand(createAuthLoginComponentCommand, {
-      label: bqFeature.enable_bigquery_integration
-        ? 'Google BigQuery Settings'
-        : 'Google Dataproc Settings',
+      label: 'Google Cloud Settings',
       execute: () => {
         const content = new AuthLogin(
           app as JupyterLab,
@@ -833,7 +842,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
           launcher.add({
             command: commandNotebook,
-            category: 'Dataproc Serverless Notebooks',
+            category: 'Dataproc Serverless Spark',
             //@ts-ignore jupyter lab Launcher type issue
             metadata: kernelsData?.metadata,
             rank: index + 1,
@@ -882,7 +891,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
       launcher.add({
         command: createRuntimeTemplateComponentCommand,
-        category: 'Dataproc Serverless Notebooks',
+        category: 'Dataproc Serverless Spark',
         rank: serverlessIndex + 2
       });
       launcher.add({
@@ -906,8 +915,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         rank: 4
       });
     }
-
-    await jupyterVersionCheck();
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
     // loads one when a notification occurs.  Let's hackily fire off a notification
