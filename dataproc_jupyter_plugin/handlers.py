@@ -90,7 +90,7 @@ class DataprocPluginConfig(SingletonConfigurable):
     )
 
     enable_bigquery_integration = Bool(
-        True,
+        False,
         config=True,
         help="Enable integration with BigQuery in JupyterLab",
     )
@@ -100,7 +100,7 @@ class DataprocPluginConfig(SingletonConfigurable):
         help="Enable integration with gcs in JupyterLab",
     )
     enable_metastore_integration = Bool(
-        True,
+        False,
         config=True,
         help="Enable integration with metastore in JupyterLab",
     )
