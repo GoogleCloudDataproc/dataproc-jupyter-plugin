@@ -21,8 +21,6 @@ import tornado
 from jupyter_server.base.handlers import APIHandler
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import bigquery
-from google.cloud import service_usage_v1
-from google.cloud.service_usage_v1.types import GetServiceRequest
 
 # GCP project holding BigQuery public datasets.
 BQ_PUBLIC_DATASET_PROJECT_ID = "bigquery-public-data"
@@ -160,23 +158,3 @@ class SearchController(APIHandler):
         except Exception as e:
             self.log.exception("Error fetching search data")
             self.finish({"error": str(e)})
-
-
-class CheckApiController(APIHandler):
-    async def post(self, service_name):
-        """
-        Check if a specific GCP API service is enabled for the current project.
-        """
-        project_id = await credentials._gcp_project()
-        client = service_usage_v1.ServiceUsageAsyncClient()
-        full_service_name = f"projects/{project_id}/services/{service_name}"
-        try:
-            request = GetServiceRequest(name=full_service_name)
-            service = await client.get_service(request=request)
-            is_enabled = service.state == service_usage_v1.types.State.ENABLED
-            self.finish({"success": True, "is_enabled": is_enabled})
-
-        except Exception as e:  
-            self.finish({"success": False, "is_enabled": False, "error": str(e)})
-
-        
