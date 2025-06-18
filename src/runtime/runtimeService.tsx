@@ -23,7 +23,7 @@ import {
   USER_INFO_URL,
   gcpServiceUrls,
   STATUS_RUNNING,
-  DATAPROC_API
+  DATAPROC_SERVICE_NAME
 } from '../utils/const';
 import {
   authApi,
@@ -514,7 +514,7 @@ export class RunTimeSerive {
   static checkDataprocApiEnabledService = async () => {
     try {
       const data: DataprocApiStatusResponse = await requestAPI(
-        `CheckApiEnabled?service_name=${DATAPROC_API}`,
+        `CheckApiEnabled?service_name=${DATAPROC_SERVICE_NAME}`,
         {
           method: 'POST'
         }

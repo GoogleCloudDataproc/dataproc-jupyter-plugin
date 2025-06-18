@@ -260,5 +260,5 @@ export const TIER_SELECT_OPTIONS = [
 ];
 export const CLOUD_COMPOSER_API =
   'https://console.developers.google.com/apis/api/composer.googleapis.com';
-export const DATAPROC_API = 'dataproc.googleapis.com';
-export const BIGQUERY_API = 'bigquery.googleapis.com'
+export const DATAPROC_SERVICE_NAME = 'dataproc.googleapis.com';
+export const BIGQUERY_SERVICE_NAME = 'bigquery.googleapis.com';
