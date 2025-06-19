@@ -21,6 +21,7 @@ import tempfile
 
 
 import tornado
+from dataproc_jupyter_plugin.controllers.version import LatestVersionController, UpdatePackage
 from google.cloud.jupyter_config.config import (
     async_run_gcloud_subcommand,
     clear_gcloud_cache,
