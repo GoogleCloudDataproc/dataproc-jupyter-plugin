@@ -101,6 +101,7 @@ interface DataprocApiStatusResponse {
   is_enabled: boolean;
   error?: string;
 }
+let lastErrorMessage: null | string = null;
 export class RunTimeSerive {
   static deleteRuntimeTemplateAPI = async (
     selectedRuntimeTemplate: string,
@@ -251,9 +252,13 @@ export class RunTimeSerive {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(formattedResponse?.error?.message, 'error', {
-          autoClose: 5000
-        });
+        const currentError = formattedResponse.error.message;
+        if (currentError !== lastErrorMessage) {
+          Notification.emit(currentError, 'error', {
+            autoClose: 5000
+          });
+          lastErrorMessage = currentError;
+        }
       }
     } catch (error) {
       setIsLoading(false);

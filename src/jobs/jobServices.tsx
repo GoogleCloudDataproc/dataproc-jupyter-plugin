@@ -72,6 +72,7 @@ interface IClusterResponse {
   status: string;
   clusterName: string;
 }
+let lastErrorMessage: null | string = null;
 export class JobService {
   static stopJobApi = async (jobId: string) => {
     const credentials = await authApi();
@@ -310,9 +311,13 @@ export class JobService {
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
+                const currentError = responseResult.error.message;
+                if (currentError !== lastErrorMessage) {
+                  Notification.emit(currentError, 'error', {
+                    autoClose: 5000
+                  });
+                  lastErrorMessage = currentError;
+                }
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {

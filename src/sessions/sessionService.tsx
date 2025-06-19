@@ -39,6 +39,7 @@ interface IRenderActionsData {
   name: string;
 }
 
+let lastErrorMessage: null | string = null;
 export class SessionService {
   static deleteSessionAPI = async (selectedSession: string) => {
     const credentials = await authApi();
@@ -264,13 +265,13 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(
-          `Failed to fetch sessions : ${formattedResponse?.error?.message}`,
-          'error',
-          {
+        const currentError = formattedResponse.error.message;
+        if (currentError !== lastErrorMessage) {
+          Notification.emit(currentError, 'error', {
             autoClose: 5000
-          }
-        );
+          });
+          lastErrorMessage = currentError;
+        }
         setIsLoading(false);
       }
     } catch (error) {

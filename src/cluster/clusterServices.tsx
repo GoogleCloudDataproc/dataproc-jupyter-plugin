@@ -63,6 +63,7 @@ interface ICluster {
   actions: React.ReactNode;
 }
 
+let lastErrorMessage: null | string = null;
 export class ClusterService {
   static listClustersAPIService = async (
     setProjectId: (value: string) => void,
@@ -138,13 +139,14 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(
-          `Failed to fetch clusters list : ${formattedResponse?.error?.message}`,
-          'error',
-          {
+        const currentError = formattedResponse.error.message;
+
+        if (currentError !== lastErrorMessage) {
+          Notification.emit(currentError, 'error', {
             autoClose: 5000
-          }
-        );
+          });
+          lastErrorMessage = currentError;
+        }
       }
     } catch (error) {
       setIsLoading(false);

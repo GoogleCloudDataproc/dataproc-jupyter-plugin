@@ -168,6 +168,7 @@ type Region = {
   name: string;
 };
 
+let lastErrorMessage: null | string = null;
 export class BatchService {
   static deleteBatchAPIService = async (selectedBatch: string) => {
     const credentials = await authApi();
@@ -341,9 +342,13 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
+                const currentError = responseResult.error.message;
+                if (currentError !== lastErrorMessage) {
+                  Notification.emit(currentError, 'error', {
+                    autoClose: 5000
+                  });
+                  lastErrorMessage = currentError;
+                }
               }
               const existingBatchData = previousBatchesList ?? [];
 
