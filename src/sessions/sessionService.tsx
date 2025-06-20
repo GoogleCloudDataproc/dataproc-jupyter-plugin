@@ -205,6 +205,7 @@ export class SessionService {
         regionIdentifier: 'locations',
         queryParams: queryParams
       });
+      const credentials = await authApi();
       const formattedResponse = await response.json();
       let transformSessionListData: React.SetStateAction<never[]> = [];
       if (formattedResponse && formattedResponse.sessions) {
@@ -267,12 +268,28 @@ export class SessionService {
       if (formattedResponse?.error?.code) {
         const currentError = formattedResponse.error.message;
         if (currentError !== lastErrorMessage) {
-          Notification.emit(currentError, 'error', {
-            autoClose: 5000
-          });
           lastErrorMessage = currentError;
+          if (formattedResponse.error.code === 403) {
+            Notification.error('The Cloud Dataproc API is not enabled.', {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () =>
+                    window.open(
+                      `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
+                      '_blank'
+                    ),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          } else {
+            Notification.emit(currentError, 'error', {
+              autoClose: 5000
+            });
+          }
         }
-        setIsLoading(false);
       }
     } catch (error) {
       setIsLoading(false);

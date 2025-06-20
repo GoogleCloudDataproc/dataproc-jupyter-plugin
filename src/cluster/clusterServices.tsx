@@ -78,7 +78,7 @@ export class ClusterService {
     try {
       const projectId = await getProjectId();
       setProjectId(projectId);
-
+      const credentials = await authApi();
       const queryParams = new URLSearchParams();
       queryParams.append('pageSize', '50');
       queryParams.append('pageToken', pageToken);
@@ -140,12 +140,28 @@ export class ClusterService {
       }
       if (formattedResponse?.error?.code) {
         const currentError = formattedResponse.error.message;
-
         if (currentError !== lastErrorMessage) {
-          Notification.emit(currentError, 'error', {
-            autoClose: 5000
-          });
           lastErrorMessage = currentError;
+          if (formattedResponse.error.code === 403) {
+            Notification.error('The Cloud Dataproc API is not enabled.', {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () =>
+                    window.open(
+                      `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
+                      '_blank'
+                    ),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          } else {
+            Notification.emit(currentError, 'error', {
+              autoClose: 5000
+            });
+          }
         }
       }
     } catch (error) {
