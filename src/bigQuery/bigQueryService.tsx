@@ -18,7 +18,7 @@
 import { Notification } from '@jupyterlab/apputils';
 import { requestAPI } from '../handler/handler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { PLUGIN_ID } from '../utils/const';
+import { BIGQUERY_SERVICE_NAME, PLUGIN_ID } from '../utils/const';
 
 interface IPreviewColumn {
   Header: string;
@@ -447,9 +447,12 @@ export class BigQueryService {
 
   static checkBigQueryDatasetsAPIService = async () => {
     try {
-      const data: any = await requestAPI(`bigQueryApiEnabled`, {
-        method: 'POST'
-      });
+      const data: any = await requestAPI(
+        `checkApiEnabled?service_name=${BIGQUERY_SERVICE_NAME}`,
+        {
+          method: 'POST'
+        }
+      );
       return data;
     } catch (reason) {
       return reason;

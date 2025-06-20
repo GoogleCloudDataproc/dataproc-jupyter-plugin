@@ -72,6 +72,7 @@ interface IClusterResponse {
   status: string;
   clusterName: string;
 }
+let lastErrorMessage: null | string = null;
 export class JobService {
   static stopJobApi = async (jobId: string) => {
     const credentials = await authApi();
@@ -310,9 +311,33 @@ export class JobService {
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
+                const currentError = responseResult.error.message;
+                if (currentError !== lastErrorMessage) {
+                  lastErrorMessage = currentError;
+                  if (responseResult.error.code === 403) {
+                    Notification.error(
+                      'The Cloud Dataproc API is not enabled.',
+                      {
+                        actions: [
+                          {
+                            label: 'Enable',
+                            callback: () =>
+                              window.open(
+                                `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
+                                '_blank'
+                              ),
+                            displayType: 'link'
+                          }
+                        ],
+                        autoClose: false
+                      }
+                    );
+                  } else {
+                    Notification.emit(currentError, 'error', {
+                      autoClose: 5000
+                    });
+                  }
+                }
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {

@@ -168,6 +168,7 @@ type Region = {
   name: string;
 };
 
+let lastErrorMessage: null | string = null;
 export class BatchService {
   static deleteBatchAPIService = async (selectedBatch: string) => {
     const credentials = await authApi();
@@ -341,9 +342,30 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
+                const currentError = responseResult.error.message;
+                if (currentError !== lastErrorMessage) {
+                  lastErrorMessage = currentError;
+                  if (responseResult.error.code === 403) {
+                    Notification.error(
+                      'The Cloud Dataproc API is not enabled.',
+                      {
+                        actions: [
+                          {
+                            label: 'Enable',
+                            callback: () =>
+                              window.open(`https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`, '_blank'),
+                            displayType: 'link'
+                          }
+                        ],
+                        autoClose: false
+                      }
+                    );
+                  } else {
+                    Notification.emit(currentError, 'error', {
+                      autoClose: 5000
+                    });
+                  }
+                }
               }
               const existingBatchData = previousBatchesList ?? [];
 

@@ -39,6 +39,7 @@ interface IRenderActionsData {
   name: string;
 }
 
+let lastErrorMessage: null | string = null;
 export class SessionService {
   static deleteSessionAPI = async (selectedSession: string) => {
     const credentials = await authApi();
@@ -204,6 +205,7 @@ export class SessionService {
         regionIdentifier: 'locations',
         queryParams: queryParams
       });
+      const credentials = await authApi();
       const formattedResponse = await response.json();
       let transformSessionListData: React.SetStateAction<never[]> = [];
       if (formattedResponse && formattedResponse.sessions) {
@@ -264,14 +266,30 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(
-          `Failed to fetch sessions : ${formattedResponse?.error?.message}`,
-          'error',
-          {
-            autoClose: 5000
+        const currentError = formattedResponse.error.message;
+        if (currentError !== lastErrorMessage) {
+          lastErrorMessage = currentError;
+          if (formattedResponse.error.code === 403) {
+            Notification.error('The Cloud Dataproc API is not enabled.', {
+              actions: [
+                {
+                  label: 'Enable',
+                  callback: () =>
+                    window.open(
+                      `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
+                      '_blank'
+                    ),
+                  displayType: 'link'
+                }
+              ],
+              autoClose: false
+            });
+          } else {
+            Notification.emit(currentError, 'error', {
+              autoClose: 5000
+            });
           }
-        );
-        setIsLoading(false);
+        }
       }
     } catch (error) {
       setIsLoading(false);
