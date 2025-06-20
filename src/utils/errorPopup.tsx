@@ -31,11 +31,26 @@ interface IErrorPopupProps {
 }
 
 function ErrorPopup({ onCancel, errorPopupOpen, errorMsg }: IErrorPopupProps) {
+  const isDataprocPermissionError = errorMsg.includes(
+    'Dataproc does not have the necessary permissions to run your workload using end user credentials'
+  );
+
   const urlMatch = errorMsg.match(/(https:\/\/[^\s]+)/);
   const authorizationUrl = urlMatch ? urlMatch[0] : '';
-  const displayMessage = authorizationUrl
-    ? errorMsg.replace(authorizationUrl, '').trim()
-    : errorMsg;
+
+  const getDisplayMessage = () => {
+    if (isDataprocPermissionError && authorizationUrl) {
+      return errorMsg.replace(
+        'Please visit the following link to grant the permissions and retry:',
+        'Please Authorize to grant permissions and retry'
+      ).replace(authorizationUrl, '').trim();
+    }
+    return authorizationUrl 
+      ? errorMsg.replace(authorizationUrl, '').trim()
+      : errorMsg;
+  };
+
+  const displayMessage = getDisplayMessage();
 
   const handleAuthorize = () => {
     if (authorizationUrl) {
