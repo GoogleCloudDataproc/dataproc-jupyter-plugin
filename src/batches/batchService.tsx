@@ -360,7 +360,7 @@ export class BatchService {
                             displayType: 'link'
                           }
                         ],
-                        autoClose: 5000
+                        autoClose: false
                       }
                     );
                   } else {
