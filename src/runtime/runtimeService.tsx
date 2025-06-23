@@ -537,7 +537,7 @@ export class RunTimeSerive {
   static checkDataprocApiEnabledService = async () => {
     try {
       const data: DataprocApiStatusResponse = await requestAPI(
-        `CheckApiEnabled?service_name=${DATAPROC_SERVICE_NAME}`,
+        `checkApiEnabled?service_name=${DATAPROC_SERVICE_NAME}`,
         {
           method: 'POST'
         }

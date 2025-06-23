@@ -14,25 +14,24 @@
 
 
 from jupyter_server.base.handlers import APIHandler
-from google.cloud import service_usage_v1
-from google.cloud.service_usage_v1.types import GetServiceRequest
+import tornado
+from google.cloud.jupyter_config.config import async_run_gcloud_subcommand
 from dataproc_jupyter_plugin import credentials
 
 
 class CheckApiController(APIHandler):
-
+    @tornado.web.authenticated
     async def post(self):
         """
-        Check if a specific GCP API service is enabled for the current project.
+        Check if a specific GCP API service is enabled for the current project using gcloud.
         """
         service_name = self.get_argument("service_name")
         project_id = await credentials._gcp_project()
-        full_service_name = f"projects/{project_id}/services/{service_name}"
+
         try:
-            async with service_usage_v1.ServiceUsageAsyncClient() as client:
-                request = GetServiceRequest(name=full_service_name)
-                service = await client.get_service(request=request)
-                is_enabled = service.state == service_usage_v1.types.State.ENABLED
-                self.finish({"success": True, "is_enabled": is_enabled})
+            cmd = f'services list --enabled --project={project_id} --filter="NAME={service_name}"'
+            result = await async_run_gcloud_subcommand(cmd)
+            is_enabled = bool(result.strip())
+            self.finish({"success": True, "is_enabled": is_enabled})
         except Exception as e:
             self.finish({"success": False, "is_enabled": False, "error": str(e)})

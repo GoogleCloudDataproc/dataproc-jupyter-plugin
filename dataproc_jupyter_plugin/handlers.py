@@ -269,7 +269,7 @@ def setup_handlers(web_app):
         "checkResourceManager": ResourceManagerHandler,
         "jupyterlabVersion": LatestVersionController,
         "updatePlugin": UpdatePackage,
-        "CheckApiEnabled": checkApiEnabled.CheckApiController,
+        "checkApiEnabled": checkApiEnabled.CheckApiController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)
