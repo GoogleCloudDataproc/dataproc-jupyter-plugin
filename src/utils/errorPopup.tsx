@@ -42,7 +42,7 @@ function ErrorPopup({ onCancel, errorPopupOpen, errorMsg }: IErrorPopupProps) {
     if (isDataprocPermissionError && authorizationUrl) {
       return errorMsg.replace(
         'Please visit the following link to grant the permissions and retry:',
-        'Please Authorize to grant permissions and retry'
+        'Please Authorize to grant permissions and retry.'
       ).replace(authorizationUrl, '').trim();
     }
     return authorizationUrl 
