@@ -411,7 +411,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 displayType: 'default'
               }
             ],
-            autoClose: 5000
+            autoClose: false
           });
         }
       } catch (error) {
