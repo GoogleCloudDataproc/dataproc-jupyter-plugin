@@ -31,7 +31,8 @@ import {
   elapsedTime,
   jobTypeDisplay,
   authenticatedFetch,
-  IAuthCredentials
+  IAuthCredentials,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -169,7 +170,6 @@ type Region = {
   name: string;
 };
 
-let lastErrorMessage: null | string = null;
 export class BatchService {
   static deleteBatchAPIService = async (selectedBatch: string) => {
     const credentials = await authApi();
@@ -295,7 +295,10 @@ export class BatchService {
   ) => {
     const credentials = await authApi();
     const { DATAPROC } = await gcpServiceUrls;
-    const pageToken = nextPageTokens.length > 0 ? nextPageTokens[nextPageTokens.length - 1] : '';
+    const pageToken =
+      nextPageTokens.length > 0
+        ? nextPageTokens[nextPageTokens.length - 1]
+        : '';
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
@@ -345,30 +348,7 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                const currentError = responseResult.error.message;
-                if (currentError !== lastErrorMessage) {
-                  lastErrorMessage = currentError;
-                  if (responseResult.error.code === 403) {
-                    Notification.error(
-                      'The Cloud Dataproc API is not enabled.',
-                      {
-                        actions: [
-                          {
-                            label: 'Enable',
-                            callback: () =>
-                              window.open(`https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`, '_blank'),
-                            displayType: 'link'
-                          }
-                        ],
-                        autoClose: 5000
-                      }
-                    );
-                  } else {
-                    Notification.emit(currentError, 'error', {
-                      autoClose: 5000
-                    });
-                  }
-                }
+                handleApiError(responseResult, credentials);
               }
               const existingBatchData = previousBatchesList ?? [];
 
@@ -380,7 +360,10 @@ export class BatchService {
               if (shouldUpdatePagination) {
                 if (responseResult?.nextPageToken) {
                   setBatchesList(allBatchesData);
-                  setNextPageTokens([...nextPageTokens, responseResult.nextPageToken]);
+                  setNextPageTokens([
+                    ...nextPageTokens,
+                    responseResult.nextPageToken
+                  ]);
                   setIsLoading(false);
                   setLoggedIn(true);
                 } else {
@@ -389,7 +372,7 @@ export class BatchService {
                   setIsLoading(false);
                   setLoggedIn(true);
                 }
-              } 
+              }
             })
             .catch((e: Error) => {
               console.log(e);

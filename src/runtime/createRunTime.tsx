@@ -41,7 +41,13 @@ import {
   KEY_MESSAGE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
+import {
+  authApi,
+  iconDisplay,
+  loggedFetch,
+  checkConfig,
+  handleApiError
+} from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
@@ -95,7 +101,6 @@ const iconHelp = new LabIcon({
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
-let lastErrorMessage: null | string = null;
 function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
@@ -207,7 +212,7 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
-  
+
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [stagingBucket, setStagingBucket] = useState('');
 
@@ -367,7 +372,7 @@ function CreateRunTime({
       !gpuDetailChangeDone &&
       (!selectedRuntimeClone ||
         selectedRuntimeClone.runtimeConfig.properties[
-        'spark.dataproc.executor.resource.accelerator.type'
+          'spark.dataproc.executor.resource.accelerator.type'
         ] === 'l4' ||
         gpuDetailUpdated.includes(
           'spark.dataproc.executor.resource.accelerator.type:l4'
@@ -1026,32 +1031,9 @@ function CreateRunTime({
           } else {
             const errorResponse = await response.json();
             setError({ isOpen: true, message: errorResponse.error.message });
-               if (errorResponse?.error?.code) {
-                 const currentError = errorResponse.error.message;
-                 if (currentError !== lastErrorMessage) {
-                   lastErrorMessage = currentError;
-                   if (errorResponse.error.code === 403) {
-                     Notification.error('The Cloud Dataproc API is not enabled.', {
-                       actions: [
-                         {
-                           label: 'Enable',
-                           callback: () =>
-                             window.open(
-                              `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
-                               '_blank'
-                             ),
-                           displayType: 'link'
-                         }
-                       ],
-                       autoClose: 5000
-                     });
-                   } else {
-                     Notification.emit(currentError, 'error', {
-                       autoClose: 5000
-                     });
-                   }
-                 }
-               }
+            if (errorResponse?.error?.code) {
+              handleApiError(errorResponse, credentials);
+            }
           }
         })
         .catch((err: Error) => {
@@ -1158,54 +1140,54 @@ function CreateRunTime({
               ...(keySelected !== '' &&
                 selectedRadioValue === 'key' &&
                 keySelected !== undefined && {
-                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-              }),
+                  kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+                }),
               ...(manualKeySelected !== '' &&
                 selectedRadioValue === 'manually' && {
-                kmsKey: manualKeySelected
-              }),
+                  kmsKey: manualKeySelected
+                }),
 
               ...(subNetworkSelected &&
                 selectedNetworkRadio === 'projectNetwork' && {
-                subnetworkUri: subNetworkSelected
-              }),
+                  subnetworkUri: subNetworkSelected
+                }),
               ...(sharedvpcSelected &&
                 selectedNetworkRadio === 'sharedVpc' && {
-                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
-              }),
+                  subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
+                }),
               ...(timeSelected === 'h' &&
                 idleTimeSelected && {
-                idleTtl: inputValueHour.toString() + 's'
-              }),
+                  idleTtl: inputValueHour.toString() + 's'
+                }),
               ...(timeSelected === 'm' &&
                 idleTimeSelected && {
-                idleTtl: inputValueMin.toString() + 's'
-              }),
+                  idleTtl: inputValueMin.toString() + 's'
+                }),
               ...(timeSelected === 's' &&
                 idleTimeSelected && {
-                idleTtl: idleTimeSelected + 's'
-              }),
+                  idleTtl: idleTimeSelected + 's'
+                }),
 
               ...(autoSelected === 'h' &&
                 autoTimeSelected && {
-                ttl: inputValueHourAuto.toString() + 's'
-              }),
+                  ttl: inputValueHourAuto.toString() + 's'
+                }),
               ...(autoSelected === 'm' &&
                 autoTimeSelected && {
-                ttl: inputValueMinAuto.toString() + 's'
-              }),
+                  ttl: inputValueMinAuto.toString() + 's'
+                }),
 
               ...(autoSelected === 's' &&
                 autoTimeSelected && {
-                ttl: autoTimeSelected + 's'
-              }),
-              
+                  ttl: autoTimeSelected + 's'
+                }),
+
               ...(selectedAccountRadio === 'userAccount' && {
                 authentication_config: {
                   user_workload_authentication_type: 'END_USER_CREDENTIALS'
                 }
               }),
-            ...(stagingBucket && { stagingBucket: stagingBucket })
+              ...(stagingBucket && { stagingBucket: stagingBucket })
             },
             peripheralsConfig: {
               ...(servicesSelected !== 'None' && {
@@ -1413,8 +1395,9 @@ function CreateRunTime({
 
               <div className="select-text-overlay">
                 <Input
-                  className={`create-runtime-style ${selectedRuntimeClone !== undefined ? ' disable-text' : ''
-                    }`}
+                  className={`create-runtime-style ${
+                    selectedRuntimeClone !== undefined ? ' disable-text' : ''
+                  }`}
                   value={runTimeSelected}
                   onChange={e => handleInputChange(e)}
                   type="text"

@@ -30,7 +30,8 @@ import {
   loggedFetch,
   authenticatedFetch,
   jobTimeFormat,
-  elapsedTime
+  elapsedTime,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
@@ -39,7 +40,6 @@ interface IRenderActionsData {
   name: string;
 }
 
-let lastErrorMessage: null | string = null;
 export class SessionService {
   static deleteSessionAPI = async (selectedSession: string) => {
     const credentials = await authApi();
@@ -266,30 +266,7 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        const currentError = formattedResponse.error.message;
-        if (currentError !== lastErrorMessage) {
-          lastErrorMessage = currentError;
-          if (formattedResponse.error.code === 403) {
-            Notification.error('The Cloud Dataproc API is not enabled.', {
-              actions: [
-                {
-                  label: 'Enable',
-                  callback: () =>
-                    window.open(
-                      `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
-                      '_blank'
-                    ),
-                  displayType: 'link'
-                }
-              ],
-              autoClose: 5000
-            });
-          } else {
-            Notification.emit(currentError, 'error', {
-              autoClose: 5000
-            });
-          }
-        }
+        handleApiError(formattedResponse, credentials);
       }
     } catch (error) {
       setIsLoading(false);
