@@ -262,3 +262,5 @@ export const CLOUD_COMPOSER_API =
   'https://console.developers.google.com/apis/api/composer.googleapis.com';
 export const DATAPROC_SERVICE_NAME = 'dataproc.googleapis.com';
 export const BIGQUERY_SERVICE_NAME = 'bigquery.googleapis.com';
+
+export const PAGE_SIZE = 50;

@@ -21,7 +21,8 @@ import {
   BatchStatus,
   HTTP_METHOD,
   STATUS_RUNNING,
-  gcpServiceUrls
+  gcpServiceUrls,
+  PAGE_SIZE
 } from '../utils/const';
 import {
   authApi,
@@ -287,17 +288,19 @@ export class BatchService {
     setBatchesList: (value: IBatchesList[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
-    nextPageToken?: string,
-    previousBatchesList?: object
+    nextPageTokens: string[],
+    setNextPageTokens: (value: string[]) => void,
+    previousBatchesList?: object,
+    shouldUpdatePagination: boolean = true
   ) => {
     const credentials = await authApi();
     const { DATAPROC } = await gcpServiceUrls;
-    const pageToken = nextPageToken ?? '';
+    const pageToken = nextPageTokens.length > 0 ? nextPageTokens[nextPageTokens.length - 1] : '';
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
       loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=500&pageToken=${pageToken}`,
+        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=${PAGE_SIZE}&pageToken=${pageToken}`,
         {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
@@ -373,23 +376,20 @@ export class BatchService {
                 ...(existingBatchData as []),
                 ...transformBatchListData
               ];
-
-              if (responseResult.nextPageToken) {
-                this.listBatchAPIService(
-                  setRegionName,
-                  setProjectName,
-                  renderActions,
-                  setBatchesList,
-                  setIsLoading,
-                  setLoggedIn,
-                  responseResult.nextPageToken,
-                  allBatchesData
-                );
-              } else {
-                setBatchesList(allBatchesData);
-                setIsLoading(false);
-                setLoggedIn(true);
-              }
+              // Only update pagination tokens if shouldUpdatePagination is true
+              if (shouldUpdatePagination) {
+                if (responseResult?.nextPageToken) {
+                  setBatchesList(allBatchesData);
+                  setNextPageTokens([...nextPageTokens, responseResult.nextPageToken]);
+                  setIsLoading(false);
+                  setLoggedIn(true);
+                } else {
+                  setBatchesList(allBatchesData);
+                  setNextPageTokens([]);
+                  setIsLoading(false);
+                  setLoggedIn(true);
+                }
+              } 
             })
             .catch((e: Error) => {
               console.log(e);
@@ -1005,15 +1005,8 @@ export class BatchService {
           );
         } else {
           const errorResponse = await response.json();
-          Notification.emit(
-            `Failed to submit the Batch : ${errorResponse?.error?.message}`,
-            'error',
-            {
-              autoClose: 5000
-            }
-          );
           setError({ isOpen: true, message: errorResponse.error.message });
-          console.log(error);
+          console.error('Failed to submit batch, API response:', errorResponse);
         }
       })
       .catch((err: Error) => {
