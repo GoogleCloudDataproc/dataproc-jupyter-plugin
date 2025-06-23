@@ -40,12 +40,15 @@ function ErrorPopup({ onCancel, errorPopupOpen, errorMsg }: IErrorPopupProps) {
 
   const getDisplayMessage = () => {
     if (isDataprocPermissionError && authorizationUrl) {
-      return errorMsg.replace(
-        'Please visit the following link to grant the permissions and retry:',
-        'Please Authorize to grant permissions and retry.'
-      ).replace(authorizationUrl, '').trim();
+      return errorMsg
+        .replace(
+          'Please visit the following link to grant the permissions and retry:',
+          'Please Authorize to grant permissions and retry.'
+        )
+        .replace(authorizationUrl, '')
+        .trim();
     }
-    return authorizationUrl 
+    return authorizationUrl
       ? errorMsg.replace(authorizationUrl, '').trim()
       : errorMsg;
   };
@@ -54,7 +57,7 @@ function ErrorPopup({ onCancel, errorPopupOpen, errorMsg }: IErrorPopupProps) {
 
   const handleAuthorize = () => {
     if (authorizationUrl) {
-      window.open(authorizationUrl, '_blank');
+      window.open(authorizationUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
