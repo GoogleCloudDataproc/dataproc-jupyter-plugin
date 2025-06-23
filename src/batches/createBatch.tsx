@@ -451,7 +451,7 @@ function CreateBatch({
           batchInfoResponse.runtimeConfig.properties
         )
           .filter(([k]) => !k.startsWith('dataproc:internal')) // Filter out internal properties
-          .map(([k, v]) => `${k.substring(6)}:${v}`);
+          .map(([k, v]) => `${k.substring(k.indexOf(':') + 1)}:${v}`);
 
         setPropertyDetail(prev => [...prev, ...updatedPropertyDetail]);
         setPropertyDetailUpdated(prev => [...prev, ...updatedPropertyDetail]);
