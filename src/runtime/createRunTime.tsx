@@ -95,7 +95,7 @@ const iconHelp = new LabIcon({
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
-
+let lastErrorMessage: null | string = null;
 function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
@@ -1024,18 +1024,36 @@ function CreateRunTime({
             if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
             }
-            console.log(responseResult);
+            console.info(responseResult);
           } else {
             const errorResponse = await response.json();
-            console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
-            Notification.emit(
-              `Failed to create the template : ${errorResponse.error.message}`,
-              'error',
-              {
-                autoClose: 5000
-              }
-            );
+               if (errorResponse?.error?.code) {
+                 const currentError = errorResponse.error.message;
+                 if (currentError !== lastErrorMessage) {
+                   lastErrorMessage = currentError;
+                   if (errorResponse.error.code === 403) {
+                     Notification.error('The Cloud Dataproc API is not enabled.', {
+                       actions: [
+                         {
+                           label: 'Enable',
+                           callback: () =>
+                             window.open(
+                              `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
+                               '_blank'
+                             ),
+                           displayType: 'link'
+                         }
+                       ],
+                       autoClose: false
+                     });
+                   } else {
+                     Notification.emit(currentError, 'error', {
+                       autoClose: 5000
+                     });
+                   }
+                 }
+               }
           }
         })
         .catch((err: Error) => {

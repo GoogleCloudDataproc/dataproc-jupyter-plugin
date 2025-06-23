@@ -323,7 +323,7 @@ export class JobService {
                             label: 'Enable',
                             callback: () =>
                               window.open(
-                                `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
+                               `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
                                 '_blank'
                               ),
                             displayType: 'link'
@@ -464,7 +464,7 @@ export class JobService {
       } else {
         setClusterResponse(allClustersData);
       }
-      if (formattedResponse?.error?.code) {
+      if (formattedResponse?.error?.code !== 403) {
         Notification.emit(formattedResponse?.error?.message, 'error', {
           autoClose: 5000
         });
