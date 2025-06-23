@@ -446,6 +446,16 @@ function CreateBatch({
           }
         }
       }
+      if (batchInfoResponse.runtimeConfig?.properties) {
+        const updatedPropertyDetail = Object.entries(
+          batchInfoResponse.runtimeConfig.properties
+        )
+          .filter(([k]) => !k.startsWith('dataproc:internal')) // Filter out internal properties
+          .map(([k, v]) => `${k.substring(6)}:${v}`);
+
+        setPropertyDetail(prev => [...prev, ...updatedPropertyDetail]);
+        setPropertyDetailUpdated(prev => [...prev, ...updatedPropertyDetail]);
+      }
 
       if (Object.keys(batchInfoResponse).length !== 0) {
         if (batchInfoResponse.hasOwnProperty('labels')) {
