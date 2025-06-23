@@ -282,7 +282,7 @@ export class SessionService {
                   displayType: 'link'
                 }
               ],
-              autoClose: false
+              autoClose: 5000
             });
           } else {
             Notification.emit(currentError, 'error', {

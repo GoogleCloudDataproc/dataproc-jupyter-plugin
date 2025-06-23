@@ -155,7 +155,7 @@ export class ClusterService {
                   displayType: 'link'
                 }
               ],
-              autoClose: false
+              autoClose: 5000
             });
           } else {
             Notification.emit(currentError, 'error', {
