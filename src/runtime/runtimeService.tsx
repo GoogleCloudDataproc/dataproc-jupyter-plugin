@@ -269,7 +269,7 @@ export class RunTimeSerive {
                   displayType: 'link'
                 }
               ],
-              autoClose: false
+              autoclose: 5000
             });
           } else {
             Notification.emit(currentError, 'error', {

@@ -329,7 +329,7 @@ export class JobService {
                             displayType: 'link'
                           }
                         ],
-                        autoClose: false
+                        autoclose: 5000
                       }
                     );
                   } else {
