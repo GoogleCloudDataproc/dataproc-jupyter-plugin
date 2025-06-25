@@ -29,9 +29,6 @@ import { authenticatedFetch } from '../utils/utils';
 import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
-import notebookSchedulerIcon from '../../style/icons/scheduler_calendar_month.svg';
-import { NotebookScheduler } from '../scheduler/notebookScheduler';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import { Widget } from '@lumino/widgets';
 
@@ -47,10 +44,6 @@ const iconServerless = new LabIcon({
   name: 'launcher:serverless-icon',
   svgstr: serverlessIcon
 });
-const iconNotebookScheduler = new LabIcon({
-  name: 'launcher:notebook-scheduler-icon',
-  svgstr: notebookSchedulerIcon
-});
 
 /**
  * A disposable class to track the toolbar widget for a single notebook.
@@ -62,7 +55,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
   private readonly sparkLogsButton: ToolbarButton;
   private readonly sessionDetailsButton: ToolbarButton;
   private readonly sessionDetailsButtonDisable: ToolbarButton;
-  private readonly notebookSchedulerButton: ToolbarButton;
   private sessionId?: string;
 
   /**
@@ -74,7 +66,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
     private readonly panel: NotebookPanel,
     private readonly context: DocumentRegistry.IContext<INotebookModel>,
     private readonly app: JupyterLab,
-    private readonly settingRegistry: ISettingRegistry,
     private readonly launcher: ILauncher,
     private readonly themeManager: IThemeManager
   ) {
@@ -109,7 +100,11 @@ class NotebookButtonExtensionPoint implements IDisposable {
     // Keeping this line for the future changes or for the reference.
     // this.panel.toolbar.insertItem(12, 'kernel-status', this.kernelStatusWidget);
     // Add the widget to the toolbar
-    this.panel.toolbar.insertBefore('executionProgress', 'kernel-status', this.kernelStatusWidget);
+    this.panel.toolbar.insertBefore(
+      'executionProgress',
+      'kernel-status',
+      this.kernelStatusWidget
+    );
 
     // Initial fetch of kernel status
     this.fetchAndUpdateKernelStatus();
@@ -146,18 +141,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
       1000,
       'session-details-disable',
       this.sessionDetailsButtonDisable
-    );
-
-    this.notebookSchedulerButton = new ToolbarButton({
-      icon: iconNotebookScheduler,
-      onClick: () => this.onNotebookSchedulerClick(),
-      tooltip: 'Job Scheduler',
-      className: 'dark-theme-logs'
-    });
-    this.panel.toolbar.insertItem(
-      1000,
-      'notebook-scheduler',
-      this.notebookSchedulerButton
     );
   }
 
@@ -235,19 +218,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
    */
   private updateKernelStatus = async () => {
     await this.fetchAndUpdateKernelStatus();
-  };
-
-  private onNotebookSchedulerClick = () => {
-    const content = new NotebookScheduler(
-      this.app as JupyterLab,
-      this.themeManager,
-      this.settingRegistry as ISettingRegistry,
-      this.context
-    );
-    const widget = new MainAreaWidget<NotebookScheduler>({ content });
-    widget.title.label = 'Job Scheduler';
-    widget.title.icon = iconNotebookScheduler;
-    this.app.shell.add(widget, 'main');
   };
 
   private onSessionDetailsClick = () => {
@@ -367,7 +337,6 @@ export class NotebookButtonExtension
 {
   constructor(
     private app: JupyterLab,
-    private settingRegistry: ISettingRegistry,
     private launcher: ILauncher,
     private themeManager: IThemeManager
   ) {}
@@ -380,7 +349,6 @@ export class NotebookButtonExtension
       panel,
       context,
       this.app,
-      this.settingRegistry,
       this.launcher,
       this.themeManager
     );
