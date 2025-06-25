@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
@@ -23,6 +23,7 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import SucceededIcon from '../../style/icons/succeeded_icon.svg';
 import clusterRunningIcon from '../../style/icons/cluster_running_icon.svg';
 import clusterErrorIcon from '../../style/icons/cluster_error_icon.svg';
+import refreshBatchIcon from '../../style/icons/refresh_cluster_icon.svg';
 import GlobalFilter from '../utils/globalFilter';
 import {
   BatchStatus,
@@ -35,16 +36,25 @@ import {
   STATUS_SUCCESS
 } from '../utils/const';
 import TableData from '../utils/tableData';
-import { PaginationView } from '../utils/paginationView';
 import { ICellProps } from '../utils/utils';
 import { BatchService } from './batchService';
-import PollingTimer from '../utils/pollingTimer';
 import DeletePopup from '../utils/deletePopup';
 import BatchDetails from './batchDetails';
 import CreateBatch from './createBatch';
+import PreviousIcon from '../../style/icons/previous_page.svg';
+import NextIcon from '../../style/icons/next_page.svg';
 
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { CircularProgress } from '@mui/material';
+
+const iconPrevious = new LabIcon({
+  name: 'launcher:previous-icon',
+  svgstr: PreviousIcon
+});
+const iconNext = new LabIcon({
+  name: 'launcher:next-icon',
+  svgstr: NextIcon
+});
 
 const iconSubmitJob = new LabIcon({
   name: 'launcher:submit-job-icon',
@@ -72,6 +82,11 @@ const iconDelete = new LabIcon({
   svgstr: deleteIcon
 });
 
+const iconRefreshBatch = new LabIcon({
+  name: 'launcher:refresh-dataset-explorer-icon',
+  svgstr: refreshBatchIcon
+});
+
 interface IBatchesList {
   batchID: string;
   status: string;
@@ -95,18 +110,14 @@ function ListBatches({ setLoggedIn }: any) {
   const [selectedBatch, setSelectedBatch] = useState('');
   const [regionName, setRegionName] = useState('');
   const [projectName, setProjectName] = useState('');
-  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-  const pollingBatches = async (
-    pollingFunction: () => void,
-    pollingDisable: boolean
-  ) => {
-    timer.current = PollingTimer(
-      pollingFunction,
-      pollingDisable,
-      timer.current
-    );
-  };
+  const [nextPageTokens, setNextPageTokens] = useState<string[]>([]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+
+  // New state to track if a batch was created from batch details
+  const [batchCreatedFromDetails, setBatchCreatedFromDetails] = useState<boolean>(false);
+
   const data = batchesList;
+
   const columns = React.useMemo(
     () => [
       {
@@ -151,12 +162,7 @@ function ListBatches({ setLoggedIn }: any) {
     preGlobalFilteredRows,
     setGlobalFilter,
     page,
-    canPreviousPage,
-    canNextPage,
-    nextPage,
-    previousPage,
-    setPageSize,
-    state: { pageIndex, pageSize }
+    state: { pageSize }
   } = useTable(
     //@ts-ignore react-table 'columns' which is declared here on type 'TableOptions<ICluster>'
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
@@ -167,6 +173,18 @@ function ListBatches({ setLoggedIn }: any) {
   const handleCreateBatchOpen = () => {
     setCreateBatchView(true);
   };
+
+  const handleRefreshBatches = () => {
+    // If we're on the first page (index 0), refresh with no tokens
+    if (currentPageIndex === 0) {
+      listBatchAPI([], true);
+    } else {
+      // For any other page, use the current page's tokens to stay on the same page
+      // Get tokens up to the current page
+      const tokensForCurrentPage = nextPageTokens.slice(0, currentPageIndex);
+      listBatchAPI(tokensForCurrentPage, false); // false to maintain current pagination state
+    }
+  }
 
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Batch ID') {
@@ -203,12 +221,12 @@ function ListBatches({ setLoggedIn }: any) {
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_DELETING) && (
-              <CircularProgress
-                size={15}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            )}
+                <CircularProgress
+                  size={15}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>
@@ -231,22 +249,29 @@ function ListBatches({ setLoggedIn }: any) {
     stateTime: Date;
   }
 
-  const listBatchAPI = async () => {
+  const listBatchAPI = async (pageToken?: string[], shouldUpdatePagination: boolean = true) => {
     await BatchService.listBatchAPIService(
       setRegionName,
       setProjectName,
       renderActions,
       setBatchesList,
       setIsLoading,
-      setLoggedIn
+      setLoggedIn,
+      pageToken ? pageToken : nextPageTokens,
+      setNextPageTokens,
+      undefined,
+      // Only update nextPageTokens if shouldUpdatePagination is true
+      shouldUpdatePagination
     );
   };
 
   const handleBatchDetails = (selectedName: string) => {
-    pollingBatches(listBatchAPI, true);
+    // Stop polling and don't update pagination when viewing details
+    setPollingDisable(true);
     setBatchSelected(selectedName);
     setDetailedBatchView(true);
   };
+
   const handleDeleteBatch = (data: IBatchData) => {
     if (data.state !== BatchStatus.STATUS_PENDING) {
       /*
@@ -257,6 +282,7 @@ function ListBatches({ setLoggedIn }: any) {
       setDeletePopupOpen(true);
     }
   };
+
   const handleCancelDelete = () => {
     setDeletePopupOpen(false);
   };
@@ -301,20 +327,74 @@ function ListBatches({ setLoggedIn }: any) {
     );
   };
 
+  // Updated useEffect - prevent API call when returning from detailed view
   useEffect(() => {
-    if (!pollingDisable) {
-      listBatchAPI();
+    if (!createBatchView && !detailedBatchView) {
+      // Only call API when not in detailed view and not creating batch
+      // Don't update pagination when coming back from detailed view
+      listBatchAPI(undefined, false);
     }
+  }, [createBatchView, pollingDisable]);
 
-    return () => {
-      pollingBatches(listBatchAPI, true);
-    };
-  }, [pollingDisable, detailedBatchView]);
+  // Separate useEffect for when detailedBatchView changes to false (coming back)
   useEffect(() => {
-    if (!detailedBatchView && !isLoading) {
-      pollingBatches(listBatchAPI, pollingDisable);
+    if (!detailedBatchView && !createBatchView) {
+      // Check if a batch was created from details
+      if (batchCreatedFromDetails) {
+        // Case 1: Batch was created from details - reset pagination and clear tokens
+        setNextPageTokens([]);
+        setCurrentPageIndex(0);
+        listBatchAPI([], true);
+        setBatchCreatedFromDetails(false);
+      } else if (batchesList.length > 0) {
+        // Case 2 & 3: No batch created - just refresh data without updating pagination
+        listBatchAPI(undefined, false);
+      }
     }
-  }, [isLoading]);
+  }, [detailedBatchView, createBatchView, batchCreatedFromDetails]);
+
+  // Keep the initial load with pagination enabled
+  useEffect(() => {
+    listBatchAPI();
+  }, []);
+
+  const handlePreviousPage = () => {
+    if (currentPageIndex > 0) {
+      const newPageIndex = currentPageIndex - 1;
+      setCurrentPageIndex(newPageIndex);
+
+      const tokensForPreviousPage = nextPageTokens.slice(0, nextPageTokens.length - 2);
+      listBatchAPI(tokensForPreviousPage, true);
+    }
+  };
+
+  const handleNextPage = () => {
+    // Check if we have a next page token available
+    if (nextPageTokens.length > currentPageIndex) {
+      const newPageIndex = currentPageIndex + 1;
+      setCurrentPageIndex(newPageIndex);
+
+      // Use the last token in the array for the next page
+      listBatchAPI(nextPageTokens, true);
+    }
+  };
+
+  // Check if we can navigate to previous/next pages
+  const canPreviousPage = currentPageIndex > 0;
+  const canNextPage = nextPageTokens.length > currentPageIndex;
+
+  const startIndex = currentPageIndex * pageSize + 1;
+  const actualRecordsOnCurrentPage = rows.length;
+
+  // Calculate the end index - either full pageSize or actual records if less than pageSize
+  const endIndex = Math.min((currentPageIndex + 1) * pageSize, startIndex - 1 + actualRecordsOnCurrentPage);
+
+  // Calculate estimated total:
+  // If there's a next page available, show current page + next potential page (+ pageSize)
+  // If no next page, show actual end index as total
+  const estimatedTotal = canNextPage
+    ? (currentPageIndex + 2) * pageSize
+    : endIndex;
 
   return (
     <div>
@@ -333,6 +413,8 @@ function ListBatches({ setLoggedIn }: any) {
           batchSelected={batchSelected}
           setDetailedBatchView={setDetailedBatchView}
           setCreateBatchView={setCreateBatchView}
+          batchCreatedFromDetails={batchCreatedFromDetails}
+          setBatchCreatedFromDetails={setBatchCreatedFromDetails}
         />
       )}
       {createBatchView && (
@@ -340,6 +422,9 @@ function ListBatches({ setLoggedIn }: any) {
           setCreateBatchView={setCreateBatchView}
           regionName={regionName}
           projectName={projectName}
+          setNextPageTokens={setNextPageTokens}
+          batchCreatedFromDetails={batchCreatedFromDetails}
+          setBatchCreatedFromDetails={setBatchCreatedFromDetails}
         />
       )}
 
@@ -359,6 +444,20 @@ function ListBatches({ setLoggedIn }: any) {
                 />
               </div>
               <div className="create-text">Create Batch</div>
+            </div>
+            <div
+              className="create-batch-overlay"
+              onClick={() => {
+                handleRefreshBatches();
+              }}
+            >
+              <div className="batch-refresh-icon">
+                <iconRefreshBatch.react
+                  tag="div"
+                  className="logo-alignment-style"
+                />
+              </div>
+              <div className="create-text">Refresh</div>
             </div>
           </div>
 
@@ -393,18 +492,34 @@ function ListBatches({ setLoggedIn }: any) {
                   tableDataCondition={tableDataCondition}
                   fromPage="Batches"
                 />
-                {batchesList.length > 50 && (
-                  <PaginationView
-                    pageSize={pageSize}
-                    setPageSize={setPageSize}
-                    pageIndex={pageIndex}
-                    allData={batchesList}
-                    previousPage={previousPage}
-                    nextPage={nextPage}
-                    canPreviousPage={canPreviousPage}
-                    canNextPage={canNextPage}
-                  />
-                )}
+                <div className="pagination-parent-view">
+                  <div>Rows per page: 50</div>
+                  <div className="page-display-part">
+                    {batchesList.length > 0 ? (
+                      `${startIndex} - ${endIndex} of ${estimatedTotal}`
+                    ) : (
+                      "0 - 0 of 0"
+                    )}
+                  </div>
+                  <div
+                    role="button"
+                    className={
+                      !canPreviousPage ? 'page-move-button disabled' : 'page-move-button'
+                    }
+                    onClick={() => handlePreviousPage()}
+                  >
+                    <iconPrevious.react tag="div" className="icon-white logo-alignment-style" />
+                  </div>
+                  <div
+                    role="button"
+                    onClick={() => handleNextPage()}
+                    className={
+                      !canNextPage ? 'page-move-button disabled' : 'page-move-button'
+                    }
+                  >
+                    <iconNext.react tag="div" className="icon-white logo-alignment-style" />
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
@@ -412,7 +527,7 @@ function ListBatches({ setLoggedIn }: any) {
               {isLoading && (
                 <div className="spin-loader-main">
                   <CircularProgress
-                    className = "spin-loader-custom-style"
+                    className="spin-loader-custom-style"
                     size={18}
                     aria-label="Loading Spinner"
                     data-testid="loader"
