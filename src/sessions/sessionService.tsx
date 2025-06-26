@@ -30,7 +30,8 @@ import {
   loggedFetch,
   authenticatedFetch,
   jobTimeFormat,
-  elapsedTime
+  elapsedTime,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
@@ -204,6 +205,7 @@ export class SessionService {
         regionIdentifier: 'locations',
         queryParams: queryParams
       });
+      const credentials = await authApi();
       const formattedResponse = await response.json();
       let transformSessionListData: React.SetStateAction<never[]> = [];
       if (formattedResponse && formattedResponse.sessions) {
@@ -264,14 +266,7 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(
-          `Failed to fetch sessions : ${formattedResponse?.error?.message}`,
-          'error',
-          {
-            autoClose: 5000
-          }
-        );
-        setIsLoading(false);
+        handleApiError(formattedResponse, credentials, 'sessions');
       }
     } catch (error) {
       setIsLoading(false);

@@ -28,7 +28,8 @@ import {
   loggedFetch,
   getProjectId,
   authenticatedFetch,
-  statusValue
+  statusValue,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -77,7 +78,7 @@ export class ClusterService {
     try {
       const projectId = await getProjectId();
       setProjectId(projectId);
-
+      const credentials = await authApi();
       const queryParams = new URLSearchParams();
       queryParams.append('pageSize', '50');
       queryParams.append('pageToken', pageToken);
@@ -138,13 +139,7 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(
-          `Failed to fetch clusters list : ${formattedResponse?.error?.message}`,
-          'error',
-          {
-            autoClose: 5000
-          }
-        );
+        handleApiError(formattedResponse, credentials, 'clusters');
       }
     } catch (error) {
       setIsLoading(false);

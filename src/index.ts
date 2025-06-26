@@ -245,7 +245,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                     displayType: 'link'
                   }
                 ],
-                autoClose: false
+                autoClose: 5000
               });
             }
           } 
@@ -444,11 +444,11 @@ const extension: JupyterFrontEndPlugin<void> = {
                   displayType: 'link'
                 }
               ],
-              autoClose: false
+              autoClose: 5000
             });
           } else {
             Notification.error(`Error in running gcloud command: ${error}`, {
-              autoClose: false
+              autoClose: 5000
             });
           }
         }

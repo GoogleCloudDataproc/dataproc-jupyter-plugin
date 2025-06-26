@@ -41,7 +41,7 @@ import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import { SessionService } from './sessionService';
 import TableData from '../utils/tableData';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, resetLastError } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import { CircularProgress } from '@mui/material';
 
@@ -172,6 +172,9 @@ function ListSessions() {
     usePagination
   );
 
+  useEffect(() => {
+    resetLastError('sessions');
+  }, []);
   useEffect(() => {
     if (!pollingDisable) {
       listSessionsAPI();

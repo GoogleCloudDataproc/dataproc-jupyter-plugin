@@ -20,7 +20,7 @@ import ListBatches from './listBatches';
 import ListSessions from '../sessions/listSessions';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
-import { checkConfig } from '../utils/utils';
+import { checkConfig, resetLastError } from '../utils/utils';
 import { CircularProgress } from '@mui/material';
 
 const BatchesComponent = (): React.JSX.Element => {
@@ -49,7 +49,9 @@ const BatchesComponent = (): React.JSX.Element => {
     setLoggedIn(localstorageGetInformation === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
+      resetLastError('batches');
     }
+    
   }, []);
 
   return (

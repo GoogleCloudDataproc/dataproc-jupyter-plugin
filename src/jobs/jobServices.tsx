@@ -34,7 +34,8 @@ import {
   jobTypeDisplay,
   authenticatedFetch,
   statusValue,
-  IAuthCredentials
+  IAuthCredentials,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { IJobDetails } from '../utils/jobDetailsInterface';
@@ -310,9 +311,7 @@ export class JobService {
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
+                handleApiError(responseResult, credentials, 'jobs');
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
@@ -439,7 +438,7 @@ export class JobService {
       } else {
         setClusterResponse(allClustersData);
       }
-      if (formattedResponse?.error?.code) {
+      if (formattedResponse?.error?.code !== 403) {
         Notification.emit(formattedResponse?.error?.message, 'error', {
           autoClose: 5000
         });

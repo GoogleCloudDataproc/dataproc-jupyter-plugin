@@ -31,7 +31,8 @@ import {
   elapsedTime,
   jobTypeDisplay,
   authenticatedFetch,
-  IAuthCredentials
+  IAuthCredentials,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -294,7 +295,10 @@ export class BatchService {
   ) => {
     const credentials = await authApi();
     const { DATAPROC } = await gcpServiceUrls;
-    const pageToken = nextPageTokens.length > 0 ? nextPageTokens[nextPageTokens.length - 1] : '';
+    const pageToken =
+      nextPageTokens.length > 0
+        ? nextPageTokens[nextPageTokens.length - 1]
+        : '';
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
@@ -344,9 +348,7 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
+                handleApiError(responseResult, credentials, 'batches');
               }
               const existingBatchData = previousBatchesList ?? [];
 
@@ -358,7 +360,10 @@ export class BatchService {
               if (shouldUpdatePagination) {
                 if (responseResult?.nextPageToken) {
                   setBatchesList(allBatchesData);
-                  setNextPageTokens([...nextPageTokens, responseResult.nextPageToken]);
+                  setNextPageTokens([
+                    ...nextPageTokens,
+                    responseResult.nextPageToken
+                  ]);
                   setIsLoading(false);
                   setLoggedIn(true);
                 } else {
@@ -367,7 +372,7 @@ export class BatchService {
                   setIsLoading(false);
                   setLoggedIn(true);
                 }
-              } 
+              }
             })
             .catch((e: Error) => {
               console.log(e);

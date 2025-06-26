@@ -22,13 +22,15 @@ import {
   HTTP_METHOD,
   USER_INFO_URL,
   gcpServiceUrls,
-  STATUS_RUNNING
+  STATUS_RUNNING,
+  DATAPROC_SERVICE_NAME
 } from '../utils/const';
 import {
   authApi,
   loggedFetch,
   authenticatedFetch,
-  jobTimeFormat
+  jobTimeFormat,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
@@ -167,6 +169,7 @@ export class RunTimeSerive {
         regionIdentifier: 'locations',
         queryParams: queryParams
       });
+      const credentials = await authApi();
       const formattedResponse: ISessionTemplateRoot = await response.json();
       let transformRuntimeTemplatesListData: ISessionTemplateDisplay[] = [];
       if (formattedResponse && formattedResponse.sessionTemplates) {
@@ -250,9 +253,7 @@ export class RunTimeSerive {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(formattedResponse?.error?.message, 'error', {
-          autoClose: 5000
-        });
+        handleApiError(formattedResponse, credentials, 'runtimeTemplates');
       }
     } catch (error) {
       setIsLoading(false);
@@ -512,9 +513,12 @@ export class RunTimeSerive {
 
   static checkDataprocApiEnabledService = async () => {
     try {
-      const data: DataprocApiStatusResponse = await requestAPI(`DataprocApiEnabled`, {
-        method: 'POST'
-      });
+      const data: DataprocApiStatusResponse = await requestAPI(
+        `checkApiEnabled?service_name=${DATAPROC_SERVICE_NAME}`,
+        {
+          method: 'POST'
+        }
+      );
       return data;
     } catch (reason) {
       return reason;
