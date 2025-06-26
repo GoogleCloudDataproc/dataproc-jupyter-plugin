@@ -65,7 +65,7 @@ interface Credentials {
   project_id?: string;
 }
 
-let lastErrorMessage: string | null = null;
+const lastErrorMessages = new Map<string, string | null>();
 
 export const authApi = async (): Promise<IAuthCredentials | undefined> => {
   try {
@@ -526,16 +526,26 @@ export const handleDebounce = (func: any, delay: number) => {
     }, delay);
   };
 };
+
+export const resetLastError = (pageId?: string): void => {
+  if (pageId) {
+    lastErrorMessages.delete(pageId);
+  } else {
+    lastErrorMessages.clear();
+  }
+};
 export const handleApiError = (
   responseResult: ErrorResponse,
-  credentials: Credentials | undefined
+  credentials: Credentials | undefined,
+  pageId: string = 'default'
+
 ): void => {
   if (responseResult?.error?.code) {
     const currentError = responseResult.error.message;
+    const lastErrorMessage = lastErrorMessages.get(pageId);
 
     if (currentError !== lastErrorMessage) {
-      lastErrorMessage = currentError ?? null;
-
+      lastErrorMessages.set(pageId, currentError ?? null);
       if (responseResult.error.code === 403) {
         Notification.error('The Cloud Dataproc API is not enabled.', {
           actions: [

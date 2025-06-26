@@ -22,7 +22,7 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, resetLastError } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
 import { RunTimeSerive } from './runtimeService';
 import { PaginationView } from '../utils/paginationView';
@@ -189,6 +189,9 @@ function ListRuntimeTemplates({
     useGlobalFilter,
     usePagination
   );
+  useEffect(() => {
+    resetLastError('runtimeTemplates');
+  }, []);
 
   useEffect(() => {
     listRuntimeTemplatesAPI();

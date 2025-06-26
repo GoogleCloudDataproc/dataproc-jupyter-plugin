@@ -253,7 +253,7 @@ export class RunTimeSerive {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        handleApiError(formattedResponse, credentials);
+        handleApiError(formattedResponse, credentials, 'runtimeTemplates');
       }
     } catch (error) {
       setIsLoading(false);

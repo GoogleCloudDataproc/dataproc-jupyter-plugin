@@ -17,7 +17,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
-import { ICellProps } from '../utils/utils';
+import { ICellProps, resetLastError } from '../utils/utils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
 import cloneIcon from '../../style/icons/clone_icon.svg';
@@ -195,14 +195,14 @@ function JobComponent({
   };
 
   const listJobsAPI = async () => {
-    controller.current.abort(); 
-    controller.current = new AbortController(); 
+    controller.current.abort();
+    controller.current = new AbortController();
     await JobService.listJobsAPIService(
       clusterSelected,
       setIsLoading,
       setjobsList,
       renderActions,
-      controller.current.signal 
+      controller.current.signal
     );
   };
 
@@ -283,7 +283,9 @@ function JobComponent({
       </div>
     );
   };
-
+  useEffect(() => {
+    resetLastError('jobs');
+  }, []);
   useEffect(() => {
     if (!pollingDisable) {
       listJobsAPI();
@@ -296,7 +298,7 @@ function JobComponent({
       }
     };
   }, [pollingDisable, detailedJobView]);
-  
+
   useEffect(() => {
     if (!detailedJobView && !isLoading) {
       pollingJobs(listJobsAPI, pollingDisable);
@@ -505,7 +507,7 @@ function JobComponent({
               {isLoading && (
                 <div className="spin-loader-main">
                   <CircularProgress
-                    className = "spin-loader-custom-style"
+                    className="spin-loader-custom-style"
                     size={20}
                     aria-label="Loading Spinner"
                     data-testid="loader"

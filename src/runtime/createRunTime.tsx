@@ -46,7 +46,8 @@ import {
   iconDisplay,
   loggedFetch,
   checkConfig,
-  handleApiError
+  handleApiError,
+  resetLastError
 } from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
@@ -254,6 +255,7 @@ function CreateRunTime({
     listNetworksAPI();
     listKeyRingsAPI();
     runtimeSharedProject();
+    resetLastError('createRuntimeApi');
   }, []);
 
   useEffect(() => {
@@ -1032,7 +1034,7 @@ function CreateRunTime({
             const errorResponse = await response.json();
             setError({ isOpen: true, message: errorResponse.error.message });
             if (errorResponse?.error?.code) {
-              handleApiError(errorResponse, credentials);
+              handleApiError(errorResponse, credentials, 'createRuntimeApi');
             }
           }
         })

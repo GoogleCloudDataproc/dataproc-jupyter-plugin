@@ -18,7 +18,7 @@
 import React, { useEffect, useState } from 'react';
 import JobComponent from '../jobs/jobs';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
-import { checkConfig } from '../utils/utils';
+import { checkConfig, resetLastError } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
 import { DataprocWidget } from '../controls/DataprocWidget';
@@ -56,6 +56,7 @@ const ClusterComponent = (): React.JSX.Element => {
     setLoggedIn(localstorageGetInformation === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
+      resetLastError('clusters');
     }
   }, []);
 
@@ -64,7 +65,7 @@ const ClusterComponent = (): React.JSX.Element => {
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"

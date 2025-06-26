@@ -348,7 +348,7 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                handleApiError(responseResult, credentials);
+                handleApiError(responseResult, credentials, 'batches');
               }
               const existingBatchData = previousBatchesList ?? [];
 

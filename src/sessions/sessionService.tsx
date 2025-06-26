@@ -266,7 +266,7 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        handleApiError(formattedResponse, credentials);
+        handleApiError(formattedResponse, credentials, 'sessions');
       }
     } catch (error) {
       setIsLoading(false);

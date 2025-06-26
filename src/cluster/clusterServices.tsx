@@ -139,7 +139,7 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        handleApiError(formattedResponse, credentials);
+        handleApiError(formattedResponse, credentials, 'clusters');
       }
     } catch (error) {
       setIsLoading(false);

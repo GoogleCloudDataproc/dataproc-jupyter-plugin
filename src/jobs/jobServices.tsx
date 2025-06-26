@@ -311,7 +311,7 @@ export class JobService {
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                handleApiError(responseResult, credentials);
+                handleApiError(responseResult, credentials, 'jobs');
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
