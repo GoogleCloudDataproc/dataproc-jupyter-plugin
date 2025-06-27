@@ -19,10 +19,8 @@ import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import signinGoogleIcon from '../../style/icons/signin_google_icon.svg';
 import { login } from './utils';
-// import ConfigSelection from '../login/configSelection';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { JupyterLab } from '@jupyterlab/application';
-// import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 
 // Create the Google Sign-in Icon
 const IconsigninGoogle = new LabIcon({
