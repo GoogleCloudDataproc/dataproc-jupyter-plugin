@@ -18,7 +18,7 @@
 import React, { useEffect, useState } from 'react';
 import JobComponent from '../jobs/jobs';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
-import { checkConfig, resetLastError } from '../utils/utils';
+import { checkConfig } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
 import { DataprocWidget } from '../controls/DataprocWidget';
@@ -56,7 +56,6 @@ const ClusterComponent = (): React.JSX.Element => {
     setLoggedIn(localstorageGetInformation === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
-      resetLastError('clusters');
     }
   }, []);
 

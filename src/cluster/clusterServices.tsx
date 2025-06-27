@@ -29,7 +29,7 @@ import {
   getProjectId,
   authenticatedFetch,
   statusValue,
-  handleApiError
+  handleApiError1
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -71,6 +71,9 @@ export class ClusterService {
     setClustersList: (value: ICluster[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
+    setApiDialogOpen: (open: boolean) => void,
+    setPollingDisable: (value: boolean) => void,
+    setEnableLink: (link: string) => void,
     nextPageToken?: string,
     previousClustersList?: object
   ) => {
@@ -130,6 +133,9 @@ export class ClusterService {
           setClustersList,
           setIsLoading,
           setLoggedIn,
+          setApiDialogOpen,
+          setPollingDisable,
+          setEnableLink,
           formattedResponse.nextPageToken,
           allClustersData
         );
@@ -139,7 +145,14 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        handleApiError(formattedResponse, credentials, 'clusters');
+        handleApiError1(
+          formattedResponse,
+          credentials,
+          setApiDialogOpen,
+          setEnableLink,
+          setPollingDisable,
+          'clusters'
+        );
       }
     } catch (error) {
       setIsLoading(false);

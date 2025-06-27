@@ -569,3 +569,32 @@ export const handleApiError = (
     }
   }
 };
+export const handleApiError1 = (
+  responseResult: ErrorResponse,
+  credentials: Credentials | undefined,
+  setApiDialogOpen: (open: boolean) => void,
+  setEnableLink: (link: string) => void,
+  setPollingDisabled: (disabled: boolean) => void,
+  pageId: string = 'default',
+
+): void => {
+  if (responseResult?.error?.code) {
+    const currentError = responseResult.error.message;
+
+      lastErrorMessages.set(pageId, currentError ?? null);
+      
+      if (responseResult.error.code === 403) {
+        // Set the enable link and open the dialog
+        const link = `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`;
+        setEnableLink(link);
+        setApiDialogOpen(true);
+        setPollingDisabled(true);
+      } else {
+        // Keep existing notification for other errors
+        Notification.emit(currentError ?? 'Unknown error', 'error', {
+          autoClose: 5000
+        });
+      }
+    
+  }
+};
