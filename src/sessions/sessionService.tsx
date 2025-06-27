@@ -31,7 +31,7 @@ import {
   authenticatedFetch,
   jobTimeFormat,
   elapsedTime,
-  handleApiError1
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
@@ -272,7 +272,7 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        handleApiError1(
+        handleApiError(
           formattedResponse,
           credentials,
           setApiDialogOpen,

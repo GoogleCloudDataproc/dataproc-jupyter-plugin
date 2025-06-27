@@ -35,7 +35,7 @@ import {
   authenticatedFetch,
   statusValue,
   IAuthCredentials,
-  handleApiError1
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { IJobDetails } from '../utils/jobDetailsInterface';
@@ -314,7 +314,7 @@ export class JobService {
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                handleApiError1(
+                handleApiError(
                   responseResult,
                   credentials,
                   setApiDialogOpen,

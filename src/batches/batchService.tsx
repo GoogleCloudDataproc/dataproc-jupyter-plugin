@@ -32,7 +32,7 @@ import {
   jobTypeDisplay,
   authenticatedFetch,
   IAuthCredentials,
-  handleApiError1
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -351,7 +351,7 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                handleApiError1(
+                handleApiError(
                   responseResult,
                   credentials,
                   setApiDialogOpen,

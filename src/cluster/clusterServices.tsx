@@ -29,7 +29,7 @@ import {
   getProjectId,
   authenticatedFetch,
   statusValue,
-  handleApiError1
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -145,7 +145,7 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        handleApiError1(
+        handleApiError(
           formattedResponse,
           credentials,
           setApiDialogOpen,

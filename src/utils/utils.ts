@@ -65,7 +65,7 @@ interface Credentials {
   project_id?: string;
 }
 
-const lastErrorMessages = new Map<string, string | null>();
+// Removed unused lastErrorMessages map to resolve compile error.
 
 export const authApi = async (): Promise<IAuthCredentials | undefined> => {
   try {
@@ -527,74 +527,25 @@ export const handleDebounce = (func: any, delay: number) => {
   };
 };
 
-export const resetLastError = (pageId?: string): void => {
-  if (pageId) {
-    lastErrorMessages.delete(pageId);
-  } else {
-    lastErrorMessages.clear();
-  }
-};
 export const handleApiError = (
-  responseResult: ErrorResponse,
-  credentials: Credentials | undefined,
-  pageId: string = 'default'
-
-): void => {
-  if (responseResult?.error?.code) {
-    const currentError = responseResult.error.message;
-    const lastErrorMessage = lastErrorMessages.get(pageId);
-
-    if (currentError !== lastErrorMessage) {
-      lastErrorMessages.set(pageId, currentError ?? null);
-      if (responseResult.error.code === 403) {
-        Notification.error('The Cloud Dataproc API is not enabled.', {
-          actions: [
-            {
-              label: 'Enable',
-              callback: () =>
-                window.open(
-                  `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`,
-                  '_blank'
-                ),
-              displayType: 'link'
-            }
-          ],
-          autoClose: 5000
-        });
-      } else {
-        Notification.emit(currentError ?? 'Unknown error', 'error', {
-          autoClose: 5000
-        });
-      }
-    }
-  }
-};
-export const handleApiError1 = (
   responseResult: ErrorResponse,
   credentials: Credentials | undefined,
   setApiDialogOpen: (open: boolean) => void,
   setEnableLink: (link: string) => void,
   setPollingDisabled: (disabled: boolean) => void,
-  pageId: string = 'default',
-
+  pageId: string = 'default'
 ): void => {
   if (responseResult?.error?.code) {
     const currentError = responseResult.error.message;
-
-      lastErrorMessages.set(pageId, currentError ?? null);
-      
-      if (responseResult.error.code === 403) {
-        // Set the enable link and open the dialog
-        const link = `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`;
-        setEnableLink(link);
-        setApiDialogOpen(true);
-        setPollingDisabled(true);
-      } else {
-        // Keep existing notification for other errors
-        Notification.emit(currentError ?? 'Unknown error', 'error', {
-          autoClose: 5000
-        });
-      }
-    
+    if (responseResult.error.code === 403) {
+      const link = `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`;
+      setEnableLink(link);
+      setApiDialogOpen(true);
+      setPollingDisabled(true);
+    } else {
+      Notification.emit(currentError ?? 'Unknown error', 'error', {
+        autoClose: 5000
+      });
+    }
   }
 };
