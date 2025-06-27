@@ -17,7 +17,7 @@
 
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import 'react-toastify/dist/ReactToastify.css';
+import { Notification } from '@jupyterlab/apputils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -40,16 +40,9 @@ import {
   KEY_MESSAGE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import {
-  authApi,
-  toastifyCustomStyle,
-  iconDisplay,
-  loggedFetch,
-  checkConfig
-} from '../utils/utils';
+import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { toast } from 'react-toastify';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
 import { Select } from '../controls/MuiWrappedSelect';
@@ -217,6 +210,9 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
+  
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [stagingBucket, setStagingBucket] = useState('');
 
   const runtimeOptions = [
     {
@@ -304,14 +300,12 @@ function CreateRunTime({
 
           let gpuDetailModify = [...gpuDetailUpdated];
           resourceAllocationModify.forEach(item => {
-            const [key, value] = item.split(':');
+            const [key] = item.split(':');
             if (key === 'spark.executor.cores') {
-              const cores = Number(value);
-              const gpuValue = (1 / cores).toFixed(2);
               gpuDetailModify = gpuDetailModify.map(gpuItem => {
-                const [gpuKey] = gpuItem.split(':');
+                const [gpuKey, value] = gpuItem.split(':');
                 if (gpuKey === 'spark.task.resource.gpu.amount') {
-                  return `spark.task.resource.gpu.amount:${gpuValue}`;
+                  return `spark.task.resource.gpu.amount:${value}`;
                 }
                 return gpuItem;
               });
@@ -350,14 +344,12 @@ function CreateRunTime({
 
           let gpuDetailModify = [...gpuDetailUpdated];
           resourceAllocationModify.forEach(item => {
-            const [key, value] = item.split(':');
+            const [key] = item.split(':');
             if (key === 'spark.executor.cores') {
-              const cores = Number(value);
-              const gpuValue = (1 / cores).toFixed(2);
               gpuDetailModify = gpuDetailModify.map(gpuItem => {
-                const [gpuKey] = gpuItem.split(':');
+                const [gpuKey, value] = gpuItem.split(':');
                 if (gpuKey === 'spark.task.resource.gpu.amount') {
-                  return `spark.task.resource.gpu.amount:${gpuValue}`;
+                  return `spark.task.resource.gpu.amount:${value}`;
                 }
                 return gpuItem;
               });
@@ -377,7 +369,7 @@ function CreateRunTime({
       !gpuDetailChangeDone &&
       (!selectedRuntimeClone ||
         selectedRuntimeClone.runtimeConfig.properties[
-          'spark.dataproc.executor.resource.accelerator.type'
+        'spark.dataproc.executor.resource.accelerator.type'
         ] === 'l4' ||
         gpuDetailUpdated.includes(
           'spark.dataproc.executor.resource.accelerator.type:l4'
@@ -456,7 +448,6 @@ function CreateRunTime({
           runtimeConfig.repositoryConfig.pypiRepositoryConfig.pypiRepository;
         setPythonRepositorySelected(pythonRepositorySelected);
       }
-
       setDisplayNameSelected(displayName);
       /*
          Extracting runtimeId from name
@@ -632,6 +623,9 @@ function CreateRunTime({
             } else {
               setManualKeySelected(executionConfig.kmsKey);
             }
+          }
+          if (executionConfig.stagingBucket) {
+            setStagingBucket(executionConfig.stagingBucket);
           }
         }
 
@@ -926,9 +920,12 @@ function CreateRunTime({
           if (response.ok) {
             const responseResult = await response.json();
             setOpenCreateTemplate(false);
-            toast.success(
+            Notification.emit(
               `Runtime Template ${displayNameSelected} successfully created`,
-              toastifyCustomStyle
+              'success',
+              {
+                autoClose: 5000
+              }
             );
             const kernelSpecs = await KernelSpecAPI.getSpecs();
             const kernels = kernelSpecs.kernelspecs;
@@ -970,7 +967,7 @@ function CreateRunTime({
 
                   launcher.add({
                     command: commandNotebook,
-                    category: 'Dataproc Serverless Notebooks',
+                    category: 'Dataproc Serverless Spark',
                     //@ts-ignore jupyter lab Launcher type issue
                     metadata: kernelsData?.metadata,
                     rank: index + 1,
@@ -1032,7 +1029,13 @@ function CreateRunTime({
             const errorResponse = await response.json();
             console.log(errorResponse);
             setError({ isOpen: true, message: errorResponse.error.message });
-            toast.error(errorResponse?.error?.message, toastifyCustomStyle);
+            Notification.emit(
+              `Failed to create the template : ${errorResponse.error.message}`,
+              'error',
+              {
+                autoClose: 5000
+              }
+            );
           }
         })
         .catch((err: Error) => {
@@ -1041,10 +1044,10 @@ function CreateRunTime({
             'Error Creating template',
             LOG_LEVEL.ERROR
           );
-          toast.error(
-            `Failed to create the template : ${err}`,
-            toastifyCustomStyle
-          );
+
+          Notification.emit(`Failed to create the template : ${err}`, 'error', {
+            autoClose: 5000
+          });
         });
     }
   };
@@ -1061,148 +1064,157 @@ function CreateRunTime({
   };
 
   const handleSave = async () => {
-    const credentials = await authApi();
-    if (credentials) {
-      const labelObject: { [key: string]: string } = {};
-      labelDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        labelObject[key] = value;
-      });
-      const propertyObject: { [key: string]: string } = {};
-      resourceAllocationDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      autoScalingDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      gpuDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(':');
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      propertyDetailUpdated.forEach((label: string) => {
-        const labelSplit = label.split(/:(.+)/);
-        const key = labelSplit[0];
-        const value = labelSplit[1];
-        propertyObject[key] = value;
-      });
-      const inputValueHour = Number(idleTimeSelected) * 3600;
-      const inputValueMin = Number(idleTimeSelected) * 60;
-      const inputValueHourAuto = Number(autoTimeSelected) * 3600;
-      const inputValueMinAuto = Number(autoTimeSelected) * 60;
+    setIsSaving(true);
+    try {
+      const credentials = await authApi();
+      if (credentials) {
+        const labelObject: { [key: string]: string } = {};
+        labelDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(':');
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          labelObject[key] = value;
+        });
+        const propertyObject: { [key: string]: string } = {};
+        resourceAllocationDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(':');
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        autoScalingDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(':');
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        gpuDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(':');
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        propertyDetailUpdated.forEach((label: string) => {
+          const labelSplit = label.split(/:(.+)/);
+          const key = labelSplit[0];
+          const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        const inputValueHour = Number(idleTimeSelected) * 3600;
+        const inputValueMin = Number(idleTimeSelected) * 60;
+        const inputValueHourAuto = Number(autoTimeSelected) * 3600;
+        const inputValueMinAuto = Number(autoTimeSelected) * 60;
 
-      const payload = {
-        name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
-        description: desciptionSelected,
-        creator: userInfo,
-        createTime: createTime,
-        jupyterSession: {
-          kernel: 'PYTHON',
-          displayName: displayNameSelected
-        },
-        labels: labelObject,
-        runtimeConfig: {
-          ...(versionSelected && { version: versionSelected }),
-          ...(containerImageSelected !== '' && {
-            containerImage: containerImageSelected
-          }),
-          ...(propertyObject && { properties: propertyObject }),
-
-          ...(pythonRepositorySelected && {
-            repositoryConfig: {
-              pypiRepositoryConfig: {
-                pypiRepository: pythonRepositorySelected
-              }
-            }
-          })
-        },
-        environmentConfig: {
-          executionConfig: {
-            ...(serviceAccountSelected !== '' && {
-              serviceAccount: serviceAccountSelected
+        const payload = {
+          name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
+          description: desciptionSelected,
+          creator: userInfo,
+          createTime: createTime,
+          jupyterSession: {
+            kernel: 'PYTHON',
+            displayName: displayNameSelected
+          },
+          labels: labelObject,
+          runtimeConfig: {
+            ...(versionSelected && { version: versionSelected }),
+            ...(containerImageSelected !== '' && {
+              containerImage: containerImageSelected
             }),
-            ...(networkTagSelected.length > 0 && {
-              networkTags: networkTagSelected
-            }),
+            ...(propertyObject && { properties: propertyObject }),
 
-            ...(keySelected !== '' &&
-              selectedRadioValue === 'key' &&
-              keySelected !== undefined && {
-                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-              }),
-            ...(manualKeySelected !== '' &&
-              selectedRadioValue === 'manually' && {
-                kmsKey: manualKeySelected
-              }),
-
-            ...(subNetworkSelected &&
-              selectedNetworkRadio === 'projectNetwork' && {
-                subnetworkUri: subNetworkSelected
-              }),
-            ...(sharedvpcSelected &&
-              selectedNetworkRadio === 'sharedVpc' && {
-                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
-              }),
-            ...(timeSelected === 'h' &&
-              idleTimeSelected && {
-                idleTtl: inputValueHour.toString() + 's'
-              }),
-            ...(timeSelected === 'm' &&
-              idleTimeSelected && {
-                idleTtl: inputValueMin.toString() + 's'
-              }),
-            ...(timeSelected === 's' &&
-              idleTimeSelected && {
-                idleTtl: idleTimeSelected + 's'
-              }),
-
-            ...(autoSelected === 'h' &&
-              autoTimeSelected && {
-                ttl: inputValueHourAuto.toString() + 's'
-              }),
-            ...(autoSelected === 'm' &&
-              autoTimeSelected && {
-                ttl: inputValueMinAuto.toString() + 's'
-              }),
-
-            ...(autoSelected === 's' &&
-              autoTimeSelected && {
-                ttl: autoTimeSelected + 's'
-              }),
-            ...(selectedAccountRadio === 'userAccount' && {
-              authentication_config: {
-                user_workload_authentication_type: 'END_USER_CREDENTIALS'
+            ...(pythonRepositorySelected && {
+              repositoryConfig: {
+                pypiRepositoryConfig: {
+                  pypiRepository: pythonRepositorySelected
+                }
               }
             })
           },
-          peripheralsConfig: {
-            ...(servicesSelected !== 'None' && {
-              metastoreService: servicesSelected
-            }),
-            ...(clusterSelected !== '' && {
-              sparkHistoryServerConfig: {
-                dataprocCluster: `projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`
-              }
-            })
-          }
-        },
+          environmentConfig: {
+            executionConfig: {
+              ...(serviceAccountSelected !== '' && {
+                serviceAccount: serviceAccountSelected
+              }),
+              ...(networkTagSelected.length > 0 && {
+                networkTags: networkTagSelected
+              }),
 
-        updateTime: new Date().toISOString()
-      };
-      if (selectedRuntimeClone !== undefined) {
-        updateRuntimeApi(payload);
-      } else {
-        createRuntimeApi(payload);
+              ...(keySelected !== '' &&
+                selectedRadioValue === 'key' &&
+                keySelected !== undefined && {
+                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+              }),
+              ...(manualKeySelected !== '' &&
+                selectedRadioValue === 'manually' && {
+                kmsKey: manualKeySelected
+              }),
+
+              ...(subNetworkSelected &&
+                selectedNetworkRadio === 'projectNetwork' && {
+                subnetworkUri: subNetworkSelected
+              }),
+              ...(sharedvpcSelected &&
+                selectedNetworkRadio === 'sharedVpc' && {
+                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
+              }),
+              ...(timeSelected === 'h' &&
+                idleTimeSelected && {
+                idleTtl: inputValueHour.toString() + 's'
+              }),
+              ...(timeSelected === 'm' &&
+                idleTimeSelected && {
+                idleTtl: inputValueMin.toString() + 's'
+              }),
+              ...(timeSelected === 's' &&
+                idleTimeSelected && {
+                idleTtl: idleTimeSelected + 's'
+              }),
+
+              ...(autoSelected === 'h' &&
+                autoTimeSelected && {
+                ttl: inputValueHourAuto.toString() + 's'
+              }),
+              ...(autoSelected === 'm' &&
+                autoTimeSelected && {
+                ttl: inputValueMinAuto.toString() + 's'
+              }),
+
+              ...(autoSelected === 's' &&
+                autoTimeSelected && {
+                ttl: autoTimeSelected + 's'
+              }),
+              
+              ...(selectedAccountRadio === 'userAccount' && {
+                authentication_config: {
+                  user_workload_authentication_type: 'END_USER_CREDENTIALS'
+                }
+              }),
+            ...(stagingBucket && { stagingBucket: stagingBucket })
+            },
+            peripheralsConfig: {
+              ...(servicesSelected !== 'None' && {
+                metastoreService: servicesSelected
+              }),
+              ...(clusterSelected !== '' && {
+                sparkHistoryServerConfig: {
+                  dataprocCluster: `projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`
+                }
+              })
+            }
+          },
+
+          updateTime: new Date().toISOString()
+        };
+        if (selectedRuntimeClone !== undefined) {
+          updateRuntimeApi(payload);
+        } else {
+          createRuntimeApi(payload);
+        }
       }
+    } catch (error) {
+      console.error('Error saving runtime:', error);
+    } finally {
+      setIsSaving(false); // Stop loading regardless of success/failure
     }
   };
 
@@ -1385,9 +1397,8 @@ function CreateRunTime({
 
               <div className="select-text-overlay">
                 <Input
-                  className={`create-runtime-style ${
-                    selectedRuntimeClone !== undefined ? ' disable-text' : ''
-                  }`}
+                  className={`create-runtime-style ${selectedRuntimeClone !== undefined ? ' disable-text' : ''
+                    }`}
                   value={runTimeSelected}
                   onChange={e => handleInputChange(e)}
                   type="text"
@@ -1563,6 +1574,15 @@ function CreateRunTime({
                 >
                   Learn more
                 </div>
+              </div>
+              <div className="select-text-overlay">
+                <Input
+                  className="create-runtime-style "
+                  value={stagingBucket}
+                  onChange={e => setStagingBucket(e.target.value)}
+                  type="text"
+                  Label="Staging Bucket"
+                />
               </div>
               <div className="select-text-overlay">
                 <Input
@@ -2180,18 +2200,18 @@ function CreateRunTime({
               <div className="job-button-style-parent">
                 <div
                   onClick={() => {
-                    if (!isSaveDisabled()) {
+                    if (!isSaveDisabled() && !isSaving) {
                       handleSave();
                     }
                   }}
                   className={
-                    isSaveDisabled()
+                    isSaveDisabled() || isSaving
                       ? 'submit-button-disable-style'
                       : 'submit-button-style'
                   }
                   aria-label="submit Batch"
                 >
-                  <div>SAVE</div>
+                  <div>{isSaving ? 'SAVING...' : 'SAVE'}</div>
                 </div>
                 <div
                   className="job-cancel-button-style"

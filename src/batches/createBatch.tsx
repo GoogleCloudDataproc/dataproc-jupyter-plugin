@@ -18,7 +18,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
-import 'react-toastify/dist/ReactToastify.css';
 import {
   ARCHIVE_FILES_MESSAGE,
   ARGUMENTS_MESSAGE,
@@ -72,6 +71,9 @@ interface ICreateBatchProps {
   batchInfoResponse?: any;
   createBatch?: boolean;
   setCreateBatch?: (value: boolean) => void;
+  setNextPageTokens?: (value: string[]) => void;
+  batchCreatedFromDetails?: boolean;
+  setBatchCreatedFromDetails?: (value: boolean) => void;
 }
 
 function batchTypeFunction(batchKey: string) {
@@ -97,7 +99,10 @@ function CreateBatch({
   projectName,
   batchInfoResponse,
   setCreateBatch,
-  createBatch
+  createBatch,
+  setNextPageTokens,
+  batchCreatedFromDetails,
+  setBatchCreatedFromDetails
 }: ICreateBatchProps) {
   let batchKeys: string[] = [];
   let batchType = 'Spark';
@@ -898,6 +903,14 @@ function CreateBatch({
 
   const handleSubmit = async () => {
     const credentials = await authApi();
+    if (!batchCreatedFromDetails) {
+      if (setBatchCreatedFromDetails) {
+        setBatchCreatedFromDetails(true);
+      }
+    }
+    if (setNextPageTokens) {
+      setNextPageTokens([]); // Reset next page tokens
+    }
     if (credentials) {
       const labelObject: { [key: string]: string } = {};
       labelDetailUpdated.forEach((label: string) => {

@@ -49,7 +49,6 @@ import {
   statusMessageBatch
 } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import 'react-toastify/dist/ReactToastify.css';
 import { BatchService } from './batchService';
 import { statusDisplay } from '../utils/statusDisplay';
 import PollingTimer from '../utils/pollingTimer';
@@ -78,12 +77,16 @@ type BatchDetailsProps = {
   batchSelected: string;
   setDetailedBatchView: (flag: boolean) => void;
   setCreateBatchView: (flag: boolean) => void;
+  batchCreatedFromDetails?: boolean;
+  setBatchCreatedFromDetails?: (value: boolean) => void;
 };
 
 function BatchDetails({
   batchSelected,
   setDetailedBatchView,
-  setCreateBatchView
+  setCreateBatchView,
+  batchCreatedFromDetails,
+  setBatchCreatedFromDetails
 }: BatchDetailsProps) {
   const [batchInfoResponse, setBatchInfoResponse] = useState({
     uuid: '',
@@ -161,7 +164,6 @@ function BatchDetails({
   };
 
   const handleDetailedBatchView = () => {
-    pollingBatchDetails(getBatchDetails, true);
     setDetailedBatchView(false);
   };
 
@@ -254,6 +256,8 @@ function BatchDetails({
           projectName={projectName}
           batchInfoResponse={batchInfoResponse}
           createBatch={createBatch}
+          batchCreatedFromDetails={batchCreatedFromDetails}
+          setBatchCreatedFromDetails={setBatchCreatedFromDetails}
         />
       )}
       {deletePopupOpen && (
