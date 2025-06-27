@@ -47,7 +47,6 @@ import {
   loggedFetch,
   checkConfig,
   handleApiError,
-  resetLastError
 } from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
@@ -216,7 +215,8 @@ function CreateRunTime({
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [stagingBucket, setStagingBucket] = useState('');
-
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const runtimeOptions = [
     {
       value: '2.3',
@@ -255,7 +255,6 @@ function CreateRunTime({
     listNetworksAPI();
     listKeyRingsAPI();
     runtimeSharedProject();
-    resetLastError('createRuntimeApi');
   }, []);
 
   useEffect(() => {
@@ -1034,8 +1033,15 @@ function CreateRunTime({
             const errorResponse = await response.json();
             setError({ isOpen: true, message: errorResponse.error.message });
             if (errorResponse?.error?.code) {
-              handleApiError(errorResponse, credentials, 'createRuntimeApi');
-            }
+                      handleApiError(
+                        errorResponse,
+                        credentials,
+                        setApiDialogOpen,
+                        setEnableLink,
+                        () => {},
+                        'createRuntimeTemplates'
+                      );
+       }
           }
         })
         .catch((err: Error) => {
