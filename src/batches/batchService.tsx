@@ -32,7 +32,7 @@ import {
   jobTypeDisplay,
   authenticatedFetch,
   IAuthCredentials,
-  handleApiError
+  handleApiError1
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -288,6 +288,9 @@ export class BatchService {
     setBatchesList: (value: IBatchesList[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
+    setApiDialogOpen: (open: boolean) => void,
+    setPollingDisable: (value: boolean) => void,
+    setEnableLink: (link: string) => void,
     nextPageTokens: string[],
     setNextPageTokens: (value: string[]) => void,
     previousBatchesList?: object,
@@ -348,7 +351,14 @@ export class BatchService {
                 );
               }
               if (responseResult?.error?.code) {
-                handleApiError(responseResult, credentials, 'batches');
+                handleApiError1(
+                  responseResult,
+                  credentials,
+                  setApiDialogOpen,
+                  setEnableLink,
+                  setPollingDisable,
+                  'batches'
+                );
               }
               const existingBatchData = previousBatchesList ?? [];
 

@@ -208,7 +208,6 @@ function JobComponent({
       setApiDialogOpen,
       setPollingDisable,
       setEnableLink
-
     );
   };
 
@@ -521,14 +520,14 @@ function JobComponent({
               {!isLoading && (
                 <div className="no-data-style">No rows to display</div>
               )}
-               {apiDialogOpen && (
-                          <ApiEnableDialog
-                            open={apiDialogOpen}
-                            onCancel={() => setApiDialogOpen(false)}
-                            onEnable={() => setApiDialogOpen(false)}
-                            enableLink={enableLink}
-                          />
-                        )}
+              {apiDialogOpen && (
+                <ApiEnableDialog
+                  open={apiDialogOpen}
+                  onCancel={() => setApiDialogOpen(false)}
+                  onEnable={() => setApiDialogOpen(false)}
+                  enableLink={enableLink}
+                />
+              )}
             </div>
           )}
         </div>

@@ -20,7 +20,7 @@ import ListBatches from './listBatches';
 import ListSessions from '../sessions/listSessions';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
-import { checkConfig, resetLastError } from '../utils/utils';
+import { checkConfig } from '../utils/utils';
 import { CircularProgress } from '@mui/material';
 
 const BatchesComponent = (): React.JSX.Element => {
@@ -49,9 +49,7 @@ const BatchesComponent = (): React.JSX.Element => {
     setLoggedIn(localstorageGetInformation === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
-      resetLastError('batches');
     }
-    
   }, []);
 
   return (
@@ -59,7 +57,7 @@ const BatchesComponent = (): React.JSX.Element => {
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
