@@ -30,7 +30,8 @@ import {
   loggedFetch,
   authenticatedFetch,
   jobTimeFormat,
-  handleApiError
+  handleApiError,
+  handleApiError1
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
@@ -152,6 +153,9 @@ export class RunTimeSerive {
     setIsLoading: (value: boolean) => void,
     setRuntimeTemplateslist: (value: ISessionTemplateDisplay[]) => void,
     setRunTimeTemplateAllList: (value: ISessionTemplate[]) => void,
+    setApiDialogOpen: (value: boolean) => void,
+    setPollingDisable: (value: boolean) => void,
+    setEnableLink: (value: string) => void,
     nextPageToken?: string,
     previousRuntimeTemplatesList?: object,
     previousRuntimeTemplatesAllList?: object
@@ -238,6 +242,9 @@ export class RunTimeSerive {
             setIsLoading,
             setRuntimeTemplateslist,
             setRunTimeTemplateAllList,
+            setApiDialogOpen,
+            setPollingDisable,
+            setEnableLink,
             formattedResponse.nextPageToken,
             allRuntimeTemplatesData,
             allRuntimeTemplatesAllData
@@ -253,7 +260,14 @@ export class RunTimeSerive {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        handleApiError(formattedResponse, credentials, 'runtimeTemplates');
+        handleApiError1(
+          formattedResponse,
+          credentials,
+          setApiDialogOpen,
+          setEnableLink,
+          setPollingDisable,
+          'runtimeTemplates'
+        );
       }
     } catch (error) {
       setIsLoading(false);

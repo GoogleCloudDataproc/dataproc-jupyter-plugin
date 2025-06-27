@@ -278,8 +278,7 @@ export class SessionService {
           setApiDialogOpen,
           setEnableLink,
           setPollingDisable,
-          'batches'
-        );
+          'sessions');
       }
     } catch (error) {
       setIsLoading(false);

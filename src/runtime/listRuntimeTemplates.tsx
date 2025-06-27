@@ -22,7 +22,7 @@ import filterIcon from '../../style/icons/filter_icon.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
-import { ICellProps, resetLastError } from '../utils/utils';
+import { ICellProps } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
 import { RunTimeSerive } from './runtimeService';
 import { PaginationView } from '../utils/paginationView';
@@ -33,6 +33,7 @@ import {
   ISessionTemplateDisplay
 } from '../utils/listRuntimeTemplateInterface';
 import { CircularProgress } from '@mui/material';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
   svgstr: filterIcon
@@ -93,7 +94,8 @@ function ListRuntimeTemplates({
       updateTime: ''
     }
   ]);
-
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingRuntimeTemplates = async (
@@ -144,7 +146,10 @@ function ListRuntimeTemplates({
       renderActions,
       setIsLoading,
       setRuntimeTemplateslist,
-      setRunTimeTemplateAllList
+      setRunTimeTemplateAllList,
+      setApiDialogOpen,
+      setPollingDisable,
+      setEnableLink
     );
   };
 
@@ -189,10 +194,6 @@ function ListRuntimeTemplates({
     useGlobalFilter,
     usePagination
   );
-  useEffect(() => {
-    resetLastError('runtimeTemplates');
-  }, []);
-
   useEffect(() => {
     listRuntimeTemplatesAPI();
     if (!openCreateTemplate) {
@@ -360,6 +361,14 @@ function ListRuntimeTemplates({
           )}
           {!isLoading && !openCreateTemplate && (
             <div className="no-data-style">No rows to display</div>
+          )}
+          {apiDialogOpen && (
+            <ApiEnableDialog
+              open={apiDialogOpen}
+              onCancel={() => setApiDialogOpen(false)}
+              onEnable={() => setApiDialogOpen(false)}
+              enableLink={enableLink}
+            />
           )}
         </div>
       )}
