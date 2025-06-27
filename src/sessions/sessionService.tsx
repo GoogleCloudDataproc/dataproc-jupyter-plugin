@@ -31,7 +31,7 @@ import {
   authenticatedFetch,
   jobTimeFormat,
   elapsedTime,
-  handleApiError
+  handleApiError1
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
@@ -190,6 +190,9 @@ export class SessionService {
     renderActions: (value: IRenderActionsData) => React.JSX.Element,
     setIsLoading: (value: boolean) => void,
     setSessionsList: any,
+    setApiDialogOpen: (open: boolean) => void,
+    setPollingDisable: (value: boolean) => void,
+    setEnableLink: (link: string) => void,
     nextPageToken?: string,
     previousSessionsList?: object
   ) => {
@@ -223,6 +226,9 @@ export class SessionService {
             renderActions,
             setIsLoading,
             setSessionsList,
+            setApiDialogOpen,
+            setPollingDisable,
+            setEnableLink,
             formattedResponse.nextPageToken,
             allSessionsData
           );
@@ -266,7 +272,14 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        handleApiError(formattedResponse, credentials, 'sessions');
+        handleApiError1(
+          formattedResponse,
+          credentials,
+          setApiDialogOpen,
+          setEnableLink,
+          setPollingDisable,
+          'batches'
+        );
       }
     } catch (error) {
       setIsLoading(false);

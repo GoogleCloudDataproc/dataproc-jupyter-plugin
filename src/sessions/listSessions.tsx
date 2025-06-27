@@ -41,9 +41,10 @@ import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import { SessionService } from './sessionService';
 import TableData from '../utils/tableData';
-import { ICellProps, resetLastError } from '../utils/utils';
+import { ICellProps } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import { CircularProgress } from '@mui/material';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -80,6 +81,8 @@ function ListSessions() {
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedSessionValue, setSelectedSessionValue] = useState('');
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingSessions = async (
@@ -133,7 +136,10 @@ function ListSessions() {
     await SessionService.listSessionsAPIService(
       renderActions,
       setIsLoading,
-      setSessionsList
+      setSessionsList,
+      setApiDialogOpen,
+      setPollingDisable,
+      setEnableLink,
     );
   };
 
@@ -172,9 +178,6 @@ function ListSessions() {
     usePagination
   );
 
-  useEffect(() => {
-    resetLastError('sessions');
-  }, []);
   useEffect(() => {
     if (!pollingDisable) {
       listSessionsAPI();
@@ -370,7 +373,7 @@ function ListSessions() {
           {isLoading && (
             <div className="spin-loader-main">
               <CircularProgress
-                className = "spin-loader-custom-style"
+                className="spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"
@@ -380,6 +383,14 @@ function ListSessions() {
           )}
           {!isLoading && !detailedSessionView && (
             <div className="no-data-style">No rows to display</div>
+          )}
+          {apiDialogOpen && (
+            <ApiEnableDialog
+              open={apiDialogOpen}
+              onCancel={() => setApiDialogOpen(false)}
+              onEnable={() => setApiDialogOpen(false)}
+              enableLink={enableLink}
+            />
           )}
         </div>
       )}
