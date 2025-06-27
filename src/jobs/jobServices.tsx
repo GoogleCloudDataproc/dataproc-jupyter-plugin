@@ -35,7 +35,7 @@ import {
   authenticatedFetch,
   statusValue,
   IAuthCredentials,
-  handleApiError
+  handleApiError1
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { IJobDetails } from '../utils/jobDetailsInterface';
@@ -279,6 +279,9 @@ export class JobService {
     setjobsList: any,
     renderActions: (value: IRenderActionsData) => React.JSX.Element,
     controllerSignal: any,
+    setApiDialogOpen: (open: boolean) => void,
+    setPollingDisable: (value: boolean) => void,
+    setEnableLink: (link: string) => void,
     nextPageToken?: string,
     previousJobsList?: object
   ) => {
@@ -311,7 +314,14 @@ export class JobService {
                 actions: React.JSX.Element;
               }[] = [];
               if (responseResult?.error?.code) {
-                handleApiError(responseResult, credentials, 'jobs');
+                handleApiError1(
+                  responseResult,
+                  credentials,
+                  setApiDialogOpen,
+                  setEnableLink,
+                  setPollingDisable,
+                  'jobs'
+                );
               }
               if (responseResult && responseResult.jobs) {
                 transformJobListData = responseResult.jobs.map((data: any) => {
@@ -367,6 +377,9 @@ export class JobService {
                   setjobsList,
                   renderActions,
                   controllerSignal,
+                  setApiDialogOpen,
+                  setPollingDisable,
+                  setEnableLink,
                   responseResult.nextPageToken,
                   allJobsData
                 );
