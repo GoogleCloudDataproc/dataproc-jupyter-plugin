@@ -46,7 +46,7 @@ import {
   iconDisplay,
   loggedFetch,
   checkConfig,
-  handleApiError,
+  handleApiError
 } from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
@@ -1034,15 +1034,15 @@ function CreateRunTime({
             const errorResponse = await response.json();
             setError({ isOpen: true, message: errorResponse.error.message });
             if (errorResponse?.error?.code) {
-                      handleApiError(
-                        errorResponse,
-                        credentials,
-                        setApiDialogOpen,
-                        setEnableLink,
-                        () => {},
-                        'createRuntimeTemplates'
-                      );
-       }
+              handleApiError(
+                errorResponse,
+                credentials,
+                setApiDialogOpen,
+                setEnableLink,
+                () => {},
+                'createRuntimeTemplates'
+              );
+            }
           }
         })
         .catch((err: Error) => {
