@@ -964,7 +964,9 @@ export class BatchService {
     setCreateBatchView: any,
     setCreateBatch: any,
     setError: any,
-    error: any
+    error: any,
+    setApiDialogOpen: (open: boolean) => void,
+    setEnableLink: (link: string) => void
   ) => {
     const { DATAPROC } = await gcpServiceUrls;
     loggedFetch(
@@ -998,7 +1000,20 @@ export class BatchService {
           );
         } else {
           const errorResponse = await response.json();
-          setError({ isOpen: true, message: errorResponse.error.message });
+          if (errorResponse?.error?.code !== 403) {
+            setError({ isOpen: true, message: errorResponse.error.message });
+          }
+          if (errorResponse?.error?.code === 403) {
+            handleApiError(
+              errorResponse,
+              credentials,
+              setApiDialogOpen,
+              setEnableLink,
+              () => {},
+
+              'batches'
+            );
+          }
           console.error('Failed to submit batch, API response:', errorResponse);
         }
       })

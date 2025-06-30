@@ -53,6 +53,7 @@ import { DynamicDropdown } from '../controls/DynamicDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { BatchService } from './batchService';
 import { MuiChipsInput } from 'mui-chips-input';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -290,7 +291,8 @@ function CreateBatch({
   >('serviceAccount');
   const [serviceAccountSelected, setServiceAccountSelected] = useState('');
   const [userAccountSelected, setUserAccountSelected] = useState('');
-
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const runtimeOptions = [
     {
       value: '2.3',
@@ -964,7 +966,9 @@ function CreateBatch({
         setCreateBatchView,
         setCreateBatch,
         setError,
-        error
+        error,
+        setApiDialogOpen,
+        setEnableLink
       );
     }
   };
@@ -2080,6 +2084,14 @@ function CreateBatch({
                 onCancel={() => setError({ isOpen: false, message: '' })}
                 errorPopupOpen={error.isOpen}
                 errorMsg={error.message}
+              />
+            )}
+            {apiDialogOpen && (
+              <ApiEnableDialog
+                open={apiDialogOpen}
+                onCancel={() => setApiDialogOpen(false)}
+                onEnable={() => setApiDialogOpen(false)}
+                enableLink={enableLink}
               />
             )}
           </div>
