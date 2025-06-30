@@ -76,6 +76,7 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -2244,6 +2245,14 @@ function CreateRunTime({
             {LOGIN_ERROR_MESSAGE}
           </div>
         )
+      )}
+      {apiDialogOpen && (
+        <ApiEnableDialog
+          open={apiDialogOpen}
+          onCancel={() => setApiDialogOpen(false)}
+          onEnable={() => setApiDialogOpen(false)}
+          enableLink={enableLink}
+        />
       )}
 
       {configError && (
