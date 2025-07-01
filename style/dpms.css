@@ -203,3 +203,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.link-class {
+  color: #1a73e8;       
+  text-decoration: underline;
+  font-weight: 500;
+  cursor: pointer;
+}
