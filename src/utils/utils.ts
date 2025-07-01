@@ -44,6 +44,8 @@ import {
 } from './const';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { DataprocLoggingService } from './loggingService';
+import { Notification } from '@jupyterlab/apputils';
+
 export interface IAuthCredentials {
   access_token?: string;
   project_id?: string;
@@ -51,6 +53,19 @@ export interface IAuthCredentials {
   config_error?: number;
   login_error?: number;
 }
+
+interface ErrorResponse {
+  error?: {
+    code?: number;
+    message?: string;
+  };
+}
+
+interface Credentials {
+  project_id?: string;
+}
+
+// Removed unused lastErrorMessages map to resolve compile error.
 
 export const authApi = async (): Promise<IAuthCredentials | undefined> => {
   try {
@@ -510,4 +525,27 @@ export const handleDebounce = (func: any, delay: number) => {
       func(...args);
     }, delay);
   };
+};
+
+export const handleApiError = (
+  responseResult: ErrorResponse,
+  credentials: Credentials | undefined,
+  setApiDialogOpen: (open: boolean) => void,
+  setEnableLink: (link: string) => void,
+  setPollingDisabled: (disabled: boolean) => void,
+  pageId: string = 'default'
+): void => {
+  if (responseResult?.error?.code) {
+    const currentError = responseResult.error.message;
+    if (responseResult.error.code === 403) {
+      const link = `https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${credentials?.project_id}`;
+      setEnableLink(link);
+      setApiDialogOpen(true);
+      setPollingDisabled(true);
+    } else {
+      Notification.emit(currentError ?? 'Unknown error', 'error', {
+        autoClose: 5000
+      });
+    }
+  }
 };

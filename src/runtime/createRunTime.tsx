@@ -41,7 +41,13 @@ import {
   KEY_MESSAGE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
+import {
+  authApi,
+  iconDisplay,
+  loggedFetch,
+  checkConfig,
+  handleApiError
+} from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
@@ -70,6 +76,7 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -95,7 +102,6 @@ const iconHelp = new LabIcon({
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
-
 function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
@@ -207,10 +213,11 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
-  
+
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [stagingBucket, setStagingBucket] = useState('');
-
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const runtimeOptions = [
     {
       value: '2.3',
@@ -367,7 +374,7 @@ function CreateRunTime({
       !gpuDetailChangeDone &&
       (!selectedRuntimeClone ||
         selectedRuntimeClone.runtimeConfig.properties[
-        'spark.dataproc.executor.resource.accelerator.type'
+          'spark.dataproc.executor.resource.accelerator.type'
         ] === 'l4' ||
         gpuDetailUpdated.includes(
           'spark.dataproc.executor.resource.accelerator.type:l4'
@@ -1022,18 +1029,22 @@ function CreateRunTime({
             if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
             }
-            console.log(responseResult);
+            console.info(responseResult);
           } else {
             const errorResponse = await response.json();
-            console.log(errorResponse);
+            if(errorResponse?.error?.code !== 403) {
             setError({ isOpen: true, message: errorResponse.error.message });
-            Notification.emit(
-              `Failed to create the template : ${errorResponse.error.message}`,
-              'error',
-              {
-                autoClose: 5000
-              }
-            );
+            }
+            if (errorResponse?.error?.code) {
+              handleApiError(
+                errorResponse,
+                credentials,
+                setApiDialogOpen,
+                setEnableLink,
+                () => {},
+                'createRuntimeTemplates'
+              );
+            }
           }
         })
         .catch((err: Error) => {
@@ -1140,54 +1151,54 @@ function CreateRunTime({
               ...(keySelected !== '' &&
                 selectedRadioValue === 'key' &&
                 keySelected !== undefined && {
-                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-              }),
+                  kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+                }),
               ...(manualKeySelected !== '' &&
                 selectedRadioValue === 'manually' && {
-                kmsKey: manualKeySelected
-              }),
+                  kmsKey: manualKeySelected
+                }),
 
               ...(subNetworkSelected &&
                 selectedNetworkRadio === 'projectNetwork' && {
-                subnetworkUri: subNetworkSelected
-              }),
+                  subnetworkUri: subNetworkSelected
+                }),
               ...(sharedvpcSelected &&
                 selectedNetworkRadio === 'sharedVpc' && {
-                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
-              }),
+                  subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
+                }),
               ...(timeSelected === 'h' &&
                 idleTimeSelected && {
-                idleTtl: inputValueHour.toString() + 's'
-              }),
+                  idleTtl: inputValueHour.toString() + 's'
+                }),
               ...(timeSelected === 'm' &&
                 idleTimeSelected && {
-                idleTtl: inputValueMin.toString() + 's'
-              }),
+                  idleTtl: inputValueMin.toString() + 's'
+                }),
               ...(timeSelected === 's' &&
                 idleTimeSelected && {
-                idleTtl: idleTimeSelected + 's'
-              }),
+                  idleTtl: idleTimeSelected + 's'
+                }),
 
               ...(autoSelected === 'h' &&
                 autoTimeSelected && {
-                ttl: inputValueHourAuto.toString() + 's'
-              }),
+                  ttl: inputValueHourAuto.toString() + 's'
+                }),
               ...(autoSelected === 'm' &&
                 autoTimeSelected && {
-                ttl: inputValueMinAuto.toString() + 's'
-              }),
+                  ttl: inputValueMinAuto.toString() + 's'
+                }),
 
               ...(autoSelected === 's' &&
                 autoTimeSelected && {
-                ttl: autoTimeSelected + 's'
-              }),
-              
+                  ttl: autoTimeSelected + 's'
+                }),
+
               ...(selectedAccountRadio === 'userAccount' && {
                 authentication_config: {
                   user_workload_authentication_type: 'END_USER_CREDENTIALS'
                 }
               }),
-            ...(stagingBucket && { stagingBucket: stagingBucket })
+              ...(stagingBucket && { stagingBucket: stagingBucket })
             },
             peripheralsConfig: {
               ...(servicesSelected !== 'None' && {
@@ -1395,8 +1406,9 @@ function CreateRunTime({
 
               <div className="select-text-overlay">
                 <Input
-                  className={`create-runtime-style ${selectedRuntimeClone !== undefined ? ' disable-text' : ''
-                    }`}
+                  className={`create-runtime-style ${
+                    selectedRuntimeClone !== undefined ? ' disable-text' : ''
+                  }`}
                   value={runTimeSelected}
                   onChange={e => handleInputChange(e)}
                   type="text"
@@ -2235,6 +2247,14 @@ function CreateRunTime({
             {LOGIN_ERROR_MESSAGE}
           </div>
         )
+      )}
+      {apiDialogOpen && (
+        <ApiEnableDialog
+          open={apiDialogOpen}
+          onCancel={() => setApiDialogOpen(false)}
+          onEnable={() => setApiDialogOpen(false)}
+          enableLink={enableLink}
+        />
       )}
 
       {configError && (

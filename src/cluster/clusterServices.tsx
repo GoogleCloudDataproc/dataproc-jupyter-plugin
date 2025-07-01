@@ -28,7 +28,8 @@ import {
   loggedFetch,
   getProjectId,
   authenticatedFetch,
-  statusValue
+  statusValue,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -70,6 +71,9 @@ export class ClusterService {
     setClustersList: (value: ICluster[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
+    setApiDialogOpen: (open: boolean) => void,
+    setPollingDisable: (value: boolean) => void,
+    setEnableLink: (link: string) => void,
     nextPageToken?: string,
     previousClustersList?: object
   ) => {
@@ -77,7 +81,7 @@ export class ClusterService {
     try {
       const projectId = await getProjectId();
       setProjectId(projectId);
-
+      const credentials = await authApi();
       const queryParams = new URLSearchParams();
       queryParams.append('pageSize', '50');
       queryParams.append('pageToken', pageToken);
@@ -129,6 +133,9 @@ export class ClusterService {
           setClustersList,
           setIsLoading,
           setLoggedIn,
+          setApiDialogOpen,
+          setPollingDisable,
+          setEnableLink,
           formattedResponse.nextPageToken,
           allClustersData
         );
@@ -138,12 +145,13 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(
-          `Failed to fetch clusters list : ${formattedResponse?.error?.message}`,
-          'error',
-          {
-            autoClose: 5000
-          }
+        handleApiError(
+          formattedResponse,
+          credentials,
+          setApiDialogOpen,
+          setEnableLink,
+          setPollingDisable,
+          'clusters'
         );
       }
     } catch (error) {

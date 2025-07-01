@@ -46,6 +46,7 @@ import NextIcon from '../../style/icons/next_page.svg';
 
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import { CircularProgress } from '@mui/material';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 
 const iconPrevious = new LabIcon({
   name: 'launcher:previous-icon',
@@ -114,8 +115,10 @@ function ListBatches({ setLoggedIn }: any) {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
   // New state to track if a batch was created from batch details
-  const [batchCreatedFromDetails, setBatchCreatedFromDetails] = useState<boolean>(false);
-
+  const [batchCreatedFromDetails, setBatchCreatedFromDetails] =
+    useState<boolean>(false);
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const data = batchesList;
 
   const columns = React.useMemo(
@@ -184,7 +187,7 @@ function ListBatches({ setLoggedIn }: any) {
       const tokensForCurrentPage = nextPageTokens.slice(0, currentPageIndex);
       listBatchAPI(tokensForCurrentPage, false); // false to maintain current pagination state
     }
-  }
+  };
 
   const tableDataCondition = (cell: ICellProps) => {
     if (cell.column.Header === 'Batch ID') {
@@ -221,12 +224,12 @@ function ListBatches({ setLoggedIn }: any) {
               cell.value === STATUS_CREATING ||
               cell.value === STATUS_PENDING ||
               cell.value === STATUS_DELETING) && (
-                <CircularProgress
-                  size={15}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-              )}
+              <CircularProgress
+                size={15}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            )}
             <div className="cluster-status">
               {cell.value && cell.value.toLowerCase()}
             </div>
@@ -249,7 +252,10 @@ function ListBatches({ setLoggedIn }: any) {
     stateTime: Date;
   }
 
-  const listBatchAPI = async (pageToken?: string[], shouldUpdatePagination: boolean = true) => {
+  const listBatchAPI = async (
+    pageToken?: string[],
+    shouldUpdatePagination: boolean = true
+  ) => {
     await BatchService.listBatchAPIService(
       setRegionName,
       setProjectName,
@@ -257,6 +263,9 @@ function ListBatches({ setLoggedIn }: any) {
       setBatchesList,
       setIsLoading,
       setLoggedIn,
+      setApiDialogOpen,
+      setPollingDisable,
+      setEnableLink,
       pageToken ? pageToken : nextPageTokens,
       setNextPageTokens,
       undefined,
@@ -363,7 +372,10 @@ function ListBatches({ setLoggedIn }: any) {
       const newPageIndex = currentPageIndex - 1;
       setCurrentPageIndex(newPageIndex);
 
-      const tokensForPreviousPage = nextPageTokens.slice(0, nextPageTokens.length - 2);
+      const tokensForPreviousPage = nextPageTokens.slice(
+        0,
+        nextPageTokens.length - 2
+      );
       listBatchAPI(tokensForPreviousPage, true);
     }
   };
@@ -387,7 +399,10 @@ function ListBatches({ setLoggedIn }: any) {
   const actualRecordsOnCurrentPage = rows.length;
 
   // Calculate the end index - either full pageSize or actual records if less than pageSize
-  const endIndex = Math.min((currentPageIndex + 1) * pageSize, startIndex - 1 + actualRecordsOnCurrentPage);
+  const endIndex = Math.min(
+    (currentPageIndex + 1) * pageSize,
+    startIndex - 1 + actualRecordsOnCurrentPage
+  );
 
   // Calculate estimated total:
   // If there's a next page available, show current page + next potential page (+ pageSize)
@@ -495,29 +510,37 @@ function ListBatches({ setLoggedIn }: any) {
                 <div className="pagination-parent-view">
                   <div>Rows per page: 50</div>
                   <div className="page-display-part">
-                    {batchesList.length > 0 ? (
-                      `${startIndex} - ${endIndex} of ${estimatedTotal}`
-                    ) : (
-                      "0 - 0 of 0"
-                    )}
+                    {batchesList.length > 0
+                      ? `${startIndex} - ${endIndex} of ${estimatedTotal}`
+                      : '0 - 0 of 0'}
                   </div>
                   <div
                     role="button"
                     className={
-                      !canPreviousPage ? 'page-move-button disabled' : 'page-move-button'
+                      !canPreviousPage
+                        ? 'page-move-button disabled'
+                        : 'page-move-button'
                     }
                     onClick={() => handlePreviousPage()}
                   >
-                    <iconPrevious.react tag="div" className="icon-white logo-alignment-style" />
+                    <iconPrevious.react
+                      tag="div"
+                      className="icon-white logo-alignment-style"
+                    />
                   </div>
                   <div
                     role="button"
                     onClick={() => handleNextPage()}
                     className={
-                      !canNextPage ? 'page-move-button disabled' : 'page-move-button'
+                      !canNextPage
+                        ? 'page-move-button disabled'
+                        : 'page-move-button'
                     }
                   >
-                    <iconNext.react tag="div" className="icon-white logo-alignment-style" />
+                    <iconNext.react
+                      tag="div"
+                      className="icon-white logo-alignment-style"
+                    />
                   </div>
                 </div>
               </div>
@@ -537,6 +560,14 @@ function ListBatches({ setLoggedIn }: any) {
               )}
               {!isLoading && (
                 <div className="no-data-style">No rows to display</div>
+              )}
+              {apiDialogOpen && (
+                <ApiEnableDialog
+                  open={apiDialogOpen}
+                  onCancel={() => setApiDialogOpen(false)}
+                  onEnable={() => setApiDialogOpen(false)}
+                  enableLink={enableLink}
+                />
               )}
             </div>
           )}

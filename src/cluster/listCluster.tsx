@@ -48,6 +48,7 @@ import stopDisableIcon from '../../style/icons/stop_icon_disable.svg';
 import PollingTimer from '../utils/pollingTimer';
 import { ClusterService } from './clusterServices';
 import { CircularProgress } from '@mui/material';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 
 const iconCreateCluster = new LabIcon({
   name: 'launcher:create-cluster-icon',
@@ -122,7 +123,8 @@ function ListCluster({
   const [pollingDisable, setPollingDisable] = useState(false);
   const [projectId, setProjectId] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
-
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const pollingClusters = async (
     pollingFunction: () => void,
     pollingDisable: boolean
@@ -178,7 +180,10 @@ function ListCluster({
       renderActions,
       setClustersList,
       setIsLoading,
-      setLoggedIn
+      setLoggedIn,
+      setApiDialogOpen,
+      setPollingDisable,
+      setEnableLink
     );
   };
 
@@ -341,6 +346,9 @@ function ListCluster({
     if (!detailedView && !isLoading) {
       pollingClusters(listClustersAPI, pollingDisable);
     }
+    if (apiDialogOpen) {
+      pollingClusters(listClustersAPI, pollingDisable);
+    }
   }, [isLoading]);
 
   const tableDataCondition = (cell: ICellProps) => {
@@ -501,7 +509,7 @@ function ListCluster({
           {isLoading && (
             <div className="spin-loader-main">
               <CircularProgress
-                className = "spin-loader-custom-style"
+                className="spin-loader-custom-style"
                 size={18}
                 aria-label="Loading Spinner"
                 data-testid="loader"
@@ -511,6 +519,14 @@ function ListCluster({
           )}
           {!isLoading && (
             <div className="no-data-style">No rows to display</div>
+          )}
+          {apiDialogOpen && (
+            <ApiEnableDialog
+              open={apiDialogOpen}
+              onCancel={() => setApiDialogOpen(false)}
+              onEnable={() => setApiDialogOpen(false)}
+              enableLink={enableLink}
+            />
           )}
         </div>
       )}

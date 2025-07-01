@@ -19,7 +19,6 @@ import subprocess
 import aiohttp
 import tornado
 from jupyter_server.base.handlers import APIHandler
-from google.cloud.jupyter_config.config import async_run_gcloud_subcommand
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import bigquery
 
@@ -159,31 +158,3 @@ class SearchController(APIHandler):
         except Exception as e:
             self.log.exception("Error fetching search data")
             self.finish({"error": str(e)})
-
-
-class CheckApiController(APIHandler):
-    @tornado.web.authenticated
-    async def post(self):
-        try:
-            project_id = await credentials._gcp_project()
-            cmd = f"services list --enabled --project={project_id} | grep bigquery.googleapis.com"
-            result = await async_run_gcloud_subcommand(cmd)
-            is_enabled = bool(result.strip())
-            self.finish({"success": True, "is_enabled": is_enabled})
-
-        except Exception as e:
-            self.finish({"success": False, "is_enabled": False, "error": str(e)})
-
-
-class CheckDataprocApiController(APIHandler):
-    @tornado.web.authenticated
-    async def post(self):
-        try:
-            project_id = await credentials._gcp_project()
-            cmd = f"services list --enabled --project={project_id} | grep dataproc.googleapis.com"
-            result = await async_run_gcloud_subcommand(cmd)
-            is_enabled = bool(result.strip())
-            self.finish({"success": True, "is_enabled": is_enabled})
-
-        except Exception as e:
-            self.finish({"success": False, "is_enabled": False, "error": str(e)})
