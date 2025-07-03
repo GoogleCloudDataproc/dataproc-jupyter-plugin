@@ -25,11 +25,7 @@ import {
   USER_INFO_URL,
   VERSION_DETAIL
 } from '../utils/const';
-import {
-  IAuthCredentials,
-  authApi,
-  loggedFetch
-} from '../utils/utils';
+import { IAuthCredentials, authApi, loggedFetch } from '../utils/utils';
 import { Notification } from '@jupyterlab/apputils';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
@@ -232,7 +228,6 @@ function ConfigSelection({
   useEffect(() => {
     handleSettingsRegistry();
     handleBigQueryFeature();
- console.log('BigQuery Feature Enable:', bigQueryRegion);
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);

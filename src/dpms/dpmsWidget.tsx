@@ -45,9 +45,6 @@ import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { DpmsService } from './dpmsService';
 import { checkConfig } from '../utils/utils';
 import { LOGIN_STATE } from '../utils/const';
-// import LoginErrorComponent from '../utils/loginErrorComponent';
-// import signinGoogleIcon2 from '../../style/icons/google_icon.svg';
-// import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
 import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
