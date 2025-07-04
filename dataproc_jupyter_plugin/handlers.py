@@ -19,8 +19,6 @@ import subprocess
 import sys
 import tempfile
 
-
-import tornado
 from google.cloud.jupyter_config.config import (
     async_run_gcloud_subcommand,
     clear_gcloud_cache,
@@ -46,6 +44,7 @@ from dataproc_jupyter_plugin.controllers import (
 from dataproc_jupyter_plugin.controllers.version import (
     LatestVersionController,
     UpdatePackage,
+    tornado
 )
 
 _region_not_set_error = """GCP region not set in gcloud.
