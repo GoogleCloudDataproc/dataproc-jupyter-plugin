@@ -18,7 +18,7 @@
 import { Notification } from '@jupyterlab/apputils';
 import { requestAPI } from '../handler/handler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { PLUGIN_ID } from '../utils/const';
+import { BIGQUERY_SERVICE_NAME, PLUGIN_ID } from '../utils/const';
 
 interface IPreviewColumn {
   Header: string;
@@ -404,11 +404,21 @@ export class BigQueryService {
   };
 
   static getBigQueryProjectsListAPIService = async (
-    setProjectNameInfo: any
+    setProjectNameInfo: any,
+    setIsLoading: (value: boolean) => void,
+    setApiError: (value: boolean) => void
   ) => {
     try {
-      const data: any = await requestAPI(`bigQueryProjectsList`);
-      setProjectNameInfo(data);
+      const result: any = BigQueryService.checkBigQueryDatasetsAPIService();
+      if (result?.is_enabled) {
+        const data: any = await requestAPI(`bigQueryProjectsList`);
+        setProjectNameInfo(data);
+        setApiError(false);
+      } else {
+        setIsLoading(false);
+        setProjectNameInfo([]);
+        setApiError(true);
+      }
     } catch (reason) {
       Notification.emit(
         `Error in calling BigQurey Project List API : ${reason}`,
@@ -447,9 +457,12 @@ export class BigQueryService {
 
   static checkBigQueryDatasetsAPIService = async () => {
     try {
-      const data: any = await requestAPI(`bigQueryApiEnabled`, {
-        method: 'POST'
-      });
+      const data: any = await requestAPI(
+        `checkApiEnabled?service_name=${BIGQUERY_SERVICE_NAME}`,
+        {
+          method: 'POST'
+        }
+      );
       return data;
     } catch (reason) {
       return reason;

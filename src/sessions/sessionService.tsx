@@ -30,7 +30,8 @@ import {
   loggedFetch,
   authenticatedFetch,
   jobTimeFormat,
-  elapsedTime
+  elapsedTime,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
@@ -189,6 +190,9 @@ export class SessionService {
     renderActions: (value: IRenderActionsData) => React.JSX.Element,
     setIsLoading: (value: boolean) => void,
     setSessionsList: any,
+    setApiDialogOpen: (open: boolean) => void,
+    setPollingDisable: (value: boolean) => void,
+    setEnableLink: (link: string) => void,
     nextPageToken?: string,
     previousSessionsList?: object
   ) => {
@@ -204,6 +208,7 @@ export class SessionService {
         regionIdentifier: 'locations',
         queryParams: queryParams
       });
+      const credentials = await authApi();
       const formattedResponse = await response.json();
       let transformSessionListData: React.SetStateAction<never[]> = [];
       if (formattedResponse && formattedResponse.sessions) {
@@ -221,6 +226,9 @@ export class SessionService {
             renderActions,
             setIsLoading,
             setSessionsList,
+            setApiDialogOpen,
+            setPollingDisable,
+            setEnableLink,
             formattedResponse.nextPageToken,
             allSessionsData
           );
@@ -264,14 +272,13 @@ export class SessionService {
         setIsLoading(false);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(
-          `Failed to fetch sessions : ${formattedResponse?.error?.message}`,
-          'error',
-          {
-            autoClose: 5000
-          }
-        );
-        setIsLoading(false);
+        handleApiError(
+          formattedResponse,
+          credentials,
+          setApiDialogOpen,
+          setEnableLink,
+          setPollingDisable,
+          'sessions');
       }
     } catch (error) {
       setIsLoading(false);
