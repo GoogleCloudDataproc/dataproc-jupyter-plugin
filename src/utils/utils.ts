@@ -65,8 +65,6 @@ interface Credentials {
   project_id?: string;
 }
 
-// Removed unused lastErrorMessages map to resolve compile error.
-
 export const authApi = async (): Promise<IAuthCredentials | undefined> => {
   try {
     const data = await requestAPI('credentials');
