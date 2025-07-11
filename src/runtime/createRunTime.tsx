@@ -27,7 +27,6 @@ import {
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
-  LOGIN_ERROR_MESSAGE,
   LOGIN_STATE,
   SHARED_VPC,
   SERVICE_ACCOUNT,
@@ -70,6 +69,8 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
+import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -101,13 +102,15 @@ function CreateRunTime({
   selectedRuntimeClone,
   launcher,
   app,
-  fromPage
+  fromPage,
+  settingRegistry
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
   launcher: ILauncher;
   app: JupyterLab;
   fromPage: string;
+  settingRegistry: ISettingRegistry;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -232,8 +235,7 @@ function CreateRunTime({
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
+    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
     }
@@ -2230,17 +2232,18 @@ function CreateRunTime({
           </div>
         </>
       ) : (
-        loginError && (
-          <div role="alert" className="login-error">
-            {LOGIN_ERROR_MESSAGE}
+        (loginError || configError) && (
+          <div className="login-error">
+            <LoginErrorComponent
+              setLoginError={setLoginError}
+              loginError={loginError}
+              configError={configError}
+              setConfigError={setConfigError}
+              settingRegistry={settingRegistry}
+              app={app}
+            />
           </div>
         )
-      )}
-
-      {configError && (
-        <div role="alert" className="login-error">
-          Please configure gcloud with account, project-id and region
-        </div>
       )}
     </div>
   );
