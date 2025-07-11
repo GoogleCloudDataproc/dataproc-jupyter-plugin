@@ -36,13 +36,7 @@ from traitlets.config import SingletonConfigurable
 
 from dataproc_jupyter_plugin import credentials, urls
 from dataproc_jupyter_plugin.commons import constants
-from dataproc_jupyter_plugin.controllers import (
-    airflow,
-    bigquery,
-    composer,
-    dataproc,
-    executor,
-)
+from dataproc_jupyter_plugin.controllers import bigquery
 from dataproc_jupyter_plugin.controllers.version import (
     LatestVersionController,
     UpdatePackage,
@@ -244,20 +238,6 @@ def setup_handlers(web_app):
         "configuration": ConfigHandler,
         "getGcpServiceUrls": UrlHandler,
         "log": LogHandler,
-        "composerList": composer.EnvironmentListController,
-        "dagRun": airflow.DagRunController,
-        "dagRunTask": airflow.DagRunTaskController,
-        "dagRunTaskLogs": airflow.DagRunTaskLogsController,
-        "clusterList": dataproc.ClusterListController,
-        "runtimeList": dataproc.RuntimeController,
-        "createJobScheduler": executor.ExecutorController,
-        "dagList": airflow.DagListController,
-        "dagDelete": airflow.DagDeleteController,
-        "dagUpdate": airflow.DagUpdateController,
-        "editJobScheduler": airflow.EditDagController,
-        "importErrorsList": airflow.ImportErrorController,
-        "triggerDag": airflow.TriggerDagController,
-        "downloadOutput": executor.DownloadOutputController,
         "bigQueryDataset": bigquery.DatasetController,
         "bigQueryTable": bigquery.TableController,
         "bigQueryDatasetInfo": bigquery.DatasetInfoController,
