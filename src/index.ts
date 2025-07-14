@@ -228,7 +228,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 autoClose: false
               });
             }
-          } 
+          }
         });
       }
     };
