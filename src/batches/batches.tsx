@@ -21,7 +21,7 @@ import ListSessions from '../sessions/listSessions';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
-import { CircularProgress } from '@mui/material'
+import { CircularProgress } from '@mui/material';
 
 const BatchesComponent = (): React.JSX.Element => {
   const [selectedMode, setSelectedMode] = useState('Batches');

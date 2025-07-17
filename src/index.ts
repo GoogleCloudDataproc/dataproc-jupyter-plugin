@@ -656,8 +656,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
         const content = new Cluster(
-          settingRegistry,
-          app as JupyterLab,
           themeManager
         );
         const widget = new MainAreaWidget<Cluster>({ content });

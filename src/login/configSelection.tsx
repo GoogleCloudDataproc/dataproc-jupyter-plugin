@@ -57,10 +57,9 @@ const iconExpandMore = new LabIcon({
 interface IConfigSelectionProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
-  app?: JupyterLab;
-  launcher?: ILauncher;
-  settingRegistry?: ISettingRegistry;
-  fromPage?: string;
+  app: JupyterLab;
+  launcher: ILauncher;
+  settingRegistry: ISettingRegistry;
 }
 
 function ConfigSelection({
@@ -69,7 +68,6 @@ function ConfigSelection({
   app,
   launcher,
   settingRegistry,
-  fromPage
 }: IConfigSelectionProps) {
   const IconGoogleCloud = new LabIcon({
     name: 'launcher:google_cloud_icon',
@@ -109,8 +107,8 @@ function ConfigSelection({
             });
           } else {
             if (bigQueryFeatureEnable) {
-              const settings = await settingRegistry?.load(PLUGIN_ID);
-              settings?.set('bqRegion', bigQueryRegion);
+              const settings = await settingRegistry.load(PLUGIN_ID);
+              settings.set('bqRegion', bigQueryRegion);
             }
             Notification.emit(
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
@@ -124,9 +122,6 @@ function ConfigSelection({
               'dataprocConfigChange',
               `${configStatus} - Configuration updated successfully.`
             );
-            if (fromPage === 'loginError') {
-              window.location.reload();
-            }
           }
         }
       }
@@ -210,8 +205,8 @@ function ConfigSelection({
   };
 
   const handleSettingsRegistry = async () => {
-    const settings = await settingRegistry?.load(PLUGIN_ID);
-    setBigQueryRegion(settings?.get('bqRegion')['composite']);
+  const settings = await settingRegistry.load(PLUGIN_ID);
+    setBigQueryRegion(settings.get('bqRegion')['composite']);
   };
 
   const handleBigQueryFeature = async () => {
@@ -231,15 +226,12 @@ function ConfigSelection({
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);
-      if (
-        credentials &&
-        credentials.project_id &&
-        Object.keys(credentials.project_id).length > 0 &&
-        credentials.region_id !== ''
-      ) {
-        setProjectId(credentials?.project_id ?? '');
-        setRegion(credentials?.region_id ?? '');
+     if (credentials && credentials.project_id && credentials.region_id) {
+        setProjectId(credentials.project_id);
+        setRegion(credentials.region_id);
         setConfigError(false);
+      } else {
+        setConfigError(true);
       }
     });
   }, []);
@@ -259,10 +251,9 @@ function ConfigSelection({
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
-          launcher={launcher!}
-          app={app!}
+          launcher={launcher}
+          app={app}
           fromPage="config"
-          settingRegistry={settingRegistry!}
         />
       ) : (
         <div className="settings-component">
@@ -389,35 +380,29 @@ function ConfigSelection({
             </div>
           </div>
           <div>
-            {!configError && (
-              <>
-                <div className="dataproc-settings-header">
-                  Dataproc Settings{' '}
-                </div>
-                <div className="runtime-title-section">
-                  <div className="runtime-title-part">
-                    Serverless Runtime Templates
-                  </div>
-                  <div
-                    className="expand-icon"
-                    onClick={() => handleRuntimeExpand()}
-                  >
-                    {expandRuntimeTemplate ? (
-                      <iconExpandLess.react
-                        tag="div"
-                        className="logo-alignment-style"
-                      />
-                    ) : (
-                      <iconExpandMore.react
-                        tag="div"
-                        className="logo-alignment-style"
-                      />
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-            {expandRuntimeTemplate && !configError && (
+       <div className="dataproc-settings-header">Dataproc Settings </div>
+            <div className="runtime-title-section">
+              <div className="runtime-title-part">
+                Serverless Runtime Templates
+              </div>
+              <div
+                className="expand-icon"
+                onClick={() => handleRuntimeExpand()}
+              >
+                {expandRuntimeTemplate ? (
+                  <iconExpandLess.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
+                ) : (
+                  <iconExpandMore.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
+                )}
+              </div>
+            </div>
+            {expandRuntimeTemplate && (
               <ListRuntimeTemplates
                 openCreateTemplate={openCreateTemplate}
                 setOpenCreateTemplate={setOpenCreateTemplate}

@@ -43,9 +43,6 @@ import {
 } from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { DpmsService } from './dpmsService';
-import { checkConfig } from '../utils/utils';
-import { LOGIN_STATE } from '../utils/const';
-import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -101,10 +98,6 @@ const DpmsComponent = ({
     name: 'launcher:search-icon',
     svgstr: searchIcon
   });
-  // const iconSubmitJob = new LabIcon({
-  //   name: 'launcher:submit-job-icon',
-  //   svgstr: SubmitJobIcon
-  // });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
@@ -128,9 +121,6 @@ const DpmsComponent = ({
     Record<string, string>
   >({});
   const [apiMessage, setApiMessage] = useState('');
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [configError, setConfigError] = useState(false);
-  const [loginError, setLoginError] = useState(false);
   const getColumnDetails = async (name: string) => {
     await DpmsService.getColumnDetailsAPIService(
       name,
@@ -244,7 +234,9 @@ const DpmsComponent = ({
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
-  const searchMatch = (node: { data: { name: string } }, term: string) => {
+  const searchMatch = (node: { data: {
+    id: string; name: string 
+} }, term: string) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
   const openedWidgets: Record<string, boolean> = {};
@@ -515,14 +507,6 @@ const DpmsComponent = ({
       setNoDpmsInstance(true);
     }
   };
-
-    useEffect(() => {
-      checkConfig(setLoggedIn, setConfigError, setLoginError);
-      setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
-      if (loggedIn) {
-        setIsLoading(false);
-      }
-    }, []);
   useEffect(() => {
     getActiveNotebook();
     return () => {
@@ -649,18 +633,6 @@ const DpmsComponent = ({
       ) : (
         <div className="dpms-error">DPMS schema explorer not set up</div>
       )}
-        {(loginError || configError) && (
-        <div className="login-error">
-          <LoginErrorComponent
-            setLoginError={setLoginError}
-            loginError={loginError}
-            configError={configError}
-            setConfigError={setConfigError}
-            app={app}
-            fromPage='sidepanel'
-          />
-        </div>
-        )}
     </div>
   );
 };

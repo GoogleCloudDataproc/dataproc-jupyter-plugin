@@ -46,9 +46,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { checkConfig, handleDebounce } from '../utils/utils';
-import { LOGIN_STATE } from '../utils/const';
-import LoginErrorComponent from '../utils/loginErrorComponent';
+import { handleDebounce } from '../utils/utils';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -143,9 +141,6 @@ const BigQueryComponent = ({
   const [searchLoading, setSearchLoading] = useState(false);
 
   const [height, setHeight] = useState(window.innerHeight - 125);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [configError, setConfigError] = useState(false);
-  const [loginError, setLoginError] = useState(false);
 
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 125;
@@ -835,13 +830,6 @@ const BigQueryComponent = ({
   };
 
   useEffect(() => {
-    checkConfig(setLoggedIn, setConfigError, setLoginError);
-    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
-    if (loggedIn) {
-      setIsLoading(false);
-    }
-  }, []);
-  useEffect(() => {
     getActiveNotebook();
     return () => {
       setNotebookValue('');
@@ -913,7 +901,6 @@ const BigQueryComponent = ({
             </div>
           ) : (
             <div>
-              {!loginError && !configError && (
                 <div>
                   <div className="search-field">
                     <TextField
@@ -979,19 +966,6 @@ const BigQueryComponent = ({
                       )}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-          {(loginError || configError) && (
-            <div className="login-error">
-              <LoginErrorComponent
-                setLoginError={setLoginError}
-                loginError={loginError}
-                configError={configError}
-                setConfigError={setConfigError}
-                app={app}
-                fromPage="sidepanel"
-              />
             </div>
           )}
         </div>

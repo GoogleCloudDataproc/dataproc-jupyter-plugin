@@ -37,7 +37,8 @@ import {
   AUTO_SCALING_DEFAULT,
   GPU_DEFAULT,
   SECURITY_KEY,
-  KEY_MESSAGE
+  KEY_MESSAGE,
+  LOGIN_ERROR_MESSAGE,
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
@@ -69,8 +70,6 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
-import LoginErrorComponent from '../utils/loginErrorComponent';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -102,15 +101,14 @@ function CreateRunTime({
   selectedRuntimeClone,
   launcher,
   app,
-  fromPage,
-  settingRegistry
+  fromPage
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
   launcher: ILauncher;
   app: JupyterLab;
   fromPage: string;
-  settingRegistry: ISettingRegistry;
+
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -2232,18 +2230,16 @@ function CreateRunTime({
           </div>
         </>
       ) : (
-        (loginError || configError) && (
-          <div className="login-error">
-            <LoginErrorComponent
-              setLoginError={setLoginError}
-              loginError={loginError}
-              configError={configError}
-              setConfigError={setConfigError}
-              settingRegistry={settingRegistry}
-              app={app}
-            />
+        loginError && (
+          <div role="alert" className="login-error">
+            {LOGIN_ERROR_MESSAGE}
           </div>
         )
+      )}
+      {configError && (
+        <div role="alert" className="login-error">
+          Please configure gcloud with account, project-id and region
+        </div>
       )}
     </div>
   );

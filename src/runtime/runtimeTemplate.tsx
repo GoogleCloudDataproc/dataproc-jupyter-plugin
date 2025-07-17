@@ -51,7 +51,6 @@ const RuntimeTemplateComponent = ({
           app={app}
           launcher={launcher}
           fromPage="launcher"
-          settingRegistry={settingRegistry}
         />
       )}
     </div>

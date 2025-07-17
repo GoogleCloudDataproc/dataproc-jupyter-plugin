@@ -62,16 +62,18 @@ const AuthLoginComponent = ({
       if (loginStatus === STATUS_SUCCESS) {
         setLoginState(true);
         setLoginError(false);
+        localStorage.setItem('loginState', LOGIN_STATE);
       } else {
         setLoginState(false);
-        setLoginError(true);
+       localStorage.removeItem('loginState');
       }
     }
   };
 
   useEffect(() => {
     checkConfig(setLoginState, setConfigError, setLoginError);
-    setLoginState((!loginError && !configError).toString() === LOGIN_STATE);
+    const localstorageGetInformation = localStorage.getItem('loginState');
+    setLoginState(localstorageGetInformation === LOGIN_STATE);
     if (loginState) {
       setConfigLoading(false);
     }
@@ -110,13 +112,7 @@ const AuthLoginComponent = ({
                   ? 'signin-google-icon disabled'
                   : 'signin-google-icon'
               }
-              onClick={
-                isloginDisabled
-                  ? undefined
-                  : () => {
-                      login();
-                    }
-              }
+             onClick={isloginDisabled ? undefined : login}
             >
               <IconsigninGoogle.react
                 tag="div"
@@ -125,6 +121,11 @@ const AuthLoginComponent = ({
             </div>
           </div>
         </>
+      )}
+       {configError && (
+        <div className="login-error">
+          Please configure gcloud with account, project-id and region
+        </div>
       )}
     </div>
   );

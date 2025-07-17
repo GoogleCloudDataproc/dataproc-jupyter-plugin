@@ -45,7 +45,6 @@ const iconServerless = new LabIcon({
   svgstr: serverlessIcon
 });
 
-
 /**
  * A disposable class to track the toolbar widget for a single notebook.
  */
@@ -220,7 +219,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
   private updateKernelStatus = async () => {
     await this.fetchAndUpdateKernelStatus();
   };
-
 
   private onSessionDetailsClick = () => {
     if (!this.sessionId) {
