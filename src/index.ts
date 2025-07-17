@@ -691,7 +691,6 @@ const extension: JupyterFrontEndPlugin<void> = {
           app as JupyterLab,
           themeManager,
           factory as IFileBrowserFactory,
-          settingRegistry as ISettingRegistry
         );
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'Notebook Templates';
