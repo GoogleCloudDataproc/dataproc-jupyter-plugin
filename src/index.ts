@@ -32,7 +32,6 @@ import clusterIcon from '../style/icons/cluster_icon.svg';
 import addRuntimeIcon from '../style/icons/add_runtime_template.svg';
 import serverlessIcon from '../style/icons/serverless_icon.svg';
 import notebookTemplateIcon from '../style/icons/notebook_template_icon.svg';
-import storageIcon from '../style/icons/storage_icon.svg';
 import { Panel, Title, Widget } from '@lumino/widgets';
 import { AuthLogin } from './login/authLogin';
 import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
@@ -54,12 +53,9 @@ import {
 } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
 import datasetExplorerIconDark from '../style/icons/dataset_explorer_dark_icon.svg';
-import storageIconDark from '../style/icons/Storage-icon-dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IDocumentManager } from '@jupyterlab/docmanager';
-import { GCSDrive } from './gcs/gcsDrive';
-import { GcsBrowserWidget } from './gcs/gcsBrowserWidget';
 import { DataprocLoggingService, LOG_LEVEL } from './utils/loggingService';
 import pythonLogo from '../third_party/icons/python_logo.svg';
 import NotebookTemplateService from './notebookTemplates/notebookTemplatesService';
@@ -129,10 +125,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:notebook-template-icon',
       svgstr: notebookTemplateIcon
     });
-    const iconStorage = new LabIcon({
-      name: 'launcher:storage-icon',
-      svgstr: storageIcon
-    });
     const iconDpmsDark = new LabIcon({
       name: 'launcher:dpms-icon-dark',
       svgstr: dpmsIconDark
@@ -140,10 +132,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     const iconDatasetExplorerDark = new LabIcon({
       name: 'launcher:dataset-explorer-icon-dark',
       svgstr: datasetExplorerIconDark
-    });
-    const iconStorageDark = new LabIcon({
-      name: 'launcher:storage-icon-dark',
-      svgstr: storageIconDark
     });
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
@@ -179,10 +167,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     const settings = await settingRegistry.load(PLUGIN_ID);
 
     // The current value of whether or not preview features are enabled.
-    let panelDpms: Panel | undefined,
-      panelGcs: Panel | undefined,
-      panelDatasetExplorer: Panel | undefined;
-    let gcsDrive: GCSDrive | undefined;
+    let panelDpms: Panel | undefined, panelDatasetExplorer: Panel | undefined;
+    await checkResourceManager();
 
     // Capture the signal
     eventEmitter.on('dataprocConfigChange', async (message: string) => {
@@ -251,7 +237,7 @@ const extension: JupyterFrontEndPlugin<void> = {
      * Handler for when the Jupyter Lab theme changes.
      */
     const onThemeChanged = () => {
-      if (!panelDpms && !panelGcs && !panelDatasetExplorer) return;
+      if (!panelDpms && !panelDatasetExplorer) return;
       const isLightTheme = themeManager.theme
         ? themeManager.isLight(themeManager.theme)
         : true;
@@ -262,9 +248,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
           panelDatasetExplorer.title.icon = iconDatasetExplorer;
         }
-        if (bqFeature.enable_cloud_storage_integration && panelGcs) {
-          panelGcs.title.icon = iconStorage;
-        }
       } else {
         if (bqFeature.enable_metastore_integration && panelDpms) {
           panelDpms.title.icon = iconDpmsDark;
@@ -272,15 +255,12 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
           panelDatasetExplorer.title.icon = iconDatasetExplorerDark;
         }
-        if (bqFeature.enable_cloud_storage_integration && panelGcs) {
-          panelGcs.title.icon = iconStorageDark;
-        }
       }
     };
     themeManager.themeChanged.connect(onThemeChanged);
 
     /**
-     * Enables and disables the side panel sections DPMS, GCS and Datasset Explorer based on the flags.
+     * Enables and disables the side panel sections DPMS and Datasset Explorer based on the flags.
      */
     const onSidePanelEnabled = async () => {
       const toBoolean = (value: any): boolean => {
@@ -294,19 +274,11 @@ const extension: JupyterFrontEndPlugin<void> = {
 
       // Convert configuration values to boolean
       const enableBigQuery = toBoolean(bqFeature.enable_bigquery_integration);
-      const enableCloudStorage = toBoolean(
-        bqFeature.enable_cloud_storage_integration
-      );
       const enableMetastore = toBoolean(bqFeature.enable_metastore_integration);
 
       // Clear any existing panels first
       panelDatasetExplorer?.dispose();
       panelDatasetExplorer = undefined;
-
-      panelGcs?.dispose();
-      gcsDrive?.dispose();
-      panelGcs = undefined;
-      gcsDrive = undefined;
 
       panelDpms?.dispose();
       panelDpms = undefined;
@@ -342,21 +314,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         onThemeChanged();
         app.shell.add(panelDpms, 'left', { rank: 1001 });
         DataprocLoggingService.log('Metastore is enabled', LOG_LEVEL.INFO);
-      }
-
-      if (enableCloudStorage) {
-        panelGcs = new Panel();
-        panelGcs.id = 'GCS-bucket-tab';
-        panelGcs.title.caption = 'Google Cloud Storage';
-        panelGcs.title.className = 'panel-icons-custom-style';
-        gcsDrive = new GCSDrive();
-        documentManager.services.contents.addDrive(gcsDrive);
-        panelGcs.addWidget(
-          new GcsBrowserWidget(gcsDrive, factory as IFileBrowserFactory)
-        );
-        onThemeChanged();
-        app.shell.add(panelGcs, 'left', { rank: 1002 });
-        DataprocLoggingService.log('Cloud storage is enabled', LOG_LEVEL.INFO);
       }
     };
     onSidePanelEnabled();
@@ -681,7 +638,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new RuntimeTemplate(
           app as JupyterLab,
           launcher as ILauncher,
-          themeManager
+          themeManager          
         );
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
@@ -697,7 +654,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
-        const content = new Cluster(themeManager);
+        const content = new Cluster(
+          themeManager
+        );
         const widget = new MainAreaWidget<Cluster>({ content });
         widget.title.label = 'Clusters';
         widget.title.icon = iconCluster;
@@ -712,7 +671,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-        const content = new Batches(themeManager);
+       const content = new Batches(themeManager);
         const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;
@@ -730,7 +689,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new NotebookTemplates(
           app as JupyterLab,
           themeManager,
-          factory as IFileBrowserFactory
+          factory as IFileBrowserFactory,
         );
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'Notebook Templates';

@@ -25,11 +25,7 @@ import {
   USER_INFO_URL,
   VERSION_DETAIL
 } from '../utils/const';
-import {
-  IAuthCredentials,
-  authApi,
-  loggedFetch
-} from '../utils/utils';
+import { IAuthCredentials, authApi, loggedFetch } from '../utils/utils';
 import { Notification } from '@jupyterlab/apputils';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
@@ -71,7 +67,7 @@ function ConfigSelection({
   setConfigError,
   app,
   launcher,
-  settingRegistry
+  settingRegistry,
 }: IConfigSelectionProps) {
   const IconGoogleCloud = new LabIcon({
     name: 'launcher:google_cloud_icon',
@@ -209,7 +205,7 @@ function ConfigSelection({
   };
 
   const handleSettingsRegistry = async () => {
-    const settings = await settingRegistry.load(PLUGIN_ID);
+  const settings = await settingRegistry.load(PLUGIN_ID);
     setBigQueryRegion(settings.get('bqRegion')['composite']);
   };
 
@@ -227,12 +223,10 @@ function ConfigSelection({
   useEffect(() => {
     handleSettingsRegistry();
     handleBigQueryFeature();
-
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);
-
-      if (credentials && credentials.project_id && credentials.region_id) {
+     if (credentials && credentials.project_id && credentials.region_id) {
         setProjectId(credentials.project_id);
         setRegion(credentials.region_id);
         setConfigError(false);
@@ -278,7 +272,7 @@ function ConfigSelection({
             <div className="config-form">
               <div className="project-overlay">
                 <DynamicDropdown
-                  value={projectId}
+                  value={projectId ?? ''}
                   onChange={(_, projectId) => setProjectId(projectId ?? '')}
                   fetchFunc={projectListAPI}
                   label="Project ID*"
@@ -386,7 +380,7 @@ function ConfigSelection({
             </div>
           </div>
           <div>
-            <div className="dataproc-settings-header">Dataproc Settings </div>
+       <div className="dataproc-settings-header">Dataproc Settings </div>
             <div className="runtime-title-section">
               <div className="runtime-title-part">
                 Serverless Runtime Templates

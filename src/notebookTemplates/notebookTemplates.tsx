@@ -11,7 +11,7 @@ import { CircularProgress } from '@mui/material';
 const NotebookTemplatesComponent = ({
   app,
   themeManager,
-  factory
+  factory,
 }: {
   app: JupyterLab;
   themeManager: IThemeManager;
@@ -24,8 +24,7 @@ const NotebookTemplatesComponent = ({
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
+    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
     }
@@ -36,7 +35,7 @@ const NotebookTemplatesComponent = ({
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -76,7 +75,7 @@ export class NotebookTemplates extends DataprocWidget {
   constructor(
     app: JupyterLab,
     themeManager: IThemeManager,
-    factory: IFileBrowserFactory
+    factory: IFileBrowserFactory,
   ) {
     super(themeManager);
     this.app = app;

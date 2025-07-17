@@ -228,8 +228,7 @@ async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
 
         return MockProcess()
 
-    monkeypatch.setattr("asyncio.create_subprocess_shell",
-                        mock_create_subprocess_shell)
+    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
 
     # Call the handler
     response = await jp_fetch(
@@ -263,8 +262,7 @@ async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
 
         return MockProcess()
 
-    monkeypatch.setattr("asyncio.create_subprocess_shell",
-                        mock_create_subprocess_shell)
+    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
 
     # Mock the error output from the subprocess
     def mock_tempfile():

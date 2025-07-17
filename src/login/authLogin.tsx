@@ -56,7 +56,7 @@ const AuthLoginComponent = ({
     setIsloginDisabled(true);
     const data = await requestAPI('login', {
       method: 'POST'
-    });;
+    });
     if (typeof data === 'object' && data !== null) {
       const loginStatus = (data as { login: string }).login;
       if (loginStatus === STATUS_SUCCESS) {
@@ -65,7 +65,7 @@ const AuthLoginComponent = ({
         localStorage.setItem('loginState', LOGIN_STATE);
       } else {
         setLoginState(false);
-        localStorage.removeItem('loginState');
+       localStorage.removeItem('loginState');
       }
     }
   };
@@ -84,7 +84,7 @@ const AuthLoginComponent = ({
       {configLoading && !loginState && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
-            className = "spin-loader-custom-style"
+            className="spin-loader-custom-style"
             size={18}
             aria-label="Loading Spinner"
             data-testid="loader"
@@ -112,7 +112,7 @@ const AuthLoginComponent = ({
                   ? 'signin-google-icon disabled'
                   : 'signin-google-icon'
               }
-              onClick={isloginDisabled ? undefined : login}
+             onClick={isloginDisabled ? undefined : login}
             >
               <IconsigninGoogle.react
                 tag="div"
@@ -122,7 +122,7 @@ const AuthLoginComponent = ({
           </div>
         </>
       )}
-      {configError && (
+       {configError && (
         <div className="login-error">
           Please configure gcloud with account, project-id and region
         </div>
