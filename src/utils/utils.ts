@@ -277,31 +277,13 @@ export const checkConfig = async (
 ): Promise<void> => {
   const credentials = await authApi();
   if (credentials) {
-      if (credentials.config_error === 1) {
-        setConfigError(true);
-      }
-      if (credentials.login_error === 1) {
-        setLoginError(true);
-      }
-     else {
-      setLoginState(true);
+    if (credentials.config_error === 1) {
+      setConfigError(true);
     }
-  }
-};
-
-export const login = async (
-  setLoginError: React.Dispatch<React.SetStateAction<boolean>>
-) => {
-  const data = await requestAPI('login', {
-    method: 'POST'
-  });
-  if (typeof data === 'object' && data !== null) {
-    const loginStatus = (data as { login: string }).login;
-    if (loginStatus === STATUS_SUCCESS) {
-      setLoginError(false);
-      window.location.reload();
-    } else {
+    if (credentials.login_error === 1) {
       setLoginError(true);
+    } else {
+      setLoginState(true);
     }
   }
 };
