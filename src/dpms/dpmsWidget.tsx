@@ -234,9 +234,15 @@ const DpmsComponent = ({
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
-  const searchMatch = (node: { data: {
-    id: string; name: string 
-} }, term: string) => {
+  const searchMatch = (
+    node: {
+      data: {
+        id: string;
+        name: string;
+      };
+    },
+    term: string
+  ) => {
     return node.data.name.toLowerCase().includes(term.toLowerCase());
   };
   const openedWidgets: Record<string, boolean> = {};

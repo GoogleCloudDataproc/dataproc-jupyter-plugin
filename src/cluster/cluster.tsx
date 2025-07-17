@@ -24,7 +24,6 @@ import ListCluster from './listCluster';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { CircularProgress } from '@mui/material';
 
-
 const ClusterComponent = (): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
 
@@ -132,7 +131,7 @@ const ClusterComponent = (): React.JSX.Element => {
           )}
         </>
       ) : (
-     loginError && <div className="login-error"> {LOGIN_ERROR_MESSAGE}</div>
+        loginError && <div className="login-error"> {LOGIN_ERROR_MESSAGE}</div>
       )}
       {configError && (
         <div className="login-error">
@@ -144,8 +143,7 @@ const ClusterComponent = (): React.JSX.Element => {
 };
 
 export class Cluster extends DataprocWidget {
-  
   renderInternal(): React.JSX.Element {
-   return <ClusterComponent />;
+    return <ClusterComponent />;
   }
 }
