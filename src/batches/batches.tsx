@@ -25,13 +25,16 @@ import { CircularProgress } from '@mui/material';
 
 const BatchesComponent = (): React.JSX.Element => {
   const [selectedMode, setSelectedMode] = useState('Batches');
+
   const [loggedIn, setLoggedIn] = useState(false);
   const [configError, setConfigError] = useState(false);
   const [loginError, setLoginError] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
+
   const selectedModeChange = (mode: 'Sessions' | 'Batches') => {
     setSelectedMode(mode);
   };
+
   const toggleStyleSelection = (toggleItem: string) => {
     if (selectedMode === toggleItem) {
       return 'selected-header';
