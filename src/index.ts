@@ -638,8 +638,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new RuntimeTemplate(
           app as JupyterLab,
           launcher as ILauncher,
-          themeManager,
-          settingRegistry
+          themeManager          
         );
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';

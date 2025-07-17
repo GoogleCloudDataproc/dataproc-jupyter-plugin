@@ -60,7 +60,6 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
-
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
@@ -121,6 +120,7 @@ const DpmsComponent = ({
     Record<string, string>
   >({});
   const [apiMessage, setApiMessage] = useState('');
+  
   const getColumnDetails = async (name: string) => {
     await DpmsService.getColumnDetailsAPIService(
       name,
