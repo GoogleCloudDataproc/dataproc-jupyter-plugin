@@ -29,8 +29,6 @@ import { authenticatedFetch } from '../utils/utils';
 import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
-// import { ISettingRegistry } from '@jupyterlab/settingregistry';
-
 import { Widget } from '@lumino/widgets';
 
 const iconLogs = new LabIcon({
@@ -56,7 +54,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
   private readonly sparkLogsButton: ToolbarButton;
   private readonly sessionDetailsButton: ToolbarButton;
   private readonly sessionDetailsButtonDisable: ToolbarButton;
-  // private readonly notebookSchedulerButton: ToolbarButton;
   private sessionId?: string;
 
   /**
@@ -68,7 +65,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
     private readonly panel: NotebookPanel,
     private readonly context: DocumentRegistry.IContext<INotebookModel>,
     private readonly app: JupyterLab,
-    // private readonly settingRegistry: ISettingRegistry,
     private readonly launcher: ILauncher,
     private readonly themeManager: IThemeManager
   ) {
@@ -145,18 +141,6 @@ class NotebookButtonExtensionPoint implements IDisposable {
       'session-details-disable',
       this.sessionDetailsButtonDisable
     );
-
-    // this.notebookSchedulerButton = new ToolbarButton({
-    //   icon: iconNotebookScheduler,
-    //   onClick: () => this.onNotebookSchedulerClick(),
-    //   tooltip: 'Job Scheduler',
-    //   className: 'dark-theme-logs'
-    // });
-    // this.panel.toolbar.insertItem(
-    //   1000,
-    //   'notebook-scheduler',
-    //   this.notebookSchedulerButton
-    // );
   }
 
   /**

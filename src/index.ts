@@ -57,7 +57,6 @@ import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { DataprocLoggingService, LOG_LEVEL } from './utils/loggingService';
-// import { NotebookScheduler } from './scheduler/notebookScheduler';
 import pythonLogo from '../third_party/icons/python_logo.svg';
 import NotebookTemplateService from './notebookTemplates/notebookTemplatesService';
 import * as path from 'path';
@@ -122,10 +121,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:serverless-icon',
       svgstr: serverlessIcon
     });
-    // const iconScheduledNotebooks = new LabIcon({
-    //   name: 'launcher:scheduled-notebooks-icon',
-    //   svgstr: scheduledNotebooksIcon
-    // });
     const iconNotebookTemplate = new LabIcon({
       name: 'launcher:notebook-template-icon',
       svgstr: notebookTemplateIcon
@@ -849,11 +844,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 3
       });
-      // launcher.add({
-      //   command: createNotebookJobsComponentCommand,
-      //   category: TITLE_LAUNCHER_CATEGORY,
-      //   rank: 4
-      // });
     }
 
     // the plugin depends on having a toast container, and Jupyter labs lazy

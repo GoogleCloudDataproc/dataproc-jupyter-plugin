@@ -101,10 +101,6 @@ const DpmsComponent = ({
     name: 'launcher:search-icon',
     svgstr: searchIcon
   });
-  // const iconSubmitJob = new LabIcon({
-  //   name: 'launcher:submit-job-icon',
-  //   svgstr: SubmitJobIcon
-  // });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
