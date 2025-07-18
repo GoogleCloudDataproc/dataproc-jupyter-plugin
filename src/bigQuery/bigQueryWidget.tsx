@@ -983,7 +983,7 @@ const BigQueryComponent = ({
             </div>
           )}
           {(loginError || configError) && (
-            <div className="login-error">
+            <div className="sidepanel-login-error">
               <LoginErrorComponent
                 setLoginError={setLoginError}
                 loginError={loginError}

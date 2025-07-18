@@ -84,7 +84,10 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
         <div style={{ alignItems: 'center' }}>
           <div
             role="button"
-            className="signin-google-icon"
+            className={
+            fromPage === 'sidepanel' ? 'sidepanel-signin-google-icon' :  "signin-google-icon"
+          }
+       
             onClick={() => login(setLoginError)}
           >
             <IconsigninGoogle.react

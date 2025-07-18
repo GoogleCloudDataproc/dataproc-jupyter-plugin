@@ -650,7 +650,7 @@ const DpmsComponent = ({
         <div className="dpms-error">DPMS schema explorer not set up</div>
       )}
         {(loginError || configError) && (
-        <div className="login-error">
+        <div className="sidepanel-login-error">
           <LoginErrorComponent
             setLoginError={setLoginError}
             loginError={loginError}
