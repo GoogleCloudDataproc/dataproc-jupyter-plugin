@@ -50,6 +50,17 @@ async def _gcp_region():
 
 
 async def get_cached():
+    """Retrieves and caches GCP credentials and configuration.
+    
+    Returns:
+        A dictionary containing:
+        - project_id: The GCP project ID
+        - project_number: The GCP project number
+        - region_id: The default region
+        - access_token: The access token for authentication
+        - config_error: 1 if project or region are not configured, else 0
+        - login_error: 1 if not logged in or missing access token, else 0
+    """
     credentials = {
         "project_id": "",
         "project_number": 0,
@@ -61,11 +72,14 @@ async def get_cached():
     try:
         credentials["project_id"] = await _gcp_project()
         credentials["region_id"] = await _gcp_region()
-        credentials["config_error"] = 0
         credentials["access_token"] = await _gcp_credentials()
         credentials["project_number"] = await _gcp_project_number()
     except Exception as ex:
+        logging.error(f"Error getting gcloud config: {ex}")
+    
+    if not credentials["access_token"]:
         credentials["login_error"] = 1
-        if not credentials["access_token"] or not credentials["project_number"]:
-            credentials["login_error"] = 1
+    if credentials["access_token"] and (not credentials["project_id"] or not credentials["region_id"]):
+        credentials["config_error"] = 1
+
     return credentials

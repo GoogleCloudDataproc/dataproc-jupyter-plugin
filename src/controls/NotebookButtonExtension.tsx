@@ -29,7 +29,6 @@ import { authenticatedFetch } from '../utils/utils';
 import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
-
 import { Widget } from '@lumino/widgets';
 
 const iconLogs = new LabIcon({
@@ -337,6 +336,7 @@ export class NotebookButtonExtension
 {
   constructor(
     private app: JupyterLab,
+    // private settingRegistry: ISettingRegistry,
     private launcher: ILauncher,
     private themeManager: IThemeManager
   ) {}
@@ -349,6 +349,7 @@ export class NotebookButtonExtension
       panel,
       context,
       this.app,
+      // this.settingRegistry,
       this.launcher,
       this.themeManager
     );

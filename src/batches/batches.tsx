@@ -19,11 +19,21 @@ import React, { useEffect, useState } from 'react';
 import ListBatches from './listBatches';
 import ListSessions from '../sessions/listSessions';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
+import { LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import { CircularProgress } from '@mui/material';
+import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
 
-const BatchesComponent = (): React.JSX.Element => {
+const BatchesComponent = ({
+  settingRegistry,
+  app
+}: {
+  settingRegistry: ISettingRegistry;
+  app: JupyterLab;
+}): React.JSX.Element => {
   const [selectedMode, setSelectedMode] = useState('Batches');
 
   const [loggedIn, setLoggedIn] = useState(false);
@@ -45,8 +55,7 @@ const BatchesComponent = (): React.JSX.Element => {
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
+    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
     }
@@ -65,14 +74,16 @@ const BatchesComponent = (): React.JSX.Element => {
           Loading Batches
         </div>
       )}
-      {loginError && (
-        <div role="alert" className="login-error">
-          {LOGIN_ERROR_MESSAGE}
-        </div>
-      )}
-      {configError && (
-        <div role="alert" className="login-error">
-          Please configure gcloud with account, project-id and region
+      {(loginError || configError) && (
+        <div className="login-error">
+          <LoginErrorComponent
+            setLoginError={setLoginError}
+            loginError={loginError}
+            configError={configError}
+            setConfigError={setConfigError}
+            settingRegistry={settingRegistry}
+            app ={app}
+          />
         </div>
       )}
       {loggedIn && !configError && !loginError && (
@@ -109,7 +120,15 @@ const BatchesComponent = (): React.JSX.Element => {
 };
 
 export class Batches extends DataprocWidget {
+  settingRegistry: ISettingRegistry;
+  app: JupyterLab;
+  constructor(settingRegistry: ISettingRegistry, app: JupyterLab, themeManager: IThemeManager) {
+    super(themeManager);
+    this.settingRegistry = settingRegistry;
+    this.app = app;
+  }
+
   renderInternal(): React.JSX.Element {
-    return <BatchesComponent />;
+    return <BatchesComponent settingRegistry={this.settingRegistry} app={this.app} />;
   }
 }
