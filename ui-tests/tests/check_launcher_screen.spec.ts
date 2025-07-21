@@ -36,18 +36,16 @@ test.describe('Launcher screen', () => {
         }
 
         // Check visibility and validate Dataproc Serverless Notebooks section with new runtime template card is available
-        let sectionVisible = await page.getByRole('heading', { name: 'Dataproc Serverless Notebooks' }).isVisible();
+        let sectionVisible = await page.getByRole('heading', { name: 'Dataproc Serverless Spark' }).isVisible();
         if (sectionVisible) {
-            await expect(page.getByRole('heading', { name: 'Dataproc Serverless Notebooks' })).toBeVisible();
             await expect(page.locator('.jp-LauncherCard:visible', { hasText: 'New Runtime Template' })).toBeVisible();
         } else {
-            throw new Error("Dataproc Serverless Notebooks section is missing");
+            throw new Error("Dataproc Serverless Spark section is missing");
         }
 
         // Check visibility and validate Dataproc Cluster Notebooks section
         sectionVisible = await page.getByRole('heading', { name: 'Dataproc Cluster Notebooks' }).isVisible();
         if (sectionVisible) {
-            await expect(page.getByRole('heading', { name: 'Dataproc Cluster Notebooks' })).toBeVisible(); 
             await expect(page.locator('[data-category="Dataproc Cluster Notebooks"][title*="Apache Toree - Scala on"]').first()).toBeVisible(); 
             await expect(page.locator('[data-category="Dataproc Cluster Notebooks"][title*="R on"]').first()).toBeVisible(); 
             await expect(page.locator('[data-category="Dataproc Cluster Notebooks"][title*="PySpark on"]').first()).toBeVisible(); 
@@ -62,7 +60,5 @@ test.describe('Launcher screen', () => {
         await expect(page.locator('[data-category="Google Cloud Resources"][title="Clusters"]')).toBeVisible();
         await expect(page.locator('[data-category="Google Cloud Resources"][title="Serverless"]')).toBeVisible();
         await expect(page.locator('[data-category="Google Cloud Resources"][title="Notebook Templates"]')).toBeVisible();
-        await expect(page.locator('[data-category="Google Cloud Resources"][title="Scheduled Jobs"]')).toBeVisible();
-
     });
 });

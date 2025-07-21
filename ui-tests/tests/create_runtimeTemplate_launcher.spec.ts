@@ -33,14 +33,14 @@ test.describe('Serverless notebook from launcher screen', () => {
         await page.getByLabel('Display name*').click();
         await page.getByLabel('Display name*').fill('testing246');
         await page.getByLabel('Display name*').clear();
-        await expect(page.getByText('Name is required')).toBeVisible(); // Error should appear for empty Display name
+        await expect(page.getByText('Name is required')).toBeVisible();
 
         // Fill Display name and check if error is hidden
         await page.getByLabel('Display name*').fill('testing246');
         await expect(page.getByText('Name is required')).toBeHidden();
 
         await page.getByLabel('Runtime ID*').clear();
-        await expect(page.getByText('ID is required')).toBeVisible(); // Error should appear for empty Runtime ID
+        await expect(page.getByText('ID is required')).toBeVisible();
 
         // Fill Runtime ID and check if error is hidden
         await page.getByLabel('Runtime ID*').fill('runtime123');
@@ -48,35 +48,45 @@ test.describe('Serverless notebook from launcher screen', () => {
 
         await page.getByLabel('Description*').fill('test description');
         await page.getByLabel('Description*').clear();
-        await expect(page.getByText('Description is required')).toBeVisible(); // Error should appear for empty Description
+        await expect(page.getByText('Description is required')).toBeVisible();
 
         // Fill Description and check if error is hidden
         await page.getByLabel('Description*').fill('test description');
         await expect(page.getByText('Description is required')).toBeHidden();
 
-        await page.getByLabel('Runtime version*').clear();
-        await expect(page.getByText('Version is required')).toBeVisible(); // Error should appear for empty Runtime version
-
-        // Fill Runtime version and check if error is hidden
-        await page.getByLabel('Runtime version*').fill('2.2');
-        await expect(page.getByText('Version is required')).toBeHidden();
+        // Check Execution Configuration section fields
+        await expect(page.getByText('Execution Configuration')).toBeVisible();
+        await expect(page.getByText('Execute notebooks with:')).toBeVisible();
+        await expect(page.locator('//div[@class="create-runtime-radio"]//input').first()).toBeChecked();
+        await expect(page.locator('//div[@class="create-runtime-radio"]//input/parent::*/preceding-sibling::div[text()="Service Account"]')).toBeVisible();
+        await expect(page.getByLabel('Service account')).toBeVisible();
+        await expect(page.locator('//div[@class="create-runtime-radio"]//input').nth(1)).not.toBeChecked();
+        await expect(page.locator('//div[@class="create-runtime-radio"]//input/ancestor::div[2]//div[2][text()="User Account"]')).toBeVisible();
+        await page.locator('//div[@class="create-runtime-radio"]//input').nth(1).click();
+        await expect(page.getByLabel('Service account for system operations')).toBeVisible();
+        await page.locator('//div[@class="create-runtime-radio"]//input').first().click();
+        const RuntimeVerSelectedOption = await page.getByLabel('Runtime version*').inputValue();
+        expect(RuntimeVerSelectedOption).toEqual('2.2 LTS (Spark 3.5, Java 17, Scala 2.13)');
+        await expect(page.getByLabel('Custom container image')).toBeVisible();
+        await expect(page.getByLabel('Staging Bucket')).toBeVisible();
+        await expect(page.getByLabel('Python packages repository')).toBeVisible();
 
         // Add property validation: Empty key should show an error
         await page.getByRole('button', { name: 'ADD PROPERTY' }).click();
-        await expect(page.getByText('key is required')).toBeVisible(); // Key field should be required
+        await expect(page.getByText('key is required')).toBeVisible();
 
         // Check if the ADD PROPERTY button is disabled
         let isDisabled = await page.getByRole('button', { name: 'ADD PROPERTY' }).getAttribute('class');
-        expect(isDisabled).toContain('disabled'); // Button should be disabled initially
+        expect(isDisabled).toContain('disabled');
 
         // Fill the key field and ensure the error is hidden
         await page.getByLabel('Key 1*').first().fill('key');
-        await expect(page.getByText('key is required')).toBeHidden(); // Error should disappear after entering the key
+        await expect(page.getByText('key is required')).toBeHidden();
 
         // Click on the value field and ensure the ADD PROPERTY button is enabled
         await page.getByLabel('Value').first().click();
         isDisabled = await page.getByRole('button', { name: 'ADD PROPERTY' }).getAttribute('class');
-        expect(isDisabled).not.toContain('disabled'); // Button should now be enabled
+        expect(isDisabled).not.toContain('disabled');
 
         // Delete added property
         await page.locator('.labels-delete-icon').click();
@@ -87,11 +97,11 @@ test.describe('Serverless notebook from launcher screen', () => {
         await expect(page.locator('//label[text()="Value 1"]/following-sibling::div/input[@value="bigquery-jupyter-plugin"]')).toBeVisible();
         await expect(page.getByRole('button', { name: 'ADD LABEL' })).toBeVisible();
         await page.getByRole('button', { name: 'ADD LABEL' }).click();
-        await expect(page.getByText('key is required')).toBeVisible(); // Key field should be required
+        await expect(page.getByText('key is required')).toBeVisible();
 
         // Fill the key field and ensure the error is hidden
         await page.getByLabel('Key 2*').first().fill('key');
-        await expect(page.getByText('key is required')).toBeHidden(); // Error should disappear after entering the key
+        await expect(page.getByText('key is required')).toBeHidden();
         await page.getByLabel('Value 2').first().click();
 
         // Delete added label
@@ -155,8 +165,8 @@ test.describe('Serverless notebook from launcher screen', () => {
     // Navigate to config setup page and click on create template button
     async function navigateToRuntimeTemplate(page) {
         await page.getByLabel('main menu', { exact: true }).getByText('Settings').click();
-        const dataprocSettings = page.getByText('Google Dataproc Settings');
-        const bigQuerySettings = page.getByText('Google BigQuery Settings');
+        const dataprocSettings = page.getByText('Google Cloud Settings');
+        const bigQuerySettings = page.getByText('Google Cloud Settings');
         await dataprocSettings.or(bigQuerySettings).click();
         await page.getByText('Create', { exact: true }).click();
         await page.getByText('Loading Runtime').waitFor({ state: "hidden" });
@@ -196,7 +206,8 @@ test.describe('Serverless notebook from launcher screen', () => {
         }
 
         // Expand and check properties in Resource Allocation subsection
-        await page.locator('//*[@id="resource-allocation-expand-icon"]').click();
+        //await page.locator('//*[@id="resource-allocation-expand-icon"]').click(); // ids PR yet to merge 
+        await page.locator(`//*[text()='Resource Allocation']/../following-sibling::div[@class='expand-icon']`).click();
         await page.mouse.wheel(0, 300); // Scroll down to reveal properties
         await checkSparkProperties(page);
 
@@ -217,7 +228,8 @@ test.describe('Serverless notebook from launcher screen', () => {
         await checkPropertiesValue(page, allocationValues);
 
         // Expand and check properties in Resource Autoscaling subsection
-        await page.locator('//*[@id="autoscaling-expand-icon"]').click();
+        //await page.locator('//*[@id="autoscaling-expand-icon"]').click(); // Ids PR yet to merge
+        await page.locator(`//*[text()='Autoscaling']/../following-sibling::div[@class='expand-icon']`).click();
         await page.mouse.wheel(0, 300); // Scroll down to reveal properties
         const autoscalingProps = [
             'spark.dynamicAllocation.enabled', 'spark.dynamicAllocation.initialExecutors',
@@ -273,7 +285,8 @@ test.describe('Serverless notebook from launcher screen', () => {
         await navigateToRuntimeTemplate(page);
 
         // Expand Resource Allocation subsection
-        await page.locator('//*[@id="resource-allocation-expand-icon"]').click();
+        //await page.locator('//*[@id="resource-allocation-expand-icon"]').click();// ids PR yet to merge 
+        await page.locator(`//*[text()='Resource Allocation']/../following-sibling::div[@class='expand-icon']`).click();
 
         // Check GPU checkbox and validate the properties
         await page.getByLabel('GPU').check();
@@ -312,8 +325,8 @@ test.describe('Serverless notebook from launcher screen', () => {
 
         // Change GPU type to non-L4 value and validate properties are visible
         await page.getByLabel('GPU').check();
-        const sparkDPERATypeInput = page.locator('//*[@id="value-spark.dataproc.executor.resource.accelerator.type"]//input');
-        await sparkDPERATypeInput.fill('a100-40');
+        const sparkDPERATypeValue = page.locator('//*[@id="value-spark.dataproc.executor.resource.accelerator.type"]//input');
+        await sparkDPERATypeValue.fill('a100-40');
 
         // Check Allocation subsection property is visible
         await expect(page.locator('//*[@value="spark.dataproc.executor.disk.size"]')).toBeVisible();

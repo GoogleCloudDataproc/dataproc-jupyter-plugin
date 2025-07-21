@@ -78,7 +78,6 @@ test.describe('bigquery-dataset-explorer', () => {
 
       // Click on the Schema tab and check all schema fields are visible
       await page.getByText('Schema', { exact: true }).click();
-      await expect(page.getByText('Schema').nth(2)).toBeVisible();
       const schemaHeaders = [
         'Field name', 'Type', 'Mode', 'Key', 'Collation', 'Default Value',
         'Policy Tags', 'Data Policies', 'Description'

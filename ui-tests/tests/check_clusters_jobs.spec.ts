@@ -150,7 +150,7 @@ test.describe('Clusters & Jobs tests', () => {
         }
     });
 
-    test.skip('Can start, restart, and stop the cluster', async ({ page }) => {
+    test('Can start, restart, and stop the cluster', async ({ page }) => {
         test.setTimeout(timeout);
 
         // Click on Google Cloud Resources - Clusters card
@@ -416,7 +416,7 @@ test.describe('Clusters & Jobs tests', () => {
     async function fillLabels(page) {
         await expect(page.getByText('Labels')).toBeVisible();
         await expect(page.locator('//label[text()="Key 1*"]/following-sibling::div/input[@value="client"]')).toBeVisible();
-        await expect(page.locator('//label[text()="Value 1"]/following-sibling::div/input[@value="dataproc-jupyter-plugin"]')).toBeVisible();
+        await expect(page.locator('//label[text()="Value 1"]/following-sibling::div/input[@value="bigquery-jupyter-plugin"]')).toBeVisible();
         await page.getByRole('button', { name: 'ADD LABEL' }).click();
         await page.getByLabel('Key 2*').fill('goog-dataproc-location');
         await page.getByLabel('Value 2').fill('us-central1');
