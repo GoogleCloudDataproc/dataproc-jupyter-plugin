@@ -22,15 +22,18 @@ import { ISessionTemplate } from '../utils/listRuntimeTemplateInterface';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { ILauncher } from '@jupyterlab/launcher';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const RuntimeTemplateComponent = ({
   app,
   launcher,
   themeManager,
+  settingRegistry
 }: {
   app: JupyterLab;
   launcher: ILauncher;
   themeManager: IThemeManager;
+  settingRegistry: ISettingRegistry;
 }): JSX.Element => {
   const [openCreateTemplate, setOpenCreateTemplate] = useState(false);
 
@@ -48,6 +51,7 @@ const RuntimeTemplateComponent = ({
           app={app}
           launcher={launcher}
           fromPage="launcher"
+          settingRegistry={settingRegistry}
         />
       )}
     </div>
@@ -57,14 +61,17 @@ const RuntimeTemplateComponent = ({
 export class RuntimeTemplate extends DataprocWidget {
   app: JupyterLab;
   launcher: ILauncher;
+  settingRegistry: ISettingRegistry;
   constructor(
     app: JupyterLab,
     launcher: ILauncher,
     themeManager: IThemeManager,
+    settingRegistry: ISettingRegistry
   ) {
     super(themeManager);
     this.app = app;
     this.launcher = launcher;
+    this.settingRegistry = settingRegistry;
   }
 
   renderInternal(): React.JSX.Element {
@@ -74,6 +81,7 @@ export class RuntimeTemplate extends DataprocWidget {
           app={this.app}
           launcher={this.launcher}
           themeManager={this.themeManager}
+          settingRegistry={this.settingRegistry}
         />
       </div>
     );

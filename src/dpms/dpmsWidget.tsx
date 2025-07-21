@@ -43,6 +43,9 @@ import {
 } from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { DpmsService } from './dpmsService';
+import { checkConfig } from '../utils/utils';
+import { LOGIN_STATE } from '../utils/const';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -60,6 +63,7 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
+
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
@@ -120,7 +124,9 @@ const DpmsComponent = ({
     Record<string, string>
   >({});
   const [apiMessage, setApiMessage] = useState('');
-  
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [configError, setConfigError] = useState(false);
+  const [loginError, setLoginError] = useState(false);
   const getColumnDetails = async (name: string) => {
     await DpmsService.getColumnDetailsAPIService(
       name,
@@ -505,6 +511,14 @@ const DpmsComponent = ({
       setNoDpmsInstance(true);
     }
   };
+
+    useEffect(() => {
+      checkConfig(setLoggedIn, setConfigError, setLoginError);
+      setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
+      if (loggedIn) {
+        setIsLoading(false);
+      }
+    }, []);
   useEffect(() => {
     getActiveNotebook();
     return () => {
@@ -631,6 +645,18 @@ const DpmsComponent = ({
       ) : (
         <div className="dpms-error">DPMS schema explorer not set up</div>
       )}
+        {(loginError || configError) && (
+        <div className="sidepanel-login-error">
+          <LoginErrorComponent
+            setLoginError={setLoginError}
+            loginError={loginError}
+            configError={configError}
+            setConfigError={setConfigError}
+            app={app}
+            fromPage='sidepanel'
+          />
+        </div>
+        )}
     </div>
   );
 };

@@ -185,7 +185,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       let bigqueryDatasetsResponse;
       let dataprocClusterResponse;
 
-      if (credentials?.project_id !== '' || credentials?.access_token != '') {
+      if (credentials?.login_error && credentials?.config_error) {
         dataprocClusterResponse =
           await RunTimeSerive.checkDataprocApiEnabledService();
         if (bqFeature.enable_bigquery_integration) {
@@ -381,26 +381,28 @@ const extension: JupyterFrontEndPlugin<void> = {
           method: 'POST'
         });
         const { status, error } = data as { status: string; error?: string };
-        if (status === 'ERROR') {
-          if (
-            error?.includes(
-              'API [cloudresourcemanager.googleapis.com] not enabled on project'
-            )
-          ) {
-            Notification.error(notificationMessage, {
-              actions: [
-                {
-                  label: 'Enable',
-                  callback: () => window.open(enableLink, '_blank'),
-                  displayType: 'link'
-                }
-              ],
-              autoClose: false
-            });
-          } else {
-            Notification.error(`Error in running gcloud command: ${error}`, {
-              autoClose: false
-            });
+        if (!credentials?.config_error && !credentials?.login_error) {
+          if (status === 'ERROR') {
+            if (
+              error?.includes(
+                'API [cloudresourcemanager.googleapis.com] not enabled on project'
+              )
+            ) {
+              Notification.error(notificationMessage, {
+                actions: [
+                  {
+                    label: 'Enable',
+                    callback: () => window.open(enableLink, '_blank'),
+                    displayType: 'link'
+                  }
+                ],
+                autoClose: false
+              });
+            } else {
+              Notification.error(`Error in running gcloud command: ${error}`, {
+                autoClose: false
+              });
+            }
           }
         }
       } catch (error) {
@@ -411,7 +413,11 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
+      new NotebookButtonExtension(
+        app as JupyterLab,
+        launcher,
+        themeManager
+      )
     );
 
     const loadDpmsWidget = (value: string) => {
@@ -638,7 +644,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new RuntimeTemplate(
           app as JupyterLab,
           launcher as ILauncher,
-          themeManager          
+          themeManager ,
+          settingRegistry         
         );
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
@@ -655,6 +662,8 @@ const extension: JupyterFrontEndPlugin<void> = {
       icon: args => (args['isPalette'] ? null : iconCluster),
       execute: () => {
         const content = new Cluster(
+          settingRegistry,
+          app as JupyterLab,
           themeManager
         );
         const widget = new MainAreaWidget<Cluster>({ content });
@@ -671,7 +680,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       // @ts-ignore jupyter lab icon command issue
       icon: args => (args['isPalette'] ? null : iconServerless),
       execute: () => {
-       const content = new Batches(themeManager);
+        const content = new Batches(
+          settingRegistry,
+          app as JupyterLab,
+          themeManager
+        );
         const widget = new MainAreaWidget<Batches>({ content });
         widget.title.label = 'Serverless';
         widget.title.icon = iconServerless;
@@ -690,6 +703,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           app as JupyterLab,
           themeManager,
           factory as IFileBrowserFactory,
+          settingRegistry as ISettingRegistry
         );
         const widget = new MainAreaWidget<NotebookTemplates>({ content });
         widget.title.label = 'Notebook Templates';
