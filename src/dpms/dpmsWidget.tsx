@@ -511,13 +511,13 @@ const DpmsComponent = ({
     }
   };
 
-    useEffect(() => {
-      checkConfig(setLoggedIn, setConfigError, setLoginError);
-      setLoggedIn(!loginError && !configError);
-      if (loggedIn) {
-        setIsLoading(false);
-      }
-    }, []);
+  useEffect(() => {
+    checkConfig(setLoggedIn, setConfigError, setLoginError);
+    setLoggedIn(!loginError && !configError);
+    if (loggedIn) {
+      setIsLoading(false);
+    }
+  }, []);
   useEffect(() => {
     getActiveNotebook();
     return () => {
@@ -641,10 +641,10 @@ const DpmsComponent = ({
         <div className="dpms-error">{apiMessage}</div>
       ) : schemaError ? (
         <div className="dpms-error">No schema available</div>
-      ) : (
+      ) : !loginError && !configError ? (
         <div className="dpms-error">DPMS schema explorer not set up</div>
-      )}
-        {(loginError || configError) && (
+      ) : null}
+      {(loginError || configError) && (
         <div className="sidepanel-login-error">
           <LoginErrorComponent
             setLoginError={setLoginError}
@@ -655,7 +655,7 @@ const DpmsComponent = ({
             fromPage='sidepanel'
           />
         </div>
-        )}
+      )}
     </div>
   );
 };
