@@ -47,8 +47,17 @@ class Client:
 
     async def list_datasets(self, page_token, project_id):
         try:
-            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
+            # bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
+            # api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
+            # base_url = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
+            base_url = f"https://dataplex.googleapis.com/v1/projects/{project_id}/locations/us/entryGroups/@bigquery/entries?filter=entry_type=projects/655216118709/locations/global/entryTypes/bigquery-dataset"
+        
+            # Append pageToken only if it's provided
+            if page_token:
+                api_endpoint = f"{base_url}?pageToken={page_token}"
+            else:
+                api_endpoint = base_url
+            
             async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:

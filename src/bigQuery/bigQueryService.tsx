@@ -146,13 +146,12 @@ export class BigQueryService {
         const data: any = await requestAPI(
           `bigQueryDataset?project_id=${projectId}&pageToken=${pageToken}`
         );
-
-        if (data.datasets) {
+        if (data.entries) {
           const existingDatasetList = previousDatasetList ?? [];
           //setStateAction never type issue
           const allDatasetList: any = [
             ...(existingDatasetList as []),
-            ...data.datasets
+            ...data.entries
           ];
 
           if (data.nextPageToken) {
@@ -173,21 +172,21 @@ export class BigQueryService {
             let filterDatasetByLocation = allDatasetList;
             filterDatasetByLocation = filterDatasetByLocation.filter(
               (dataset: any) =>
-                dataset.location === settings.get('bqRegion')['composite']
+                dataset.entrySource.location.toUpperCase() === settings.get('bqRegion')['composite']
             );
 
             if (filterDatasetByLocation.length > 0) {
               const databaseNames: string[] = [];
               const updatedDatabaseDetails: { [key: string]: string } = {};
               filterDatasetByLocation.forEach(
-                (data: {
-                  datasetReference: { description: string; datasetId: string };
-                }) => {
-                  databaseNames.push(data.datasetReference.datasetId);
-                  const description =
-                    data.datasetReference.description || 'None';
-                  updatedDatabaseDetails[data.datasetReference.datasetId] =
-                    description;
+                (data: any) => {
+                  const name = data.entrySource.displayName;
+
+                  if (name !== undefined && !databaseNames.includes(name)) {
+                    databaseNames.push(name);
+                    const description = data.entrySource?.description || 'None';
+                    updatedDatabaseDetails[name] = description;
+                  }
                 }
               );
               setDataSetResponse(filterDatasetByLocation);
@@ -207,9 +206,6 @@ export class BigQueryService {
           setIsIconLoading(false);
         }
       } catch (reason) {
-        Notification.emit(`Failed to fetch datasets : ${reason}`, 'error', {
-          autoClose: 5000
-        });
         setIsLoading(false);
         setIsIconLoading(false);
       }
