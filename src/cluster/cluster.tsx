@@ -17,7 +17,6 @@
 
 import React, { useEffect, useState } from 'react';
 import JobComponent from '../jobs/jobs';
-import { LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
@@ -62,7 +61,7 @@ const ClusterComponent = ({
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
+    setLoggedIn(!loginError && !configError);
     if (loggedIn) {
       setConfigLoading(false);
     }

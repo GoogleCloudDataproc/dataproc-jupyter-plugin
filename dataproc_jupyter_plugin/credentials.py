@@ -79,7 +79,9 @@ async def get_cached():
     
     if not credentials["access_token"]:
         credentials["login_error"] = 1
-    if credentials["access_token"] and (not credentials["project_id"] or not credentials["region_id"]):
+    if not credentials["access_token"]:
+        credentials["login_error"] = 1
+    elif not credentials["project_id"] or not credentials["region_id"]:
         credentials["config_error"] = 1
 
     return credentials

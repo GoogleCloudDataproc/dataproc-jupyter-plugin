@@ -312,17 +312,6 @@
   font-weight: 500;
   font-size: 20px;
   color: var(--jp-ui-font-color0);
-}@import url(https://fonts.googleapis.com/css?family=Roboto);
-
-.signin-google-icon {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.signin-google-icon:disabled {
-  opacity: 0.5;
 }
 
 .settings-overlay {

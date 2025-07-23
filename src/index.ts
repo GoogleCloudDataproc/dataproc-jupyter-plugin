@@ -185,7 +185,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       let bigqueryDatasetsResponse;
       let dataprocClusterResponse;
 
-      if (credentials?.login_error && credentials?.config_error) {
+      if (!credentials?.login_error && !credentials?.config_error) {
         dataprocClusterResponse =
           await RunTimeSerive.checkDataprocApiEnabledService();
         if (bqFeature.enable_bigquery_integration) {

@@ -44,7 +44,6 @@ import {
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { DpmsService } from './dpmsService';
 import { checkConfig } from '../utils/utils';
-import { LOGIN_STATE } from '../utils/const';
 import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
@@ -514,7 +513,7 @@ const DpmsComponent = ({
 
     useEffect(() => {
       checkConfig(setLoggedIn, setConfigError, setLoginError);
-      setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
+      setLoggedIn(!loginError && !configError);
       if (loggedIn) {
         setIsLoading(false);
       }

@@ -27,7 +27,6 @@ import {
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
-  LOGIN_STATE,
   SHARED_VPC,
   SERVICE_ACCOUNT,
   SPARK_GPU_INFO_URL,
@@ -37,7 +36,8 @@ import {
   AUTO_SCALING_DEFAULT,
   GPU_DEFAULT,
   SECURITY_KEY,
-  KEY_MESSAGE
+  KEY_MESSAGE,
+  LOGIN_STATE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';

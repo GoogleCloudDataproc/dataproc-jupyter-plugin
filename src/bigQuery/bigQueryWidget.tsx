@@ -47,7 +47,6 @@ import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { checkConfig, handleDebounce } from '../utils/utils';
-import { LOGIN_STATE } from '../utils/const';
 import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
@@ -836,7 +835,7 @@ const BigQueryComponent = ({
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
+    setLoggedIn(!loginError && !configError);
     if (loggedIn) {
       setIsLoading(false);
     }

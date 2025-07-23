@@ -269,14 +269,14 @@ function ConfigSelection({
           />
           Loading Config Setup
         </div>
-      ) : !configError && openCreateTemplate ? (
+      ) : !configError && openCreateTemplate && launcher && app && settingRegistry ? (
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
-          launcher={launcher!}
-          app={app!}
+          launcher={launcher}
+          app={app}
           fromPage="config"
-          settingRegistry={settingRegistry!}
+          settingRegistry={settingRegistry}
         />
       ) : (
         <div className="settings-component">

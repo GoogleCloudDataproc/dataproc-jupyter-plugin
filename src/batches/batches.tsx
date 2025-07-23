@@ -19,7 +19,6 @@ import React, { useEffect, useState } from 'react';
 import ListBatches from './listBatches';
 import ListSessions from '../sessions/listSessions';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import { CircularProgress } from '@mui/material';
 import LoginErrorComponent from '../utils/loginErrorComponent';
@@ -55,7 +54,7 @@ const BatchesComponent = ({
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
+    setLoggedIn(!loginError && !configError);
     if (loggedIn) {
       setConfigLoading(false);
     }
