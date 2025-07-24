@@ -70,11 +70,15 @@ export function useRegion(projectId: string) {
         }
         setRegions(items);
       })
-      .catch((error) => {
+      .catch(async (error) => {
         console.error(error);
+        const credentials = await authApi();
+        if( !credentials?.login_error &&
+           !credentials?.config_error){
         Notification.emit(error.message, 'error', {
           autoClose: 5000,
         });
+        }
       });
   }, [projectId]);
 

@@ -294,7 +294,10 @@ export class BatchService {
   ) => {
     const credentials = await authApi();
     const { DATAPROC } = await gcpServiceUrls;
-    const pageToken = nextPageTokens.length > 0 ? nextPageTokens[nextPageTokens.length - 1] : '';
+    const pageToken =
+      nextPageTokens.length > 0
+        ? nextPageTokens[nextPageTokens.length - 1]
+        : '';
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
@@ -343,7 +346,11 @@ export class BatchService {
                   }
                 );
               }
-              if (responseResult?.error?.code) {
+              if (
+                responseResult?.error?.code &&
+                !credentials?.login_error &&
+                !credentials?.config_error
+              ) {
                 Notification.emit(responseResult?.error?.message, 'error', {
                   autoClose: 5000
                 });
@@ -358,7 +365,10 @@ export class BatchService {
               if (shouldUpdatePagination) {
                 if (responseResult?.nextPageToken) {
                   setBatchesList(allBatchesData);
-                  setNextPageTokens([...nextPageTokens, responseResult.nextPageToken]);
+                  setNextPageTokens([
+                    ...nextPageTokens,
+                    responseResult.nextPageToken
+                  ]);
                   setIsLoading(false);
                   setLoggedIn(true);
                 } else {
@@ -367,7 +377,7 @@ export class BatchService {
                   setIsLoading(false);
                   setLoggedIn(true);
                 }
-              } 
+              }
             })
             .catch((e: Error) => {
               console.log(e);

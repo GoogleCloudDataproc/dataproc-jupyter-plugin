@@ -27,7 +27,6 @@ import {
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
-  LOGIN_STATE,
   SHARED_VPC,
   SERVICE_ACCOUNT,
   SPARK_GPU_INFO_URL,
@@ -38,7 +37,7 @@ import {
   GPU_DEFAULT,
   SECURITY_KEY,
   KEY_MESSAGE,
-  LOGIN_ERROR_MESSAGE
+  LOGIN_STATE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
@@ -70,6 +69,8 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
+import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -101,13 +102,15 @@ function CreateRunTime({
   selectedRuntimeClone,
   launcher,
   app,
-  fromPage
+  fromPage,
+  settingRegistry
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
   launcher: ILauncher;
   app: JupyterLab;
   fromPage: string;
+  settingRegistry: ISettingRegistry;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -207,6 +210,7 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
+  
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [stagingBucket, setStagingBucket] = useState('');
 
@@ -231,23 +235,22 @@ function CreateRunTime({
 
   useEffect(() => {
     checkConfig(setLoggedIn, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
+    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
     if (loggedIn) {
       setConfigLoading(false);
-    }
-    const timeData = [
-      { key: 'h', value: 'h', text: 'hour' },
-      { key: 'm', value: 'm', text: 'min' },
-      { key: 's', value: 's', text: 'sec' }
-    ];
+      const timeData = [
+        { key: 'h', value: 'h', text: 'hour' },
+        { key: 'm', value: 'm', text: 'min' },
+        { key: 's', value: 's', text: 'sec' }
+      ];
 
-    setTimeList(timeData);
-    updateLogic();
-    listClustersAPI();
-    listNetworksAPI();
-    listKeyRingsAPI();
-    runtimeSharedProject();
+      setTimeList(timeData);
+      updateLogic();
+      listClustersAPI();
+      listNetworksAPI();
+      listKeyRingsAPI();
+      runtimeSharedProject();
+    }
   }, []);
 
   useEffect(() => {
@@ -270,8 +273,10 @@ function CreateRunTime({
   ]);
 
   useEffect(() => {
-    if (networkSelected !== '') {
-      listSubNetworksAPI(networkSelected);
+    if (loggedIn && !configError && !loginError) {
+      if (networkSelected !== '') {
+        listSubNetworksAPI(networkSelected);
+      }
     }
   }, [networkSelected]);
 
@@ -366,7 +371,7 @@ function CreateRunTime({
       !gpuDetailChangeDone &&
       (!selectedRuntimeClone ||
         selectedRuntimeClone.runtimeConfig.properties[
-          'spark.dataproc.executor.resource.accelerator.type'
+        'spark.dataproc.executor.resource.accelerator.type'
         ] === 'l4' ||
         gpuDetailUpdated.includes(
           'spark.dataproc.executor.resource.accelerator.type:l4'
@@ -397,8 +402,10 @@ function CreateRunTime({
   };
 
   useEffect(() => {
-    if (keyRingSelected !== '') {
-      listKeysAPI(keyRingSelected);
+    if (loggedIn && !configError && !loginError) {
+      if (keyRingSelected !== '') {
+        listKeysAPI(keyRingSelected);
+      }
     }
   }, [keyRingSelected]);
 
@@ -1139,54 +1146,54 @@ function CreateRunTime({
               ...(keySelected !== '' &&
                 selectedRadioValue === 'key' &&
                 keySelected !== undefined && {
-                  kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-                }),
+                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+              }),
               ...(manualKeySelected !== '' &&
                 selectedRadioValue === 'manually' && {
-                  kmsKey: manualKeySelected
-                }),
+                kmsKey: manualKeySelected
+              }),
 
               ...(subNetworkSelected &&
                 selectedNetworkRadio === 'projectNetwork' && {
-                  subnetworkUri: subNetworkSelected
-                }),
+                subnetworkUri: subNetworkSelected
+              }),
               ...(sharedvpcSelected &&
                 selectedNetworkRadio === 'sharedVpc' && {
-                  subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
-                }),
+                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
+              }),
               ...(timeSelected === 'h' &&
                 idleTimeSelected && {
-                  idleTtl: inputValueHour.toString() + 's'
-                }),
+                idleTtl: inputValueHour.toString() + 's'
+              }),
               ...(timeSelected === 'm' &&
                 idleTimeSelected && {
-                  idleTtl: inputValueMin.toString() + 's'
-                }),
+                idleTtl: inputValueMin.toString() + 's'
+              }),
               ...(timeSelected === 's' &&
                 idleTimeSelected && {
-                  idleTtl: idleTimeSelected + 's'
-                }),
+                idleTtl: idleTimeSelected + 's'
+              }),
 
               ...(autoSelected === 'h' &&
                 autoTimeSelected && {
-                  ttl: inputValueHourAuto.toString() + 's'
-                }),
+                ttl: inputValueHourAuto.toString() + 's'
+              }),
               ...(autoSelected === 'm' &&
                 autoTimeSelected && {
-                  ttl: inputValueMinAuto.toString() + 's'
-                }),
+                ttl: inputValueMinAuto.toString() + 's'
+              }),
 
               ...(autoSelected === 's' &&
                 autoTimeSelected && {
-                  ttl: autoTimeSelected + 's'
-                }),
-
+                ttl: autoTimeSelected + 's'
+              }),
+              
               ...(selectedAccountRadio === 'userAccount' && {
                 authentication_config: {
                   user_workload_authentication_type: 'END_USER_CREDENTIALS'
                 }
               }),
-              ...(stagingBucket && { stagingBucket: stagingBucket })
+            ...(stagingBucket && { stagingBucket: stagingBucket })
             },
             peripheralsConfig: {
               ...(servicesSelected !== 'None' && {
@@ -1394,9 +1401,8 @@ function CreateRunTime({
 
               <div className="select-text-overlay">
                 <Input
-                  className={`create-runtime-style ${
-                    selectedRuntimeClone !== undefined ? ' disable-text' : ''
-                  }`}
+                  className={`create-runtime-style ${selectedRuntimeClone !== undefined ? ' disable-text' : ''
+                    }`}
                   value={runTimeSelected}
                   onChange={e => handleInputChange(e)}
                   type="text"
@@ -2230,16 +2236,18 @@ function CreateRunTime({
           </div>
         </>
       ) : (
-        loginError && (
-          <div role="alert" className="login-error">
-            {LOGIN_ERROR_MESSAGE}
+        (loginError || configError) && (
+          <div className="login-error">
+            <LoginErrorComponent
+              setLoginError={setLoginError}
+              loginError={loginError}
+              configError={configError}
+              setConfigError={setConfigError}
+              settingRegistry={settingRegistry}
+              app={app}
+            />
           </div>
         )
-      )}
-      {configError && (
-        <div role="alert" className="login-error">
-          Please configure gcloud with account, project-id and region
-        </div>
       )}
     </div>
   );

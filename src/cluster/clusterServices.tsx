@@ -138,20 +138,26 @@ export class ClusterService {
         setLoggedIn(true);
       }
       if (formattedResponse?.error?.code) {
-        Notification.emit(
-          `Failed to fetch clusters list : ${formattedResponse?.error?.message}`,
-          'error',
-          {
-            autoClose: 5000
-          }
-        );
+        const credentials = await authApi();
+        if (!credentials?.login_error && !credentials?.config_error) {
+          Notification.emit(
+            `Failed to fetch clusters list : ${formattedResponse?.error?.message}`,
+            'error',
+            {
+              autoClose: 5000
+            }
+          );
+        }
       }
     } catch (error) {
       setIsLoading(false);
       DataprocLoggingService.log('Error listing clusters', LOG_LEVEL.ERROR);
-      Notification.emit(`Failed to fetch clusters list : ${error}`, 'error', {
-        autoClose: 5000
-      });
+      const credentials = await authApi();
+      if (!credentials?.login_error && !credentials?.config_error) {
+        Notification.emit(`Failed to fetch clusters list : ${error}`, 'error', {
+          autoClose: 5000
+        });
+      }
     }
   };
 
