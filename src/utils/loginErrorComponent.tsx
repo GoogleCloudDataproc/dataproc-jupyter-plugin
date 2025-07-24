@@ -64,9 +64,11 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
         >
           Please configure gcloud with account, project-id and region
         </div>
+          <div style={{ alignItems: 'center' }}>
         <button className="config-button" onClick={handleConfigButtonClick}>
           Configure Settings
         </button>
+        </div>
       </>
     );
   }
