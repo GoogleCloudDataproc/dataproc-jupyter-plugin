@@ -53,15 +53,31 @@ const BatchesComponent = ({
   };
 
   useEffect(() => {
-    checkConfig(setLoggedIn, setConfigError, setLoginError);
-    setLoggedIn(!loginError && !configError);
-    if (loggedIn) {
-      setConfigLoading(false);
-    }
+    const handleConfigCheck = async () => {
+      await checkConfig(setLoggedIn, setConfigError, setLoginError);
+      setLoggedIn(!loginError && !configError);
+      if (!loginError && !configError) {
+        setConfigLoading(false);
+      }
+    };
+
+    handleConfigCheck();
   }, []);
 
   return (
     <div className="component-level">
+      {(loginError || configError) && (
+        <div className="login-error">
+          <LoginErrorComponent
+            setLoginError={setLoginError}
+            loginError={loginError}
+            configError={configError}
+            setConfigError={setConfigError}
+            settingRegistry={settingRegistry}
+            app={app}
+          />
+        </div>
+      )}
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
@@ -71,18 +87,6 @@ const BatchesComponent = ({
             data-testid="loader"
           />
           Loading Batches
-        </div>
-      )}
-      {(loginError || configError) && (
-        <div className="login-error">
-          <LoginErrorComponent
-            setLoginError={setLoginError}
-            loginError={loginError}
-            configError={configError}
-            setConfigError={setConfigError}
-            settingRegistry={settingRegistry}
-            app ={app}
-          />
         </div>
       )}
       {loggedIn && !configError && !loginError && (
@@ -121,13 +125,19 @@ const BatchesComponent = ({
 export class Batches extends DataprocWidget {
   settingRegistry: ISettingRegistry;
   app: JupyterLab;
-  constructor(settingRegistry: ISettingRegistry, app: JupyterLab, themeManager: IThemeManager) {
+  constructor(
+    settingRegistry: ISettingRegistry,
+    app: JupyterLab,
+    themeManager: IThemeManager
+  ) {
     super(themeManager);
     this.settingRegistry = settingRegistry;
     this.app = app;
   }
 
   renderInternal(): React.JSX.Element {
-    return <BatchesComponent settingRegistry={this.settingRegistry} app={this.app} />;
+    return (
+      <BatchesComponent settingRegistry={this.settingRegistry} app={this.app} />
+    );
   }
 }
