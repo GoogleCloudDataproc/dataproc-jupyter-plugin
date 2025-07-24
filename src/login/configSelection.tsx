@@ -25,11 +25,7 @@ import {
   USER_INFO_URL,
   VERSION_DETAIL
 } from '../utils/const';
-import {
-  IAuthCredentials,
-  authApi,
-  loggedFetch
-} from '../utils/utils';
+import { IAuthCredentials, authApi, loggedFetch } from '../utils/utils';
 import { Notification } from '@jupyterlab/apputils';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
@@ -168,7 +164,11 @@ function ConfigSelection({
           response
             .json()
             .then((responseResult: IUserInfoResponse) => {
-              if (responseResult?.error?.code) {
+              if (
+                responseResult?.error?.code &&
+                !credentials?.login_error &&
+                !credentials?.config_error
+              ) {
                 Notification.emit(responseResult?.error?.message, 'error', {
                   autoClose: 5000
                 });
@@ -269,7 +269,11 @@ function ConfigSelection({
           />
           Loading Config Setup
         </div>
-      ) : !configError && openCreateTemplate && launcher && app && settingRegistry ? (
+      ) : !configError &&
+        openCreateTemplate &&
+        launcher &&
+        app &&
+        settingRegistry ? (
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
