@@ -60,15 +60,30 @@ const ClusterComponent = ({
   };
 
   useEffect(() => {
-    checkConfig(setLoggedIn, setConfigError, setLoginError);
-    setLoggedIn(!loginError && !configError);
-    if (loggedIn) {
-      setConfigLoading(false);
-    }
-  }, []);
+    const handleConfigCheck = async () => {
+      await checkConfig(setLoggedIn, setConfigError, setLoginError);
+      setLoggedIn(!loginError && !configError);
+      if (!loginError && !configError) {
+        setConfigLoading(false);
+      }
+    };
 
+    handleConfigCheck();
+  }, []);
   return (
     <div className="component-level">
+      {(loginError || configError) && (
+        <div className="login-error">
+          <LoginErrorComponent
+            setLoginError={setLoginError}
+            loginError={loginError}
+            configError={configError}
+            setConfigError={setConfigError}
+            settingRegistry={settingRegistry}
+            app={app}
+          />
+        </div>
+      )}
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
@@ -80,7 +95,7 @@ const ClusterComponent = ({
           Loading Clusters
         </div>
       )}
-      {loggedIn && !loginError && !configError ? (
+      {loggedIn && !loginError && !configError && (
         <>
           {detailedView && (
             <ClusterDetails
@@ -94,7 +109,7 @@ const ClusterComponent = ({
               setSubmitJobView={setSubmitJobView}
             />
           )}
-          {!detailedView && (
+          {!detailedView && !configError && !loginError && (
             <div className="clusters-list-component" role="tablist">
               {!detailedJobView && !submitJobView && (
                 <div className="clusters-list-overlay" role="tab">
@@ -138,19 +153,6 @@ const ClusterComponent = ({
             </div>
           )}
         </>
-      ) : (
-        (loginError || configError) && (
-          <div className="login-error">
-            <LoginErrorComponent
-              setLoginError={setLoginError}
-              loginError={loginError}
-              configError={configError}
-              setConfigError={setConfigError}
-              settingRegistry={settingRegistry}
-              app = {app}
-            />
-          </div>
-        )
       )}
     </div>
   );
@@ -158,14 +160,20 @@ const ClusterComponent = ({
 
 export class Cluster extends DataprocWidget {
   settingRegistry: ISettingRegistry;
-  app: JupyterLab
-  constructor(settingRegistry: ISettingRegistry, app:JupyterLab, themeManager: IThemeManager) {
+  app: JupyterLab;
+  constructor(
+    settingRegistry: ISettingRegistry,
+    app: JupyterLab,
+    themeManager: IThemeManager
+  ) {
     super(themeManager);
     this.settingRegistry = settingRegistry;
-    this.app =app
+    this.app = app;
   }
-  
+
   renderInternal(): React.JSX.Element {
-return <ClusterComponent settingRegistry = {this.settingRegistry} app = {this.app}/>;
+    return (
+      <ClusterComponent settingRegistry={this.settingRegistry} app={this.app} />
+    );
   }
 }
