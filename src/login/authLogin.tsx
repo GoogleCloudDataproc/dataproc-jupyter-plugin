@@ -104,7 +104,7 @@ const AuthLoginComponent = ({
       )}
       {loginError && (
         <>
-          <div className="login-error">Please login to continue</div>
+          <div className="login-errorParent">Please login to continue</div>
           <div style={{ alignItems: 'center' }}>
             <div
               role="button"
@@ -124,7 +124,7 @@ const AuthLoginComponent = ({
         </>
       )}
       {configError && !loginError && (
-        <div className="login-error">
+        <div className="login-errorParent">
           Please configure gcloud with account, project-id and region
         </div>
       )}

@@ -67,7 +67,7 @@ const BatchesComponent = ({
   return (
     <div className="component-level">
       {(loginError || configError) && (
-        <div className="login-error-parent">
+        <div className="login-errorParent">
           <LoginErrorComponent
             setLoginError={setLoginError}
             loginError={loginError}

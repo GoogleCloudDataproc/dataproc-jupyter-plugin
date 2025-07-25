@@ -314,7 +314,7 @@
   max-height: 90vh;
 }
 
-.login-error-parent{
+.login-errorParent{
   align-items: center;
   justify-content: center;
   display: flex;

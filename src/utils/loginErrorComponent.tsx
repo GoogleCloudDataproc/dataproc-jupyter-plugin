@@ -59,7 +59,7 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
       <>
         <div
           className={
-            fromPage === 'sidepanel' ? 'sidepanel-login-error' : 'login-error-parent'
+            fromPage === 'sidepanel' ? 'sidepanel-login-error' : 'login-errorParent'
           }
         >
           Please configure gcloud with account, project-id and region
@@ -78,7 +78,7 @@ const LoginErrorComponent: React.FC<LoginErrorProps> = ({
       <>
         <div
           className={
-            fromPage === 'sidepanel' ? 'sidepanel-login-error' : 'login-error-parent'
+            fromPage === 'sidepanel' ? 'sidepanel-login-error' : 'login-errorParent'
           }
         >
           Please login to continue
