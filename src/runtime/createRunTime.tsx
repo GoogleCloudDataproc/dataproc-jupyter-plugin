@@ -2237,7 +2237,7 @@ function CreateRunTime({
         </>
       ) : (
         (loginError || configError) && (
-          <div className="login-error">
+          <div className="login-errorParent">
             <LoginErrorComponent
               setLoginError={setLoginError}
               loginError={loginError}

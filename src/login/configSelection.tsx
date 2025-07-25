@@ -124,9 +124,7 @@ function ConfigSelection({
               'dataprocConfigChange',
               `${configStatus} - Configuration updated successfully.`
             );
-            if (fromPage === 'loginError') {
-              window.location.reload();
-            }
+            window.location.reload();
           }
         }
       }
