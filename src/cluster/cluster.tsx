@@ -73,7 +73,7 @@ const ClusterComponent = ({
   return (
     <div className="component-level">
       {(loginError || configError) && (
-        <div className="login-error">
+        <div className="login-error-parent">
           <LoginErrorComponent
             setLoginError={setLoginError}
             loginError={loginError}
