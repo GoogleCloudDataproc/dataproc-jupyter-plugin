@@ -842,6 +842,7 @@ const BigQueryComponent = ({
     setNotebookValue('bigframes');
     setDataprocMetastoreServices('bigframes');
   };
+
   useEffect(() => {
     getActiveNotebook();
     return () => {
@@ -898,7 +899,7 @@ const BigQueryComponent = ({
         isPreview={false}
         getBigQueryProjects={getBigQueryProjects}
       />
-      <>
+      <div>
         <div>
           {isLoading ? (
             <div className="database-loader">
@@ -997,7 +998,7 @@ const BigQueryComponent = ({
             </div>
           )}
         </div>
-      </>
+      </div>
     </div>
   );
 };

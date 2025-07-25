@@ -120,7 +120,7 @@ const DpmsComponent = ({
     Record<string, string>
   >({});
   const [apiMessage, setApiMessage] = useState('');
-
+  
   const getColumnDetails = async (name: string) => {
     await DpmsService.getColumnDetailsAPIService(
       name,

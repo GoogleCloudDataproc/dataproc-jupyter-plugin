@@ -25,7 +25,8 @@ import { ILauncher } from '@jupyterlab/launcher';
 
 const RuntimeTemplateComponent = ({
   app,
-  launcher
+  launcher,
+  themeManager,
 }: {
   app: JupyterLab;
   launcher: ILauncher;
@@ -39,7 +40,7 @@ const RuntimeTemplateComponent = ({
     setSelectedRuntimeClone(undefined);
   });
   return (
-    <div className='component-level'>
+    <div className="component-level">
       {!openCreateTemplate && (
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
@@ -56,8 +57,11 @@ const RuntimeTemplateComponent = ({
 export class RuntimeTemplate extends DataprocWidget {
   app: JupyterLab;
   launcher: ILauncher;
-
-  constructor(app: JupyterLab, launcher: ILauncher, themeManager: IThemeManager) {
+  constructor(
+    app: JupyterLab,
+    launcher: ILauncher,
+    themeManager: IThemeManager,
+  ) {
     super(themeManager);
     this.app = app;
     this.launcher = launcher;
@@ -65,12 +69,12 @@ export class RuntimeTemplate extends DataprocWidget {
 
   renderInternal(): React.JSX.Element {
     return (
-      <div className='component-level'>
-      <RuntimeTemplateComponent
-        app={this.app}
-        launcher={this.launcher}
-        themeManager={this.themeManager}
-      />
+      <div className="component-level">
+        <RuntimeTemplateComponent
+          app={this.app}
+          launcher={this.launcher}
+          themeManager={this.themeManager}
+        />
       </div>
     );
   }

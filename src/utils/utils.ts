@@ -290,19 +290,17 @@ export const checkConfig = async (
 ): Promise<void> => {
   const credentials = await authApi();
   if (credentials) {
-    if (credentials.access_token === '') {
-      localStorage.removeItem('loginState');
-      if (credentials.config_error === 1) {
-        setConfigError(true);
-      }
-      if (credentials.login_error === 1) {
-        setLoginError(true);
-      }
+    if (credentials.config_error === 1) {
+      setConfigError(true);
+    }
+    if (credentials.login_error === 1) {
+      setLoginError(true);
     } else {
       setLoginState(true);
     }
   }
 };
+
 export const statusMessageBatch = (data: { state: string }) => {
   if (data.state === STATUS_DONE) {
     return STATUS_SUCCESS;

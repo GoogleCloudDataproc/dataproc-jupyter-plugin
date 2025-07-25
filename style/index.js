@@ -30,6 +30,4 @@ import './dpms.css';
 import './databaseInfo.css';
 import './paginationView.css';
 import './runtimeTemplate.css';
-import './gcsBucket.css';
-import './notebookScheduler.css';
 import './notebookTemplates.css';
