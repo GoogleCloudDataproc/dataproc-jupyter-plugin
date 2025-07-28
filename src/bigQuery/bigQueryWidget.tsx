@@ -926,7 +926,7 @@ const BigQueryComponent = ({
             </div>
           ) : (
             <div>
-              {!loginError && !configError && (
+              {!loginError && !configError && !apiError && (
                 <div>
                   <div className="search-field">
                     <TextField
