@@ -36,7 +36,8 @@ from traitlets.config import SingletonConfigurable
 from dataproc_jupyter_plugin import credentials, urls
 from dataproc_jupyter_plugin.commons import constants
 from dataproc_jupyter_plugin.controllers import (
-    bigquery
+    bigquery,
+    checkApiEnabled
 )
 from dataproc_jupyter_plugin.controllers.version import (
     LatestVersionController,
