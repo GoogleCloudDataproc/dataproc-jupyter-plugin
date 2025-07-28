@@ -17,14 +17,23 @@
 
 import React, { useEffect, useState } from 'react';
 import JobComponent from '../jobs/jobs';
-import { LOGIN_ERROR_MESSAGE, LOGIN_STATE } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import ClusterDetails from './clusterDetails';
 import ListCluster from './listCluster';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { CircularProgress } from '@mui/material';
+import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { IThemeManager } from '@jupyterlab/apputils';
+import { JupyterLab } from '@jupyterlab/application';
 
-const ClusterComponent = (): React.JSX.Element => {
+const ClusterComponent = ({
+  settingRegistry,
+  app
+}: {
+  settingRegistry: ISettingRegistry;
+  app: JupyterLab;
+}): React.JSX.Element => {
   type Mode = 'Clusters' | 'Serverless' | 'Jobs';
 
   const [detailedJobView, setDetailedJobView] = useState(false);
@@ -51,16 +60,30 @@ const ClusterComponent = (): React.JSX.Element => {
   };
 
   useEffect(() => {
-    checkConfig(setLoggedIn, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
-    if (loggedIn) {
-      setConfigLoading(false);
-    }
-  }, []);
+    const handleConfigCheck = async () => {
+      await checkConfig(setLoggedIn, setConfigError, setLoginError);
+      setLoggedIn(!loginError && !configError);
+      if (!loginError && !configError) {
+        setConfigLoading(false);
+      }
+    };
 
+    handleConfigCheck();
+  }, []);
   return (
     <div className="component-level">
+      {(loginError || configError) && (
+        <div className="login-error">
+          <LoginErrorComponent
+            setLoginError={setLoginError}
+            loginError={loginError}
+            configError={configError}
+            setConfigError={setConfigError}
+            settingRegistry={settingRegistry}
+            app={app}
+          />
+        </div>
+      )}
       {configLoading && !loggedIn && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
@@ -72,7 +95,7 @@ const ClusterComponent = (): React.JSX.Element => {
           Loading Clusters
         </div>
       )}
-      {loggedIn && !loginError && !configError ? (
+      {loggedIn && !loginError && !configError && (
         <>
           {detailedView && (
             <ClusterDetails
@@ -86,7 +109,7 @@ const ClusterComponent = (): React.JSX.Element => {
               setSubmitJobView={setSubmitJobView}
             />
           )}
-          {!detailedView && (
+          {!detailedView && !configError && !loginError && (
             <div className="clusters-list-component" role="tablist">
               {!detailedJobView && !submitJobView && (
                 <div className="clusters-list-overlay" role="tab">
@@ -130,20 +153,27 @@ const ClusterComponent = (): React.JSX.Element => {
             </div>
           )}
         </>
-      ) : (
-        loginError && <div className="login-error"> {LOGIN_ERROR_MESSAGE}</div>
-      )}
-      {configError && (
-        <div className="login-error">
-          Please configure gcloud with account, project-id and region
-        </div>
       )}
     </div>
   );
 };
 
 export class Cluster extends DataprocWidget {
+  settingRegistry: ISettingRegistry;
+  app: JupyterLab;
+  constructor(
+    settingRegistry: ISettingRegistry,
+    app: JupyterLab,
+    themeManager: IThemeManager
+  ) {
+    super(themeManager);
+    this.settingRegistry = settingRegistry;
+    this.app = app;
+  }
+
   renderInternal(): React.JSX.Element {
-    return <ClusterComponent />;
+    return (
+      <ClusterComponent settingRegistry={this.settingRegistry} app={this.app} />
+    );
   }
 }

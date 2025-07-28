@@ -350,7 +350,11 @@ export class BatchService {
                   }
                 );
               }
-              if (responseResult?.error?.code) {
+              if (
+                responseResult?.error?.code &&
+                !credentials?.login_error &&
+                !credentials?.config_error
+              ) {
                 handleApiError(
                   responseResult,
                   credentials,

@@ -122,7 +122,7 @@ const AuthLoginComponent = ({
           </div>
         </>
       )}
-       {configError && (
+       {configError && !loginError && (
         <div className="login-error">
           Please configure gcloud with account, project-id and region
         </div>

@@ -46,7 +46,8 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { handleDebounce } from '../utils/utils';
+import { checkConfig, handleDebounce } from '../utils/utils';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -142,6 +143,9 @@ const BigQueryComponent = ({
   const [apiError, setApiError] = useState(false);
 
   const [height, setHeight] = useState(window.innerHeight - 125);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [configError, setConfigError] = useState(false);
+  const [loginError, setLoginError] = useState(false);
 
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 125;
@@ -844,6 +848,13 @@ const BigQueryComponent = ({
   };
 
   useEffect(() => {
+    checkConfig(setLoggedIn, setConfigError, setLoginError);
+    setLoggedIn(!loginError && !configError);
+    if (loggedIn) {
+      setIsLoading(false);
+    }
+  }, []);
+  useEffect(() => {
     getActiveNotebook();
     return () => {
       setNotebookValue('');
@@ -914,87 +925,86 @@ const BigQueryComponent = ({
               Loading datasets
             </div>
           ) : (
-            <>
-              {!apiError && (
-                <div className="search-field">
-                  <TextField
-                    placeholder="Enter your keyword to search"
-                    type="text"
-                    variant="outlined"
-                    fullWidth
-                    size="small"
-                    onChange={handleSearchTerm}
-                    value={searchTerm}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          {!searchLoading ? (
-                            <iconSearch.react
+            <div>
+              {!loginError && !configError && (
+                <div>
+                  <div className="search-field">
+                    <TextField
+                      placeholder="Enter your keyword to search"
+                      type="text"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      onChange={handleSearchTerm}
+                      value={searchTerm}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            {!searchLoading ? (
+                              <iconSearch.react
+                                tag="div"
+                                className="icon-white logo-alignment-style"
+                              />
+                            ) : (
+                              <CircularProgress
+                                size={16}
+                                aria-label="Loading Spinner"
+                                data-testid="loader"
+                              />
+                            )}
+                          </InputAdornment>
+                        ),
+                        endAdornment: searchTerm && (
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleSearchClear}
+                          >
+                            <iconSearchClear.react
                               tag="div"
-                              className="icon-white logo-alignment-style"
+                              className="icon-white logo-alignment-style search-clear-icon"
                             />
-                          ) : (
-                            <CircularProgress
-                              size={16}
-                              aria-label="Loading Spinner"
-                              data-testid="loader"
-                            />
-                          )}
-                        </InputAdornment>
-                      ),
-                      endAdornment: searchTerm && (
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={handleSearchClear}
+                          </IconButton>
+                        )
+                      }}
+                    />
+                  </div>
+                  <div className="tree-container">
+                    {treeStructureData.length > 0 &&
+                      treeStructureData[0].name !== '' && (
+                        <Tree
+                          className="dataset-tree"
+                          data={treeStructureData}
+                          openByDefault={searchTerm === '' ? false : true}
+                          indent={24}
+                          width={auto}
+                          height={height}
+                          rowHeight={36}
+                          overscanCount={1}
+                          paddingTop={30}
+                          paddingBottom={10}
+                          padding={25}
+                          idAccessor={(node: any) => node.id}
                         >
-                          <iconSearchClear.react
-                            tag="div"
-                            className="icon-white logo-alignment-style search-clear-icon"
-                          />
-                        </IconButton>
-                      )
-                    }}
-                  />
+                          {(props: NodeRendererProps<any>) => (
+                            <Node {...props} onClick={handleNodeClick} />
+                          )}
+                        </Tree>
+                      )}
+                  </div>
                 </div>
               )}
-              <div className="tree-container">
-                {treeStructureData.length > 0 &&
-                  treeStructureData[0].name !== '' && (
-                    <Tree
-                      className="dataset-tree"
-                      data={treeStructureData}
-                      openByDefault={searchTerm === '' ? false : true}
-                      indent={24}
-                      width={auto}
-                      height={height}
-                      rowHeight={36}
-                      overscanCount={1}
-                      paddingTop={30}
-                      paddingBottom={10}
-                      padding={25}
-                      idAccessor={(node: any) => node.id}
-                    >
-                      {(props: NodeRendererProps<any>) => (
-                        <Node {...props} onClick={handleNodeClick} />
-                      )}
-                    </Tree>
-                  )}
-              </div>
-            </>
+            </div>
           )}
-          {apiError && (
-            <div className="api-error-message">
-              <p>
-                Bigquery API is not enabled for this project. Please enable it{' '}
-                <a
-                  href={`https://console.cloud.google.com/apis/library/dataproc.googleapis.com?project=${projectNameInfo[1]}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link-class"
-                >
-                  here
-                </a>
-              </p>
+          {(loginError || configError) && (
+            <div className="sidepanel-login-error">
+              <LoginErrorComponent
+                setLoginError={setLoginError}
+                loginError={loginError}
+                configError={configError}
+                setConfigError={setConfigError}
+                app={app}
+                fromPage="sidepanel"
+              />
             </div>
           )}
         </div>
