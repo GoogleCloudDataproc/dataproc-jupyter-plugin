@@ -740,6 +740,8 @@ export class BatchService {
     setIsloadingNetwork: (value: boolean) => void
   ) => {
     setIsloadingNetwork(true);
+    setSubNetworklist([]);
+    setSubNetworkSelected('');
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
 
