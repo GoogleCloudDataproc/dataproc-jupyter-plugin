@@ -254,10 +254,10 @@ function CreateRunTime({
       setTimeList(timeData);
       updateLogic();
       listClustersAPI();
-      listNetworksAPI();
       listKeyRingsAPI();
       runtimeSharedProject();
     }
+    listNetworksAPI();
   }, []);
 
   useEffect(() => {
