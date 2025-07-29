@@ -40,7 +40,13 @@ import {
   LOGIN_STATE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
+import {
+  authApi,
+  iconDisplay,
+  loggedFetch,
+  checkConfig,
+  handleApiError
+} from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
@@ -69,6 +75,7 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 import LoginErrorComponent from '../utils/loginErrorComponent';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
@@ -96,7 +103,6 @@ const iconHelp = new LabIcon({
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
-
 function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
@@ -213,7 +219,8 @@ function CreateRunTime({
   
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [stagingBucket, setStagingBucket] = useState('');
-
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const runtimeOptions = [
     {
       value: '2.3',
@@ -1028,18 +1035,22 @@ function CreateRunTime({
             if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
             }
-            console.log(responseResult);
+            console.info(responseResult);
           } else {
             const errorResponse = await response.json();
-            console.log(errorResponse);
+            if(errorResponse?.error?.code !== 403) {
             setError({ isOpen: true, message: errorResponse.error.message });
-            Notification.emit(
-              `Failed to create the template : ${errorResponse.error.message}`,
-              'error',
-              {
-                autoClose: 5000
-              }
-            );
+            }
+            if (errorResponse?.error?.code) {
+              handleApiError(
+                errorResponse,
+                credentials,
+                setApiDialogOpen,
+                setEnableLink,
+                () => {},
+                'createRuntimeTemplates'
+              );
+            }
           }
         })
         .catch((err: Error) => {
@@ -2248,6 +2259,20 @@ function CreateRunTime({
             />
           </div>
         )
+      )}
+      {apiDialogOpen && (
+        <ApiEnableDialog
+          open={apiDialogOpen}
+          onCancel={() => setApiDialogOpen(false)}
+          onEnable={() => setApiDialogOpen(false)}
+          enableLink={enableLink}
+        />
+      )}
+
+      {configError && (
+        <div role="alert" className="login-error">
+          Please configure gcloud with account, project-id and region
+        </div>
       )}
     </div>
   );

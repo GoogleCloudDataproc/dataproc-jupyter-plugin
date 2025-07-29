@@ -225,7 +225,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                     displayType: 'link'
                   }
                 ],
-                autoClose: false
+                autoClose: 5000
               });
             }
           }

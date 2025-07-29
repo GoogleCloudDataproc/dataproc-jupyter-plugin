@@ -140,6 +140,7 @@ const BigQueryComponent = ({
 
   const [searchResponse, setSearchResponse] = useState<any>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [apiError, setApiError] = useState(false);
 
   const [height, setHeight] = useState(window.innerHeight - 125);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -305,12 +306,12 @@ const BigQueryComponent = ({
                 name: searchData.linkedResource.split('/')[6],
                 children: searchData.linkedResource.split('/')[8]
                   ? [
-                    {
-                      id: uuidv4(),
-                      name: searchData.linkedResource.split('/')[8],
-                      children: []
-                    }
-                  ]
+                      {
+                        id: uuidv4(),
+                        name: searchData.linkedResource.split('/')[8],
+                        children: []
+                      }
+                    ]
                   : []
               }
             ]
@@ -340,9 +341,9 @@ const BigQueryComponent = ({
                   projectData['children'].forEach((datasetData: any) => {
                     if (
                       datasetData.name ===
-                      searchData.linkedResource.split('/')[6] &&
+                        searchData.linkedResource.split('/')[6] &&
                       projectData.name ===
-                      searchData.linkedResource.split('/')[4]
+                        searchData.linkedResource.split('/')[4]
                     ) {
                       if (searchData.linkedResource.split('/')[8]) {
                         datasetData['children'].push({
@@ -360,12 +361,12 @@ const BigQueryComponent = ({
                     name: searchData.linkedResource.split('/')[6],
                     children: searchData.linkedResource.split('/')[8]
                       ? [
-                        {
-                          id: uuidv4(),
-                          name: searchData.linkedResource.split('/')[8],
-                          children: []
-                        }
-                      ]
+                          {
+                            id: uuidv4(),
+                            name: searchData.linkedResource.split('/')[8],
+                            children: []
+                          }
+                        ]
                       : []
                   });
                 }
@@ -383,12 +384,12 @@ const BigQueryComponent = ({
                   name: searchData.linkedResource.split('/')[6],
                   children: searchData.linkedResource.split('/')[8]
                     ? [
-                      {
-                        id: uuidv4(),
-                        name: searchData.linkedResource.split('/')[8],
-                        children: []
-                      }
-                    ]
+                        {
+                          id: uuidv4(),
+                          name: searchData.linkedResource.split('/')[8],
+                          children: []
+                        }
+                      ]
                     : []
                 }
               ]
@@ -521,10 +522,10 @@ const BigQueryComponent = ({
         setContextMenu(
           contextMenu === null
             ? {
-              mouseX: event.clientX + 2,
-              mouseY: event.clientY - 6,
-            }
-            : null,
+                mouseX: event.clientX + 2,
+                mouseY: event.clientY - 6
+              }
+            : null
         );
       }
     };
@@ -557,9 +558,12 @@ const BigQueryComponent = ({
     ) => {
       try {
         // Create a new notebook
-        const notebookPanel = await app.commands.execute('notebook:create-new', {
-          kernelName: 'python3'
-        });
+        const notebookPanel = await app.commands.execute(
+          'notebook:create-new',
+          {
+            kernelName: 'python3'
+          }
+        );
 
         // Wait briefly for the notebook to initialize
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -567,9 +571,9 @@ const BigQueryComponent = ({
         // Activate the notebook
         app.shell.activateById(notebookPanel.id);
 
-       // Insert packages to first cell in the notebook
+        // Insert packages to first cell in the notebook
         await app.commands.execute('notebook:replace-selection', {
-          text: "#Uncomment if bigquery-magics is not installed \n#!pip install bigquery-magics\n%load_ext bigquery_magics"
+          text: '#Uncomment if bigquery-magics is not installed \n#!pip install bigquery-magics\n%load_ext bigquery_magics'
         });
 
         // Run the first cell and and another cell with select query
@@ -577,7 +581,6 @@ const BigQueryComponent = ({
         await app.commands.execute('notebook:replace-selection', {
           text: `%%bqsql\nselect * from ${fullTableName} limit 20`
         });
-        
       } catch (error) {
         console.error('Error creating notebook:', error);
       }
@@ -772,7 +775,12 @@ const BigQueryComponent = ({
     return (
       <div style={style}>
         {renderNodeIcon()}
-        <div role="treeitem" title={node.data.name} onClick={handleTextClick} onContextMenu={handleContextMenu}>
+        <div
+          role="treeitem"
+          title={node.data.name}
+          onClick={handleTextClick}
+          onContextMenu={handleContextMenu}
+        >
           {node.data.name}
         </div>
         <div title={node?.data?.type} className="dpms-column-type-text">
@@ -789,7 +797,9 @@ const BigQueryComponent = ({
           }
         >
           <MenuItem onClick={handleQueryTable}>Query table</MenuItem>
-          <MenuItem onClick={handleOpenTableDetails}>Open table details</MenuItem>
+          <MenuItem onClick={handleOpenTableDetails}>
+            Open table details
+          </MenuItem>
           <MenuItem onClick={handleCopyId}>Copy table ID</MenuItem>
         </Menu>
       </div>
@@ -797,7 +807,11 @@ const BigQueryComponent = ({
   };
 
   const getBigQueryProjects = async () => {
-    await BigQueryService.getBigQueryProjectsListAPIService(setProjectNameInfo);
+    await BigQueryService.getBigQueryProjectsListAPIService(
+      setProjectNameInfo,
+      setIsLoading,
+      setApiError
+    );
   };
 
   const getBigQueryDatasets = async (projectId: string) => {
@@ -912,7 +926,7 @@ const BigQueryComponent = ({
             </div>
           ) : (
             <div>
-              {!loginError && !configError && (
+              {!loginError && !configError && !apiError && (
                 <div>
                   <div className="search-field">
                     <TextField
