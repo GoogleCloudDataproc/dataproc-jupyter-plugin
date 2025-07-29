@@ -777,6 +777,15 @@ export class BatchService {
                 );
                 setSubNetworklist(transformedServiceList);
                 if (batchInfoResponse === undefined) {
+                  if (transformedServiceList.length > 0) {
+                      setSubNetworkSelected(transformedServiceList[0]);
+                    } else {
+                      const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
+                      Notification.emit(errorMessage, 'error', {
+                        autoClose: 5000
+                      });
+                      DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
+                    }
                   setSubNetworkSelected(transformedServiceList[0]);
                 }
                 setIsloadingNetwork(false);
