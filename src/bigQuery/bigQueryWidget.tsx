@@ -146,6 +146,7 @@ const BigQueryComponent = ({
   const [loggedIn, setLoggedIn] = useState(false);
   const [configError, setConfigError] = useState(false);
   const [loginError, setLoginError] = useState(false);
+  const [projectName, setProjectName] = useState<string[]>([]);
 
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 125;
@@ -810,7 +811,8 @@ const BigQueryComponent = ({
     await BigQueryService.getBigQueryProjectsListAPIService(
       setProjectNameInfo,
       setIsLoading,
-      setApiError
+      setApiError,
+      setProjectName
     );
   };
 
@@ -993,6 +995,24 @@ const BigQueryComponent = ({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {apiError && !loginError && !configError && (
+            <div className="sidepanel-login-error">
+              <p>
+                Bigquery API is not enabled for this project.
+                <br />
+                Please{' '}
+                <a
+                  href={`https://pantheon.corp.google.com/apis/library/bigquery.googleapis.com?project=${projectName}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-class"
+                >
+                  enable
+                </a>
+                <span> it. </span>
+              </p>
             </div>
           )}
           {(loginError || configError) && (
