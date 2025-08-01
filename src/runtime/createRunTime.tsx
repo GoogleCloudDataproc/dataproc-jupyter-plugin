@@ -36,8 +36,7 @@ import {
   AUTO_SCALING_DEFAULT,
   GPU_DEFAULT,
   SECURITY_KEY,
-  KEY_MESSAGE,
-  LOGIN_STATE
+  KEY_MESSAGE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -216,7 +215,6 @@ function CreateRunTime({
   const [manualValidation, setManualValidation] = useState(true);
   const [keyRinglist, setKeyRinglist] = useState<string[]>([]);
   const [keylist, setKeylist] = useState<string[]>([]);
-  
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [stagingBucket, setStagingBucket] = useState('');
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
@@ -241,24 +239,35 @@ function CreateRunTime({
   ];
 
   useEffect(() => {
-    checkConfig(setLoggedIn, setConfigError, setLoginError);
-    setLoggedIn((!loginError && !configError).toString() === LOGIN_STATE);
-    if (loggedIn) {
-      setConfigLoading(false);
-      const timeData = [
-        { key: 'h', value: 'h', text: 'hour' },
-        { key: 'm', value: 'm', text: 'min' },
-        { key: 's', value: 's', text: 'sec' }
-      ];
+    const initializeRuntime = async () => {
+      try {
+        await checkConfig(setLoggedIn, setConfigError, setLoginError);
+        if (loggedIn && !configError && !loginError) {
+          setConfigLoading(false);
+          const timeData = [
+            { key: 'h', value: 'h', text: 'hour' },
+            { key: 'm', value: 'm', text: 'min' },
+            { key: 's', value: 's', text: 'sec' }
+          ];
 
-      setTimeList(timeData);
-      updateLogic();
-      listClustersAPI();
-      listNetworksAPI();
-      listKeyRingsAPI();
-      runtimeSharedProject();
-    }
-  }, []);
+          setTimeList(timeData);
+          updateLogic();
+          listClustersAPI();
+          listNetworksAPI();
+          listKeyRingsAPI();
+          runtimeSharedProject();
+        } else {
+          setConfigLoading(false);
+        }
+      } catch (error) {
+        console.error('Initialization error:', error);
+        setConfigLoading(false);
+        setLoginError(true);
+      }
+    };
+
+    initializeRuntime();
+  }, [loggedIn, configError, loginError]);
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
@@ -378,7 +387,7 @@ function CreateRunTime({
       !gpuDetailChangeDone &&
       (!selectedRuntimeClone ||
         selectedRuntimeClone.runtimeConfig.properties[
-        'spark.dataproc.executor.resource.accelerator.type'
+          'spark.dataproc.executor.resource.accelerator.type'
         ] === 'l4' ||
         gpuDetailUpdated.includes(
           'spark.dataproc.executor.resource.accelerator.type:l4'
@@ -1038,8 +1047,8 @@ function CreateRunTime({
             console.info(responseResult);
           } else {
             const errorResponse = await response.json();
-            if(errorResponse?.error?.code !== 403) {
-            setError({ isOpen: true, message: errorResponse.error.message });
+            if (errorResponse?.error?.code !== 403) {
+              setError({ isOpen: true, message: errorResponse.error.message });
             }
             if (errorResponse?.error?.code) {
               handleApiError(
@@ -1157,54 +1166,54 @@ function CreateRunTime({
               ...(keySelected !== '' &&
                 selectedRadioValue === 'key' &&
                 keySelected !== undefined && {
-                kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
-              }),
+                  kmsKey: `projects/${credentials.project_id}/locations/${credentials.region_id}/keyRings/${keyRingSelected}/cryptoKeys/${keySelected}`
+                }),
               ...(manualKeySelected !== '' &&
                 selectedRadioValue === 'manually' && {
-                kmsKey: manualKeySelected
-              }),
+                  kmsKey: manualKeySelected
+                }),
 
               ...(subNetworkSelected &&
                 selectedNetworkRadio === 'projectNetwork' && {
-                subnetworkUri: subNetworkSelected
-              }),
+                  subnetworkUri: subNetworkSelected
+                }),
               ...(sharedvpcSelected &&
                 selectedNetworkRadio === 'sharedVpc' && {
-                subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
-              }),
+                  subnetworkUri: `projects/${projectInfo}/regions/${credentials.region_id}/subnetworks/${sharedvpcSelected}`
+                }),
               ...(timeSelected === 'h' &&
                 idleTimeSelected && {
-                idleTtl: inputValueHour.toString() + 's'
-              }),
+                  idleTtl: inputValueHour.toString() + 's'
+                }),
               ...(timeSelected === 'm' &&
                 idleTimeSelected && {
-                idleTtl: inputValueMin.toString() + 's'
-              }),
+                  idleTtl: inputValueMin.toString() + 's'
+                }),
               ...(timeSelected === 's' &&
                 idleTimeSelected && {
-                idleTtl: idleTimeSelected + 's'
-              }),
+                  idleTtl: idleTimeSelected + 's'
+                }),
 
               ...(autoSelected === 'h' &&
                 autoTimeSelected && {
-                ttl: inputValueHourAuto.toString() + 's'
-              }),
+                  ttl: inputValueHourAuto.toString() + 's'
+                }),
               ...(autoSelected === 'm' &&
                 autoTimeSelected && {
-                ttl: inputValueMinAuto.toString() + 's'
-              }),
+                  ttl: inputValueMinAuto.toString() + 's'
+                }),
 
               ...(autoSelected === 's' &&
                 autoTimeSelected && {
-                ttl: autoTimeSelected + 's'
-              }),
-              
+                  ttl: autoTimeSelected + 's'
+                }),
+
               ...(selectedAccountRadio === 'userAccount' && {
                 authentication_config: {
                   user_workload_authentication_type: 'END_USER_CREDENTIALS'
                 }
               }),
-            ...(stagingBucket && { stagingBucket: stagingBucket })
+              ...(stagingBucket && { stagingBucket: stagingBucket })
             },
             peripheralsConfig: {
               ...(servicesSelected !== 'None' && {
@@ -1412,8 +1421,9 @@ function CreateRunTime({
 
               <div className="select-text-overlay">
                 <Input
-                  className={`create-runtime-style ${selectedRuntimeClone !== undefined ? ' disable-text' : ''
-                    }`}
+                  className={`create-runtime-style ${
+                    selectedRuntimeClone !== undefined ? ' disable-text' : ''
+                  }`}
                   value={runTimeSelected}
                   onChange={e => handleInputChange(e)}
                   type="text"
