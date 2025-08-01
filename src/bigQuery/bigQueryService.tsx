@@ -403,7 +403,7 @@ export class BigQueryService {
     }
   };
 
-  static getBigQueryProjectsListAPIService = async (
+ static getBigQueryProjectsListAPIService = async (
     setProjectNameInfo: any,
     setIsLoading: (value: boolean) => void,
     setApiError: (value: boolean) => void
@@ -457,12 +457,9 @@ export class BigQueryService {
 
   static checkBigQueryDatasetsAPIService = async () => {
     try {
-      const data: any = await requestAPI(
-        `checkApiEnabled?service_name=${BIGQUERY_SERVICE_NAME}`,
-        {
-          method: 'POST'
-        }
-      );
+      const data: any = await requestAPI( `checkApiEnabled?service_name=${BIGQUERY_SERVICE_NAME}`, {
+        method: 'POST'
+      });
       return data;
     } catch (reason) {
       return reason;
