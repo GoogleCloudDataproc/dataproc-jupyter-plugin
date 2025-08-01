@@ -146,7 +146,7 @@ const BigQueryComponent = ({
   const [loggedIn, setLoggedIn] = useState(false);
   const [configError, setConfigError] = useState(false);
   const [loginError, setLoginError] = useState(false);
-  const [projectName, setProjectName] = useState<string[]>([]);
+  const [projectName, setProjectName] = useState<string>('');
 
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 125;
