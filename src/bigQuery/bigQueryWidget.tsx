@@ -1001,7 +1001,6 @@ const BigQueryComponent = ({
             <div className="sidepanel-login-error">
               <p>
                 Bigquery API is not enabled for this project.
-                <br />
                 Please{' '}
                 <a
                   href={`https://pantheon.corp.google.com/apis/library/bigquery.googleapis.com?project=${projectName}`}
