@@ -744,12 +744,10 @@ export class BatchService {
     setSubNetworkSelected('');
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
-
     if (!credentials) {
       setIsloadingNetwork(false);
       return;
     }
-
     try {
       const response = await loggedFetch(
         `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
@@ -760,9 +758,7 @@ export class BatchService {
           }
         }
       );
-
       const responseResult = await response.json();
-
       if (responseResult?.error?.code) {
         Notification.emit(responseResult.error.message, 'error', {
           autoClose: 5000
@@ -770,7 +766,6 @@ export class BatchService {
         setIsloadingNetwork(false);
         return;
       }
-
       if (!responseResult.items || responseResult.items.length === 0) {
         const errorMessage = `No subnetworks found for network "${subnetwork}"`;
         Notification.emit(errorMessage, 'error', { autoClose: 5000 });
@@ -778,11 +773,9 @@ export class BatchService {
         setIsloadingNetwork(false);
         return;
       }
-
       const networkSubnets = responseResult.items.filter(
         (item: { network: string }) => item.network.split('/')[9] === subnetwork
       );
-
       if (networkSubnets.length === 0) {
         const errorMessage = `No subnetworks found for network "${subnetwork}"`;
         Notification.emit(errorMessage, 'error', { autoClose: 5000 });
@@ -790,18 +783,14 @@ export class BatchService {
         setIsloadingNetwork(false);
         return;
       }
-
       const filteredServices = networkSubnets.filter(
         (item: { privateIpGoogleAccess: boolean }) =>
           item.privateIpGoogleAccess === true
       );
-
       const transformedServiceList = filteredServices.map(
         (data: { name: string }) => data.name
       );
-
       setSubNetworklist(transformedServiceList);
-
       if (batchInfoResponse === undefined) {
         if (transformedServiceList.length > 0) {
           setSubNetworkSelected(transformedServiceList[0]);
@@ -811,18 +800,15 @@ export class BatchService {
           DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
         }
       }
-
       setIsloadingNetwork(false);
     } catch (err) {
       console.error('Error listing subNetworks:', err);
       DataprocLoggingService.log('Error listing subNetworks', LOG_LEVEL.ERROR);
       setIsloadingNetwork(false);
-
       const errorMessage =
         err instanceof Error
           ? `Error listing subNetworks: ${err.message}`
           : 'Error listing subNetworks';
-
       Notification.emit(errorMessage, 'error', { autoClose: 5000 });
     }
   };
