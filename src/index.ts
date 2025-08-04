@@ -321,7 +321,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     async function jupyterVersionCheck() {
       try {
         const notificationMessage =
-          'There is a newer version of Dataproc Plugin available. Would you like to update it?';
+          'There is a new version of Dataproc extension available. Would you like to update the extension?';
         const latestVersion = await requestAPI(
           `jupyterlabVersion?packageName=${PLUGIN_NAME}`,
           {
@@ -413,11 +413,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-      new NotebookButtonExtension(
-        app as JupyterLab,
-        launcher,
-        themeManager
-      )
+      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
     );
 
     const loadDpmsWidget = (value: string) => {
@@ -644,8 +640,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         const content = new RuntimeTemplate(
           app as JupyterLab,
           launcher as ILauncher,
-          themeManager ,
-          settingRegistry         
+          themeManager,
+          settingRegistry
         );
         const widget = new MainAreaWidget<RuntimeTemplate>({ content });
         widget.title.label = 'Runtime template';
