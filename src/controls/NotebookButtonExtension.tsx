@@ -118,7 +118,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     // TODO: we want to use the registry to specify a rank:
     // https://jupyterlab.readthedocs.io/en/stable/extension/extension_points.html#document-widgets
     // but for now we are just inserting at index 1000 to ensure it's at the end.
-    this.panel.toolbar.insertItem(1000, 'session-logs', this.sparkLogsButton);
+    this.panel.toolbar.insertItem(997, 'session-logs', this.sparkLogsButton);
     this.sessionDetailsButton = new ToolbarButton({
       icon: iconSessionLogs,
       onClick: this.onSessionDetailsClick,
@@ -126,7 +126,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       className: 'dark-theme-logs'
     });
     this.panel.toolbar.insertItem(
-      1000,
+      998,
       'session-details',
       this.sessionDetailsButton
     );
@@ -138,7 +138,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       className: 'dark-theme-logs-disable'
     });
     this.panel.toolbar.insertItem(
-      1000,
+      999,
       'session-details-disable',
       this.sessionDetailsButtonDisable
     );
