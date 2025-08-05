@@ -31,7 +31,8 @@ import {
   elapsedTime,
   jobTypeDisplay,
   authenticatedFetch,
-  IAuthCredentials
+  IAuthCredentials,
+  handleApiError
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
@@ -287,6 +288,9 @@ export class BatchService {
     setBatchesList: (value: IBatchesList[]) => void,
     setIsLoading: (value: boolean) => void,
     setLoggedIn: (value: boolean) => void,
+    setApiDialogOpen: (open: boolean) => void,
+    setPollingDisable: (value: boolean) => void,
+    setEnableLink: (link: string) => void,
     nextPageTokens: string[],
     setNextPageTokens: (value: string[]) => void,
     previousBatchesList?: object,
@@ -294,7 +298,10 @@ export class BatchService {
   ) => {
     const credentials = await authApi();
     const { DATAPROC } = await gcpServiceUrls;
-    const pageToken = nextPageTokens.length > 0 ? nextPageTokens[nextPageTokens.length - 1] : '';
+    const pageToken =
+      nextPageTokens.length > 0
+        ? nextPageTokens[nextPageTokens.length - 1]
+        : '';
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
@@ -343,10 +350,19 @@ export class BatchService {
                   }
                 );
               }
-              if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
+              if (
+                responseResult?.error?.code &&
+                !credentials?.login_error &&
+                !credentials?.config_error
+              ) {
+                handleApiError(
+                  responseResult,
+                  credentials,
+                  setApiDialogOpen,
+                  setEnableLink,
+                  setPollingDisable,
+                  'batches'
+                );
               }
               const existingBatchData = previousBatchesList ?? [];
 
@@ -358,7 +374,10 @@ export class BatchService {
               if (shouldUpdatePagination) {
                 if (responseResult?.nextPageToken) {
                   setBatchesList(allBatchesData);
-                  setNextPageTokens([...nextPageTokens, responseResult.nextPageToken]);
+                  setNextPageTokens([
+                    ...nextPageTokens,
+                    responseResult.nextPageToken
+                  ]);
                   setIsLoading(false);
                   setLoggedIn(true);
                 } else {
@@ -367,7 +386,7 @@ export class BatchService {
                   setIsLoading(false);
                   setLoggedIn(true);
                 }
-              } 
+              }
             })
             .catch((e: Error) => {
               console.log(e);
@@ -949,7 +968,9 @@ export class BatchService {
     setCreateBatchView: any,
     setCreateBatch: any,
     setError: any,
-    error: any
+    error: any,
+    setApiDialogOpen: (open: boolean) => void,
+    setEnableLink: (link: string) => void
   ) => {
     const { DATAPROC } = await gcpServiceUrls;
     loggedFetch(
@@ -983,7 +1004,20 @@ export class BatchService {
           );
         } else {
           const errorResponse = await response.json();
-          setError({ isOpen: true, message: errorResponse.error.message });
+          if (errorResponse?.error?.code !== 403) {
+            setError({ isOpen: true, message: errorResponse.error.message });
+          }
+          if (errorResponse?.error?.code === 403) {
+            handleApiError(
+              errorResponse,
+              credentials,
+              setApiDialogOpen,
+              setEnableLink,
+              () => {},
+
+              'batches'
+            );
+          }
           console.error('Failed to submit batch, API response:', errorResponse);
         }
       })

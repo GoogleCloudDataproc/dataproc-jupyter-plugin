@@ -46,7 +46,8 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
-import { handleDebounce } from '../utils/utils';
+import { checkConfig, handleDebounce } from '../utils/utils';
+import LoginErrorComponent from '../utils/loginErrorComponent';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -139,8 +140,13 @@ const BigQueryComponent = ({
 
   const [searchResponse, setSearchResponse] = useState<any>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [apiError, setApiError] = useState(false);
 
   const [height, setHeight] = useState(window.innerHeight - 125);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [configError, setConfigError] = useState(false);
+  const [loginError, setLoginError] = useState(false);
+  const [projectName, setProjectName] = useState<string>('');
 
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 125;
@@ -802,7 +808,12 @@ const BigQueryComponent = ({
   };
 
   const getBigQueryProjects = async () => {
-    await BigQueryService.getBigQueryProjectsListAPIService(setProjectNameInfo);
+    await BigQueryService.getBigQueryProjectsListAPIService(
+      setProjectNameInfo,
+      setIsLoading,
+      setApiError,
+      setProjectName
+    );
   };
 
   const getBigQueryDatasets = async (projectId: string) => {
@@ -838,6 +849,13 @@ const BigQueryComponent = ({
     setDataprocMetastoreServices('bigframes');
   };
 
+  useEffect(() => {
+    checkConfig(setLoggedIn, setConfigError, setLoginError);
+    setLoggedIn(!loginError && !configError);
+    if (loggedIn) {
+      setIsLoading(false);
+    }
+  }, []);
   useEffect(() => {
     getActiveNotebook();
     return () => {
@@ -910,71 +928,102 @@ const BigQueryComponent = ({
             </div>
           ) : (
             <div>
-              <div>
-                <div className="search-field">
-                  <TextField
-                    placeholder="Enter your keyword to search"
-                    type="text"
-                    variant="outlined"
-                    fullWidth
-                    size="small"
-                    onChange={handleSearchTerm}
-                    value={searchTerm}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          {!searchLoading ? (
-                            <iconSearch.react
+              {!loginError && !configError && !apiError && (
+                <div>
+                  <div className="search-field">
+                    <TextField
+                      placeholder="Enter your keyword to search"
+                      type="text"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      onChange={handleSearchTerm}
+                      value={searchTerm}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            {!searchLoading ? (
+                              <iconSearch.react
+                                tag="div"
+                                className="icon-white logo-alignment-style"
+                              />
+                            ) : (
+                              <CircularProgress
+                                size={16}
+                                aria-label="Loading Spinner"
+                                data-testid="loader"
+                              />
+                            )}
+                          </InputAdornment>
+                        ),
+                        endAdornment: searchTerm && (
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleSearchClear}
+                          >
+                            <iconSearchClear.react
                               tag="div"
-                              className="icon-white logo-alignment-style"
+                              className="icon-white logo-alignment-style search-clear-icon"
                             />
-                          ) : (
-                            <CircularProgress
-                              size={16}
-                              aria-label="Loading Spinner"
-                              data-testid="loader"
-                            />
-                          )}
-                        </InputAdornment>
-                      ),
-                      endAdornment: searchTerm && (
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={handleSearchClear}
+                          </IconButton>
+                        )
+                      }}
+                    />
+                  </div>
+                  <div className="tree-container">
+                    {treeStructureData.length > 0 &&
+                      treeStructureData[0].name !== '' && (
+                        <Tree
+                          className="dataset-tree"
+                          data={treeStructureData}
+                          openByDefault={searchTerm === '' ? false : true}
+                          indent={24}
+                          width={auto}
+                          height={height}
+                          rowHeight={36}
+                          overscanCount={1}
+                          paddingTop={30}
+                          paddingBottom={10}
+                          padding={25}
+                          idAccessor={(node: any) => node.id}
                         >
-                          <iconSearchClear.react
-                            tag="div"
-                            className="icon-white logo-alignment-style search-clear-icon"
-                          />
-                        </IconButton>
-                      )
-                    }}
-                  />
+                          {(props: NodeRendererProps<any>) => (
+                            <Node {...props} onClick={handleNodeClick} />
+                          )}
+                        </Tree>
+                      )}
+                  </div>
                 </div>
-                <div className="tree-container">
-                  {treeStructureData.length > 0 &&
-                    treeStructureData[0].name !== '' && (
-                      <Tree
-                        className="dataset-tree"
-                        data={treeStructureData}
-                        openByDefault={searchTerm === '' ? false : true}
-                        indent={24}
-                        width={auto}
-                        height={height}
-                        rowHeight={36}
-                        overscanCount={1}
-                        paddingTop={30}
-                        paddingBottom={10}
-                        padding={25}
-                        idAccessor={(node: any) => node.id}
-                      >
-                        {(props: NodeRendererProps<any>) => (
-                          <Node {...props} onClick={handleNodeClick} />
-                        )}
-                      </Tree>
-                    )}
-                </div>
-              </div>
+              )}
+            </div>
+          )}
+          {apiError && !loginError && !configError && (
+            <div className="sidepanel-login-error">
+              <p>
+                Bigquery API is not enabled for this project.
+                Please{' '}
+                <a
+                  href={`https://pantheon.corp.google.com/apis/library/bigquery.googleapis.com?project=${projectName}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-class"
+                >
+                  enable
+                </a>
+                <span> it. </span>
+              </p>
+            </div>
+          )}
+          {(loginError || configError) && (
+            <div className="sidepanel-login-error">
+              <LoginErrorComponent
+                setLoginError={setLoginError}
+                loginError={loginError}
+                configError={configError}
+                setConfigError={setConfigError}
+                app={app}
+                fromPage="sidepanel"
+              />
             </div>
           )}
         </div>

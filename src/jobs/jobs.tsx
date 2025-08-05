@@ -48,6 +48,7 @@ import { JobService } from './jobServices';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import { CircularProgress } from '@mui/material';
+import ApiEnableDialog from '../utils/apiErrorPopup';
 
 const iconFilter = new LabIcon({
   name: 'launcher:filter-icon',
@@ -107,7 +108,8 @@ function JobComponent({
   const [selectedJobId, setSelectedJobId] = useState('');
 
   const [clusterResponse, setClusterResponse] = useState([]);
-
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const pollingJobs = async (
@@ -195,14 +197,17 @@ function JobComponent({
   };
 
   const listJobsAPI = async () => {
-    controller.current.abort(); 
-    controller.current = new AbortController(); 
+    controller.current.abort();
+    controller.current = new AbortController();
     await JobService.listJobsAPIService(
       clusterSelected,
       setIsLoading,
       setjobsList,
       renderActions,
-      controller.current.signal 
+      controller.current.signal,
+      setApiDialogOpen,
+      setPollingDisable,
+      setEnableLink
     );
   };
 
@@ -283,7 +288,6 @@ function JobComponent({
       </div>
     );
   };
-
   useEffect(() => {
     if (!pollingDisable) {
       listJobsAPI();
@@ -296,7 +300,7 @@ function JobComponent({
       }
     };
   }, [pollingDisable, detailedJobView]);
-  
+
   useEffect(() => {
     if (!detailedJobView && !isLoading) {
       pollingJobs(listJobsAPI, pollingDisable);
@@ -505,7 +509,7 @@ function JobComponent({
               {isLoading && (
                 <div className="spin-loader-main">
                   <CircularProgress
-                    className = "spin-loader-custom-style"
+                    className="spin-loader-custom-style"
                     size={20}
                     aria-label="Loading Spinner"
                     data-testid="loader"
@@ -515,6 +519,14 @@ function JobComponent({
               )}
               {!isLoading && (
                 <div className="no-data-style">No rows to display</div>
+              )}
+              {apiDialogOpen && (
+                <ApiEnableDialog
+                  open={apiDialogOpen}
+                  onCancel={() => setApiDialogOpen(false)}
+                  onEnable={() => setApiDialogOpen(false)}
+                  enableLink={enableLink}
+                />
               )}
             </div>
           )}

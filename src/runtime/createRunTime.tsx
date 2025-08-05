@@ -27,7 +27,6 @@ import {
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
-  LOGIN_STATE,
   SHARED_VPC,
   SERVICE_ACCOUNT,
   SPARK_GPU_INFO_URL,
@@ -37,11 +36,16 @@ import {
   AUTO_SCALING_DEFAULT,
   GPU_DEFAULT,
   SECURITY_KEY,
-  KEY_MESSAGE,
-  LOGIN_ERROR_MESSAGE
+  KEY_MESSAGE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
-import { authApi, iconDisplay, loggedFetch, checkConfig } from '../utils/utils';
+import {
+  authApi,
+  iconDisplay,
+  loggedFetch,
+  checkConfig,
+  handleApiError
+} from '../utils/utils';
 import ErrorPopup from '../utils/errorPopup';
 import errorIcon from '../../style/icons/error_icon.svg';
 import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
@@ -70,6 +74,9 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
 import SparkProperties from './sparkProperties';
+import ApiEnableDialog from '../utils/apiErrorPopup';
+import LoginErrorComponent from '../utils/loginErrorComponent';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 const iconLeftArrow = new LabIcon({
   name: 'launcher:left-arrow-icon',
@@ -95,19 +102,20 @@ const iconHelp = new LabIcon({
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
-
 function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
   launcher,
   app,
-  fromPage
+  fromPage,
+  settingRegistry
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
   launcher: ILauncher;
   app: JupyterLab;
   fromPage: string;
+  settingRegistry: ISettingRegistry;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -209,7 +217,8 @@ function CreateRunTime({
   const [keylist, setKeylist] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [stagingBucket, setStagingBucket] = useState('');
-
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [enableLink, setEnableLink] = useState('');
   const runtimeOptions = [
     {
       value: '2.3',
@@ -230,25 +239,35 @@ function CreateRunTime({
   ];
 
   useEffect(() => {
-    checkConfig(setLoggedIn, setConfigError, setLoginError);
-    const localstorageGetInformation = localStorage.getItem('loginState');
-    setLoggedIn(localstorageGetInformation === LOGIN_STATE);
-    if (loggedIn) {
-      setConfigLoading(false);
-    }
-    const timeData = [
-      { key: 'h', value: 'h', text: 'hour' },
-      { key: 'm', value: 'm', text: 'min' },
-      { key: 's', value: 's', text: 'sec' }
-    ];
+    const initializeRuntime = async () => {
+      try {
+        await checkConfig(setLoggedIn, setConfigError, setLoginError);
+        if (loggedIn && !configError && !loginError) {
+          setConfigLoading(false);
+          const timeData = [
+            { key: 'h', value: 'h', text: 'hour' },
+            { key: 'm', value: 'm', text: 'min' },
+            { key: 's', value: 's', text: 'sec' }
+          ];
 
-    setTimeList(timeData);
-    updateLogic();
-    listClustersAPI();
-    listNetworksAPI();
-    listKeyRingsAPI();
-    runtimeSharedProject();
-  }, []);
+          setTimeList(timeData);
+          updateLogic();
+          listClustersAPI();
+          listNetworksAPI();
+          listKeyRingsAPI();
+          runtimeSharedProject();
+        } else {
+          setConfigLoading(false);
+        }
+      } catch (error) {
+        console.error('Initialization error:', error);
+        setConfigLoading(false);
+        setLoginError(true);
+      }
+    };
+
+    initializeRuntime();
+  }, [loggedIn, configError, loginError]);
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
@@ -270,8 +289,10 @@ function CreateRunTime({
   ]);
 
   useEffect(() => {
-    if (networkSelected !== '') {
-      listSubNetworksAPI(networkSelected);
+    if (loggedIn && !configError && !loginError) {
+      if (networkSelected !== '') {
+        listSubNetworksAPI(networkSelected);
+      }
     }
   }, [networkSelected]);
 
@@ -397,8 +418,10 @@ function CreateRunTime({
   };
 
   useEffect(() => {
-    if (keyRingSelected !== '') {
-      listKeysAPI(keyRingSelected);
+    if (loggedIn && !configError && !loginError) {
+      if (keyRingSelected !== '') {
+        listKeysAPI(keyRingSelected);
+      }
     }
   }, [keyRingSelected]);
 
@@ -1021,18 +1044,22 @@ function CreateRunTime({
             if (fromPage === 'launcher') {
               app.shell.activeWidget?.close();
             }
-            console.log(responseResult);
+            console.info(responseResult);
           } else {
             const errorResponse = await response.json();
-            console.log(errorResponse);
-            setError({ isOpen: true, message: errorResponse.error.message });
-            Notification.emit(
-              `Failed to create the template : ${errorResponse.error.message}`,
-              'error',
-              {
-                autoClose: 5000
-              }
-            );
+            if (errorResponse?.error?.code !== 403) {
+              setError({ isOpen: true, message: errorResponse.error.message });
+            }
+            if (errorResponse?.error?.code) {
+              handleApiError(
+                errorResponse,
+                credentials,
+                setApiDialogOpen,
+                setEnableLink,
+                () => {},
+                'createRuntimeTemplates'
+              );
+            }
           }
         })
         .catch((err: Error) => {
@@ -2230,12 +2257,28 @@ function CreateRunTime({
           </div>
         </>
       ) : (
-        loginError && (
-          <div role="alert" className="login-error">
-            {LOGIN_ERROR_MESSAGE}
+        (loginError || configError) && (
+          <div className="login-error-parent">
+            <LoginErrorComponent
+              setLoginError={setLoginError}
+              loginError={loginError}
+              configError={configError}
+              setConfigError={setConfigError}
+              settingRegistry={settingRegistry}
+              app={app}
+            />
           </div>
         )
       )}
+      {apiDialogOpen && (
+        <ApiEnableDialog
+          open={apiDialogOpen}
+          onCancel={() => setApiDialogOpen(false)}
+          onEnable={() => setApiDialogOpen(false)}
+          enableLink={enableLink}
+        />
+      )}
+
       {configError && (
         <div role="alert" className="login-error">
           Please configure gcloud with account, project-id and region

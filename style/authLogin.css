@@ -7,6 +7,12 @@
   margin-top: -20px;
   cursor: pointer;
 }
+.sidepanel-signin-google-icon {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+}
 
 .signin-google-icon:disabled {
   opacity: 0.5;
@@ -306,4 +312,313 @@
   font-weight: 500;
   font-size: 20px;
   color: var(--jp-ui-font-color0);
+}
+
+.settings-overlay {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding-bottom: 10px;
+  padding-left: 5px;
+}
+
+.settings-text {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 22px;
+  color: var(--jp-ui-font-color0);
+  padding-left: 10px;
+  padding-bottom: 5px;
+}
+
+.settings-separator {
+  border-bottom: 1px solid var(--jp-layout-color3);
+  width: 100%;
+  height: 0px;
+  margin-left: 5px;
+}
+
+.config-form {
+  display: flex;
+  flex-direction: column;
+  padding-top: 30px;
+  padding-left: 5px;
+  padding-right: 20px;
+  width: 100%;
+  width: 630px;
+}
+
+.project-overlay {
+  position: relative;
+}
+
+.region-overlay {
+  position: relative;
+  margin-top: 50px;
+}
+
+.project-text {
+  height: 13px;
+  font-style: normal;
+  font-weight: 1000;
+  font-size: 12px;
+  line-height: 13px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color0);
+  position: absolute;
+  background-color: var(--jp-layout-color0);
+  bottom: 32px;
+  padding-left: 2px;
+  left: 7px;
+}
+
+.project-select {
+  box-sizing: border-box;
+  background: var(--jp-layout-color0) !important;
+  border: 1px solid var(--jp-ui-font-color2) !important;
+  display: block !important;
+  height: 36px;
+  width: 100%;
+  border-radius: 4px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none;
+  position: unset !important;
+  transform: none !important;
+}
+
+.region-text {
+  height: 13px;
+  font-style: normal;
+  font-weight: 1000;
+  font-size: 12px;
+  line-height: 13px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color0);
+  position: absolute;
+  background-color: var(--jp-layout-color0);
+  padding-right: 4px;
+  bottom: 34px;
+  padding-left: 2px;
+  left: 7px;
+  z-index: 3;
+}
+
+.project-region-select {
+  box-sizing: border-box;
+  background: var(--jp-layout-color0) !important;
+  display: block !important;
+  min-height: 36px;
+  width: 100%;
+  border-radius: 4px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none;
+  transform: none !important;
+}
+
+.region-loader {
+  margin-left: 1px;
+  margin-top: 160px;
+}
+
+.save-overlay {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 32px 0px 0px;
+  gap: 12px;
+  height: 64px;
+}
+
+.save-loader {
+  margin-top: 5px;
+}
+
+.user-info-card {
+  box-sizing: border-box;
+  width: 344px;
+  height: fit-content;
+  background: var(--jp-layout-color0);
+  border: 1px solid #b0b0b0;
+  border-radius: 27px;
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  margin-right: 25px;
+}
+
+.user-image-overlay {
+  width: 63px;
+  height: 62px;
+  border-radius: 33.5px;
+}
+
+.user-image {
+  height: 62px;
+  border-radius: 33.5px;
+}
+
+.config-overlay {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 25px;
+  justify-content: space-between;
+}
+
+.google-header {
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  display: flex;
+  font-size: 12px;
+}
+
+.separator {
+  width: 100%;
+  height: 0;
+  border-bottom: 1px solid var(--jp-layout-color3);
+}
+
+.user-overlay {
+  display: flex;
+  padding: 30px 30px;
+}
+
+.google-footer {
+  width: 344px;
+  height: 0px;
+  border: 1px solid #e1e3e1;
+  text-align: center;
+}
+
+.user-details {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--jp-ui-font-color0);
+  padding-left: 30px;
+  padding-top: 20px;
+  justify-content: center;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+
+.add-account {
+  display: flex;
+  justify-content: center;
+  height: 32px;
+}
+
+.account-icon {
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.account-dropdown {
+  width: 250px;
+  height: 32px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 32px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  text-transform: uppercase;
+  color: #1f1f1f;
+  border: none;
+}
+
+.footer-text {
+  padding-top: 15px;
+}
+
+.privacy-terms {
+  margin: 0 5px;
+}
+
+.ui.selection.active.dropdown .menu {
+  border: none !important;
+}
+
+.ui.dropdown .menu .selected.item,
+.ui.dropdown.selected {
+  background: var(--jp-layout-color0) !important;
+  color: var(--jp-brand-color0) !important;
+}
+
+.dataproc-settings-header {
+  padding-bottom: 15px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--jp-ui-font-color0);
+}
+
+.runtime-title-section {
+  display: flex;
+  justify-content: space-between;
+  color: var(--jp-ui-font-color0);
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  margin-right: 20px;
+  line-height: 28px;
+  border-bottom: 1px solid var(--jp-layout-color3);
+}
+
+.settings-component {
+  margin-left: 40px;
+  font-family: 'Roboto';
+}
+
+.expand-icon {
+  cursor: pointer;
+}
+
+.runtime-title-part {
+  margin-bottom: 5px;
+}
+.footer-divider {
+  margin: 0 5px;
+}
+
+.feedback-container {
+  color: #3367d6 !important;
+  font-weight: bold;
+}
+
+.feedback-version-container {
+  margin-right: 25px;
+}
+
+.project-header,
+.bigquery-region-header {
+  padding-top: 40px;
+  padding-left: 5px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--jp-ui-font-color0);
+}
+
+.config-button {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 10px 0;
+ width: fit-content;
 }

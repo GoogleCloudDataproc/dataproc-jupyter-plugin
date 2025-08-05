@@ -20,7 +20,6 @@ import sys
 import tempfile
 
 
-import tornado
 from google.cloud.jupyter_config.config import (
     async_run_gcloud_subcommand,
     clear_gcloud_cache,
@@ -36,10 +35,14 @@ from traitlets.config import SingletonConfigurable
 
 from dataproc_jupyter_plugin import credentials, urls
 from dataproc_jupyter_plugin.commons import constants
-from dataproc_jupyter_plugin.controllers import bigquery
+from dataproc_jupyter_plugin.controllers import (
+    bigquery,
+    checkApiEnabled
+)
 from dataproc_jupyter_plugin.controllers.version import (
     LatestVersionController,
     UpdatePackage,
+    tornado
 )
 
 _region_not_set_error = """GCP region not set in gcloud.
@@ -240,11 +243,10 @@ def setup_handlers(web_app):
         "bigQueryPreview": bigquery.PreviewController,
         "bigQueryProjectsList": bigquery.ProjectsController,
         "bigQuerySearch": bigquery.SearchController,
-        "bigQueryApiEnabled": bigquery.CheckApiController,
         "checkResourceManager": ResourceManagerHandler,
         "jupyterlabVersion": LatestVersionController,
         "updatePlugin": UpdatePackage,
-        "DataprocApiEnabled": bigquery.CheckDataprocApiController,
+        "checkApiEnabled": checkApiEnabled.CheckApiController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

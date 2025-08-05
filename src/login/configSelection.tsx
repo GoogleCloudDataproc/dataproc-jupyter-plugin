@@ -57,9 +57,10 @@ const iconExpandMore = new LabIcon({
 interface IConfigSelectionProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
-  app: JupyterLab;
-  launcher: ILauncher;
-  settingRegistry: ISettingRegistry;
+  app?: JupyterLab;
+  launcher?: ILauncher;
+  settingRegistry?: ISettingRegistry;
+  fromPage?: string;
 }
 
 function ConfigSelection({
@@ -68,6 +69,7 @@ function ConfigSelection({
   app,
   launcher,
   settingRegistry,
+  fromPage
 }: IConfigSelectionProps) {
   const IconGoogleCloud = new LabIcon({
     name: 'launcher:google_cloud_icon',
@@ -107,8 +109,8 @@ function ConfigSelection({
             });
           } else {
             if (bigQueryFeatureEnable) {
-              const settings = await settingRegistry.load(PLUGIN_ID);
-              settings.set('bqRegion', bigQueryRegion);
+              const settings = await settingRegistry?.load(PLUGIN_ID);
+              settings?.set('bqRegion', bigQueryRegion);
             }
             Notification.emit(
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
@@ -122,6 +124,7 @@ function ConfigSelection({
               'dataprocConfigChange',
               `${configStatus} - Configuration updated successfully.`
             );
+            window.location.reload();
           }
         }
       }
@@ -159,7 +162,11 @@ function ConfigSelection({
           response
             .json()
             .then((responseResult: IUserInfoResponse) => {
-              if (responseResult?.error?.code) {
+              if (
+                responseResult?.error?.code &&
+                !credentials?.login_error &&
+                !credentials?.config_error
+              ) {
                 Notification.emit(responseResult?.error?.message, 'error', {
                   autoClose: 5000
                 });
@@ -205,8 +212,8 @@ function ConfigSelection({
   };
 
   const handleSettingsRegistry = async () => {
-  const settings = await settingRegistry.load(PLUGIN_ID);
-    setBigQueryRegion(settings.get('bqRegion')['composite']);
+    const settings = await settingRegistry?.load(PLUGIN_ID);
+    setBigQueryRegion(settings?.get('bqRegion')['composite']);
   };
 
   const handleBigQueryFeature = async () => {
@@ -226,12 +233,25 @@ function ConfigSelection({
     authApi().then(credentials => {
       displayUserInfo(credentials);
       setSelectedRuntimeClone(undefined);
-     if (credentials && credentials.project_id && credentials.region_id) {
-        setProjectId(credentials.project_id);
-        setRegion(credentials.region_id);
-        setConfigError(false);
-      } else {
-        setConfigError(true);
+      if (credentials) {
+        // Set project ID if it exists and is not empty
+        if (
+          credentials.project_id &&
+          Object.keys(credentials.project_id).length > 0
+        ) {
+          setProjectId(credentials.project_id);
+        }
+
+        // Set region if it exists and is not empty
+        if (
+          credentials.region_id &&
+          Object.keys(credentials.region_id).length > 0
+        ) {
+          setRegion(credentials.region_id);
+        }
+
+        // Set config error based on error flags
+        setConfigError(!!(credentials.config_error || credentials.login_error));
       }
     });
   }, []);
@@ -247,13 +267,18 @@ function ConfigSelection({
           />
           Loading Config Setup
         </div>
-      ) : !configError && openCreateTemplate ? (
+      ) : !configError &&
+        openCreateTemplate &&
+        launcher &&
+        app &&
+        settingRegistry ? (
         <CreateRuntime
           setOpenCreateTemplate={setOpenCreateTemplate}
           selectedRuntimeClone={selectedRuntimeClone}
           launcher={launcher}
           app={app}
           fromPage="config"
+          settingRegistry={settingRegistry}
         />
       ) : (
         <div className="settings-component">
@@ -380,29 +405,35 @@ function ConfigSelection({
             </div>
           </div>
           <div>
-       <div className="dataproc-settings-header">Dataproc Settings </div>
-            <div className="runtime-title-section">
-              <div className="runtime-title-part">
-                Serverless Runtime Templates
-              </div>
-              <div
-                className="expand-icon"
-                onClick={() => handleRuntimeExpand()}
-              >
-                {expandRuntimeTemplate ? (
-                  <iconExpandLess.react
-                    tag="div"
-                    className="logo-alignment-style"
-                  />
-                ) : (
-                  <iconExpandMore.react
-                    tag="div"
-                    className="logo-alignment-style"
-                  />
-                )}
-              </div>
-            </div>
-            {expandRuntimeTemplate && (
+            {!configError && (
+              <>
+                <div className="dataproc-settings-header">
+                  Dataproc Settings{' '}
+                </div>
+                <div className="runtime-title-section">
+                  <div className="runtime-title-part">
+                    Serverless Runtime Templates
+                  </div>
+                  <div
+                    className="expand-icon"
+                    onClick={() => handleRuntimeExpand()}
+                  >
+                    {expandRuntimeTemplate ? (
+                      <iconExpandLess.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                    ) : (
+                      <iconExpandMore.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+            {expandRuntimeTemplate && !configError && (
               <ListRuntimeTemplates
                 openCreateTemplate={openCreateTemplate}
                 setOpenCreateTemplate={setOpenCreateTemplate}
