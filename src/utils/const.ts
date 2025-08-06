@@ -264,3 +264,7 @@ export const DATAPROC_SERVICE_NAME = 'dataproc.googleapis.com';
 export const BIGQUERY_SERVICE_NAME = 'bigquery.googleapis.com';
 
 export const PAGE_SIZE = 50;
+
+export const SESSION_LOGS_BUTTON_RANK = 997;
+export const SESSION_DETAILS_BUTTON_RANK = 998;
+export const SESSION_DETAILS_DISABLE_BUTTON_RANK = 999;

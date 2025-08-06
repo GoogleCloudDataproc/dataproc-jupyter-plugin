@@ -26,7 +26,7 @@ import { ToolbarButton, ISessionContext } from '@jupyterlab/apputils';
 import { MainAreaWidget, IThemeManager } from '@jupyterlab/apputils';
 import { KernelAPI } from '@jupyterlab/services';
 import { authenticatedFetch } from '../utils/utils';
-import { HTTP_METHOD, SPARK_HISTORY_SERVER } from '../utils/const';
+import { HTTP_METHOD, SESSION_DETAILS_BUTTON_RANK, SESSION_DETAILS_DISABLE_BUTTON_RANK, SESSION_LOGS_BUTTON_RANK, SPARK_HISTORY_SERVER } from '../utils/const';
 import { SessionTemplate } from '../sessions/sessionTemplate';
 import serverlessIcon from '../../style/icons/serverless_icon.svg';
 
@@ -118,7 +118,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
     // TODO: we want to use the registry to specify a rank:
     // https://jupyterlab.readthedocs.io/en/stable/extension/extension_points.html#document-widgets
     // but for now we are just inserting at index 1000 to ensure it's at the end.
-    this.panel.toolbar.insertItem(997, 'session-logs', this.sparkLogsButton);
+    this.panel.toolbar.insertItem(SESSION_LOGS_BUTTON_RANK, 'session-logs', this.sparkLogsButton);
     this.sessionDetailsButton = new ToolbarButton({
       icon: iconSessionLogs,
       onClick: this.onSessionDetailsClick,
@@ -126,7 +126,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       className: 'dark-theme-logs'
     });
     this.panel.toolbar.insertItem(
-      998,
+      SESSION_DETAILS_BUTTON_RANK,
       'session-details',
       this.sessionDetailsButton
     );
@@ -138,7 +138,7 @@ class NotebookButtonExtensionPoint implements IDisposable {
       className: 'dark-theme-logs-disable'
     });
     this.panel.toolbar.insertItem(
-      999,
+      SESSION_DETAILS_DISABLE_BUTTON_RANK,
       'session-details-disable',
       this.sessionDetailsButtonDisable
     );
