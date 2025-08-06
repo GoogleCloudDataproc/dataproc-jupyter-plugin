@@ -795,7 +795,7 @@ export class BatchService {
         if (transformedServiceList.length > 0) {
           setSubNetworkSelected(transformedServiceList[0]);
         } else {
-          const errorMessage = `There are subnetworks for "${subnetwork}" but none have Google Private Access enabled. Please enable Private Google Access for at least one subnetwork.`;
+          const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
           Notification.emit(errorMessage, 'error', { autoClose: 5000 });
           DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
         }

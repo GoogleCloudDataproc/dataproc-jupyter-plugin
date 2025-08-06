@@ -816,7 +816,6 @@ function CreateRunTime({
     if (data !== null) {
       setNetworkSelected(data!.toString());
       setSubNetworkSelected(defaultValue);
-      await listSubNetworksAPI(data!.toString());
       await handleProjectIdChange(projectId, data!.toString());
     }
   };
