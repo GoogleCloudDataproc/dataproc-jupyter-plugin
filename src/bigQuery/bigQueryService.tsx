@@ -19,6 +19,7 @@ import { Notification } from '@jupyterlab/apputils';
 import { requestAPI } from '../handler/handler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BIGQUERY_SERVICE_NAME, PLUGIN_ID } from '../utils/const';
+import { authApi } from '../utils/utils';
 
 interface IPreviewColumn {
   Header: string;
@@ -406,10 +407,14 @@ export class BigQueryService {
   static getBigQueryProjectsListAPIService = async (
     setProjectNameInfo: any,
     setIsLoading: (value: boolean) => void,
-    setApiError: (value: boolean) => void
+    setApiError: (value: boolean) => void,
+    setProjectName: any
   ) => {
     try {
-      const result: any = BigQueryService.checkBigQueryDatasetsAPIService();
+      const credentials = await authApi();
+      if (credentials) setProjectName(credentials.project_id || '');
+      const result: any =
+        await BigQueryService.checkBigQueryDatasetsAPIService();
       if (result?.is_enabled) {
         const data: any = await requestAPI(`bigQueryProjectsList`);
         setProjectNameInfo(data);

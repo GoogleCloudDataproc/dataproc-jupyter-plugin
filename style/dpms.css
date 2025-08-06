@@ -135,15 +135,16 @@
   margin-left: 5px;
 }
 
-.dataset-tree
-  div[role='treeitem'][aria-level='4']
-> div:first-child{
+.dataset-tree div[role='treeitem'][aria-level='4'] > div:first-child {
   display: flex;
   align-items: center;
   gap: 5px;
 }
- 
-.dataset-tree div[role='treeitem'][aria-level='4'] > div > div:nth-last-child(2){
+
+.dataset-tree
+  div[role='treeitem'][aria-level='4']
+  > div
+  > div:nth-last-child(2) {
   width: 50%;
 }
 
@@ -204,8 +205,8 @@
   white-space: nowrap;
 }
 .link-class {
-  color: #1a73e8;       
-  text-decoration: underline;
+  color: #1a73e8 !important;
+  text-decoration: underline !important;
   font-weight: 500;
   cursor: pointer;
 }
