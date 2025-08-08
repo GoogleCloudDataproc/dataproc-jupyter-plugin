@@ -733,7 +733,7 @@ export class BatchService {
   };
 
   static listSubNetworksAPIService = async (
-    subnetwork: string,
+    network: string,
     setSubNetworklist: (value: string[]) => void,
     setSubNetworkSelected: (value: string) => void,
     batchInfoResponse: any,
@@ -767,17 +767,17 @@ export class BatchService {
         return;
       }
       if (!responseResult.items || responseResult.items.length === 0) {
-        const errorMessage = `No subnetworks found for network "${subnetwork}"`;
+        const errorMessage = `No subnetworks found for network "${network}"`;
         Notification.emit(errorMessage, 'error', { autoClose: 5000 });
         DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
         setIsloadingNetwork(false);
         return;
       }
       const networkSubnets = responseResult.items.filter(
-        (item: { network: string }) => item.network.split('/')[9] === subnetwork
+        (item: { network: string }) => item.network.split('/')[9] === network
       );
       if (networkSubnets.length === 0) {
-        const errorMessage = `No subnetworks found for network "${subnetwork}"`;
+        const errorMessage = `No subnetworks found for network "${network}"`;
         Notification.emit(errorMessage, 'error', { autoClose: 5000 });
         DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
         setIsloadingNetwork(false);
@@ -795,7 +795,7 @@ export class BatchService {
         if (transformedServiceList.length > 0) {
           setSubNetworkSelected(transformedServiceList[0]);
         } else {
-          const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
+          const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${network}"`;
           Notification.emit(errorMessage, 'error', { autoClose: 5000 });
           DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
         }
