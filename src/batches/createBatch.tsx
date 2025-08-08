@@ -1043,7 +1043,6 @@ function CreateBatch({
   const handleNetworkChange = async (data: DropdownProps | null) => {
     if (data !== null) {
       setNetworkSelected(data!.toString());
-      await listSubNetworksAPI(data!.toString());
       await handleProjectIdChange(projectId, data!.toString());
     }
   };
