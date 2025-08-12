@@ -27,5 +27,5 @@ def jp_server_config(jp_server_config, mock_configure_gateway_client_url_true):
 def mock_configure_gateway_client_url_true(monkeypatch):
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.configure_gateway_client_url",
-        lambda c, log: True,
+        lambda c, log, kernel_gateway_project_number: True,
     )
