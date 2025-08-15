@@ -19,7 +19,7 @@ pytest_plugins = ("pytest_jupyter.jupyter_server", )
 
 @pytest.fixture
 def jp_server_config(jp_server_config, mock_configure_gateway_client_url_true):
-    return {"ServerApp": {"jpserver_extensions": {"dataproc_jupyter_plugin": True}}, "GatewayClient": {"gateway_retry_interval": 1, "gateway_retry_max": 1, "request_timeout": 1}}
+    return {"ServerApp": {"jpserver_extensions": {"dataproc_jupyter_plugin": True}}, "GatewayClient": {"gateway_retry_interval": 1, "gateway_retry_max": 1, "request_timeout": 1}, "DataprocPluginConfig": {"kernel_gateway_project_number": ""}}
 
 
 # Since the jp_server_config fixture calls configure_gateway_client_url before we have a chance to mock it, we need to mock the result here
@@ -27,5 +27,5 @@ def jp_server_config(jp_server_config, mock_configure_gateway_client_url_true):
 def mock_configure_gateway_client_url_true(monkeypatch):
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.configure_gateway_client_url",
-        lambda c, log: True,
+        lambda c, log, kernel_gateway_project_number: True,
     )
