@@ -63,12 +63,12 @@ def configure_gateway_client_url(c, log, kernel_gateway_project_number):
         if not region:
             log.error(_region_not_set_error)
             return False
-        
+
         project_number = kernel_gateway_project_number or gcp_project_number()
         if not project_number:
             log.error(_project_number_not_set_error)
             return False
-        
+
         kernel_gateway_url = f"https://{project_number}-dot-{region}.kernels.googleusercontent.com"
         log.info(f"Updating remote kernel gateway URL to {kernel_gateway_url}")
         c.GatewayClient.url = kernel_gateway_url
@@ -162,10 +162,13 @@ class ConfigHandler(APIHandler):
     async def post(self):
         ERROR_MESSAGE = "Project and region update "
         input_data = self.get_json_body()
+        config_project_number = ServerApp.instance().config.DataprocPluginConfig.kernel_gateway_project_number
+        if config_project_number:
+            self.log.debug(f"Using DataprocPluginConfig.kernel_gateway_project_number: {config_project_number}")
         project_id = input_data["projectId"]
         region = input_data["region"]
         # Validate inputs before processing
-        if not re.fullmatch(constants.PROJECT_REGEXP, project_id):
+        if not config_project_number and not re.fullmatch(constants.PROJECT_REGEXP, project_id):
             self.set_status(400)
             self.finish({"error": f"Unsupported project ID: {project_id}"})
             return
@@ -174,10 +177,11 @@ class ConfigHandler(APIHandler):
             self.finish({"error": f"Unsupported region: {region}"})
             return
         try:
-            await async_run_gcloud_subcommand(f"config set project {project_id}")
+            if not config_project_number:
+                await async_run_gcloud_subcommand(f"config set project {project_id}")
             await async_run_gcloud_subcommand(f"config set dataproc/region {region}")
             clear_gcloud_cache()
-            configure_gateway_client_url(self.config, self.log, "")
+            configure_gateway_client_url(self.config, self.log, config_project_number)
             self.finish({"config": ERROR_MESSAGE + "successful"})
         except subprocess.CalledProcessError as er:
             self.finish({"config": ERROR_MESSAGE + "failed"})

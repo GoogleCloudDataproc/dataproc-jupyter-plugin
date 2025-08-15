@@ -45,6 +45,7 @@ async def test_get_modified_settings(jp_fetch, jp_serverapp):
 
 async def test_get_default_config(jp_serverapp):
     server_config = jp_serverapp.config
+    assert server_config.DataprocPluginConfig.kernel_gateway_project_number == ""
     assert server_config.GatewayClient.gateway_retry_interval == 20
     assert server_config.GatewayClient.gateway_retry_max == 45
     assert server_config.GatewayClient.request_timeout == 600
