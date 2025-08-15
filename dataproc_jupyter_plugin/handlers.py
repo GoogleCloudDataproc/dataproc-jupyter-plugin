@@ -162,7 +162,7 @@ class ConfigHandler(APIHandler):
     async def post(self):
         ERROR_MESSAGE = "Project and region update "
         input_data = self.get_json_body()
-        config_project_number = ServerApp.instance().config.DataprocPluginConfig.kernel_gateway_project_number
+        config_project_number = self.config.DataprocPluginConfig.kernel_gateway_project_number
         if config_project_number:
             self.log.debug(f"Using DataprocPluginConfig.kernel_gateway_project_number: {config_project_number}")
         project_id = input_data["projectId"]

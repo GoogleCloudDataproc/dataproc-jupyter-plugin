@@ -14,7 +14,7 @@
 
 import json
 import subprocess
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
 from dataproc_jupyter_plugin.tests import mocks
@@ -50,8 +50,27 @@ async def test_get_default_config(jp_serverapp):
     assert server_config.GatewayClient.gateway_retry_max == 45
     assert server_config.GatewayClient.request_timeout == 600
 
+@pytest.mark.parametrize(
+    "config_project_number,expected_calls",
+    [
+        (
+            "",
+            [
+                call("config set project my-project-123"),
+                call("config set dataproc/region us-central1")
+            ],
+        ),
+        (
+            "12345",
+            [
+                call("config set dataproc/region us-central1")
+            ],
+        )
+    ],
+)
+async def test_post_config_handler_success(jp_fetch, monkeypatch, jp_serverapp, config_project_number, expected_calls):
+    jp_serverapp.config.DataprocPluginConfig.kernel_gateway_project_number = config_project_number
 
-async def test_post_config_handler_success(jp_fetch, monkeypatch):
     mock_run_gcloud = AsyncMock()
     mock_clear_cache = Mock()
     mock_configure_gateway = Mock(return_value=True)
@@ -77,15 +96,11 @@ async def test_post_config_handler_success(jp_fetch, monkeypatch):
     payload = json.loads(response.body)
     assert payload == {"config": "Project and region update successful"}
 
-    expected_calls = [
-        call("config set project my-project-123"),
-        call("config set dataproc/region us-central1"),
-    ]
-    assert mock_run_gcloud.call_count == 2
+    assert mock_run_gcloud.call_count == len(expected_calls)
     mock_run_gcloud.assert_has_calls(expected_calls, any_order=False)
     assert mock_clear_cache.called
     assert mock_configure_gateway.called
-
+    mock_configure_gateway.assert_called_with(ANY, ANY, config_project_number)
 
 @pytest.mark.parametrize(
     "project_id",
