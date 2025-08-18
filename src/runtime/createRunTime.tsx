@@ -433,27 +433,17 @@ function CreateRunTime({
 
     if (dynamicAllocationState) {
       const isEnabled = dynamicAllocationState.endsWith('true');
-      
-      if (isEnabled) {
-        // If auto-scaling dynamicAllocation is re-enabled, restore the full set of properties.
+      if (!isEnabled) {
+        const filteredProperties = autoScalingDetailUpdated.length > 2 ? [
+          autoScalingDetailUpdated[0], // spark.dynamicAllocation.enabled
+          autoScalingDetailUpdated[5]  // spark.reducer.fetchMigratedShuffle.enabled
+        ] : autoScalingDetailUpdated;
+        setAutoScalingDetail(filteredProperties);
+        setAutoScalingDetailUpdated(filteredProperties);
+      }else{
+        // If auto-scaling dynamicAllocation is re-enabled, restoring the full set of properties 
         setAutoScalingDetail(AUTO_SCALING_DEFAULT);
         setAutoScalingDetailUpdated(AUTO_SCALING_DEFAULT);
-      } else {
-        // dynamicAllocation is disabled, so filter out the properties.
-        const propertiesToFilter = [
-          'spark.dynamicAllocation.enabled:',
-          'spark.reducer.fetchMigratedShuffle.enabled:'
-        ];
-
-        const filteredProperties = autoScalingDetailUpdated.filter(prop =>
-          propertiesToFilter.some(prefix => prop.startsWith(prefix))
-        );
-
-        // Only update if there are properties to filter.
-        if (filteredProperties.length < autoScalingDetailUpdated.length) {
-          setAutoScalingDetail(filteredProperties);
-          setAutoScalingDetailUpdated(filteredProperties);
-        }
       }
     }
   }, [autoScalingDetailUpdated]);
