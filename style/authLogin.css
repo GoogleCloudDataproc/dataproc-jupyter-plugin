@@ -623,11 +623,6 @@
  width: fit-content;
 }
 
-.info-icon-container {
-  display: inline-block;
-  cursor: pointer;
-}
-
 .info-icon {
   width: 20px;
   color: #888;
@@ -638,6 +633,8 @@
 }
 
 .info-icon-container {
+  display: inline-block;
+  cursor: pointer;
   position: absolute;
   right: 5px;
   top: 50%;

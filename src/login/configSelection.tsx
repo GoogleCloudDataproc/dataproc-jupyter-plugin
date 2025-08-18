@@ -231,12 +231,11 @@ function ConfigSelection({
 
     let bqFeature: SettingsResponse = await requestAPI('settings');
 
-    console.log('BigQuery Feature Settings:', bqFeature);
     if (bqFeature.enable_bigquery_integration) {
       setbigQueryFeatureEnable(true);
     }
 
-    if (bqFeature.kernel_gateway_project_number && bqFeature.kernel_gateway_project_number.length > 0) {
+    if (bqFeature.kernel_gateway_project_number){
       console.log(
         'Kernel Gateway Project Number:',
         bqFeature.kernel_gateway_project_number
