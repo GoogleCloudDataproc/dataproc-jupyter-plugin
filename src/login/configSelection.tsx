@@ -236,10 +236,6 @@ function ConfigSelection({
     }
 
     if (bqFeature.kernel_gateway_project_number){
-      console.log(
-        'Kernel Gateway Project Number:',
-        bqFeature.kernel_gateway_project_number
-      );
       setIsProjectIdEditable(false);
     }
   };
