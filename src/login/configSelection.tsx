@@ -18,6 +18,7 @@
 import React, { useState, useEffect } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import googleCloudIcon from '../../style/icons/google-cloud.svg';
+import helpIcon from '../../style/icons/help_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -76,7 +77,13 @@ function ConfigSelection({
     svgstr: googleCloudIcon
   });
 
+  const iconHelp = new LabIcon({
+    name: 'launcher:help-spark-icon',
+    svgstr: helpIcon
+  });
+
   const [bigQueryFeatureEnable, setbigQueryFeatureEnable] = useState(false);
+  const [isProjectIdEditable, setIsProjectIdEditable] = useState(true);
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
   const [bigQueryRegion, setBigQueryRegion] = useState<any>('');
@@ -219,11 +226,22 @@ function ConfigSelection({
   const handleBigQueryFeature = async () => {
     interface SettingsResponse {
       enable_bigquery_integration?: boolean;
+      kernel_gateway_project_number?: string;
     }
+
     let bqFeature: SettingsResponse = await requestAPI('settings');
 
+    console.log('BigQuery Feature Settings:', bqFeature);
     if (bqFeature.enable_bigquery_integration) {
       setbigQueryFeatureEnable(true);
+    }
+
+    if (bqFeature.kernel_gateway_project_number && bqFeature.kernel_gateway_project_number.length > 0) {
+      console.log(
+        'Kernel Gateway Project Number:',
+        bqFeature.kernel_gateway_project_number
+      );
+      setIsProjectIdEditable(false);
     }
   };
 
@@ -301,6 +319,7 @@ function ConfigSelection({
                   onChange={(_, projectId) => setProjectId(projectId ?? '')}
                   fetchFunc={projectListAPI}
                   label="Project ID*"
+                  disabled={!isProjectIdEditable}
                   // Always show the clear indicator and hide the dropdown arrow
                   // make it very clear that this is an autocomplete.
                   sx={{
@@ -310,6 +329,16 @@ function ConfigSelection({
                   }}
                   popupIcon={null}
                 />
+                {!isProjectIdEditable && (
+                  <div className="info-icon-container" title="Project Id is set at Jupyter Lab startup">
+                    <div className="info-icon">
+                      <iconHelp.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="region-overlay">
