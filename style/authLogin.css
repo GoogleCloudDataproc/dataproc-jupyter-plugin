@@ -622,3 +622,23 @@
   margin: 10px 0;
  width: fit-content;
 }
+
+.info-icon {
+  width: 20px;
+  color: #888;
+}
+
+.project-overlay {
+  position: relative;
+}
+
+.info-icon-container {
+  display: inline-block;
+  cursor: pointer;
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: auto;
+}
