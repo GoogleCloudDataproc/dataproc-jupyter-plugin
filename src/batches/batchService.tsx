@@ -733,17 +733,23 @@ export class BatchService {
   };
 
   static listSubNetworksAPIService = async (
-    subnetwork: string,
+    network: string,
     setSubNetworklist: (value: string[]) => void,
     setSubNetworkSelected: (value: string) => void,
     batchInfoResponse: any,
     setIsloadingNetwork: (value: boolean) => void
   ) => {
     setIsloadingNetwork(true);
+    setSubNetworklist([]);
+    setSubNetworkSelected('');
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
+    if (!credentials) {
+      setIsloadingNetwork(false);
+      return;
+    }
+    try {
+      const response = await loggedFetch(
         `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks`,
         {
           headers: {
@@ -751,56 +757,59 @@ export class BatchService {
             Authorization: API_HEADER_BEARER + credentials.access_token
           }
         }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                items: {
-                  name: string;
-                  network: string;
-                  privateIpGoogleAccess: boolean;
-                }[];
-                error: {
-                  message: string;
-                  code: number;
-                };
-              }) => {
-                const filteredServices = responseResult.items.filter(
-                  (item: { network: string; privateIpGoogleAccess: boolean }) =>
-                    item.network.split('/')[9] === subnetwork &&
-                    item.privateIpGoogleAccess === true
-                );
-                const transformedServiceList = filteredServices.map(
-                  (data: { name: string }) => data.name
-                );
-                setSubNetworklist(transformedServiceList);
-                if (batchInfoResponse === undefined) {
-                  setSubNetworkSelected(transformedServiceList[0]);
-                }
-                setIsloadingNetwork(false);
-                if (responseResult?.error?.code) {
-                  Notification.emit(responseResult?.error?.message, 'error', {
-                    autoClose: 5000
-                  });
-                }
-              }
-            )
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          DataprocLoggingService.log(
-            'Error listing subNetworks',
-            LOG_LEVEL.ERROR
-          );
-          setIsloadingNetwork(false);
-          Notification.emit(`Error listing subNetworks : ${err}`, 'error', {
-            autoClose: 5000
-          });
+      );
+      const responseResult = await response.json();
+      if (responseResult?.error?.code) {
+        Notification.emit(responseResult.error.message, 'error', {
+          autoClose: 5000
         });
+        setIsloadingNetwork(false);
+        return;
+      }
+      if (!responseResult.items || responseResult.items.length === 0) {
+        const errorMessage = `No subnetworks found for network "${network}"`;
+        Notification.emit(errorMessage, 'error', { autoClose: 5000 });
+        DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
+        setIsloadingNetwork(false);
+        return;
+      }
+      const networkSubnets = responseResult.items.filter(
+        (item: { network: string }) => item.network.split('/')[9] === network
+      );
+      if (networkSubnets.length === 0) {
+        const errorMessage = `No subnetworks found for network "${network}"`;
+        Notification.emit(errorMessage, 'error', { autoClose: 5000 });
+        DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
+        setIsloadingNetwork(false);
+        return;
+      }
+      const filteredServices = networkSubnets.filter(
+        (item: { privateIpGoogleAccess: boolean }) =>
+          item.privateIpGoogleAccess === true
+      );
+      const transformedServiceList = filteredServices.map(
+        (data: { name: string }) => data.name
+      );
+      setSubNetworklist(transformedServiceList);
+      if (batchInfoResponse === undefined) {
+        if (transformedServiceList.length > 0) {
+          setSubNetworkSelected(transformedServiceList[0]);
+        } else {
+          const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${network}"`;
+          Notification.emit(errorMessage, 'error', { autoClose: 5000 });
+          DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
+        }
+      }
+      setIsloadingNetwork(false);
+    } catch (err) {
+      console.error('Error listing subNetworks:', err);
+      DataprocLoggingService.log('Error listing subNetworks', LOG_LEVEL.ERROR);
+      setIsloadingNetwork(false);
+      const errorMessage =
+        err instanceof Error
+          ? `Error listing subNetworks: ${err.message}`
+          : 'Error listing subNetworks';
+      Notification.emit(errorMessage, 'error', { autoClose: 5000 });
     }
   };
 
