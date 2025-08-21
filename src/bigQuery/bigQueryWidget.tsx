@@ -127,6 +127,7 @@ const BigQueryComponent = ({
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isResetLoading, setResetLoading] = useState(false);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
 
   const [dataSetResponse, setDataSetResponse] = useState<any>();
@@ -368,7 +369,7 @@ const BigQueryComponent = ({
         setSearchResponse
       );
     } else {
-      getBigQueryProjects();
+      getBigQueryProjects(false);
     }
   };
 
@@ -429,7 +430,10 @@ const BigQueryComponent = ({
 
   const handleSearchClear = () => {
     setSearchTerm('');
-    getBigQueryProjects();
+    setSearchLoading(true);
+    setAllDatasets(new Map()); 
+    setNextPageTokens(new Map());
+    getBigQueryProjects(false);
   };
   type NodeProps = NodeRendererProps<IDataEntry> & {
     onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
@@ -833,7 +837,10 @@ const BigQueryComponent = ({
     );
   };
 
-  const getBigQueryProjects = async () => {
+  const getBigQueryProjects = async (isReset : boolean) => {
+    if (isReset) {
+      setResetLoading(true);
+    }
     await BigQueryService.getBigQueryProjectsListAPIService(
       setProjectNameInfo,
       setIsLoading,
@@ -914,7 +921,7 @@ const BigQueryComponent = ({
   }, [notebookValue]);
 
   useEffect(() => {
-    getBigQueryProjects();
+    getBigQueryProjects(false);
   }, [dataprocMetastoreServices]);
 
   useEffect(() => {
@@ -943,7 +950,9 @@ const BigQueryComponent = ({
 
   useEffect(() => {
     if (treeStructureData.length > 0 && treeStructureData[0].name !== '') {
+      setSearchLoading(false);
       setIsLoading(false);
+      setResetLoading(false);
     }
     if (currentNode && !currentNode.isOpen) {
       currentNode?.toggle();
@@ -960,7 +969,8 @@ const BigQueryComponent = ({
       <TitleComponent
         titleStr="Dataset Explorer"
         isPreview={false}
-        getBigQueryProjects={getBigQueryProjects}
+        getBigQueryProjects={() => getBigQueryProjects(true)}
+        isLoading={isResetLoading}
       />
       <div>
         <div>

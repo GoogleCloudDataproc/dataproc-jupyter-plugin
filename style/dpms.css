@@ -217,8 +217,9 @@
 }
 
 .load-more-icon{
-  padding-left: 80px;
+  margin-left: 80px;
   color: #1a73e8;
+  cursor: pointer;
 }
 
 .load-more-spinner-container {

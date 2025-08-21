@@ -163,6 +163,10 @@ export class BigQueryService {
           }
           if (setNextPageToken && data.nextPageToken) {
             setNextPageToken(projectId, data.nextPageToken || null);
+          }else{
+            // Passing null will delete the project from the token map
+            // Hides LoadMore From the UI
+            setNextPageToken && setNextPageToken(projectId, null);
           }
 
           const settings = await settingRegistry.load(PLUGIN_ID);

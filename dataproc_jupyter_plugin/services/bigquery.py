@@ -198,7 +198,6 @@ class Client:
             # Handle pagination to retrieve all results.
             while has_next:
                 try:
-                    self.log.info("Fetching next page...")
                     async with self.client_session.post(
                         api_endpoint, headers=headers, json=payload
                     ) as response:
