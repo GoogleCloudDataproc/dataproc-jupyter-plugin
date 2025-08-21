@@ -148,6 +148,9 @@ const BigQueryComponent = ({
   const [loginError, setLoginError] = useState(false);
   const [projectName, setProjectName] = useState<string>('');
 
+  const [nextPageTokens, setNextPageTokens] = useState<Map<string, string | null>>(new Map());
+  const [allDatasets, setAllDatasets] = useState<Map<string, any[]>>(new Map());
+
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 125;
     setHeight(updateHeight);
@@ -186,6 +189,7 @@ const BigQueryComponent = ({
     id: string;
     name: string;
     type: string;
+    isLoadMoreNode?: boolean;
     description: string;
     children: any;
   }
@@ -207,19 +211,30 @@ const BigQueryComponent = ({
 
     tempData.forEach((projectData: any) => {
       if (projectData.name === currentNode.data.name) {
-        projectData['children'] = databaseNames.map(datasetName => ({
+        const datasetNodes = databaseNames.map(datasetName => ({
           id: uuidv4(),
           name: datasetName,
+          isLoadMoreNode: false,
           children: []
         }));
+        datasetNodes.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Check if there's a next page token for this project
+        const nextPageToken = nextPageTokens.get(projectData.name);
+        if (nextPageToken) {
+            // Add a special "Load more" node
+            datasetNodes.push({
+              id: uuidv4(),
+              name: '',
+              isLoadMoreNode: true,
+              children: []
+            });
+        }
+        projectData['children'] = datasetNodes;
       }
     });
 
     tempData.sort((a, b) => a.name.localeCompare(b.name));
-
-    tempData.forEach(db => {
-      db.children.sort((a: any, b: any) => a.name.localeCompare(b.name));
-    });
 
     setTreeStructureData(tempData);
   };
@@ -294,112 +309,54 @@ const BigQueryComponent = ({
       searchResponse.results.length > 0
     ) {
       let data: any = [];
+
       searchResponse.results.forEach((searchData: any) => {
-        let tempData = [...data];
-        //first time data is empty
-        if (tempData.length === 0) {
-          tempData.push({
+        const dataplexEntry = searchData.dataplexEntry;
+        if (!dataplexEntry || !dataplexEntry.fullyQualifiedName) {
+          return;
+        }
+
+        const fqn = dataplexEntry.fullyQualifiedName;
+        const fqnParts = fqn.split(':');
+        const tableParts = fqnParts[1].split('.');
+        const projectId = tableParts[0];
+        const datasetId = tableParts[1];
+        const tableId = tableParts.length > 2 ? tableParts[2] : null;
+
+        let projectNode = data.find((p: any) => p.name === projectId);
+        if (!projectNode) {
+          projectNode = {
             id: uuidv4(),
-            name: searchData.linkedResource.split('/')[4],
-            children: [
-              {
-                id: uuidv4(),
-                name: searchData.linkedResource.split('/')[6],
-                children: searchData.linkedResource.split('/')[8]
-                  ? [
-                      {
-                        id: uuidv4(),
-                        name: searchData.linkedResource.split('/')[8],
-                        children: []
-                      }
-                    ]
-                  : []
-              }
-            ]
-          });
-        } else {
-          //To check if project is already exist or not
-          let projectDataAlreadyExist = tempData.filter(projectData => {
-            return projectData.name === searchData.linkedResource.split('/')[4];
-          });
-          //if project is already exist
-          if (projectDataAlreadyExist.length !== 0) {
-            tempData.forEach((projectData: any) => {
-              if (
-                projectData.name === searchData.linkedResource.split('/')[4]
-              ) {
-                //To check if dataset is already exist or not
-                let datasetDataAlreadyExist = projectData['children'].filter(
-                  (datasetData: any) => {
-                    return (
-                      datasetData.name ===
-                      searchData.linkedResource.split('/')[6]
-                    );
-                  }
-                );
-                //if dataset is already exist
-                if (datasetDataAlreadyExist.length !== 0) {
-                  projectData['children'].forEach((datasetData: any) => {
-                    if (
-                      datasetData.name ===
-                        searchData.linkedResource.split('/')[6] &&
-                      projectData.name ===
-                        searchData.linkedResource.split('/')[4]
-                    ) {
-                      if (searchData.linkedResource.split('/')[8]) {
-                        datasetData['children'].push({
-                          id: uuidv4(),
-                          name: searchData.linkedResource.split('/')[8],
-                          children: []
-                        });
-                      }
-                    }
-                  });
-                } else {
-                  //if dataset is not exist
-                  projectData['children'].push({
-                    id: uuidv4(),
-                    name: searchData.linkedResource.split('/')[6],
-                    children: searchData.linkedResource.split('/')[8]
-                      ? [
-                          {
-                            id: uuidv4(),
-                            name: searchData.linkedResource.split('/')[8],
-                            children: []
-                          }
-                        ]
-                      : []
-                  });
-                }
-              }
-            });
-          }
-          //if project is not exist
-          else {
-            tempData.push({
+            name: projectId,
+            children: []
+          };
+          data.push(projectNode);
+        }
+
+        let datasetNode = projectNode.children.find((d: any) => d.name === datasetId);
+        if (!datasetNode) {
+          datasetNode = {
+            id: uuidv4(),
+            name: datasetId,
+            children: []
+          };
+          projectNode.children.push(datasetNode);
+        }
+
+        if (tableId) {
+          if (!datasetNode.children.find((t: any) => t.name === tableId)) {
+            datasetNode.children.push({
               id: uuidv4(),
-              name: searchData.linkedResource.split('/')[4],
-              children: [
-                {
-                  id: uuidv4(),
-                  name: searchData.linkedResource.split('/')[6],
-                  children: searchData.linkedResource.split('/')[8]
-                    ? [
-                        {
-                          id: uuidv4(),
-                          name: searchData.linkedResource.split('/')[8],
-                          children: []
-                        }
-                      ]
-                    : []
-                }
-              ]
+              name: tableId,
+              children: []
             });
           }
         }
-        data = tempData;
       });
+
       setTreeStructureData(data);
+    } else {
+      setTreeStructureData([]);
     }
   };
 
@@ -476,17 +433,37 @@ const BigQueryComponent = ({
   };
   type NodeProps = NodeRendererProps<IDataEntry> & {
     onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
+    nextPageTokens: Map<string, string | null>;
+    getBigQueryDatasets: (projectId: string) => Promise<void>;
   };
-  const Node = ({ node, style, onClick }: NodeProps) => {
+  const Node = ({ node, style, onClick, nextPageTokens, getBigQueryDatasets }: NodeProps) => {
+    // Fetching parent (project) data for datasets
+    // const projectId = node.parent?.data.name;
+    // const nextPageToken = projectId ? nextPageTokens.get(projectId) : undefined;
+
     const [contextMenu, setContextMenu] = useState<{
       mouseX: number;
       mouseY: number;
     } | null>(null);
     const handleToggle = () => {
+      if (node.data.isLoadMoreNode) {
+        const projectId = node.parent?.data?.name;
+        const nextPageToken = projectId ? nextPageTokens.get(projectId) : undefined;
+        if (projectId && nextPageToken) {
+          setCurrentNode(node.parent);
+          setIsIconLoading(true);
+          getBigQueryDatasets(projectId);
+        }
+        return;
+      }
       if (calculateDepth(node) === 1 && !node.isOpen) {
         setCurrentNode(node);
-        setIsIconLoading(true);
-        getBigQueryDatasets(node.data.name);
+        if(!allDatasets.has(node.data.name)) { 
+          setIsIconLoading(true);
+          getBigQueryDatasets(node.data.name);
+        }else{
+          node.toggle();
+        }
       } else if (calculateDepth(node) === 2 && !node.isOpen) {
         setCurrentNode(node);
         setIsIconLoading(true);
@@ -598,12 +575,12 @@ const BigQueryComponent = ({
       await createBigQueryNotebookWithQuery(app, fullTableName);
     };
 
+    const depth = calculateDepth(node);
     const renderNodeIcon = () => {
-      const depth = calculateDepth(node);
       const hasChildren =
         (node.children && node.children.length > 0) ||
         (depth !== 4 && node.children);
-      const arrowIcon = hasChildren ? (
+      const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
         isIconLoading && currentNode.data.name === node.data.name ? (
           <div className="big-query-loader-style">
             <CircularProgress
@@ -637,11 +614,11 @@ const BigQueryComponent = ({
             />
           </div>
         )
-      ) : (
+      ): (
         <div style={{ width: '29px' }}></div>
       );
       if (searchTerm) {
-        const arrowIcon = hasChildren ? (
+        const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
           isIconLoading && currentNode.data.name === node.data.name ? (
             <div className="big-query-loader-style">
               <CircularProgress
@@ -678,6 +655,29 @@ const BigQueryComponent = ({
         ) : (
           <div style={{ width: '29px' }}></div>
         );
+        if (node.data.isLoadMoreNode) {
+          return isIconLoading ? (
+            <div className='load-more-spinner-container'>
+              <div className='load-more-spinner'>
+                <CircularProgress
+                  className="spin-loader-custom-style"
+                  size={20}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              </div>
+              Loading datasets
+            </div>
+          ) : (
+            <div
+              role="treeitem"
+              className="caret-icon down load-more-icon"
+              onClick={handleToggle}
+            >
+              Load More...
+            </div>
+          );
+        }
         if (depth === 1) {
           return (
             <>
@@ -723,6 +723,29 @@ const BigQueryComponent = ({
               className="icon-white logo-alignment-style"
             />
           </>
+        );
+      }
+      if (node.data.isLoadMoreNode) {
+        return isIconLoading ? (
+          <div className='load-more-spinner-container'>
+            <div className='load-more-spinner'>
+              <CircularProgress
+                className="spin-loader-custom-style"
+                size={20}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            </div>
+            Loading datasets
+          </div>
+        ) : (
+          <div
+            role="treeitem"
+            className="caret-icon down load-more-icon"
+            onClick={handleToggle}
+          >
+            Load More...
+          </div>
         );
       }
       if (depth === 1) {
@@ -774,36 +797,39 @@ const BigQueryComponent = ({
     };
 
     return (
-      <div style={style}>
-        {renderNodeIcon()}
-        <div
-          role="treeitem"
-          title={node.data.name}
-          onClick={handleTextClick}
-          onContextMenu={handleContextMenu}
-        >
-          {node.data.name}
+      <>
+        <div style={style}>
+          {renderNodeIcon()}
+          <div
+            role="treeitem"
+            title={node.data.name}
+            onClick={handleTextClick}
+            onContextMenu={handleContextMenu}
+          >
+            {node.data.name}
+          </div>
+          <div title={node?.data?.type} className="dpms-column-type-text">
+            {node.data.type}
+          </div>
+
+          <Menu
+            open={contextMenu !== null}
+            onClose={handleClose}
+            anchorReference="anchorPosition"
+            anchorPosition={
+              contextMenu !== null
+                ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                : undefined
+            }
+          >
+            <MenuItem onClick={handleQueryTable}>Query table</MenuItem>
+            <MenuItem onClick={handleOpenTableDetails}>
+              Open table details
+            </MenuItem>
+            <MenuItem onClick={handleCopyId}>Copy table ID</MenuItem>
+          </Menu>
         </div>
-        <div title={node?.data?.type} className="dpms-column-type-text">
-          {node.data.type}
-        </div>
-        <Menu
-          open={contextMenu !== null}
-          onClose={handleClose}
-          anchorReference="anchorPosition"
-          anchorPosition={
-            contextMenu !== null
-              ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-              : undefined
-          }
-        >
-          <MenuItem onClick={handleQueryTable}>Query table</MenuItem>
-          <MenuItem onClick={handleOpenTableDetails}>
-            Open table details
-          </MenuItem>
-          <MenuItem onClick={handleCopyId}>Copy table ID</MenuItem>
-        </Menu>
-      </div>
+      </>
     );
   };
 
@@ -817,6 +843,10 @@ const BigQueryComponent = ({
   };
 
   const getBigQueryDatasets = async (projectId: string) => {
+
+    const pageTokenForProject = nextPageTokens.get(projectId);
+    const allDatasetsUnderProject = allDatasets.get(projectId) || [];
+
     await BigQueryService.getBigQueryDatasetsAPIService(
       notebookValue,
       settingRegistry,
@@ -824,7 +854,27 @@ const BigQueryComponent = ({
       setDataSetResponse,
       projectId,
       setIsIconLoading,
-      setIsLoading
+      setIsLoading,
+      allDatasetsUnderProject,
+      (value: any[]) => {
+        setAllDatasets(prev => {
+          const newMap = new Map(prev);
+          newMap.set(projectId, value);
+          return newMap;
+        });
+      },
+      pageTokenForProject,
+      (projectId: string, token: string | null) => {
+        setNextPageTokens(prevTokens => {
+            const newMap = new Map(prevTokens);
+            if (token) {
+                newMap.set(projectId, token);
+            } else {
+                newMap.delete(projectId);
+            }
+            return newMap;
+        });
+      }
     );
   };
 
@@ -895,7 +945,7 @@ const BigQueryComponent = ({
     if (treeStructureData.length > 0 && treeStructureData[0].name !== '') {
       setIsLoading(false);
     }
-    if (currentNode) {
+    if (currentNode && !currentNode.isOpen) {
       currentNode?.toggle();
     }
   }, [treeStructureData]);
@@ -973,24 +1023,31 @@ const BigQueryComponent = ({
                   <div className="tree-container">
                     {treeStructureData.length > 0 &&
                       treeStructureData[0].name !== '' && (
-                        <Tree
-                          className="dataset-tree"
-                          data={treeStructureData}
-                          openByDefault={searchTerm === '' ? false : true}
-                          indent={24}
-                          width={auto}
-                          height={height}
-                          rowHeight={36}
-                          overscanCount={1}
-                          paddingTop={30}
-                          paddingBottom={10}
-                          padding={25}
-                          idAccessor={(node: any) => node.id}
-                        >
-                          {(props: NodeRendererProps<any>) => (
-                            <Node {...props} onClick={handleNodeClick} />
-                          )}
-                        </Tree>
+                        <>
+                          <Tree
+                            className="dataset-tree"
+                            data={treeStructureData}
+                            openByDefault={searchTerm === '' ? false : true}
+                            indent={24}
+                            width={auto}
+                            height={height}
+                            rowHeight={36}
+                            overscanCount={1}
+                            paddingTop={30}
+                            paddingBottom={10}
+                            padding={25}
+                            idAccessor={(node: any) => node.id}
+                          >
+                            {(props: NodeRendererProps<any>) => (
+                              <Node
+                                {...props}
+                                onClick={handleNodeClick}
+                                nextPageTokens={nextPageTokens}
+                                getBigQueryDatasets={getBigQueryDatasets}
+                              />
+                            )}
+                          </Tree>
+                        </>
                       )}
                   </div>
                 </div>

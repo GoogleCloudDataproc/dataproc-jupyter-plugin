@@ -77,6 +77,7 @@ function ConfigSelection({
   });
 
   const [bigQueryFeatureEnable, setbigQueryFeatureEnable] = useState(false);
+  const [isProjectIdEditable, setIsProjectIdEditable] = useState(false);
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
   const [bigQueryRegion, setBigQueryRegion] = useState<any>('');
@@ -219,11 +220,16 @@ function ConfigSelection({
   const handleBigQueryFeature = async () => {
     interface SettingsResponse {
       enable_bigquery_integration?: boolean;
+      projectIdEnabled?: boolean;
     }
     let bqFeature: SettingsResponse = await requestAPI('settings');
 
     if (bqFeature.enable_bigquery_integration) {
       setbigQueryFeatureEnable(true);
+    }
+
+    if (bqFeature.projectIdEnabled) {
+      setIsProjectIdEditable(bqFeature.projectIdEnabled);
     }
   };
 
@@ -301,6 +307,7 @@ function ConfigSelection({
                   onChange={(_, projectId) => setProjectId(projectId ?? '')}
                   fetchFunc={projectListAPI}
                   label="Project ID*"
+                  disabled={!isProjectIdEditable}
                   // Always show the clear indicator and hide the dropdown arrow
                   // make it very clear that this is an autocomplete.
                   sx={{

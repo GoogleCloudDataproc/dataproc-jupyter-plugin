@@ -18,7 +18,7 @@
 import { Notification } from '@jupyterlab/apputils';
 import { requestAPI } from '../handler/handler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { BIGQUERY_SERVICE_NAME, PLUGIN_ID } from '../utils/const';
+import { BIGQUERY_SERVICE_NAME, DEFAULT_PUBLIC_PROJECT_ID, PLUGIN_ID } from '../utils/const';
 import { authApi } from '../utils/utils';
 
 interface IPreviewColumn {
@@ -138,8 +138,10 @@ export class BigQueryService {
     projectId: string,
     setIsIconLoading: (value: boolean) => void,
     setIsLoading: (value: boolean) => void,
-    nextPageToken?: string,
-    previousDatasetList?: object
+    previousDatasetList?: object,
+    setUpdatedDatasetList?: (value: any[]) => void,
+    nextPageToken?: any,
+    setNextPageToken?: (projectId: string, token: string | null) => void
   ) => {
     if (notebookValue) {
       const pageToken = nextPageToken ?? '';
@@ -147,38 +149,47 @@ export class BigQueryService {
         const data: any = await requestAPI(
           `bigQueryDataset?project_id=${projectId}&pageToken=${pageToken}`
         );
-        if (data.entries) {
+        if (data.entries || data.datasets) {
           const existingDatasetList = previousDatasetList ?? [];
           //setStateAction never type issue
+
           const allDatasetList: any = [
             ...(existingDatasetList as []),
-            ...data.entries
+            ...(DEFAULT_PUBLIC_PROJECT_ID === projectId ? data.datasets : data.entries)
           ];
 
-          if (data.nextPageToken) {
-            this.getBigQueryDatasetsAPIService(
-              notebookValue,
-              settingRegistry,
-              setDatabaseNames,
-              setDataSetResponse,
-              projectId,
-              setIsIconLoading,
-              setIsLoading,
-              data.nextPageToken,
-              allDatasetList
-            );
-          } else {
-            const settings = await settingRegistry.load(PLUGIN_ID);
+          if (setUpdatedDatasetList && allDatasetList.length > 0) {
+            setUpdatedDatasetList(allDatasetList);
+          }
+          if (setNextPageToken && data.nextPageToken) {
+            setNextPageToken(projectId, data.nextPageToken || null);
+          }
 
-            let filterDatasetByLocation = allDatasetList;
-            filterDatasetByLocation = filterDatasetByLocation.filter(
-              (dataset: any) =>
-                dataset.entrySource.location.toUpperCase() === settings.get('bqRegion')['composite']
-            );
+          const settings = await settingRegistry.load(PLUGIN_ID);
 
-            if (filterDatasetByLocation.length > 0) {
-              const databaseNames: string[] = [];
-              const updatedDatabaseDetails: { [key: string]: string } = {};
+          let filterDatasetByLocation = allDatasetList;
+          filterDatasetByLocation = filterDatasetByLocation.filter(
+            (dataset: any) =>
+              DEFAULT_PUBLIC_PROJECT_ID === projectId ? dataset.location === settings.get('bqRegion')['composite'] :
+              dataset.entrySource.location.toUpperCase() === settings.get('bqRegion')['composite']
+          );
+
+          if (filterDatasetByLocation.length > 0) {
+            const databaseNames: string[] = [];
+            const updatedDatabaseDetails: { [key: string]: string } = {};
+            if(DEFAULT_PUBLIC_PROJECT_ID === projectId) {
+              filterDatasetByLocation.forEach(
+                (data: {
+                  datasetReference: { description: string; datasetId: string };
+                }) => {
+                  databaseNames.push(data.datasetReference.datasetId);
+                  const description =
+                    data.datasetReference.description || 'None';
+                  updatedDatabaseDetails[data.datasetReference.datasetId] =
+                    description;
+                }
+              );
+            }else{
               filterDatasetByLocation.forEach(
                 (data: any) => {
                   const name = data.entrySource.displayName;
@@ -190,15 +201,15 @@ export class BigQueryService {
                   }
                 }
               );
-              setDataSetResponse(filterDatasetByLocation);
-              setDatabaseNames(databaseNames);
-              setIsIconLoading(false);
-            } else {
-              setDataSetResponse([]);
-              setDatabaseNames([]);
-              setIsLoading(false);
-              setIsIconLoading(false);
             }
+            setDataSetResponse(filterDatasetByLocation);
+            setDatabaseNames(databaseNames);
+            setIsIconLoading(false);
+          } else {
+            setDataSetResponse([]);
+            setDatabaseNames([]);
+            setIsLoading(false);
+            setIsIconLoading(false);
           }
         } else {
           setDataSetResponse([]);

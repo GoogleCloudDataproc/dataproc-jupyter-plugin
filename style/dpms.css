@@ -210,3 +210,17 @@
   font-weight: 500;
   cursor: pointer;
 }
+
+.load-more-spinner {
+  display: inline;
+  padding-left: 50px;
+}
+
+.load-more-icon{
+  padding-left: 80px;
+  color: #1a73e8;
+}
+
+.load-more-spinner-container {
+  width: 200%;
+}
