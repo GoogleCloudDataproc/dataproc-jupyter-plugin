@@ -24,7 +24,7 @@ from dataproc_jupyter_plugin.commons.constants import (
 )
 
 from dataproc_jupyter_plugin.commons.constants import (
-    BQ_PUBLIC_DATASET_PROJECT_ID,
+    BQ_PUBLIC_DATASET_PROJECT_ID,BASE_PROJECT_ID
 )
 
 class Client:
@@ -51,21 +51,20 @@ class Client:
     async def list_datasets(self, page_token, project_id):
         try:
             bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
-            base_url = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
-            
-            if(project_id == BQ_PUBLIC_DATASET_PROJECT_ID):
-                # For public datasets, use the BigQuery API
-                base_url = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets"
+            dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
+
+            if project_id == BQ_PUBLIC_DATASET_PROJECT_ID:
+                # Use BigQuery API for public datasets
+                api_endpoint = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets"
+                if page_token:
+                    api_endpoint += f"?pageToken={page_token}"
             else:
-                # For user-specific datasets, use the dataplex API
-                base_url = f"https://dataplex.googleapis.com/v1/projects/{project_id}/locations/us/entryGroups/@bigquery/entries?filter=entry_type=projects/655216118709/locations/global/entryTypes/bigquery-dataset"
-        
-            # Append pageToken only if it's provided
-            if page_token:
-                api_endpoint = f"{base_url}?pageToken={page_token}"
-            else:
-                api_endpoint = base_url
+                # Use Dataplex API for user-specific datasets
+                api_endpoint = (
+                    f"{dataplex_url}/v1/projects/{project_id}/locations/us/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset"
+                )
+                if page_token:
+                    api_endpoint += f"&pageToken={page_token}"
             
             async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()

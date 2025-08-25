@@ -172,11 +172,14 @@ export class BigQueryService {
           const settings = await settingRegistry.load(PLUGIN_ID);
 
           let filterDatasetByLocation = allDatasetList;
-          filterDatasetByLocation = filterDatasetByLocation.filter(
-            (dataset: any) =>
-              DEFAULT_PUBLIC_PROJECT_ID === projectId ? dataset.location === settings.get('bqRegion')['composite'] :
-              dataset.entrySource.location.toUpperCase() === settings.get('bqRegion')['composite']
-          );
+
+          if(DEFAULT_PUBLIC_PROJECT_ID !== projectId) {
+            filterDatasetByLocation = filterDatasetByLocation.filter(
+              (dataset: any) =>
+                DEFAULT_PUBLIC_PROJECT_ID === projectId ? dataset.location === settings.get('bqRegion')['composite'] :
+                dataset.entrySource.location.toUpperCase() === settings.get('bqRegion')['composite']
+            );
+          }
 
           if (filterDatasetByLocation.length > 0) {
             const databaseNames: string[] = [];
@@ -222,6 +225,9 @@ export class BigQueryService {
           setIsIconLoading(false);
         }
       } catch (reason) {
+        Notification.emit(`Failed to fetch datasets : ${reason}`, 'error', {
+          autoClose: 5000
+        });
         setIsLoading(false);
         setIsIconLoading(false);
       }

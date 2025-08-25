@@ -441,9 +441,6 @@ const BigQueryComponent = ({
     getBigQueryDatasets: (projectId: string) => Promise<void>;
   };
   const Node = ({ node, style, onClick, nextPageTokens, getBigQueryDatasets }: NodeProps) => {
-    // Fetching parent (project) data for datasets
-    // const projectId = node.parent?.data.name;
-    // const nextPageToken = projectId ? nextPageTokens.get(projectId) : undefined;
 
     const [contextMenu, setContextMenu] = useState<{
       mouseX: number;
@@ -621,6 +618,28 @@ const BigQueryComponent = ({
       ): (
         <div style={{ width: '29px' }}></div>
       );
+      const renderLoadMoreNode = () =>
+        isIconLoading ? (
+          <div className='load-more-spinner-container'>
+            <div className='load-more-spinner'>
+        <CircularProgress
+          className="spin-loader-custom-style"
+          size={20}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        />
+            </div>
+            Loading datasets
+          </div>
+        ) : (
+          <div
+            role="treeitem"
+            className="caret-icon down load-more-icon"
+            onClick={handleToggle}
+          >
+            Load More...
+          </div>
+        );
       if (searchTerm) {
         const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
           isIconLoading && currentNode.data.name === node.data.name ? (
@@ -659,28 +678,9 @@ const BigQueryComponent = ({
         ) : (
           <div style={{ width: '29px' }}></div>
         );
+
         if (node.data.isLoadMoreNode) {
-          return isIconLoading ? (
-            <div className='load-more-spinner-container'>
-              <div className='load-more-spinner'>
-                <CircularProgress
-                  className="spin-loader-custom-style"
-                  size={20}
-                  aria-label="Loading Spinner"
-                  data-testid="loader"
-                />
-              </div>
-              Loading datasets
-            </div>
-          ) : (
-            <div
-              role="treeitem"
-              className="caret-icon down load-more-icon"
-              onClick={handleToggle}
-            >
-              Load More...
-            </div>
-          );
+          return renderLoadMoreNode();
         }
         if (depth === 1) {
           return (
@@ -730,27 +730,7 @@ const BigQueryComponent = ({
         );
       }
       if (node.data.isLoadMoreNode) {
-        return isIconLoading ? (
-          <div className='load-more-spinner-container'>
-            <div className='load-more-spinner'>
-              <CircularProgress
-                className="spin-loader-custom-style"
-                size={20}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            </div>
-            Loading datasets
-          </div>
-        ) : (
-          <div
-            role="treeitem"
-            className="caret-icon down load-more-icon"
-            onClick={handleToggle}
-          >
-            Load More...
-          </div>
-        );
+        return renderLoadMoreNode();
       }
       if (depth === 1) {
         return (
@@ -839,6 +819,8 @@ const BigQueryComponent = ({
 
   const getBigQueryProjects = async (isReset : boolean) => {
     if (isReset) {
+      setAllDatasets(new Map()); 
+      setNextPageTokens(new Map());
       setResetLoading(true);
     }
     await BigQueryService.getBigQueryProjectsListAPIService(
