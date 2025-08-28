@@ -181,9 +181,7 @@ export class BigQueryService {
         if (DEFAULT_PUBLIC_PROJECT_ID !== projectId) {
           filterDatasetByLocation = filterDatasetByLocation.filter(
             (dataset: any) =>
-              DEFAULT_PUBLIC_PROJECT_ID === projectId
-          ? dataset.location === settings.get('bqRegion')['composite']
-          : dataset.entrySource.location.toUpperCase() === settings.get('bqRegion')['composite']
+              dataset.entrySource?.location?.toUpperCase() === settings.get('bqRegion')['composite']
           );
         }
 
