@@ -127,6 +127,7 @@ const BigQueryComponent = ({
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadMoreLoading, setIsLoadMoreLoading] = useState(false);
   const [isResetLoading, setResetLoading] = useState(false);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
 
@@ -349,7 +350,8 @@ const BigQueryComponent = ({
             datasetNode.children.push({
               id: uuidv4(),
               name: tableId,
-              children: []
+              children: [],
+              isOpen: false
             });
           }
         }
@@ -373,11 +375,17 @@ const BigQueryComponent = ({
     }
   };
 
-  const debouncedHandleSearch = debounce(handleSearch, 500);
+  const debouncedHandleSearch = debounce(handleSearch, 1000);
 
   const handleSearchTerm = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-    debouncedHandleSearch(event.target.value);
+    const value = event.target.value;
+    setSearchTerm(value);
+    if (value.length >= 3) {
+      debouncedHandleSearch(value);
+    }
+    if (value.length === 0) {
+      handleSearchClear();
+    }
   };
 
   const openedWidgets: Record<string, boolean> = {};
@@ -452,7 +460,7 @@ const BigQueryComponent = ({
         const nextPageToken = projectId ? nextPageTokens.get(projectId) : undefined;
         if (projectId && nextPageToken) {
           setCurrentNode(node.parent);
-          setIsIconLoading(true);
+          setIsLoadMoreLoading(true);
           getBigQueryDatasets(projectId);
         }
         return;
@@ -619,7 +627,7 @@ const BigQueryComponent = ({
         <div style={{ width: '29px' }}></div>
       );
       const renderLoadMoreNode = () =>
-        isIconLoading ? (
+        isLoadMoreLoading ? (
           <div className='load-more-spinner-container'>
             <div className='load-more-spinner'>
         <CircularProgress
@@ -651,33 +659,25 @@ const BigQueryComponent = ({
               />
             </div>
           ) : node.isOpen ? (
-            <>
-              <div
-                role="treeitem"
-                className="caret-icon right"
-                onClick={handleIconClick}
-              >
-                <iconDownArrow.react
+              <>
+                <div role="treeitem" className="caret-icon down" onClick={handleIconClick}>
+                  <iconDownArrow.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                </div>
+              </>
+            ) : (
+              <div role="treeitem" className="caret-icon right" onClick={handleIconClick}>
+                <iconRightArrow.react
                   tag="div"
                   className="icon-white logo-alignment-style"
                 />
               </div>
-            </>
+            )
           ) : (
-            <div
-              role="treeitem"
-              className="caret-icon down"
-              onClick={handleIconClick}
-            >
-              <iconRightArrow.react
-                tag="div"
-                className="icon-white logo-alignment-style"
-              />
-            </div>
-          )
-        ) : (
-          <div style={{ width: '29px' }}></div>
-        );
+            <div style={{ width: '29px' }}></div>
+          );
 
         if (node.data.isLoadMoreNode) {
           return renderLoadMoreNode();
@@ -844,6 +844,7 @@ const BigQueryComponent = ({
       projectId,
       setIsIconLoading,
       setIsLoading,
+      setIsLoadMoreLoading,
       allDatasetsUnderProject,
       (value: any[]) => {
         setAllDatasets(prev => {
@@ -935,6 +936,7 @@ const BigQueryComponent = ({
       setSearchLoading(false);
       setIsLoading(false);
       setResetLoading(false);
+      setIsLoadMoreLoading(false);
     }
     if (currentNode && !currentNode.isOpen) {
       currentNode?.toggle();

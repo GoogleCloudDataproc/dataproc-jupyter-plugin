@@ -227,10 +227,8 @@ function ConfigSelection({
     if (bqFeature.enable_bigquery_integration) {
       setbigQueryFeatureEnable(true);
     }
-
-    if (bqFeature.projectIdEnabled) {
-      setIsProjectIdEditable(bqFeature.projectIdEnabled);
-    }
+    
+    setIsProjectIdEditable(Boolean(bqFeature.projectIdEnabled));
   };
 
   useEffect(() => {

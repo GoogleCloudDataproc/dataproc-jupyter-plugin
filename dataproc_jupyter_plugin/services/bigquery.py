@@ -48,20 +48,19 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_datasets(self, page_token, project_id):
+    async def list_datasets(self, page_token, project_id, location):
         try:
-            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
-
             if project_id == BQ_PUBLIC_DATASET_PROJECT_ID:
                 # Use BigQuery API for public datasets
+                bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
                 api_endpoint = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets"
                 if page_token:
                     api_endpoint += f"?pageToken={page_token}"
             else:
                 # Use Dataplex API for user-specific datasets
+                dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
                 api_endpoint = (
-                    f"{dataplex_url}/v1/projects/{project_id}/locations/us/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset"
+                    f"{dataplex_url}/v1/projects/{project_id}/locations/{location}/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset"
                 )
                 if page_token:
                     api_endpoint += f"&pageToken={page_token}"
