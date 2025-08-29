@@ -210,3 +210,19 @@
   font-weight: 500;
   cursor: pointer;
 }
+
+.load-more-spinner {
+  display: inline;
+  padding-left: 50px;
+}
+
+.load-more-icon{
+  margin-left: 80px;
+  color: #1a73e8;
+  cursor: pointer;
+  width:200%;
+}
+
+.load-more-spinner-container {
+  width: 200%;
+}

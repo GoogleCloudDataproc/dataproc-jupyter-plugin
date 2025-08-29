@@ -264,3 +264,5 @@ export const DATAPROC_SERVICE_NAME = 'dataproc.googleapis.com';
 export const BIGQUERY_SERVICE_NAME = 'bigquery.googleapis.com';
 
 export const PAGE_SIZE = 50;
+
+export const DEFAULT_PUBLIC_PROJECT_ID = 'bigquery-public-data';

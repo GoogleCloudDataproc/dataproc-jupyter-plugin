@@ -22,7 +22,7 @@ PACKAGE_NAME = "dataproc_jupyter_plugin"
 COMPOSER_SERVICE_NAME = "composer"
 DATAPROC_SERVICE_NAME = "dataproc"
 BIGQUERY_SERVICE_NAME = "bigquery"
-DATACATALOG_SERVICE_NAME = "datacatalog"
+DATAPLEX_SERVICE_NAME = "dataplex"
 CLOUDRESOURCEMANAGER_SERVICE_NAME = "cloudresourcemanager"
 STORAGE_SERVICE_NAME = "storage"
 COMPUTE_SERVICE_NAME = "compute"
@@ -31,6 +31,8 @@ CLOUDKMS_SERVICE_NAME = "cloudkms"
 COMPUTE_SERVICE_DEFAULT_URL = "https://compute.googleapis.com/compute/v1"
 STORAGE_SERVICE_DEFAULT_URL = "https://storage.googleapis.com/storage/v1/"
 WRAPPER_PAPPERMILL_FILE = "wrapper_papermill.py"
+BQ_PUBLIC_DATASET_PROJECT_ID = "bigquery-public-data"
+BASE_PROJECT_ID = "655216118709"
 
 #######################################################
 # Regular expressions used for validating user input: #
