@@ -60,7 +60,7 @@ def _link_jupyter_server_extension(server_app):
         server_app.log.addHandler(file_handler)
 
     c = server_app.config
-    if not configure_gateway_client_url(c, server_app.log):
+    if not configure_gateway_client_url(c, server_app.log, plugin_config.kernel_gateway_project_number):
         # We were not able to configure the gateway client URL so do not modify
         # any of the server settings that rely on that.
 
@@ -68,6 +68,7 @@ def _link_jupyter_server_extension(server_app):
         # impact on the UI components of the Dataproc Jupyter Plugin, as these
         # are only related to running remote kernels and are independent of
         # the UI extensions provided by the plugin.
+        server_app.log.warning("Disabling remote kernel support due to a gateway config error.")
         return
 
     c.ServerApp.kernel_spec_manager_class = MixingKernelSpecManager
