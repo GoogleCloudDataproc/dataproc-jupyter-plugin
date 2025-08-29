@@ -18,6 +18,7 @@
 import React, { useState, useEffect } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import googleCloudIcon from '../../style/icons/google-cloud.svg';
+import helpIcon from '../../style/icons/help_icon.svg';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -76,8 +77,13 @@ function ConfigSelection({
     svgstr: googleCloudIcon
   });
 
+  const iconHelp = new LabIcon({
+    name: 'launcher:help-spark-icon',
+    svgstr: helpIcon
+  });
+
   const [bigQueryFeatureEnable, setbigQueryFeatureEnable] = useState(false);
-  const [isProjectIdEditable, setIsProjectIdEditable] = useState(false);
+  const [isProjectIdEditable, setIsProjectIdEditable] = useState(true);
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
   const [bigQueryRegion, setBigQueryRegion] = useState<any>('');
@@ -220,15 +226,18 @@ function ConfigSelection({
   const handleBigQueryFeature = async () => {
     interface SettingsResponse {
       enable_bigquery_integration?: boolean;
-      projectIdEnabled?: boolean;
+      kernel_gateway_project_number?: string;
     }
+
     let bqFeature: SettingsResponse = await requestAPI('settings');
 
     if (bqFeature.enable_bigquery_integration) {
       setbigQueryFeatureEnable(true);
     }
-    
-    setIsProjectIdEditable(Boolean(bqFeature.projectIdEnabled));
+
+    if (bqFeature.kernel_gateway_project_number){
+      setIsProjectIdEditable(false);
+    }
   };
 
   useEffect(() => {
@@ -315,6 +324,16 @@ function ConfigSelection({
                   }}
                   popupIcon={null}
                 />
+                {!isProjectIdEditable && (
+                  <div className="info-icon-container" title="Project Id is set at Jupyter Lab startup">
+                    <div className="info-icon">
+                      <iconHelp.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="region-overlay">
