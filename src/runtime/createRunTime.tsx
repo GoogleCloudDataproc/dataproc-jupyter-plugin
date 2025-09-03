@@ -1020,7 +1020,7 @@ function CreateRunTime({
 
                   launcher.add({
                     command: commandNotebook,
-                    category: 'Dataproc Serverless Spark',
+                    category: 'Google Cloud Serverless for Apache Spark',
                     //@ts-ignore jupyter lab Launcher type issue
                     metadata: kernelsData?.metadata,
                     rank: index + 1,
