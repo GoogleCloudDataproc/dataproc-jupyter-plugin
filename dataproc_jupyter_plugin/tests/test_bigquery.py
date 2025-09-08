@@ -18,12 +18,13 @@ from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.tests import mocks
+from dataproc_jupyter_plugin.commons.constants import BQ_PUBLIC_DATASET_PROJECT_ID
 
 
 async def test_list_datasets(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
 
-    mock_project_id = "mock-project-id"
+    mock_project_id = BQ_PUBLIC_DATASET_PROJECT_ID
     mock_page_token = "mock-page-token"
     response = await jp_fetch(
         "dataproc-plugin",
