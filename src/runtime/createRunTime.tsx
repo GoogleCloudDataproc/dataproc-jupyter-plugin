@@ -34,9 +34,12 @@ import {
   SPARK_AUTOSCALING_INFO_URL,
   RESOURCE_ALLOCATION_DEFAULT,
   AUTO_SCALING_DEFAULT,
+  META_STORE_DEFAULT,
   GPU_DEFAULT,
   SECURITY_KEY,
-  KEY_MESSAGE
+  KEY_MESSAGE,
+  META_STORE_TYPES,
+  SPARK_META_STORE_INFO_URL
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -149,7 +152,8 @@ function CreateRunTime({
   const [sparkValueValidation, setSparkValueValidation] = useState({
     resourceallocation: [],
     autoscaling: [],
-    gpu: []
+    gpu: [],
+    metastore: []
   });
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
@@ -201,6 +205,32 @@ function CreateRunTime({
   );
   const [sharedvpcSelected, setSharedvpcSelected] = useState('');
   const [gpuDetailChangeDone, setGpuDetailChangeDone] = useState(false);
+
+  const [metastoreType, setMetastoreType] = useState('none');
+  const [dataWarehouseDir, setDataWarehouseDir] = useState('');
+  const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
+  const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
+  const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])\/.*[^\/]$/;
+  const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
+  const [expandMetastore, setExpandMetastore] = useState(false);
+
+  useEffect(() => {
+    if (metastoreType === 'biglake') {
+      const metaStoreProperties = META_STORE_DEFAULT.map(property => {
+        if (property.endsWith('spark.sql.catalog.iceberg_catalog.warehouse:')) {
+          return property + dataWarehouseDir;
+        }
+        return property;
+      });
+      setMetastoreDetail(metaStoreProperties);
+      setMetastoreDetailUpdated(metaStoreProperties);
+    } else {
+      setDataWarehouseDir('');
+      setIsValidDataWareHouseUrl(false);
+      setMetastoreDetail([]);
+      setMetastoreDetailUpdated([]);
+    }
+  }, [metastoreType, dataWarehouseDir]);
 
   let keyType = '';
   let keyRing = '';
@@ -470,6 +500,19 @@ function CreateRunTime({
     );
   };
 
+  const handleDataWareHouseUrlChange = (url : string) => {
+    setDataWarehouseDir(url);
+    if (url === '') {
+      setIsValidDataWareHouseUrl(false);
+    } else {
+      setIsValidDataWareHouseUrl(gcsUrlRegex.test(url));
+    }
+  };
+
+  const handleMetastoreExpand = () => {
+    setExpandMetastore(prevState => !prevState);
+  };
+
   const updateLogic = () => {
     if (selectedRuntimeClone !== undefined) {
       const {
@@ -539,6 +582,7 @@ function CreateRunTime({
             let resourceAllocationDetailList: string[] = [];
             let autoScalingDetailList: string[] = [];
             let gpuDetailList: string[] = [];
+            let metaStoreDetailList: string[] = [];
             let otherDetailList: string[] = [];
             updatedPropertyDetail.forEach(property => {
               if (
@@ -562,6 +606,13 @@ function CreateRunTime({
                 })
               ) {
                 gpuDetailList.push(property);
+              } else if (
+                META_STORE_DEFAULT.some(item => {
+                  const [itemKey] = item.split(':');
+                  return itemKey === property.split(':')[0];
+                })
+              ) {
+                metaStoreDetailList.push(property);
               } else {
                 otherDetailList.push(property);
               }
@@ -571,6 +622,23 @@ function CreateRunTime({
             setResourceAllocationDetailUpdated(resourceAllocationDetailList);
             setAutoScalingDetail(autoScalingDetailList);
             setAutoScalingDetailUpdated(autoScalingDetailList);
+            setMetastoreDetail(metaStoreDetailList);
+            setMetastoreDetailUpdated(metaStoreDetailList);
+            if (metaStoreDetailList.length > 0) {
+              setMetastoreType('biglake');
+              const warehouseProperty = metaStoreDetailList.find(property =>
+                property.startsWith('spark.sql.catalog.iceberg_catalog.warehouse:')
+              );
+              if (warehouseProperty) {
+                const firstColonIndex = warehouseProperty.indexOf(':');
+                const warehouseUrl = warehouseProperty.substring(firstColonIndex + 1);
+                setDataWarehouseDir(warehouseUrl);
+                setIsValidDataWareHouseUrl(gcsUrlRegex.test(warehouseUrl));
+              }
+              setExpandMetastore(false);
+            } else {
+              setMetastoreType('none');
+            }
             if (gpuDetailList.length > 0) {
               setGpuChecked(true);
               setExpandGpu(true);
@@ -951,7 +1019,8 @@ function CreateRunTime({
       (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
       (selectedNetworkRadio === 'projectNetwork' &&
         networkList.length !== 0 &&
-        subNetworkList.length === 0)
+        subNetworkList.length === 0) ||
+      (metastoreType === 'biglake' && ( dataWarehouseDir === '' || !isValidDataWareHouseUrl))
     );
   }
   const createRuntimeApi = async (payload: any) => {
@@ -1149,6 +1218,13 @@ function CreateRunTime({
           const labelSplit = label.split(':');
           const key = labelSplit[0];
           const value = labelSplit[1];
+          propertyObject[key] = value;
+        });
+        metastoreType === 'biglake' &&
+        metastoreDetailUpdated.forEach((label: string) => {
+          const firstColonIndex = label.indexOf(':');
+          const key = label.substring(0, firstColonIndex);
+          const value = label.substring(firstColonIndex + 1);
           propertyObject[key] = value;
         });
         propertyDetailUpdated.forEach((label: string) => {
@@ -2019,44 +2095,86 @@ function CreateRunTime({
               <div className="submit-job-label-header">Metastore</div>
 
               <div className="select-text-overlay">
-                <DynamicDropdown
-                  value={projectId}
-                  onChange={(_, projectId) =>
-                    handleProjectIdChange(projectId, networkSelected)
-                  }
-                  fetchFunc={projectListAPI}
-                  label="Project ID"
-                  // Always show the clear indicator and hide the dropdown arrow
-                  // make it very clear that this is an autocomplete.
-                  sx={{
-                    '& .MuiAutocomplete-clearIndicator': {
-                      visibility: 'hidden'
-                    }
+                <Autocomplete
+                  className="create-runtime-style"
+                  options={META_STORE_TYPES}
+                  value={META_STORE_TYPES.find(option => option.value === metastoreType) || null}
+                  getOptionLabel={option => option.label}
+                  onChange={(event, newValue) => {
+                    setMetastoreType(newValue?.value || '');
                   }}
-                  popupIcon={null}
+                  renderInput={params => (
+                    <TextField {...params} label="Metastore" />
+                  )}
                 />
               </div>
 
-              <div className="select-text-overlay">
-                {isLoadingService ? (
-                  <div className="metastore-loader">
-                    <CircularProgress
-                      size={25}
-                      aria-label="Loading Spinner"
-                      data-testid="loader"
+              {metastoreType === 'dataproc' && (
+                <>
+                  <div className="select-text-overlay">
+                    <DynamicDropdown
+                      value={projectId}
+                      onChange={(_, projectId) =>
+                        handleProjectIdChange(projectId, networkSelected)
+                      }
+                      fetchFunc={projectListAPI}
+                      label="Project ID"
+                      // Always show the clear indicator and hide the dropdown arrow
+                      // make it very clear that this is an autocomplete.
+                      sx={{
+                        '& .MuiAutocomplete-clearIndicator': {
+                          visibility: 'hidden'
+                        }
+                      }}
+                      popupIcon={null}
                     />
                   </div>
-                ) : (
-                  <Autocomplete
-                    options={servicesList}
-                    value={servicesSelected}
-                    onChange={(_event, val) => handleServiceSelected(val)}
-                    renderInput={params => (
-                      <TextField {...params} label="Metastore services" />
+
+                  <div className="select-text-overlay">
+                    {isLoadingService ? (
+                      <div className="metastore-loader">
+                        <CircularProgress
+                          size={25}
+                          aria-label="Loading Spinner"
+                          data-testid="loader"
+                        />
+                      </div>
+                    ) : (
+                      <Autocomplete
+                        options={servicesList}
+                        value={servicesSelected}
+                        onChange={(_event, val) => handleServiceSelected(val)}
+                        renderInput={params => (
+                          <TextField {...params} label="Metastore service" />
+                        )}
+                      />
                     )}
-                  />
-                )}
-              </div>
+                  </div>
+                </>
+              )}
+
+              {metastoreType === 'biglake' && (
+                <>
+                  <div className="select-text-overlay">
+                    <Input
+                      className="create-runtime-style"
+                      value={dataWarehouseDir}
+                      onChange={e => handleDataWareHouseUrlChange(e.target.value)}
+                      type="text"
+                      Label="Data warehousing directory*"
+                      placeholder="e.g, gs://bucket-name>/path/to/directory"
+                      style={{ borderColor: isValidDataWareHouseUrl ? '' : 'red' }}
+                    />
+                  </div>
+                  {!isValidDataWareHouseUrl && (
+                    <div className="error-key-parent">
+                      <iconError.react tag="div" className="logo-alignment-style" />
+                      <div className="error-key-missing">Input does not match pattern : gs://bucket-name/path/to/directory</div>
+                    </div>
+                  )}
+                </>
+              )}
+
               <div className="submit-job-label-header">
                 Persistent Spark History Server
               </div>
@@ -2224,6 +2342,56 @@ function CreateRunTime({
                   sparkSection="gpu"
                   setGpuDetailChangeDone={setGpuDetailChangeDone}
                 />
+              )}
+              {metastoreType === 'biglake' && (
+                <>
+                  <div className="spark-properties-sub-header-parent">
+                    <div className="spark-properties-title">
+                      <div className="spark-properties-sub-header">Metastore</div>
+                      <div
+                        className="expand-icon"
+                        onClick={() =>
+                          window.open(`${SPARK_META_STORE_INFO_URL}`, '_blank')
+                        }
+                        >
+                        <iconHelp.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
+                      </div>
+                    </div>
+                    <div
+                      className="expand-icon"
+                      onClick={() => handleMetastoreExpand()}
+                    >
+                      {expandMetastore ? (
+                        <iconExpandLess.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
+                      ) : (
+                        <iconExpandMore.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
+                      )}
+                    </div>
+                  </div>
+                  {expandMetastore && (
+                    <SparkProperties
+                      labelDetail={metastoreDetail}
+                      setLabelDetail={setMetastoreDetail}
+                      labelDetailUpdated={metastoreDetailUpdated}
+                      setLabelDetailUpdated={setMetastoreDetailUpdated}
+                      buttonText="ADD PROPERTY"
+                      sparkValueValidation={sparkValueValidation}
+                      setSparkValueValidation={setSparkValueValidation}
+                      sparkSection="metastore"
+                      setGpuDetailChangeDone={setGpuDetailChangeDone}
+                      disabled={true}
+                    />
+                  )}
+                </>
               )}
               <div className="spark-properties-sub-header">Others</div>
               <LabelProperties

@@ -43,7 +43,8 @@ function SparkProperties({
   sparkValueValidation,
   setSparkValueValidation,
   sparkSection,
-  setGpuDetailChangeDone
+  setGpuDetailChangeDone,
+  disabled = false
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
@@ -236,6 +237,7 @@ function SparkProperties({
                               ? BOOLEAN_SELECT_OPTIONS
                               : TIER_SELECT_OPTIONS
                           }
+                          disabled={disabled}
                           Label={`Value ${index + 1}`}
                         />
                       ) : (
@@ -250,9 +252,9 @@ function SparkProperties({
                             labelSplit[0] ===
                               'spark.dataproc.executor.compute.tier'
                               ? true
-                              : false
+                              : false || disabled
                           }
-                          value={labelDetailUpdated[index].split(':')[1]}
+                          value={labelDetailUpdated[index] ? labelDetailUpdated[index].substring(labelDetailUpdated[index].indexOf(':') + 1) : ''}
                           Label={`Value ${index + 1}`}
                         />
                       )}
