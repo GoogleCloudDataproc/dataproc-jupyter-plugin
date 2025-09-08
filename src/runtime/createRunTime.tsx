@@ -425,6 +425,40 @@ function CreateRunTime({
     }
   }, [keyRingSelected]);
 
+  useEffect(() => {
+    // filtering the 'spark.dynamicAllocation.enabled' property in the updated state
+    const dynamicAllocationState = autoScalingDetailUpdated.find(prop =>
+      prop.startsWith('spark.dynamicAllocation.enabled:')
+    );
+
+    if (dynamicAllocationState) {
+      const isEnabled = dynamicAllocationState.endsWith('true');
+
+      if (isEnabled) {
+        // If auto-scaling dynamicAllocation is re-enabled, restore the full set of properties.
+        if (JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(AUTO_SCALING_DEFAULT)) {
+          setAutoScalingDetail(AUTO_SCALING_DEFAULT);
+          setAutoScalingDetailUpdated(AUTO_SCALING_DEFAULT);
+        }
+      } else {
+        let filteredProperties = [dynamicAllocationState];
+
+        const shuffleEnabledState = autoScalingDetailUpdated.find(prop =>
+          prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
+        );
+
+        if (shuffleEnabledState) {
+          filteredProperties.push(shuffleEnabledState);
+        }
+        
+        if (JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(filteredProperties)) {
+          setAutoScalingDetail(filteredProperties);
+          setAutoScalingDetailUpdated(filteredProperties);
+        }
+      }
+    }
+  }, [autoScalingDetailUpdated]);
+
   const displayUserInfo = async () => {
     await RunTimeSerive.displayUserInfoService(setUserInfo);
   };
