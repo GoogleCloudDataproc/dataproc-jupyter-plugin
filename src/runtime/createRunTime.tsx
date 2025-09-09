@@ -216,7 +216,7 @@ function CreateRunTime({
 
   useEffect(() => {
     if (metastoreType === 'biglake') {
-      const metaStoreProperties = META_STORE_DEFAULT.map(property => {
+      const metaStoreProperties = metastoreDetail.map(property => {
         if (property.endsWith('spark.sql.catalog.iceberg_catalog.warehouse:')) {
           return property + dataWarehouseDir;
         }
@@ -2388,7 +2388,6 @@ function CreateRunTime({
                       setSparkValueValidation={setSparkValueValidation}
                       sparkSection="metastore"
                       setGpuDetailChangeDone={setGpuDetailChangeDone}
-                      disabled={true}
                     />
                   )}
                 </>
