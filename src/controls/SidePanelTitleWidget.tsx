@@ -18,6 +18,7 @@ import React from 'react';
 import { ReactWidget } from '@jupyterlab/apputils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import refreshDatasetIcon from '../../style/icons/refresh_icon.svg';
+import { CircularProgress } from '@mui/material';
 
 const iconRefreshDatasetExplorer = new LabIcon({
   name: 'launcher:refresh-dataset-explorer-icon',
@@ -28,11 +29,13 @@ export const TitleComponent = function ({
   titleStr,
   isPreview,
   getBigQueryProjects,
+  isLoading,
   styles
 }: {
   titleStr: string;
   isPreview: boolean;
   getBigQueryProjects?: () => void;
+  isLoading?: boolean; // Add to type definition
   styles?: React.CSSProperties;
 }) {
   return (
@@ -68,14 +71,28 @@ export const TitleComponent = function ({
         </div>
         {getBigQueryProjects ? (
           <span
-            onClick={() => getBigQueryProjects()}
+            onClick={() => {
+              if (!isLoading) {
+                getBigQueryProjects();
+              }
+            }}
             aria-label="dataset-explorer-refresh"
             className="dataset-explorer-refresh"
+            style={{ cursor: isLoading ? 'wait' : 'pointer' }}
           >
-            <iconRefreshDatasetExplorer.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
+            {isLoading ? (
+              <CircularProgress
+                className="spin-loader-custom-style"
+                size={16}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            ) : (
+              <iconRefreshDatasetExplorer.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
+            )}
           </span>
         ) : null}
       </div>

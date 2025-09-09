@@ -32,11 +32,12 @@ class DatasetController(APIHandler):
         try:
             page_token = self.get_argument("pageToken")
             project_id = self.get_argument("project_id")
+            location = self.get_argument("location", default="us").lower()
             async with aiohttp.ClientSession() as client_session:
                 client = bigquery.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
-                dataset_list = await client.list_datasets(page_token, project_id)
+                dataset_list = await client.list_datasets(page_token, project_id, location)
             self.finish(json.dumps(dataset_list))
         except Exception as e:
             self.log.exception("Error fetching datasets")

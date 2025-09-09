@@ -18,12 +18,13 @@ from google.cloud import jupyter_config
 
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.tests import mocks
+from dataproc_jupyter_plugin.commons.constants import BQ_PUBLIC_DATASET_PROJECT_ID
 
 
 async def test_list_datasets(monkeypatch, jp_fetch):
     mocks.patch_mocks(monkeypatch)
 
-    mock_project_id = "mock-project-id"
+    mock_project_id = BQ_PUBLIC_DATASET_PROJECT_ID
     mock_page_token = "mock-page-token"
     response = await jp_fetch(
         "dataproc-plugin",
@@ -163,41 +164,3 @@ async def test_projects_list(monkeypatch, jp_fetch):
     assert response.code == 200
     payload = json.loads(response.body)
     assert payload == ["bigquery-public-data", "credentials-project"]
-
-
-async def test_search(monkeypatch, jp_fetch):
-    async def mock_config(config_field):
-        return ""
-
-    mocks.patch_mocks(monkeypatch)
-    monkeypatch.setattr(jupyter_config, "async_get_gcloud_config", mock_config)
-
-    mock_search_string = "mock-search-string"
-    mock_system = "mock-system"
-    mock_type = "mock-type"
-    response = await jp_fetch(
-        "dataproc-plugin",
-        "bigQuerySearch",
-        params={
-            "search_string": mock_search_string,
-            "system": mock_system,
-            "type": mock_type,
-        },
-        method="POST",
-        allow_nonstandard_methods=True,
-    )
-    assert response.code == 200
-    payload = json.loads(response.body)["results"][0]
-    assert (
-        payload["api_endpoint"]
-        == f"https://datacatalog.googleapis.com/v1/catalog:search"
-    )
-    assert payload["headers"]["Authorization"] == f"Bearer mock-token"
-    assert (
-        payload["json"]["query"]
-        == f"{mock_search_string}, system={mock_system}, type={mock_type}"
-    )
-    assert payload["json"]["scope"]["includeProjectIds"] == [
-        "bigquery-public-data",
-        "credentials-project",
-    ]

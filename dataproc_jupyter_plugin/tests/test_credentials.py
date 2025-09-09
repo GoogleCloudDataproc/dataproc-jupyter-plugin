@@ -17,7 +17,7 @@ import unittest
 
 from google.cloud.jupyter_config.config import clear_gcloud_cache
 
-from .. import credentials
+from dataproc_jupyter_plugin import credentials
 
 
 class TestGetCached(unittest.IsolatedAsyncioTestCase):

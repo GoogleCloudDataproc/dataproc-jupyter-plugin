@@ -20,9 +20,12 @@ from dataproc_jupyter_plugin.commons.constants import (
     BIGQUERY_SERVICE_NAME,
     CLOUDRESOURCEMANAGER_SERVICE_NAME,
     CONTENT_TYPE,
-    DATACATALOG_SERVICE_NAME,
+    DATAPLEX_SERVICE_NAME
 )
 
+from dataproc_jupyter_plugin.commons.constants import (
+    BQ_PUBLIC_DATASET_PROJECT_ID,BASE_PROJECT_ID
+)
 
 class Client:
     def __init__(self, credentials, log, client_session):
@@ -45,10 +48,23 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_datasets(self, page_token, project_id):
+    async def list_datasets(self, page_token, project_id, location):
         try:
-            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets?pageToken={page_token}"
+            if project_id == BQ_PUBLIC_DATASET_PROJECT_ID:
+                # Use BigQuery API for public datasets
+                bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
+                api_endpoint = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets"
+                if page_token:
+                    api_endpoint += f"?pageToken={page_token}"
+            else:
+                # Use Dataplex API for user-specific datasets
+                dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
+                api_endpoint = (
+                    f"{dataplex_url}/v1/projects/{project_id}/locations/{location}/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset"
+                )
+                if page_token:
+                    api_endpoint += f"&pageToken={page_token}"
+            
             async with self.client_session.get(
                 api_endpoint, headers=self.create_headers()
             ) as response:
@@ -139,44 +155,75 @@ class Client:
             self.log.exception("Error fetching preview data")
             return {"error": str(e)}
 
-    async def bigquery_search(self, search_string, type, system, projects):
+    async def bigquery_search(self, search_string: str, type: str, system: str, projects: list):
+        """Searches for BigQuery data assets using the Dataplex API."""
         try:
-            datacatalog_url = await urls.gcp_service_url(DATACATALOG_SERVICE_NAME)
-            api_endpoint = f"{datacatalog_url}v1/catalog:search"
+            dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
+            api_endpoint = f"{dataplex_url}v1/projects/{self.project_id}/locations/global:searchEntries"
+            
             headers = {
-                "Content-Type": CONTENT_TYPE,
+                "Content-Type": "application/json",
                 "Authorization": f"Bearer {self._access_token}",
                 "X-Goog-User-Project": self.project_id,
             }
+
+            query_parts = []
+            if search_string:
+                query_parts.append(f"{search_string}")
+            if system:
+                query_parts.append(f"system={system.upper()}")
+            if type:
+                type_filters = " OR ".join([f"type={t.upper()}" for t in type.split('|')])
+                query_parts.append(f"({type_filters})")
+            if projects:
+                project_filters = " OR ".join([f"projectid={p}" for p in projects])
+                query_parts.append(f"({project_filters})")
+
+            full_query = " AND ".join(filter(None, query_parts))
+            
+            if not full_query:
+                self.log.warning("No search query provided. Returning empty result.")
+                return {}
+
             payload = {
-                "query": f"{search_string}, system={system}, type={type}",
-                "scope": {"includeProjectIds": projects},
+                "query": full_query,
                 "pageSize": 500,
             }
+            
             has_next = True
-            search_result = []
+            search_results = []
+            
+            # Handle pagination to retrieve all results.
             while has_next:
-                async with self.client_session.post(
-                    api_endpoint, headers=headers, json=payload
-                ) as response:
-                    if response.status == 200:
-                        resp = await response.json()
-                        if "results" in resp:
-                            search_result += resp["results"]
-                        if "nextPageToken" in resp:
-                            payload["pageToken"] = resp["nextPageToken"]
+                try:
+                    async with self.client_session.post(
+                        api_endpoint, headers=headers, json=payload
+                    ) as response:
+                        if response.status == 200:
+                            resp = await response.json()
+                            if "results" in resp:
+                                search_results.extend(resp["results"])
+
+                            if "nextPageToken" in resp:
+                                payload["pageToken"] = resp["nextPageToken"]
+                            else:
+                                has_next = False
                         else:
-                            has_next = False
-                    else:
-                        raise Exception(
-                            f"Error searching in BigQuery data : {response.reason} {await response.text()}"
-                        )
-            if len(search_result) == 0:
+                            response_text = await response.text()
+                            self.log.error(f"Error searching in Dataplex: {response.status} - {response_text}")
+                            raise Exception(f"Dataplex API Error: {response.status} - {response.reason} - {response_text}")
+
+                except aiohttp.ClientError as e:
+                    self.log.error(f"Aiohttp client error during API call: {e}")
+                    raise
+
+            if not search_results:
                 return {}
             else:
-                return {"results": search_result}
+                return {"results": search_results}
+
         except Exception as e:
-            self.log.exception(f"Error fetching search data")
+            self.log.exception(f"Error fetching Dataplex search data: {e}")
             return {"error": str(e)}
 
     async def bigquery_projects(self, dataset_id, table_id):

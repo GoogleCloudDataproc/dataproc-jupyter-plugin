@@ -18,7 +18,7 @@ from dataproc_jupyter_plugin.commons.constants import (
     CLOUDRESOURCEMANAGER_SERVICE_NAME,
     COMPUTE_SERVICE_DEFAULT_URL,
     COMPUTE_SERVICE_NAME,
-    DATACATALOG_SERVICE_NAME,
+    DATAPLEX_SERVICE_NAME,
     DATAPROC_SERVICE_NAME,
     METASTORE_SERVICE_NAME,
     STORAGE_SERVICE_DEFAULT_URL,
@@ -34,7 +34,7 @@ async def map():
     metastore_url = await gcp_service_url(METASTORE_SERVICE_NAME)
     cloudkms_url = await gcp_service_url(CLOUDKMS_SERVICE_NAME)
     cloudresourcemanager_url = await gcp_service_url(CLOUDRESOURCEMANAGER_SERVICE_NAME)
-    datacatalog_url = await gcp_service_url(DATACATALOG_SERVICE_NAME)
+    dataplex_url = await gcp_service_url(DATAPLEX_SERVICE_NAME)
     storage_url = await gcp_service_url(
         STORAGE_SERVICE_NAME, default_url=STORAGE_SERVICE_DEFAULT_URL
     )
@@ -44,8 +44,8 @@ async def map():
         "metastore_url": metastore_url,
         "cloudkms_url": cloudkms_url,
         "cloudresourcemanager_url": cloudresourcemanager_url,
-        "datacatalog_url": datacatalog_url,
         "storage_url": storage_url,
+        "dataplex_url": dataplex_url,
     }
     return url_map
 
