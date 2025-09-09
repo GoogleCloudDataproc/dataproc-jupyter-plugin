@@ -29,7 +29,7 @@ async def test_get_default_settings(jp_fetch):
     assert "enable_bigquery_integration" in payload
     assert "log_path" in payload
     assert payload["enable_bigquery_integration"] is False
-    assert payload["log_path"] is ""
+    assert payload["log_path"] == ""
 
 
 async def test_get_modified_settings(jp_fetch, jp_serverapp):
@@ -40,7 +40,7 @@ async def test_get_modified_settings(jp_fetch, jp_serverapp):
     assert "enable_bigquery_integration" in payload
     assert "log_path" in payload
     assert payload["enable_bigquery_integration"] is True
-    assert payload["log_path"] is ""
+    assert payload["log_path"] == ""
 
 
 async def test_get_default_config(jp_serverapp):
