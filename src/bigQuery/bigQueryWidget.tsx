@@ -500,6 +500,10 @@ const BigQueryComponent = ({
       }
     };
     const handleIconClick = (event: React.MouseEvent) => {
+      // `node.isOpen` is the default property of the library, which sometimes has incorrect initial behaviour.
+      // This leads to, incorrect expand / collapase Icon in the UI.
+      // using `isNodeOpen` this (custom) property to correct the node's intial expand/collapse state.
+      // and prevent visual flickering when the user interacts with the tree.
       if(node.isOpen !== node.data.isNodeOpen){
         node.toggle();
       }

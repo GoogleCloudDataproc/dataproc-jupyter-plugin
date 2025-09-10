@@ -14,8 +14,8 @@
 
 
 import json
-import subprocess
 import time
+import asyncio
 
 import aiohttp
 import tornado
@@ -26,23 +26,25 @@ from dataproc_jupyter_plugin.services import bigquery
 from dataproc_jupyter_plugin.commons.constants import (
     BQ_PUBLIC_DATASET_PROJECT_ID,BQ_CLIENT_EXPIRY_DURATION
 )
-
+    
 class BigQueryClient:
     _client = None
     _session = None
     _creation_time = None
-    
+    _lock = asyncio.Lock()
+	
     async def get_client(self, log):
-        if self._client is None or (time.time() - self._creation_time) > BQ_CLIENT_EXPIRY_DURATION:
-            if self._session:
-                await self._session.close()
-            
-            self._session = aiohttp.ClientSession()
-            self._client = bigquery.Client(
-                await credentials.get_cached(), log, self._session
-            )
-            self._creation_time = time.time()
-        return self._client
+        async with self._lock:
+            if self._client is None or (time.time() - self._creation_time) > BQ_CLIENT_EXPIRY_DURATION:
+                if self._session:
+                    await self._session.close()
+
+                self._session = aiohttp.ClientSession()
+                self._client = bigquery.Client(
+                    await credentials.get_cached(), log, self._session
+                )
+                self._creation_time = time.time()
+            return self._client
 
 bigquery_client = BigQueryClient()
 
