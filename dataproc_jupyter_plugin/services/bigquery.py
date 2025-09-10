@@ -24,7 +24,7 @@ from dataproc_jupyter_plugin.commons.constants import (
 )
 
 from dataproc_jupyter_plugin.commons.constants import (
-    BQ_PUBLIC_DATASET_PROJECT_ID,BASE_PROJECT_ID
+    BQ_PUBLIC_DATASET_PROJECT_ID,BASE_PROJECT_ID,PAGE_SIZE_LIMIT
 )
 
 class Client:
@@ -53,14 +53,14 @@ class Client:
             if project_id == BQ_PUBLIC_DATASET_PROJECT_ID:
                 # Use BigQuery API for public datasets
                 bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-                api_endpoint = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets"
+                api_endpoint = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets?maxResults={PAGE_SIZE_LIMIT}"
                 if page_token:
-                    api_endpoint += f"?pageToken={page_token}"
+                    api_endpoint += f"&pageToken={page_token}"
             else:
                 # Use Dataplex API for user-specific datasets
                 dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
                 api_endpoint = (
-                    f"{dataplex_url}/v1/projects/{project_id}/locations/{location}/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset"
+                    f"{dataplex_url}/v1/projects/{project_id}/locations/{location}/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset&pageSize={PAGE_SIZE_LIMIT}"
                 )
                 if page_token:
                     api_endpoint += f"&pageToken={page_token}"

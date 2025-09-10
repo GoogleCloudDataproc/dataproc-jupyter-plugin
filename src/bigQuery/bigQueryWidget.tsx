@@ -192,6 +192,7 @@ const BigQueryComponent = ({
     name: string;
     type: string;
     isLoadMoreNode?: boolean;
+    isNodeOpen: boolean;
     description: string;
     children: any;
   }
@@ -200,7 +201,8 @@ const BigQueryComponent = ({
     const data = projectNameInfo.map(projectName => ({
       id: uuidv4(),
       name: projectName,
-      children: []
+      children: [],
+      isNodeOpen: false
     }));
 
     data.sort((a, b) => a.name.localeCompare(b.name));
@@ -217,6 +219,7 @@ const BigQueryComponent = ({
           id: uuidv4(),
           name: datasetName,
           isLoadMoreNode: false,
+          isNodeOpen: false,
           children: []
         }));
         datasetNodes.sort((a, b) => a.name.localeCompare(b.name));
@@ -229,6 +232,7 @@ const BigQueryComponent = ({
               id: uuidv4(),
               name: '',
               isLoadMoreNode: true,
+              isNodeOpen: false,
               children: []
             });
         }
@@ -252,7 +256,8 @@ const BigQueryComponent = ({
               dataset['children'] = tableResponse.map((tableDetails: any) => ({
                 id: uuidv4(),
                 name: tableDetails.tableReference.tableId,
-                children: []
+                children: [],
+                isNodeOpen: false
               }));
             }
           } else {
@@ -330,27 +335,32 @@ const BigQueryComponent = ({
           projectNode = {
             id: uuidv4(),
             name: projectId,
-            children: []
+            children: [],
+            isNodeOpen: false
           };
           data.push(projectNode);
         }
 
         let datasetNode = projectNode.children.find((d: any) => d.name === datasetId);
         if (!datasetNode) {
+          projectNode.isNodeOpen = true
           datasetNode = {
             id: uuidv4(),
             name: datasetId,
-            children: []
+            children: [],
+            isNodeOpen: false
           };
           projectNode.children.push(datasetNode);
         }
 
         if (tableId) {
           if (!datasetNode.children.find((t: any) => t.name === tableId)) {
+            datasetNode.isNodeOpen = true
             datasetNode.children.push({
               id: uuidv4(),
               name: tableId,
               children: [],
+              isNodeOpen: false,
               isOpen: false
             });
           }
@@ -490,7 +500,11 @@ const BigQueryComponent = ({
       }
     };
     const handleIconClick = (event: React.MouseEvent) => {
+      if(node.isOpen !== node.data.isNodeOpen){
+        node.toggle();
+      }
       if (event.currentTarget.classList.contains('caret-icon')) {
+        node.data.isNodeOpen = ! node.data.isNodeOpen
         handleToggle();
       }
     };
@@ -658,7 +672,7 @@ const BigQueryComponent = ({
                 data-testid="loader"
               />
             </div>
-          ) : node.isOpen ? (
+          ) : node.data.isNodeOpen ? (
               <>
                 <div role="treeitem" className="caret-icon down" onClick={handleIconClick}>
                   <iconDownArrow.react
