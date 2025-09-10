@@ -76,6 +76,7 @@ import { RunTimeSerive } from './runtimeService';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
+import helpIconDark from '../../style/icons/help_icon_dark.svg';
 import SparkProperties from './sparkProperties';
 import ApiEnableDialog from '../utils/apiErrorPopup';
 import LoginErrorComponent from '../utils/loginErrorComponent';
@@ -101,6 +102,10 @@ const iconHelp = new LabIcon({
   name: 'launcher:help-spark-icon',
   svgstr: helpIcon
 });
+const iconHelpDark = new LabIcon({
+  name: 'launcher:help-spark-dark-icon',
+  svgstr: helpIconDark
+})
 
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
@@ -218,9 +223,11 @@ function CreateRunTime({
 
   useEffect(() => {
     if (metastoreType === 'biglake') {
-      const metaStoreProperties = metastoreDetail.map(property => {
-        if (property.endsWith('spark.sql.catalog.iceberg_catalog.warehouse:')) {
-          return property + dataWarehouseDir;
+      const metaStorePropertiesList = metastoreDetail.length > 0 ? metastoreDetail : META_STORE_DEFAULT;
+      const warehouseProperty = 'spark.sql.catalog.iceberg_catalog.warehouse:';
+      const metaStoreProperties = metaStorePropertiesList.map(property => {
+        if (property.startsWith(warehouseProperty)) {
+          return warehouseProperty + dataWarehouseDir;
         }
         return property;
       });
@@ -757,6 +764,7 @@ function CreateRunTime({
           peripheralsConfig &&
           peripheralsConfig.metastoreService !== undefined
         ) {
+          setMetastoreType('dataproc');
           setServicesSelected(peripheralsConfig.metastoreService);
           const metastoreDetails =
             peripheralsConfig?.metastoreService?.split('/');
@@ -968,6 +976,23 @@ function CreateRunTime({
     if (fromPage === 'launcher') {
       app.shell.activeWidget?.close();
     }
+  };
+
+  const renderHelpIcon = (themeManager: IThemeManager) => {
+    if (themeManager.theme && themeManager.isLight(themeManager.theme)) {
+      return (
+        <iconHelp.react
+          tag="div"
+          className="logo-alignment-style"
+        />
+      );
+    }
+    return (
+      <iconHelpDark.react
+        tag="div"
+        className="logo-alignment-style"
+      />
+    );
   };
 
   const handleClusterSelected = (data: string | null) => {
@@ -2209,10 +2234,7 @@ function CreateRunTime({
                       )
                     }
                   >
-                    <iconHelp.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
+                    {renderHelpIcon(themeManager)}
                   </div>
                 </div>
                 <div
@@ -2254,10 +2276,7 @@ function CreateRunTime({
                       window.open(`${SPARK_AUTOSCALING_INFO_URL}`, '_blank')
                     }
                   >
-                    <iconHelp.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
+                    {renderHelpIcon(themeManager)}
                   </div>
                 </div>
                 <div
@@ -2311,10 +2330,7 @@ function CreateRunTime({
                       window.open(`${SPARK_GPU_INFO_URL}`, '_blank')
                     }
                   >
-                    <iconHelp.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
+                    {renderHelpIcon(themeManager)}
                   </div>
                 </div>
                 <div className="expand-icon" onClick={() => handleGpuExpand()}>
@@ -2355,10 +2371,7 @@ function CreateRunTime({
                           window.open(`${SPARK_META_STORE_INFO_URL}`, '_blank')
                         }
                         >
-                        <iconHelp.react
-                          tag="div"
-                          className="logo-alignment-style"
-                        />
+                          {renderHelpIcon(themeManager)}
                       </div>
                     </div>
                     <div
