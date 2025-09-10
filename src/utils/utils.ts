@@ -365,25 +365,26 @@ export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel,themeManager: I
   const isLightTheme = themeManager.theme
         ? themeManager.isLight(themeManager.theme)
         : true;
-  if (
-    kernelType?.name.includes('spylon') ||
-    kernelType?.name.includes('apache')
-  ) {
+  const kernalName = kernelType?.name || '';
+  const kernalLanguage = kernelType?.language || '';
+  
+  if (kernalName.includes('spylon') || kernalName.includes('apache')) {
     return iconScalaLogo;
-  } else if (kernelType?.name.includes('ir')) {
-    return iconSparkRLogo;
-  } else if (
-    kernelType?.name.includes('pyspark') ||
-    kernelType?.resources.endpointParentResource.includes('/sessions')
-  ) {
-    if (kernelType?.language === 'scala') {
-      return iconScalaLogo;
-    } else {
-      return isLightTheme ? iconPysparkLogo : iconPysparkDarkLogo;
-    }
-  } else {
-    return iconPythonLogo;
   }
+  
+  if (kernalName.includes('ir')) {
+    return iconSparkRLogo;  
+  } 
+  
+  if (kernalName.includes('pyspark') 
+    || kernelType?.resources.endpointParentResource.includes('/sessions')) {
+    if (kernalLanguage === 'scala') {
+      return iconScalaLogo;
+    }
+    return isLightTheme ? iconPysparkLogo : iconPysparkDarkLogo;
+  }
+  
+  return iconPythonLogo;
 };
 
 export interface ICellProps {

@@ -469,31 +469,29 @@ function CreateRunTime({
     const dynamicAllocationState = autoScalingDetailUpdated.find(prop =>
       prop.startsWith('spark.dynamicAllocation.enabled:')
     );
-
+   
     if (dynamicAllocationState) {
       const isEnabled = dynamicAllocationState.endsWith('true');
+      let updatedProperties;
 
       if (isEnabled) {
-        // If auto-scaling dynamicAllocation is re-enabled, restore the full set of properties.
-        if (JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(AUTO_SCALING_DEFAULT)) {
-          setAutoScalingDetail(AUTO_SCALING_DEFAULT);
-          setAutoScalingDetailUpdated(AUTO_SCALING_DEFAULT);
-        }
+        updatedProperties = AUTO_SCALING_DEFAULT;
       } else {
         let filteredProperties = [dynamicAllocationState];
 
-        const shuffleEnabledState = autoScalingDetailUpdated.find(prop =>
-          prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
+        const shuffleEnabledState = autoScalingDetailUpdated.find(
+          (prop) => prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
         );
 
         if (shuffleEnabledState) {
           filteredProperties.push(shuffleEnabledState);
         }
-        
-        if (JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(filteredProperties)) {
-          setAutoScalingDetail(filteredProperties);
-          setAutoScalingDetailUpdated(filteredProperties);
-        }
+        updatedProperties = filteredProperties;
+      }
+      
+      if (JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(updatedProperties)) {
+        setAutoScalingDetail(updatedProperties);
+        setAutoScalingDetailUpdated(updatedProperties);
       }
     }
   }, [autoScalingDetailUpdated]);
@@ -509,13 +507,9 @@ function CreateRunTime({
     );
   };
 
-  const handleDataWareHouseUrlChange = (url : string) => {
+  const handleDataWareHouseUrlChange = (url: string) => {
     setDataWarehouseDir(url);
-    if (url === '') {
-      setIsValidDataWareHouseUrl(false);
-    } else {
-      setIsValidDataWareHouseUrl(gcsUrlRegex.test(url));
-    }
+    setIsValidDataWareHouseUrl(url === '' ? false : gcsUrlRegex.test(url));
   };
 
   const handleMetastoreExpand = () => {
