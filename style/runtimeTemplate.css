@@ -197,3 +197,7 @@
   color: var(--jp-ui-font-color0);
   margin-right: 15px;
 }
+
+.input-error .MuiOutlinedInput-notchedOutline {
+  border-color: red !important;
+}

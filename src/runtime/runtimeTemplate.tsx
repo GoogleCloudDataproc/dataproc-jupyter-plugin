@@ -52,6 +52,7 @@ const RuntimeTemplateComponent = ({
           launcher={launcher}
           fromPage="launcher"
           settingRegistry={settingRegistry}
+          themeManager={themeManager}
         />
       )}
     </div>

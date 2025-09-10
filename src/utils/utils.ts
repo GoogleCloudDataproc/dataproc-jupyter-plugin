@@ -17,6 +17,7 @@
 
 import { LabIcon } from '@jupyterlab/ui-components';
 import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
+import pySparkDarkLogo from '../../third_party/icons/pyspark-dark-icon.svg'
 import pythonLogo from '../../third_party/icons/python_logo.svg';
 import scalaLogo from '../../third_party/icons/scala_logo.svg';
 import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
@@ -44,7 +45,7 @@ import {
 } from './const';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { DataprocLoggingService } from './loggingService';
-import { Notification } from '@jupyterlab/apputils';
+import { IThemeManager, Notification } from '@jupyterlab/apputils';
 
 export interface IAuthCredentials {
   access_token?: string;
@@ -343,6 +344,10 @@ const iconPysparkLogo = new LabIcon({
   name: 'launcher:pyspark-logo-icon',
   svgstr: pysparkLogo
 });
+const iconPysparkDarkLogo = new LabIcon({
+  name: 'launcher:pyspark-dark-logo-icon',
+  svgstr: pySparkDarkLogo
+})
 const iconPythonLogo = new LabIcon({
   name: 'launcher:python-logo-icon',
   svgstr: pythonLogo
@@ -356,7 +361,10 @@ const iconScalaLogo = new LabIcon({
   svgstr: scalaLogo
 });
 
-export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel) => {
+export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel,themeManager: IThemeManager) => {
+  const isLightTheme = themeManager.theme
+        ? themeManager.isLight(themeManager.theme)
+        : true;
   if (
     kernelType?.name.includes('spylon') ||
     kernelType?.name.includes('apache')
@@ -371,7 +379,7 @@ export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel) => {
     if (kernelType?.language === 'scala') {
       return iconScalaLogo;
     } else {
-      return iconPysparkLogo;
+      return isLightTheme ? iconPysparkLogo : iconPysparkDarkLogo;
     }
   } else {
     return iconPythonLogo;

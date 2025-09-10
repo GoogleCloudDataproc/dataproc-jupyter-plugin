@@ -17,7 +17,7 @@
 
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
-import { Notification } from '@jupyterlab/apputils';
+import { IThemeManager, Notification } from '@jupyterlab/apputils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -111,7 +111,8 @@ function CreateRunTime({
   launcher,
   app,
   fromPage,
-  settingRegistry
+  settingRegistry,
+  themeManager
 }: {
   setOpenCreateTemplate: (value: boolean) => void;
   selectedRuntimeClone: any;
@@ -119,6 +120,7 @@ function CreateRunTime({
   app: JupyterLab;
   fromPage: string;
   settingRegistry: ISettingRegistry;
+  themeManager: IThemeManager;
 }) {
   const [generationCompleted, setGenerationCompleted] = useState(false);
   const [displayNameSelected, setDisplayNameSelected] = useState('');
@@ -1069,7 +1071,7 @@ function CreateRunTime({
                   commands.addCommand(commandNotebook, {
                     caption: kernelsData?.display_name,
                     label: kernelsData?.display_name,
-                    icon: iconDisplay(kernelsData),
+                    icon: () => iconDisplay(kernelsData, themeManager),
                     execute: async () => {
                       const model = await app.commands.execute(
                         'docmanager:new-untitled',
@@ -1112,7 +1114,7 @@ function CreateRunTime({
                   commands.addCommand(commandNotebook, {
                     caption: kernelsData?.display_name,
                     label: kernelsData?.display_name,
-                    icon: iconDisplay(kernelsData),
+                    icon: () => iconDisplay(kernelsData, themeManager),
                     execute: async () => {
                       const model = await app.commands.execute(
                         'docmanager:new-untitled',
@@ -2157,13 +2159,12 @@ function CreateRunTime({
                 <>
                   <div className="select-text-overlay">
                     <Input
-                      className="create-runtime-style"
+                      className={`create-runtime-style ${!isValidDataWareHouseUrl && dataWarehouseDir ? 'input-error' : ''}`}
                       value={dataWarehouseDir}
                       onChange={e => handleDataWareHouseUrlChange(e.target.value)}
                       type="text"
                       Label="Data warehousing directory*"
                       placeholder="e.g, gs://bucket-name>/path/to/directory"
-                      style={{ borderColor: isValidDataWareHouseUrl ? '' : 'red' }}
                     />
                   </div>
                   {!isValidDataWareHouseUrl && (

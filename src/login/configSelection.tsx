@@ -27,7 +27,7 @@ import {
   VERSION_DETAIL
 } from '../utils/const';
 import { IAuthCredentials, authApi, loggedFetch } from '../utils/utils';
-import { Notification } from '@jupyterlab/apputils';
+import { IThemeManager, Notification } from '@jupyterlab/apputils';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import ListRuntimeTemplates from '../runtime/listRuntimeTemplates';
 import expandLessIcon from '../../style/icons/expand_less.svg';
@@ -62,6 +62,7 @@ interface IConfigSelectionProps {
   launcher?: ILauncher;
   settingRegistry?: ISettingRegistry;
   fromPage?: string;
+  themeManager: IThemeManager;
 }
 
 function ConfigSelection({
@@ -70,7 +71,8 @@ function ConfigSelection({
   app,
   launcher,
   settingRegistry,
-  fromPage
+  fromPage,
+  themeManager
 }: IConfigSelectionProps) {
   const IconGoogleCloud = new LabIcon({
     name: 'launcher:google_cloud_icon',
@@ -292,6 +294,7 @@ function ConfigSelection({
           app={app}
           fromPage="config"
           settingRegistry={settingRegistry}
+          themeManager={themeManager}
         />
       ) : (
         <div className="settings-component">
