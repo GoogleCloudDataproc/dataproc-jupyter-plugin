@@ -198,7 +198,6 @@ function SparkProperties({
                       Example: "{client:dataProc_plugin}"
                   */
             const labelSplit = label.split(':');
-
             return (
               <div key={label}>
                 <div className="job-label-edit-row">
@@ -247,12 +246,10 @@ function SparkProperties({
                             handleEditLabel(e.target.value, index, 'value')
                           }
                           disabled={
-                            labelSplit[0] ===
-                              'spark.dataproc.executor.compute.tier'
-                              ? true
-                              : false
+                            labelSplit[0] === 'spark.dataproc.executor.compute.tier' ||
+                            labelSplit[0] === 'spark.sql.catalog.iceberg_catalog.warehouse'
                           }
-                          value={labelDetailUpdated[index].split(':')[1]}
+                          value={labelDetailUpdated[index] ? labelDetailUpdated[index].substring(labelDetailUpdated[index].indexOf(':') + 1) : ''}
                           Label={`Value ${index + 1}`}
                         />
                       )}

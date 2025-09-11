@@ -196,6 +196,8 @@ export const SPARK_AUTOSCALING_INFO_URL =
   'https://cloud.google.com/dataproc-serverless/docs/concepts/autoscaling#spark_dynamic_allocation_properties';
 export const SPARK_GPU_INFO_URL =
   'https://cloud.google.com/dataproc-serverless/docs/guides/gpus-serverless';
+export const SPARK_META_STORE_INFO_URL =
+  'https://cloud.google.com/bigquery/docs/blms-use-dataproc#interactive-spark';
 export const RESOURCE_ALLOCATION_DEFAULT = [
   'spark.driver.cores:4',
   'spark.driver.memory:12200m',
@@ -217,6 +219,20 @@ export const AUTO_SCALING_DEFAULT = [
   'spark.dynamicAllocation.executorAllocationRatio:0.3',
   'spark.reducer.fetchMigratedShuffle.enabled:false'
 ];
+
+export const META_STORE_DEFAULT = [
+  'spark.sql.extensions:org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions',
+  'spark.sql.catalog.iceberg_catalog:spark.sql.catalog.iceberg_catalog',
+  'spark.sql.catalog.iceberg_catalog.type:hadoop',
+  'spark.sql.catalog.iceberg_catalog.warehouse:'
+]
+
+export const META_STORE_TYPES = [
+  { value: 'none', label: 'No Metastore' },
+  { value: 'biglake', label: 'Biglake Metastore' },
+  { value: 'dataproc', label: 'Dataproc Metastore' }
+];
+
 export const GPU_DEFAULT = [
   'spark.dataproc.driverEnv.LANG:C.UTF-8',
   'spark.executorEnv.LANG:C.UTF-8',

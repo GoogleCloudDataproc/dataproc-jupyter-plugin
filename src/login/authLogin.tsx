@@ -100,6 +100,7 @@ const AuthLoginComponent = ({
           app={app}
           launcher={launcher}
           settingRegistry={settingRegistry}
+          themeManager={themeManager}
         />
       )}
       {loginError && (

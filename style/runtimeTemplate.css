@@ -62,7 +62,7 @@
   display: flex;
 }
 
-.select-runtime-radio-style {
+.select-runtime-radio-style, .select-meta-store-radio-style {
   padding: 8px 4px 4px 0px !important;
 }
 
@@ -131,7 +131,7 @@
   align-items: center;
   justify-content: center;
 }
-.create-runtime-radio {
+.create-runtime-radio, .meta-store-type-radio {
   display: flex;
 }
 .create-no-list-message {
@@ -189,11 +189,15 @@
   margin-bottom: 15px;
 }
 
-.create-batch-message-acc {
+.create-batch-message-acc, .big-data-meta-store-label {
   font-style: normal;
   font-weight: 400;
   font-size: 13px;
   margin: auto 0;
   color: var(--jp-ui-font-color0);
   margin-right: 15px;
+}
+
+.input-error .MuiOutlinedInput-notchedOutline {
+  border-color: red !important;
 }

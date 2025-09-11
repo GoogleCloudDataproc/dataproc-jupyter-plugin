@@ -17,6 +17,7 @@
 
 import { LabIcon } from '@jupyterlab/ui-components';
 import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
+import pySparkDarkLogo from '../../third_party/icons/pyspark_dark_icon.svg'
 import pythonLogo from '../../third_party/icons/python_logo.svg';
 import scalaLogo from '../../third_party/icons/scala_logo.svg';
 import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
@@ -44,7 +45,7 @@ import {
 } from './const';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { DataprocLoggingService } from './loggingService';
-import { Notification } from '@jupyterlab/apputils';
+import { IThemeManager, Notification } from '@jupyterlab/apputils';
 
 export interface IAuthCredentials {
   access_token?: string;
@@ -343,6 +344,10 @@ const iconPysparkLogo = new LabIcon({
   name: 'launcher:pyspark-logo-icon',
   svgstr: pysparkLogo
 });
+const iconPysparkDarkLogo = new LabIcon({
+  name: 'launcher:pyspark-dark-logo-icon',
+  svgstr: pySparkDarkLogo
+})
 const iconPythonLogo = new LabIcon({
   name: 'launcher:python-logo-icon',
   svgstr: pythonLogo
@@ -356,26 +361,30 @@ const iconScalaLogo = new LabIcon({
   svgstr: scalaLogo
 });
 
-export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel) => {
-  if (
-    kernelType?.name.includes('spylon') ||
-    kernelType?.name.includes('apache')
-  ) {
+export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel,themeManager: IThemeManager) => {
+  const isLightTheme = themeManager.theme
+        ? themeManager.isLight(themeManager.theme)
+        : true;
+  const kernalName = kernelType?.name || '';
+  const kernalLanguage = kernelType?.language || '';
+  
+  if (kernalName.includes('spylon') || kernalName.includes('apache')) {
     return iconScalaLogo;
-  } else if (kernelType?.name.includes('ir')) {
-    return iconSparkRLogo;
-  } else if (
-    kernelType?.name.includes('pyspark') ||
-    kernelType?.resources.endpointParentResource.includes('/sessions')
-  ) {
-    if (kernelType?.language === 'scala') {
-      return iconScalaLogo;
-    } else {
-      return iconPysparkLogo;
-    }
-  } else {
-    return iconPythonLogo;
   }
+  
+  if (kernalName.includes('ir')) {
+    return iconSparkRLogo;  
+  } 
+  
+  if (kernalName.includes('pyspark') 
+    || kernelType?.resources.endpointParentResource.includes('/sessions')) {
+    if (kernalLanguage === 'scala') {
+      return iconScalaLogo;
+    }
+    return isLightTheme ? iconPysparkLogo : iconPysparkDarkLogo;
+  }
+  
+  return iconPythonLogo;
 };
 
 export interface ICellProps {

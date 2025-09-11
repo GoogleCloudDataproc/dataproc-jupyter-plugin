@@ -750,7 +750,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           commands.addCommand(commandNotebook, {
             caption: kernelsData?.display_name,
             label: kernelsData?.display_name,
-            icon: iconDisplay(kernelsData),
+            icon: () => iconDisplay(kernelsData, themeManager),
             execute: async () => {
               const model = await app.commands.execute(
                 'docmanager:new-untitled',
@@ -790,7 +790,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           commands.addCommand(commandNotebook, {
             caption: kernelsData?.display_name,
             label: kernelsData?.display_name,
-            icon: iconDisplay(kernelsData),
+            icon: () => iconDisplay(kernelsData, themeManager),
             execute: async () => {
               const model = await app.commands.execute(
                 'docmanager:new-untitled',
