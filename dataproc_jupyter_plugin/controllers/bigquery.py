@@ -14,7 +14,8 @@
 
 
 import json
-import subprocess
+import time
+import asyncio
 
 import aiohttp
 import tornado
@@ -22,9 +23,30 @@ from jupyter_server.base.handlers import APIHandler
 from dataproc_jupyter_plugin import credentials
 from dataproc_jupyter_plugin.services import bigquery
 
-# GCP project holding BigQuery public datasets.
-BQ_PUBLIC_DATASET_PROJECT_ID = "bigquery-public-data"
+from dataproc_jupyter_plugin.commons.constants import (
+    BQ_PUBLIC_DATASET_PROJECT_ID,BQ_CLIENT_EXPIRY_DURATION
+)
+    
+class BigQueryClient:
+    _client = None
+    _session = None
+    _creation_time = None
+    _lock = asyncio.Lock()
+	
+    async def get_client(self, log):
+        async with self._lock:
+            if self._client is None or (time.time() - self._creation_time) > BQ_CLIENT_EXPIRY_DURATION:
+                if self._session:
+                    await self._session.close()
 
+                self._session = aiohttp.ClientSession()
+                self._client = bigquery.Client(
+                    await credentials.get_cached(), log, self._session
+                )
+                self._creation_time = time.time()
+            return self._client
+
+bigquery_client = BigQueryClient()
 
 class DatasetController(APIHandler):
     @tornado.web.authenticated
@@ -33,11 +55,8 @@ class DatasetController(APIHandler):
             page_token = self.get_argument("pageToken")
             project_id = self.get_argument("project_id")
             location = self.get_argument("location", default="us").lower()
-            async with aiohttp.ClientSession() as client_session:
-                client = bigquery.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                dataset_list = await client.list_datasets(page_token, project_id, location)
+            bq_client = await bigquery_client.get_client(self.log)
+            dataset_list = await bq_client.list_datasets(page_token, project_id, location)
             self.finish(json.dumps(dataset_list))
         except Exception as e:
             self.log.exception("Error fetching datasets")
@@ -51,11 +70,8 @@ class TableController(APIHandler):
             page_token = self.get_argument("pageToken")
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
-            async with aiohttp.ClientSession() as client_session:
-                client = bigquery.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                table_list = await client.list_table(dataset_id, page_token, project_id)
+            bq_client = await bigquery_client.get_client(self.log)
+            table_list = await bq_client.list_table(dataset_id, page_token, project_id)
             self.finish(json.dumps(table_list))
         except Exception as e:
             self.log.exception("Error fetching datasets")
@@ -68,11 +84,8 @@ class DatasetInfoController(APIHandler):
         try:
             dataset_id = self.get_argument("dataset_id")
             project_id = self.get_argument("project_id")
-            async with aiohttp.ClientSession() as client_session:
-                client = bigquery.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                dataset_info = await client.list_dataset_info(dataset_id, project_id)
+            bq_client = await bigquery_client.get_client(self.log)
+            dataset_info = await bq_client.list_dataset_info(dataset_id, project_id)
             self.finish(json.dumps(dataset_info))
         except Exception as e:
             self.log.exception("Error fetching dataset information")
@@ -86,13 +99,10 @@ class TableInfoController(APIHandler):
             dataset_id = self.get_argument("dataset_id")
             table_id = self.get_argument("table_id")
             project_id = self.get_argument("project_id")
-            async with aiohttp.ClientSession() as client_session:
-                client = bigquery.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                table_info = await client.list_table_info(
-                    dataset_id, table_id, project_id
-                )
+            bq_client = await bigquery_client.get_client(self.log)
+            table_info = await bq_client.list_table_info(
+                dataset_id, table_id, project_id
+            )
             self.finish(json.dumps(table_info))
         except Exception as e:
             self.log.exception("Error fetching table information")
@@ -108,13 +118,10 @@ class PreviewController(APIHandler):
             max_results = self.get_argument("max_results")
             start_index = self.get_argument("start_index")
             project_id = self.get_argument("project_id")
-            async with aiohttp.ClientSession() as client_session:
-                client = bigquery.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                preview_data = await client.bigquery_preview_data(
-                    dataset_id, table_id, max_results, start_index, project_id
-                )
+            bq_client = await bigquery_client.get_client(self.log)
+            preview_data = await bq_client.bigquery_preview_data(
+                dataset_id, table_id, max_results, start_index, project_id
+            )
             self.finish(json.dumps(preview_data))
         except Exception as e:
             self.log.exception("Error fetching preview data")
@@ -148,13 +155,10 @@ class SearchController(APIHandler):
             type = self.get_argument("type")
             system = self.get_argument("system")
             projects = await bq_projects_list()
-            async with aiohttp.ClientSession() as client_session:
-                client = bigquery.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
-                search_data = await client.bigquery_search(
-                    search_string, type, system, projects
-                )
+            bq_client = await bigquery_client.get_client(self.log)
+            search_data = await bq_client.bigquery_search(
+                search_string, type, system, projects
+            )
             self.finish(json.dumps(search_data))
         except Exception as e:
             self.log.exception("Error fetching search data")
