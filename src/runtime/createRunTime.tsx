@@ -468,6 +468,16 @@ function CreateRunTime({
     }
   };
 
+  const renderLoadingLabel = (label: string, isLoading: boolean) => {
+    return isLoading ? (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        {label} <CircularProgress size={16} style={{ marginLeft: '8px' }} />
+      </div>
+    ) : (
+      label
+    );
+  };
+
   useEffect(() => {
     if (loggedIn && !configError && !loginError) {
       if (keyRingSelected !== '') {
@@ -1702,7 +1712,7 @@ function CreateRunTime({
               {versionBiglakeValidation && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">Please select v2.3 to use BigLake Metastore</div>
+                  <div className="error-key-missing">To use BigLake Metastore, select runtime version 2.3 or higher.</div>
                 </div>
               )}
               <div className="select-text-overlay">
@@ -1960,15 +1970,7 @@ function CreateRunTime({
                           renderInput={params => (
                             <TextField
                               {...params}
-                              label={
-                                isloadingNetwork ? (
-                                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    Primary network* <CircularProgress size={16} style={{ marginLeft: '8px' }} />
-                                  </div>
-                                ) : (
-                                  'Primary network*'
-                                )
-                              }
+                              label={renderLoadingLabel('Primary network*', isloadingNetwork)}
                               disabled={isloadingNetwork}
                             />
                           )}
@@ -1984,15 +1986,7 @@ function CreateRunTime({
                           renderInput={params => (
                             <TextField
                               {...params}
-                              label={
-                                isloadingSubNetwork ? (
-                                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    Subnetwork* <CircularProgress size={16} style={{ marginLeft: '8px' }} />
-                                  </div>
-                                ) : (
-                                  'Subnetwork*'
-                                )
-                              }
+                              label={renderLoadingLabel('Subnetwork*', isloadingSubNetwork)}
                               disabled={isloadingSubNetwork}
                             />
                           )}
@@ -2013,7 +2007,7 @@ function CreateRunTime({
                       </div>
                     </div>
                   )}
-                {!isloadingNetwork &&
+                {!isloadingNetwork && !isloadingSubNetwork &&
                   selectedNetworkRadio === 'projectNetwork' &&
                   networkSelected !== '' &&
                   subNetworkSelected === '' && (

@@ -584,13 +584,13 @@ export class RunTimeSerive {
           );
         }
       }
-      setIsloadingNetwork(false); 
     } catch (error) {
-      setIsloadingNetwork(false);
       DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
       Notification.emit(`Error listing Networks : ${error}`, 'error', {
         autoClose: 5000
       });
+    } finally {
+      setIsloadingNetwork(false);
     }
   };
   static listMetaStoreAPIService = async (
