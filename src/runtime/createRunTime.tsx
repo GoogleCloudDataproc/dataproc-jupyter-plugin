@@ -461,11 +461,7 @@ function CreateRunTime({
   const handleMetastoreTypeAndVersionChange = (metastore: string, version: string) => {
     setVersionSelected(version);
     setMetastoreType(metastore);
-    if (metastore === 'biglake' && version !== '2.3') {
-      setVersionBiglakeValidation(true);
-    } else {
-      setVersionBiglakeValidation(false);
-    }
+    setVersionBiglakeValidation(metastore === 'biglake' && version !== '2.3')
   };
 
   const renderLoadingLabel = (label: string, isLoading: boolean) => {
@@ -496,9 +492,7 @@ function CreateRunTime({
       const isEnabled = dynamicAllocationState.endsWith('true');
       let updatedProperties;
 
-      if (isEnabled) {
-        updatedProperties = AUTO_SCALING_DEFAULT;
-      } else {
+      if (!isEnabled && autoScalingDetailUpdated.length !== 2) {
         let filteredProperties = [dynamicAllocationState];
 
         const shuffleEnabledState = autoScalingDetailUpdated.find(
@@ -511,7 +505,11 @@ function CreateRunTime({
         updatedProperties = filteredProperties;
       }
       
-      if (JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(updatedProperties)) {
+      if (isEnabled && autoScalingDetailUpdated.length == 2) {
+        updatedProperties = AUTO_SCALING_DEFAULT;
+      }
+      
+      if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(updatedProperties)) {
         setAutoScalingDetail(updatedProperties);
         setAutoScalingDetailUpdated(updatedProperties);
       }
