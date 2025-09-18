@@ -461,7 +461,7 @@ function CreateRunTime({
   const handleMetastoreTypeAndVersionChange = (metastore: string, version: string) => {
     setVersionSelected(version);
     setMetastoreType(metastore);
-    setVersionBiglakeValidation(metastore === 'biglake' && version !== '2.3')
+    setVersionBiglakeValidation(metastore === 'biglake' && version !== '2.3');
   };
 
   const renderLoadingLabel = (label: string, isLoading: boolean) => {
