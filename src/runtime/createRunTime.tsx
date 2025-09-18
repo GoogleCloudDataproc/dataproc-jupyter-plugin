@@ -131,7 +131,7 @@ function CreateRunTime({
   const [displayNameSelected, setDisplayNameSelected] = useState('');
   const [desciptionSelected, setDescriptionSelected] = useState('');
   const [runTimeSelected, setRunTimeSelected] = useState('');
-  const [versionSelected, setVersionSelected] = useState('2.2');
+  const [versionSelected, setVersionSelected] = useState('2.3');
   const [pythonRepositorySelected, setPythonRepositorySelected] = useState('');
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
@@ -185,6 +185,7 @@ function CreateRunTime({
   const [displayNameValidation, setDisplayNameValidation] = useState(false);
   const [idleValidation, setIdleValidation] = useState(false);
   const [autoValidation, setAutoValidation] = useState(false);
+  const [versionBiglakeValidation, setVersionBiglakeValidation] = useState(false);
   const [defaultValue, setDefaultValue] = useState('');
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
@@ -195,6 +196,7 @@ function CreateRunTime({
   const [userInfo, setUserInfo] = useState('');
   const [duplicateValidation, setDuplicateValidation] = useState(false);
   const [isloadingNetwork, setIsloadingNetwork] = useState(false);
+  const [isloadingSubNetwork, setIsloadingSubNetwork] = useState(false);
   const [selectedNetworkRadio, setSelectedNetworkRadio] = useState<
     'sharedVpc' | 'projectNetwork'
   >('projectNetwork');
@@ -217,7 +219,7 @@ function CreateRunTime({
   const [dataWarehouseDir, setDataWarehouseDir] = useState('');
   const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
   const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
-  const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])\/.*[^\/]$/;
+  const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
   const [expandMetastore, setExpandMetastore] = useState(false);
 
@@ -454,6 +456,16 @@ function CreateRunTime({
     setSelectedRadioValue('manually');
     setKeyRingSelected('');
     setKeySelected('');
+  };
+
+  const handleMetastoreTypeAndVersionChange = (metastore: string, version: string) => {
+    setVersionSelected(version);
+    setMetastoreType(metastore);
+    if (metastore === 'biglake' && version !== '2.3') {
+      setVersionBiglakeValidation(true);
+    } else {
+      setVersionBiglakeValidation(false);
+    }
   };
 
   useEffect(() => {
@@ -823,7 +835,7 @@ function CreateRunTime({
       setSubNetworklist,
       setSubNetworkSelected,
       selectedRuntimeClone,
-      setIsloadingNetwork
+      setIsloadingSubNetwork
     );
   };
 
@@ -1035,6 +1047,7 @@ function CreateRunTime({
       runTimeValidation ||
       autoValidation ||
       duplicateValidation ||
+      versionBiglakeValidation ||
       (selectedNetworkRadio === 'sharedVpc' &&
         sharedSubNetworkList.length === 0) ||
       (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
@@ -1677,7 +1690,7 @@ function CreateRunTime({
                     ) || null
                   }
                   onChange={(event, newValue) => {
-                    setVersionSelected(newValue?.value || '');
+                    handleMetastoreTypeAndVersionChange(metastoreType, newValue?.value || '');
                   }}
                   options={runtimeOptions}
                   getOptionLabel={option => option.text}
@@ -1686,6 +1699,12 @@ function CreateRunTime({
                   )}
                 />
               </div>
+              {versionBiglakeValidation && (
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">Please select v2.3 to use BigLake Metastore</div>
+                </div>
+              )}
               <div className="select-text-overlay">
                 <Input
                   className="create-batch-style "
@@ -1932,40 +1951,54 @@ function CreateRunTime({
               <div>
                 {selectedNetworkRadio === 'projectNetwork' && (
                   <div className="create-batch-network">
-                    {isloadingNetwork ? (
-                      <div className="metastore-loader">
-                        <CircularProgress
-                          size={25}
-                          aria-label="Loading Spinner"
-                          data-testid="loader"
+                    <>
+                      <div className="select-text-overlay">
+                        <Autocomplete
+                          options={networkList}
+                          value={networkSelected}
+                          onChange={(_event, val) => handleNetworkChange(val)}
+                          renderInput={params => (
+                            <TextField
+                              {...params}
+                              label={
+                                isloadingNetwork ? (
+                                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    Primary network* <CircularProgress size={16} style={{ marginLeft: '8px' }} />
+                                  </div>
+                                ) : (
+                                  'Primary network*'
+                                )
+                              }
+                              disabled={isloadingNetwork}
+                            />
+                          )}
                         />
                       </div>
-                    ) : (
-                      <>
-                        <div className="select-text-overlay">
-                          <Autocomplete
-                            options={networkList}
-                            value={networkSelected}
-                            onChange={(_event, val) => handleNetworkChange(val)}
-                            renderInput={params => (
-                              <TextField {...params} label="Primary network*" />
-                            )}
-                          />
-                        </div>
-                        <div className="select-text-overlay subnetwork-style">
-                          <Autocomplete
-                            options={subNetworkList}
-                            value={subNetworkSelected}
-                            onChange={(_event, val) =>
-                              handleSubNetworkChange(val)
-                            }
-                            renderInput={params => (
-                              <TextField {...params} label="subnetwork*" />
-                            )}
-                          />
-                        </div>
-                      </>
-                    )}
+                      <div className="select-text-overlay subnetwork-style">
+                        <Autocomplete
+                          options={subNetworkList}
+                          value={subNetworkSelected}
+                          onChange={(_event, val) =>
+                            handleSubNetworkChange(val)
+                          }
+                          renderInput={params => (
+                            <TextField
+                              {...params}
+                              label={
+                                isloadingSubNetwork ? (
+                                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    Subnetwork* <CircularProgress size={16} style={{ marginLeft: '8px' }} />
+                                  </div>
+                                ) : (
+                                  'Subnetwork*'
+                                )
+                              }
+                              disabled={isloadingSubNetwork}
+                            />
+                          )}
+                        />
+                      </div>
+                    </>
                   </div>
                 )}
                 {selectedNetworkRadio === 'projectNetwork' &&
@@ -2122,7 +2155,7 @@ function CreateRunTime({
                   value={META_STORE_TYPES.find(option => option.value === metastoreType) || null}
                   getOptionLabel={option => option.label}
                   onChange={(event, newValue) => {
-                    setMetastoreType(newValue?.value || '');
+                    handleMetastoreTypeAndVersionChange(newValue?.value || '', versionSelected);
                   }}
                   renderInput={params => (
                     <TextField {...params} label="Metastore" />
@@ -2183,13 +2216,13 @@ function CreateRunTime({
                       onChange={e => handleDataWareHouseUrlChange(e.target.value)}
                       type="text"
                       Label="Data warehousing directory*"
-                      placeholder="e.g, gs://bucket-name>/path/to/directory"
+                      placeholder="e.g, gs://<bucket-name>"
                     />
                   </div>
                   {!isValidDataWareHouseUrl && (
                     <div className="error-key-parent">
                       <iconError.react tag="div" className="logo-alignment-style" />
-                      <div className="error-key-missing">Input does not match pattern : gs://bucket-name/path/to/directory</div>
+                      <div className="error-key-missing">Input does not match pattern : gs://bucket-name</div>
                     </div>
                   )}
                 </>
