@@ -221,8 +221,7 @@ export const AUTO_SCALING_DEFAULT = [
 ];
 
 export const META_STORE_DEFAULT = [
-  'spark.sql.extensions:org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions',
-  'spark.sql.catalog.iceberg_catalog:spark.sql.catalog.iceberg_catalog',
+  'spark.sql.catalog.iceberg_catalog:org.apache.iceberg.spark.SparkCatalog',
   'spark.sql.catalog.iceberg_catalog.type:hadoop',
   'spark.sql.catalog.iceberg_catalog.warehouse:'
 ]
