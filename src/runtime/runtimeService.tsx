@@ -468,6 +468,7 @@ export class RunTimeSerive {
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
               setDefaultValue(subnetwork);
+              setIsloadingNetwork(false);
               if (responseResult?.error?.code) {
                 Notification.emit(responseResult?.error?.message, 'error', {
                   autoClose: 5000
@@ -480,6 +481,7 @@ export class RunTimeSerive {
             });
         })
         .catch((err: Error) => {
+          setIsloadingNetwork(false);
           DataprocLoggingService.log(
             'Error selecting Network',
             LOG_LEVEL.ERROR
@@ -587,6 +589,8 @@ export class RunTimeSerive {
       Notification.emit(`Error listing Networks : ${error}`, 'error', {
         autoClose: 5000
       });
+    } finally {
+      setIsloadingNetwork(false);
     }
   };
   static listMetaStoreAPIService = async (
@@ -750,9 +754,9 @@ export class RunTimeSerive {
     setSubNetworklist: (value: string[]) => void,
     setSubNetworkSelected: (value: string) => void,
     selectedRuntimeClone: any,
-    setIsloadingNetwork: (value: boolean) => void
+    setIsloadingSubNetwork: (value: boolean) => void
   ) => {
-    setIsloadingNetwork(true);
+    setIsloadingSubNetwork(true);
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
@@ -808,7 +812,7 @@ export class RunTimeSerive {
                   });
                   DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                 }
-                setIsloadingNetwork(false);
+                setIsloadingSubNetwork(false);
                 if (responseResult?.error?.code) {
                   Notification.emit(responseResult?.error?.message, 'error', {
                     autoClose: 5000
@@ -825,7 +829,7 @@ export class RunTimeSerive {
             'Error listing subNetworks',
             LOG_LEVEL.ERROR
           );
-          setIsloadingNetwork(false);
+          setIsloadingSubNetwork(false);
 
           Notification.emit(`Error listing subNetworks : ${err}`, 'error', {
             autoClose: 5000
