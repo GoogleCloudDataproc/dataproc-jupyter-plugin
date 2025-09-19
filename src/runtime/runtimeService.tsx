@@ -438,9 +438,9 @@ export class RunTimeSerive {
     subnetwork: string,
     setIsloadingNetwork: (value: boolean) => void,
     setNetworkSelected: (value: string) => void,
-    setSubNetworkSelected: (value: string) => void,
-    setDefaultValue: (value: string) => void
+    setSubNetworkSelected: (value: string) => void
   ) => {
+    setSubNetworkSelected('');
     setIsloadingNetwork(true);
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
@@ -467,7 +467,6 @@ export class RunTimeSerive {
 
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
-              setDefaultValue(subnetwork);
               setIsloadingNetwork(false);
               if (responseResult?.error?.code) {
                 Notification.emit(responseResult?.error?.message, 'error', {
@@ -750,7 +749,7 @@ export class RunTimeSerive {
     }
   };
   static listSubNetworksAPIService = async (
-    subnetwork: string,
+    network: string,
     setSubNetworklist: (value: string[]) => void,
     setSubNetworkSelected: (value: string) => void,
     selectedRuntimeClone: any,
@@ -786,7 +785,7 @@ export class RunTimeSerive {
               }) => {
                 const filteredServices = responseResult?.items?.filter(
                   (item: { network: string; privateIpGoogleAccess: boolean }) =>
-                    item.network.split('/')[9] === subnetwork &&
+                    item.network.split('/')[9] === network &&
                     item.privateIpGoogleAccess === true
                 );
                 if (filteredServices) {
@@ -794,19 +793,17 @@ export class RunTimeSerive {
                     (data: { name: string }) => data.name
                   );
                   setSubNetworklist(transformedServiceList);
-                  if (selectedRuntimeClone === undefined) {
-                    if (transformedServiceList.length > 0) {
-                      setSubNetworkSelected(transformedServiceList[0]);
-                    } else {
-                      const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${subnetwork}"`;
-                      Notification.emit(errorMessage, 'error', {
-                        autoClose: 5000
-                      });
-                      DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
-                    }
+                  if (transformedServiceList.length > 0) {
+                    setSubNetworkSelected(transformedServiceList[0]);
+                  } else {
+                    const errorMessage = `There are no subnetworks with Google Private Access enabled for network "${network}"`;
+                    Notification.emit(errorMessage, 'error', {
+                      autoClose: 5000
+                    });
+                    DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
                   }
                 } else {
-                  const errorMessage = `No subNetworks found  for network ${subnetwork}`;
+                  const errorMessage = `No subNetworks found for network ${network}`;
                   Notification.emit(errorMessage, 'error', {
                     autoClose: 5000
                   });
