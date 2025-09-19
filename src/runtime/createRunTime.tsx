@@ -1367,7 +1367,7 @@ function CreateRunTime({
             },
             peripheralsConfig: {
               ...(metastoreType && {
-                metastoreService: metastoreType == 'none' ? '' : servicesSelected
+                metastoreService: metastoreType === 'none' ? '' : servicesSelected
               }),
               ...(clusterSelected !== '' && {
                 sparkHistoryServerConfig: {
