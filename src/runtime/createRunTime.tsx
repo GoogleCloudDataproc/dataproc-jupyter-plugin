@@ -186,7 +186,6 @@ function CreateRunTime({
   const [idleValidation, setIdleValidation] = useState(false);
   const [autoValidation, setAutoValidation] = useState(false);
   const [versionBiglakeValidation, setVersionBiglakeValidation] = useState(false);
-  const [defaultValue, setDefaultValue] = useState('');
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
   const [autoTimeSelected, setAutoTimeSelected] = useState('');
@@ -820,8 +819,7 @@ function CreateRunTime({
       subnetwork,
       setIsloadingNetwork,
       setNetworkSelected,
-      setSubNetworkSelected,
-      setDefaultValue
+      setSubNetworkSelected
     );
   };
   const listClustersAPI = async () => {
@@ -837,14 +835,15 @@ function CreateRunTime({
     );
   };
 
-  const listSubNetworksAPI = async (subnetwork: string) => {
+  const listSubNetworksAPI = async (network: string) => {
     await RunTimeSerive.listSubNetworksAPIService(
-      subnetwork,
+      network,
       setSubNetworklist,
       setSubNetworkSelected,
       selectedRuntimeClone,
       setIsloadingSubNetwork
     );
+
   };
 
   const regionListAPI = async (
@@ -950,7 +949,7 @@ function CreateRunTime({
   const handleNetworkChange = async (data: DropdownProps | null) => {
     if (data !== null) {
       setNetworkSelected(data!.toString());
-      setSubNetworkSelected(defaultValue);
+      setSubNetworkSelected('');
       await handleProjectIdChange(projectId, data!.toString());
     }
   };
@@ -1367,8 +1366,8 @@ function CreateRunTime({
               ...(stagingBucket && { stagingBucket: stagingBucket })
             },
             peripheralsConfig: {
-              ...(servicesSelected !== 'None' && {
-                metastoreService: servicesSelected
+              ...(metastoreType && {
+                metastoreService: metastoreType == 'none' ? '' : servicesSelected
               }),
               ...(clusterSelected !== '' && {
                 sparkHistoryServerConfig: {
