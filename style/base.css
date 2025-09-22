@@ -149,16 +149,17 @@ body[data-jp-theme-name='JupyterLab Dark'] .dark-theme-logs-disable path {
   cursor: default !important;
 }
 
-body[data-jp-theme-name='JupyterLab Dark'] .icon-white path {
+body:is([data-jp-theme-name='JupyterLab Dark'], [data-jp-theme-name='JupyterLab Dark High Contrast']) .icon-white path {
   fill: var(--jp-ui-font-color1);
 }
-body[data-jp-theme-name='JupyterLab Dark'] .icon-black path {
+body:is([data-jp-theme-name='JupyterLab Dark'], [data-jp-theme-name='JupyterLab Dark High Contrast']) .icon-black path {
   fill: var(--jp-layout-color1);
 }
-body[data-jp-theme-name='JupyterLab Dark'] .select-title-text {
+body:is([data-jp-theme-name='JupyterLab Dark'], [data-jp-theme-name='JupyterLab Dark High Contrast']) .select-title-text {
   background-color: var(--jp-layout-color0);
   color: var(--jp-layout-color4);
 }
+
 body[data-jp-theme-name='JupyterLab Dark'] .filter-search-gcs {
   padding: 0px 5px;
   background-color: var(--jp-layout-color0);
