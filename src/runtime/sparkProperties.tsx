@@ -166,6 +166,7 @@ function SparkProperties({
           'spark.dynamicAllocation.executorAllocationRatio'
         ) {
           if (
+            value.length === 0 ||
             Number.isNaN(Number(value)) ||
             Number(value) < 0 ||
             Number(value) > 1
