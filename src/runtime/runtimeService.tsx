@@ -438,7 +438,8 @@ export class RunTimeSerive {
     subnetwork: string,
     setIsloadingNetwork: (value: boolean) => void,
     setNetworkSelected: (value: string) => void,
-    setSubNetworkSelected: (value: string) => void
+    setSubNetworkSelected: (value: string) => void,
+    setIsLoadingSubNetwork: (value: boolean) => void
   ) => {
     setSubNetworkSelected('');
     setIsloadingNetwork(true);
@@ -467,7 +468,6 @@ export class RunTimeSerive {
 
               setNetworkSelected(transformedNetworkSelected);
               setSubNetworkSelected(subnetwork);
-              setIsloadingNetwork(false);
               if (responseResult?.error?.code) {
                 Notification.emit(responseResult?.error?.message, 'error', {
                   autoClose: 5000
@@ -480,7 +480,6 @@ export class RunTimeSerive {
             });
         })
         .catch((err: Error) => {
-          setIsloadingNetwork(false);
           DataprocLoggingService.log(
             'Error selecting Network',
             LOG_LEVEL.ERROR
@@ -488,6 +487,10 @@ export class RunTimeSerive {
           Notification.emit(`Error selecting Network : ${err}`, 'error', {
             autoClose: 5000
           });
+        })
+        .finally(() => {
+          setIsloadingNetwork(false);
+          setIsLoadingSubNetwork(true);
         });
     }
   };
@@ -542,7 +545,8 @@ export class RunTimeSerive {
     setNetworklist: (value: string[]) => void,
     setNetworkSelected: (value: string) => void,
     selectedRuntimeClone: any,
-    setIsloadingNetwork: (value: boolean) => void
+    setIsloadingNetwork: (value: boolean) => void,
+    setIsloadingSubNetwork: (value: boolean) => void
   ) => {
     setIsloadingNetwork(true);
     const { COMPUTE } = await gcpServiceUrls;
@@ -590,6 +594,7 @@ export class RunTimeSerive {
       });
     } finally {
       setIsloadingNetwork(false);
+      setIsloadingSubNetwork(true);
     }
   };
   static listMetaStoreAPIService = async (

@@ -511,6 +511,10 @@ function CreateRunTime({
       if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(updatedProperties)) {
         setAutoScalingDetail(updatedProperties);
         setAutoScalingDetailUpdated(updatedProperties);
+         setSparkValueValidation(prev => ({
+          ...prev,
+          autoscaling: []
+        }));
       }
     }
   }, [autoScalingDetailUpdated]);
@@ -819,7 +823,8 @@ function CreateRunTime({
       subnetwork,
       setIsloadingNetwork,
       setNetworkSelected,
-      setSubNetworkSelected
+      setSubNetworkSelected,
+      setIsloadingSubNetwork
     );
   };
   const listClustersAPI = async () => {
@@ -831,7 +836,8 @@ function CreateRunTime({
       setNetworklist,
       setNetworkSelected,
       selectedRuntimeClone,
-      setIsloadingNetwork
+      setIsloadingNetwork,
+      setIsloadingSubNetwork
     );
   };
 
@@ -949,6 +955,7 @@ function CreateRunTime({
   const handleNetworkChange = async (data: DropdownProps | null) => {
     if (data !== null) {
       setNetworkSelected(data!.toString());
+      setIsloadingSubNetwork(true);
       setSubNetworkSelected('');
       await handleProjectIdChange(projectId, data!.toString());
     }
