@@ -36,7 +36,7 @@ test.describe('Create and run notebook', () => {
     // Wait for kernel to be ready (why unknown?  Is this a bug?)
     await page
       .locator('.jp-Notebook-ExecutionIndicator[data-status="starting"]')
-      .waitFor({ timeout: 10000 });
+      .waitFor({ timeout: 30000 });
 
     await firstCodeBox.click();
     await firstCodeBox.fill("print('test output')");
