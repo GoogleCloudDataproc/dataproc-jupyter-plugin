@@ -102,87 +102,55 @@ function SparkProperties({
           /*
             allowed aplhanumeric and spaces and underscores values
           */
-          if (MEMORY_RELATED_PROPERTIES.includes(data.split(':')[0])) {
+          let label = data.split(':')[0];
+          if (MEMORY_RELATED_PROPERTIES.includes(label)) {
             const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
 
-            if (value.search(regex) === -1) {
-              updateErrorIndexes(index, true);
-            } else {
-              updateErrorIndexes(index, false);
-            }
-          } else if (DISK_RELATED_PROPERTIES.includes(data.split(':')[0])) {
+            const isError = value.search(regex) === -1;
+            updateErrorIndexes(index, isError);
+          } else if (DISK_RELATED_PROPERTIES.includes(label)) {
             const regex = /^(0*[1-9][0-9]*)(k|m|g|t)$/i;
 
-            if (value.search(regex) === -1) {
-              updateErrorIndexes(index, true);
-            } else {
-              updateErrorIndexes(index, false);
-            }
-          } else if (CORE_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-            if (
+            const isError = value.search(regex) === -1;
+            updateErrorIndexes(index, isError);
+          } else if (CORE_RELATED_PROPERTIES.includes(label)) {
+            const isError =
               value.includes('.') ||
               !Number.isInteger(Number(value)) ||
-              Number(value) <= 0
-            ) {
-              updateErrorIndexes(index, true);
-            } else {
-              updateErrorIndexes(index, false);
-            }
-          } else if (EXECUTOR_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-            if (
+              Number(value) <= 0;
+            updateErrorIndexes(index, isError);
+          } else if (EXECUTOR_RELATED_PROPERTIES.includes(label)) {
+            const isError =
               value.includes('.') ||
               !Number.isInteger(Number(value)) ||
               Number(value) < 2 ||
-              Number(value) > 2000
-            ) {
-              updateErrorIndexes(index, true);
-            } else {
-              updateErrorIndexes(index, false);
-            }
-          } else if (
-            data.split(':')[0] === 'spark.dynamicAllocation.initialExecutors'
-          ) {
-            if (
+              Number(value) > 2000;
+            updateErrorIndexes(index, isError);
+          } else if (label === 'spark.dynamicAllocation.initialExecutors') {
+            const isError =
               value.includes('.') ||
               !Number.isInteger(Number(value)) ||
               Number(value) < 2 ||
-              Number(value) > 500
-            ) {
-              updateErrorIndexes(index, true);
-            } else {
-              updateErrorIndexes(index, false);
-            }
-          } else if (
-            data.split(':')[0] === 'spark.dynamicAllocation.minExecutors'
-          ) {
-            if (
+              Number(value) > 500;
+            updateErrorIndexes(index, isError);
+          } else if (label === 'spark.dynamicAllocation.minExecutors') {
+            const isError =
               value.includes('.') ||
               !Number.isInteger(Number(value)) ||
-              Number(value) < 2
-            ) {
-              updateErrorIndexes(index, true);
-            } else {
-              updateErrorIndexes(index, false);
-            }
-          } else if (
-            data.split(':')[0] ===
-            'spark.dynamicAllocation.executorAllocationRatio'
-          ) {
-            if (
+              Number(value) < 2;
+            updateErrorIndexes(index, isError);
+          } else if (label === 'spark.dynamicAllocation.executorAllocationRatio') {
+            const isError =
               value.length === 0 ||
               Number.isNaN(Number(value)) ||
               Number(value) < 0 ||
-              Number(value) > 1
-            ) {
-              updateErrorIndexes(index, true);
-            } else {
-              updateErrorIndexes(index, false);
-            }
+              Number(value) > 1;
+            updateErrorIndexes(index, isError);
           }
           /*
             value is split from labels
             Example:"client:dataproc_jupyter_plugin"
-            */
+          */
           let sparkProperties = data.split(':');
           sparkProperties[1] = value.trim();
           data = sparkProperties[0] + ':' + sparkProperties[1];
