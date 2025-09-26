@@ -43,7 +43,9 @@ function SparkProperties({
   sparkValueValidation,
   setSparkValueValidation,
   sparkSection,
-  setGpuDetailChangeDone
+  setGpuDetailChangeDone,
+  metastoreKeyValidation,
+  setMetastoreKeyValidation
 }: any) {
   /*
   labelDetail used to store the permanent label details when onblur
@@ -91,98 +93,119 @@ function SparkProperties({
     setSparkValueValidation(newErrorIndexes);
   };
 
-  const handleEditLabel = (value: string, index: number, keyValue: string) => {
+  const handleEditLabel = (section:string, value: string, index: number, keyValue: string) => {
     const labelEdit = [...labelDetail];
 
     labelEdit.forEach((data, dataNumber: number) => {
       if (index === dataNumber) {
-        /*
-          allowed aplhanumeric and spaces and underscores values
-        */
-        if (MEMORY_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
+        if(keyValue === 'value'){
+          /*
+            allowed aplhanumeric and spaces and underscores values
+          */
+          if (MEMORY_RELATED_PROPERTIES.includes(data.split(':')[0])) {
+            const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
 
-          if (value.search(regex) === -1) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (DISK_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          const regex = /^(0*[1-9][0-9]*)(k|m|g|t)$/i;
+            if (value.search(regex) === -1) {
+              updateErrorIndexes(index, true);
+            } else {
+              updateErrorIndexes(index, false);
+            }
+          } else if (DISK_RELATED_PROPERTIES.includes(data.split(':')[0])) {
+            const regex = /^(0*[1-9][0-9]*)(k|m|g|t)$/i;
 
-          if (value.search(regex) === -1) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (CORE_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          if (
-            value.includes('.') ||
-            !Number.isInteger(Number(value)) ||
-            Number(value) <= 0
+            if (value.search(regex) === -1) {
+              updateErrorIndexes(index, true);
+            } else {
+              updateErrorIndexes(index, false);
+            }
+          } else if (CORE_RELATED_PROPERTIES.includes(data.split(':')[0])) {
+            if (
+              value.includes('.') ||
+              !Number.isInteger(Number(value)) ||
+              Number(value) <= 0
+            ) {
+              updateErrorIndexes(index, true);
+            } else {
+              updateErrorIndexes(index, false);
+            }
+          } else if (EXECUTOR_RELATED_PROPERTIES.includes(data.split(':')[0])) {
+            if (
+              value.includes('.') ||
+              !Number.isInteger(Number(value)) ||
+              Number(value) < 2 ||
+              Number(value) > 2000
+            ) {
+              updateErrorIndexes(index, true);
+            } else {
+              updateErrorIndexes(index, false);
+            }
+          } else if (
+            data.split(':')[0] === 'spark.dynamicAllocation.initialExecutors'
           ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (EXECUTOR_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          if (
-            value.includes('.') ||
-            !Number.isInteger(Number(value)) ||
-            Number(value) < 2 ||
-            Number(value) > 2000
+            if (
+              value.includes('.') ||
+              !Number.isInteger(Number(value)) ||
+              Number(value) < 2 ||
+              Number(value) > 500
+            ) {
+              updateErrorIndexes(index, true);
+            } else {
+              updateErrorIndexes(index, false);
+            }
+          } else if (
+            data.split(':')[0] === 'spark.dynamicAllocation.minExecutors'
           ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (
-          data.split(':')[0] === 'spark.dynamicAllocation.initialExecutors'
-        ) {
-          if (
-            value.includes('.') ||
-            !Number.isInteger(Number(value)) ||
-            Number(value) < 2 ||
-            Number(value) > 500
+            if (
+              value.includes('.') ||
+              !Number.isInteger(Number(value)) ||
+              Number(value) < 2
+            ) {
+              updateErrorIndexes(index, true);
+            } else {
+              updateErrorIndexes(index, false);
+            }
+          } else if (
+            data.split(':')[0] ===
+            'spark.dynamicAllocation.executorAllocationRatio'
           ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
+            if (
+              value.length === 0 ||
+              Number.isNaN(Number(value)) ||
+              Number(value) < 0 ||
+              Number(value) > 1
+            ) {
+              updateErrorIndexes(index, true);
+            } else {
+              updateErrorIndexes(index, false);
+            }
           }
-        } else if (
-          data.split(':')[0] === 'spark.dynamicAllocation.minExecutors'
-        ) {
-          if (
-            value.includes('.') ||
-            !Number.isInteger(Number(value)) ||
-            Number(value) < 2
-          ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (
-          data.split(':')[0] ===
-          'spark.dynamicAllocation.executorAllocationRatio'
-        ) {
-          if (
-            value.length === 0 ||
-            Number.isNaN(Number(value)) ||
-            Number(value) < 0 ||
-            Number(value) > 1
-          ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
+          /*
+            value is split from labels
+            Example:"client:dataproc_jupyter_plugin"
+            */
+          let sparkProperties = data.split(':');
+          sparkProperties[1] = value.trim();
+          data = sparkProperties[0] + ':' + sparkProperties[1];
+        }
+        else if(keyValue === 'key' && section === 'metastore'){
+          const catalogNamePattern = /^spark\.sql\.catalog\..+$/;
+          let seperatorIndex = data.indexOf(':');
+          let sparkProperties = [];
+          sparkProperties[0] = value.trim();
+          sparkProperties[1] = data.substring(seperatorIndex + 1);
+          data = sparkProperties[0] + ':' + sparkProperties[1];
+          if(value.startsWith('spark.sql.catalog.') && catalogNamePattern.test(value)){
+            // Remove index from error array if present
+            if(metastoreKeyValidation.includes(index)){
+              let updatedArray = metastoreKeyValidation.filter((item:number) => item !== index);
+              setMetastoreKeyValidation(updatedArray);
+            }
+          }else{
+            if (!metastoreKeyValidation.includes(index)) {
+              setMetastoreKeyValidation([...metastoreKeyValidation, index]);
+            }
           }
         }
-        /*
-          value is split from labels
-          Example:"client:dataproc_jupyter_plugin"
-          */
-        let sparkProperties = data.split(':');
-        sparkProperties[1] = value.trim();
-        data = sparkProperties[0] + ':' + sparkProperties[1];
       }
       labelEdit[dataNumber] = data;
     });
@@ -205,20 +228,32 @@ function SparkProperties({
                   <div className="key-message-wrapper">
                     <div
                       className="select-text-overlay-label"
-                      title={labelSplit[0]}
+                      title={labelDetailUpdated[index] ? labelDetailUpdated[index].substring(0,labelDetailUpdated[index].indexOf(':')) : ''}
                     >
                       <Input
                         sx={{ margin: 0 }}
                         className={`edit-input-style`}
-                        disabled={true}
+                        disabled={ sparkSection !== 'metastore'}
                         onBlur={() => handleEditLabelSwitch()}
                         onChange={e =>
-                          handleEditLabel(e.target.value, index, 'key')
+                          handleEditLabel(sparkSection,e.target.value, index, 'key')
                         }
                         defaultValue={labelSplit[0]}
                         Label={`Key ${index + 1}*`}
+                        value={labelDetailUpdated[index] ? labelDetailUpdated[index].substring(0,labelDetailUpdated[index].indexOf(':')) : ''}
                       />
                     </div>
+                    {metastoreKeyValidation?.includes(index) && (
+                      <div className="error-key-parent">
+                        <iconError.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
+                        <div className="error-key-missing">
+                          The key name should match this pattern : spark.sql.catalog.*
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
@@ -244,11 +279,11 @@ function SparkProperties({
                           className={`edit-input-style`}
                           onBlur={() => handleEditLabelSwitch()}
                           onChange={e =>
-                            handleEditLabel(e.target.value, index, 'value')
+                            handleEditLabel(sparkSection,e.target.value, index, 'value')
                           }
                           disabled={
                             labelSplit[0] === 'spark.dataproc.executor.compute.tier' ||
-                            labelSplit[0] === 'spark.sql.catalog.iceberg_catalog.warehouse'
+                            (sparkSection === 'metastore' && index === 2)
                           }
                           value={labelDetailUpdated[index] ? labelDetailUpdated[index].substring(labelDetailUpdated[index].indexOf(':') + 1) : ''}
                           Label={`Value ${index + 1}`}

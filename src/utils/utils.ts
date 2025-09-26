@@ -17,7 +17,6 @@
 
 import { LabIcon } from '@jupyterlab/ui-components';
 import pysparkLogo from '../../third_party/icons/pyspark_logo.svg';
-import pySparkDarkLogo from '../../third_party/icons/pyspark_dark_icon.svg'
 import pythonLogo from '../../third_party/icons/python_logo.svg';
 import scalaLogo from '../../third_party/icons/scala_logo.svg';
 import sparkrLogo from '../../third_party/icons/sparkr_logo.svg';
@@ -344,10 +343,6 @@ const iconPysparkLogo = new LabIcon({
   name: 'launcher:pyspark-logo-icon',
   svgstr: pysparkLogo
 });
-const iconPysparkDarkLogo = new LabIcon({
-  name: 'launcher:pyspark-dark-logo-icon',
-  svgstr: pySparkDarkLogo
-})
 const iconPythonLogo = new LabIcon({
   name: 'launcher:python-logo-icon',
   svgstr: pythonLogo
@@ -362,9 +357,6 @@ const iconScalaLogo = new LabIcon({
 });
 
 export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel,themeManager: IThemeManager) => {
-  const isLightTheme = themeManager.theme
-        ? themeManager.isLight(themeManager.theme)
-        : true;
   const kernalName = kernelType?.name || '';
   const kernalLanguage = kernelType?.language || '';
   
@@ -381,7 +373,7 @@ export const iconDisplay = (kernelType: KernelSpecAPI.ISpecModel,themeManager: I
     if (kernalLanguage === 'scala') {
       return iconScalaLogo;
     }
-    return isLightTheme ? iconPysparkLogo : iconPysparkDarkLogo;
+    return iconPysparkLogo;
   }
   
   return iconPythonLogo;

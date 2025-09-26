@@ -162,6 +162,7 @@ function CreateRunTime({
     gpu: [],
     metastore: []
   });
+  const [metastoreKeyValidation, setMetastoreKeyValidation] = useState<number[]>([]);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
   const [labelDetail, setLabelDetail] = useState(key);
   const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
@@ -225,7 +226,7 @@ function CreateRunTime({
   useEffect(() => {
     if (metastoreType === 'biglake') {
       const metaStorePropertiesList = metastoreDetail.length > 0 ? metastoreDetail : META_STORE_DEFAULT;
-      const warehouseProperty = 'spark.sql.catalog.iceberg_catalog.warehouse:';
+      const warehouseProperty = 'spark.sql.catalog.biglake.warehouse:';
       const metaStoreProperties = metaStorePropertiesList.map(property => {
         if (property.startsWith(warehouseProperty)) {
           return warehouseProperty + dataWarehouseDir;
@@ -461,6 +462,7 @@ function CreateRunTime({
     setVersionSelected(version);
     setMetastoreType(metastore);
     setVersionBiglakeValidation(metastore === 'biglake' && version !== '2.3');
+    setMetastoreKeyValidation([]);
   };
 
   const renderLoadingLabel = (label: string, isLoading: boolean) => {
@@ -636,7 +638,7 @@ function CreateRunTime({
                 META_STORE_DEFAULT.some(item => {
                   const [itemKey] = item.split(':');
                   return itemKey === property.split(':')[0];
-                })
+                }) || property.startsWith('spark.sql.catalog.')
               ) {
                 metaStoreDetailList.push(property);
               } else {
@@ -652,9 +654,9 @@ function CreateRunTime({
             setMetastoreDetailUpdated(metaStoreDetailList);
             if (metaStoreDetailList.length > 0) {
               setMetastoreType('biglake');
-              const warehouseProperty = metaStoreDetailList.find(property =>
-                property.startsWith('spark.sql.catalog.iceberg_catalog.warehouse:')
-              );
+              const warehouseProperty = (metaStoreDetailList[2] && metaStoreDetailList[2].startsWith('spark.sql.catalog.') && metaStoreDetailList[2].split(':').length === 3)
+                ? metaStoreDetailList[2]
+                : null; 
               if (warehouseProperty) {
                 const firstColonIndex = warehouseProperty.indexOf(':');
                 const warehouseUrl = warehouseProperty.substring(firstColonIndex + 1);
@@ -1051,6 +1053,7 @@ function CreateRunTime({
       sparkValueValidation.resourceallocation.length !== 0 ||
       sparkValueValidation.autoscaling.length !== 0 ||
       sparkValueValidation.gpu.length !== 0 ||
+      metastoreKeyValidation.length !== 0 ||
       displayNameSelected === '' ||
       runTimeSelected === '' ||
       desciptionSelected === '' ||
@@ -2427,6 +2430,8 @@ function CreateRunTime({
                       setSparkValueValidation={setSparkValueValidation}
                       sparkSection="metastore"
                       setGpuDetailChangeDone={setGpuDetailChangeDone}
+                      metastoreKeyValidation={metastoreKeyValidation}
+                      setMetastoreKeyValidation={setMetastoreKeyValidation}
                     />
                   )}
                 </>
