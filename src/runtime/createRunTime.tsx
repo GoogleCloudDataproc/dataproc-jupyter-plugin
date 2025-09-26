@@ -1274,8 +1274,8 @@ function CreateRunTime({
         metastoreType === 'biglake' &&
         metastoreDetailUpdated.forEach((label: string) => {
           const firstColonIndex = label.indexOf(':');
-          const key = label.substring(0, firstColonIndex);
-          const value = label.substring(firstColonIndex + 1);
+          const key = firstColonIndex === -1 ? label : label.substring(0, firstColonIndex);
+          const value = firstColonIndex === -1 ? '' : label.substring(firstColonIndex + 1);
           propertyObject[key] = value;
         });
         propertyDetailUpdated.forEach((label: string) => {

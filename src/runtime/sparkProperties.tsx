@@ -238,7 +238,6 @@ function SparkProperties({
                         onChange={e =>
                           handleEditLabel(sparkSection,e.target.value, index, 'key')
                         }
-                        defaultValue={labelSplit[0]}
                         Label={`Key ${index + 1}*`}
                         value={labelDetailUpdated[index] ? labelDetailUpdated[index].substring(0,labelDetailUpdated[index].indexOf(':')) : ''}
                       />
