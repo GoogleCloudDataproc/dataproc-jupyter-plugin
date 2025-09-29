@@ -231,27 +231,21 @@ function CreateRunTime({
 
   useEffect(() => {
     if (metastoreType === 'biglake') {
-      const metaStorePropertiesList =
-        metastoreDetail.length > 0 ? metastoreDetail : META_STORE_DEFAULT;
-      const warehouseProperty = 'spark.sql.catalog.iceberg_catalog.warehouse:';
-      const metaStoreProperties = metaStorePropertiesList.map(property => {
-        if (property.startsWith(warehouseProperty)) {
-          return warehouseProperty + dataWarehouseDir;
-          //here
-        }
-        return property;
-      });
+      const catalogPrefix = `spark.sql.catalog.${catalogName}`;
+      const metaStoreProperties = [
+        `${catalogPrefix}:org.apache.iceberg.spark.SparkCatalog`,
+        `${catalogPrefix}.type:hadoop`,
+        `${catalogPrefix}.warehouse:${dataWarehouseDir}`
+      ];
       setMetastoreDetail(metaStoreProperties);
       setMetastoreDetailUpdated(metaStoreProperties);
     } else {
       setDataWarehouseDir('');
-      //here
       setIsValidDataWareHouseUrl(false);
-      //here
       setMetastoreDetail([]);
       setMetastoreDetailUpdated([]);
     }
-  }, [metastoreType, dataWarehouseDir]);
+  }, [metastoreType, catalogName, dataWarehouseDir]);
 
   let keyType = '';
   let keyRing = '';
@@ -655,18 +649,12 @@ function CreateRunTime({
                 })
               ) {
                 gpuDetailList.push(property);
-              } else if (
-                META_STORE_DEFAULT.some(item => {
-                  const [itemKey] = item.split(':');
-                  return itemKey === property.split(':')[0];
-                })
-              ) {
+              } else if (property.startsWith('spark.sql.catalog.')) {
                 metaStoreDetailList.push(property);
               } else {
                 otherDetailList.push(property);
               }
             });
-
             setResourceAllocationDetail(resourceAllocationDetailList);
             setResourceAllocationDetailUpdated(resourceAllocationDetailList);
             setAutoScalingDetail(autoScalingDetailList);
@@ -675,22 +663,27 @@ function CreateRunTime({
             setMetastoreDetailUpdated(metaStoreDetailList);
             if (metaStoreDetailList.length > 0) {
               setMetastoreType('biglake');
-              const warehouseProperty = metaStoreDetailList.find(property =>
-                property.startsWith(
-                  'spark.sql.catalog.iceberg_catalog.warehouse:'
-                )
+              const warehouseProperty = metaStoreDetailList.find(prop =>
+                prop.includes('.warehouse:')
               );
+
               if (warehouseProperty) {
                 const firstColonIndex = warehouseProperty.indexOf(':');
                 const warehouseUrl = warehouseProperty.substring(
                   firstColonIndex + 1
                 );
+                const warehouseKey = warehouseProperty.substring(
+                  0,
+                  firstColonIndex
+                );
                 setDataWarehouseDir(warehouseUrl);
-                //here
                 setIsValidDataWareHouseUrl(gcsUrlRegex.test(warehouseUrl));
-                //here
+                const keyParts = warehouseKey.split('.');
+                if (keyParts.length > 3) {
+                  const extractedCatalogName = keyParts[3];
+                  setCatalogName(extractedCatalogName);
+                }
               }
-              setExpandMetastore(false);
             } else {
               setMetastoreType('none');
             }
