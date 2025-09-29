@@ -1731,10 +1731,7 @@ function CreateRunTime({
               {versionBiglakeValidation && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    To use BigLake Metastore, select runtime version 2.3 or
-                    higher.
-                  </div>
+                  <div className="error-key-missing">To use BigLake Metastore, select runtime version 2.3 or higher.</div>
                 </div>
               )}
               <div className="select-text-overlay">
@@ -1992,10 +1989,7 @@ function CreateRunTime({
                           renderInput={params => (
                             <TextField
                               {...params}
-                              label={renderLoadingLabel(
-                                'Primary network*',
-                                isloadingNetwork
-                              )}
+                              label={renderLoadingLabel('Primary network*',isloadingNetwork)}
                               disabled={isloadingNetwork}
                             />
                           )}
@@ -2011,10 +2005,7 @@ function CreateRunTime({
                           renderInput={params => (
                             <TextField
                               {...params}
-                              label={renderLoadingLabel(
-                                'Subnetwork*',
-                                isloadingSubNetwork
-                              )}
+                              label={renderLoadingLabel('Subnetwork*',isloadingSubNetwork)}
                               disabled={isloadingSubNetwork}
                             />
                           )}
@@ -2035,8 +2026,7 @@ function CreateRunTime({
                       </div>
                     </div>
                   )}
-                {!isloadingNetwork &&
-                  !isloadingSubNetwork &&
+                {!isloadingNetwork && !isloadingSubNetwork &&
                   selectedNetworkRadio === 'projectNetwork' &&
                   networkSelected !== '' &&
                   subNetworkSelected === '' && (
@@ -2175,17 +2165,10 @@ function CreateRunTime({
                 <Autocomplete
                   className="create-runtime-style"
                   options={META_STORE_TYPES}
-                  value={
-                    META_STORE_TYPES.find(
-                      option => option.value === metastoreType
-                    ) || null
-                  }
+                  value={META_STORE_TYPES.find(option => option.value === metastoreType) || null}
                   getOptionLabel={option => option.label}
                   onChange={(event, newValue) => {
-                    handleMetastoreTypeAndVersionChange(
-                      newValue?.value || '',
-                      versionSelected
-                    );
+                    handleMetastoreTypeAndVersionChange(newValue?.value || '', versionSelected);
                   }}
                   renderInput={params => (
                     <TextField {...params} label="Metastore" />
@@ -2241,15 +2224,9 @@ function CreateRunTime({
                 <>
                   <div className="select-text-overlay">
                     <Input
-                      className={`create-runtime-style ${
-                        !isValidDataWareHouseUrl && dataWarehouseDir
-                          ? 'input-error'
-                          : ''
-                      }`}
+                      className={`create-runtime-style ${!isValidDataWareHouseUrl && dataWarehouseDir ? 'input-error' : ''}`}
                       value={dataWarehouseDir}
-                      onChange={e =>
-                        handleDataWareHouseUrlChange(e.target.value)
-                      }
+                      onChange={e => handleDataWareHouseUrlChange(e.target.value)}
                       type="text"
                       Label="Data warehousing directory*"
                       placeholder="e.g, gs://<bucket-name>"
@@ -2257,13 +2234,8 @@ function CreateRunTime({
                   </div>
                   {!isValidDataWareHouseUrl && (
                     <div className="error-key-parent">
-                      <iconError.react
-                        tag="div"
-                        className="logo-alignment-style"
-                      />
-                      <div className="error-key-missing">
-                        Input does not match pattern : gs://bucket-name
-                      </div>
+                      <iconError.react tag="div" className="logo-alignment-style"/>
+                      <div className="error-key-missing"> Input does not match pattern : gs://bucket-name </div>
                     </div>
                   )}
                   <div className="select-text-overlay">
@@ -2456,16 +2428,14 @@ function CreateRunTime({
                 <>
                   <div className="spark-properties-sub-header-parent">
                     <div className="spark-properties-title">
-                      <div className="spark-properties-sub-header">
-                        Metastore
-                      </div>
+                      <div className="spark-properties-sub-header">Metastore</div>
                       <div
                         className="expand-icon"
                         onClick={() =>
                           window.open(`${SPARK_META_STORE_INFO_URL}`, '_blank')
                         }
-                      >
-                        {renderHelpIcon(themeManager)}
+                       >
+                         {renderHelpIcon(themeManager)}
                       </div>
                     </div>
                     <div
