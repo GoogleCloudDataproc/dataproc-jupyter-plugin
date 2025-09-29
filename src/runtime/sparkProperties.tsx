@@ -94,23 +94,22 @@ function SparkProperties({
   };
 
   const handleEditLabel = (section:string, value: string, index: number, keyValue: string) => {
-    const labelEdit = [...labelDetail];
-
+    const DISALLOWED_CHARS_REGEX = /[^a-z0-9_.]/g;
+    value = value.replace(DISALLOWED_CHARS_REGEX, '');
+    const labelEdit = [...labelDetailUpdated];
     labelEdit.forEach((data, dataNumber: number) => {
       if (index === dataNumber) {
-        if(keyValue === 'value'){
+        if (keyValue === 'value') {
           /*
-            allowed aplhanumeric and spaces and underscores values
+            allowed alphanumeric and spaces and underscores values
           */
           let label = data.split(':')[0];
           if (MEMORY_RELATED_PROPERTIES.includes(label)) {
             const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
-
             const isError = value.search(regex) === -1;
             updateErrorIndexes(index, isError);
           } else if (DISK_RELATED_PROPERTIES.includes(label)) {
             const regex = /^(0*[1-9][0-9]*)(k|m|g|t)$/i;
-
             const isError = value.search(regex) === -1;
             updateErrorIndexes(index, isError);
           } else if (CORE_RELATED_PROPERTIES.includes(label)) {
@@ -147,38 +146,95 @@ function SparkProperties({
               Number(value) > 1;
             updateErrorIndexes(index, isError);
           }
-          /*
-            value is split from labels
-            Example:"client:dataproc_jupyter_plugin"
-          */
           let sparkProperties = data.split(':');
           sparkProperties[1] = value.trim();
           data = sparkProperties[0] + ':' + sparkProperties[1];
-        }
-        else if(keyValue === 'key' && section === 'metastore'){
-          const catalogNamePattern = /^spark\.sql\.catalog\..+$/;
-          let seperatorIndex = data.indexOf(':');
-          let sparkProperties = [];
-          sparkProperties[0] = value.trim();
-          sparkProperties[1] = data.substring(seperatorIndex + 1);
-          data = sparkProperties[0] + ':' + sparkProperties[1];
-          if(value.startsWith('spark.sql.catalog.') && catalogNamePattern.test(value)){
-            // Remove index from error array if present
-            if(metastoreKeyValidation.includes(index)){
-              let updatedArray = metastoreKeyValidation.filter((item:number) => item !== index);
-              setMetastoreKeyValidation(updatedArray);
-            }
-          }else{
-            if (!metastoreKeyValidation.includes(index)) {
-              setMetastoreKeyValidation([...metastoreKeyValidation, index]);
-            }
+        } else if (keyValue === 'key' && section === 'metastore') {
+          const originalKey = data.split(':')[0];
+          const valueKey = value.trim(); // The proposed new key
+          const prefix = 'spark.sql.catalog.';
+          const baseKeyPattern = /^spark\.sql\.catalog\.([a-z][a-z0-9_]*)$/i;
+          let originalSuffix = '';
+          if (originalKey.match(baseKeyPattern)) {
+              originalSuffix = '';
+          } else {
+              const suffixMatch = originalKey.match(/(\.[a-z][a-z0-9_]*)$/i);
+              originalSuffix = suffixMatch ? suffixMatch[0] : '';
+          }
+          const isPrefixPreserved = valueKey.startsWith(prefix);
+          let isSuffixPreserved = valueKey.endsWith(originalSuffix) && valueKey.length >= prefix.length + originalSuffix.length
+            && !(valueKey.endsWith('.') && valueKey !== prefix);
+
+          let isValidChange = isPrefixPreserved && isSuffixPreserved;
+
+          if (isValidChange) {
+            let seperatorIndex = data.indexOf(':');
+            let sparkProperties: string[] = [];
+            sparkProperties[0] = valueKey;
+            sparkProperties[1] = data.substring(seperatorIndex + 1);
+            data = sparkProperties[0] + ':' + sparkProperties[1];
           }
         }
       }
       labelEdit[dataNumber] = data;
     });
+    if (keyValue === 'key' && section === 'metastore') {
+      let finalErrorIndexes: number[] = [];
+
+      const consistencyCheck = checkAllMetastoreKeysForConsistency(labelEdit);
+      finalErrorIndexes = consistencyCheck.inconsistentIndexes;
+      
+      let updatedValidationArray = metastoreKeyValidation.filter((item: number) => 
+          !labelEdit[item].startsWith('spark.sql.catalog.')
+      );
+
+      updatedValidationArray = [...updatedValidationArray, ...finalErrorIndexes];
+
+      // Remove duplicates and update state
+      setMetastoreKeyValidation([...new Set(updatedValidationArray)]);
+    }
     setLabelDetailUpdated(labelEdit);
   };
+  
+  const getCategoryName = (key: string): string | null => {
+    const match = key.match(/^spark\.sql\.catalog\.([a-z][a-z0-9_]*)/);
+    return match ? match[1] : null; 
+  };
+
+  const checkAllMetastoreKeysForConsistency = (labelEdit: string[]): { isConsistent: boolean, inconsistentIndexes: number[] } => {
+    const catalogEntries = labelEdit
+      .map((data, index) => ({
+        index,
+        key: data.split(':')[0].trim(),
+      }))
+      .filter(entry => entry.key.startsWith('spark.sql.catalog.'));
+
+    if (catalogEntries.length === 0) {
+      return { isConsistent: true, inconsistentIndexes: [] };
+    }
+
+    const firstEntry = catalogEntries[0];
+    let requiredCategoryName = getCategoryName(firstEntry.key);
+
+    if (!requiredCategoryName) {
+      return { isConsistent: false, inconsistentIndexes: catalogEntries.map(e => e.index) };
+    }
+
+    const inconsistentIndexes: number[] = [];
+    let isConsistent = true;
+
+    for (const entry of catalogEntries) {
+      const currentCategoryName = getCategoryName(entry.key);
+      
+      if (currentCategoryName !== requiredCategoryName) {
+        isConsistent = false;
+        inconsistentIndexes.push(entry.index);
+      }
+    }
+
+    return { isConsistent, inconsistentIndexes };
+  };
+
 
   return (
     <div>
@@ -186,10 +242,23 @@ function SparkProperties({
         {labelDetail.length > 0 &&
           labelDetail.map((label: string, index: number) => {
             /*
-                     Extracting key, value from label
-                      Example: "{client:dataProc_plugin}"
-                  */
+              Extracting key, value from label
+              Example: "{client:dataProc_plugin}"
+            */
             const labelSplit = label.split(':');
+            const originalKey = labelDetail[index].split(':')[0].trim(); // Get the original key
+
+            let requiredSuffix = '';
+            const baseKeyPattern = /^spark\.sql\.catalog\.([a-z][a-z0-9_]*)$/i;
+            
+            if (originalKey.startsWith('spark.sql.catalog.')) {
+                if (!originalKey.match(baseKeyPattern)) {
+                    const suffixMatch = originalKey.match(/(\.[a-z][a-z0-9_]*)$/i);
+                    requiredSuffix = suffixMatch ? suffixMatch[0] : '';
+                }
+            }
+            
+            const dynamicPattern = `spark.sql.catalog.<catalog_name>${requiredSuffix}`;
             return (
               <div key={label}>
                 <div className="job-label-edit-row">
@@ -206,6 +275,7 @@ function SparkProperties({
                         onChange={e =>
                           handleEditLabel(sparkSection,e.target.value, index, 'key')
                         }
+                        inputProps={{ pattern: '^[a-zA-Z0-9_]*$' }}
                         Label={`Key ${index + 1}*`}
                         value={labelDetailUpdated[index] ? labelDetailUpdated[index].substring(0,labelDetailUpdated[index].indexOf(':')) : ''}
                       />
@@ -217,7 +287,9 @@ function SparkProperties({
                           className="logo-alignment-style"
                         />
                         <div className="error-key-missing">
-                          The key name should match this pattern : spark.sql.catalog.*
+                          The key name should match this pattern : {dynamicPattern}
+                          <br />
+                          ** catalog_name must be identical across all Metastore properties.
                         </div>
                       </div>
                     )}

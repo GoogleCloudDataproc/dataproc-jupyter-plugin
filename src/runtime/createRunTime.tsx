@@ -226,10 +226,11 @@ function CreateRunTime({
   useEffect(() => {
     if (metastoreType === 'biglake') {
       const metaStorePropertiesList = metastoreDetail.length > 0 ? metastoreDetail : META_STORE_DEFAULT;
-      const warehouseProperty = 'spark.sql.catalog.biglake.warehouse:';
+      const warehousePropertyPrefix = 'spark.sql.catalog.';
+      const warehousePropertySuffix = '.warehouse:';
       const metaStoreProperties = metaStorePropertiesList.map(property => {
-        if (property.startsWith(warehouseProperty)) {
-          return warehouseProperty + dataWarehouseDir;
+        if (property.startsWith(warehousePropertyPrefix) && property.includes(warehousePropertySuffix)) {
+          return property.split(":")[0] + ":" + dataWarehouseDir;
         }
         return property;
       });
