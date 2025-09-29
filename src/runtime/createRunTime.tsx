@@ -105,7 +105,7 @@ const iconHelp = new LabIcon({
 const iconHelpDark = new LabIcon({
   name: 'launcher:help-spark-dark-icon',
   svgstr: helpIconDark
-});
+})
 
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
@@ -185,8 +185,7 @@ function CreateRunTime({
   const [displayNameValidation, setDisplayNameValidation] = useState(false);
   const [idleValidation, setIdleValidation] = useState(false);
   const [autoValidation, setAutoValidation] = useState(false);
-  const [versionBiglakeValidation, setVersionBiglakeValidation] =
-    useState(false);
+  const [versionBiglakeValidation, setVersionBiglakeValidation] = useState(false);
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
   const [autoTimeSelected, setAutoTimeSelected] = useState('');
@@ -219,10 +218,8 @@ function CreateRunTime({
   const [dataWarehouseDir, setDataWarehouseDir] = useState('');
   const [catalogName, setCatalogName] = useState('biglake');
   const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
-  const [metastoreDetailUpdated, setMetastoreDetailUpdated] =
-    useState(META_STORE_DEFAULT);
-  const gcsUrlRegex =
-    /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
+  const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
+  const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
   const [expandMetastore, setExpandMetastore] = useState(false);
 
@@ -494,7 +491,6 @@ function CreateRunTime({
     const dynamicAllocationState = autoScalingDetailUpdated.find(prop =>
       prop.startsWith('spark.dynamicAllocation.enabled:')
     );
-
     if (dynamicAllocationState) {
       const isEnabled = dynamicAllocationState.endsWith('true');
       let updatedProperties;
@@ -502,8 +498,8 @@ function CreateRunTime({
       if (!isEnabled && autoScalingDetailUpdated.length !== 2) {
         let filteredProperties = [dynamicAllocationState];
 
-        const shuffleEnabledState = autoScalingDetailUpdated.find(prop =>
-          prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
+       const shuffleEnabledState = autoScalingDetailUpdated.find(
+          (prop) => prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
         );
 
         if (shuffleEnabledState) {
@@ -515,12 +511,8 @@ function CreateRunTime({
       if (isEnabled && autoScalingDetailUpdated.length == 2) {
         updatedProperties = AUTO_SCALING_DEFAULT;
       }
-
-      if (
-        updatedProperties &&
-        JSON.stringify(autoScalingDetailUpdated) !==
-          JSON.stringify(updatedProperties)
-      ) {
+      if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !== 
+      JSON.stringify(updatedProperties)) {
         setAutoScalingDetail(updatedProperties);
         setAutoScalingDetailUpdated(updatedProperties);
         setSparkValueValidation(prev => ({
@@ -684,6 +676,7 @@ function CreateRunTime({
                   setCatalogName(extractedCatalogName);
                 }
               }
+              setExpandMetastore(false);
             } else {
               setMetastoreType('none');
             }
@@ -1019,11 +1012,21 @@ function CreateRunTime({
     }
   };
 
-  const renderHelpIcon = (themeManager: IThemeManager) => {
+   const renderHelpIcon = (themeManager: IThemeManager) => {
     if (themeManager.theme && themeManager.isLight(themeManager.theme)) {
-      return <iconHelp.react tag="div" className="logo-alignment-style" />;
+      return (
+        <iconHelp.react
+          tag="div"
+          className="logo-alignment-style"
+        />
+      );
     }
-    return <iconHelpDark.react tag="div" className="logo-alignment-style" />;
+    return (
+      <iconHelpDark.react
+        tag="div"
+        className="logo-alignment-style"
+      />
+    );
   };
 
   const handleClusterSelected = (data: string | null) => {
@@ -1285,11 +1288,11 @@ function CreateRunTime({
         });
         metastoreType === 'biglake' &&
           metastoreDetailUpdated.forEach((label: string) => {
-            const firstColonIndex = label.indexOf(':');
-            const key = label.substring(0, firstColonIndex);
-            const value = label.substring(firstColonIndex + 1);
-            propertyObject[key] = value;
-          });
+          const firstColonIndex = label.indexOf(':');
+          const key = label.substring(0, firstColonIndex);
+          const value = label.substring(firstColonIndex + 1);
+          propertyObject[key] = value;
+        });
         propertyDetailUpdated.forEach((label: string) => {
           const labelSplit = label.split(/:(.+)/);
           const key = labelSplit[0];
@@ -1389,8 +1392,7 @@ function CreateRunTime({
             },
             peripheralsConfig: {
               ...(metastoreType && {
-                metastoreService:
-                  metastoreType === 'none' ? '' : servicesSelected
+               metastoreService: metastoreType === 'none' ? '' : servicesSelected
               }),
               ...(clusterSelected !== '' && {
                 sparkHistoryServerConfig: {
