@@ -459,10 +459,7 @@ function CreateRunTime({
     setKeySelected('');
   };
 
-  const handleMetastoreTypeAndVersionChange = (
-    metastore: string,
-    version: string
-  ) => {
+  const handleMetastoreTypeAndVersionChange = (metastore: string, version: string) => {
     setVersionSelected(version);
     setMetastoreType(metastore);
     setVersionBiglakeValidation(metastore === 'biglake' && version !== '2.3');
@@ -498,7 +495,7 @@ function CreateRunTime({
       if (!isEnabled && autoScalingDetailUpdated.length !== 2) {
         let filteredProperties = [dynamicAllocationState];
 
-       const shuffleEnabledState = autoScalingDetailUpdated.find(
+        const shuffleEnabledState = autoScalingDetailUpdated.find(
           (prop) => prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
         );
 
@@ -511,11 +508,11 @@ function CreateRunTime({
       if (isEnabled && autoScalingDetailUpdated.length == 2) {
         updatedProperties = AUTO_SCALING_DEFAULT;
       }
-      if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !== 
+      if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !==
       JSON.stringify(updatedProperties)) {
         setAutoScalingDetail(updatedProperties);
         setAutoScalingDetailUpdated(updatedProperties);
-        setSparkValueValidation(prev => ({
+         setSparkValueValidation(prev => ({
           ...prev,
           autoscaling: []
         }));
@@ -1722,10 +1719,7 @@ function CreateRunTime({
                     ) || null
                   }
                   onChange={(event, newValue) => {
-                    handleMetastoreTypeAndVersionChange(
-                      metastoreType,
-                      newValue?.value || ''
-                    );
+                    handleMetastoreTypeAndVersionChange(metastoreType, newValue?.value || '');
                   }}
                   options={runtimeOptions}
                   getOptionLabel={option => option.text}

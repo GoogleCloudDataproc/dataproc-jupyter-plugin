@@ -235,7 +235,7 @@ function SparkProperties({
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
                       {SELECT_FIELDS.includes(labelSplit[0]) &&
-                       sparkSection !== 'gpu' ? (
+                        sparkSection !== 'gpu' ? (
                         <Select
                           className="spark-properties-select-style"
                           value={labelSplit[1]}
@@ -244,7 +244,7 @@ function SparkProperties({
                           }
                           options={
                             labelSplit[1] === 'true' ||
-                             labelSplit[1] === 'false'
+                              labelSplit[1] === 'false'
                               ? BOOLEAN_SELECT_OPTIONS
                               : TIER_SELECT_OPTIONS
                           }
