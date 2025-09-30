@@ -2243,7 +2243,7 @@ function CreateRunTime({
                       value={catalogName}
                       onChange={e => handleCatalogNameChange(e.target.value)}
                       type="text"
-                      Label="Catalog Name*"
+                      Label="Catalog Name*" //accepts catalogName from user and updates the metastore properties
                       placeholder="Catalog Name"
                     />
                   </div>
