@@ -1007,7 +1007,7 @@ function CreateRunTime({
     }
   };
 
-   const renderHelpIcon = (themeManager: IThemeManager) => {
+  const renderHelpIcon = (themeManager: IThemeManager) => {
     if (themeManager.theme && themeManager.isLight(themeManager.theme)) {
       return (
         <iconHelp.react
@@ -1282,7 +1282,7 @@ function CreateRunTime({
           propertyObject[key] = value;
         });
         metastoreType === 'biglake' &&
-          metastoreDetailUpdated.forEach((label: string) => {
+        metastoreDetailUpdated.forEach((label: string) => {
           const firstColonIndex = label.indexOf(':');
           const key = label.substring(0, firstColonIndex);
           const value = label.substring(firstColonIndex + 1);
@@ -1987,7 +1987,7 @@ function CreateRunTime({
                           renderInput={params => (
                             <TextField
                               {...params}
-                              label={renderLoadingLabel('Primary network*',isloadingNetwork)}
+                              label={renderLoadingLabel('Primary network*', isloadingNetwork)}
                               disabled={isloadingNetwork}
                             />
                           )}
@@ -2003,7 +2003,7 @@ function CreateRunTime({
                           renderInput={params => (
                             <TextField
                               {...params}
-                              label={renderLoadingLabel('Subnetwork*',isloadingSubNetwork)}
+                              label={renderLoadingLabel('Subnetwork*', isloadingSubNetwork)}
                               disabled={isloadingSubNetwork}
                             />
                           )}
@@ -2232,8 +2232,8 @@ function CreateRunTime({
                   </div>
                   {!isValidDataWareHouseUrl && (
                     <div className="error-key-parent">
-                      <iconError.react tag="div" className="logo-alignment-style"/>
-                      <div className="error-key-missing"> Input does not match pattern : gs://bucket-name </div>
+                      <iconError.react tag="div" className="logo-alignment-style" />
+                      <div className="error-key-missing">Input does not match pattern : gs://bucket-name</div>
                     </div>
                   )}
                   <div className="select-text-overlay">
@@ -2433,8 +2433,8 @@ function CreateRunTime({
                         onClick={() =>
                           window.open(`${SPARK_META_STORE_INFO_URL}`, '_blank')
                         }
-                       >
-                         {renderHelpIcon(themeManager)}
+                        >
+                          {renderHelpIcon(themeManager)}
                       </div>
                     </div>
                     <div
