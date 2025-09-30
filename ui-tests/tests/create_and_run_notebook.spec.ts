@@ -40,7 +40,8 @@ test.describe('Create and run notebook', () => {
     await kernelStartingIndicator.waitFor({ state: 'visible', timeout: 30000 });
     await kernelStartingIndicator.waitFor({
       state: 'hidden',
-      timeout: 5 * 60 * 1000
+      // Reduced timeout to leave time for other test steps
+      timeout: 3 * 60 * 1000
     });
 
     await firstCodeBox.click();
