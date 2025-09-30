@@ -33,10 +33,16 @@ test.describe('Create and run notebook', () => {
       .locator('div')
       .first();
 
-    // Wait for kernel to be ready (why unknown?  Is this a bug?)
-    await page
-      .locator('.jp-Notebook-ExecutionIndicator[data-status="starting"]')
-      .waitFor({ timeout: 10000 });
+    // Wait for kernel to be ready
+    const kernelStartingIndicator = page.locator(
+      '.jp-Notebook-ExecutionIndicator[data-status="starting"]'
+    );
+    await kernelStartingIndicator.waitFor({ state: 'visible', timeout: 30000 });
+    await kernelStartingIndicator.waitFor({
+      state: 'hidden',
+      // Reduced timeout to leave time for other test steps
+      timeout: 3 * 60 * 1000
+    });
 
     await firstCodeBox.click();
     await firstCodeBox.fill("print('test output')");
