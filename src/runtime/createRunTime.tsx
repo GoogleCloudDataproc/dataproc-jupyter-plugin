@@ -237,8 +237,6 @@ function CreateRunTime({
       setMetastoreDetail(metaStoreProperties);
       setMetastoreDetailUpdated(metaStoreProperties);
     } else {
-      setDataWarehouseDir('');
-      setIsValidDataWareHouseUrl(false);
       setMetastoreDetail([]);
       setMetastoreDetailUpdated([]);
     }
@@ -2251,17 +2249,18 @@ function CreateRunTime({
                     />
                   </div>
                   {!isValidCatalogName && (
-                    <div className="error-key-parent">
-                      <iconError.react
-                        tag="div"
-                        className="logo-alignment-style"
-                      />
-                      <div className="error-key-missing">
-                        Catalog Name must contain only letters, numbers, and
-                        underscores.
-                      </div>
-                    </div>
-                  )}
+                <div className="error-key-parent">
+                  <iconError.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
+                  <div className="error-key-missing">
+                    {catalogName === ''
+                      ? 'Catalog Name is required'
+                      : 'Catalog Name must contain only letters, numbers, and underscores.'}
+                  </div>
+                </div>
+              )}
                 </>
               )}
 
