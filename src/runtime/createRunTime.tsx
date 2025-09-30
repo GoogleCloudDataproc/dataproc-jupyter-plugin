@@ -1080,7 +1080,6 @@ function CreateRunTime({
       (metastoreType === 'biglake' &&
         (dataWarehouseDir === '' ||
           !isValidDataWareHouseUrl ||
-          catalogName === '' ||
           !isValidCatalogName))
     );
   }
