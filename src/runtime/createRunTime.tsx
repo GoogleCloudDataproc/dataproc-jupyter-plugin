@@ -534,9 +534,9 @@ function CreateRunTime({
     setIsValidDataWareHouseUrl(url === '' ? false : gcsUrlRegex.test(url));
   };
 
-  const handleCatalogNameChange = (url: string) => {
-    setCatalogName(url);
-    setIsValidCatalogName(url === '' ? false : catalogNameRegEx.test(url));
+  const handleCatalogNameChange = (catalogName: string) => {
+    setCatalogName(catalogName);
+    setIsValidCatalogName(catalogName === '' ? false : catalogNameRegEx.test(catalogName));
   };
 
   const handleMetastoreExpand = () => {
@@ -651,7 +651,7 @@ function CreateRunTime({
             if (metaStoreDetailList.length > 0) {
               setMetastoreType('biglake');
               const warehouseProperty = metaStoreDetailList.find(prop =>
-                prop.includes('.warehouse:')
+                prop.substring(0, prop.indexOf(':')).endsWith('.warehouse')
               );
 
               if (warehouseProperty) {
