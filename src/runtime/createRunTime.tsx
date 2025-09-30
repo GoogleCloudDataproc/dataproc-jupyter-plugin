@@ -216,31 +216,31 @@ function CreateRunTime({
 
   const [metastoreType, setMetastoreType] = useState('none');
   const [dataWarehouseDir, setDataWarehouseDir] = useState('');
+  const [catalogName, setCatalogName] = useState('biglake');
   const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
   const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
   const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
   const [expandMetastore, setExpandMetastore] = useState(false);
 
+  const catalogNameRegEx = /^[a-zA-Z0-9_]*$/;
+  const [isValidCatalogName, setIsValidCatalogName] = useState(true);
+
   useEffect(() => {
     if (metastoreType === 'biglake') {
-      const metaStorePropertiesList = metastoreDetail.length > 0 ? metastoreDetail : META_STORE_DEFAULT;
-      const warehouseProperty = 'spark.sql.catalog.iceberg_catalog.warehouse:';
-      const metaStoreProperties = metaStorePropertiesList.map(property => {
-        if (property.startsWith(warehouseProperty)) {
-          return warehouseProperty + dataWarehouseDir;
-        }
-        return property;
-      });
+      const catalogPrefix = `spark.sql.catalog.${catalogName}`;
+      const metaStoreProperties = [
+        `${catalogPrefix}:org.apache.iceberg.spark.SparkCatalog`,
+        `${catalogPrefix}.type:hadoop`,
+        `${catalogPrefix}.warehouse:${dataWarehouseDir}`
+      ];
       setMetastoreDetail(metaStoreProperties);
       setMetastoreDetailUpdated(metaStoreProperties);
     } else {
-      setDataWarehouseDir('');
-      setIsValidDataWareHouseUrl(false);
       setMetastoreDetail([]);
       setMetastoreDetailUpdated([]);
     }
-  }, [metastoreType, dataWarehouseDir]);
+  }, [metastoreType, catalogName, dataWarehouseDir]);
 
   let keyType = '';
   let keyRing = '';
@@ -486,7 +486,6 @@ function CreateRunTime({
     const dynamicAllocationState = autoScalingDetailUpdated.find(prop =>
       prop.startsWith('spark.dynamicAllocation.enabled:')
     );
-    
     if (dynamicAllocationState) {
       const isEnabled = dynamicAllocationState.endsWith('true');
       let updatedProperties;
@@ -503,12 +502,12 @@ function CreateRunTime({
         }
         updatedProperties = filteredProperties;
       }
-      
+
       if (isEnabled && autoScalingDetailUpdated.length == 2) {
         updatedProperties = AUTO_SCALING_DEFAULT;
       }
-      
-      if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !== JSON.stringify(updatedProperties)) {
+      if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !==
+      JSON.stringify(updatedProperties)) {
         setAutoScalingDetail(updatedProperties);
         setAutoScalingDetailUpdated(updatedProperties);
          setSparkValueValidation(prev => ({
@@ -533,6 +532,11 @@ function CreateRunTime({
   const handleDataWareHouseUrlChange = (url: string) => {
     setDataWarehouseDir(url);
     setIsValidDataWareHouseUrl(url === '' ? false : gcsUrlRegex.test(url));
+  };
+
+  const handleCatalogNameChange = (catalogName: string) => {
+    setCatalogName(catalogName);
+    setIsValidCatalogName(catalogName === '' ? false : catalogNameRegEx.test(catalogName));
   };
 
   const handleMetastoreExpand = () => {
@@ -632,18 +636,12 @@ function CreateRunTime({
                 })
               ) {
                 gpuDetailList.push(property);
-              } else if (
-                META_STORE_DEFAULT.some(item => {
-                  const [itemKey] = item.split(':');
-                  return itemKey === property.split(':')[0];
-                })
-              ) {
+              } else if (property.startsWith('spark.sql.catalog.')) {
                 metaStoreDetailList.push(property);
               } else {
                 otherDetailList.push(property);
               }
             });
-
             setResourceAllocationDetail(resourceAllocationDetailList);
             setResourceAllocationDetailUpdated(resourceAllocationDetailList);
             setAutoScalingDetail(autoScalingDetailList);
@@ -652,14 +650,26 @@ function CreateRunTime({
             setMetastoreDetailUpdated(metaStoreDetailList);
             if (metaStoreDetailList.length > 0) {
               setMetastoreType('biglake');
-              const warehouseProperty = metaStoreDetailList.find(property =>
-                property.startsWith('spark.sql.catalog.iceberg_catalog.warehouse:')
+              const warehouseProperty = metaStoreDetailList.find(prop =>
+                prop.substring(0, prop.indexOf(':')).endsWith('.warehouse')
               );
+
               if (warehouseProperty) {
                 const firstColonIndex = warehouseProperty.indexOf(':');
-                const warehouseUrl = warehouseProperty.substring(firstColonIndex + 1);
+                const warehouseUrl = warehouseProperty.substring(
+                  firstColonIndex + 1
+                );
+                const warehouseKey = warehouseProperty.substring(
+                  0,
+                  firstColonIndex
+                );
                 setDataWarehouseDir(warehouseUrl);
                 setIsValidDataWareHouseUrl(gcsUrlRegex.test(warehouseUrl));
+                const keyParts = warehouseKey.split('.');
+                if (keyParts.length > 3) {
+                  const extractedCatalogName = keyParts[3];
+                  setCatalogName(extractedCatalogName);
+                }
               }
               setExpandMetastore(false);
             } else {
@@ -849,7 +859,6 @@ function CreateRunTime({
       selectedRuntimeClone,
       setIsloadingSubNetwork
     );
-
   };
 
   const regionListAPI = async (
@@ -1068,7 +1077,10 @@ function CreateRunTime({
       (selectedNetworkRadio === 'projectNetwork' &&
         networkList.length !== 0 &&
         subNetworkList.length === 0) ||
-      (metastoreType === 'biglake' && ( dataWarehouseDir === '' || !isValidDataWareHouseUrl))
+      (metastoreType === 'biglake' &&
+        (dataWarehouseDir === '' ||
+          !isValidDataWareHouseUrl ||
+          !isValidCatalogName))
     );
   }
   const createRuntimeApi = async (payload: any) => {
@@ -1374,7 +1386,7 @@ function CreateRunTime({
             },
             peripheralsConfig: {
               ...(metastoreType && {
-                metastoreService: metastoreType === 'none' ? '' : servicesSelected
+               metastoreService: metastoreType === 'none' ? '' : servicesSelected
               }),
               ...(clusterSelected !== '' && {
                 sparkHistoryServerConfig: {
@@ -2223,6 +2235,31 @@ function CreateRunTime({
                       <div className="error-key-missing">Input does not match pattern : gs://bucket-name</div>
                     </div>
                   )}
+                  <div className="select-text-overlay">
+                    <Input
+                      className={`create-runtime-style ${
+                        !isValidCatalogName && catalogName ? 'input-error' : ''
+                      }`}
+                      value={catalogName}
+                      onChange={e => handleCatalogNameChange(e.target.value)}
+                      type="text"
+                      Label="Catalog Name*"
+                      placeholder="Catalog Name"
+                    />
+                  </div>
+                  {!isValidCatalogName && (
+                <div className="error-key-parent">
+                  <iconError.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
+                  <div className="error-key-missing">
+                    {catalogName === ''
+                      ? 'Catalog Name is required'
+                      : 'Catalog Name must contain only letters, numbers, and underscores.'}
+                  </div>
+                </div>
+              )}
                 </>
               )}
 
