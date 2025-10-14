@@ -21,7 +21,7 @@ import plusIcon from '../../style/icons/plus_icon.svg';
 import plusIconDisable from '../../style/icons/plus_icon_disable.svg';
 import deleteIcon from '../../style/icons/delete_icon.svg';
 import errorIcon from '../../style/icons/error_icon.svg';
-import { DEFAULT_LABEL_DETAIL } from '../utils/const';
+import { DATAPROC_LIGHTNING_ENGINE_PROPERTY, DATAPROC_TIER_PROPERTY, DEFAULT_LABEL_DETAIL } from '../utils/const';
 import { Input } from '../controls/MuiWrappedInput';
 
 const iconPlus = new LabIcon({
@@ -196,7 +196,6 @@ function LabelProperties({
                       Example: "{client:dataProc_plugin}"
                   */
             const labelSplit = label.split(':');
-
             return (
               <div key={label}>
                 <div className="job-label-edit-row">
@@ -212,11 +211,13 @@ function LabelProperties({
                             : ' disable-text'
                         }`}
                         disabled={
-                          labelSplit[0] === '' ||
+                          label.startsWith(DATAPROC_TIER_PROPERTY) ||
+                          label.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY) ||
+                          (labelSplit[0] === '' ||
                           buttonText !== 'ADD LABEL' ||
                           duplicateKeyError !== -1
                             ? false
-                            : true
+                            : true)
                         }
                         onBlur={() => handleEditLabelSwitch()}
                         onChange={e =>
@@ -282,8 +283,9 @@ function LabelProperties({
                           handleEditLabel(e.target.value, index, 'value')
                         }
                         disabled={
-                          label === DEFAULT_LABEL_DETAIL &&
-                          buttonText === 'ADD LABEL'
+                          (label === DEFAULT_LABEL_DETAIL &&
+                          buttonText === 'ADD LABEL') || label.startsWith(DATAPROC_TIER_PROPERTY)
+                          || label.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)
                         }
                         defaultValue={
                           labelSplit.length > 2
@@ -307,7 +309,8 @@ function LabelProperties({
                       </div>
                     )}
                   </div>
-
+                  {!(label.startsWith(DATAPROC_TIER_PROPERTY)
+                        || label.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) && (
                   <div
                     role="button"
                     className={
@@ -331,7 +334,7 @@ function LabelProperties({
                       tag="div"
                       className="logo-alignment-style"
                     />
-                  </div>
+                  </div>)}
                   <></>
                 </div>
               </div>

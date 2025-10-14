@@ -148,6 +148,8 @@ export const RESTART_JOB_URL =
   'https://cloud.google.com/dataproc/docs/concepts/jobs/restartable-jobs';
 export const SELF_MANAGED_CLUSTER =
   'https://cloud.google.com/dataproc-metastore/docs/attach-dataproc';
+export const LIGHTNING_ENGINE_DOC = 
+  'https://cloud.google.com/dataproc-serverless/docs/guides/lightning-engine'
 export const SECURITY_KEY =
   'https://console.cloud.google.com/security/kms/keyrings';
 export const SERVICE_ACCOUNT =
@@ -265,6 +267,10 @@ export const EXECUTOR_RELATED_PROPERTIES = [
   'spark.executor.instances',
   'spark.dynamicAllocation.maxExecutors'
 ];
+
+export const DATAPROC_TIER_PROPERTY = 'dataproc.tier';
+export const DATAPROC_LIGHTNING_ENGINE_PROPERTY = 'spark.dataproc.engine';
+
 export const BOOLEAN_SELECT_OPTIONS = [
   { key: 'true', value: 'true', text: 'true' },
   { key: 'false', value: 'false', text: 'false' }
@@ -273,6 +279,18 @@ export const TIER_SELECT_OPTIONS = [
   { key: 'standard', value: 'standard', text: 'standard' },
   { key: 'premium', value: 'premium', text: 'premium' }
 ];
+
+export const LightningEngineDisplayNameMap = new Map<string, string>([
+  ['default', 'Default'],
+  ['lightningEngine', 'Lightning Engine'],
+]);
+
+export const TierDisplayNameMap = new Map<string, string>([
+  ['premium', 'Premium'],
+  ['standard', 'Standard']
+]);
+
+
 export const CLOUD_COMPOSER_API =
   'https://console.developers.google.com/apis/api/composer.googleapis.com';
 export const DATAPROC_SERVICE_NAME = 'dataproc.googleapis.com';

@@ -22,7 +22,9 @@ import {
   HTTP_METHOD,
   STATUS_RUNNING,
   gcpServiceUrls,
-  PAGE_SIZE
+  PAGE_SIZE,
+  LightningEngineDisplayNameMap,
+  TierDisplayNameMap
 } from '../utils/const';
 import {
   authApi,
@@ -100,17 +102,29 @@ interface IBatchesList {
   batchID: string;
   status: string;
   location: string;
+  tier: string;
+  engine: string;
   creationTime: string;
   type: string | undefined;
   elapsedTime: string;
   actions: React.JSX.Element;
 }
+interface ILigntningProperties {
+  'dataproc:dataproc.tier'?: string;
+  'spark:spark.dataproc.engine'?: string;
+  [key: string]: any;
+}
 
+interface IRuntimeConfig {
+  properties?: ILigntningProperties;
+  // ... other properties you might need from runtimeConfig
+}
 interface IBatchData {
   name: string;
   state: BatchStatus;
   createTime: string;
   stateTime: Date;
+  runtimeConfig?: IRuntimeConfig; 
 }
 interface IBatchListResponse {
   error: {
@@ -338,10 +352,16 @@ export class BatchService {
                     const batchTypeDisplay = jobTypeDisplay(
                       batchType[0].split('Batch')[0]
                     );
+
+                    const tier = data.runtimeConfig?.properties?.['dataproc:dataproc.tier'] ?? 'standard';
+                    const engine = data.runtimeConfig?.properties?.['spark:spark.dataproc.engine'] ?? 'default';
+
                     return {
                       batchID: data.name.split('/')[5],
                       status: data.state,
                       location: data.name.split('/')[3],
+                      tier: TierDisplayNameMap.get(tier) ?? tier,
+                      engine: LightningEngineDisplayNameMap.get(engine) ?? engine,
                       creationTime: startTimeDisplay,
                       type: batchTypeDisplay,
                       elapsedTime: elapsedTimeString,

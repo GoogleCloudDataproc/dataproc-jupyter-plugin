@@ -251,3 +251,12 @@
   width: 90%;
   padding-left: 35px;
 }
+
+.lightning-engine-label{
+  font-style: normal;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 10px;
+  color: var(--jp-ui-font-color0);
+  display: flex;
+}

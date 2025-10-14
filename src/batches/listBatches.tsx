@@ -92,6 +92,8 @@ interface IBatchesList {
   batchID: string;
   status: string;
   location: string;
+  tier: string;
+  engine: string;
   creationTime: string;
   type: string | undefined;
   elapsedTime: string;
@@ -134,6 +136,13 @@ function ListBatches({ setLoggedIn }: any) {
       {
         Header: 'Location',
         accessor: 'location'
+      },
+      {
+        Header: 'Tier',
+        accessor: 'tier'
+      },{
+        Header: 'Engine',
+        accessor: 'engine'
       },
       {
         Header: 'Creation time',

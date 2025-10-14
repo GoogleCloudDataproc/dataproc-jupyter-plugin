@@ -18,6 +18,11 @@
   color: var(--jp-ui-font-color0);
 }
 
+.lightning-label-style {
+  font-size: 14px !important;
+  padding-left: 30px;
+}
+
 .job-add-property-button-disabled {
   margin-top: 15px;
   display: flex;

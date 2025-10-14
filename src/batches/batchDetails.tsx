@@ -36,7 +36,11 @@ import {
   SPARK_HISTORY_SERVER,
   SPARK_HISTORY_SERVER_KEY,
   SUBNETWORK_KEY,
-  SUBNETWORK_LABEL
+  SUBNETWORK_LABEL,
+  DATAPROC_TIER_PROPERTY,
+  DATAPROC_LIGHTNING_ENGINE_PROPERTY,
+  LightningEngineDisplayNameMap,
+  TierDisplayNameMap
 } from '../utils/const';
 import {
   BatchTypeValue,
@@ -149,6 +153,8 @@ function BatchDetails({
   const [selectedBatch, setSelectedBatch] = useState('');
   const [projectName, setProjectName] = useState('');
   const [createBatch, setCreateBatch] = useState(false);
+  const [selectedTier, setSelectedTier ] = useState('Standard');
+  const [selectedEngine, setSelectedEngine ] = useState('Default');
 
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
@@ -166,6 +172,18 @@ function BatchDetails({
   const handleDetailedBatchView = () => {
     setDetailedBatchView(false);
   };
+
+  useEffect(() => {
+    const properties = batchInfoResponse?.runtimeConfig?.properties || {};
+    Object.entries(properties).forEach(([key, value]) => {
+      if (key.endsWith(DATAPROC_TIER_PROPERTY)) {
+        setSelectedTier(TierDisplayNameMap.get(value) ?? 'Standard');
+      }
+      if (key.endsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) {
+        setSelectedEngine(LightningEngineDisplayNameMap.get(value) ?? 'Default');
+      }
+    });
+  }, [batchInfoResponse]);
 
   useEffect(() => {
     getBatchDetails();
@@ -348,6 +366,14 @@ function BatchDetails({
               <div className="details-value">Batch</div>
             </div>
             <div className="row-details">
+              <div className="details-label">Tier</div>
+              <div className="details-value">{selectedTier}</div>
+            </div>
+            <div className="row-details">
+              <div className="details-label">Engine</div>
+              <div className="details-value">{selectedEngine}</div>
+            </div>
+            <div className="row-details">
               <div className="details-label">Status</div>
               {statusDisplay(statusMsg)}
             </div>
@@ -480,13 +506,17 @@ function BatchDetails({
               <div className="details-label">Properties</div>
               <div className="details-value"></div>
             </div>
-            {Object.entries(batchInfoResponse.runtimeConfig.properties).map(
-              ([key, value]) => (
-                <div className="row-details" key={key}>
-                  <div className="batch-details-label-level-one">{key}</div>
-                  <div className="details-value">{value}</div>
-                </div>
-              )
+            {Object.entries(batchInfoResponse.runtimeConfig.properties)
+            //.filter(([key]) => !(key.endsWith(DATAPROC_TIER_PROPERTY) || key.endsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY))) 
+            .map(
+              ([key, value]) => {
+                return (
+                  <div className="row-details" key={key}>
+                    <div className="batch-details-label-level-one">{key}</div>
+                    <div className="details-value">{value}</div>
+                  </div>
+                );
+              }
             )}
             {batchInfoResponse &&
               batchInfoResponse?.runtimeInfo?.endpoints &&
