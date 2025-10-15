@@ -507,7 +507,6 @@ function BatchDetails({
               <div className="details-value"></div>
             </div>
             {Object.entries(batchInfoResponse.runtimeConfig.properties)
-            //.filter(([key]) => !(key.endsWith(DATAPROC_TIER_PROPERTY) || key.endsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY))) 
             .map(
               ([key, value]) => {
                 return (

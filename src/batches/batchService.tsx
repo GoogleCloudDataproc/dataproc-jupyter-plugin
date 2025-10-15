@@ -109,15 +109,14 @@ interface IBatchesList {
   elapsedTime: string;
   actions: React.JSX.Element;
 }
-interface ILigntningProperties {
+interface ILightningProperties {
   'dataproc:dataproc.tier'?: string;
   'spark:spark.dataproc.engine'?: string;
   [key: string]: any;
 }
 
 interface IRuntimeConfig {
-  properties?: ILigntningProperties;
-  // ... other properties you might need from runtimeConfig
+  properties?: ILightningProperties;
 }
 interface IBatchData {
   name: string;

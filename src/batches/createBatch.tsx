@@ -1660,8 +1660,9 @@ function CreateBatch({
               />
             </>
           )}
-          <div className="submit-job-label-header">Tier</div>
-          <div>
+          <div className="submit-job-label-header">Execution Configuration</div>
+          <div className="lightning-header">Tier</div>
+          <div className='lightning-content'>
             <div className="create-batch-tier-radio">
               <Radio
                 size="small"
@@ -1716,7 +1717,6 @@ function CreateBatch({
               </div>
             </div>
           </div>
-          <div className="submit-job-label-header">Execution Configuration</div>
           <div>
             <div className="runtime-message">Execute notebooks with: </div>
             <div className="create-runtime-radio">
