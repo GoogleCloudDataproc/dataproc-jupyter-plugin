@@ -1717,7 +1717,7 @@ function CreateBatch({
               </div>
             </div>
           </div>
-          <div>
+          <div className='lightning-content'>
             <div className="runtime-message">Execute notebooks with: </div>
             <div className="create-runtime-radio">
               <Radio
