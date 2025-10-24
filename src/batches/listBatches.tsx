@@ -92,8 +92,8 @@ interface IBatchesList {
   batchID: string;
   status: string;
   location: string;
-  tier: string;
-  engine: string;
+  tier: string | undefined;
+  engine: string | undefined;
   creationTime: string;
   type: string | undefined;
   elapsedTime: string;
