@@ -309,21 +309,21 @@ function LabelProperties({
                       </div>
                     )}
                   </div>
-                  {!(label.startsWith(DATAPROC_TIER_PROPERTY)
-                        || label.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) && (
                   <div
                     role="button"
                     className={
-                      label === DEFAULT_LABEL_DETAIL &&
-                      buttonText === 'ADD LABEL'
+                      (label === DEFAULT_LABEL_DETAIL &&
+                          buttonText === 'ADD LABEL') || label.startsWith(DATAPROC_TIER_PROPERTY)
+                          || label.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)
                         ? 'labels-delete-icon-hide'
                         : 'labels-delete-icon'
                     }
                     onClick={() => {
                       if (
                         !(
-                          label === DEFAULT_LABEL_DETAIL &&
-                          buttonText === 'ADD LABEL'
+                          (label === DEFAULT_LABEL_DETAIL && buttonText === 'ADD LABEL') ||
+                          label.startsWith(DATAPROC_TIER_PROPERTY) ||
+                          label.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)
                         )
                       ) {
                         handleDeleteLabel(index, labelSplit[0]);
@@ -334,7 +334,7 @@ function LabelProperties({
                       tag="div"
                       className="logo-alignment-style"
                     />
-                  </div>)}
+                  </div>
                   <></>
                 </div>
               </div>

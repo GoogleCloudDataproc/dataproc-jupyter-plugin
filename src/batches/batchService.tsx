@@ -359,7 +359,7 @@ export class BatchService {
                       batchID: data.name.split('/')[5],
                       status: data.state,
                       location: data.name.split('/')[3],
-                      tier: TierDisplayNameMap.get(tier) ?? tier,
+                      tier: TierDisplayNameMap.get(tier),
                       engine: LightningEngineDisplayNameMap.get(engine) ?? engine,
                       creationTime: startTimeDisplay,
                       type: batchTypeDisplay,

@@ -1661,11 +1661,10 @@ function CreateBatch({
             </>
           )}
           <div className="submit-job-label-header">Execution Configuration</div>
-          <div className="lightning-header">Tier</div>
+          <div className="lightning-header lightning-sub-header">Tier</div>
           <div className='lightning-content'>
             <div className="create-batch-tier-radio">
               <Radio
-                size="small"
                 className="select-runtime-radio-style"
                 value="premium"
                 checked={dataprocTierSelected === 'premium'}
@@ -1706,7 +1705,6 @@ function CreateBatch({
               </div>
             <div className="create-batch-tier-radio">
               <Radio
-                size="small"
                 className="select-runtime-radio-style"
                 value="default"
                 checked={dataprocTierSelected === 'standard'}
@@ -1718,8 +1716,8 @@ function CreateBatch({
             </div>
           </div>
           <div className='lightning-content'>
-            <div className="runtime-message">Execute notebooks with: </div>
-            <div className="create-runtime-radio">
+            <div className="lightning-header">Execute notebooks with: </div>
+            <div className="create-runtime-radio  execution-config-radio">
               <Radio
                 className="select-runtime-radio-style"
                 value={serviceAccountSelected}
