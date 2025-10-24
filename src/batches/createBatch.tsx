@@ -26,9 +26,12 @@ import {
   CUSTOM_CONTAINERS,
   CUSTOM_CONTAINER_MESSAGE,
   CUSTOM_CONTAINER_MESSAGE_PART,
+  DATAPROC_LIGHTNING_ENGINE_PROPERTY,
+  DATAPROC_TIER_PROPERTY,
   FILES_MESSAGE,
   JAR_FILE_MESSAGE,
   KEY_MESSAGE,
+  LIGHTNING_ENGINE_DOC,
   METASTORE_MESSAGE,
   NETWORK_TAG_MESSAGE,
   QUERY_FILE_MESSAGE,
@@ -44,7 +47,9 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
 import {
   Autocomplete,
+  Checkbox,
   CircularProgress,
+  FormControlLabel,
   Radio,
   TextField
 } from '@mui/material';
@@ -293,6 +298,8 @@ function CreateBatch({
   const [userAccountSelected, setUserAccountSelected] = useState('');
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [enableLink, setEnableLink] = useState('');
+  const [lightningEngineEnabled, setLightningEngineEnabled] = useState(false);
+  const [dataprocTierSelected, setDataprocTierSelected] = useState('standard');
   const runtimeOptions = [
     {
       value: '2.3',
@@ -319,6 +326,27 @@ function CreateBatch({
       text: '1.1 LTS (Spark 3.3, Java 11, Scala 2.12)'
     }
   ];
+
+  const updateLightningEngineProperty = () => {
+    const tierProperty = DATAPROC_TIER_PROPERTY + ":" + dataprocTierSelected;
+    const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ":" + (lightningEngineEnabled
+    ? 'lightningEngine'
+    : 'default');
+    
+    const filteredProperties = propertyDetailUpdated.filter(
+      property => !(property.startsWith(DATAPROC_TIER_PROPERTY)
+        || property.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY) || property === "")
+    );
+  
+    const updatedProperties = [tierProperty, lightningProperty, ...filteredProperties];
+    setPropertyDetail(updatedProperties);
+    setPropertyDetailUpdated(updatedProperties);
+    return updatedProperties;
+  }
+
+  useEffect(() => {
+    updateLightningEngineProperty();
+  }, [dataprocTierSelected, lightningEngineEnabled]);
 
   const handleCreateBatchBackView = () => {
     if (setCreateBatchView) {
@@ -455,8 +483,8 @@ function CreateBatch({
           .filter(([k]) => !k.startsWith('dataproc:internal')) // Filter out internal properties
           .map(([k, v]) => `${k.substring(k.indexOf(':') + 1)}:${v}`);
 
-        setPropertyDetail(prev => [...prev, ...updatedPropertyDetail]);
-        setPropertyDetailUpdated(prev => [...prev, ...updatedPropertyDetail]);
+        setPropertyDetail(updatedPropertyDetail);
+        setPropertyDetailUpdated(updatedPropertyDetail);
       }
 
       if (Object.keys(batchInfoResponse).length !== 0) {
@@ -464,14 +492,8 @@ function CreateBatch({
           const updatedLabelDetail = Object.entries(
             batchInfoResponse.labels
           ).map(([k, v]) => `${k}:${v}`);
-          setLabelDetail(prevLabelDetail => [
-            ...prevLabelDetail,
-            ...updatedLabelDetail
-          ]);
-          setLabelDetailUpdated(prevLabelDetailUpdated => [
-            ...prevLabelDetailUpdated,
-            ...updatedLabelDetail
-          ]);
+          setLabelDetail(updatedLabelDetail);
+          setLabelDetailUpdated(updatedLabelDetail);
           for (const key in batchInfoResponse) {
             if (key.endsWith('Batch')) {
               batchKeys.push(key);
@@ -489,15 +511,20 @@ function CreateBatch({
           if (batchInfoResponse.runtimeConfig.hasOwnProperty('properties')) {
             const updatedPropertyDetail = Object.entries(
               batchInfoResponse.runtimeConfig.properties
-            ).map(([k, v]) => `${k.substring(6)}:${v}`); // spark:spark.app.name , spark:spark.driver.cores - every property is appended with 'spark:' therefore getting the porperty key value after 'spark:'
-            setPropertyDetail(prevPropertyDetail => [
-              ...prevPropertyDetail,
-              ...updatedPropertyDetail
-            ]);
-            setPropertyDetailUpdated(prevPropertyDetailUpdated => [
-              ...prevPropertyDetailUpdated,
-              ...updatedPropertyDetail
-            ]);
+            ).map(([k, v]) => {
+              if(k.includes(DATAPROC_TIER_PROPERTY)) {
+                setDataprocTierSelected(v as string);
+                return null;
+              }
+              if(k.includes(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) {
+                (v as string) === 'lightningEngine' ? setLightningEngineEnabled(true) : setLightningEngineEnabled(false);
+                return null;
+              }
+              return `${k.substring(6)}:${v}`; // spark:spark.app.name , spark:spark.driver.cores - every property is appended with 'spark:' therefore getting the porperty key value after 'spark:'
+            }).filter(item => item !== null);;
+            
+            setPropertyDetail(updatedPropertyDetail as string[]);
+            setPropertyDetailUpdated(updatedPropertyDetail as string[]);
           }
           if (
             batchInfoResponse[batchKeys[0]].hasOwnProperty('queryVariables')
@@ -505,14 +532,8 @@ function CreateBatch({
             const updatedParamDetail = Object.entries(
               batchInfoResponse[batchKeys[0]].queryVariables
             ).map(([k, v]) => `${k}:${v}`);
-            setPropertyDetail(prevParameterDetail => [
-              ...prevParameterDetail,
-              ...updatedParamDetail
-            ]);
-            setPropertyDetailUpdated(prevParameterDetailUpdated => [
-              ...prevParameterDetailUpdated,
-              ...updatedParamDetail
-            ]);
+            setPropertyDetail(updatedParamDetail);
+            setPropertyDetailUpdated(updatedParamDetail);
           }
         }
       }
@@ -552,6 +573,7 @@ function CreateBatch({
   function isSubmitDisabled() {
     const commonConditions =
       batchIdSelected === '' ||
+      subNetworkSelected === '' ||
       regionName === '' ||
       batchIdValidation ||
       (selectedNetworkRadio === 'sharedVpc' &&
@@ -1051,6 +1073,16 @@ function CreateBatch({
       setSubNetworkSelected(data!.toString());
     }
   };
+  const handleTierRadioChange = (tier: string | null, lightningEngineState: boolean) => {
+    if( tier !== null) {
+      setDataprocTierSelected(tier!.toString());
+      setLightningEngineEnabled(lightningEngineState);
+      if(tier === 'standard'){
+        setLightningEngineEnabled(false);
+      }
+    }
+  }
+
   const handleKeyRingChange = (data: string | null) => {
     if (data !== null) {
       setKeyRingSelected(data!.toString());
@@ -1629,9 +1661,63 @@ function CreateBatch({
             </>
           )}
           <div className="submit-job-label-header">Execution Configuration</div>
-          <div>
-            <div className="runtime-message">Execute notebooks with: </div>
-            <div className="create-runtime-radio">
+          <div className="lightning-header lightning-sub-header">Tier</div>
+          <div className='lightning-content'>
+            <div className="create-batch-tier-radio">
+              <Radio
+                className="select-runtime-radio-style"
+                value="premium"
+                checked={dataprocTierSelected === 'premium'}
+                onChange={() => handleTierRadioChange('premium', true)}
+              />
+              <div className="create-batch-message">
+                Premium
+              </div>
+            </div>
+            <div className="lightning-label-style">
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={lightningEngineEnabled}
+                      disabled={dataprocTierSelected === 'standard'}
+                      onChange={event =>
+                        setLightningEngineEnabled(event.target.checked)
+                      }
+                      name="lightningEngine"
+                    />
+                  }
+                  label={
+                    <div className="lightning-engine-label">
+                      Enable Lightning Engine {' '}
+                      <div
+                        className="submit-job-learn-more"
+                        onClick={e => {
+                          e.preventDefault();
+                          window.open(`${LIGHTNING_ENGINE_DOC}`, '_blank');
+                        }}
+                      >
+                        Learn more
+                      </div>
+                    </div>
+                  }
+                />
+              </div>
+            <div className="create-batch-tier-radio">
+              <Radio
+                className="select-runtime-radio-style"
+                value="default"
+                checked={dataprocTierSelected === 'standard'}
+                onChange={() => handleTierRadioChange('standard' ,false)}
+              />
+              <div className="create-batch-message">
+                Standard
+              </div>
+            </div>
+          </div>
+          <div className='lightning-content'>
+            <div className="lightning-header">Execute notebooks with: </div>
+            <div className="create-runtime-radio  execution-config-radio">
               <Radio
                 className="select-runtime-radio-style"
                 value={serviceAccountSelected}

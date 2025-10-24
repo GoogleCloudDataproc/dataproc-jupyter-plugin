@@ -134,6 +134,14 @@
 .create-runtime-radio, .meta-store-type-radio {
   display: flex;
 }
+.execution-config-radio{
+  display: flex;
+  padding-left: 9px;
+}
+.create-batch-tier-radio{
+  display: flex;
+  padding-left: 9px;
+}
 .create-no-list-message {
   color: var(--jp-ui-font-color0);
   background: var(--jp-layout-color2);

@@ -18,6 +18,35 @@
   color: var(--jp-ui-font-color0);
 }
 
+.lightning-header {
+  margin-top: 15px;
+  font-style: normal;
+  font-weight: 100;
+  font-size: 18px;
+  line-height: 28px;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color0);
+}
+
+.lightning-sub-header {
+  padding-left: 15px;
+}
+
+.lightning-content {
+  padding-left: 15px;
+}
+
+.lightning-label-style {
+  font-size: 14px !important;
+  padding-left: 30px;
+}
+
+.lightning-label-style-without-padding {
+  font-size: 14px !important;
+  margin-top: 20px;
+}
+
 .job-add-property-button-disabled {
   margin-top: 15px;
   display: flex;
