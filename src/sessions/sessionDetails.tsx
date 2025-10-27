@@ -127,7 +127,7 @@ function SessionDetails({
   const [labelDetail, setLabelDetail] = useState(['']);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [errorView, setErrorView] = useState(false);
-  const [selectedEngine, setSelectedEngine ] = useState('Default');
+  const [selectedEngine, setSelectedEngine] = useState('Default');
 
   const pollingSessionDetails = async (
     pollingFunction: () => void,

@@ -7,14 +7,14 @@ export interface ISessionTemplateRoot {
   nextPageToken: string;
 }
 
-interface ILigntningProperties {
+interface ILightningProperties {
   'dataproc:dataproc.tier'?: string;
   'spark:spark.dataproc.engine'?: string;
   [key: string]: any;
 }
 
 interface IRuntimeConfig {
-  properties?: ILigntningProperties;
+  properties?: ILightningProperties;
 }
 
 export interface ISessionTemplate {

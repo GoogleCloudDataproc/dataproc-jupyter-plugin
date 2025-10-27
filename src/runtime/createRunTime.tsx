@@ -658,8 +658,9 @@ function CreateRunTime({
                 gpuDetailList.push(property);
               } else if (property.startsWith('spark.sql.catalog.')) {
                 metaStoreDetailList.push(property);
-              } else if(property.startsWith('spark.dataproc.engine:lightningEngine')){
-                setLightningEngineEnabled(true);
+              } else if (property.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) {
+                const value = property.split(':')[1];
+                setLightningEngineEnabled(value === 'lightningEngine');
               }  else {
                 otherDetailList.push(property);
               }
@@ -671,9 +672,6 @@ function CreateRunTime({
             setMetastoreDetail(metaStoreDetailList);
             setMetastoreDetailUpdated(metaStoreDetailList);
             setOthersList(otherDetailList);
-            setMetastoreDetail(metaStoreDetailList);
-            setMetastoreDetailUpdated(metaStoreDetailList);
-            
             if (metaStoreDetailList.length > 0) {
               setMetastoreType('biglake');
               const warehouseProperty = metaStoreDetailList.find(prop =>

@@ -76,7 +76,7 @@ interface ISessionList {
   sessionID: string;
   status: string;
   location: string;
-  engine: string; 
+  engine: string;
   creator: string;
   creationTime: string;
   elapsedTime: string;
