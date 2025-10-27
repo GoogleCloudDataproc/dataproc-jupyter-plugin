@@ -52,6 +52,17 @@ interface IDagList {
   scheduleInterval: string;
 }
 
+interface ISession {
+  sessionID: string;
+  status: string;
+  location: string;
+  engine: string; 
+  creator: string;
+  creationTime: string;
+  elapsedTime: string;
+  actions: React.JSX.Element;
+}
+
 interface IPaginationViewProps {
   pageSize: number;
   setPageSize: (value: number) => void;
@@ -61,7 +72,8 @@ interface IPaginationViewProps {
     | ITemplate[]
     | ICluster[]
     | ISessionTemplateDisplay[]
-    | IDagList[];
+    | IDagList[]
+    | ISession[];
   previousPage: () => void;
   nextPage: () => void;
   canPreviousPage: boolean;

@@ -39,7 +39,9 @@ import {
   SECURITY_KEY,
   KEY_MESSAGE,
   META_STORE_TYPES,
-  SPARK_META_STORE_INFO_URL
+  SPARK_META_STORE_INFO_URL,
+  DATAPROC_LIGHTNING_ENGINE_PROPERTY,
+  LIGHTNING_ENGINE_DOC
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -105,7 +107,7 @@ const iconHelp = new LabIcon({
 const iconHelpDark = new LabIcon({
   name: 'launcher:help-spark-dark-icon',
   svgstr: helpIconDark
-})
+});
 
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
@@ -258,7 +260,9 @@ function CreateRunTime({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [stagingBucket, setStagingBucket] = useState('');
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [lightningEngineEnabled, setLightningEngineEnabled] = useState(false);
   const [enableLink, setEnableLink] = useState('');
+  const [othersList , setOthersList] = useState<string[]>([]);
   const runtimeOptions = [
     {
       value: '2.3',
@@ -278,6 +282,21 @@ function CreateRunTime({
     }
   ];
 
+  const updateLightningEngineProperty = () => {
+    const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ":" + (lightningEngineEnabled
+    ? 'lightningEngine'
+    : 'default');
+  
+    const updatedProperties = [lightningProperty, ...othersList];
+    setPropertyDetail(updatedProperties);
+    setPropertyDetailUpdated(updatedProperties);
+    return updatedProperties;
+  }
+
+  useEffect(() => {
+    updateLightningEngineProperty();
+  }, [lightningEngineEnabled,othersList]);
+
   useEffect(() => {
     const initializeRuntime = async () => {
       try {
@@ -296,6 +315,7 @@ function CreateRunTime({
           listNetworksAPI();
           listKeyRingsAPI();
           runtimeSharedProject();
+          updateLightningEngineProperty();
         } else {
           setConfigLoading(false);
         }
@@ -638,7 +658,9 @@ function CreateRunTime({
                 gpuDetailList.push(property);
               } else if (property.startsWith('spark.sql.catalog.')) {
                 metaStoreDetailList.push(property);
-              } else {
+              } else if(property.startsWith('spark.dataproc.engine:lightningEngine')){
+                setLightningEngineEnabled(true);
+              }  else {
                 otherDetailList.push(property);
               }
             });
@@ -648,6 +670,10 @@ function CreateRunTime({
             setAutoScalingDetailUpdated(autoScalingDetailList);
             setMetastoreDetail(metaStoreDetailList);
             setMetastoreDetailUpdated(metaStoreDetailList);
+            setOthersList(otherDetailList);
+            setMetastoreDetail(metaStoreDetailList);
+            setMetastoreDetailUpdated(metaStoreDetailList);
+            
             if (metaStoreDetailList.length > 0) {
               setMetastoreType('biglake');
               const warehouseProperty = metaStoreDetailList.find(prop =>
@@ -688,27 +714,6 @@ function CreateRunTime({
               setGpuDetailUpdated(['']);
               setGpuDetailChangeDone(false);
             }
-
-            setPropertyDetail(prevPropertyDetail => {
-              if (
-                prevPropertyDetail.length === 1 &&
-                prevPropertyDetail[0] === ''
-              ) {
-                return otherDetailList;
-              } else {
-                return [...prevPropertyDetail, ...otherDetailList];
-              }
-            });
-            setPropertyDetailUpdated(prevPropertyDetailUpdated => {
-              if (
-                prevPropertyDetailUpdated.length === 1 &&
-                prevPropertyDetailUpdated[0] === ''
-              ) {
-                return otherDetailList;
-              } else {
-                return [...prevPropertyDetailUpdated, ...otherDetailList];
-              }
-            });
           }
         }
       }
@@ -1723,6 +1728,34 @@ function CreateRunTime({
                   renderInput={params => (
                     <TextField {...params} label="Runtime version*" />
                   )}
+                />
+              </div>
+              <div className="lightning-label-style-without-padding ">
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={lightningEngineEnabled}
+                      onChange={event =>
+                        setLightningEngineEnabled(event.target.checked)
+                      }
+                      name="lightningEngine"
+                    />
+                  }
+                  label={
+                    <div className="lightning-engine-label">
+                      Enable Lightning Engine {' '}
+                      <div
+                        className="submit-job-learn-more"
+                        onClick={e => {
+                          e.preventDefault();
+                          window.open(`${LIGHTNING_ENGINE_DOC}`, '_blank');
+                        }}
+                      >
+                        Learn more
+                      </div>
+                    </div>
+                  }
                 />
               </div>
               {versionBiglakeValidation && (

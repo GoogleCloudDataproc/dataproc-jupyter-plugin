@@ -23,7 +23,8 @@ import {
   USER_INFO_URL,
   gcpServiceUrls,
   STATUS_RUNNING,
-  DATAPROC_SERVICE_NAME
+  DATAPROC_SERVICE_NAME,
+  LightningEngineDisplayNameMap
 } from '../utils/const';
 import {
   authApi,
@@ -209,10 +210,13 @@ export class RunTimeSerive {
             // Extracting runtimeId from name
             // Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
 
+            const engine = data.runtimeConfig?.properties?.['spark.dataproc.engine'] ?? 'default';
+
             return {
               name: displayName,
               owner: data.creator,
               description: data.description,
+              engine: LightningEngineDisplayNameMap.get(engine),
               authentication: authentication,
               lastModified: startTimeDisplay,
               actions: renderActions(data),

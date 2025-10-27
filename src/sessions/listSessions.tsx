@@ -41,7 +41,7 @@ import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import { SessionService } from './sessionService';
 import TableData from '../utils/tableData';
-import { ICellProps } from '../utils/utils';
+import { authApi, ICellProps } from '../utils/utils';
 import SessionDetails from './sessionDetails';
 import { CircularProgress } from '@mui/material';
 import ApiEnableDialog from '../utils/apiErrorPopup';
@@ -72,8 +72,24 @@ const iconDelete = new LabIcon({
   svgstr: deleteIcon
 });
 
+interface ISessionList {
+  sessionID: string;
+  status: string;
+  location: string;
+  engine: string; 
+  creator: string;
+  creationTime: string;
+  elapsedTime: string;
+  actions: React.JSX.Element;
+}
+
+interface ISessionData {
+  state: ClusterStatus;
+  name: string;
+}
+
 function ListSessions() {
-  const [sessionsList, setSessionsList] = useState([]);
+  const [sessionsList, setSessionsList] = useState<ISessionList[]>([])
   const [isLoading, setIsLoading] = useState(true);
   const [pollingDisable, setPollingDisable] = useState(false);
   const [sessionSelected, setSessionSelected] = useState('');
@@ -113,6 +129,10 @@ function ListSessions() {
         accessor: 'location'
       },
       {
+        Header: 'Engine',
+        accessor: 'engine'
+      },
+      {
         Header: 'Creator',
         accessor: 'creator'
       },
@@ -133,6 +153,7 @@ function ListSessions() {
   );
 
   const listSessionsAPI = async () => {
+    const credentials = await authApi();
     await SessionService.listSessionsAPIService(
       renderActions,
       setIsLoading,
@@ -140,6 +161,7 @@ function ListSessions() {
       setApiDialogOpen,
       setPollingDisable,
       setEnableLink,
+      credentials
     );
   };
 
@@ -173,6 +195,7 @@ function ListSessions() {
     setPageSize,
     state: { pageIndex, pageSize }
   } = useTable(
+    //@ts-ignore columns Header, accessor with interface issue
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
     useGlobalFilter,
     usePagination
@@ -191,7 +214,7 @@ function ListSessions() {
       pollingSessions(listSessionsAPI, pollingDisable);
     }
   }, [isLoading]);
-  const renderActions = (data: { state: ClusterStatus; name: string }) => {
+  const renderActions = (data: ISessionData) => {
     /*
       Extracting sessionId from sessionInfo
       Example: "projects/{project}/locations/{location}/sessions/{name}"
