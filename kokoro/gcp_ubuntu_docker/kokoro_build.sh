@@ -18,18 +18,54 @@ set -e
 
 export PATH="$HOME/.local/bin:$PATH"
 
+# Define source directories
+PLUGIN_SRC_DIR="${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
+SPARKMONITOR_G3_DIR="${KOKORO_ARTIFACTS_DIR}/piper/google3/third_party/javascript/sparkmonitor"
+
 # configure gcloud
 gcloud config set project dataproc-kokoro-tests
 gcloud config set compute/region us-central1
 
 # Install dependencies.
 sudo apt-get update
-sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv
+sudo apt-get --assume-yes install python3 python3-pip nodejs npm python3-venv
 
 # Install latest jupyter lab and build.
 python -m venv latest
 source latest/bin/activate
-pip install jupyterlab build
+pip install jupyterlab build hatch hatch-jupyter-builder hatch-nodejs-version
+
+# --- Build and Stage Sparkmonitor from Piper using npm ---
+echo "--- Building sparkmonitor from Piper using npm ---"
+cd "${SPARKMONITOR_G3_DIR}"
+
+# Clean up any previous npm/node artifacts in sparkmonitor dir
+rm -rf node_modules package-lock.json lib labextension
+
+# Install Node.js dependencies for sparkmonitor using npm
+echo "Running npm install for sparkmonitor..."
+npm install
+
+# Build the sparkmonitor lib and then the JupyterLab extension using npm run
+echo "Running npm run build:lib:prod..."
+npm run build:lib:prod
+echo "Running npm run build:labextension..."
+npm run build:labextension
+echo "sparkmonitor build complete."
+
+# Stage sparkmonitor artifacts into the plugin source directory
+SPARKMONITOR_ARTIFACTS_DIR="${SPARKMONITOR_G3_DIR}/labextension"
+PLUGIN_STAGING_DIR="${PLUGIN_SRC_DIR}/sparkmonitor_labextension_staging"
+
+echo "--- Staging sparkmonitor artifacts to ${PLUGIN_STAGING_DIR} ---"
+rm -rf "${PLUGIN_STAGING_DIR}"
+mkdir -p "${PLUGIN_STAGING_DIR}"
+cp -r "${SPARKMONITOR_ARTIFACTS_DIR}/." "${PLUGIN_STAGING_DIR}/"
+
+# Copy Sparkmonitor LICENSE for third-party compliance
+cp "${SPARKMONITOR_G3_DIR}/LICENSE" "${PLUGIN_SRC_DIR}/SPARKMONITOR_LICENSE"
+echo "Copied sparkmonitor LICENSE to ${PLUGIN_SRC_DIR}/SPARKMONITOR_LICENSE"
+# --- End Sparkmonitor Build and Stage ---
 
 # Navigate to repo.
 cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
