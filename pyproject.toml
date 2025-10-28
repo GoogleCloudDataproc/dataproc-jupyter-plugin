@@ -54,7 +54,7 @@ fields = ["description", "authors", "urls"]
 allow-direct-references = true
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["dataproc_jupyter_plugin/labextension"]
+artifacts = ["dataproc_jupyter_plugin/labextension", "sparkmonitor_labextension_staging", "SPARKMONITOR_LICENSE"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
@@ -62,6 +62,8 @@ exclude = [".github", "binder"]
 "install.json" = "share/jupyter/labextensions/dataproc_jupyter_plugin/install.json"
 "jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
 "jupyter-config/nb-config" = "etc/jupyter/jupyter_notebook_config.d"
+"sparkmonitor_labextension_staging" = "share/jupyter/labextensions/sparkmonitor"
+"SPARKMONITOR_LICENSE" = "share/jupyter/labextensions/sparkmonitor/SPARKMONITOR_LICENSE"
 
 [tool.hatch.build.hooks.version]
 path = "dataproc_jupyter_plugin/_version.py"
