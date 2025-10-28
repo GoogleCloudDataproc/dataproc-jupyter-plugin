@@ -39,7 +39,7 @@ pip install jupyterlab build
 cd "${SPARKMONITOR_G3_DIR}"
 
 # Clean up any previous npm/node artifacts in sparkmonitor dir
-rm -rf node_modules package-lock.json lib labextension
+rm -rf node_modules lib labextension
 
 # Install Node.js dependencies for sparkmonitor using npm
 npm install
