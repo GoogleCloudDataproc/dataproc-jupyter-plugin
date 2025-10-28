@@ -54,7 +54,7 @@ PLUGIN_STAGING_DIR="${PLUGIN_SRC_DIR}/sparkmonitor_labextension_staging"
 
 rm -rf "${PLUGIN_STAGING_DIR}"
 mkdir -p "${PLUGIN_STAGING_DIR}"
-cp -r "${SPARKMONITOR_ARTIFACTS_DIR}/." "${PLUGIN_STAGING_DIR}/"
+cp -a "${SPARKMONITOR_ARTIFACTS_DIR}/." "${PLUGIN_STAGING_DIR}/"
 
 # Copy Sparkmonitor LICENSE for third-party compliance
 cp "${SPARKMONITOR_G3_DIR}/LICENSE" "${PLUGIN_SRC_DIR}/SPARKMONITOR_LICENSE"
