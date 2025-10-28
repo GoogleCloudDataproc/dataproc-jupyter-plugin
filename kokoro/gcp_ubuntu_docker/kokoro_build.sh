@@ -22,6 +22,10 @@ export PATH="$HOME/.local/bin:$PATH"
 PLUGIN_SRC_DIR="${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
 SPARKMONITOR_G3_DIR="${KOKORO_ARTIFACTS_DIR}/piper/google3/third_party/javascript/sparkmonitor"
 
+# Define patch file paths
+PATCH_FILE="${PLUGIN_SRC_DIR}/kokoro/gcp_ubuntu_docker/notebook.ts"
+TARGET_FILE="${SPARKMONITOR_G3_DIR}/src/store/notebook.ts"
+
 # configure gcloud
 gcloud config set project dataproc-kokoro-tests
 gcloud config set compute/region us-central1
@@ -30,17 +34,29 @@ gcloud config set compute/region us-central1
 sudo apt-get update
 sudo apt-get --assume-yes install python3 python3-pip nodejs npm python3-venv
 
-# Install latest jupyter lab and build.
+# Install latest jupyter lab and build tools.
 python -m venv latest
 source latest/bin/activate
 pip install jupyterlab build hatch hatch-jupyter-builder hatch-nodejs-version
 
 # --- Build and Stage Sparkmonitor from Piper using npm ---
-echo "--- Building sparkmonitor from Piper using npm ---"
+echo "--- Preparing and Building sparkmonitor from Piper using npm ---"
 cd "${SPARKMONITOR_G3_DIR}"
 
 # Clean up any previous npm/node artifacts in sparkmonitor dir
 rm -rf node_modules package-lock.json lib labextension
+
+# --- Apply Patch ---
+if [ -f "${PATCH_FILE}" ]; then
+  echo "Applying patch: Copying ${PATCH_FILE} to ${TARGET_FILE}"
+  # Ensure the target directory exists
+  mkdir -p "$(dirname "${TARGET_FILE}")"
+  cp "${PATCH_FILE}" "${TARGET_FILE}"
+  echo "Patch applied successfully."
+else
+  echo "Warning: Patch file not found at ${PATCH_FILE}. Using sparkmonitor from Piper HEAD for notebook.ts."
+fi
+# --- End Apply Patch ---
 
 # Install Node.js dependencies for sparkmonitor using npm
 echo "Running npm install for sparkmonitor..."
