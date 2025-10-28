@@ -32,7 +32,7 @@ gcloud config set compute/region us-central1
 
 # Install dependencies.
 sudo apt-get update
-sudo apt-get --assume-yes install python3 python3-pip nodejs npm python3-venv
+sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv
 
 # Install latest jupyter lab and build tools.
 python -m venv latest
