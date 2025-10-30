@@ -26,6 +26,8 @@ import errorIcon from '../../style/icons/error_icon.svg';
 import {
   DATAPROC_CLUSTER_KEY,
   DATAPROC_CLUSTER_LABEL,
+  DATAPROC_LIGHTNING_ENGINE_PROPERTY,
+  LightningEngineDisplayNameMap,
   METASTORE_SERVICE_KEY,
   METASTORE_SERVICE_LABEL,
   NETWORK_KEY,
@@ -104,7 +106,7 @@ function SessionDetails({
     createTime: '',
     stateTime: '',
     stateHistory: [{ stateStartTime: '' }],
-    runtimeConfig: { properties: [] },
+    runtimeConfig: { properties: {} as { [key: string]: string } },
     stateMessage: '',
     environmentConfig: {
       executionConfig: {
@@ -125,6 +127,7 @@ function SessionDetails({
   const [labelDetail, setLabelDetail] = useState(['']);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [errorView, setErrorView] = useState(false);
+  const [selectedEngine, setSelectedEngine] = useState('Default');
 
   const pollingSessionDetails = async (
     pollingFunction: () => void,
@@ -154,6 +157,15 @@ function SessionDetails({
       setSessionInfo
     );
   };
+
+   useEffect(() => {
+      const properties = sessionInfo?.runtimeConfig?.properties || {};
+      Object.entries(properties).forEach(([key, value]) => {
+        if (key.endsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) {
+          setSelectedEngine(LightningEngineDisplayNameMap.get(value) ?? 'Default');
+        }
+      });
+    }, [sessionInfo]);
 
   useEffect(() => {
     getSessionDetails();
@@ -271,6 +283,10 @@ function SessionDetails({
                   <div className="session-details-value">
                     {sessionInfo.uuid}
                   </div>
+                </div>
+                 <div className="row-details">
+                  <div className="cluster-details-label">Engine</div>
+                  <div className="session-details-value">{selectedEngine}</div>
                 </div>
                 <div className="row-details">
                   <div className="cluster-details-label">Status</div>

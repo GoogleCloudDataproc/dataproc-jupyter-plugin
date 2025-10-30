@@ -7,6 +7,16 @@ export interface ISessionTemplateRoot {
   nextPageToken: string;
 }
 
+interface ILightningProperties {
+  'dataproc:dataproc.tier'?: string;
+  'spark:spark.dataproc.engine'?: string;
+  [key: string]: any;
+}
+
+interface IRuntimeConfig {
+  properties?: ILightningProperties;
+}
+
 export interface ISessionTemplate {
   name: string;
   createTime: string;
@@ -16,6 +26,8 @@ export interface ISessionTemplate {
   environmentConfig?: IEnvironmentConfig;
   description: string;
   updateTime: string;
+  runtimeConfig?: IRuntimeConfig;
+  id: string;
 }
 
 export interface IJupyterSession {

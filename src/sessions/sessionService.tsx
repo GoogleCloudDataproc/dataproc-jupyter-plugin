@@ -23,7 +23,8 @@ import {
   STATUS_FAIL,
   STATUS_TERMINATED,
   ClusterStatus,
-  gcpServiceUrls
+  gcpServiceUrls,
+  LightningEngineDisplayNameMap
 } from '../utils/const';
 import {
   authApi,
@@ -31,7 +32,8 @@ import {
   authenticatedFetch,
   jobTimeFormat,
   elapsedTime,
-  handleApiError
+  handleApiError,
+  IAuthCredentials
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 
@@ -193,13 +195,14 @@ export class SessionService {
     setApiDialogOpen: (open: boolean) => void,
     setPollingDisable: (value: boolean) => void,
     setEnableLink: (link: string) => void,
+    credentials?: IAuthCredentials | undefined,
     nextPageToken?: string,
     previousSessionsList?: object
   ) => {
     try {
       const pageToken = nextPageToken ?? '';
       const queryParams = new URLSearchParams();
-      queryParams.append('pageSize', '50');
+      queryParams.append('pageSize', '1000');
       queryParams.append('pageToken', pageToken);
 
       const response = await authenticatedFetch({
@@ -208,7 +211,6 @@ export class SessionService {
         regionIdentifier: 'locations',
         queryParams: queryParams
       });
-      const credentials = await authApi();
       const formattedResponse = await response.json();
       let transformSessionListData: React.SetStateAction<never[]> = [];
       if (formattedResponse && formattedResponse.sessions) {
@@ -229,6 +231,7 @@ export class SessionService {
             setApiDialogOpen,
             setPollingDisable,
             setEnableLink,
+            credentials,
             formattedResponse.nextPageToken,
             allSessionsData
           );
@@ -254,10 +257,13 @@ export class SessionService {
             // Extracting sessionID, location from sessionInfo.name
             // Example: "projects/{project}/locations/{location}/sessions/{sessionID}"
 
+            const engine = data.runtimeConfig?.properties?.['spark:spark.dataproc.engine'] ?? 'default';
+
             return {
               sessionID: data.name.split('/')[5],
               status: data.state,
               location: data.name.split('/')[3],
+              engine: LightningEngineDisplayNameMap.get(engine),
               creator: data.creator,
               creationTime: startTimeDisplay,
               elapsedTime: elapsedTimeString,
