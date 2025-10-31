@@ -155,17 +155,20 @@ export class RunTimeSerive {
     setRuntimeTemplateslist: (value: ISessionTemplateDisplay[]) => void,
     setRunTimeTemplateAllList: (value: ISessionTemplate[]) => void,
     setApiDialogOpen: (value: boolean) => void,
-    setPollingDisable: (value: boolean) => void,
     setEnableLink: (value: string) => void,
-    nextPageToken?: string,
-    previousRuntimeTemplatesList?: object,
-    previousRuntimeTemplatesAllList?: object
+    pageTokens: string[],
+    setNextPageTokens: (tokens: string[]) => void,
+    shouldUpdatePagination: boolean
   ) => {
     try {
-      const pageToken = nextPageToken ?? '';
+      // Determine the token to use for *this* fetch request
+      // It's the last token in the array, or empty string for page 0
+      const tokenToFetch =
+        pageTokens.length > 0 ? pageTokens[pageTokens.length - 1] : '';
+
       const queryParams = new URLSearchParams({
         pageSize: '50',
-        pageToken: pageToken
+        pageToken: tokenToFetch
       });
 
       const response = await authenticatedFetch({
@@ -208,10 +211,10 @@ export class RunTimeSerive {
             } else {
               authentication = 'Service Account';
             }
-            // Extracting runtimeId from name
-            // Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
-
-            const engine = data.runtimeConfig?.properties?.[DATAPROC_LIGHTNING_ENGINE_PROPERTY] ?? 'default';
+            const engine =
+              data.runtimeConfig?.properties?.[
+                DATAPROC_LIGHTNING_ENGINE_PROPERTY
+              ] ?? 'default';
 
             return {
               name: displayName,
@@ -225,43 +228,29 @@ export class RunTimeSerive {
             };
           }
         );
-        const existingRuntimeTemplatesAllData =
-          previousRuntimeTemplatesAllList ?? [];
-        //setStateAction never type issue
-        let allRuntimeTemplatesAllData: ISessionTemplate[] = [
-          ...(existingRuntimeTemplatesAllData as []),
-          ...formattedResponse.sessionTemplates
-        ];
+        setRunTimeTemplateAllList(formattedResponse.sessionTemplates);
+        setRuntimeTemplateslist(transformRuntimeTemplatesListData);
 
-        const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
-        //setStateAction never type issue
-        let allRuntimeTemplatesData: ISessionTemplateDisplay[] = [
-          ...(existingRuntimeTemplatesData as []),
-          ...transformRuntimeTemplatesListData
-        ];
-
-        if (formattedResponse.nextPageToken) {
-          this.listRuntimeTemplatesAPIService(
-            renderActions,
-            setIsLoading,
-            setRuntimeTemplateslist,
-            setRunTimeTemplateAllList,
-            setApiDialogOpen,
-            setPollingDisable,
-            setEnableLink,
-            formattedResponse.nextPageToken,
-            allRuntimeTemplatesData,
-            allRuntimeTemplatesAllData
-          );
-        } else {
-          setRunTimeTemplateAllList(allRuntimeTemplatesAllData);
-          setRuntimeTemplateslist(allRuntimeTemplatesData);
-          setIsLoading(false);
+        // Update the pagination token state *if* we're supposed to
+        if (shouldUpdatePagination) {
+          if (formattedResponse.nextPageToken) {
+            // Add the new token to the list for the *next* page
+            setNextPageTokens([...pageTokens, formattedResponse.nextPageToken]);
+          } else {
+            // We've reached the end; the token list is just what we were given
+            setNextPageTokens(pageTokens);
+          }
         }
+        setIsLoading(false);
       } else {
+        // No data found for this page
         setRunTimeTemplateAllList([]);
         setRuntimeTemplateslist([]);
         setIsLoading(false);
+        // Ensure token list is correct even on empty response
+        if (shouldUpdatePagination) {
+          setNextPageTokens(pageTokens);
+        }
       }
       if (formattedResponse?.error?.code) {
         handleApiError(
@@ -269,7 +258,7 @@ export class RunTimeSerive {
           credentials,
           setApiDialogOpen,
           setEnableLink,
-          setPollingDisable,
+          () => {},
           'runtimeTemplates'
         );
       }
