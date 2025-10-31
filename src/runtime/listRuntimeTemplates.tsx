@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTable, useGlobalFilter, usePagination } from 'react-table';
 import { LabIcon } from '@jupyterlab/ui-components';
 import filterIcon from '../../style/icons/filter_icon.svg';
@@ -25,9 +25,10 @@ import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
 import { RunTimeSerive } from './runtimeService';
-import { PaginationView } from '../utils/paginationView';
-import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
+import refreshIcon from '../../style/icons/refresh_cluster_icon.svg'; // Added refresh icon
+import PreviousIcon from '../../style/icons/previous_page.svg'; // Added pagination icon
+import NextIcon from '../../style/icons/next_page.svg'; // Added pagination icon
 import {
   ISessionTemplate,
   ISessionTemplateDisplay
@@ -47,6 +48,19 @@ const iconSubmitJob = new LabIcon({
   svgstr: SubmitJobIcon
 });
 
+const iconRefresh = new LabIcon({
+  name: 'launcher:refresh-icon',
+  svgstr: refreshIcon
+});
+const iconPrevious = new LabIcon({
+  name: 'launcher:previous-icon',
+  svgstr: PreviousIcon
+});
+const iconNext = new LabIcon({
+  name: 'launcher:next-icon',
+  svgstr: NextIcon
+});
+
 interface IListRuntimeTemplate {
   openCreateTemplate: boolean;
   setOpenCreateTemplate: (value: boolean) => void;
@@ -62,8 +76,6 @@ function ListRuntimeTemplates({
     ISessionTemplateDisplay[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [pollingDisable, setPollingDisable] = useState(false);
-
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedRuntimeTemplateValue, setSelectedRuntimeTemplateValue] =
     useState('');
@@ -73,42 +85,12 @@ function ListRuntimeTemplates({
   ] = useState('');
   const [runTimeTemplateAllList, setRunTimeTemplateAllList] = useState<
     ISessionTemplate[]
-  >([
-    {
-      name: '',
-      createTime: '',
-      jupyterSession: {
-        kernel: '',
-        displayName: ''
-      },
-      creator: '',
-      labels: {
-        purpose: ''
-      },
-      environmentConfig: {
-        executionConfig: {
-          subnetworkUri: ''
-        }
-      },
-      description: '',
-      updateTime: '',
-      id:  ''
-    }
-  ]);
+  >([]);
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [enableLink, setEnableLink] = useState('');
-  const timer = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  const pollingRuntimeTemplates = async (
-    pollingFunction: () => void,
-    pollingDisable: boolean
-  ) => {
-    timer.current = PollingTimer(
-      pollingFunction,
-      pollingDisable,
-      timer.current
-    );
-  };
+  const [nextPageTokens, setNextPageTokens] = useState<string[]>([]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
   const data = runtimeTemplateslist;
 
@@ -146,15 +128,21 @@ function ListRuntimeTemplates({
     []
   );
 
-  const listRuntimeTemplatesAPI = async () => {
+  const listRuntimeTemplatesAPI = async (
+    pageToken?: string[],
+    shouldUpdatePagination: boolean = true
+  ) => {
+    setIsLoading(true);
     await RunTimeSerive.listRuntimeTemplatesAPIService(
       renderActions,
       setIsLoading,
       setRuntimeTemplateslist,
       setRunTimeTemplateAllList,
       setApiDialogOpen,
-      setPollingDisable,
-      setEnableLink
+      setEnableLink,
+      pageToken ? pageToken : nextPageTokens,
+      setNextPageTokens,
+      shouldUpdatePagination
     );
   };
 
@@ -175,6 +163,7 @@ function ListRuntimeTemplates({
       selectedRuntimeTemplateValue,
       selectedRuntimeTemplateDisplayName
     );
+    handleRefresh();
     setDeletePopupOpen(false);
   };
   const {
@@ -187,12 +176,7 @@ function ListRuntimeTemplates({
     preGlobalFilteredRows,
     setGlobalFilter,
     page,
-    canPreviousPage,
-    canNextPage,
-    nextPage,
-    previousPage,
-    setPageSize,
-    state: { pageIndex, pageSize }
+    state: { pageSize }
   } = useTable(
     //@ts-ignore columns Header, accessor with interface issue
     { columns, data, autoResetPage: false, initialState: { pageSize: 50 } },
@@ -200,15 +184,12 @@ function ListRuntimeTemplates({
     usePagination
   );
   useEffect(() => {
-    listRuntimeTemplatesAPI();
     if (!openCreateTemplate) {
-      pollingRuntimeTemplates(listRuntimeTemplatesAPI, pollingDisable);
+      setCurrentPageIndex(0);
+      setNextPageTokens([]);
+      listRuntimeTemplatesAPI([], true);
     }
-
-    return () => {
-      pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
-    };
-  }, [pollingDisable, openCreateTemplate]);
+  }, [openCreateTemplate]);
 
   const renderActions = (data: ISessionTemplate) => {
     let runtimeTemplateName = data.name;
@@ -248,7 +229,6 @@ function ListRuntimeTemplates({
       }
     });
 
-    pollingRuntimeTemplates(listRuntimeTemplatesAPI, true);
     setSelectedRuntimeClone(selectedRunTimeAll[0]);
     setOpenCreateTemplate(true);
   };
@@ -256,6 +236,32 @@ function ListRuntimeTemplates({
   const handleCreateBatchOpen = () => {
     setOpenCreateTemplate(true);
     setSelectedRuntimeClone(undefined);
+  };
+
+  const handleRefresh = () => {
+    // Fetch the data for the current page, without updating pagination state
+    const tokensForCurrentPage = nextPageTokens.slice(0, currentPageIndex);
+    listRuntimeTemplatesAPI(tokensForCurrentPage, false);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPageIndex > 0) {
+      const newPageIndex = currentPageIndex - 1;
+      setCurrentPageIndex(newPageIndex);
+      // Get tokens needed to fetch the *new* target page
+      const tokensForPage = nextPageTokens.slice(0, newPageIndex);
+      listRuntimeTemplatesAPI(tokensForPage, true);
+    }
+  };
+
+  const handleNextPage = () => {
+    // We only know a next page exists if a token was added
+    if (nextPageTokens.length > currentPageIndex) {
+      const newPageIndex = currentPageIndex + 1;
+      setCurrentPageIndex(newPageIndex);
+      // Pass the *current* token list; service will use the last token
+      listRuntimeTemplatesAPI(nextPageTokens, true);
+    }
   };
 
   const tableDataCondition = (cell: ICellProps) => {
@@ -278,6 +284,21 @@ function ListRuntimeTemplates({
       );
     }
   };
+
+  const canPreviousPage = currentPageIndex > 0;
+  const canNextPage = nextPageTokens.length > currentPageIndex;
+
+  const startIndex = currentPageIndex * pageSize + 1;
+  const actualRecordsOnCurrentPage = rows.length;
+
+  const endIndex = Math.min(
+    (currentPageIndex + 1) * pageSize,
+    startIndex - 1 + actualRecordsOnCurrentPage
+  );
+
+  const estimatedTotal = canNextPage
+    ? (currentPageIndex + 2) * pageSize
+    : endIndex;
 
   return (
     <div className="list-runtime-template-wrapper">
@@ -305,6 +326,18 @@ function ListRuntimeTemplates({
           </div>
           <div className="create-text">Create</div>
         </div>
+
+        <div
+          className="create-runtime-overlay"
+          onClick={() => {
+            handleRefresh();
+          }}
+        >
+          <div className="create-icon">
+            <iconRefresh.react tag="div" className="logo-alignment-style" />
+          </div>
+          <div className="create-text">Refresh</div>
+        </div>
       </div>
       {runtimeTemplateslist.length > 0 && !openCreateTemplate ? (
         <div>
@@ -321,7 +354,6 @@ function ListRuntimeTemplates({
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
-                setPollingDisable={setPollingDisable}
               />
             </div>
           </div>
@@ -337,18 +369,42 @@ function ListRuntimeTemplates({
               tableDataCondition={tableDataCondition}
               fromPage="Runtime Templates"
             />
-            {runtimeTemplateslist.length > 50 && (
-              <PaginationView
-                pageSize={pageSize}
-                setPageSize={setPageSize}
-                pageIndex={pageIndex}
-                allData={runtimeTemplateslist}
-                previousPage={previousPage}
-                nextPage={nextPage}
-                canPreviousPage={canPreviousPage}
-                canNextPage={canNextPage}
-              />
-            )}
+            <div className="pagination-parent-view">
+              <div>Rows per page: {pageSize}</div>
+              <div className="page-display-part">
+                {runtimeTemplateslist.length > 0
+                  ? `${startIndex} - ${endIndex} of ${estimatedTotal}`
+                  : '0 - 0 of 0'}
+              </div>
+              <div
+                role="button"
+                className={
+                  !canPreviousPage
+                    ? 'page-move-button disabled'
+                    : 'page-move-button'
+                }
+                onClick={() => handlePreviousPage()}
+              >
+                <iconPrevious.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              </div>
+              <div
+                role="button"
+                onClick={() => handleNextPage()}
+                className={
+                  !canNextPage
+                    ? 'page-move-button disabled'
+                    : 'page-move-button'
+                }
+              >
+                <iconNext.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              </div>
+            </div>
           </div>
         </div>
       ) : (

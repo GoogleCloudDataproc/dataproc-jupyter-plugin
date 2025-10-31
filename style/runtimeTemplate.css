@@ -62,7 +62,8 @@
   display: flex;
 }
 
-.select-runtime-radio-style, .select-meta-store-radio-style {
+.select-runtime-radio-style,
+.select-meta-store-radio-style {
   padding: 8px 4px 4px 0px !important;
 }
 
@@ -84,6 +85,8 @@
 
 .create-runtime-button-wrapper {
   border-bottom: 1px solid var(--jp-layout-color3);
+  display: flex;
+  justify-content: space-between;
 }
 
 .subnetwork-style {
@@ -131,14 +134,15 @@
   align-items: center;
   justify-content: center;
 }
-.create-runtime-radio, .meta-store-type-radio {
+.create-runtime-radio,
+.meta-store-type-radio {
   display: flex;
 }
-.execution-config-radio{
+.execution-config-radio {
   display: flex;
   padding-left: 9px;
 }
-.create-batch-tier-radio{
+.create-batch-tier-radio {
   display: flex;
   padding-left: 9px;
 }
@@ -197,7 +201,8 @@
   margin-bottom: 15px;
 }
 
-.create-batch-message-acc, .big-data-meta-store-label {
+.create-batch-message-acc,
+.big-data-meta-store-label {
   font-style: normal;
   font-weight: 400;
   font-size: 13px;
