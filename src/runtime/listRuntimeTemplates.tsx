@@ -132,7 +132,6 @@ function ListRuntimeTemplates({
     pageToken?: string[],
     shouldUpdatePagination: boolean = true
   ) => {
-    setIsLoading(true);
     await RunTimeSerive.listRuntimeTemplatesAPIService(
       renderActions,
       setIsLoading,
@@ -354,6 +353,7 @@ function ListRuntimeTemplates({
                 preGlobalFilteredRows={preGlobalFilteredRows}
                 globalFilter={state.globalFilter}
                 setGlobalFilter={setGlobalFilter}
+                setPollingDisable={() => {}}
               />
             </div>
           </div>
