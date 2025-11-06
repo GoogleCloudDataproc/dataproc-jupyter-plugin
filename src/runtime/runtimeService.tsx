@@ -150,144 +150,153 @@ export class RunTimeSerive {
     }
   };
   static listRuntimeTemplatesAPIService = async (
-    renderActions: (value: ISessionTemplate) => React.JSX.Element,
-    setIsLoading: (value: boolean) => void,
-    setRuntimeTemplateslist: (value: ISessionTemplateDisplay[]) => void,
-    setRunTimeTemplateAllList: (value: ISessionTemplate[]) => void,
-    setApiDialogOpen: (value: boolean) => void,
-    setPollingDisable: (value: boolean) => void,
-    setEnableLink: (value: string) => void,
-    nextPageToken?: string,
-    previousRuntimeTemplatesList?: object,
-    previousRuntimeTemplatesAllList?: object
-  ) => {
-    try {
-      const pageToken = nextPageToken ?? '';
-      const queryParams = new URLSearchParams({
-        pageSize: '50',
-        pageToken: pageToken
-      });
+  renderActions: (value: ISessionTemplate) => React.JSX.Element,
+  setIsLoading: (value: boolean) => void,
+  setRuntimeTemplateslist: (value: ISessionTemplateDisplay[]) => void,
+  setRunTimeTemplateAllList: (value: ISessionTemplate[]) => void,
+  setApiDialogOpen: (value: boolean) => void,
+  setPollingDisable: (value: boolean) => void,
+  setEnableLink: (value: string) => void,
+  nextPageToken?: string,
+  previousRuntimeTemplatesList?: object,
+  previousRuntimeTemplatesAllList?: object
+) => {
+  try {
+    const pageToken = nextPageToken ?? '';
+    const queryParams = new URLSearchParams({
+      pageSize: '50',
+      pageToken: pageToken
+    });
 
-      const response = await authenticatedFetch({
-        uri: 'sessionTemplates',
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'locations',
-        queryParams: queryParams
-      });
-      const credentials = await authApi();
-      const formattedResponse: ISessionTemplateRoot = await response.json();
-      let transformRuntimeTemplatesListData: ISessionTemplateDisplay[] = [];
-      if (formattedResponse && formattedResponse.sessionTemplates) {
-        let runtimeTemplatesListNew = formattedResponse.sessionTemplates;
-        runtimeTemplatesListNew.sort(
-          (a: { updateTime: string }, b: { updateTime: string }) => {
-            const dateA = new Date(a.updateTime);
-            const dateB = new Date(b.updateTime);
-            return Number(dateB) - Number(dateA);
-          }
-        );
-        transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
-          (data: ISessionTemplate) => {
-            const startTimeDisplay = data.updateTime
-              ? jobTimeFormat(data.updateTime)
-              : '';
+    const response = await authenticatedFetch({
+      uri: 'sessionTemplates',
+      method: HTTP_METHOD.GET,
+      regionIdentifier: 'locations',
+      queryParams: queryParams
+    });
+    const credentials = await authApi();
+    const formattedResponse: ISessionTemplateRoot = await response.json();
+    let transformRuntimeTemplatesListData: ISessionTemplateDisplay[] = [];
+    if (formattedResponse && formattedResponse.sessionTemplates) {
+      
+      const jupyterSessionTemplates = formattedResponse.sessionTemplates.filter(
+        (template: ISessionTemplate) => template.jupyterSession
+      );
 
-            let displayName = '';
-
-            if (data.jupyterSession && data.jupyterSession.displayName) {
-              displayName = data.jupyterSession.displayName;
-            }
-            let authentication = '';
-
-            const authType =
-              data.environmentConfig?.executionConfig?.authenticationConfig
-                ?.userWorkloadAuthenticationType;
-
-            if (authType === 'END_USER_CREDENTIALS') {
-              authentication = 'User Account';
-            } else {
-              authentication = 'Service Account';
-            }
-            // Extracting runtimeId from name
-            // Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
-
-            const engine = data.runtimeConfig?.properties?.[DATAPROC_LIGHTNING_ENGINE_PROPERTY] ?? 'default';
-
-            return {
-              name: displayName,
-              owner: data.creator,
-              description: data.description,
-              engine: LightningEngineDisplayNameMap.get(engine),
-              authentication: authentication,
-              lastModified: startTimeDisplay,
-              actions: renderActions(data),
-              id: data.name.split('/')[5]
-            };
-          }
-        );
-        const existingRuntimeTemplatesAllData =
-          previousRuntimeTemplatesAllList ?? [];
-        //setStateAction never type issue
-        let allRuntimeTemplatesAllData: ISessionTemplate[] = [
-          ...(existingRuntimeTemplatesAllData as []),
-          ...formattedResponse.sessionTemplates
-        ];
-
-        const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
-        //setStateAction never type issue
-        let allRuntimeTemplatesData: ISessionTemplateDisplay[] = [
-          ...(existingRuntimeTemplatesData as []),
-          ...transformRuntimeTemplatesListData
-        ];
-
-        if (formattedResponse.nextPageToken) {
-          this.listRuntimeTemplatesAPIService(
-            renderActions,
-            setIsLoading,
-            setRuntimeTemplateslist,
-            setRunTimeTemplateAllList,
-            setApiDialogOpen,
-            setPollingDisable,
-            setEnableLink,
-            formattedResponse.nextPageToken,
-            allRuntimeTemplatesData,
-            allRuntimeTemplatesAllData
-          );
-        } else {
-          setRunTimeTemplateAllList(allRuntimeTemplatesAllData);
-          setRuntimeTemplateslist(allRuntimeTemplatesData);
-          setIsLoading(false);
+      let runtimeTemplatesListNew = jupyterSessionTemplates; 
+      
+      runtimeTemplatesListNew.sort(
+        (a: { updateTime: string }, b: { updateTime: string }) => {
+          const dateA = new Date(a.updateTime);
+          const dateB = new Date(b.updateTime);
+          return Number(dateB) - Number(dateA);
         }
+      );
+      transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
+        (data: ISessionTemplate) => {
+
+          const startTimeDisplay = data.updateTime
+            ? jobTimeFormat(data.updateTime)
+            : '';
+
+          let displayName = '';
+
+          // We know data.jupyterSession exists, so we can safely access it
+          if (data.jupyterSession && data.jupyterSession.displayName) {
+            displayName = data.jupyterSession.displayName;
+          }
+          
+          let authentication = '';
+
+          const authType =
+            data.environmentConfig?.executionConfig?.authenticationConfig
+              ?.userWorkloadAuthenticationType;
+
+          if (authType === 'END_USER_CREDENTIALS') {
+            authentication = 'User Account';
+          } else {
+            authentication = 'Service Account';
+          }
+          // Extracting runtimeId from name
+          // Example: "projects/{projectName}/locations/{region}/sessionTemplates/{runtimeid}",
+
+          const engine = data.runtimeConfig?.properties?.[DATAPROC_LIGHTNING_ENGINE_PROPERTY] ?? 'default';
+
+          return {
+            name: displayName,
+            owner: data.creator,
+            description: data.description,
+            engine: LightningEngineDisplayNameMap.get(engine),
+            authentication: authentication,
+            lastModified: startTimeDisplay,
+            actions: renderActions(data),
+            id: data.name.split('/')[5]
+          };
+        }
+      );
+      const existingRuntimeTemplatesAllData =
+        previousRuntimeTemplatesAllList ?? [];
+      //setStateAction never type issue
+      let allRuntimeTemplatesAllData: ISessionTemplate[] = [
+        ...(existingRuntimeTemplatesAllData as []),
+        ...jupyterSessionTemplates // Use the filtered list here too
+      ];
+
+      const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
+      //setStateAction never type issue
+      let allRuntimeTemplatesData: ISessionTemplateDisplay[] = [
+        ...(existingRuntimeTemplatesData as []),
+        ...transformRuntimeTemplatesListData
+      ];
+
+      if (formattedResponse.nextPageToken) {
+        this.listRuntimeTemplatesAPIService(
+          renderActions,
+          setIsLoading,
+          setRuntimeTemplateslist,
+          setRunTimeTemplateAllList,
+          setApiDialogOpen,
+          setPollingDisable,
+          setEnableLink,
+          formattedResponse.nextPageToken,
+          allRuntimeTemplatesData,
+          allRuntimeTemplatesAllData
+        );
       } else {
-        setRunTimeTemplateAllList([]);
-        setRuntimeTemplateslist([]);
+        setRunTimeTemplateAllList(allRuntimeTemplatesAllData);
+        setRuntimeTemplateslist(allRuntimeTemplatesData);
         setIsLoading(false);
       }
-      if (formattedResponse?.error?.code) {
-        handleApiError(
-          formattedResponse,
-          credentials,
-          setApiDialogOpen,
-          setEnableLink,
-          setPollingDisable,
-          'runtimeTemplates'
-        );
-      }
-    } catch (error) {
+    } else {
+      setRunTimeTemplateAllList([]);
+      setRuntimeTemplateslist([]);
       setIsLoading(false);
-      DataprocLoggingService.log(
-        'Error listing runtime templates',
-        LOG_LEVEL.ERROR
-      );
-
-      Notification.emit(
-        `Failed to fetch runtime templates : ${error}`,
-        'error',
-        {
-          autoClose: 5000
-        }
+    }
+    if (formattedResponse?.error?.code) {
+      handleApiError(
+        formattedResponse,
+        credentials,
+        setApiDialogOpen,
+        setEnableLink,
+        setPollingDisable,
+        'runtimeTemplates'
       );
     }
+  } catch (error) {
+    setIsLoading(false);
+    DataprocLoggingService.log(
+      'Error listing runtime templates',
+      LOG_LEVEL.ERROR
+    );
+
+    Notification.emit(
+      `Failed to fetch runtime templates : ${error}`,
+      'error',
+      {
+        autoClose: 5000
+      }
+    );
+  }
   };
   static displayUserInfoService = async (
     setUserInfo: (value: string) => void
