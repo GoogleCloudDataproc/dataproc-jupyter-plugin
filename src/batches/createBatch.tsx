@@ -282,8 +282,8 @@ function CreateBatch({
   const [networkTagsDuplicateValidation, setNetworkTagsDuplicateValidation] =
     useState(false);
   const [keylist, setKeylist] = useState<string[]>([]);
-  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
-  const [isloadingSubNetwork, setIsloadingSubNetwork] = useState(false);
+  const [isloadingNetwork, setIsloadingNetwork] = useState(true);
+  const [isloadingSubNetwork, setIsloadingSubNetwork] = useState(true);
   const [selectedNetworkRadio, setSelectedNetworkRadio] = useState<
     'sharedVpc' | 'projectNetwork'
   >('projectNetwork');
@@ -1877,7 +1877,7 @@ function CreateBatch({
                     </>
                   </div>
                 )}
-                {selectedNetworkRadio === 'projectNetwork' &&
+                {!isloadingNetwork && selectedNetworkRadio === 'projectNetwork' &&
                   networkList.length === 0 && (
                     <div className="error-key-parent">
                       <iconError.react
