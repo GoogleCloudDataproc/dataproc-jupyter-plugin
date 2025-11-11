@@ -1072,7 +1072,7 @@ const BigQueryComponent = ({
                 Bigquery API is not enabled for this project.
                 Please{' '}
                 <a
-                  href={`https://pantheon.corp.google.com/apis/library/bigquery.googleapis.com?project=${projectName}`}
+                  href={`https://console.cloud.google.com/apis/library/bigquery.googleapis.com?project=${projectName}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="link-class"
