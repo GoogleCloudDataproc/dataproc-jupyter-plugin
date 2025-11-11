@@ -1843,7 +1843,6 @@ function CreateBatch({
       <div>
         {selectedNetworkRadio === 'projectNetwork' && (
        <div className="create-batch-network">
-                  <>
                       <div className="select-text-overlay">
                         <Autocomplete
                           options={networkList}
@@ -1874,7 +1873,7 @@ function CreateBatch({
                           )}
                         />
                       </div>
-                    </>
+                    
                   </div>
                 )}
                 {!isloadingNetwork && selectedNetworkRadio === 'projectNetwork' &&

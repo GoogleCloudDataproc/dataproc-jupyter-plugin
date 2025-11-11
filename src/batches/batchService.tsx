@@ -626,7 +626,7 @@ export class BatchService {
           }
         );
         setNetworklist(transformedNetworkList);
-        if (batchInfoResponse === undefined) {
+        if (batchInfoResponse === undefined && transformedNetworkList.length > 0) {
           setNetworkSelected(transformedNetworkList[0]);
         }
         if (responseResult?.error?.code) {
