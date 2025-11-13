@@ -48,6 +48,7 @@ import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
 import { DataprocWidget } from '../controls/DataprocWidget';
 import { checkConfig, handleDebounce } from '../utils/utils';
 import LoginErrorComponent from '../utils/loginErrorComponent';
+import { BIGQUERY_API_URL } from '../utils/const';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -1072,7 +1073,7 @@ const BigQueryComponent = ({
                 Bigquery API is not enabled for this project.
                 Please{' '}
                 <a
-                  href={`https://console.cloud.google.com/apis/library/bigquery.googleapis.com?project=${projectName}`}
+                  href={`${BIGQUERY_API_URL}?project=${projectName}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="link-class"

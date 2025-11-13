@@ -299,3 +299,5 @@ export const BIGQUERY_SERVICE_NAME = 'bigquery.googleapis.com';
 export const PAGE_SIZE = 50;
 
 export const DEFAULT_PUBLIC_PROJECT_ID = 'bigquery-public-data';
+
+export const BIGQUERY_API_URL = 'https://console.cloud.google.com/apis/library/bigquery.googleapis.com';
