@@ -23,11 +23,13 @@ from dataproc_jupyter_plugin.commons.constants import (
     METASTORE_SERVICE_NAME,
     STORAGE_SERVICE_DEFAULT_URL,
     STORAGE_SERVICE_NAME,
+    BIGQUERY_SERVICE_NAME
 )
 
 
 async def map():
     dataproc_url = await gcp_service_url(DATAPROC_SERVICE_NAME)
+    bigquery_url = await gcp_service_url(BIGQUERY_SERVICE_NAME)
     compute_url = await gcp_service_url(
         COMPUTE_SERVICE_NAME, default_url=COMPUTE_SERVICE_DEFAULT_URL
     )
@@ -38,6 +40,7 @@ async def map():
     storage_url = await gcp_service_url(
         STORAGE_SERVICE_NAME, default_url=STORAGE_SERVICE_DEFAULT_URL
     )
+    
     url_map = {
         "dataproc_url": dataproc_url,
         "compute_url": compute_url,
@@ -46,6 +49,7 @@ async def map():
         "cloudresourcemanager_url": cloudresourcemanager_url,
         "storage_url": storage_url,
         "dataplex_url": dataplex_url,
+        "bigquery_url": bigquery_url,
     }
     return url_map
 
