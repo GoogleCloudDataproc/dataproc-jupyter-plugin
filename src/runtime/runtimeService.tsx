@@ -702,8 +702,8 @@ export class RunTimeSerive {
 
       return transformedServiceList;
     } catch (err: any) {
-      DataprocLoggingService.log('Error listing regions or metastores', LOG_LEVEL.ERROR);
-      console.error(err);
+      const errMsg = `Metastores listing error (${err?.code ?? 'unknown'}): ${err?.message ?? String(err)}`;
+      DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
       return transformedServiceList;
     }
   };
