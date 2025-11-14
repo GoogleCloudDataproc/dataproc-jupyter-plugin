@@ -591,7 +591,7 @@ export class BatchService {
       const { COMPUTE } = await gcpServiceUrls;
 
       if (!credentials) {
-        setIsloadingNetwork(false); 
+        setIsloadingNetwork(false);
         return;
       }
 
@@ -613,38 +613,39 @@ export class BatchService {
         };
       } = await response.json();
 
-      if (responseResult.items) {
-        let transformedNetworkList = [];
+      if (responseResult?.error?.code) {
+        Notification.emit(responseResult.error.message, 'error', {
+          autoClose: 5000
+        });
+      }
+      else if (responseResult.items) {
         /*
          Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
         */
-
-        transformedNetworkList = responseResult.items.map(
+        const transformedNetworkList = responseResult.items.map(
           (data: Network) => {
             return data.selfLink.split('/')[9];
           }
         );
         setNetworklist(transformedNetworkList);
+
         if (batchInfoResponse === undefined && transformedNetworkList.length > 0) {
           setNetworkSelected(transformedNetworkList[0]);
         }
-        if (responseResult?.error?.code) {
-          Notification.emit(responseResult?.error?.message, 'error', {
+        else if (transformedNetworkList.length === 0) {
+          DataprocLoggingService.log('No networks found (empty list).', LOG_LEVEL.ERROR);
+          Notification.emit('No networks found.', 'error', {
             autoClose: 5000
           });
         }
-      } else if (responseResult?.error?.code) {
-         Notification.emit(responseResult?.error?.message, 'error', {
-            autoClose: 5000
-          });
-      } else {
+      }
+      else {
         DataprocLoggingService.log('No networks found in response.', LOG_LEVEL.ERROR);
         Notification.emit('No networks found.', 'error', {
           autoClose: 5000
         });
       }
-
     } catch (err) {
       DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
       Notification.emit(`Error listing Networks : ${err}`, 'error', {
