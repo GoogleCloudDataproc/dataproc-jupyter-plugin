@@ -183,6 +183,7 @@ export enum HTTP_METHOD {
   GET = 'GET',
   POST = 'POST'
 }
+export const AUTH_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 export const NETWORK_TAG_MESSAGE =
   'Network tags are text attributes you can add to make firewall rules and routes applicable to specific VM instances.';
 export const LOGIN_ERROR_MESSAGE =
