@@ -41,7 +41,8 @@ import {
   META_STORE_TYPES,
   SPARK_META_STORE_INFO_URL,
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
-  LIGHTNING_ENGINE_DOC
+  LIGHTNING_ENGINE_DOC,
+  METASTORE_LOADING_LABEL
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -870,40 +871,24 @@ function CreateRunTime({
 
     // Enabling main spinner
     setIsLoadingService(true);
-    let filteredServicesArray: any[] = [];
     try {
       let transformedServiceList: string[] = [];
-      await new Promise<void>((resolve, reject) => {
-        Promise.resolve(
-          RunTimeSerive.listMetaStoreAPIService(
-            projectId,
-            regionId,
-            network,
-            filteredServicesArray
-          )
-        )
-          .then(() => resolve())
-          .catch(err => reject(err));
-      });
-      transformedServiceList = (filteredServicesArray as any[]).map(
-        (data: any) => (typeof data === 'string' ? data : data?.name ?? String(data))
+      transformedServiceList = await RunTimeSerive.listMetaStoreAPIService(
+        projectId,
+        regionId,
+        network
       );
-      filteredServicesArray = [...transformedServiceList, 'Loading Metastore Service From Other Regions...'];
-      setServicesList(filteredServicesArray);
+      transformedServiceList = [...transformedServiceList, METASTORE_LOADING_LABEL];
+      setServicesList(transformedServiceList);
 
       // Removing main spinner
       setIsLoadingService(false);
       
-      // Clearing values for next stage
-      filteredServicesArray = [];
-      await RunTimeSerive.regionListAPIService(
+      transformedServiceList = await RunTimeSerive.regionListAPIService(
         projectId,
-        network,
-        filteredServicesArray
+        network
       );
-      transformedServiceList = (filteredServicesArray as any[]).map(
-        (data: any) => (typeof data === 'string' ? data : data?.name ?? String(data))
-      );
+      
       setServicesList(transformedServiceList);
 
     } catch (error) {
@@ -2278,20 +2263,20 @@ function CreateRunTime({
                       </div>
                     ) : (
                       <Autocomplete
-                      options={servicesList.map(option => (typeof option === 'string' ? option : String(option)))}
+                      options={servicesList}
                       value={servicesSelected}
                       onChange={(_event, val) => {
-                        if (typeof val === 'string' && val.startsWith('Loading Metastore Service')) {
+                        if (typeof val === 'string' && val === METASTORE_LOADING_LABEL) {
                         // don't select the loading placeholder
                         return;
                         }
                         handleServiceSelected(val);
                       }}
                       getOptionDisabled={(option) =>
-                        typeof option === 'string' && option.startsWith('Loading Metastore Service')
+                        typeof option === 'string' && option === METASTORE_LOADING_LABEL
                       }
                       renderOption={(props, option) =>
-                        typeof option === 'string' && option.startsWith('Loading Metastore Service') ? (
+                        typeof option === 'string' && option === METASTORE_LOADING_LABEL ? (
                           <li
                             {...props}
                             key="loading-meta"
@@ -2299,7 +2284,7 @@ function CreateRunTime({
                             style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: 0.9 }}
                           >
                             <CircularProgress size={16} />
-                            <span>Loading MetaStore Service From Other Regions</span>
+                            <span>{METASTORE_LOADING_LABEL}</span>
                           </li>
                         ) : (
                           <li {...props}>{option}</li>

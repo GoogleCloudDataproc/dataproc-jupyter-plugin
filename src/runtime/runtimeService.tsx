@@ -607,96 +607,104 @@ export class RunTimeSerive {
     projectId: string,
     location: string,
     network: string | undefined,
-    filteredServicesArray: any
-) => {
+  ): Promise<string[]> => {
     const credentials = await authApi();
     const { METASTORE } = await gcpServiceUrls;
+    let filteredServicesArray: any = [];
+    let transformedServiceList: string[] = [];
 
-    if (credentials) {
-        try {
-            const response = await loggedFetch( 
-              `${METASTORE}/projects/${projectId}/locations/${location}/services`,
-              {
-                headers: {
-                  'Content-Type': API_HEADER_CONTENT_TYPE,
-                  Authorization: API_HEADER_BEARER + credentials.access_token
-                }
-              }
-            );
-
-            const responseResult: { services: { name: string; network: string; hiveMetastoreConfig: { endpointProtocol: string }; }[]; error: { message: string; code: number; }; } = await response.json(); 
-
-            if (responseResult?.error?.code) {
-                const errMsg = `Metastores listing error (${responseResult.error.code}): ${responseResult.error.message}`;
-                DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
-            }
-
-            // Filter based on endpointProtocol and network
-            const filteredServices = responseResult?.services?.filter(
-                service => {
-                    return (
-                        service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
-                        (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT' &&
-                            location == credentials.region_id &&
-                            service.network.split('/')[4] === network)
-                    );
-                }
-            );
-
-            if (filteredServices) {
-                filteredServicesArray.push(...filteredServices);
-            }
-
-        } catch (err: any) {
-            const errMsg = `Metastores listing error (${err.code}): ${err.message}`;
-            DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
-        }
+    if (!credentials) {
+      return filteredServicesArray;
     }
-};
-  
-  static regionListAPIService = async (
-    projectId: string,
-    network: string | undefined,
-    filteredServicesArray: any
-  ) => {
-    try {
-      const credentials = await authApi();
-      const { REGION_URL } = await gcpServiceUrls;
 
-      if (credentials) {
-        const response = await loggedFetch(`${REGION_URL}/${projectId}/regions`, {
+    try {
+      const response = await loggedFetch(
+        `${METASTORE}/projects/${projectId}/locations/${location}/services`,
+        {
           headers: {
             'Content-Type': API_HEADER_CONTENT_TYPE,
             Authorization: API_HEADER_BEARER + credentials.access_token
           }
-        });
+        }
+      );
 
-        const responseResult: {
-          items: Region[];
-          error: {
-            code: number;
-            message: string;
-          };
-        } = await response.json();
-        
-        let transformedRegionList = responseResult.items?.map(
-          (data: Region) => data.name
-        );
+      const responseResult: { services: { name: string; network: string; hiveMetastoreConfig: { endpointProtocol: string }; }[]; error: { message: string; code: number; }; } = await response.json();
 
-        const servicePromises = transformedRegionList?.map(location => {
-          return this.listMetaStoreAPIService(
-            projectId,
-            location,
-            network,
-            filteredServicesArray
-          );
-        });
-
-        await Promise.all(servicePromises);
+      if (responseResult?.error?.code) {
+        const errMsg = `Metastores listing error (${responseResult.error.code}): ${responseResult.error.message}`;
+        DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
       }
+
+      // Filter based on endpointProtocol and network
+      const filteredServices = responseResult?.services?.filter(service => {
+        return (
+          service.hiveMetastoreConfig.endpointProtocol === 'GRPC' ||
+          (service.hiveMetastoreConfig.endpointProtocol === 'THRIFT' &&
+            location == credentials.region_id &&
+            service.network.match(/\/networks\/(?<networkName>[^/]+)$/)?.groups?.networkName === network)
+        );
+      });
+
+      if (filteredServices) {
+        filteredServicesArray.push(...filteredServices);
+      }
+
+      transformedServiceList = (filteredServicesArray as any[]).map(
+        (data: any) => (typeof data === 'string' ? data : data?.name ?? String(data))
+      );
+
+      return transformedServiceList;
+    } catch (err: any) {
+      const errMsg = `Metastores listing error (${err?.code ?? 'unknown'}): ${err?.message ?? String(err)}`;
+      DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
+      return transformedServiceList;
+    }
+  };
+  
+  static regionListAPIService = async (
+    projectId: string,
+    network: string | undefined
+  ): Promise<string[]> => {
+    const credentials = await authApi();
+    const { REGION_URL } = await gcpServiceUrls;
+    let transformedServiceList: string[] = [];
+
+    if(!credentials) {
+      return transformedServiceList;
+    }
+    try {
+      const response = await loggedFetch(`${REGION_URL}/${projectId}/regions`, {
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      });
+
+      const responseResult: {
+        items: Region[];
+        error: {
+          code: number;
+          message: string;
+        };
+      } = await response.json();
+      
+      let transformedRegionList = responseResult.items?.map(
+        (data: Region) => data.name
+      );
+
+      const servicePromises = transformedRegionList?.map(location =>
+        this.listMetaStoreAPIService(projectId, location, network)
+      ) ?? [];
+
+      const results = await Promise.all(servicePromises);
+
+      transformedServiceList.push(...results.flat());
+
+      return transformedServiceList;
     } catch (err: any) {
       DataprocLoggingService.log('Error listing regions or metastores', LOG_LEVEL.ERROR);
       console.error(err);
+      return transformedServiceList;
     }
   };
 
