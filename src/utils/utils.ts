@@ -40,7 +40,8 @@ import {
   STATUS_SETUP_DONE,
   STATUS_STARTING,
   STATUS_SUCCESS,
-  gcpServiceUrls
+  gcpServiceUrls,
+  AUTH_CACHE_TTL_MS
 } from './const';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { DataprocLoggingService } from './loggingService';
@@ -65,24 +66,52 @@ interface Credentials {
   project_id?: string;
 }
 
+let cachedCredentials: IAuthCredentials | undefined;
+let cachedAt: number | undefined;
+let cachedPromise: Promise<IAuthCredentials | undefined> | null = null;
+
 export const authApi = async (): Promise<IAuthCredentials | undefined> => {
-  try {
-    const data = await requestAPI('credentials');
-    if (typeof data === 'object' && data !== null) {
-      const credentials: IAuthCredentials = {
-        access_token: (data as { access_token: string }).access_token,
-        project_id: (data as { project_id: string }).project_id,
-        region_id: (data as { region_id: string }).region_id,
-        config_error: (data as { config_error: number }).config_error,
-        login_error: (data as { login_error: number }).login_error
-      };
-      return credentials;
-    } else {
-      console.error('Invalid data format.');
-    }
-  } catch (reason) {
-    console.error(`Error on GET credentials.\n${reason}`);
+  const now = Date.now();
+
+  // Return cached credentials if still valid
+  // Keeping 30 mins as TTL for cached auth credentials since config is done with args, "--min-expiry=30m"
+  if (cachedCredentials && cachedAt && now - cachedAt < AUTH_CACHE_TTL_MS) {
+    return cachedCredentials;
   }
+
+  // If a fetch is already in progress, await it
+  if (cachedPromise) {
+    return cachedPromise;
+  }
+
+  // Fetch and cache credentials
+  cachedPromise = (async () => {
+    try {
+      const data = await requestAPI('credentials');
+      if (typeof data === 'object' && data !== null) {
+        const credentials: IAuthCredentials = {
+          access_token: (data as { access_token: string }).access_token,
+          project_id: (data as { project_id: string }).project_id,
+          region_id: (data as { region_id: string }).region_id,
+          config_error: (data as { config_error: number }).config_error,
+          login_error: (data as { login_error: number }).login_error
+        };
+        cachedCredentials = credentials;
+        cachedAt = Date.now();
+        return credentials;
+      } else {
+        console.error('Invalid data format.');
+        return undefined;
+      }
+    } catch (reason) {
+      console.error(`Error on GET credentials.\n${reason}`);
+      return undefined;
+    } finally {
+      cachedPromise = null;
+    }
+  })();
+
+  return cachedPromise;
 };
 
 /**
