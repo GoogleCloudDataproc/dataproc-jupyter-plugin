@@ -21,7 +21,7 @@ import {
   JupyterLab,
   ILabShell
 } from '@jupyterlab/application';
-import { MainAreaWidget, IThemeManager } from '@jupyterlab/apputils';
+import { MainAreaWidget, IThemeManager, ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
@@ -92,7 +92,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     INotebookTracker,
     IThemeManager,
     ISettingRegistry,
-    IDocumentManager
+    IDocumentManager,
+    ICommandPalette
   ],
   activate: async (
     app: JupyterFrontEnd,
@@ -104,7 +105,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     notebookTracker: INotebookTracker,
     themeManager: IThemeManager,
     settingRegistry: ISettingRegistry,
-    documentManager: IDocumentManager
+    documentManager: IDocumentManager,
+    palette: ICommandPalette
   ) => {
     DataprocLoggingService.attach();
     const { commands } = app;
@@ -839,6 +841,24 @@ const extension: JupyterFrontEndPlugin<void> = {
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 3
       });
+    }
+
+     if (palette) {
+      const command = 'jlab-examples:command-palette';
+
+      commands.addCommand(command, {
+        label: 'Google Data cloud : search for a Dataset',
+        caption: 'What Dataset are you looking for ?',
+        execute: (args: any) => {
+          console.log(
+            `jlab-examples:command-palette has been called ${args['origin']}.`
+          );
+        }
+      });
+
+      // Add the command to the command palette
+      const category = 'Extension Examples';
+      palette.addItem({ command, category, args: { origin: 'from palette' } });
     }
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
