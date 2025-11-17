@@ -89,13 +89,7 @@ export const authApi = async (): Promise<IAuthCredentials | undefined> => {
     try {
       const data = await requestAPI('credentials');
       if (typeof data === 'object' && data !== null) {
-        const credentials: IAuthCredentials = {
-          access_token: (data as { access_token: string }).access_token,
-          project_id: (data as { project_id: string }).project_id,
-          region_id: (data as { region_id: string }).region_id,
-          config_error: (data as { config_error: number }).config_error,
-          login_error: (data as { login_error: number }).login_error
-        };
+        const credentials = data as IAuthCredentials;
         cachedCredentials = credentials;
         cachedAt = Date.now();
         return credentials;
