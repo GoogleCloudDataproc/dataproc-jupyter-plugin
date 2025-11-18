@@ -178,7 +178,11 @@ export class RunTimeSerive {
       const formattedResponse: ISessionTemplateRoot = await response.json();
       let transformRuntimeTemplatesListData: ISessionTemplateDisplay[] = [];
       if (formattedResponse && formattedResponse.sessionTemplates) {
-        let runtimeTemplatesListNew = formattedResponse.sessionTemplates;
+        const jupyterSessionTemplates = formattedResponse.sessionTemplates.filter(
+        (template: ISessionTemplate) => template.jupyterSession
+      );
+
+      let runtimeTemplatesListNew = jupyterSessionTemplates; 
         runtimeTemplatesListNew.sort(
           (a: { updateTime: string }, b: { updateTime: string }) => {
             const dateA = new Date(a.updateTime);
@@ -230,7 +234,7 @@ export class RunTimeSerive {
         //setStateAction never type issue
         let allRuntimeTemplatesAllData: ISessionTemplate[] = [
           ...(existingRuntimeTemplatesAllData as []),
-          ...formattedResponse.sessionTemplates
+          ...jupyterSessionTemplates
         ];
 
         const existingRuntimeTemplatesData = previousRuntimeTemplatesList ?? [];
@@ -562,35 +566,57 @@ export class RunTimeSerive {
         method: HTTP_METHOD.GET,
         regionIdentifier: 'global'
       });
-      const formattedResponse: { items: Network[] } = await response.json();
-      let transformedNetworkList = [];
-      /*
+      const formattedResponse: { items: Network[];
+        error?: { message: string; code: number };} = await response.json();
+           /*
         Extracting network from items
         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
       */
 
-      transformedNetworkList = formattedResponse.items.map((data: Network) => {
-        return data.selfLink.split('/')[9];
-      });
+      if (formattedResponse?.error?.code) {
+        Notification.emit(formattedResponse.error.message, 'error', {
+          autoClose: 5000
+        });
+        return;
+      }
+      if (formattedResponse.items) {
+        const transformedNetworkList = formattedResponse.items.map(
+          (data: Network) => {
+            return data.selfLink.split('/')[9];
+          }
+        );
 
-      setNetworklist(transformedNetworkList);
-      if (selectedRuntimeClone === undefined) {
-        if (transformedNetworkList.length > 0) {
-          setNetworkSelected(transformedNetworkList[0]);
-        } else {
-          DataprocLoggingService.log(
-            'No networks found. Account may lack access to list networks',
-            LOG_LEVEL.ERROR
-          );
+        setNetworklist(transformedNetworkList);
+        if (selectedRuntimeClone === undefined) {
+          if (transformedNetworkList.length > 0) {
+            setNetworkSelected(transformedNetworkList[0]);
+          } else {
+            DataprocLoggingService.log(
+              'No networks found. Account may lack access to list networks',
+              LOG_LEVEL.ERROR
+            );
 
-          Notification.emit(
-            'No networks found. Account may lack access to list networks.',
-            'error',
-            {
-              autoClose: 5000
-            }
-          );
+            Notification.emit(
+              'No networks found. Account may lack access to list networks.',
+              'error',
+              {
+                autoClose: 5000
+              }
+            );
+          }
         }
+      } else {
+        DataprocLoggingService.log(
+          'No networks found. Account may lack access to list networks',
+          LOG_LEVEL.ERROR
+        );
+        Notification.emit(
+          'No networks found. Account may lack access to list networks.',
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
       }
     } catch (error) {
       DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
