@@ -586,15 +586,15 @@ export class RunTimeSerive {
           }
         );
 
-        setNetworklist(transformedNetworkList);
-        if (selectedRuntimeClone === undefined) {
-          if (transformedNetworkList.length > 0) {
-            setNetworkSelected(transformedNetworkList[0]);
-          } else {
-            DataprocLoggingService.log(
-              'No networks found. Account may lack access to list networks',
-              LOG_LEVEL.ERROR
-            );
+      setNetworklist(transformedNetworkList);
+      if (selectedRuntimeClone === undefined) {
+        if (transformedNetworkList.length > 0) {
+          setNetworkSelected(transformedNetworkList[0]);
+        } else {
+          DataprocLoggingService.log(
+            'No networks found. Account may lack access to list networks',
+            LOG_LEVEL.ERROR
+          );
 
             Notification.emit(
               'No networks found. Account may lack access to list networks.',
