@@ -67,6 +67,7 @@ import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
 
+
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
@@ -853,6 +854,15 @@ const extension: JupyterFrontEndPlugin<void> = {
           console.log(
             `jlab-examples:command-palette has been called ${args['origin']}.`
           );
+
+          const content = new Widget();
+          content.node.innerHTML = '<h1>Hello World!</h1><p>This is your new tab.</p>';
+
+          const widget = new MainAreaWidget({ content });
+          widget.title.label = 'Search : dataset';
+          widget.title.closable = true;
+
+          app.shell.add(widget, 'main');
         }
       });
 
