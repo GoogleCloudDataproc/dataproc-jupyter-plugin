@@ -181,16 +181,14 @@ export class RunTimeSerive {
         const jupyterSessionTemplates = formattedResponse.sessionTemplates.filter(
         (template: ISessionTemplate) => template.jupyterSession
       );
-
-      let runtimeTemplatesListNew = jupyterSessionTemplates; 
-        runtimeTemplatesListNew.sort(
+        jupyterSessionTemplates.sort(
           (a: { updateTime: string }, b: { updateTime: string }) => {
             const dateA = new Date(a.updateTime);
             const dateB = new Date(b.updateTime);
             return Number(dateB) - Number(dateA);
           }
         );
-        transformRuntimeTemplatesListData = runtimeTemplatesListNew.map(
+        transformRuntimeTemplatesListData = jupyterSessionTemplates.map(
           (data: ISessionTemplate) => {
             const startTimeDisplay = data.updateTime
               ? jobTimeFormat(data.updateTime)
