@@ -623,6 +623,7 @@ export class BatchService {
          Extracting network from items
          Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
         */
+       
         const transformedNetworkList = responseResult.items.map(
           (data: Network) => {
             return data.selfLink.split('/')[9];
