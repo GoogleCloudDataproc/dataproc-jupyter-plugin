@@ -28,7 +28,7 @@ import datasetsIcon from '../../style/icons/datasets_icon.svg';
 import searchIcon from '../../style/icons/search_icon.svg';
 import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
 import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
-import searchClearIcon from '../../style/icons/search_clear_icon.svg';
+// import searchClearIcon from '../../style/icons/search_clear_icon.svg';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { Menu, MenuItem } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,9 +36,7 @@ import { auto } from '@popperjs/core';
 import { IThemeManager } from '@jupyterlab/apputils';
 import {
   CircularProgress,
-  IconButton,
-  InputAdornment,
-  TextField
+  IconButton
 } from '@mui/material';
 import { TitleComponent } from '../controls/SidePanelTitleWidget';
 import { BigQueryService } from './bigQueryService';
@@ -49,6 +47,7 @@ import { DataprocWidget } from '../controls/DataprocWidget';
 import { checkConfig, handleDebounce } from '../utils/utils';
 import LoginErrorComponent from '../utils/loginErrorComponent';
 import { BIGQUERY_API_URL } from '../utils/const';
+// import {NaturalLanguageSearchWidget} from './naturalLanguageSearchWidget'
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -76,16 +75,16 @@ const calculateDepth = (node: NodeApi): number => {
   return depth;
 };
 
-let timeoutId: NodeJS.Timeout | null = null; // Define timeoutId
+// let timeoutId: NodeJS.Timeout | null = null; // Define timeoutId
 
-const debounce = (func: Function, delay: number) => {
-  return (...args: any) => {
-    clearTimeout(timeoutId as NodeJS.Timeout); // Clear the timeout
-    timeoutId = setTimeout(() => {
-      func(...args);
-    }, delay);
-  };
-};
+// const debounce = (func: Function, delay: number) => {
+//   return (...args: any) => {
+//     clearTimeout(timeoutId as NodeJS.Timeout); // Clear the timeout
+//     timeoutId = setTimeout(() => {
+//       func(...args);
+//     }, delay);
+//   };
+// };
 
 const BigQueryComponent = ({
   app,
@@ -96,10 +95,10 @@ const BigQueryComponent = ({
   settingRegistry: ISettingRegistry;
   themeManager: IThemeManager;
 }): JSX.Element => {
-  const iconSearchClear = new LabIcon({
-    name: 'launcher:search-clear-icon',
-    svgstr: searchClearIcon
-  });
+  // const iconSearchClear = new LabIcon({
+  //   name: 'launcher:search-clear-icon',
+  //   svgstr: searchClearIcon
+  // });
   const iconBigQueryProject = new LabIcon({
     name: 'launcher:bigquery-project-icon',
     svgstr: bigQueryProjectIcon
@@ -123,7 +122,7 @@ const BigQueryComponent = ({
   });
 
   const [projectNameInfo, setProjectNameInfo] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  // const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
   const [dataprocMetastoreServices, setDataprocMetastoreServices] =
     useState('');
@@ -141,8 +140,8 @@ const BigQueryComponent = ({
   const [currentNode, setCurrentNode] = useState<any>();
   const [isIconLoading, setIsIconLoading] = useState(false);
 
-  const [searchResponse, setSearchResponse] = useState<any>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  // const [searchResponse, setSearchResponse] = useState<any>([]);
+  // const [searchLoading, setSearchLoading] = useState(false);
   const [apiError, setApiError] = useState(false);
 
   const [height, setHeight] = useState(window.innerHeight - 125);
@@ -153,6 +152,8 @@ const BigQueryComponent = ({
 
   const [nextPageTokens, setNextPageTokens] = useState<Map<string, string | null>>(new Map());
   const [allDatasets, setAllDatasets] = useState<Map<string, any[]>>(new Map());
+  const [ isSearchOpen, setIsSearchOpen] = useState(false)
+  console.log(isSearchOpen)
 
   function handleUpdateHeight() {
     let updateHeight = window.innerHeight - 125;
@@ -310,94 +311,98 @@ const BigQueryComponent = ({
     setTreeStructureData(tempData);
   };
 
-  const handleSearchTreeStructure = () => {
-    if (
-      searchResponse &&
-      searchResponse.results &&
-      searchResponse.results.length > 0
-    ) {
-      let data: any = [];
+  // const handleSearchTreeStructure = () => {
+  //   if (
+  //     searchResponse &&
+  //     searchResponse.results &&
+  //     searchResponse.results.length > 0
+  //   ) {
+  //     let data: any = [];
 
-      searchResponse.results.forEach((searchData: any) => {
-        const dataplexEntry = searchData.dataplexEntry;
-        if (!dataplexEntry || !dataplexEntry.fullyQualifiedName) {
-          return;
-        }
+  //     searchResponse.results.forEach((searchData: any) => {
+  //       const dataplexEntry = searchData.dataplexEntry;
+  //       if (!dataplexEntry || !dataplexEntry.fullyQualifiedName) {
+  //         return;
+  //       }
 
-        const fqn = dataplexEntry.fullyQualifiedName;
-        const fqnParts = fqn.split(':');
-        const tableParts = fqnParts[1].split('.');
-        const projectId = tableParts[0];
-        const datasetId = tableParts[1];
-        const tableId = tableParts.length > 2 ? tableParts[2] : null;
+  //       const fqn = dataplexEntry.fullyQualifiedName;
+  //       const fqnParts = fqn.split(':');
+  //       const tableParts = fqnParts[1].split('.');
+  //       const projectId = tableParts[0];
+  //       const datasetId = tableParts[1];
+  //       const tableId = tableParts.length > 2 ? tableParts[2] : null;
 
-        let projectNode = data.find((p: any) => p.name === projectId);
-        if (!projectNode) {
-          projectNode = {
-            id: uuidv4(),
-            name: projectId,
-            children: [],
-            isNodeOpen: false
-          };
-          data.push(projectNode);
-        }
+  //       let projectNode = data.find((p: any) => p.name === projectId);
+  //       if (!projectNode) {
+  //         projectNode = {
+  //           id: uuidv4(),
+  //           name: projectId,
+  //           children: [],
+  //           isNodeOpen: false
+  //         };
+  //         data.push(projectNode);
+  //       }
 
-        let datasetNode = projectNode.children.find((d: any) => d.name === datasetId);
-        if (!datasetNode) {
-          projectNode.isNodeOpen = true
-          datasetNode = {
-            id: uuidv4(),
-            name: datasetId,
-            children: [],
-            isNodeOpen: false
-          };
-          projectNode.children.push(datasetNode);
-        }
+  //       let datasetNode = projectNode.children.find((d: any) => d.name === datasetId);
+  //       if (!datasetNode) {
+  //         projectNode.isNodeOpen = true
+  //         datasetNode = {
+  //           id: uuidv4(),
+  //           name: datasetId,
+  //           children: [],
+  //           isNodeOpen: false
+  //         };
+  //         projectNode.children.push(datasetNode);
+  //       }
 
-        if (tableId) {
-          if (!datasetNode.children.find((t: any) => t.name === tableId)) {
-            datasetNode.isNodeOpen = true
-            datasetNode.children.push({
-              id: uuidv4(),
-              name: tableId,
-              children: [],
-              isNodeOpen: false,
-              isOpen: false
-            });
-          }
-        }
-      });
+  //       if (tableId) {
+  //         if (!datasetNode.children.find((t: any) => t.name === tableId)) {
+  //           datasetNode.isNodeOpen = true
+  //           datasetNode.children.push({
+  //             id: uuidv4(),
+  //             name: tableId,
+  //             children: [],
+  //             isNodeOpen: false,
+  //             isOpen: false
+  //           });
+  //         }
+  //       }
+  //     });
 
-      setTreeStructureData(data);
-    } else {
-      setTreeStructureData([]);
-    }
-  };
+  //     setTreeStructureData(data);
+  //   } else {
+  //     setTreeStructureData([]);
+  //   }
+  // };
 
-  const handleSearch = (value: string) => {
-    if (value !== '') {
-      BigQueryService.getBigQuerySearchAPIService(
-        value,
-        setSearchLoading,
-        setSearchResponse
-      );
-    } else {
-      getBigQueryProjects(false);
-    }
-  };
+  // const handleSearch = (value: string) => {
+  //   if (value !== '') {
+  //     BigQueryService.getBigQuerySearchAPIService(
+  //       value,
+  //       // setSearchLoading,
+  //       setSearchResponse
+  //     );
+  //   } else {
+  //     getBigQueryProjects(false);
+  //   }
+  // };
 
-  const debouncedHandleSearch = debounce(handleSearch, 1000);
+  const handleOpenSearch=() => {
+    setIsSearchOpen(true)
+  }
 
-  const handleSearchTerm = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setSearchTerm(value);
-    if (value.length >= 3) {
-      debouncedHandleSearch(value);
-    }
-    if (value.length === 0) {
-      handleSearchClear();
-    }
-  };
+  // const debouncedHandleSearch = debounce(handleSearch, 1000);
+
+  // const handleSearchTerm = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const value = event.target.value;
+  //   setSearchTerm(value);
+  //   if (value.length >= 3) {
+  //     debouncedHandleSearch(value);
+  //   }
+  //   if (value.length === 0) {
+  //     handleSearchClear();
+  //   }
+  // };
 
   const openedWidgets: Record<string, boolean> = {};
   const handleNodeClick = (node: NodeApi) => {
@@ -447,13 +452,13 @@ const BigQueryComponent = ({
     }
   };
 
-  const handleSearchClear = () => {
-    setSearchTerm('');
-    setSearchLoading(true);
-    setAllDatasets(new Map()); 
-    setNextPageTokens(new Map());
-    getBigQueryProjects(false);
-  };
+  // const handleSearchClear = () => {
+  //   setSearchTerm('');
+  //   setSearchLoading(true);
+  //   setAllDatasets(new Map()); 
+  //   setNextPageTokens(new Map());
+  //   getBigQueryProjects(false);
+  // };
   type NodeProps = NodeRendererProps<IDataEntry> & {
     onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
     nextPageTokens: Map<string, string | null>;
@@ -667,7 +672,8 @@ const BigQueryComponent = ({
             Load More...
           </div>
         );
-      if (searchTerm) {
+      // if (searchTerm) 
+        {
         const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
           isIconLoading && currentNode.data.name === node.data.name ? (
             <div className="big-query-loader-style">
@@ -952,7 +958,7 @@ const BigQueryComponent = ({
 
   useEffect(() => {
     if (treeStructureData.length > 0 && treeStructureData[0].name !== '') {
-      setSearchLoading(false);
+      // setSearchLoading(false);
       setIsLoading(false);
       setResetLoading(false);
       setIsLoadMoreLoading(false);
@@ -962,10 +968,10 @@ const BigQueryComponent = ({
     }
   }, [treeStructureData]);
 
-  useEffect(() => {
-    handleSearchTreeStructure();
-    setSearchLoading(false);
-  }, [searchResponse]);
+  // useEffect(() => {
+  //   handleSearchTreeStructure();
+  //   // setSearchLoading(false);
+  // }, [searchResponse]);
 
   return (
     <div className="dpms-Wrapper">
@@ -994,44 +1000,17 @@ const BigQueryComponent = ({
               {!loginError && !configError && !apiError && (
                 <div>
                   <div className="search-field">
-                    <TextField
-                      placeholder="Enter your keyword to search"
-                      type="text"
-                      variant="outlined"
-                      fullWidth
-                      size="small"
-                      onChange={handleSearchTerm}
-                      value={searchTerm}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            {!searchLoading ? (
-                              <iconSearch.react
-                                tag="div"
-                                className="icon-white logo-alignment-style"
-                              />
-                            ) : (
-                              <CircularProgress
-                                size={16}
-                                aria-label="Loading Spinner"
-                                data-testid="loader"
-                              />
-                            )}
-                          </InputAdornment>
-                        ),
-                        endAdornment: searchTerm && (
-                          <IconButton
-                            aria-label="toggle password visibility"
-                            onClick={handleSearchClear}
-                          >
-                            <iconSearchClear.react
-                              tag="div"
-                              className="icon-white logo-alignment-style search-clear-icon"
-                            />
-                          </IconButton>
-                        )
-                      }}
+                    <IconButton
+                    onClick={handleOpenSearch}
+                    aria-label="Open Dataplex Natural Language Search"
+                    className="dataplex-search-icon" // Add a class for specific styling if needed
+                  >
+                    {/* Reuse the existing iconSearch */}
+                    <iconSearch.react
+                      tag="div"
+                      className="icon-white logo-alignment-style"
                     />
+                  </IconButton>
                   </div>
                   <div className="tree-container">
                     {treeStructureData.length > 0 &&
@@ -1040,7 +1019,7 @@ const BigQueryComponent = ({
                           <Tree
                             className="dataset-tree"
                             data={treeStructureData}
-                            openByDefault={searchTerm === '' ? false : true}
+                            // openByDefault={searchTerm === '' ? false : true}
                             indent={24}
                             width={auto}
                             height={height}

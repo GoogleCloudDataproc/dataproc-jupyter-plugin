@@ -66,6 +66,7 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
+import { NaturalLanguageSearchWidget } from './bigQuery/naturalLanguageSearchWidget';
 
 
 const iconDpms = new LabIcon({
@@ -844,29 +845,56 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
     }
 
-     if (palette) {
+    //  if (palette) {
+    //   const command = 'jlab-examples:command-palette';
+
+    //   commands.addCommand(command, {
+    //     label: 'Google Data cloud : search for a Dataset',
+    //     caption: 'What Dataset are you looking for ?',
+    //     execute: (args: any) => {
+    //       console.log(
+    //         `jlab-examples:command-palette has been called ${args['origin']}.`
+    //       );
+
+    //       const content = new Widget();
+    //       content.node.innerHTML = '<h1>Hello World!</h1><p>This is your new tab.</p>';
+
+    //       const widget = new MainAreaWidget({ content });
+    //       widget.title.label = 'Search : dataset';
+    //       widget.title.closable = true;
+
+    //       app.shell.add(widget, 'main');
+    //     }
+    //   });
+
+    //   // Add the command to the command palette
+    //   const category = 'Extension Examples';
+    //   palette.addItem({ command, category, args: { origin: 'from palette' } });
+    // }
+    if (palette) {
       const command = 'jlab-examples:command-palette';
 
       commands.addCommand(command, {
         label: 'Google Data cloud : search for a Dataset',
         caption: 'What Dataset are you looking for ?',
         execute: (args: any) => {
-          console.log(
-            `jlab-examples:command-palette has been called ${args['origin']}.`
+          const content = new NaturalLanguageSearchWidget(
+            app as JupyterLab,
+            // settingRegistry as ISettingRegistry,
+            // bqFeature.enable_bigquery_integration as boolean,
+            themeManager
           );
 
-          const content = new Widget();
-          content.node.innerHTML = '<h1>Hello World!</h1><p>This is your new tab.</p>';
-
-          const widget = new MainAreaWidget({ content });
-          widget.title.label = 'Search : dataset';
+          const widget = new MainAreaWidget<NaturalLanguageSearchWidget>({ content });
+          
+          widget.title.label = 'Dataset Search';
+          widget.title.icon = iconDatasetExplorer;
           widget.title.closable = true;
 
           app.shell.add(widget, 'main');
         }
       });
 
-      // Add the command to the command palette
       const category = 'Extension Examples';
       palette.addItem({ command, category, args: { origin: 'from palette' } });
     }
