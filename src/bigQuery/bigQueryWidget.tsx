@@ -29,6 +29,7 @@ import searchIcon from '../../style/icons/search_icon.svg';
 import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
 import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
 // import searchClearIcon from '../../style/icons/search_clear_icon.svg';
+import datasetExplorerIcon from '../../style/icons/dataset_explorer_icon.svg';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { Menu, MenuItem } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
@@ -47,7 +48,7 @@ import { DataprocWidget } from '../controls/DataprocWidget';
 import { checkConfig, handleDebounce } from '../utils/utils';
 import LoginErrorComponent from '../utils/loginErrorComponent';
 import { BIGQUERY_API_URL } from '../utils/const';
-// import {NaturalLanguageSearchWidget} from './naturalLanguageSearchWidget'
+import { NaturalLanguageSearchWidget } from './naturalLanguageSearchWidget';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -65,6 +66,12 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
+
+const iconDatasetExplorer = new LabIcon({
+  name: 'launcher:dataset-explorer-icon',
+  svgstr: datasetExplorerIcon
+});
+
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
@@ -387,9 +394,6 @@ const BigQueryComponent = ({
   //   }
   // };
 
-  const handleOpenSearch=() => {
-    setIsSearchOpen(true)
-  }
 
   // const debouncedHandleSearch = debounce(handleSearch, 1000);
 
@@ -405,6 +409,19 @@ const BigQueryComponent = ({
   // };
 
   const openedWidgets: Record<string, boolean> = {};
+    const handleOpenSearch=() => {
+    setIsSearchOpen(true)
+        const content = new NaturalLanguageSearchWidget(
+          themeManager
+        );
+        const widget = new MainAreaWidget<NaturalLanguageSearchWidget>({ content });
+          widget.title.label = 'Dataset Search';
+          widget.title.icon = iconDatasetExplorer;
+          widget.title.closable = true;
+
+          app.shell.add(widget, 'main');
+    
+  }
   const handleNodeClick = (node: NodeApi) => {
     const depth = calculateDepth(node);
     const widgetTitle = node.data.name;

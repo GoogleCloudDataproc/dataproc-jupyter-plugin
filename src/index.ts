@@ -879,7 +879,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         caption: 'What Dataset are you looking for ?',
         execute: (args: any) => {
           const content = new NaturalLanguageSearchWidget(
-            app as JupyterLab,
+            // app as JupyterLab,
             // settingRegistry as ISettingRegistry,
             // bqFeature.enable_bigquery_integration as boolean,
             themeManager

@@ -1,5 +1,5 @@
 import { Panel } from '@lumino/widgets'; 
-import { JupyterLab } from '@jupyterlab/application';
+// import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
 
 import { 
@@ -9,17 +9,17 @@ import {
 } from './naturalLanguageFilterPanel'; 
 import { NaturalLanguageSearchPanel, ISearchResult } from './naturalLanguageSearchPanel'; 
 
-const TOGGLE_FILTER_COMMAND = 'bigquery:toggle-nl-search-filters';
+// const TOGGLE_FILTER_COMMAND = 'bigquery:toggle-nl-search-filters';
 
 export class NaturalLanguageSearchWidget extends Panel { 
-  private app: JupyterLab;
+  // private app: JupyterLab;
   private filterPanel: NaturalLanguageSearchFilterPanel;
   private searchPanel: NaturalLanguageSearchPanel;
   private currentQuery: string = '';
 
-  constructor(app: JupyterLab, themeManager: IThemeManager, initialSearchTerm: string = '') {
+  constructor(themeManager: IThemeManager, initialSearchTerm: string = '') {
     super(); 
-    this.app = app;
+    // this.app = app;
     this.currentQuery = initialSearchTerm;
 
     this.title.label = 'NL Dataset Search';
@@ -67,7 +67,7 @@ export class NaturalLanguageSearchWidget extends Panel {
   
   private handleFilterButtonClick(): void {
     // This part is retained if the search panel button should toggle the filter visibility
-    this.app.commands.execute(TOGGLE_FILTER_COMMAND);
+    // this.app.commands.execute(TOGGLE_FILTER_COMMAND);
   }
   
   private runSearch(): void {
