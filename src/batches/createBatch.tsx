@@ -282,7 +282,8 @@ function CreateBatch({
   const [networkTagsDuplicateValidation, setNetworkTagsDuplicateValidation] =
     useState(false);
   const [keylist, setKeylist] = useState<string[]>([]);
-  const [isloadingNetwork, setIsloadingNetwork] = useState(false);
+  const [isloadingNetwork, setIsloadingNetwork] = useState(true);
+  const [isloadingSubNetwork, setIsloadingSubNetwork] = useState(true);
   const [selectedNetworkRadio, setSelectedNetworkRadio] = useState<
     'sharedVpc' | 'projectNetwork'
   >('projectNetwork');
@@ -299,7 +300,7 @@ function CreateBatch({
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [enableLink, setEnableLink] = useState('');
   const [lightningEngineEnabled, setLightningEngineEnabled] = useState(false);
-  const [dataprocTierSelected, setDataprocTierSelected] = useState('standard');
+  const [dataprocTierSelected, setDataprocTierSelected] = useState('standard'); 
   const runtimeOptions = [
     {
       value: '2.3',
@@ -384,6 +385,17 @@ function CreateBatch({
     setServiceAccountSelected('');
     setUserAccountSelected(e.target.value);
   };
+
+  const renderLoadingLabel = (label: string, isLoading: boolean) => {
+  return isLoading ? (
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      {label} <CircularProgress size={16} style={{ marginLeft: '8px' }} />
+    </div>
+  ) : (
+    label
+  );
+};
+
   useEffect(() => {
     if (keyRingSelected !== '') {
       listKeysAPI(keyRingSelected);
@@ -745,14 +757,14 @@ function CreateBatch({
   };
 
   const listSubNetworksAPI = async (subnetwork: string) => {
-    await BatchService.listSubNetworksAPIService(
-      subnetwork,
-      setSubNetworklist,
-      setSubNetworkSelected,
-      batchInfoResponse,
-      setIsloadingNetwork
-    );
-  };
+  await BatchService.listSubNetworksAPIService(
+    subnetwork,
+    setSubNetworklist,
+    setSubNetworkSelected,
+    batchInfoResponse,
+    setIsloadingSubNetwork
+  );
+};
 
   const regionListAPI = async (
     projectId: string,
@@ -1828,86 +1840,93 @@ function CreateBatch({
               </div>
             </div>
           </div>
-          <div>
-            {selectedNetworkRadio === 'projectNetwork' && (
-              <div className="create-batch-network">
-                {isloadingNetwork ? (
-                  <div className="metastore-loader">
-                    <CircularProgress
-                      size={25}
-                      aria-label="Loading Spinner"
-                      data-testid="loader"
+      <div>
+        {selectedNetworkRadio === 'projectNetwork' && (
+       <div className="create-batch-network">
+                      <div className="select-text-overlay">
+                        <Autocomplete
+                          options={networkList}
+                          value={networkSelected}
+                          onChange={(_event, val) => handleNetworkChange(val)}
+                          renderInput={params => (
+                            <TextField
+                              {...params}
+                              label={renderLoadingLabel('Primary network*', isloadingNetwork)}
+                              disabled={isloadingNetwork}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="select-text-overlay subnetwork-style">
+                        <Autocomplete
+                          options={subNetworkList}
+                          value={subNetworkSelected}
+                          onChange={(_event, val) =>
+                            handleSubNetworkChange(val)
+                          }
+                          renderInput={params => (
+                            <TextField
+                              {...params}
+                              label={renderLoadingLabel('Subnetwork*', isloadingSubNetwork)}
+                              disabled={isloadingSubNetwork}
+                            />
+                          )}
+                        />
+                      </div>
+                    
+                  </div>
+                )}
+                {!isloadingNetwork && selectedNetworkRadio === 'projectNetwork' &&
+                  networkList.length === 0 && (
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        No local networks are available.
+                      </div>
+                    </div>
+                  )}
+                {!isloadingNetwork && !isloadingSubNetwork &&
+                  selectedNetworkRadio === 'projectNetwork' &&
+                  networkSelected !== '' &&
+                  subNetworkSelected === '' && (
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        Please select a valid network and subnetwork.
+                      </div>
+                    </div>
+                  )}
+                {selectedNetworkRadio === 'sharedVpc' && (
+                  <div className="select-text-overlay">
+                    <Autocomplete
+                      options={sharedSubNetworkList}
+                      value={sharedvpcSelected}
+                      onChange={(_event, val) => handleSharedSubNetwork(val)}
+                      renderInput={params => (
+                        <TextField {...params} label="Shared subnetwork" />
+                      )}
                     />
                   </div>
-                ) : (
-                  <>
-                    <div className="select-text-overlay">
-                      <Autocomplete
-                        options={networkList}
-                        value={networkSelected}
-                        onChange={(_event, val) => handleNetworkChange(val)}
-                        renderInput={params => (
-                          <TextField {...params} label="Primary network*" />
-                        )}
-                      />
-                    </div>
-                    <div className="select-text-overlay subnetwork-style">
-                      <Autocomplete
-                        options={subNetworkList}
-                        value={subNetworkSelected}
-                        onChange={(_event, val) => handleSubNetworkChange(val)}
-                        renderInput={params => (
-                          <TextField {...params} label="subnetwork" />
-                        )}
-                      />
-                    </div>
-                  </>
                 )}
-              </div>
-            )}
-            {selectedNetworkRadio === 'projectNetwork' &&
-              networkList.length === 0 && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    No local networks are available.
-                  </div>
-                </div>
-              )}
-            {!isloadingNetwork &&
-              selectedNetworkRadio === 'projectNetwork' &&
-              networkList.length !== 0 &&
-              subNetworkList.length === 0 && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    Please select a valid network and subnetwork.
-                  </div>
-                </div>
-              )}
-
-            {selectedNetworkRadio === 'sharedVpc' && (
-              <div className="select-text-overlay">
-                <Autocomplete
-                  options={sharedSubNetworkList}
-                  value={sharedvpcSelected}
-                  onChange={(_event, val) => handleSharedSubNetwork(val)}
-                  renderInput={params => (
-                    <TextField {...params} label="Shared subnetwork" />
+                {selectedNetworkRadio === 'sharedVpc' &&
+                  sharedSubNetworkList.length === 0 && (
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        No shared subnetworks are available in this region.
+                      </div>
+                    </div>
                   )}
-                />
               </div>
-            )}
-            {selectedNetworkRadio === 'sharedVpc' &&
-              sharedSubNetworkList.length === 0 && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">
-                    No shared subnetworks are available in this region.
-                  </div>
-                </div>
-              )}
-          </div>
           <div className="select-text-overlay">
             <MuiChipsInput
               className="select-job-style"

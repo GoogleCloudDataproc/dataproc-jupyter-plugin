@@ -586,10 +586,16 @@ export class BatchService {
     setIsloadingNetwork: (value: boolean) => void
   ) => {
     setIsloadingNetwork(true);
-    const credentials = await authApi();
-    const { COMPUTE } = await gcpServiceUrls;
-    if (credentials) {
-      loggedFetch(
+    try {
+      const credentials = await authApi();
+      const { COMPUTE } = await gcpServiceUrls;
+
+      if (!credentials) {
+        setIsloadingNetwork(false);
+        return;
+      }
+
+      const response = await loggedFetch(
         `${COMPUTE}/projects/${credentials.project_id}/global/networks`,
         {
           headers: {
@@ -597,51 +603,57 @@ export class BatchService {
             Authorization: API_HEADER_BEARER + credentials.access_token
           }
         }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(
-              (responseResult: {
-                items: Network[];
-                error: {
-                  message: string;
-                  code: number;
-                };
-              }) => {
-                let transformedNetworkList = [];
-                /*
-       Extracting network from items
-       Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-    */
+      );
 
-                transformedNetworkList = responseResult.items.map(
-                  (data: Network) => {
-                    return data.selfLink.split('/')[9];
-                  }
-                );
-                setNetworklist(transformedNetworkList);
-                if (batchInfoResponse === undefined) {
-                  setNetworkSelected(transformedNetworkList[0]);
-                }
-                if (responseResult?.error?.code) {
-                  Notification.emit(responseResult?.error?.message, 'error', {
-                    autoClose: 5000
-                  });
-                }
-              }
-            )
+      const responseResult: {
+        items: Network[];
+        error: {
+          message: string;
+          code: number;
+        };
+      } = await response.json();
 
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
-          Notification.emit(`Error listing Networks : ${err}`, 'error', {
+      if (responseResult?.error?.code) {
+        Notification.emit(responseResult.error.message, 'error', {
+          autoClose: 5000
+        });
+      }
+      else if (responseResult.items) {
+        /*
+         Extracting network from items
+         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
+        */
+       
+        const transformedNetworkList = responseResult.items.map(
+          (data: Network) => {
+            return data.selfLink.split('/')[9];
+          }
+        );
+        setNetworklist(transformedNetworkList);
+
+        if (batchInfoResponse === undefined && transformedNetworkList.length > 0) {
+          setNetworkSelected(transformedNetworkList[0]);
+        }
+        else if (transformedNetworkList.length === 0) {
+          DataprocLoggingService.log('No networks found (empty list).', LOG_LEVEL.ERROR);
+          Notification.emit('No networks found.', 'error', {
             autoClose: 5000
           });
+        }
+      }
+      else {
+        DataprocLoggingService.log('No networks found in response.', LOG_LEVEL.ERROR);
+        Notification.emit('No networks found.', 'error', {
+          autoClose: 5000
         });
+      }
+    } catch (err) {
+      DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
+      Notification.emit(`Error listing Networks : ${err}`, 'error', {
+        autoClose: 5000
+      });
+    } finally {
+      setIsloadingNetwork(false);
     }
   };
 
@@ -756,15 +768,15 @@ export class BatchService {
     setSubNetworklist: (value: string[]) => void,
     setSubNetworkSelected: (value: string) => void,
     batchInfoResponse: any,
-    setIsloadingNetwork: (value: boolean) => void
+    setIsloadingSubNetwork: (value: boolean) => void
   ) => {
-    setIsloadingNetwork(true);
+    setIsloadingSubNetwork(true);
     setSubNetworklist([]);
     setSubNetworkSelected('');
     const credentials = await authApi();
     const { COMPUTE } = await gcpServiceUrls;
     if (!credentials) {
-      setIsloadingNetwork(false);
+      setIsloadingSubNetwork(false);
       return;
     }
     try {
@@ -782,14 +794,14 @@ export class BatchService {
         Notification.emit(responseResult.error.message, 'error', {
           autoClose: 5000
         });
-        setIsloadingNetwork(false);
+        setIsloadingSubNetwork(false);
         return;
       }
       if (!responseResult.items || responseResult.items.length === 0) {
         const errorMessage = `No subnetworks found for network "${network}"`;
         Notification.emit(errorMessage, 'error', { autoClose: 5000 });
         DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
-        setIsloadingNetwork(false);
+        setIsloadingSubNetwork(false);
         return;
       }
       const networkSubnets = responseResult.items.filter(
@@ -799,7 +811,7 @@ export class BatchService {
         const errorMessage = `No subnetworks found for network "${network}"`;
         Notification.emit(errorMessage, 'error', { autoClose: 5000 });
         DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
-        setIsloadingNetwork(false);
+        setIsloadingSubNetwork(false);
         return;
       }
       const filteredServices = networkSubnets.filter(
@@ -819,11 +831,11 @@ export class BatchService {
           DataprocLoggingService.log(errorMessage, LOG_LEVEL.ERROR);
         }
       }
-      setIsloadingNetwork(false);
+      setIsloadingSubNetwork(false);
     } catch (err) {
       console.error('Error listing subNetworks:', err);
       DataprocLoggingService.log('Error listing subNetworks', LOG_LEVEL.ERROR);
-      setIsloadingNetwork(false);
+      setIsloadingSubNetwork(false);
       const errorMessage =
         err instanceof Error
           ? `Error listing subNetworks: ${err.message}`
