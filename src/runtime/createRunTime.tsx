@@ -889,7 +889,7 @@ function CreateRunTime({
         network
       );
       
-      setServicesList(transformedServiceList);
+      transformedServiceList.length != 0  ? setServicesList(transformedServiceList) : null;
 
     } catch (error) {
       console.error(error);

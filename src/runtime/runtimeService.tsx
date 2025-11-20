@@ -603,6 +603,12 @@ export class RunTimeSerive {
     }
   };
 
+  static logListMetastoreServicesError(code: string, message: string) {
+    const errMsg = `Error listing Metastore services (${code}): ${message}`;
+    DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
+    return [];
+  }
+
   static listMetaStoreAPIService = async (
     projectId: string,
     location: string,
@@ -628,11 +634,25 @@ export class RunTimeSerive {
         }
       );
 
-      const responseResult: { services: { name: string; network: string; hiveMetastoreConfig: { endpointProtocol: string }; }[]; error: { message: string; code: number; }; } = await response.json();
+      const responseResult: {
+        services: {
+          name: string;
+          network: string;
+          hiveMetastoreConfig: {
+            endpointProtocol: string;
+          };
+        }[];
+        error: {
+          message: string;
+          code: number;
+        };
+      } = await response.json();
 
       if (responseResult?.error?.code) {
-        const errMsg = `Metastores listing error (${responseResult.error.code}): ${responseResult.error.message}`;
-        DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
+        return this.logListMetastoreServicesError(
+          String(responseResult.error.code),
+          responseResult.error.message
+        );
       }
 
       // Filter based on endpointProtocol and network
@@ -655,9 +675,7 @@ export class RunTimeSerive {
 
       return transformedServiceList;
     } catch (err: any) {
-      const errMsg = `Metastores listing error (${err?.code ?? 'unknown'}): ${err?.message ?? String(err)}`;
-      DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
-      return transformedServiceList;
+      return this.logListMetastoreServicesError(err?.code ?? 'unknown', err?.message ?? String(err));
     }
   };
   
@@ -702,9 +720,7 @@ export class RunTimeSerive {
 
       return transformedServiceList;
     } catch (err: any) {
-      const errMsg = `Metastores listing error (${err?.code ?? 'unknown'}): ${err?.message ?? String(err)}`;
-      DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
-      return transformedServiceList;
+      return this.logListMetastoreServicesError(err?.code ?? 'unknown', err?.message ?? String(err));
     }
   };
 
