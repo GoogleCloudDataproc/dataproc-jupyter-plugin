@@ -41,7 +41,8 @@ import {
   META_STORE_TYPES,
   SPARK_META_STORE_INFO_URL,
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
-  LIGHTNING_ENGINE_DOC
+  LIGHTNING_ENGINE_DOC,
+  METASTORE_LOADING_LABEL
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -170,7 +171,7 @@ function CreateRunTime({
   const [servicesList, setServicesList] = useState<string[]>([]);
   const [servicesSelected, setServicesSelected] = useState('');
   const [clusterSelected, setClusterSelected] = useState('');
-  const [projectId, setProjectId] = useState<string | null>('');
+  const [projectId, setProjectId] = useState<string>('');
   const [region, setRegion] = useState('');
   const [containerImageSelected, setContainerImageSelected] = useState('');
   const [serviceAccountSelected, setServiceAccountSelected] = useState('');
@@ -864,16 +865,37 @@ function CreateRunTime({
     );
   };
 
-  const regionListAPI = async (
-    projectId: string,
-    network: string | undefined
-  ) => {
-    await RunTimeSerive.regionListAPIService(
-      projectId,
-      network,
-      setIsLoadingService,
-      setServicesList
-    );
+  const regionListAPI = async (projectId: string, network: string | undefined) => {
+    const credentials = await authApi();
+    const regionId = credentials?.region_id ?? '';
+
+    // Enabling main spinner
+    setIsLoadingService(true);
+    try {
+      let transformedServiceList: string[] = [];
+      transformedServiceList = await RunTimeSerive.listMetaStoreAPIService(
+        projectId,
+        regionId,
+        network
+      );
+      transformedServiceList = [...transformedServiceList, METASTORE_LOADING_LABEL];
+      setServicesList(transformedServiceList);
+
+      // Removing main spinner
+      setIsLoadingService(false);
+      
+      transformedServiceList = await RunTimeSerive.regionListAPIService(
+        projectId,
+        network
+      );
+      
+      transformedServiceList.length != 0  ? setServicesList(transformedServiceList) : null;
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoadingService(false);
+    }
   };
 
   const listKeyRingsAPI = async () => {
@@ -1301,6 +1323,11 @@ function CreateRunTime({
         const inputValueHourAuto = Number(autoTimeSelected) * 3600;
         const inputValueMinAuto = Number(autoTimeSelected) * 60;
 
+        // Normalize staging bucket for payload: remove leading 'gs://' if present
+        const stagingBucketPayload = stagingBucket
+          ? stagingBucket.trim().replace(/^gs:\/\//, '')
+          : '';
+
         const payload = {
           name: `projects/${credentials.project_id}/locations/${credentials.region_id}/sessionTemplates/${runTimeSelected}`,
           description: desciptionSelected,
@@ -1385,7 +1412,7 @@ function CreateRunTime({
                   user_workload_authentication_type: 'END_USER_CREDENTIALS'
                 }
               }),
-              ...(stagingBucket && { stagingBucket: stagingBucket })
+              ...(stagingBucketPayload && { stagingBucket: stagingBucketPayload })
             },
             peripheralsConfig: {
               ...(metastoreType && {
@@ -2225,26 +2252,50 @@ function CreateRunTime({
                     />
                   </div>
 
-                  <div className="select-text-overlay">
+                    <div className="select-text-overlay">
                     {isLoadingService ? (
                       <div className="metastore-loader">
-                        <CircularProgress
-                          size={25}
-                          aria-label="Loading Spinner"
-                          data-testid="loader"
-                        />
+                      <CircularProgress
+                        size={25}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                      />
                       </div>
                     ) : (
                       <Autocomplete
-                        options={servicesList}
-                        value={servicesSelected}
-                        onChange={(_event, val) => handleServiceSelected(val)}
-                        renderInput={params => (
-                          <TextField {...params} label="Metastore service" />
-                        )}
+                      options={servicesList}
+                      value={servicesSelected}
+                      onChange={(_event, val) => {
+                        if (typeof val === 'string' && val === METASTORE_LOADING_LABEL) {
+                        // don't select the loading placeholder
+                        return;
+                        }
+                        handleServiceSelected(val);
+                      }}
+                      getOptionDisabled={(option) =>
+                        typeof option === 'string' && option === METASTORE_LOADING_LABEL
+                      }
+                      renderOption={(props, option) =>
+                        typeof option === 'string' && option === METASTORE_LOADING_LABEL ? (
+                          <li
+                            {...props}
+                            key="loading-meta"
+                            aria-disabled="true"
+                            style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: 0.9 }}
+                          >
+                            <CircularProgress size={16} />
+                            <span>{METASTORE_LOADING_LABEL}</span>
+                          </li>
+                        ) : (
+                          <li {...props}>{option}</li>
+                        )
+                      }
+                      renderInput={params => (
+                        <TextField {...params} label="Metastore service" />
+                      )}
                       />
                     )}
-                  </div>
+                    </div>
                 </>
               )}
 
