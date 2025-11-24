@@ -103,3 +103,56 @@
   overflow-y: auto;
   max-height: 85vh;
 }
+/* 1. Centering the Button Container */
+.search-button {
+    width: 100%; 
+    /* KEY: Centers the inline/inline-block elements (like the <button>) horizontally */
+    text-align: center;
+    /* Ensures the container takes full width to allow centering */
+    margin-top: 20px;
+    margin-left: 45px;
+}
+
+/* 2. Main Button Styling & Internal Alignment */
+.dataplex-search-button {
+    /* For aligning the inner content (icon and text) */
+    display: flex;
+    align-items: center; /* Vertically center the content */
+    justify-content: center; /* Horizontally center the content */
+
+    /* Appearance and Dimensions */
+    width: 120px; /* Adjusted for icon + text */
+    height: 40px;
+    border-radius: 4px;
+    background-color: #1a73e8; /* Google Blue */
+    color: #ffffff;            /* White text/icon */
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3);
+    
+    /* Ensures it is never disabled visually or interactively */
+    opacity: 1;
+    pointer-events: auto;
+    
+    /* Smooth transition for hover */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 3. Icon and Text Alignment Wrapper */
+.button-content {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Spacing between the icon and the text */
+}
+
+/* 4. Text and Icon Specific Styles */
+.button-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.button-icon {
+    /* Ensures the icon's size */
+    font-size: 18px; 
+}
