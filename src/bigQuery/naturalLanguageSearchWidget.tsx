@@ -1,6 +1,7 @@
 import { Panel } from '@lumino/widgets'; 
-// import { JupyterLab } from '@jupyterlab/application';
+import { JupyterLab } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import { 
   NaturalLanguageSearchFilterPanel, 
@@ -12,14 +13,19 @@ import { NaturalLanguageSearchPanel, ISearchResult } from './naturalLanguageSear
 // const TOGGLE_FILTER_COMMAND = 'bigquery:toggle-nl-search-filters';
 
 export class NaturalLanguageSearchWidget extends Panel { 
-  // private app: JupyterLab;
+  private app: JupyterLab;
+  private settingRegistry: ISettingRegistry;
   private filterPanel: NaturalLanguageSearchFilterPanel;
   private searchPanel: NaturalLanguageSearchPanel;
   private currentQuery: string = '';
 
-  constructor(themeManager: IThemeManager, initialSearchTerm: string = '') {
+  constructor(app: JupyterLab,
+    settingRegistry: ISettingRegistry,
+    themeManager: IThemeManager, 
+    initialSearchTerm: string = '') {
     super(); 
-    // this.app = app;
+   this.app = app;
+    this.settingRegistry = settingRegistry;
     this.currentQuery = initialSearchTerm;
 
     this.title.label = 'NL Dataset Search';
@@ -34,7 +40,11 @@ export class NaturalLanguageSearchWidget extends Panel {
     // 2. Instantiate Children
     this.filterPanel = new NaturalLanguageSearchFilterPanel();
     // Pass initialQuery to the SearchPanel constructor
-    this.searchPanel = new NaturalLanguageSearchPanel(initialSearchTerm); 
+   this.searchPanel = new NaturalLanguageSearchPanel(
+      this.app, // Added
+      this.settingRegistry, // Added
+      initialSearchTerm
+    );
     
     // 3. Add Children
     this.addWidget(this.filterPanel); 
@@ -76,8 +86,14 @@ export class NaturalLanguageSearchWidget extends Panel {
     
     // --- Mock API Response ---
     const mockResults: ISearchResult[] = [
-        { name: `${query} (Filtered by ${filters.type || 'All'})` },
-        { name: 'Dataset B' }
+        { 
+            name: `Mock Result 1: ${query} (Filtered by ${filters.type || 'All'})`,
+            description: 'gcp-project-123 > us' // ADDED description field
+        },
+        { 
+            name: 'Mock Result 2 (Dataset B)',
+            description: 'other-project-456 > eu' // ADDED description field
+        }
     ];
 
     // Pass results to the SearchPanel for rendering

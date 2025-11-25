@@ -409,7 +409,11 @@ const BigQueryComponent = ({
   const openedWidgets: Record<string, boolean> = {};
   const handleOpenSearch = () => {
     setIsSearchOpen(true);
-    const content = new NaturalLanguageSearchWidget(themeManager);
+    const content = new NaturalLanguageSearchWidget(
+      app, // Added app
+      settingRegistry, // Added settingRegistry
+      themeManager
+    );
     const widget = new MainAreaWidget<NaturalLanguageSearchWidget>({ content });
     widget.title.label = 'Dataset Search';
     widget.title.icon = iconDatasetExplorer;

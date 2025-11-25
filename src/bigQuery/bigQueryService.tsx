@@ -26,6 +26,11 @@ interface IPreviewColumn {
   accessor: string;
 }
 
+interface IFilterArgs {
+  type: string;
+  system: string;
+}
+
 export class BigQueryService {
   static bigQueryPreviewAPIService = async (
     columns: IPreviewColumn[],
@@ -447,15 +452,17 @@ export class BigQueryService {
     }
   };
 
-  static getBigQuerySearchAPIService = async (
+  static getBigQuerySearchAPIService = async ( // handling search here
     searchTerm: string,
     setSearchLoading: (value: boolean) => void,
-    setSearchResponse: any
+    setSearchResponse: any,
+    filters: IFilterArgs
   ) => {
     setSearchLoading(true);
     try {
       const data: any = await requestAPI(
-        `bigQuerySearch?search_string=${searchTerm}&type=(table|dataset)&system=bigquery`,
+        `bigQuerySearch?search_string=${searchTerm}&type=${filters.type}&system=${filters.system}`, // <-- Dynamically constructs URL
+        // `bigQuerySearch?search_string=${searchTerm}&type=(table|dataset)&system=bigquery`,
         {
           method: 'POST'
         }
