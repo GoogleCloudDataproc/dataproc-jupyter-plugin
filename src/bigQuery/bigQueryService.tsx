@@ -456,7 +456,7 @@ export class BigQueryService {
     searchTerm: string,
     setSearchLoading: (value: boolean) => void,
     setSearchResponse: any,
-    filters: IFilterArgs
+    filters: IFilterArgs,
   ) => {
     setSearchLoading(true);
     try {
