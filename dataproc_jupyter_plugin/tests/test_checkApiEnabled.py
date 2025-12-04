@@ -7,6 +7,7 @@ async def test_check_api_controller_success_enabled(jp_fetch, monkeypatch):
     """Test successful API check when service is enabled."""
     mock_run_gcloud = AsyncMock(return_value="dataproc.googleapis.com\n")
     mock_gcp_project = AsyncMock(return_value="my-project-123")
+    mock_dataproc_url = AsyncMock(return_value="https://dataproc.googleapis.com/")
 
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.controllers.checkApiEnabled.async_run_gcloud_subcommand",
@@ -14,6 +15,9 @@ async def test_check_api_controller_success_enabled(jp_fetch, monkeypatch):
     )
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.urls.gcp_service_url", mock_dataproc_url
     )
 
     body = urlencode({"service_name": "dataproc.googleapis.com"})
@@ -39,6 +43,7 @@ async def test_check_api_controller_success_disabled(jp_fetch, monkeypatch):
     """Test successful API check when service is disabled."""
     mock_run_gcloud = AsyncMock(return_value="")
     mock_gcp_project = AsyncMock(return_value="my-project-123")
+    mock_dataproc_url = AsyncMock(return_value="https://storage.googleapis.com/")
 
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.controllers.checkApiEnabled.async_run_gcloud_subcommand",
@@ -46,6 +51,9 @@ async def test_check_api_controller_success_disabled(jp_fetch, monkeypatch):
     )
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.urls.gcp_service_url", mock_dataproc_url
     )
 
     body = urlencode({"service_name": "storage.googleapis.com"})
