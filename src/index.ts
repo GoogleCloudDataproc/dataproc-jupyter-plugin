@@ -21,7 +21,7 @@ import {
   JupyterLab,
   ILabShell
 } from '@jupyterlab/application';
-import { MainAreaWidget, IThemeManager } from '@jupyterlab/apputils';
+import { MainAreaWidget, IThemeManager, ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IMainMenu } from '@jupyterlab/mainmenu';
@@ -66,6 +66,8 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
+import { NaturalLanguageSearchWidget } from './bigQuery/naturalLanguageSearchWidget';
+
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -92,7 +94,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     INotebookTracker,
     IThemeManager,
     ISettingRegistry,
-    IDocumentManager
+    IDocumentManager,
+    ICommandPalette
   ],
   activate: async (
     app: JupyterFrontEnd,
@@ -104,7 +107,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     notebookTracker: INotebookTracker,
     themeManager: IThemeManager,
     settingRegistry: ISettingRegistry,
-    documentManager: IDocumentManager
+    documentManager: IDocumentManager,
+    palette: ICommandPalette
   ) => {
     DataprocLoggingService.attach();
     const { commands } = app;
@@ -839,6 +843,32 @@ const extension: JupyterFrontEndPlugin<void> = {
         category: TITLE_LAUNCHER_CATEGORY,
         rank: 3
       });
+    }
+    if (palette) {
+      const command = 'jlab-examples:command-palette';
+
+      commands.addCommand(command, {
+        label: 'Google Data cloud : search for a Dataset',
+        caption: 'What Dataset are you looking for ?',
+        execute: (args: any) => {
+          const content = new NaturalLanguageSearchWidget(
+            app as JupyterLab, // Passed here
+            settingRegistry as ISettingRegistry, // Passed here
+            themeManager
+          );
+
+          const widget = new MainAreaWidget<NaturalLanguageSearchWidget>({ content });
+          
+          widget.title.label = 'Dataset Search';
+          widget.title.icon = iconDatasetExplorer;
+          widget.title.closable = true;
+
+          app.shell.add(widget, 'main');
+        }
+      });
+
+      const category = 'Extension Examples';
+      palette.addItem({ command, category, args: { origin: 'from palette' } });
     }
 
     // the plugin depends on having a toast container, and Jupyter labs lazy
