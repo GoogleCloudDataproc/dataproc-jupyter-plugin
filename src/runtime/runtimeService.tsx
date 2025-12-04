@@ -728,6 +728,11 @@ export class RunTimeSerive {
     const credentials = await authApi();
     const { REGION_URL } = await gcpServiceUrls;
     let transformedServiceList: string[] = [];
+    let result: MetastoreServiceResponse = {
+      transformedServiceList: [],
+      isError: false,
+      message: ''
+    };
 
     if(!credentials) {
       return transformedServiceList;
@@ -754,7 +759,7 @@ export class RunTimeSerive {
 
       const servicePromises = transformedRegionList?.map(location =>
         this.listMetaStoreAPIService(projectId, location, network)
-      ) ?? response;
+      ) ?? result;
 
       const results = await Promise.all(servicePromises);
 

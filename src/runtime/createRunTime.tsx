@@ -1877,16 +1877,16 @@ function CreateRunTime({
                     </div>
                   </div>
                   <div className="error-key-parent">
-                    <div className="error-key-missing">
-                      The bucket name must follow{' '}
-                      <a
-                        href={STAGING_BUCKET_LEARN_MORE}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="learn-more-url"
-                      >
-                        GCS naming guidelines.
-                      </a>
+                    <div className="error-key-missing"> 
+                      The bucket name must follow 
+                    </div>
+                    <div
+                      className="learn-more-url"
+                      onClick={() => {
+                        window.open(`${STAGING_BUCKET_LEARN_MORE}`, '_blank');
+                      }}
+                    >
+                      GCS naming guidelines.
                     </div>
                   </div>
                 </div>
