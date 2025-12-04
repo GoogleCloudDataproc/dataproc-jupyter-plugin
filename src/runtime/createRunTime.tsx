@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IThemeManager, Notification } from '@jupyterlab/apputils';
 import {
@@ -199,6 +199,7 @@ function CreateRunTime({
   const [duplicateValidation, setDuplicateValidation] = useState(false);
   const [isloadingNetwork, setIsloadingNetwork] = useState(false);
   const [isloadingSubNetwork, setIsloadingSubNetwork] = useState(false);
+  const metastoreListRequestId = useRef(0);
   const [selectedNetworkRadio, setSelectedNetworkRadio] = useState<
     'sharedVpc' | 'projectNetwork'
   >('projectNetwork');
@@ -223,7 +224,9 @@ function CreateRunTime({
   const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
   const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
   const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
+  const bucketNameRegex = /^(?:gs:\/\/)?([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])$/i;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
+  const [isValidStagingBucketUrl, setIsValidStagingBucketUrl] = useState(false);
   const [expandMetastore, setExpandMetastore] = useState(false);
 
   const catalogNameRegEx = /^[a-zA-Z0-9_]*$/;
@@ -555,6 +558,11 @@ function CreateRunTime({
     setIsValidDataWareHouseUrl(url === '' ? false : gcsUrlRegex.test(url));
   };
 
+  const handleStagingBucketUrlChange = (url: string) => {
+    setStagingBucket(url);
+    setIsValidStagingBucketUrl(url === '' ? false : bucketNameRegex.test(url));
+  };
+
   const handleCatalogNameChange = (catalogName: string) => {
     setCatalogName(catalogName);
     setIsValidCatalogName(catalogName === '' ? false : catalogNameRegEx.test(catalogName));
@@ -865,7 +873,7 @@ function CreateRunTime({
     );
   };
 
-  const regionListAPI = async (projectId: string, network: string | undefined) => {
+  const regionListAPI = async (projectId: string, network: string | undefined, currentRequestId: number) => {
     const credentials = await authApi();
     const regionId = credentials?.region_id ?? '';
 
@@ -881,7 +889,6 @@ function CreateRunTime({
 
       if(response.isError){
         setServicesList([]);
-        setIsLoadingService(false);
         Notification.emit(response?.message ?? 'Unknown error', 'error', {
           autoClose: 5000
         });
@@ -899,7 +906,9 @@ function CreateRunTime({
         network
       );
       
-      transformedServiceList.length != 0  ? setServicesList(transformedServiceList) : null;
+      if (currentRequestId === metastoreListRequestId.current) {
+        transformedServiceList.length != 0  ? setServicesList(transformedServiceList) : null;
+      }
 
     } catch (error) {
       console.error(error);
@@ -993,7 +1002,8 @@ function CreateRunTime({
     setProjectId(data ?? '');
     setServicesList([]);
     setServicesSelected('');
-    regionListAPI(data, network);
+    metastoreListRequestId.current += 1;
+    regionListAPI(data, network, metastoreListRequestId.current);
   };
 
   const handleNetworkChange = async (data: DropdownProps | null) => {
@@ -1847,11 +1857,17 @@ function CreateRunTime({
                 <Input
                   className="create-runtime-style "
                   value={stagingBucket}
-                  onChange={e => setStagingBucket(e.target.value)}
+                  onChange={e => handleStagingBucketUrlChange(e.target.value)}
                   type="text"
                   Label="Staging Bucket"
                 />
               </div>
+              {!isValidStagingBucketUrl && (
+                <div className="error-key-parent">
+                  <iconError.react tag="div" className="logo-alignment-style" />
+                  <div className="error-key-missing">Input does not match pattern : gs://bucket-name (or) bucket-name</div>
+                </div>
+              )}
               <div className="select-text-overlay">
                 <Input
                   className="create-runtime-style "
