@@ -42,7 +42,8 @@ import {
   SPARK_META_STORE_INFO_URL,
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
   LIGHTNING_ENGINE_DOC,
-  METASTORE_LOADING_LABEL
+  METASTORE_LOADING_LABEL,
+  STAGING_BUCKET_LEARN_MORE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -999,11 +1000,13 @@ function CreateRunTime({
     setAutoSelected(data.value!.toString());
   };
   const handleProjectIdChange = (data: any, network: string | undefined) => {
-    setProjectId(data ?? '');
-    setServicesList([]);
-    setServicesSelected('');
-    metastoreListRequestId.current += 1;
-    regionListAPI(data, network, metastoreListRequestId.current);
+    if(data && data !== ''){
+      setProjectId(data ?? '');
+      setServicesList([]);
+      setServicesSelected('');
+      metastoreListRequestId.current += 1;
+      regionListAPI(data, network, metastoreListRequestId.current);
+    }
   };
 
   const handleNetworkChange = async (data: DropdownProps | null) => {
@@ -1116,6 +1119,7 @@ function CreateRunTime({
       autoValidation ||
       duplicateValidation ||
       versionBiglakeValidation ||
+      !isValidStagingBucketUrl ||
       (selectedNetworkRadio === 'sharedVpc' &&
         sharedSubNetworkList.length === 0) ||
       (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
@@ -1863,11 +1867,32 @@ function CreateRunTime({
                 />
               </div>
               {!isValidStagingBucketUrl && (
-                <div className="error-key-parent">
-                  <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">Input does not match pattern : gs://bucket-name (or) bucket-name</div>
+                <div>
+                  <div className="error-key-parent">
+                    <iconError.react tag="div" className="logo-alignment-style" />
+                    <div className="error-key-missing">
+                      Invalid bucket name or format. Use 'gs://bucket-name' or 'bucket-name'.
+                    </div>
+                  </div>
+                  <div className="error-key-parent">
+                    <div className="error-key-missing"> 
+                      The bucket name must follow 
+                    </div>
+                    <div
+                      className="learn-more-url"
+                      onClick={() => {
+                        window.open(`${STAGING_BUCKET_LEARN_MORE}`, '_blank');
+                      }}
+                    >
+                      GCS naming guidelines.
+                    </div>
+                  </div>
                 </div>
               )}
+
+              <div className="create-messagelist">
+                Cloud Storage bucket to be used for storing workload dependencies, job driver output, and config files.
+              </div>
               <div className="select-text-overlay">
                 <Input
                   className="create-runtime-style "
