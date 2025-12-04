@@ -104,6 +104,13 @@ interface DataprocApiStatusResponse {
   is_enabled: boolean;
   error?: string;
 }
+
+interface MetastoreServiceResponse {
+    transformedServiceList: string[];
+    isError: boolean;
+    message?: string; // Optional message for errors
+}
+
 export class RunTimeSerive {
   static deleteRuntimeTemplateAPI = async (
     selectedRuntimeTemplate: string,
@@ -627,24 +634,34 @@ export class RunTimeSerive {
     }
   };
 
-  static logListMetastoreServicesError(code: string, message: string) {
+  static logListMetastoreServicesError(result : MetastoreServiceResponse, code: string, message: string) {
     const errMsg = `Error listing Metastore services (${code}): ${message}`;
     DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
-    return [];
+    result.isError = (code === '200' || code === '') ? false : true;
+    result.message = errMsg;
+    return result;
   }
 
   static listMetaStoreAPIService = async (
     projectId: string,
     location: string,
     network: string | undefined,
-  ): Promise<string[]> => {
+  ): Promise<MetastoreServiceResponse> => {
     const credentials = await authApi();
     const { METASTORE } = await gcpServiceUrls;
     let filteredServicesArray: any = [];
     let transformedServiceList: string[] = [];
 
+    let result = {
+      transformedServiceList: filteredServicesArray, 
+            isError: false, 
+            message: ''
+    }
+
     if (!credentials) {
-      return filteredServicesArray;
+      result.isError = true;
+      result.message = 'Unable to retrieve credentials.';
+      return result;
     }
 
     try {
@@ -673,7 +690,7 @@ export class RunTimeSerive {
       } = await response.json();
 
       if (responseResult?.error?.code) {
-        return this.logListMetastoreServicesError(
+        this.logListMetastoreServicesError(result,
           String(responseResult.error.code),
           responseResult.error.message
         );
@@ -697,9 +714,10 @@ export class RunTimeSerive {
         (data: any) => (typeof data === 'string' ? data : data?.name ?? String(data))
       );
 
-      return transformedServiceList;
+      result.transformedServiceList = transformedServiceList;
+      return result;
     } catch (err: any) {
-      return this.logListMetastoreServicesError(err?.code ?? 'unknown', err?.message ?? String(err));
+      return this.logListMetastoreServicesError(result , err?.code ?? 'unknown', err?.message ?? String(err));
     }
   };
   
@@ -736,15 +754,19 @@ export class RunTimeSerive {
 
       const servicePromises = transformedRegionList?.map(location =>
         this.listMetaStoreAPIService(projectId, location, network)
-      ) ?? [];
+      ) ?? response;
 
       const results = await Promise.all(servicePromises);
 
-      transformedServiceList.push(...results.flat());
+      results.forEach(response => {
+        transformedServiceList.push(...response.transformedServiceList);
+      });
 
       return transformedServiceList;
     } catch (err: any) {
-      return this.logListMetastoreServicesError(err?.code ?? 'unknown', err?.message ?? String(err));
+      const errMsg = `Error listing Metastore services (${err?.code}): ${err?.message}`;
+      DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
+      return transformedServiceList;
     }
   };
 

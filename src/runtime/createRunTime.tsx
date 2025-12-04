@@ -873,12 +873,22 @@ function CreateRunTime({
     setIsLoadingService(true);
     try {
       let transformedServiceList: string[] = [];
-      transformedServiceList = await RunTimeSerive.listMetaStoreAPIService(
+      let response = await RunTimeSerive.listMetaStoreAPIService(
         projectId,
         regionId,
         network
       );
-      transformedServiceList = [...transformedServiceList, METASTORE_LOADING_LABEL];
+
+      if(response.isError){
+        setServicesList([]);
+        setIsLoadingService(false);
+        Notification.emit(response?.message ?? 'Unknown error', 'error', {
+          autoClose: 5000
+        });
+        return;
+      }
+
+      transformedServiceList = [...response.transformedServiceList, METASTORE_LOADING_LABEL];
       setServicesList(transformedServiceList);
 
       // Removing main spinner
@@ -2253,15 +2263,6 @@ function CreateRunTime({
                   </div>
 
                     <div className="select-text-overlay">
-                    {isLoadingService ? (
-                      <div className="metastore-loader">
-                      <CircularProgress
-                        size={25}
-                        aria-label="Loading Spinner"
-                        data-testid="loader"
-                      />
-                      </div>
-                    ) : (
                       <Autocomplete
                       options={servicesList}
                       value={servicesSelected}
@@ -2291,10 +2292,9 @@ function CreateRunTime({
                         )
                       }
                       renderInput={params => (
-                        <TextField {...params} label="Metastore service" />
+                        <TextField {...params} label={renderLoadingLabel('Metastore service', isLoadingService)}/>
                       )}
                       />
-                    )}
                     </div>
                 </>
               )}
