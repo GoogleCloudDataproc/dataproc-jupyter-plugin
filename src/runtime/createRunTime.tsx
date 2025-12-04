@@ -226,7 +226,7 @@ function CreateRunTime({
   const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
   const bucketNameRegex = /^(?:gs:\/\/)?([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])$/i;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
-  const [isValidStagingBucketUrl, setIsValidStagingBucketUrl] = useState(false);
+  const [isValidStagingBucketUrl, setIsValidStagingBucketUrl] = useState(true);
   const [expandMetastore, setExpandMetastore] = useState(false);
 
   const catalogNameRegEx = /^[a-zA-Z0-9_]*$/;
@@ -560,7 +560,7 @@ function CreateRunTime({
 
   const handleStagingBucketUrlChange = (url: string) => {
     setStagingBucket(url);
-    setIsValidStagingBucketUrl(url === '' ? false : bucketNameRegex.test(url));
+    setIsValidStagingBucketUrl(url === '' ? true : bucketNameRegex.test(url));
   };
 
   const handleCatalogNameChange = (catalogName: string) => {
