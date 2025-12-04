@@ -194,7 +194,7 @@
   color: var(--jp-ui-font-color0);
 }
 
-.submit-job-learn-more .staging-bukcet-learn-more {
+.submit-job-learn-more {
   color: #3367d6;
   text-decoration: underline;
   cursor: pointer;

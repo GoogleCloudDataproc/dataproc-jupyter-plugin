@@ -225,7 +225,7 @@ function CreateRunTime({
   const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
   const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
   const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
-  const bucketNameRegex = /^(?:gs:\/\/)?([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])$/i;
+  const bucketNameRegex = /^(?:gs:\/\/)?([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])$/;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
   const [isValidStagingBucketUrl, setIsValidStagingBucketUrl] = useState(true);
   const [expandMetastore, setExpandMetastore] = useState(false);
@@ -908,7 +908,9 @@ function CreateRunTime({
       );
       
       if (currentRequestId === metastoreListRequestId.current) {
-        transformedServiceList.length != 0  ? setServicesList(transformedServiceList) : null;
+        if (transformedServiceList.length !== 0) {
+          setServicesList(transformedServiceList);
+        }
       }
 
     } catch (error) {
@@ -1875,16 +1877,16 @@ function CreateRunTime({
                     </div>
                   </div>
                   <div className="error-key-parent">
-                    <div className="error-key-missing"> 
-                      The bucket name must follow 
-                    </div>
-                    <div
-                      className="learn-more-url"
-                      onClick={() => {
-                        window.open(`${STAGING_BUCKET_LEARN_MORE}`, '_blank');
-                      }}
-                    >
-                      GCS naming guidelines.
+                    <div className="error-key-missing">
+                      The bucket name must follow{' '}
+                      <a
+                        href={STAGING_BUCKET_LEARN_MORE}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="learn-more-url"
+                      >
+                        GCS naming guidelines.
+                      </a>
                     </div>
                   </div>
                 </div>

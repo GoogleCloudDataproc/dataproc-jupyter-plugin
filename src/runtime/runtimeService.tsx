@@ -637,7 +637,7 @@ export class RunTimeSerive {
   static logListMetastoreServicesError(result : MetastoreServiceResponse, code: string, message: string) {
     const errMsg = `Error listing Metastore services (${code}): ${message}`;
     DataprocLoggingService.log(errMsg, LOG_LEVEL.ERROR);
-    result.isError = (code === '200' || code === '') ? false : true;
+    result.isError = true;
     result.message = errMsg;
     return result;
   }
