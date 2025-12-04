@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IThemeManager, Notification } from '@jupyterlab/apputils';
 import {
@@ -200,7 +200,6 @@ function CreateRunTime({
   const [duplicateValidation, setDuplicateValidation] = useState(false);
   const [isloadingNetwork, setIsloadingNetwork] = useState(false);
   const [isloadingSubNetwork, setIsloadingSubNetwork] = useState(false);
-  const metastoreListRequestId = useRef(0);
   const [selectedNetworkRadio, setSelectedNetworkRadio] = useState<
     'sharedVpc' | 'projectNetwork'
   >('projectNetwork');
@@ -874,7 +873,7 @@ function CreateRunTime({
     );
   };
 
-  const regionListAPI = async (projectId: string, network: string | undefined, currentRequestId: number) => {
+  const regionListAPI = async (currentprojectId: string, network: string | undefined) => {
     const credentials = await authApi();
     const regionId = credentials?.region_id ?? '';
 
@@ -883,7 +882,7 @@ function CreateRunTime({
     try {
       let transformedServiceList: string[] = [];
       let response = await RunTimeSerive.listMetaStoreAPIService(
-        projectId,
+        currentprojectId,
         regionId,
         network
       );
@@ -903,11 +902,11 @@ function CreateRunTime({
       setIsLoadingService(false);
       
       transformedServiceList = await RunTimeSerive.regionListAPIService(
-        projectId,
+        currentprojectId,
         network
       );
       
-      if (currentRequestId === metastoreListRequestId.current) {
+      if (projectId === currentprojectId) {
         if (transformedServiceList.length !== 0) {
           setServicesList(transformedServiceList);
         }
@@ -1004,12 +1003,16 @@ function CreateRunTime({
   const handleProjectIdChange = (data: any, network: string | undefined) => {
     if(data && data !== ''){
       setProjectId(data ?? '');
-      setServicesList([]);
-      setServicesSelected('');
-      metastoreListRequestId.current += 1;
-      regionListAPI(data, network, metastoreListRequestId.current);
     }
   };
+
+  useEffect(() => {
+    if(projectId !== '' && networkSelected !== ''){
+      setServicesList([]);
+      setServicesSelected('');
+      regionListAPI(projectId, networkSelected);
+    }
+  }, [projectId, networkSelected]);
 
   const handleNetworkChange = async (data: DropdownProps | null) => {
     if (data !== null) {
