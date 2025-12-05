@@ -42,7 +42,8 @@ import {
   SPARK_META_STORE_INFO_URL,
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
   LIGHTNING_ENGINE_DOC,
-  METASTORE_LOADING_LABEL
+  METASTORE_LOADING_LABEL,
+  STAGING_BUCKET_LEARN_MORE
 } from '../utils/const';
 import LabelProperties from '../jobs/labelProperties';
 import {
@@ -223,7 +224,9 @@ function CreateRunTime({
   const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
   const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
   const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
+  const bucketNameRegex = /^(?:gs:\/\/)?([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])$/;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
+  const [isValidStagingBucketUrl, setIsValidStagingBucketUrl] = useState(true);
   const [expandMetastore, setExpandMetastore] = useState(false);
 
   const catalogNameRegEx = /^[a-zA-Z0-9_]*$/;
@@ -555,6 +558,11 @@ function CreateRunTime({
     setIsValidDataWareHouseUrl(url === '' ? false : gcsUrlRegex.test(url));
   };
 
+  const handleStagingBucketUrlChange = (url: string) => {
+    setStagingBucket(url);
+    setIsValidStagingBucketUrl(url === '' ? true : bucketNameRegex.test(url));
+  };
+
   const handleCatalogNameChange = (catalogName: string) => {
     setCatalogName(catalogName);
     setIsValidCatalogName(catalogName === '' ? false : catalogNameRegEx.test(catalogName));
@@ -865,7 +873,7 @@ function CreateRunTime({
     );
   };
 
-  const regionListAPI = async (projectId: string, network: string | undefined) => {
+  const regionListAPI = async (currentprojectId: string, network: string | undefined) => {
     const credentials = await authApi();
     const regionId = credentials?.region_id ?? '';
 
@@ -873,23 +881,36 @@ function CreateRunTime({
     setIsLoadingService(true);
     try {
       let transformedServiceList: string[] = [];
-      transformedServiceList = await RunTimeSerive.listMetaStoreAPIService(
-        projectId,
+      let response = await RunTimeSerive.listMetaStoreAPIService(
+        currentprojectId,
         regionId,
         network
       );
-      transformedServiceList = [...transformedServiceList, METASTORE_LOADING_LABEL];
+
+      if(response.isError){
+        setServicesList([]);
+        Notification.emit(response?.message ?? 'Unknown error', 'error', {
+          autoClose: 5000
+        });
+        return;
+      }
+
+      transformedServiceList = [...response.transformedServiceList, METASTORE_LOADING_LABEL];
       setServicesList(transformedServiceList);
 
       // Removing main spinner
       setIsLoadingService(false);
       
       transformedServiceList = await RunTimeSerive.regionListAPIService(
-        projectId,
+        currentprojectId,
         network
       );
       
-      transformedServiceList.length != 0  ? setServicesList(transformedServiceList) : null;
+      if (projectId === currentprojectId) {
+        if (transformedServiceList.length !== 0) {
+          setServicesList(transformedServiceList);
+        }
+      }
 
     } catch (error) {
       console.error(error);
@@ -980,11 +1001,18 @@ function CreateRunTime({
     setAutoSelected(data.value!.toString());
   };
   const handleProjectIdChange = (data: any, network: string | undefined) => {
-    setProjectId(data ?? '');
-    setServicesList([]);
-    setServicesSelected('');
-    regionListAPI(data, network);
+    if(data && data !== ''){
+      setProjectId(data ?? '');
+    }
   };
+
+  useEffect(() => {
+    if(projectId !== '' && networkSelected !== ''){
+      setServicesList([]);
+      setServicesSelected('');
+      regionListAPI(projectId, networkSelected);
+    }
+  }, [projectId, networkSelected]);
 
   const handleNetworkChange = async (data: DropdownProps | null) => {
     if (data !== null) {
@@ -1096,6 +1124,7 @@ function CreateRunTime({
       autoValidation ||
       duplicateValidation ||
       versionBiglakeValidation ||
+      !isValidStagingBucketUrl ||
       (selectedNetworkRadio === 'sharedVpc' &&
         sharedSubNetworkList.length === 0) ||
       (selectedNetworkRadio === 'sharedVpc' && sharedvpcSelected === '') ||
@@ -1837,10 +1866,37 @@ function CreateRunTime({
                 <Input
                   className="create-runtime-style "
                   value={stagingBucket}
-                  onChange={e => setStagingBucket(e.target.value)}
+                  onChange={e => handleStagingBucketUrlChange(e.target.value)}
                   type="text"
                   Label="Staging Bucket"
                 />
+              </div>
+              {!isValidStagingBucketUrl && (
+                <div>
+                  <div className="error-key-parent">
+                    <iconError.react tag="div" className="logo-alignment-style" />
+                    <div className="error-key-missing">
+                      Invalid bucket name or format. Use 'gs://bucket-name' or 'bucket-name'.
+                    </div>
+                  </div>
+                  <div className="error-key-parent">
+                    <div className="error-key-missing"> 
+                      The bucket name must follow 
+                    </div>
+                    <div
+                      className="learn-more-url"
+                      onClick={() => {
+                        window.open(`${STAGING_BUCKET_LEARN_MORE}`, '_blank');
+                      }}
+                    >
+                      GCS naming guidelines.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="create-messagelist">
+                Cloud Storage bucket to be used for storing workload dependencies, job driver output, and config files.
               </div>
               <div className="select-text-overlay">
                 <Input
@@ -2253,15 +2309,6 @@ function CreateRunTime({
                   </div>
 
                     <div className="select-text-overlay">
-                    {isLoadingService ? (
-                      <div className="metastore-loader">
-                      <CircularProgress
-                        size={25}
-                        aria-label="Loading Spinner"
-                        data-testid="loader"
-                      />
-                      </div>
-                    ) : (
                       <Autocomplete
                       options={servicesList}
                       value={servicesSelected}
@@ -2291,10 +2338,9 @@ function CreateRunTime({
                         )
                       }
                       renderInput={params => (
-                        <TextField {...params} label="Metastore service" />
+                        <TextField {...params} label={renderLoadingLabel('Metastore service', isLoadingService)}/>
                       )}
                       />
-                    )}
                     </div>
                 </>
               )}

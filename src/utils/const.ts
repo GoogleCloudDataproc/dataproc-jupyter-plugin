@@ -154,6 +154,8 @@ export const SECURITY_KEY =
   'https://console.cloud.google.com/security/kms/keyrings';
 export const SERVICE_ACCOUNT =
   'https://cloud.google.com/compute/docs/access/service-accounts';
+export  const STAGING_BUCKET_LEARN_MORE =
+  'https://cloud.google.com/storage/docs/buckets#naming';
 export const CUSTOM_CONTAINERS =
   'https://cloud.google.com/dataproc-serverless/docs/guides/custom-containers';
 export const SHARED_VPC = 'https://cloud.google.com/vpc/docs/shared-vpc';
