@@ -1875,21 +1875,17 @@ function CreateRunTime({
                 <div>
                   <div className="error-key-parent">
                     <iconError.react tag="div" className="logo-alignment-style" />
-                    <div className="error-key-missing">
+                    <div className="staging-bucket-error">
                       Invalid bucket name or format. Use 'gs://bucket-name' or 'bucket-name'.
-                    </div>
-                  </div>
-                  <div className="error-key-parent">
-                    <div className="error-key-missing"> 
                       The bucket name must follow 
-                    </div>
                     <div
-                      className="learn-more-url"
+                      className="gcs-guidelines-url"
                       onClick={() => {
                         window.open(`${STAGING_BUCKET_LEARN_MORE}`, '_blank');
                       }}
                     >
                       GCS naming guidelines.
+                      </div>
                     </div>
                   </div>
                 </div>
