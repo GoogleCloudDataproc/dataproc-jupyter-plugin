@@ -155,8 +155,8 @@ function CreateRunTime({
   const [expandAutoScaling, setExpandAutoScaling] = useState(false);
   const [expandGpu, setExpandGpu] = useState(false);
   const [gpuChecked, setGpuChecked] = useState(false);
-  const [propertyDetail, setPropertyDetail] = useState(['']);
-  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
+  const [propertyDetail, setPropertyDetail] = useState<string[]>([]);
+  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>([]);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [sparkValueValidation, setSparkValueValidation] = useState({
@@ -166,8 +166,8 @@ function CreateRunTime({
     metastore: []
   });
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
-  const [labelDetail, setLabelDetail] = useState(key);
-  const [labelDetailUpdated, setLabelDetailUpdated] = useState(value);
+  const [labelDetail, setLabelDetail] = useState<string[]>(key);
+  const [labelDetailUpdated, setLabelDetailUpdated] = useState<string[]>(value);
   const [servicesList, setServicesList] = useState<string[]>([]);
   const [servicesSelected, setServicesSelected] = useState('');
   const [clusterSelected, setClusterSelected] = useState('');
@@ -289,7 +289,6 @@ function CreateRunTime({
     : 'default');
   
     const updatedProperties = [lightningProperty, ...othersList];
-    setPropertyDetail(updatedProperties);
     setPropertyDetailUpdated(updatedProperties);
     return updatedProperties;
   }
@@ -337,6 +336,10 @@ function CreateRunTime({
   useEffect(() => {
     setLabelDetail(labelDetailUpdated);
   }, [labelDetailUpdated]);
+
+  useEffect(() => {
+    setPropertyDetail(propertyDetailUpdated);
+  }, [propertyDetailUpdated]);
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
