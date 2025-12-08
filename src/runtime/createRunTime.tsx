@@ -330,6 +330,14 @@ function CreateRunTime({
     initializeRuntime();
   }, [loggedIn, configError, loginError]);
 
+  // This "follower" useEffect ensures that the display state (labelDetail)
+  // is always synchronized with the draft state (labelDetailUpdated) after any "commit".
+  // This solves a race condition seen in certain environments where setting both states
+  // in the same function call would fail.
+  useEffect(() => {
+    setLabelDetail(labelDetailUpdated);
+  }, [labelDetailUpdated]);
+
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
       generateRandomHex();
@@ -614,14 +622,10 @@ function CreateRunTime({
           const updatedLabelDetail = Object.entries(
             selectedRuntimeClone.labels
           ).map(([k, v]) => `${k}:${v}`);
-          setLabelDetail(prevLabelDetail => [
-            ...prevLabelDetail,
-            ...updatedLabelDetail
-          ]);
-          setLabelDetailUpdated(prevLabelDetailUpdated => [
-            ...prevLabelDetailUpdated,
-            ...updatedLabelDetail
-          ]);
+
+          // This logic only sets the draft 'labelDetailUpdated' state.
+          // A separate useEffect hook will synchronize the display 'labelDetail' state to avoid a race condition.
+          setLabelDetailUpdated(updatedLabelDetail);
           for (const key in selectedRuntimeClone) {
             runtimeKeys.push(key);
           }
