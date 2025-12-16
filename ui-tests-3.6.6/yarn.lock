@@ -2440,9 +2440,9 @@ supports-color@^7.1.0:
     has-flag "^4.0.0"
 
 systeminformation@^5.8.6:
-  version "5.21.14"
-  resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.21.14.tgz#5ea98e6b25626c2b0e4db9abeebe843ffa73523c"
-  integrity sha512-f8BuxS78GvHFExMScOV6KufV+e/0aQEngmzqAujG6nrFngJoYC954+eU+98iDmxp0BrcxvLrfiVABOCAgib7XA==
+  version "5.27.14"
+  resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.27.14.tgz#9f2b181521c151dad4972d47936ebb49a3271e9d"
+  integrity sha512-3DoNDYSZBLxBwaJtQGWNpq0fonga/VZ47HY1+7/G3YoIPaPz93Df6egSzzTKbEMmlzUpy3eQ0nR9REuYIycXGg==
 
 topojson-client@^3.1.0:
   version "3.1.0"
