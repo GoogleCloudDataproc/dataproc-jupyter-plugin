@@ -13,7 +13,7 @@ test.describe('Runtime Template UI', () => {
 
     // Wait for the form to appear. 
     // The title is "Serverless Runtime Template"
-    await page.getByTestId('loader').waitFor({ state: 'detached' });
+    await page.getByText('Loading Runtime').waitFor({ state: 'detached' });
     await expect(page.getByText('Serverless Runtime Template')).toBeVisible();
 
     // --- Test Spark Properties (Others) ---
