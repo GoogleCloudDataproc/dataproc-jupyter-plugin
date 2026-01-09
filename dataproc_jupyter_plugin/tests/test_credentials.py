@@ -48,7 +48,6 @@ class TestGetCached(unittest.IsolatedAsyncioTestCase):
     async def test_get_cached(self):
         cached = await credentials.get_cached()
         self.assertEqual(cached["project_id"], "")
-        self.assertEqual(cached["project_number"], None)
         self.assertEqual(cached["access_token"], "example-token")
         self.assertEqual(cached["region_id"], "example-region")
         self.assertEqual(cached["login_error"], 0)

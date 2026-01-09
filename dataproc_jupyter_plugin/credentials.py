@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
+import cachetools
 from google.cloud.jupyter_config.config import (
     async_get_gcloud_config,
     async_run_gcloud_subcommand,
 )
-import logging
 
 
 async def _gcp_credentials():
@@ -27,16 +29,6 @@ async def _gcp_credentials():
 async def _gcp_project():
     """Helper method to get the project configured through gcloud"""
     return await async_get_gcloud_config("configuration.properties.core.project")
-
-
-async def _gcp_project_number():
-    """Helper method to get the project number for the project configured through gcloud"""
-    project = await _gcp_project()
-    if not project:
-        return None
-    return await async_run_gcloud_subcommand(
-        f'projects describe {project} --format="value(projectNumber)"'
-    )
 
 
 async def _gcp_region():
@@ -55,7 +47,6 @@ async def get_cached():
     Returns:
         A dictionary containing:
         - project_id: The GCP project ID
-        - project_number: The GCP project number
         - region_id: The default region
         - access_token: The access token for authentication
         - config_error: 1 if project or region are not configured, else 0
@@ -63,7 +54,6 @@ async def get_cached():
     """
     credentials = {
         "project_id": "",
-        "project_number": 0,
         "region_id": "",
         "access_token": "",
         "config_error": 0,
@@ -73,7 +63,6 @@ async def get_cached():
         credentials["project_id"] = await _gcp_project()
         credentials["region_id"] = await _gcp_region()
         credentials["access_token"] = await _gcp_credentials()
-        credentials["project_number"] = await _gcp_project_number()
     except Exception as ex:
         logging.error(f"Error getting gcloud config: {ex}")
     
