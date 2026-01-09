@@ -14,7 +14,6 @@
 
 import logging
 
-import cachetools
 from google.cloud.jupyter_config.config import (
     async_get_gcloud_config,
     async_run_gcloud_subcommand,
