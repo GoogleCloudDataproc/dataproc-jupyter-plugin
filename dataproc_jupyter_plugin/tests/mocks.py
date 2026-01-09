@@ -21,7 +21,6 @@ from dataproc_jupyter_plugin import credentials
 async def mock_credentials():
     return {
         "project_id": "credentials-project",
-        "project_number": 12345,
         "region_id": "mock-region",
         "access_token": "mock-token",
         "config_error": 0,
