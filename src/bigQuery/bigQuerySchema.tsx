@@ -116,7 +116,7 @@ const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
               <tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map(column => (
                   <th {...column.getHeaderProps()}>
-                    {column.render('Header')}
+                    {column.render('Header')as React.ReactNode}
                   </th>
                 ))}
               </tr>
@@ -133,7 +133,7 @@ const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
                         className={index === 0 ? 'bold-column' : ''}
                         {...cell.getCellProps()}
                       >
-                        {cell.render('Cell')}
+                        {cell.render('Cell')as React.ReactNode}
                       </td>
                     );
                   })}

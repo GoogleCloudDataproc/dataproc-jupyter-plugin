@@ -65,7 +65,7 @@ const SchemaInfo = ({ column }: any) => {
               <tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map(column => (
                   <th {...column.getHeaderProps()}>
-                    {column.render('Header')}
+                    {column.render('Header')as React.ReactNode}
                   </th>
                 ))}
               </tr>
@@ -82,7 +82,7 @@ const SchemaInfo = ({ column }: any) => {
                         className={index === 0 ? 'bold-column' : ''}
                         {...cell.getCellProps()}
                       >
-                        {cell.render('Cell')}
+                        {cell.render('Cell')as React.ReactNode}
                       </td>
                     );
                   })}
