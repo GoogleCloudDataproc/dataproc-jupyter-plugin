@@ -286,12 +286,12 @@ function CreateRunTime({
     }
   ];
 
-  const updateLightningEngineProperty = () => {
+  const updateLightningEngineProperty = (currentOthersList = othersList) => {
     const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ":" + (lightningEngineEnabled
     ? 'lightningEngine'
     : 'default');
   
-    const updatedProperties = [lightningProperty, ...othersList];
+    const updatedProperties = [lightningProperty, ...currentOthersList];
     setPropertyDetailUpdated(updatedProperties);
     return updatedProperties;
   }
@@ -318,7 +318,7 @@ function CreateRunTime({
           listNetworksAPI();
           listKeyRingsAPI();
           runtimeSharedProject();
-          updateLightningEngineProperty();
+          updateLightningEngineProperty(othersList);
         } else {
           setConfigLoading(false);
         }

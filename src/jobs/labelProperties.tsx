@@ -228,7 +228,7 @@ function LabelProperties({
                       />
                     </div>
 
-                    {labelDetailUpdated[index].split(':')[0] === '' &&
+                    {labelDetailUpdated[index]?.split(':')[0] === '' &&
                     labelDetailUpdated[index] !== '' &&
                     duplicateKeyError !== index ? (
                       <div role="alert" className="error-key-parent">
