@@ -74,7 +74,7 @@ const iconDpms = new LabIcon({
 const iconDatasetExplorer = new LabIcon({
   name: 'launcher:dataset-explorer-icon',
   svgstr: datasetExplorerIcon
-}); //here 
+});
 const iconPythonLogo = new LabIcon({
   name: 'launcher:python-bigquery-logo-icon',
   svgstr: pythonLogo
@@ -299,10 +299,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         );
         onThemeChanged();
         app.shell.add(panelCatalog, 'left', { rank: 1000 });
-        DataprocLoggingService.log(
-          'Catalog is enabled',
-          LOG_LEVEL.INFO
-        );
+        DataprocLoggingService.log('Catalog is enabled', LOG_LEVEL.INFO);
       }
 
       if (enableMetastore) {
@@ -413,11 +410,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-        new NotebookButtonExtension(
-        app as JupyterLab,
-        launcher,
-        themeManager
-      )
+      new NotebookButtonExtension(app as JupyterLab, launcher, themeManager)
     );
 
     const loadDpmsWidget = (value: string) => {
