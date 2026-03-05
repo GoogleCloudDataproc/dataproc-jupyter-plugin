@@ -970,7 +970,7 @@ const BigQueryComponent = ({
   return (
     <div className="dpms-Wrapper">
       <TitleComponent
-        titleStr="Dataset Explorer"
+        titleStr="Catalog"
         isPreview={false}
         getBigQueryProjects={() => getBigQueryProjects(true)}
         isLoading={isResetLoading}
