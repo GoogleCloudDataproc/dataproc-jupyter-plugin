@@ -38,7 +38,7 @@ import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
 import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
-import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
+import catalogIcon from '../style/icons/catalog_icon_light.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import {
   PLUGIN_ID,
@@ -52,7 +52,7 @@ import {
   IDefaultFileBrowser
 } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
-import datasetExplorerIconDark from '../style/icons/dataset_explorer_dark_icon.svg';
+import catalogIconDark from '../style/icons/catalog_icon_dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IDocumentManager } from '@jupyterlab/docmanager';
@@ -71,9 +71,9 @@ const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
 });
-const iconDatasetExplorer = new LabIcon({
+const iconCatalog = new LabIcon({
   name: 'launcher:dataset-explorer-icon',
-  svgstr: datasetExplorerIcon
+  svgstr: catalogIcon
 });
 const iconPythonLogo = new LabIcon({
   name: 'launcher:python-bigquery-logo-icon',
@@ -129,9 +129,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:dpms-icon-dark',
       svgstr: dpmsIconDark
     });
-    const iconDatasetExplorerDark = new LabIcon({
+    const iconCatalogDark = new LabIcon({
       name: 'launcher:dataset-explorer-icon-dark',
-      svgstr: datasetExplorerIconDark
+      svgstr: catalogIconDark
     });
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
@@ -246,14 +246,14 @@ const extension: JupyterFrontEndPlugin<void> = {
           panelDpms.title.icon = iconDpms;
         }
         if (bqFeature.enable_bigquery_integration && panelCatalog) {
-          panelCatalog.title.icon = iconDatasetExplorer;
+          panelCatalog.title.icon = iconCatalog;
         }
       } else {
         if (bqFeature.enable_metastore_integration && panelDpms) {
           panelDpms.title.icon = iconDpmsDark;
         }
         if (bqFeature.enable_bigquery_integration && panelCatalog) {
-          panelCatalog.title.icon = iconDatasetExplorerDark;
+          panelCatalog.title.icon = iconCatalogDark;
         }
       }
     };
