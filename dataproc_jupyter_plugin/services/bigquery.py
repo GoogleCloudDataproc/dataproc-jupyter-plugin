@@ -15,6 +15,10 @@
 
 import aiohttp
 
+from google.cloud import bigquery
+import json
+import datetime
+
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
     BIGQUERY_SERVICE_NAME,
@@ -136,21 +140,155 @@ class Client:
             return {"error": str(e)}
 
     async def bigquery_preview_data(
-        self, dataset_id, table_id, max_results, start_index, project_id
+        self,
+        dataset_id,
+        table_id,
+        max_results,
+        start_index,
+        project_id,
+        group_by=None,
+        aggregation_fields=None,
+        aggregation_operators=None,
+        filter_fields=None,
+        filter_operators=None,
+        filter_vals=None,
+        sort_field=None,
+        sort_dir=None,
     ):
         try:
-            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}/data?maxResults={max_results}&startIndex={start_index}"
-            async with self.client_session.get(
-                api_endpoint, headers=self.create_headers()
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    return resp
-                else:
-                    raise Exception(
-                        f"Error displaying BigQuery preview data: {response.reason} {await response.text()}"
+            offset = int(start_index)
+            table_ref = f"`{project_id}.{dataset_id}.{table_id}`"
+
+            # Construct the SQL query with optional filtering, grouping, and aggregation
+            if (
+                group_by
+                and aggregation_fields
+                and aggregation_operators
+                and len(aggregation_fields) > 0
+                and len(aggregation_operators) > 0
+            ):
+                aggregations_query = ""
+                for i, field in enumerate(aggregation_fields):
+                    op = (
+                        aggregation_operators[i]
+                        if i < len(aggregation_operators)
+                        else "none"
                     )
+                    if op != "none":
+                        aggregations_query += (
+                            f"{op.upper()}(`{field}`) AS `{field}_{op}`"
+                        )
+                sql_query = f"SELECT {group_by},{aggregations_query} FROM {table_ref}"
+            else:
+                sql_query = f"SELECT * FROM {table_ref}"
+
+            conditions = []
+            query_params = []
+
+            # Adding filtering conditions if provided
+            if filter_fields and len(filter_fields) > 0:
+                for i, field in enumerate(filter_fields):
+                    op = filter_operators[i] if i < len(filter_operators) else "equals"
+                    val = filter_vals[i] if i < len(filter_vals) else None
+
+                    if val is not None and val != "":
+                        param_name = f"filterVal{i}"
+
+                        if op == "equals":
+                            conditions.append(f"`{field}` = @{param_name}")
+                            query_params.append(
+                                bigquery.ScalarQueryParameter(param_name, "STRING", val)
+                            )
+                        elif op == "contains":
+                            conditions.append(
+                                f"CONTAINS_SUBSTR(CAST(`{field}` AS STRING), @{param_name})"
+                            )
+                            query_params.append(
+                                bigquery.ScalarQueryParameter(param_name, "STRING", val)
+                            )
+
+                if conditions:
+                    sql_query += f" WHERE {' AND '.join(conditions)}"
+
+            # Adding grouping and aggregation conditions if provided
+            if (
+                group_by
+                and aggregation_fields
+                and aggregation_operators
+                and len(aggregation_fields) > 0
+                and len(aggregation_operators) > 0
+            ):
+                group_by_fields = [f"`{field}`" for field in group_by.split(",")]
+                sql_query += f" GROUP BY {', '.join(group_by_fields)}"
+
+            # Constructing count query to retrive total rows for pagination
+            if (
+                group_by
+                and aggregation_fields
+                and aggregation_operators
+                and len(aggregation_fields) > 0
+                and len(aggregation_operators) > 0
+            ):
+                sql_count_query = (
+                    f"SELECT COUNT(*) as total_count FROM ({sql_query}) AS subquery"
+                )
+            else:
+                sql_count_query = sql_query.replace(
+                    f"SELECT * FROM {table_ref}",
+                    f"SELECT COUNT(*) as total_count FROM {table_ref}",
+                )
+
+            # Adding sorting if provided
+            if sort_field and sort_dir:
+                direction = "DESC" if sort_dir.lower() == "desc" else "ASC"
+                sql_query = sql_query + f"ORDER BY {sort_field} {direction}"
+
+            sql_query_with_limit = sql_query + " LIMIT @limit OFFSET @offset"
+            query_params.append(
+                bigquery.ScalarQueryParameter("limit", "INT64", max_results)
+            )
+            query_params.append(
+                bigquery.ScalarQueryParameter("offset", "INT64", offset)
+            )
+
+            job_config = bigquery.QueryJobConfig(query_parameters=query_params)
+
+            # Execute the query
+            query_job = self.bqclient.query(sql_query_with_limit, job_config=job_config)
+            results = query_job.result()
+            # Execute the count query to get total rows
+            count_query_job = self.bqclient.query(
+                sql_count_query, job_config=job_config
+            )
+            count_results = count_query_job.result()
+
+            for row in count_results:
+                total_rows_estimate = row["total_count"]
+                break
+            else:
+                total_rows_estimate = 0
+
+            # Transform results to match the expected format for the frontend, converting datetime objects to ISO format
+            transformed_rows = []
+            for row in results:
+                f_list = []
+                for field_name in row.keys():
+                    value = row[field_name]
+                    if (
+                        isinstance(value, datetime.datetime)
+                        or isinstance(value, datetime.date)
+                        or isinstance(value, datetime.time)
+                    ):
+                        value = value.isoformat()
+                    f_list.append({"v": value})
+                transformed_rows.append({"f": f_list})
+
+            return {
+                "rows": transformed_rows,
+                "totalRows": str(total_rows_estimate),
+                "sqlQuery": sql_query,
+            }
+
         except Exception as e:
             self.log.exception("Error fetching preview data")
             return {"error": str(e)}

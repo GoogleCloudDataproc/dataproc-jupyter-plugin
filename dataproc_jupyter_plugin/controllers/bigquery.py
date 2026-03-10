@@ -118,10 +118,36 @@ class PreviewController(APIHandler):
             max_results = self.get_argument("max_results")
             start_index = self.get_argument("start_index")
             project_id = self.get_argument("project_id")
+
+            filter_fields = self.get_arguments("filter_field")
+            filter_operators = self.get_arguments("filter_op")
+            filter_values = self.get_arguments("filter_val")
+
+            group_by = self.get_argument("group_by_fields", default=None)
+            aggregation_fields = self.get_arguments("aggregation_field")
+            aggregation_operators = self.get_arguments("aggregation_op")
+
+            sort_field = self.get_argument("sort_field", default=None)
+            sort_dir = self.get_argument("sort_dir", default=None)
+
             bq_client = await bigquery_client.get_client(self.log)
+
             preview_data = await bq_client.bigquery_preview_data(
-                dataset_id, table_id, max_results, start_index, project_id
+                dataset_id,
+                table_id,
+                max_results,
+                start_index,
+                project_id,
+                group_by,
+                aggregation_fields,
+                aggregation_operators,
+                filter_fields=filter_fields,
+                filter_operators=filter_operators,
+                filter_vals=filter_values,
+                sort_field=sort_field,
+                sort_dir=sort_dir,
             )
+
             self.finish(json.dumps(preview_data))
         except Exception as e:
             self.log.exception("Error fetching preview data")
