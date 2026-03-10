@@ -1,0 +1,1 @@
+Parent Widget of catalog widget
