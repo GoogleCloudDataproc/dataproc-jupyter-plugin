@@ -152,14 +152,34 @@ class SearchController(APIHandler):
     async def post(self):
         try:
             search_string = self.get_argument("search_string")
-            type = self.get_argument("type")
+            search_type = self.get_argument("type")
             system = self.get_argument("system")
-            projects = await bq_projects_list()
+            scope_str = self.get_argument("scope", default="false")
+            scope = scope_str.lower() == "true"
+            projects_arg = self.get_argument("projects", default=None)
+            locations = self.get_arguments("location")
+
+            page_size = int(self.get_argument("page_size", default="100"))
+            page_token = self.get_argument("page_token", default=None)
+
+            if projects_arg:
+                projects = projects_arg.split("|")
+            else:
+                projects = await bq_projects_list()
+
             bq_client = await bigquery_client.get_client(self.log)
-            search_data = await bq_client.bigquery_search(
-                search_string, type, system, projects
+            search_data = await bq_client.bigquery_semantic_search(
+                search_string,
+                search_type,
+                system,
+                projects,
+                scope,
+                locations,
+                page_size=page_size,
+                page_token=page_token,
             )
             self.finish(json.dumps(search_data))
         except Exception as e:
             self.log.exception("Error fetching search data")
             self.finish({"error": str(e)})
+
