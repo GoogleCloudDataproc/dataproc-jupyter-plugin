@@ -132,7 +132,7 @@ class PreviewController(APIHandler):
 
             bq_client = await bigquery_client.get_client(self.log)
 
-            preview_data = await bq_client.bigquery_preview_data(
+            preview_data = bq_client.bigquery_preview_data(
                 dataset_id,
                 table_id,
                 max_results,

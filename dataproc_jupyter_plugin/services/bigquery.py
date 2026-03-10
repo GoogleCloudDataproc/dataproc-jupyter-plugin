@@ -139,7 +139,121 @@ class Client:
             self.log.exception(f"Error fetching table information")
             return {"error": str(e)}
 
-    async def bigquery_preview_data(
+    def _has_aggregation(self, group_by, aggregation_fields, aggregation_operators):
+        """Check if aggregation parameters are provided."""
+        return (
+            group_by
+            and aggregation_fields
+            and aggregation_operators
+            and len(aggregation_fields) > 0
+            and len(aggregation_operators) > 0
+        )
+
+    def _build_aggregations_query(self, aggregation_fields, aggregation_operators):
+        """Build the aggregation part of the SELECT clause."""
+        aggregations = []
+        for i, field in enumerate(aggregation_fields):
+            op = aggregation_operators[i] if i < len(aggregation_operators) else "none"
+            if op != "none":
+                aggregations.append(f"{op.upper()}(`{field}`) AS `{field}_{op}`")
+        return ", ".join(aggregations) if aggregations else ""
+
+    def _build_base_query(self, project_id, dataset_id, table_id, group_by, aggregation_fields, aggregation_operators):
+        """Build the base SELECT query."""
+        table_ref = f"`{project_id}.{dataset_id}.{table_id}`"
+        if self._has_aggregation(group_by, aggregation_fields, aggregation_operators):
+            aggregations_query = self._build_aggregations_query(aggregation_fields, aggregation_operators)
+            select_parts = [group_by]
+            if aggregations_query:
+                select_parts.append(aggregations_query)
+            return f"SELECT {', '.join(select_parts)} FROM {table_ref}"
+        return f"SELECT * FROM {table_ref}"
+
+    def _validate_identifier(self, identifier):
+        """Validate identifier against allowed characters."""
+        import re
+        if not re.match(r'^[a-zA-Z_]\w*$', identifier):
+            raise ValueError(f"Invalid identifier: {identifier}")
+        return identifier
+
+    def _build_filter_condition(self, field, op, val, i, query_params):
+        """Build a single filter condition."""
+        try:
+            self._validate_identifier(field)
+            param_name = f"filterVal{i}"
+            if op == "equals":
+                query_params.append(bigquery.ScalarQueryParameter(param_name, "STRING", val))
+                return f"`{field}` = @{param_name}"
+            elif op == "contains":
+                query_params.append(bigquery.ScalarQueryParameter(param_name, "STRING", val))
+                return f"CONTAINS_SUBSTR(CAST(`{field}` AS STRING), @{param_name})"
+        except ValueError as e:
+            self.log.warning(f"Skipping invalid filter field: {e}")
+        return None
+
+    def _add_filters(self, sql_query, filter_fields, filter_operators, filter_vals, query_params):
+        """Add WHERE clause with filter conditions."""
+        if not filter_fields or len(filter_fields) == 0:
+            return sql_query
+        
+        conditions = []
+        for i, field in enumerate(filter_fields):
+            op = filter_operators[i] if i < len(filter_operators) else "equals"
+            val = filter_vals[i] if i < len(filter_vals) else None
+
+            if val is not None and val != "":
+                condition = self._build_filter_condition(field, op, val, i, query_params)
+                if condition:
+                    conditions.append(condition)
+
+        if conditions:
+            sql_query += f" WHERE {' AND '.join(conditions)}"
+        return sql_query
+
+    def _add_grouping(self, sql_query, group_by, aggregation_fields, aggregation_operators):
+        """Add GROUP BY clause."""
+        if not self._has_aggregation(group_by, aggregation_fields, aggregation_operators):
+            return sql_query
+        try:
+            group_by_fields = [f"`{self._validate_identifier(field.strip())}`" for field in group_by.split(",")]
+            return sql_query + f" GROUP BY {', '.join(group_by_fields)}"
+        except ValueError as e:
+            self.log.warning(f"Invalid GROUP BY field: {e}")
+            return sql_query
+
+    def _build_count_query(self, sql_query, project_id, dataset_id, table_id, group_by, aggregation_fields, aggregation_operators):
+        """Build the count query for pagination."""
+        table_ref = f"`{project_id}.{dataset_id}.{table_id}`"
+        if self._has_aggregation(group_by, aggregation_fields, aggregation_operators):
+            return f"SELECT COUNT(*) as total_count FROM ({sql_query}) AS subquery"
+        return sql_query.replace(f"SELECT * FROM {table_ref}", f"SELECT COUNT(*) as total_count FROM {table_ref}")
+
+    def _add_sorting(self, sql_query, sort_field, sort_dir):
+        """Add ORDER BY clause."""
+        if not sort_field or not sort_dir:
+            return sql_query
+        try:
+            self._validate_identifier(sort_field)
+            direction = "DESC" if sort_dir.lower() == "desc" else "ASC"
+            return sql_query + f" ORDER BY `{sort_field}` {direction}"
+        except ValueError as e:
+            self.log.warning(f"Invalid sort field: {e}")
+            return sql_query
+
+    def _transform_results(self, results):
+        """Transform query results to frontend format."""
+        transformed_rows = []
+        for row in results:
+            f_list = []
+            for field_name in row.keys():
+                value = row[field_name]
+                if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+                    value = value.isoformat()
+                f_list.append({"v": value})
+            transformed_rows.append({"f": f_list})
+        return transformed_rows
+
+    def bigquery_preview_data(
         self,
         dataset_id,
         table_id,
@@ -157,131 +271,41 @@ class Client:
     ):
         try:
             offset = int(start_index)
-            table_ref = f"`{project_id}.{dataset_id}.{table_id}`"
 
-            # Construct the SQL query with optional filtering, grouping, and aggregation
-            if (
-                group_by
-                and aggregation_fields
-                and aggregation_operators
-                and len(aggregation_fields) > 0
-                and len(aggregation_operators) > 0
-            ):
-                aggregations_query = ""
-                for i, field in enumerate(aggregation_fields):
-                    op = (
-                        aggregation_operators[i]
-                        if i < len(aggregation_operators)
-                        else "none"
-                    )
-                    if op != "none":
-                        aggregations_query += (
-                            f"{op.upper()}(`{field}`) AS `{field}_{op}`"
-                        )
-                sql_query = f"SELECT {group_by},{aggregations_query} FROM {table_ref}"
-            else:
-                sql_query = f"SELECT * FROM {table_ref}"
-
-            conditions = []
+            # Build base query
+            sql_query = self._build_base_query(project_id, dataset_id, table_id, group_by, aggregation_fields, aggregation_operators)
             query_params = []
 
-            # Adding filtering conditions if provided
-            if filter_fields and len(filter_fields) > 0:
-                for i, field in enumerate(filter_fields):
-                    op = filter_operators[i] if i < len(filter_operators) else "equals"
-                    val = filter_vals[i] if i < len(filter_vals) else None
+            # Add filters
+            sql_query = self._add_filters(sql_query, filter_fields, filter_operators, filter_vals, query_params)
 
-                    if val is not None and val != "":
-                        param_name = f"filterVal{i}"
+            # Add grouping
+            sql_query = self._add_grouping(sql_query, group_by, aggregation_fields, aggregation_operators)
 
-                        if op == "equals":
-                            conditions.append(f"`{field}` = @{param_name}")
-                            query_params.append(
-                                bigquery.ScalarQueryParameter(param_name, "STRING", val)
-                            )
-                        elif op == "contains":
-                            conditions.append(
-                                f"CONTAINS_SUBSTR(CAST(`{field}` AS STRING), @{param_name})"
-                            )
-                            query_params.append(
-                                bigquery.ScalarQueryParameter(param_name, "STRING", val)
-                            )
+            # Build count query
+            sql_count_query = self._build_count_query(sql_query, project_id, dataset_id, table_id, group_by, aggregation_fields, aggregation_operators)
 
-                if conditions:
-                    sql_query += f" WHERE {' AND '.join(conditions)}"
+            # Add sorting
+            sql_query = self._add_sorting(sql_query, sort_field, sort_dir)
 
-            # Adding grouping and aggregation conditions if provided
-            if (
-                group_by
-                and aggregation_fields
-                and aggregation_operators
-                and len(aggregation_fields) > 0
-                and len(aggregation_operators) > 0
-            ):
-                group_by_fields = [f"`{field}`" for field in group_by.split(",")]
-                sql_query += f" GROUP BY {', '.join(group_by_fields)}"
-
-            # Constructing count query to retrive total rows for pagination
-            if (
-                group_by
-                and aggregation_fields
-                and aggregation_operators
-                and len(aggregation_fields) > 0
-                and len(aggregation_operators) > 0
-            ):
-                sql_count_query = (
-                    f"SELECT COUNT(*) as total_count FROM ({sql_query}) AS subquery"
-                )
-            else:
-                sql_count_query = sql_query.replace(
-                    f"SELECT * FROM {table_ref}",
-                    f"SELECT COUNT(*) as total_count FROM {table_ref}",
-                )
-
-            # Adding sorting if provided
-            if sort_field and sort_dir:
-                direction = "DESC" if sort_dir.lower() == "desc" else "ASC"
-                sql_query = sql_query + f"ORDER BY {sort_field} {direction}"
-
+            # Add limit and offset
             sql_query_with_limit = sql_query + " LIMIT @limit OFFSET @offset"
-            query_params.append(
-                bigquery.ScalarQueryParameter("limit", "INT64", max_results)
-            )
-            query_params.append(
-                bigquery.ScalarQueryParameter("offset", "INT64", offset)
-            )
+            query_params.append(bigquery.ScalarQueryParameter("limit", "INT64", max_results))
+            query_params.append(bigquery.ScalarQueryParameter("offset", "INT64", offset))
 
             job_config = bigquery.QueryJobConfig(query_parameters=query_params)
 
-            # Execute the query
+            # Execute queries
             query_job = self.bqclient.query(sql_query_with_limit, job_config=job_config)
             results = query_job.result()
-            # Execute the count query to get total rows
-            count_query_job = self.bqclient.query(
-                sql_count_query, job_config=job_config
-            )
+            
+            count_query_job = self.bqclient.query(sql_count_query, job_config=job_config)
             count_results = count_query_job.result()
 
-            for row in count_results:
-                total_rows_estimate = row["total_count"]
-                break
-            else:
-                total_rows_estimate = 0
+            total_rows_estimate = next((row["total_count"] for row in count_results), 0)
 
-            # Transform results to match the expected format for the frontend, converting datetime objects to ISO format
-            transformed_rows = []
-            for row in results:
-                f_list = []
-                for field_name in row.keys():
-                    value = row[field_name]
-                    if (
-                        isinstance(value, datetime.datetime)
-                        or isinstance(value, datetime.date)
-                        or isinstance(value, datetime.time)
-                    ):
-                        value = value.isoformat()
-                    f_list.append({"v": value})
-                transformed_rows.append({"f": f_list})
+            # Transform results
+            transformed_rows = self._transform_results(results)
 
             return {
                 "rows": transformed_rows,
@@ -383,3 +407,5 @@ class Client:
         except Exception as e:
             self.log.exception("Error fetching projects")
             return {"error": str(e)}
+        
+    
