@@ -249,7 +249,7 @@ class Client:
     async def bigquery_semantic_search(
         self,
         search_string: str,
-        type: str,
+        search_type: str,
         system: str,
         projects: list,
         scope: bool,
@@ -275,13 +275,13 @@ class Client:
             if system:
                 query_parts.append(f"system={system.upper()}")
 
-            if type:
-                types = type.split("|")
+            if search_type:
+                types = search_type.split("|")
                 type_filters = " OR ".join([f"type={t.upper()}" for t in types])
                 query_parts.append(f"({type_filters})")
 
             if projects:
-                project_filters = " OR ".join([f"projectid:{p}" for p in projects])
+                project_filters = " OR ".join([f"projectid={p}" for p in projects])
                 query_parts.append(f"({project_filters})")
 
             if locations:
@@ -296,9 +296,8 @@ class Client:
 
             payload = {
                 "name": f"projects/{self.project_id}/locations/global",
-                "query": " AND ".join(filter(None, query_parts)),
+                "query": full_query,
                 "pageSize": page_size,
-                "pageToken": page_token,
                 "semanticSearch": True,
             }
 
@@ -306,12 +305,6 @@ class Client:
                 payload["pageToken"] = page_token
             if scope:
                 payload["scope"] = f"projects/{self.project_id}"
-
-            if scope:
-                # If True: Restrict to "projects/<id>"
-                payload["scope"] = f"projects/{self.project_id}"
-
-            search_results = []
 
             try:
                 async with self.client_session.post(
@@ -337,11 +330,6 @@ class Client:
             except aiohttp.ClientError as e:
                 self.log.error(f"Aiohttp client error during API call: {e}")
                 raise
-
-            if not search_results:
-                return {}
-            else:
-                return {"results": search_results}
 
         except Exception as e:
             self.log.exception(f"Error fetching Dataplex search data: {e}")
