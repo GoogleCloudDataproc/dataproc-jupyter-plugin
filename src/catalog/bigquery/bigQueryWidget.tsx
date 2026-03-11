@@ -41,7 +41,7 @@ import {
   TextField
 } from '@mui/material';
 import { TitleComponent } from '../../controls/SidePanelTitleWidget';
-import { BigQueryService } from '../common/bigQueryService';
+import { BigQueryWidgetService } from './bigqueryWidgetService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryDatasetWrapper } from '../common/bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from '../common/bigQueryTableInfoWrapper';
@@ -180,7 +180,7 @@ const BigQueryComponent = ({
     projectId: string | undefined
   ) => {
     if (tableId && datasetId && projectId) {
-      await BigQueryService.getBigQueryColumnDetailsAPIService(
+      await BigQueryWidgetService.getBigQueryColumnDetailsAPIService(
         datasetId,
         tableId,
         projectId,
@@ -380,7 +380,7 @@ const BigQueryComponent = ({
 
   const handleSearch = (value: string) => {
     if (value !== '') {
-      BigQueryService.getBigQuerySearchAPIService(
+      BigQueryWidgetService.getBigQuerySearchAPIService(
         value,
         setSearchLoading,
         setSearchResponse
@@ -863,7 +863,7 @@ const BigQueryComponent = ({
       setNextPageTokens(new Map());
       setResetLoading(true);
     }
-    await BigQueryService.getBigQueryProjectsListAPIService(
+    await BigQueryWidgetService.getBigQueryProjectsListAPIService(
       setProjectNameInfo,
       setIsLoading,
       setApiError,
@@ -875,7 +875,7 @@ const BigQueryComponent = ({
     const pageTokenForProject = nextPageTokens.get(projectId);
     const allDatasetsUnderProject = allDatasets.get(projectId) || [];
 
-    await BigQueryService.getBigQueryDatasetsAPIService(
+    await BigQueryWidgetService.getBigQueryDatasetsAPIService(
       notebookValue,
       settingRegistry,
       setDatabaseNames,
@@ -912,7 +912,7 @@ const BigQueryComponent = ({
     projectId: string | undefined
   ) => {
     if (datasetId && projectId) {
-      await BigQueryService.getBigQueryTableAPIService(
+      await BigQueryWidgetService.getBigQueryTableAPIService(
         notebookValue,
         datasetId,
         setDatabaseNames,
