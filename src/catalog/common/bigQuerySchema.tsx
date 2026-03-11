@@ -17,7 +17,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTable } from 'react-table';
-import { handleDebounce } from '../utils/utils';
+import { handleDebounce } from '../../utils/utils';
 
 interface IColumn {
   name: string;
@@ -116,7 +116,7 @@ const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
               <tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map(column => (
                   <th {...column.getHeaderProps()}>
-                    {column.render('Header')as React.ReactNode}
+                    {column.render('Header') as React.ReactNode}
                   </th>
                 ))}
               </tr>
@@ -133,7 +133,7 @@ const BigQuerySchemaInfo = ({ column }: { column: IColumn[] }) => {
                         className={index === 0 ? 'bold-column' : ''}
                         {...cell.getCellProps()}
                       >
-                        {cell.render('Cell')as React.ReactNode}
+                        {cell.render('Cell') as React.ReactNode}
                       </td>
                     );
                   })}

@@ -17,11 +17,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useGlobalFilter, usePagination, useTable } from 'react-table';
-import TableData from '../utils/tableData';
-import { BigQueryService } from './bigQueryService';
-import { ICellProps, handleDebounce } from '../utils/utils';
-import { PreviewPaginationView } from '../utils/previewPaginationView';
 import { CircularProgress } from '@mui/material';
+import TableData from '../../utils/tableData';
+import { BigQueryService } from './bigQueryService';
+import { ICellProps, handleDebounce } from '../../utils/utils';
+import { PreviewPaginationView } from '../../utils/previewPaginationView';
 
 const PreviewDataInfo = ({ column, tableId, dataSetId, projectId }: any) => {
   const [previewDataList, setPreviewDataList] = useState([]);

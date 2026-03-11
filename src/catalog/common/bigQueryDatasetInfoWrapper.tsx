@@ -17,7 +17,7 @@
 
 import React from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { DataprocWidget } from '../controls/DataprocWidget';
+import { DataprocWidget } from '../../controls/DataprocWidget';
 import BigQueryDatasetInfo from './bigQueryDatasetInfo';
 
 interface IDatabaseProps {
@@ -32,7 +32,7 @@ const BigQueryDatasetInfoWrapper = ({
   const renderTable = () => {
     return (
       <>
-          <BigQueryDatasetInfo dataset={title} projectId={projectId} />
+        <BigQueryDatasetInfo dataset={title} projectId={projectId} />
       </>
     );
   };
@@ -41,7 +41,7 @@ const BigQueryDatasetInfoWrapper = ({
     <div>
       <div className="dpms-Wrapper">
         <div className="title-overlay">{title}</div>
-          <div className="db-title">Dataset info</div>
+        <div className="db-title">Dataset info</div>
         {renderTable()}
       </div>
     </div>

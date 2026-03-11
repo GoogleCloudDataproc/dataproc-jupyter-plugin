@@ -57,7 +57,7 @@ const BigQueryTableInfo = ({
         <div className="database-loader">
           <div>
             <CircularProgress
-              className = "spin-loader-custom-style"
+              className="spin-loader-custom-style"
               size={20}
               aria-label="Loading Spinner"
               data-testid="loader"

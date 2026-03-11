@@ -19,16 +19,16 @@ import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
-import bigQueryProjectIcon from '../../style/icons/bigquery_project_icon.svg';
-import datasetIcon from '../../style/icons/dataset_icon.svg';
-import tableIcon from '../../style/icons/table_icon.svg';
-import columnsIcon from '../../style/icons/columns_icon.svg';
-import databaseWidgetIcon from '../../style/icons/database_widget_icon.svg';
-import datasetsIcon from '../../style/icons/datasets_icon.svg';
-import searchIcon from '../../style/icons/search_icon.svg';
-import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
-import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
-import searchClearIcon from '../../style/icons/search_clear_icon.svg';
+import bigQueryProjectIcon from '../../../style/icons/bigquery_project_icon.svg';
+import datasetIcon from '../../../style/icons/dataset_icon.svg';
+import tableIcon from '../../../style/icons/table_icon.svg';
+import columnsIcon from '../../../style/icons/columns_icon.svg';
+import databaseWidgetIcon from '../../../style/icons/database_widget_icon.svg';
+import datasetsIcon from '../../../style/icons/datasets_icon.svg';
+import searchIcon from '../../../style/icons/search_icon.svg';
+import rightArrowIcon from '../../../style/icons/right_arrow_icon.svg';
+import downArrowIcon from '../../../style/icons/down_arrow_icon.svg';
+import searchClearIcon from '../../../style/icons/search_clear_icon.svg';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { Menu, MenuItem } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
@@ -40,15 +40,15 @@ import {
   InputAdornment,
   TextField
 } from '@mui/material';
-import { TitleComponent } from '../controls/SidePanelTitleWidget';
-import { BigQueryService } from './bigQueryService';
+import { TitleComponent } from '../../controls/SidePanelTitleWidget';
+import { BigQueryService } from '../common/bigQueryService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { BigQueryDatasetWrapper } from './bigQueryDatasetInfoWrapper';
-import { BigQueryTableWrapper } from './bigQueryTableInfoWrapper';
-import { DataprocWidget } from '../controls/DataprocWidget';
-import { checkConfig, handleDebounce } from '../utils/utils';
-import LoginErrorComponent from '../utils/loginErrorComponent';
-import { BIGQUERY_API_URL } from '../utils/const';
+import { BigQueryDatasetWrapper } from '../common/bigQueryDatasetInfoWrapper';
+import { BigQueryTableWrapper } from '../common/bigQueryTableInfoWrapper';
+import { DataprocWidget } from '../../controls/DataprocWidget';
+import { checkConfig, handleDebounce } from '../../utils/utils';
+import LoginErrorComponent from '../../utils/loginErrorComponent';
+import { BIGQUERY_API_URL } from '../../utils/const';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',
@@ -151,7 +151,9 @@ const BigQueryComponent = ({
   const [loginError, setLoginError] = useState(false);
   const [projectName, setProjectName] = useState<string>('');
 
-  const [nextPageTokens, setNextPageTokens] = useState<Map<string, string | null>>(new Map());
+  const [nextPageTokens, setNextPageTokens] = useState<
+    Map<string, string | null>
+  >(new Map());
   const [allDatasets, setAllDatasets] = useState<Map<string, any[]>>(new Map());
 
   function handleUpdateHeight() {
@@ -228,14 +230,14 @@ const BigQueryComponent = ({
         // Check if there's a next page token for this project
         const nextPageToken = nextPageTokens.get(projectData.name);
         if (nextPageToken) {
-            // Add a special "Load more" node
-            datasetNodes.push({
-              id: uuidv4(),
-              name: '',
-              isLoadMoreNode: true,
-              isNodeOpen: false,
-              children: []
-            });
+          // Add a special "Load more" node
+          datasetNodes.push({
+            id: uuidv4(),
+            name: '',
+            isLoadMoreNode: true,
+            isNodeOpen: false,
+            children: []
+          });
         }
         projectData['children'] = datasetNodes;
       }
@@ -342,9 +344,11 @@ const BigQueryComponent = ({
           data.push(projectNode);
         }
 
-        let datasetNode = projectNode.children.find((d: any) => d.name === datasetId);
+        let datasetNode = projectNode.children.find(
+          (d: any) => d.name === datasetId
+        );
         if (!datasetNode) {
-          projectNode.isNodeOpen = true
+          projectNode.isNodeOpen = true;
           datasetNode = {
             id: uuidv4(),
             name: datasetId,
@@ -356,7 +360,7 @@ const BigQueryComponent = ({
 
         if (tableId) {
           if (!datasetNode.children.find((t: any) => t.name === tableId)) {
-            datasetNode.isNodeOpen = true
+            datasetNode.isNodeOpen = true;
             datasetNode.children.push({
               id: uuidv4(),
               name: tableId,
@@ -450,7 +454,7 @@ const BigQueryComponent = ({
   const handleSearchClear = () => {
     setSearchTerm('');
     setSearchLoading(true);
-    setAllDatasets(new Map()); 
+    setAllDatasets(new Map());
     setNextPageTokens(new Map());
     getBigQueryProjects(false);
   };
@@ -459,8 +463,13 @@ const BigQueryComponent = ({
     nextPageTokens: Map<string, string | null>;
     getBigQueryDatasets: (projectId: string) => Promise<void>;
   };
-  const Node = ({ node, style, onClick, nextPageTokens, getBigQueryDatasets }: NodeProps) => {
-
+  const Node = ({
+    node,
+    style,
+    onClick,
+    nextPageTokens,
+    getBigQueryDatasets
+  }: NodeProps) => {
     const [contextMenu, setContextMenu] = useState<{
       mouseX: number;
       mouseY: number;
@@ -468,7 +477,9 @@ const BigQueryComponent = ({
     const handleToggle = () => {
       if (node.data.isLoadMoreNode) {
         const projectId = node.parent?.data?.name;
-        const nextPageToken = projectId ? nextPageTokens.get(projectId) : undefined;
+        const nextPageToken = projectId
+          ? nextPageTokens.get(projectId)
+          : undefined;
         if (projectId && nextPageToken) {
           setCurrentNode(node.parent);
           setIsLoadMoreLoading(true);
@@ -478,10 +489,10 @@ const BigQueryComponent = ({
       }
       if (calculateDepth(node) === 1 && !node.isOpen) {
         setCurrentNode(node);
-        if(!allDatasets.has(node.data.name)) { 
+        if (!allDatasets.has(node.data.name)) {
           setIsIconLoading(true);
           getBigQueryDatasets(node.data.name);
-        }else{
+        } else {
           node.toggle();
         }
       } else if (calculateDepth(node) === 2 && !node.isOpen) {
@@ -505,11 +516,11 @@ const BigQueryComponent = ({
       // This leads to, incorrect expand / collapase Icon in the UI.
       // using `isNodeOpen` this (custom) property to correct the node's intial expand/collapse state.
       // and prevent visual flickering when the user interacts with the tree.
-      if(node.isOpen !== node.data.isNodeOpen){
+      if (node.isOpen !== node.data.isNodeOpen) {
         node.toggle();
       }
       if (event.currentTarget.classList.contains('caret-icon')) {
-        node.data.isNodeOpen = ! node.data.isNodeOpen
+        node.data.isNodeOpen = !node.data.isNodeOpen;
         handleToggle();
       }
     };
@@ -608,53 +619,54 @@ const BigQueryComponent = ({
       const hasChildren =
         (node.children && node.children.length > 0) ||
         (depth !== 4 && node.children);
-      const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
-        isIconLoading && currentNode.data.name === node.data.name ? (
-          <div className="big-query-loader-style">
-            <CircularProgress
-              size={16}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
-          </div>
-        ) : node.isOpen ? (
-          <>
+      const arrowIcon =
+        hasChildren && !node.data.isLoadMoreNode ? (
+          isIconLoading && currentNode.data.name === node.data.name ? (
+            <div className="big-query-loader-style">
+              <CircularProgress
+                size={16}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
+            </div>
+          ) : node.isOpen ? (
+            <>
+              <div
+                role="treeitem"
+                className="caret-icon right"
+                onClick={handleIconClick}
+              >
+                <iconDownArrow.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              </div>
+            </>
+          ) : (
             <div
               role="treeitem"
-              className="caret-icon right"
+              className="caret-icon down"
               onClick={handleIconClick}
             >
-              <iconDownArrow.react
+              <iconRightArrow.react
                 tag="div"
                 className="icon-white logo-alignment-style"
               />
             </div>
-          </>
+          )
         ) : (
-          <div
-            role="treeitem"
-            className="caret-icon down"
-            onClick={handleIconClick}
-          >
-            <iconRightArrow.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          </div>
-        )
-      ): (
-        <div style={{ width: '29px' }}></div>
-      );
+          <div style={{ width: '29px' }}></div>
+        );
       const renderLoadMoreNode = () =>
         isLoadMoreLoading ? (
-          <div className='load-more-spinner-container'>
-            <div className='load-more-spinner'>
-        <CircularProgress
-          className="spin-loader-custom-style"
-          size={20}
-          aria-label="Loading Spinner"
-          data-testid="loader"
-        />
+          <div className="load-more-spinner-container">
+            <div className="load-more-spinner">
+              <CircularProgress
+                className="spin-loader-custom-style"
+                size={20}
+                aria-label="Loading Spinner"
+                data-testid="loader"
+              />
             </div>
             Loading datasets
           </div>
@@ -668,18 +680,23 @@ const BigQueryComponent = ({
           </div>
         );
       if (searchTerm) {
-        const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
-          isIconLoading && currentNode.data.name === node.data.name ? (
-            <div className="big-query-loader-style">
-              <CircularProgress
-                size={16}
-                aria-label="Loading Spinner"
-                data-testid="loader"
-              />
-            </div>
-          ) : node.data.isNodeOpen ? (
+        const arrowIcon =
+          hasChildren && !node.data.isLoadMoreNode ? (
+            isIconLoading && currentNode.data.name === node.data.name ? (
+              <div className="big-query-loader-style">
+                <CircularProgress
+                  size={16}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              </div>
+            ) : node.data.isNodeOpen ? (
               <>
-                <div role="treeitem" className="caret-icon down" onClick={handleIconClick}>
+                <div
+                  role="treeitem"
+                  className="caret-icon down"
+                  onClick={handleIconClick}
+                >
                   <iconDownArrow.react
                     tag="div"
                     className="icon-white logo-alignment-style"
@@ -687,7 +704,11 @@ const BigQueryComponent = ({
                 </div>
               </>
             ) : (
-              <div role="treeitem" className="caret-icon right" onClick={handleIconClick}>
+              <div
+                role="treeitem"
+                className="caret-icon right"
+                onClick={handleIconClick}
+              >
                 <iconRightArrow.react
                   tag="div"
                   className="icon-white logo-alignment-style"
@@ -836,9 +857,9 @@ const BigQueryComponent = ({
     );
   };
 
-  const getBigQueryProjects = async (isReset : boolean) => {
+  const getBigQueryProjects = async (isReset: boolean) => {
     if (isReset) {
-      setAllDatasets(new Map()); 
+      setAllDatasets(new Map());
       setNextPageTokens(new Map());
       setResetLoading(true);
     }
@@ -851,7 +872,6 @@ const BigQueryComponent = ({
   };
 
   const getBigQueryDatasets = async (projectId: string) => {
-
     const pageTokenForProject = nextPageTokens.get(projectId);
     const allDatasetsUnderProject = allDatasets.get(projectId) || [];
 
@@ -875,13 +895,13 @@ const BigQueryComponent = ({
       pageTokenForProject,
       (projectId: string, token: string | null) => {
         setNextPageTokens(prevTokens => {
-            const newMap = new Map(prevTokens);
-            if (token) {
-                newMap.set(projectId, token);
-            } else {
-                newMap.delete(projectId);
-            }
-            return newMap;
+          const newMap = new Map(prevTokens);
+          if (token) {
+            newMap.set(projectId, token);
+          } else {
+            newMap.delete(projectId);
+          }
+          return newMap;
         });
       }
     );
@@ -1070,8 +1090,7 @@ const BigQueryComponent = ({
           {apiError && !loginError && !configError && (
             <div className="sidepanel-login-error">
               <p>
-                Bigquery API is not enabled for this project.
-                Please{' '}
+                Bigquery API is not enabled for this project. Please{' '}
                 <a
                   href={`${BIGQUERY_API_URL}?project=${projectName}`}
                   target="_blank"

@@ -16,10 +16,14 @@
  */
 
 import { Notification } from '@jupyterlab/apputils';
-import { requestAPI } from '../handler/handler';
+import { requestAPI } from '../../handler/handler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { BIGQUERY_SERVICE_NAME, DEFAULT_PUBLIC_PROJECT_ID, PLUGIN_ID } from '../utils/const';
-import { authApi } from '../utils/utils';
+import {
+  BIGQUERY_SERVICE_NAME,
+  DEFAULT_PUBLIC_PROJECT_ID,
+  PLUGIN_ID
+} from '../../utils/const';
+import { authApi } from '../../utils/utils';
 
 interface IPreviewColumn {
   Header: string;
@@ -148,7 +152,7 @@ export class BigQueryService {
       const pageToken = nextPageToken ?? '';
       try {
         const settings = await settingRegistry.load(PLUGIN_ID);
-        const location = settings.get('bqRegion')['composite']
+        const location = settings.get('bqRegion')['composite'];
 
         const data: any = await requestAPI(
           `bigQueryDataset?project_id=${projectId}&location=${location}&pageToken=${pageToken}`
@@ -162,7 +166,9 @@ export class BigQueryService {
         const existingDatasetList = previousDatasetList ?? [];
         const allDatasetList: any = [
           ...(existingDatasetList as []),
-          ...(DEFAULT_PUBLIC_PROJECT_ID === projectId ? data.datasets : data.entries)
+          ...(DEFAULT_PUBLIC_PROJECT_ID === projectId
+            ? data.datasets
+            : data.entries)
         ];
 
         if (setUpdatedDatasetList && allDatasetList.length > 0) {
@@ -181,7 +187,8 @@ export class BigQueryService {
         if (DEFAULT_PUBLIC_PROJECT_ID !== projectId) {
           filterDatasetByLocation = filterDatasetByLocation.filter(
             (dataset: any) =>
-              dataset.entrySource?.location?.toUpperCase() === settings.get('bqRegion')['composite']
+              dataset.entrySource?.location?.toUpperCase() ===
+              settings.get('bqRegion')['composite']
           );
         }
 
@@ -201,7 +208,8 @@ export class BigQueryService {
             }) => {
               databaseNames.push(data.datasetReference.datasetId);
               const description = data.datasetReference.description || 'None';
-              updatedDatabaseDetails[data.datasetReference.datasetId] = description;
+              updatedDatabaseDetails[data.datasetReference.datasetId] =
+                description;
             }
           );
         } else {

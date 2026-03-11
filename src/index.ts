@@ -62,10 +62,10 @@ import NotebookTemplateService from './notebookTemplates/notebookTemplatesServic
 import * as path from 'path';
 import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
-import { BigQueryWidget } from './bigQuery/bigQueryWidget';
+import { BigQueryWidget } from './catalog/bigquery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
-import { BigQueryService } from './bigQuery/bigQueryService';
+import { BigQueryService } from './catalog/common/bigQueryService';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
