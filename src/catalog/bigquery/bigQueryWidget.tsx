@@ -135,8 +135,7 @@ const BigQueryComponent = ({
   const [projectNameInfo, setProjectNameInfo] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [notebookValue, setNotebookValue] = useState<string>('');
-  const [dataprocMetastoreServices, setDataprocMetastoreServices] =
-    useState('');
+  const [dataprocMetastoreServices, setDataprocMetastoreServices] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadMoreLoading, setIsLoadMoreLoading] = useState(false);
   const [isResetLoading, setResetLoading] = useState(false);
@@ -161,9 +160,7 @@ const BigQueryComponent = ({
   const [loginError, setLoginError] = useState(false);
   const [projectName, setProjectName] = useState<string>('');
 
-  const [nextPageTokens, setNextPageTokens] = useState<
-    Map<string, string | null>
-  >(new Map());
+  const [nextPageTokens, setNextPageTokens] = useState<Map<string, string | null>>(new Map());
   const [allDatasets, setAllDatasets] = useState<Map<string, any[]>>(new Map());
 
   function handleUpdateHeight() {
@@ -223,6 +220,7 @@ const BigQueryComponent = ({
           id: uuidv4(),
           name: 'Biglake',
           projectId: projectName,
+          children: [],
           isNodeOpen: false
         }
       ],
@@ -239,10 +237,8 @@ const BigQueryComponent = ({
 
     tempData.forEach((projectData: any) => {
       if (projectData.name === projectName) {
-        const bigQueryNode = projectData.children.find(
-          (child: any) => child.name === 'Bigquery'
-        );
-
+        const bigQueryNode = projectData.children.find((child: any) => child.name === 'Bigquery');
+        
         if (bigQueryNode) {
           const datasetNodes = databaseNames.map(datasetName => ({
             id: uuidv4(),
@@ -278,26 +274,18 @@ const BigQueryComponent = ({
 
     tempData.forEach((projectData: any) => {
       if (projectData.name === projectName) {
-        const bigQueryNode = projectData.children.find(
-          (child: any) => child.name === 'Bigquery'
-        );
-
+        const bigQueryNode = projectData.children.find((child: any) => child.name === 'Bigquery');
+        
         if (bigQueryNode) {
           bigQueryNode.children.forEach((dataset: any) => {
             if (dataset.name === datasetName) {
-              if (
-                tableResponse &&
-                tableResponse.length > 0 &&
-                tableResponse[0].tableReference
-              ) {
-                dataset['children'] = tableResponse.map(
-                  (tableDetails: any) => ({
-                    id: uuidv4(),
-                    name: tableDetails.tableReference.tableId,
-                    children: [],
-                    isNodeOpen: false
-                  })
-                );
+              if (tableResponse && tableResponse.length > 0 && tableResponse[0].tableReference) {
+                dataset['children'] = tableResponse.map((tableDetails: any) => ({
+                  id: uuidv4(),
+                  name: tableDetails.tableReference.tableId,
+                  children: [],
+                  isNodeOpen: false
+                }));
               } else if (dataset.name === tableResponse) {
                 dataset['children'] = false;
               }
@@ -316,10 +304,8 @@ const BigQueryComponent = ({
 
     tempData.forEach((projectData: any) => {
       if (projectData.name === projectName) {
-        const bigQueryNode = projectData.children.find(
-          (child: any) => child.name === 'Bigquery'
-        );
-
+        const bigQueryNode = projectData.children.find((child: any) => child.name === 'Bigquery');
+        
         if (bigQueryNode) {
           bigQueryNode.children.forEach((dataset: any) => {
             if (dataset.name === schemaResponse?.tableReference?.datasetId) {
@@ -355,11 +341,7 @@ const BigQueryComponent = ({
   };
 
   const handleSearchTreeStructure = () => {
-    if (
-      searchResponse &&
-      searchResponse.results &&
-      searchResponse.results.length > 0
-    ) {
+    if (searchResponse && searchResponse.results && searchResponse.results.length > 0) {
       let data: any = [];
 
       searchResponse.results.forEach((searchData: any) => {
@@ -386,9 +368,7 @@ const BigQueryComponent = ({
           data.push(projectNode);
         }
 
-        let bqNode = projectNode.children.find(
-          (s: any) => s.name === 'Bigquery'
-        );
+        let bqNode = projectNode.children.find((s: any) => s.name === 'Bigquery');
         if (!bqNode) {
           bqNode = {
             id: uuidv4(),
@@ -400,9 +380,7 @@ const BigQueryComponent = ({
           projectNode.children.push(bqNode);
         }
 
-        let datasetNode = bqNode.children.find(
-          (d: any) => d.name === datasetId
-        );
+        let datasetNode = bqNode.children.find((d: any) => d.name === datasetId);
         if (!datasetNode) {
           datasetNode = {
             id: uuidv4(),
@@ -482,12 +460,7 @@ const BigQueryComponent = ({
           const widgetTitle = widget.title.label;
           delete openedWidgets[widgetTitle];
         });
-      } else if (
-        depth === 4 &&
-        node.parent &&
-        node.parent.parent &&
-        node.parent.parent.parent
-      ) {
+      } else if (depth === 4 && node.parent && node.parent.parent && node.parent.parent.parent) {
         const database = node.parent.data.name;
         const projectId = node.parent.parent.parent.data.name;
 
@@ -539,8 +512,7 @@ const BigQueryComponent = ({
     const handleToggle = () => {
       const depth = calculateDepth(node);
       if (node.data.isLoadMoreNode) {
-        const projectId =
-          node.data.projectId || node.parent?.parent?.data?.name;
+        const projectId = node.data.projectId || node.parent?.parent?.data?.name;
         const nextPageToken = projectId
           ? nextPageTokens.get(projectId)
           : undefined;
@@ -578,7 +550,11 @@ const BigQueryComponent = ({
         setIsIconLoading(true);
         const datasetId = node.parent?.data?.name;
         const projectId = node.parent?.parent?.parent?.data?.name;
-        getBigQueryColumnDetails(node.data.name, datasetId, projectId);
+        getBigQueryColumnDetails(
+          node.data.name,
+          datasetId,
+          projectId
+        );
       } else {
         node.toggle();
       }
@@ -797,7 +773,7 @@ const BigQueryComponent = ({
                     tag="div"
                     className="icon-white logo-alignment-style"
                   />
-                ) : (
+                ):(
                   <iconBigquery.react
                     tag="div"
                     className="icon-white logo-alignment-style"
@@ -811,10 +787,10 @@ const BigQueryComponent = ({
             <>
               {arrowIcon}
               <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconDataset.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
+                  <iconDataset.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
               </div>
             </>
           );
@@ -861,17 +837,17 @@ const BigQueryComponent = ({
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-              {node.data.name === 'Biglake' ? (
-                <iconBiglake.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
-              ) : (
-                <iconBigquery.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
-              )}
+                {node.data.name === 'Biglake' ? (
+                  <iconBiglake.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                ) : (
+                  <iconBigquery.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                )}
             </div>
           </>
         );
@@ -913,20 +889,38 @@ const BigQueryComponent = ({
 
     return (
       <>
-        <div style={style}>
+        <div style={{ ...style, display: 'flex', alignItems: 'center' }}>
           {renderNodeIcon()}
           <div
             role="treeitem"
             title={node.data.name}
             onClick={handleTextClick}
             onContextMenu={handleContextMenu}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flex: 1,       // Take up the remaining width after the icon
+              minWidth: 0,   // Allows this div to shrink below its content width
+            }}
           >
-            {node.data.name}
+            <span 
+              style={{ 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {node.data.name}
+            </span>
+            
             {node.data.type && (
               <span
                 title={node.data.type}
                 className="dpms-column-type-text"
-                style={{ flexShrink: 0 }}
+                style={{ 
+                  flexShrink: 0, 
+                  marginLeft: '6px' 
+                }}
               >
                 ({node.data.type.toLowerCase()})
               </span>
