@@ -19,16 +19,16 @@ import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
-import bigQueryProjectIcon from '../../../style/icons/bigquery_project_icon.svg';
-import datasetIcon from '../../../style/icons/dataset_icon.svg';
-import tableIcon from '../../../style/icons/table_icon.svg';
-import columnsIcon from '../../../style/icons/columns_icon.svg';
-import databaseWidgetIcon from '../../../style/icons/database_widget_icon.svg';
-import datasetsIcon from '../../../style/icons/datasets_icon.svg';
-import searchIcon from '../../../style/icons/search_icon.svg';
-import rightArrowIcon from '../../../style/icons/right_arrow_icon.svg';
-import downArrowIcon from '../../../style/icons/down_arrow_icon.svg';
-import searchClearIcon from '../../../style/icons/search_clear_icon.svg';
+import bigQueryProjectIcon from 'style/icons/bigquery_project_icon.svg';
+import datasetIcon from 'style/icons/dataset_icon.svg';
+import tableIcon from 'style/icons/table_icon.svg';
+import columnsIcon from 'style/icons/columns_icon.svg';
+import databaseWidgetIcon from 'style/icons/database_widget_icon.svg';
+import datasetsIcon from 'style/icons/datasets_icon.svg';
+import searchIcon from 'style/icons/search_icon.svg';
+import rightArrowIcon from 'style/icons/right_arrow_icon.svg';
+import downArrowIcon from 'style/icons/down_arrow_icon.svg';
+import searchClearIcon from 'style/icons/search_clear_icon.svg';
 import { MainAreaWidget } from '@jupyterlab/apputils';
 import { Menu, MenuItem } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
@@ -40,15 +40,15 @@ import {
   InputAdornment,
   TextField
 } from '@mui/material';
-import { TitleComponent } from '../../controls/SidePanelTitleWidget';
-import { BigQueryWidgetService } from './bigqueryWidgetService';
+import { TitleComponent } from 'controls/SidePanelTitleWidget';
+import { BigQueryWidgetService } from 'catalog/bigquery/bigqueryWidgetService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { BigQueryDatasetWrapper } from '../common/bigQueryDatasetInfoWrapper';
-import { BigQueryTableWrapper } from '../common/bigQueryTableInfoWrapper';
-import { DataprocWidget } from '../../controls/DataprocWidget';
-import { checkConfig, handleDebounce } from '../../utils/utils';
-import LoginErrorComponent from '../../utils/loginErrorComponent';
-import { BIGQUERY_API_URL } from '../../utils/const';
+import { BigQueryDatasetWrapper } from 'catalog/common/bigQueryDatasetInfoWrapper';
+import { BigQueryTableWrapper } from 'catalog/common/bigQueryTableInfoWrapper';
+import { DataprocWidget } from 'controls/DataprocWidget';
+import { checkConfig, handleDebounce } from 'utils/utils';
+import LoginErrorComponent from 'utils/loginErrorComponent';
+import { BIGQUERY_API_URL } from 'utils/const';
 
 const iconDatasets = new LabIcon({
   name: 'launcher:datasets-icon',

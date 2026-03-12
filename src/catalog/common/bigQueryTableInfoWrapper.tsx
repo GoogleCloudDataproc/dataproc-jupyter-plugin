@@ -17,11 +17,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { DataprocWidget } from '../../controls/DataprocWidget';
-import PreviewDataInfo from './previewDataInfo';
-import BigQueryTableInfo from './bigQueryTableInfo';
-import BigQuerySchemaInfo from './bigQuerySchema';
-import { BigQueryService } from './bigQueryService';
+import { DataprocWidget } from 'controls/DataprocWidget';
+import PreviewDataInfo from 'catalog/common/previewDataInfo';
+import BigQueryTableInfo from 'catalog/common/bigQueryTableInfo';
+import BigQuerySchemaInfo from 'catalog/common/bigQuerySchema';
+import { BigQueryService } from 'catalog/common/bigQueryService';
 
 interface IDatabaseProps {
   title: string;

@@ -16,14 +16,14 @@
  */
 
 import { Notification } from '@jupyterlab/apputils';
-import { requestAPI } from '../../handler/handler';
+import { requestAPI } from 'handler/handler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   BIGQUERY_SERVICE_NAME,
   DEFAULT_PUBLIC_PROJECT_ID,
   PLUGIN_ID
-} from '../../utils/const';
-import { authApi } from '../../utils/utils';
+} from 'utils/const';
+import { authApi } from 'utils/utils';
 
 export class BigQueryWidgetService {
   static getBigQueryColumnDetailsAPIService = async (

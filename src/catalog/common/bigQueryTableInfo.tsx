@@ -16,7 +16,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { BigQueryService } from './bigQueryService';
+import { BigQueryService } from 'catalog/common/bigQueryService';
 import { CircularProgress } from '@mui/material';
 
 const BigQueryTableInfo = ({

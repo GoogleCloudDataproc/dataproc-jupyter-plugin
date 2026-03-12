@@ -17,8 +17,8 @@
 
 import React from 'react';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { DataprocWidget } from '../../controls/DataprocWidget';
-import BigQueryDatasetInfo from './bigQueryDatasetInfo';
+import { DataprocWidget } from 'controls/DataprocWidget';
+import BigQueryDatasetInfo from 'catalog/common/bigQueryDatasetInfo';
 
 interface IDatabaseProps {
   title: string;

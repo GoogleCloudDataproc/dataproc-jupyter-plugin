@@ -16,10 +16,10 @@
  */
 
 import { Notification } from '@jupyterlab/apputils';
-import { requestAPI } from '../../handler/handler';
+import { requestAPI } from 'handler/handler';
 import {
   BIGQUERY_SERVICE_NAME,
-} from '../../utils/const';
+} from 'utils/const';
 interface IPreviewColumn {
   Header: string;
   accessor: string;

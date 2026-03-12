@@ -17,7 +17,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTable } from 'react-table';
-import { handleDebounce } from '../../utils/utils';
+import { handleDebounce } from 'utils/utils';
 
 interface IColumn {
   name: string;
