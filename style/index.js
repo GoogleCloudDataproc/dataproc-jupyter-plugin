@@ -31,3 +31,4 @@ import './databaseInfo.css';
 import './paginationView.css';
 import './runtimeTemplate.css';
 import './notebookTemplates.css';
+import './catalog.css';
