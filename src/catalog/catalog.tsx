@@ -21,6 +21,8 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import rightArrowIcon from 'style/icons/right_arrow_icon.svg';
 import downArrowIcon from 'style/icons/down_arrow_icon.svg';
 import bigQueryProjectIcon from 'style/icons/bigquery_project_icon.svg';
+import bigqueryIcon from 'style/icons/dataset_explorer_icon.svg';
+import biglakeIcon from 'style/icons/biglake_icon.svg';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
 import { IThemeManager } from '@jupyterlab/apputils';
@@ -47,6 +49,14 @@ const iconDownArrow = new LabIcon({
 const iconBigQueryProject = new LabIcon({
   name: 'launcher:bigquery-project-icon',
   svgstr: bigQueryProjectIcon
+});
+const iconBiglake = new LabIcon({
+  name: 'launcher:biglake-icon',
+  svgstr: biglakeIcon
+});
+const iconBigquery = new LabIcon({
+  name: 'launcher:bigquery-icon',
+  svgstr: bigqueryIcon
 });
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
@@ -106,18 +116,34 @@ const CatalogComponent = ({
   interface IDataEntry {
     id: string;
     name: string;
-    type: string;
+    type?: string;
     isLoadMoreNode?: boolean;
-    isNodeOpen: boolean;
-    description: string;
-    children: any;
+    isNodeOpen?: boolean;
+    description?: string;
+    children?: any;
+    projectId?: string;
   }
 
   const treeStructureforProjects = () => {
     const data = projectNameInfo.map(projectName => ({
       id: uuidv4(),
       name: projectName,
-      children: [],
+      children: [
+        {
+          id: uuidv4(),
+          name: 'Biglake',
+          projectId: projectName,
+          children: [],
+          isNodeOpen: false
+        },
+        {
+          id: uuidv4(),
+          name: 'Bigquery',
+          projectId: projectName,
+          children: [],
+          isNodeOpen: false
+        }
+      ],
       isNodeOpen: false
     }));
 
@@ -132,9 +158,16 @@ const CatalogComponent = ({
   const Node = ({ node, style, onClick}: NodeProps) => {
 
     const handleToggle = () => {
-
-      if (calculateDepth(node) === 1 && !node.isOpen) {
-        setCurrentNode(node);
+      const depth = calculateDepth(node);
+      if (depth === 1 && !node.isOpen) {
+        node.toggle();
+      } else if (depth === 2 && !node.isOpen) {
+        if (node.data.name === 'Biglake') {
+          console.log('hello biglake');
+          return;
+        } else if (node.data.name === 'Bigquery') {
+          setCurrentNode(node);
+        }
       } else {
         node.toggle();
       }
@@ -205,6 +238,25 @@ const CatalogComponent = ({
             </div>
           </>
         );
+      } else if (depth === 2) {
+        return (
+          <>
+            {arrowIcon}
+            <div role="img" className="db-icon" onClick={handleIconClick}>
+              {node.data.name === 'Biglake' ? (
+                <iconBiglake.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              ) : (
+                <iconBigquery.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              )}
+            </div>
+          </>
+        );
       }
       return (
         <>
@@ -214,14 +266,28 @@ const CatalogComponent = ({
 
     return (
       <>
-        <div style={style}>
+        <div style={{ ...style, display: 'flex', alignItems: 'center' }}>
           {renderNodeIcon()}
           <div
             role="treeitem"
             title={node.data.name}
             onClick={handleTextClick}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flex: 1, // Take up the remaining width after the icon
+              minWidth: 0 // Allows this div to shrink below its content width
+            }}
           >
-            {node.data.name}
+            <span
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {node.data.name}
+            </span>
           </div>
         </div>
       </>
