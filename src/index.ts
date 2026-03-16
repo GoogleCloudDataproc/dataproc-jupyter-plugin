@@ -438,7 +438,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       if (!panelCatalog) return;
       const existingWidgets = panelCatalog.widgets;
       existingWidgets.forEach(widget => {
-        if (widget instanceof dpmsWidget) {
+        if (widget instanceof CatalogWidget) {
           widget.dispose();
         }
       });
