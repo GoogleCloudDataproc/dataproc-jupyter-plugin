@@ -2,21 +2,21 @@ import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
-import rightArrowIcon from '../../style/icons/right_arrow_icon.svg';
-import downArrowIcon from '../../style/icons/down_arrow_icon.svg';
-import bigQueryProjectIcon from '../../style/icons/bigquery_project_icon.svg';
+import rightArrowIcon from 'style/icons/right_arrow_icon.svg';
+import downArrowIcon from 'style/icons/down_arrow_icon.svg';
+import bigQueryProjectIcon from 'style/icons/bigquery_project_icon.svg';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
 import { IThemeManager } from '@jupyterlab/apputils';
 import {
   CircularProgress
 } from '@mui/material';
-import { TitleComponent } from '../controls/SidePanelTitleWidget';
-import { BigQueryWidgetService } from './bigquery/bigqueryWidgetService';
+import { TitleComponent } from 'controls/SidePanelTitleWidget';
+import { BigQueryWidgetService } from 'catalog/bigquery/bigqueryWidgetService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { DataprocWidget } from '../controls/DataprocWidget';
-import { handleDebounce } from '../utils/utils';
-import { BIGQUERY_API_URL } from '../utils/const';
+import { DataprocWidget } from 'controls/DataprocWidget';
+import { handleDebounce } from 'utils/utils';
+import { BIGQUERY_API_URL } from 'utils/const';
 
 
 const iconRightArrow = new LabIcon({
