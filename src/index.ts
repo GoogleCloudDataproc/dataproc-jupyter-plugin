@@ -442,7 +442,6 @@ const extension: JupyterFrontEndPlugin<void> = {
           widget.dispose();
         }
       });
-
       const newWidget = new CatalogWidget(
         app as JupyterLab,
         settingRegistry as ISettingRegistry,

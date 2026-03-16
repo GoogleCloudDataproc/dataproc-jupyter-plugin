@@ -61,8 +61,6 @@ const CatalogComponent = ({
   const [treeStructureData, setTreeStructureData] = useState<any>([]);
 
   const [currentNode, setCurrentNode] = useState<any>();
-  const [isIconLoading] = useState(false);
-
   const [apiError, setApiError] = useState(false);
 
   const [height, setHeight] = useState(window.innerHeight - 125);
@@ -150,15 +148,7 @@ const CatalogComponent = ({
         (node.children && node.children.length > 0) ||
         (depth !== 4 && node.children);
       const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
-        isIconLoading && currentNode.data.name === node.data.name ? (
-          <div className="big-query-loader-style">
-            <CircularProgress
-              size={16}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
-          </div>
-        ) : node.isOpen ? (
+        node.isOpen ? (
           <>
             <div
               role="treeitem"
@@ -183,7 +173,7 @@ const CatalogComponent = ({
             />
           </div>
         )
-      ): (
+      ) : (
         <div style={{ width: '29px' }}></div>
       );
 
@@ -226,7 +216,6 @@ const CatalogComponent = ({
     if (isReset) {
       setResetLoading(true);
     }
-    console.log("catalog flow is working here")
     await BigQueryWidgetService.getBigQueryProjectsListAPIService(
       setProjectNameInfo,
       setIsLoading,
