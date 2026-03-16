@@ -1,0 +1,233 @@
+/**
+ * @license
+ * Copyright 2024 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Notification } from '@jupyterlab/apputils';
+import { requestAPI } from '../../handler/handler';
+import {
+  BIGQUERY_SERVICE_NAME,
+} from '../../utils/const';
+interface IPreviewColumn {
+  Header: string;
+  accessor: string;
+}
+
+export class BigQueryService {
+  static bigQueryPreviewAPIService = async (
+    columns: IPreviewColumn[],
+    tableId: string,
+    dataSetId: string,
+    setIsLoading: (value: boolean) => void,
+    projectId: string,
+    maxResults: number,
+    pageIndex: number,
+    setTotalRowSize: (value: string) => void,
+    setPreviewDataList: any
+  ) => {
+    setIsLoading(true);
+    try {
+      const startIndex = pageIndex * maxResults;
+      const data: any = await requestAPI(
+        `bigQueryPreview?project_id=${projectId}&dataset_id=${dataSetId}&table_id=${tableId}&max_results=${maxResults}&start_index=${startIndex}`
+      );
+
+      if (data.error) {
+        Notification.emit(data.error, 'error', {
+          autoClose: 5000
+        });
+        setIsLoading(false);
+      } else if (data.totalRows == 0) {
+        setIsLoading(false);
+      } else {
+        let transformRowInfoList: any = [];
+        data.rows.forEach((rowInfo: any) => {
+          let transformRowInfo: any = {};
+          rowInfo['f'].forEach((fieldInfo: any, index: number) => {
+            transformRowInfo[columns[index].Header] =
+              typeof fieldInfo['v'] === 'object'
+                ? JSON.stringify(fieldInfo['v'])
+                : fieldInfo['v'];
+          });
+          transformRowInfoList.push(transformRowInfo);
+        });
+        setPreviewDataList(transformRowInfoList);
+        setIsLoading(false);
+        setTotalRowSize(data.totalRows);
+      }
+    } catch (reason) {
+      Notification.emit(
+        `Error in calling BigQuery Preview API : ${reason}`,
+        'error',
+        {
+          autoClose: 5000
+        }
+      );
+    }
+  };
+
+  static getBigQuerySchemaInfoAPIService = async (
+    datasetId: string,
+    tableId: string,
+    projectId: string,
+    setSchemaInfoResponse: any
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryTableInfo?project_id=${projectId}&dataset_id=${datasetId}&table_id=${tableId}`
+      );
+      if (data.schema && data.schema.fields) {
+        setSchemaInfoResponse(data.schema.fields);
+      } else {
+        setSchemaInfoResponse([]);
+      }
+    } catch (reason) {
+      Notification.emit(
+        `Failed to fetch big query schema : ${reason}`,
+        'error',
+        {
+          autoClose: 5000
+        }
+      );
+    }
+  };
+
+  static getBigQueryDatasetInfoAPIService = async (
+    dataset: string,
+    projectId: string,
+    setDatasetInfo: any
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryDatasetInfo?project_id=${projectId}&dataset_id=${dataset}`
+      );
+      let datasetInfoTemp: any = {};
+      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive;
+      setDatasetInfo(datasetInfoTemp);
+    } catch (reason) {
+      Notification.emit(
+        `Error in calling BigQurey Dataset API : ${reason}`,
+        'error',
+        {
+          autoClose: 5000
+        }
+      );
+    }
+  };
+
+  static getBigQueryTableInfoAPIService = async (
+    title: string,
+    dataset: string,
+    setTableInfo: any,
+    datasetInfo: any,
+    projectId: string,
+    setIsLoading: (value: boolean) => void
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryTableInfo?project_id=${projectId}&dataset_id=${dataset}&table_id=${title}`
+      );
+
+      let tableInfoTemp: any = {};
+      tableInfoTemp['Table ID'] = data.id;
+      tableInfoTemp['Created'] = data.creationTime
+        ? new Date(Number(data.creationTime)).toString()
+        : '';
+      tableInfoTemp['Last modified'] = data.lastModifiedTime
+        ? new Date(Number(data.lastModifiedTime)).toString()
+        : '';
+      tableInfoTemp['Table expiration'] = data.expirationTime
+        ? new Date(Number(data.expirationTime)).toString()
+        : '';
+      tableInfoTemp['Data location'] = data.location;
+      tableInfoTemp['Default collation'] = data.defaultCollation;
+      tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
+      tableInfoTemp['Description'] = data.description;
+      tableInfoTemp['Case insensitive'] = datasetInfo['Case insensitive']
+        ? datasetInfo['Case insensitive'].toString()
+        : '';
+      setTableInfo(tableInfoTemp);
+      setIsLoading(false);
+    } catch (reason) {
+      Notification.emit(
+        `Error in calling BigQurey Table API : ${reason}`,
+        'error',
+        {
+          autoClose: 5000
+        }
+      );
+    }
+  };
+
+  static getBigQueryDatasetDetailsAPIService = async (
+    dataset: string,
+    setDatasetInfo: any,
+    projectId: string,
+    setIsLoading: (value: boolean) => void
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryDatasetInfo?project_id=${projectId}&dataset_id=${dataset}`
+      );
+      let datasetInfoTemp: any = {};
+      datasetInfoTemp['Dataset ID'] = data.id;
+      datasetInfoTemp['Created'] = data.creationTime
+        ? new Date(Number(data.creationTime)).toString()
+        : '';
+      datasetInfoTemp['Default table expiration'] =
+        data.defaultTableExpirationMs
+          ? data.defaultTableExpirationMs / (1000 * 60 * 60 * 24) + ' days'
+          : '';
+      datasetInfoTemp['Last modified'] = data.lastModifiedTime
+        ? new Date(Number(data.lastModifiedTime)).toString()
+        : '';
+      datasetInfoTemp['Data location'] = data.location;
+      datasetInfoTemp['Description'] = data.description;
+      datasetInfoTemp['Default collation'] = data.defaultCollation;
+      datasetInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
+      datasetInfoTemp['Time travel window'] = data.maxTimeTravelHours
+        ? data.maxTimeTravelHours / 24 + ' days'
+        : '';
+      datasetInfoTemp['Storage billing model'] = data.storageBillingModel;
+      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive
+        ? data.isCaseInsensitive.toString()
+        : '';
+      setDatasetInfo(datasetInfoTemp);
+      setIsLoading(false);
+    } catch (reason) {
+      Notification.emit(
+        `Error in calling BigQurey Dataset Details API : ${reason}`,
+        'error',
+        {
+          autoClose: 5000
+        }
+      );
+    }
+  };
+
+  static checkBigQueryDatasetsAPIService = async () => {
+    try {
+      const data: any = await requestAPI(
+        `checkApiEnabled?service_name=${BIGQUERY_SERVICE_NAME}`,
+        {
+          method: 'POST'
+        }
+      );
+      return data;
+    } catch (reason) {
+      return reason;
+    }
+  };
+}

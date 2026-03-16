@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2024 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,69 +16,16 @@
  */
 
 import { Notification } from '@jupyterlab/apputils';
-import { requestAPI } from '../handler/handler';
+import { requestAPI } from '../../handler/handler';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { BIGQUERY_SERVICE_NAME, DEFAULT_PUBLIC_PROJECT_ID, PLUGIN_ID } from '../utils/const';
-import { authApi } from '../utils/utils';
+import {
+  BIGQUERY_SERVICE_NAME,
+  DEFAULT_PUBLIC_PROJECT_ID,
+  PLUGIN_ID
+} from '../../utils/const';
+import { authApi } from '../../utils/utils';
 
-interface IPreviewColumn {
-  Header: string;
-  accessor: string;
-}
-
-export class BigQueryService {
-  static bigQueryPreviewAPIService = async (
-    columns: IPreviewColumn[],
-    tableId: string,
-    dataSetId: string,
-    setIsLoading: (value: boolean) => void,
-    projectId: string,
-    maxResults: number,
-    pageIndex: number,
-    setTotalRowSize: (value: string) => void,
-    setPreviewDataList: any
-  ) => {
-    setIsLoading(true);
-    try {
-      const startIndex = pageIndex * maxResults;
-      const data: any = await requestAPI(
-        `bigQueryPreview?project_id=${projectId}&dataset_id=${dataSetId}&table_id=${tableId}&max_results=${maxResults}&start_index=${startIndex}`
-      );
-
-      if (data.error) {
-        Notification.emit(data.error, 'error', {
-          autoClose: 5000
-        });
-        setIsLoading(false);
-      } else if (data.totalRows == 0) {
-        setIsLoading(false);
-      } else {
-        let transformRowInfoList: any = [];
-        data.rows.forEach((rowInfo: any) => {
-          let transformRowInfo: any = {};
-          rowInfo['f'].forEach((fieldInfo: any, index: number) => {
-            transformRowInfo[columns[index].Header] =
-              typeof fieldInfo['v'] === 'object'
-                ? JSON.stringify(fieldInfo['v'])
-                : fieldInfo['v'];
-          });
-          transformRowInfoList.push(transformRowInfo);
-        });
-        setPreviewDataList(transformRowInfoList);
-        setIsLoading(false);
-        setTotalRowSize(data.totalRows);
-      }
-    } catch (reason) {
-      Notification.emit(
-        `Error in calling BigQuery Preview API : ${reason}`,
-        'error',
-        {
-          autoClose: 5000
-        }
-      );
-    }
-  };
-
+export class BigQueryWidgetService {
   static getBigQueryColumnDetailsAPIService = async (
     datasetId: string,
     tableId: string,
@@ -104,32 +51,6 @@ export class BigQueryService {
     }
   };
 
-  static getBigQuerySchemaInfoAPIService = async (
-    datasetId: string,
-    tableId: string,
-    projectId: string,
-    setSchemaInfoResponse: any
-  ) => {
-    try {
-      const data: any = await requestAPI(
-        `bigQueryTableInfo?project_id=${projectId}&dataset_id=${datasetId}&table_id=${tableId}`
-      );
-      if (data.schema && data.schema.fields) {
-        setSchemaInfoResponse(data.schema.fields);
-      } else {
-        setSchemaInfoResponse([]);
-      }
-    } catch (reason) {
-      Notification.emit(
-        `Failed to fetch big query schema : ${reason}`,
-        'error',
-        {
-          autoClose: 5000
-        }
-      );
-    }
-  };
-
   static getBigQueryDatasetsAPIService = async (
     notebookValue: string,
     settingRegistry: ISettingRegistry,
@@ -148,7 +69,7 @@ export class BigQueryService {
       const pageToken = nextPageToken ?? '';
       try {
         const settings = await settingRegistry.load(PLUGIN_ID);
-        const location = settings.get('bqRegion')['composite']
+        const location = settings.get('bqRegion')['composite'];
 
         const data: any = await requestAPI(
           `bigQueryDataset?project_id=${projectId}&location=${location}&pageToken=${pageToken}`
@@ -162,7 +83,9 @@ export class BigQueryService {
         const existingDatasetList = previousDatasetList ?? [];
         const allDatasetList: any = [
           ...(existingDatasetList as []),
-          ...(DEFAULT_PUBLIC_PROJECT_ID === projectId ? data.datasets : data.entries)
+          ...(DEFAULT_PUBLIC_PROJECT_ID === projectId
+            ? data.datasets
+            : data.entries)
         ];
 
         if (setUpdatedDatasetList && allDatasetList.length > 0) {
@@ -181,7 +104,8 @@ export class BigQueryService {
         if (DEFAULT_PUBLIC_PROJECT_ID !== projectId) {
           filterDatasetByLocation = filterDatasetByLocation.filter(
             (dataset: any) =>
-              dataset.entrySource?.location?.toUpperCase() === settings.get('bqRegion')['composite']
+              dataset.entrySource?.location?.toUpperCase() ===
+              settings.get('bqRegion')['composite']
           );
         }
 
@@ -201,7 +125,8 @@ export class BigQueryService {
             }) => {
               databaseNames.push(data.datasetReference.datasetId);
               const description = data.datasetReference.description || 'None';
-              updatedDatabaseDetails[data.datasetReference.datasetId] = description;
+              updatedDatabaseDetails[data.datasetReference.datasetId] =
+                description;
             }
           );
         } else {
@@ -303,119 +228,6 @@ export class BigQueryService {
     }
   };
 
-  static getBigQueryDatasetInfoAPIService = async (
-    dataset: string,
-    projectId: string,
-    setDatasetInfo: any
-  ) => {
-    try {
-      const data: any = await requestAPI(
-        `bigQueryDatasetInfo?project_id=${projectId}&dataset_id=${dataset}`
-      );
-      let datasetInfoTemp: any = {};
-      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive;
-      setDatasetInfo(datasetInfoTemp);
-    } catch (reason) {
-      Notification.emit(
-        `Error in calling BigQurey Dataset API : ${reason}`,
-        'error',
-        {
-          autoClose: 5000
-        }
-      );
-    }
-  };
-
-  static getBigQueryTableInfoAPIService = async (
-    title: string,
-    dataset: string,
-    setTableInfo: any,
-    datasetInfo: any,
-    projectId: string,
-    setIsLoading: (value: boolean) => void
-  ) => {
-    try {
-      const data: any = await requestAPI(
-        `bigQueryTableInfo?project_id=${projectId}&dataset_id=${dataset}&table_id=${title}`
-      );
-
-      let tableInfoTemp: any = {};
-      tableInfoTemp['Table ID'] = data.id;
-      tableInfoTemp['Created'] = data.creationTime
-        ? new Date(Number(data.creationTime)).toString()
-        : '';
-      tableInfoTemp['Last modified'] = data.lastModifiedTime
-        ? new Date(Number(data.lastModifiedTime)).toString()
-        : '';
-      tableInfoTemp['Table expiration'] = data.expirationTime
-        ? new Date(Number(data.expirationTime)).toString()
-        : '';
-      tableInfoTemp['Data location'] = data.location;
-      tableInfoTemp['Default collation'] = data.defaultCollation;
-      tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
-      tableInfoTemp['Description'] = data.description;
-      tableInfoTemp['Case insensitive'] = datasetInfo['Case insensitive']
-        ? datasetInfo['Case insensitive'].toString()
-        : '';
-      setTableInfo(tableInfoTemp);
-      setIsLoading(false);
-    } catch (reason) {
-      Notification.emit(
-        `Error in calling BigQurey Table API : ${reason}`,
-        'error',
-        {
-          autoClose: 5000
-        }
-      );
-    }
-  };
-
-  static getBigQueryDatasetDetailsAPIService = async (
-    dataset: string,
-    setDatasetInfo: any,
-    projectId: string,
-    setIsLoading: (value: boolean) => void
-  ) => {
-    try {
-      const data: any = await requestAPI(
-        `bigQueryDatasetInfo?project_id=${projectId}&dataset_id=${dataset}`
-      );
-      let datasetInfoTemp: any = {};
-      datasetInfoTemp['Dataset ID'] = data.id;
-      datasetInfoTemp['Created'] = data.creationTime
-        ? new Date(Number(data.creationTime)).toString()
-        : '';
-      datasetInfoTemp['Default table expiration'] =
-        data.defaultTableExpirationMs
-          ? data.defaultTableExpirationMs / (1000 * 60 * 60 * 24) + ' days'
-          : '';
-      datasetInfoTemp['Last modified'] = data.lastModifiedTime
-        ? new Date(Number(data.lastModifiedTime)).toString()
-        : '';
-      datasetInfoTemp['Data location'] = data.location;
-      datasetInfoTemp['Description'] = data.description;
-      datasetInfoTemp['Default collation'] = data.defaultCollation;
-      datasetInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
-      datasetInfoTemp['Time travel window'] = data.maxTimeTravelHours
-        ? data.maxTimeTravelHours / 24 + ' days'
-        : '';
-      datasetInfoTemp['Storage billing model'] = data.storageBillingModel;
-      datasetInfoTemp['Case insensitive'] = data.isCaseInsensitive
-        ? data.isCaseInsensitive.toString()
-        : '';
-      setDatasetInfo(datasetInfoTemp);
-      setIsLoading(false);
-    } catch (reason) {
-      Notification.emit(
-        `Error in calling BigQurey Dataset Details API : ${reason}`,
-        'error',
-        {
-          autoClose: 5000
-        }
-      );
-    }
-  };
-
   static getBigQueryProjectsListAPIService = async (
     setProjectNameInfo: any,
     setIsLoading: (value: boolean) => void,
@@ -426,7 +238,7 @@ export class BigQueryService {
       const credentials = await authApi();
       if (credentials) setProjectName(credentials.project_id || '');
       const result: any =
-        await BigQueryService.checkBigQueryDatasetsAPIService();
+        await BigQueryWidgetService.checkBigQueryDatasetsAPIService();
       if (result?.is_enabled) {
         const data: any = await requestAPI(`bigQueryProjectsList`);
         setProjectNameInfo(data);

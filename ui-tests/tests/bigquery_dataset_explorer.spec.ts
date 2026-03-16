@@ -26,13 +26,13 @@ test('bigquery-dataset-explorer', async ({ page, request }) => {
   expect(response.enable_bigquery_integration).toBe(true);
 
   const tabExists = await page.isVisible(
-    'role=tab[name="Dataset Explorer - BigQuery"]'
+    'role=tab[name="Catalog"]'
   );
 
   if (tabExists) {
     expect(response.enable_bigquery_integration).toBe(true);
     await page
-      .getByRole('tab', { name: 'Dataset Explorer - BigQuery' })
+      .getByRole('tab', { name: 'Catalog' })
       .click();
 
     // Wait for the Dataset projects to populate.
