@@ -17,8 +17,9 @@
 
 import { Notification } from '@jupyterlab/apputils';
 import { requestAPI } from 'handler/handler';
-import { BIGQUERY_SERVICE_NAME } from 'utils/const';
+import { BIGQUERY_SERVICE_NAME, DEFAULT_PUBLIC_PROJECT_ID, PLUGIN_ID } from 'utils/const';
 import { authApi } from 'utils/utils';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 export class BigQueryWidgetService {
   static getBigQueryProjectsListAPIService = async (
@@ -63,6 +64,197 @@ export class BigQueryWidgetService {
       return data;
     } catch (reason) {
       return reason;
+    }
+  };
+
+  static getBigQueryDatasetsAPIService = async (
+    settingRegistry: ISettingRegistry,
+    setDatabaseNames: (value: string[]) => void,
+    setDataSetResponse: any,
+    projectId: string,
+    setIsIconLoading: (value: boolean) => void,
+    setIsLoading: (value: boolean) => void,
+    setIsLoadMoreLoading: (value: boolean) => void,
+    previousDatasetList?: object,
+    setUpdatedDatasetList?: (value: any[]) => void,
+    nextPageToken?: any,
+    setNextPageToken?: (projectId: string, token: string | null) => void
+  ) => {
+      const pageToken = nextPageToken ?? '';
+      try {
+        const settings = await settingRegistry.load(PLUGIN_ID);
+        const location = settings.get('bqRegion')['composite']
+
+        const data: any = await requestAPI(
+          `bigQueryDataset?project_id=${projectId}&location=${location}&pageToken=${pageToken}`
+        );
+        if (!(data.entries || data.datasets)) {
+          setDataSetResponse([]);
+          setDatabaseNames([]);
+          return;
+        }
+
+        const existingDatasetList = previousDatasetList ?? [];
+        const allDatasetList: any = [
+          ...(existingDatasetList as []),
+          ...(DEFAULT_PUBLIC_PROJECT_ID === projectId ? data.datasets : data.entries)
+        ];
+
+        if (setUpdatedDatasetList && allDatasetList.length > 0) {
+          setUpdatedDatasetList(allDatasetList);
+        }
+        if (setNextPageToken && data.nextPageToken) {
+          setNextPageToken(projectId, data.nextPageToken || null);
+        } else {
+          // Passing null will delete the project from the token map
+          // Hides LoadMore From the UI
+          setNextPageToken && setNextPageToken(projectId, null);
+        }
+
+        let filterDatasetByLocation = allDatasetList;
+
+        if (DEFAULT_PUBLIC_PROJECT_ID !== projectId) {
+          filterDatasetByLocation = filterDatasetByLocation.filter(
+            (dataset: any) =>
+              dataset.entrySource?.location?.toUpperCase() === settings.get('bqRegion')['composite']
+          );
+        }
+
+        if (filterDatasetByLocation.length === 0) {
+          setDataSetResponse([]);
+          setDatabaseNames([]);
+          return;
+        }
+
+        const databaseNames: string[] = [];
+        const updatedDatabaseDetails: { [key: string]: string } = {};
+
+        if (DEFAULT_PUBLIC_PROJECT_ID === projectId) {
+          filterDatasetByLocation.forEach(
+            (data: {
+              datasetReference: { description: string; datasetId: string };
+            }) => {
+              databaseNames.push(data.datasetReference.datasetId);
+              const description = data.datasetReference.description || 'None';
+              updatedDatabaseDetails[data.datasetReference.datasetId] = description;
+            }
+          );
+        } else {
+          filterDatasetByLocation.forEach((data: any) => {
+            const name = data.entrySource.displayName;
+            if (name !== undefined && !databaseNames.includes(name)) {
+              databaseNames.push(name);
+              const description = data.entrySource?.description || 'None';
+              updatedDatabaseDetails[name] = description;
+            }
+          });
+        }
+
+        setDataSetResponse(filterDatasetByLocation);
+        setDatabaseNames(databaseNames);
+      } catch (reason) {
+        Notification.emit(`Failed to fetch datasets : ${reason}`, 'error', {
+          autoClose: 5000
+        });
+      } finally {
+        setIsLoading(false);
+        setIsIconLoading(false);
+        setIsLoadMoreLoading(false);
+      }
+  };
+
+  static getBigQueryTableAPIService = async (
+    datasetId: string,
+    setDatabaseNames: (value: string[]) => void,
+    setTableResponse: any,
+    projectId: string,
+    setIsIconLoading: (value: boolean) => void,
+    nextPageToken?: string,
+    previousDatasetList?: object
+  ) => {
+      const pageToken = nextPageToken ?? '';
+      try {
+        const data: any = await requestAPI(
+          `bigQueryTable?project_id=${projectId}&dataset_id=${datasetId}&pageToken=${pageToken}`
+        );
+
+        if (data.tables) {
+          const existingDatasetList = previousDatasetList ?? [];
+          //setStateAction never type issue
+          const allDatasetList: any = [
+            ...(existingDatasetList as []),
+            ...data.tables
+          ];
+
+          if (data.nextPageToken) {
+            this.getBigQueryTableAPIService(
+              datasetId,
+              setDatabaseNames,
+              setTableResponse,
+              projectId,
+              setIsIconLoading,
+              data.nextPageToken,
+              allDatasetList
+            );
+          } else {
+            const tableNames: string[] = [];
+            const entryNames: string[] = [];
+            const updatedTableDetails: { [key: string]: string } = {};
+            const datasetTableMapping: { [key: string]: string } = {};
+            allDatasetList.forEach(
+              (entry: {
+                tableReference: {
+                  description: string;
+                  datasetId: string;
+                  tableId: string;
+                };
+              }) => {
+                tableNames.push(entry.tableReference.tableId);
+                entryNames.push(entry.tableReference.tableId);
+                const description = entry.tableReference.description || 'None';
+                updatedTableDetails[entry.tableReference.tableId] = description;
+                datasetTableMapping[entry.tableReference.tableId] =
+                  entry.tableReference.datasetId;
+              }
+            );
+            setTableResponse(allDatasetList);
+            setIsIconLoading(false);
+          }
+        } else {
+          setTableResponse(datasetId);
+          setIsIconLoading(false);
+        }
+      } catch (reason) {
+        setIsIconLoading(false);
+
+        Notification.emit(`Failed to fetch datasets : ${reason}`, 'error', {
+          autoClose: 5000
+        });
+      }
+  };
+
+  static getBigQueryColumnDetailsAPIService = async (
+    datasetId: string,
+    tableId: string,
+    projectId: string,
+    setIsIconLoading: (value: boolean) => void,
+    setSchemaResponse: any
+  ) => {
+    try {
+      const data: any = await requestAPI(
+        `bigQueryTableInfo?project_id=${projectId}&dataset_id=${datasetId}&table_id=${tableId}`
+      );
+      setSchemaResponse(data);
+      setIsIconLoading(false);
+    } catch (reason) {
+      Notification.emit(
+        `Failed to fetch big query schema : ${reason}`,
+        'error',
+        {
+          autoClose: 5000
+        }
+      );
+      setIsIconLoading(false);
     }
   };
 }
