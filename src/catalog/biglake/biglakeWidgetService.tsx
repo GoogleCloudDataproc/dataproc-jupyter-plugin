@@ -14,8 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { Notification } from '@jupyterlab/apputils';
+import { requestAPI } from 'handler/handler';
+import { PLUGIN_ID } from 'utils/const'; // Make sure to import this!
 
 export class BigLakeWidgetService {
   static listCatalogAPIService = async (
@@ -26,27 +28,31 @@ export class BigLakeWidgetService {
     setIsIconLoading: (value: boolean) => void,
     setIsLoading: (value: boolean) => void
   ) => {
-    console.log('list catalog in service file is called');
-    // This is where the API call to list catalogs would go.
-    // For now, we will use mock data.
-    const mockData = [
-      {
-        id: 'catalog1',
-        name: 'catalog1',
-        children: [],
-        isNodeOpen: false
-      },
-      {
-        id: 'catalog2',
-        name: 'catalog2',
-        children: [],
-        isNodeOpen: false
+    try {
+      // 1. Get the region from the JupyterLab settings
+      const settings = await settingRegistry.load(PLUGIN_ID);
+      const location = settings.get('bqRegion')?.['composite'] || 'US';
+
+      // 2. Make the HTTP GET request to our local Python backend
+      const data: any = await requestAPI(
+        `bigLakeListCatalogs?project_id=${projectId}&location=${location}`
+      );
+
+      if (data && data.catalogs) {
+        const catalogNames = data.catalogs.map((c: any) => c.displayName);
+        setCatalogResponse(data.catalogs);
+        setCatalogNames(catalogNames);
+      } else {
+        setCatalogResponse([]);
+        setCatalogNames([]);
       }
-    ];
-    const catalogNames = mockData.map(c => c.name);
-    setCatalogResponse(mockData);
-    setCatalogNames(catalogNames);
-    setIsIconLoading(false);
-    setIsLoading(false);
+    } catch (reason) {
+      Notification.emit(`Failed to fetch BigLake catalogs: ${reason}`, 'error', {
+        autoClose: 5000
+      });
+    } finally {
+      setIsIconLoading(false);
+      setIsLoading(false);
+    }
   };
 }
