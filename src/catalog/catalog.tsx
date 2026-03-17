@@ -35,6 +35,7 @@ import {
 } from '@mui/material';
 import { TitleComponent } from 'controls/SidePanelTitleWidget';
 import { BigQueryWidgetService } from 'catalog/bigquery/bigqueryWidgetService';
+import { BigLakeWidgetService } from './biglake/biglakeWidgetService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { DataprocWidget } from 'controls/DataprocWidget';
 import { handleDebounce } from 'utils/utils';
@@ -111,6 +112,8 @@ const CatalogComponent = ({
   const [projectName, setProjectName] = useState<string>('');
   const [isLoadMoreLoading, setIsLoadMoreLoading] = useState(false);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
+  const [biglakeCatalogNames, setBiglakeCatalogNames] = useState<string[]>([]);
+  const [biglakeCatalogResponse, setBiglakeCatalogResponse] = useState<any>();
   const [dataSetResponse, setDataSetResponse] = useState<any>();
   const [tableResponse, setTableResponse] = useState<any>();
   const [schemaResponse, setSchemaResponse] = useState<any>();
@@ -176,6 +179,33 @@ const CatalogComponent = ({
     data.sort((a, b) => a.name.localeCompare(b.name));
 
     setTreeStructureData(data);
+  };
+
+  const treeStructureforBigLakeCatalogs = () => {
+    let tempData = [...treeStructureData];
+    const projectName = currentNode.parent?.data?.name;
+
+    tempData.forEach((projectData: any) => {
+      if (projectData.name === projectName) {
+        const biglakeNode = projectData.children.find(
+          (child: any) => child.name === 'Biglake'
+        );
+
+        if (biglakeNode) {
+          const catalogNodes = biglakeCatalogNames.map(catalogName => ({
+            id: uuidv4(),
+            name: catalogName,
+            isLoadMoreNode: false,
+            isNodeOpen: false,
+            children: []
+          }));
+          catalogNodes.sort((a, b) => a.name.localeCompare(b.name));
+          biglakeNode.children = catalogNodes;
+        }
+      }
+    });
+
+    setTreeStructureData(tempData);
   };
 
   const treeStructureforDatasets = () => {
@@ -299,6 +329,17 @@ const CatalogComponent = ({
     setTreeStructureData(tempData);
   };
 
+  const getBiglakeCatalogs = async (projectId: string) => {
+    await BigLakeWidgetService.listCatalogAPIService(
+      settingRegistry,
+      setBiglakeCatalogNames,
+      setBiglakeCatalogResponse,
+      projectId,
+      setIsIconLoading,
+      setIsLoading
+    );
+  };
+
   const getBigQueryDatasets = async (projectId: string) => {
     const pageTokenForProject = nextPageTokens.get(projectId);
     const allDatasetsUnderProject = allDatasets.get(projectId) || [];
@@ -392,8 +433,12 @@ const CatalogComponent = ({
         node.toggle();
       } else if (depth === 2 && !node.isOpen) {
         if (node.data.name === 'Biglake') {
-          console.log('hello biglake');
-          return;
+          setCurrentNode(node);
+          const projectId = node.parent?.data?.name;
+          if (projectId) {
+            setIsIconLoading(true);
+            getBiglakeCatalogs(projectId);
+          }
         } else if (node.data.name === 'Bigquery') {
           setCurrentNode(node);
           const projectId = node.parent?.data?.name;
@@ -405,16 +450,22 @@ const CatalogComponent = ({
           }
         }
       } else if (depth === 3 && !node.isOpen) {
-        setCurrentNode(node);
-        setIsIconLoading(true);
-        const projectId = node.parent?.parent?.data?.name;
-        getBigQueryTables(node.data.name, projectId);
+        // This is for BigQuery datasets
+        if (node.parent?.data.name === 'Bigquery') {
+          setCurrentNode(node);
+          setIsIconLoading(true);
+          const projectId = node.parent?.parent?.data?.name;
+          getBigQueryTables(node.data.name, projectId);
+        }
       } else if (depth === 4 && node.parent && !node.isOpen) {
-        setCurrentNode(node);
-        setIsIconLoading(true);
-        const datasetId = node.parent?.data?.name;
-        const projectId = node.parent?.parent?.parent?.data?.name;
-        getBigQueryColumnDetails(node.data.name, datasetId, projectId);
+        // This is for BigQuery tables
+        if (node.parent?.parent?.data.name === 'Bigquery') {
+          setCurrentNode(node);
+          setIsIconLoading(true);
+          const datasetId = node.parent?.data?.name;
+          const projectId = node.parent?.parent?.parent?.data?.name;
+          getBigQueryColumnDetails(node.data.name, datasetId, projectId);
+        }
       } else {
         node.toggle();
       }
@@ -626,6 +677,12 @@ const CatalogComponent = ({
       treeStructureforProjects();
     }
   }, [projectNameInfo]);
+
+  useEffect(() => {
+    if (biglakeCatalogResponse) {
+      treeStructureforBigLakeCatalogs();
+    }
+  }, [biglakeCatalogResponse]);
 
   useEffect(() => {
     if (dataSetResponse) {
