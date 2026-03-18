@@ -114,6 +114,7 @@ const CatalogComponent = ({
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [biglakeCatalogNames, setBiglakeCatalogNames] = useState<string[]>([]);
   const [biglakeCatalogResponse, setBiglakeCatalogResponse] = useState<any>();
+  const [namespaceResponse, setNamespaceResponse] = useState<any>();
   const [dataSetResponse, setDataSetResponse] = useState<any>();
   const [tableResponse, setTableResponse] = useState<any>();
   const [schemaResponse, setSchemaResponse] = useState<any>();
@@ -201,6 +202,45 @@ const CatalogComponent = ({
           }));
           catalogNodes.sort((a, b) => a.name.localeCompare(b.name));
           biglakeNode.children = catalogNodes;
+        }
+      }
+    });
+
+    setTreeStructureData(tempData);
+  };
+
+  const treeStructureforNamespaces = () => {
+    let tempData = [...treeStructureData];
+    const catalogName = currentNode.data.name;
+    const projectName = currentNode.parent?.parent?.data?.name;
+
+    tempData.forEach((projectData: any) => {
+      if (projectData.name === projectName) {
+        const biglakeNode = projectData.children.find(
+          (child: any) => child.name === 'Biglake'
+        );
+
+        if (biglakeNode) {
+          biglakeNode.children.forEach((catalog: any) => {
+            if (catalog.name === catalogName) {
+              if (
+                namespaceResponse &&
+                namespaceResponse.namespaces &&
+                namespaceResponse.namespaces.length > 0
+              ) {
+                catalog['children'] = namespaceResponse.namespaces.map(
+                  (namespaceDetails: any) => ({
+                    id: uuidv4(),
+                    name: namespaceDetails.name,
+                    children: [],
+                    isNodeOpen: false
+                  })
+                );
+              } else {
+                catalog['children'] = false;
+              }
+            }
+          });
         }
       }
     });
@@ -340,6 +380,19 @@ const CatalogComponent = ({
     );
   };
 
+  const getBiglakeNamespaces = async (
+    catalogId: string,
+    projectId: string
+  ) => {
+    await BigLakeWidgetService.listNamespaceAPIService(
+      settingRegistry,
+      catalogId,
+      setNamespaceResponse,
+      projectId,
+      setIsIconLoading
+    );
+  };
+
   const getBigQueryDatasets = async (projectId: string) => {
     const pageTokenForProject = nextPageTokens.get(projectId);
     const allDatasetsUnderProject = allDatasets.get(projectId) || [];
@@ -456,6 +509,13 @@ const CatalogComponent = ({
           setIsIconLoading(true);
           const projectId = node.parent?.parent?.data?.name;
           getBigQueryTables(node.data.name, projectId);
+        } else if (node.parent?.data.name === 'Biglake') {
+            setCurrentNode(node);
+            const projectId = node.parent?.parent?.data?.name;
+            if (projectId) {
+                setIsIconLoading(true);
+                getBiglakeNamespaces(node.data.name, projectId);
+            }
         }
       } else if (depth === 4 && node.parent && !node.isOpen) {
         // This is for BigQuery tables
@@ -606,10 +666,19 @@ const CatalogComponent = ({
           <>
             {arrowIcon}
             <div role="img" className="table-icon" onClick={handleIconClick}>
-              <iconTable.react
-                tag="div"
-                className="icon-white logo-alignment-style"
-              />
+             {
+              node.parent?.parent?.data.name === 'Biglake' ? (
+                <iconDataset.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              ) : (
+                <iconTable.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              )
+            }
             </div>
           </>
         );
@@ -683,6 +752,12 @@ const CatalogComponent = ({
       treeStructureforBigLakeCatalogs();
     }
   }, [biglakeCatalogResponse]);
+
+  useEffect(() => {
+    if (namespaceResponse) {
+      treeStructureforNamespaces();
+    }
+  }, [namespaceResponse]);
 
   useEffect(() => {
     if (dataSetResponse) {

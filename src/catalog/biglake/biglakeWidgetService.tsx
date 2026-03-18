@@ -36,7 +36,7 @@ export class BigLakeWidgetService {
       // 2. Make the HTTP GET request to our local Python backend
       const data: any = await requestAPI(
         `bigLakeListCatalogs?project_id=${projectId}&location=${location}`
-      );
+            );
 
       if (data && data.catalogs) {
         const catalogNames = data.catalogs.map((c: any) => c.displayName);
@@ -54,5 +54,48 @@ export class BigLakeWidgetService {
       setIsIconLoading(false);
       setIsLoading(false);
     }
+  };
+  static listNamespaceAPIService = async (
+    settingRegistry: ISettingRegistry,
+    catalogId: string,
+    setNamespaceResponse: any,
+    projectId: string,
+    setIsIconLoading: (value: boolean) => void
+  ) => {
+    console.log('list namespace in service file is called');
+    // This is where the API call to list namespaces would go.
+    // For now, we will use mock data based on the catalogId.
+    const mockData =
+      catalogId === 'catalog1'
+        ? [
+            {
+              id: 'namespace1-1',
+              name: 'namespace1-1',
+              children: [],
+              isNodeOpen: false
+            },
+            {
+              id: 'namespace1-2',
+              name: 'namespace1-2',
+              children: [],
+              isNodeOpen: false
+            }
+          ]
+        : [
+            {
+              id: 'namespace2-1',
+              name: 'namespace2-1',
+              children: [],
+              isNodeOpen: false
+            },
+            {
+              id: 'namespace2-2',
+              name: 'namespace2-2',
+              children: [],
+              isNodeOpen: false
+            }
+          ];
+    setNamespaceResponse({ catalogId, namespaces: mockData });
+    setIsIconLoading(false);
   };
 }
