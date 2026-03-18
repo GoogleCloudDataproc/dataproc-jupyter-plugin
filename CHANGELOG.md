@@ -1,7 +1,11 @@
 # Changelog
+<!-- <START NEW CHANGELOG ENTRY> -->
+## 0.1.96
+* Bug fix/BigQuery Datasets are not loading for some regions by @srinivasan-acn in #351
+<!-- <END NEW CHANGELOG ENTRY> -->
 
 <!-- <START NEW CHANGELOG ENTRY> -->
-## 0.1.94
+## 0.1.95
 * Bug fix/create runtime template widget getting blank on jupyter 3.x by @srinivasan-acn in #341
 * Fix: datatype fix due to conflicting versions by @aditee-accenture in #340
 * Remove the project_number field from the credentials handler response by @ojarjur in #339
