@@ -264,6 +264,7 @@ def setup_handlers(web_app):
         "updatePlugin": UpdatePackage,
         "checkApiEnabled": checkApiEnabled.CheckApiController,
         "bigLakeListCatalogs": biglake.ListCatalogsController,
+        "bigLakeListNamespaces": biglake.ListNamespacesController,
 
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]

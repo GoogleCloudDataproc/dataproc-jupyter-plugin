@@ -62,40 +62,59 @@ export class BigLakeWidgetService {
     projectId: string,
     setIsIconLoading: (value: boolean) => void
   ) => {
-    console.log('list namespace in service file is called');
-    // This is where the API call to list namespaces would go.
-    // For now, we will use mock data based on the catalogId.
-    const mockData =
-      catalogId === 'catalog1'
-        ? [
-            {
-              id: 'namespace1-1',
-              name: 'namespace1-1',
-              children: [],
-              isNodeOpen: false
-            },
-            {
-              id: 'namespace1-2',
-              name: 'namespace1-2',
-              children: [],
-              isNodeOpen: false
-            }
-          ]
-        : [
-            {
-              id: 'namespace2-1',
-              name: 'namespace2-1',
-              children: [],
-              isNodeOpen: false
-            },
-            {
-              id: 'namespace2-2',
-              name: 'namespace2-2',
-              children: [],
-              isNodeOpen: false
-            }
-          ];
-    setNamespaceResponse({ catalogId, namespaces: mockData });
-    setIsIconLoading(false);
+    try {
+      // 1. Ensure we have the full catalog path for the SDK
+      // If catalogId is just "acc-biglake-catalog", this builds the full string.
+      // If it already is the full string, it leaves it alone.
+      const fullCatalogName = catalogId.includes('projects/') 
+        ? catalogId 
+        : `projects/${projectId}/catalogs/${catalogId}`;
+
+      // 2. Encode the slashes so they don't break the URL routing
+      const encodedCatalogName = encodeURIComponent(fullCatalogName);
+
+      // 3. Make the request using ONLY the catalog_name parameter expected by the backend
+      const data: any = await requestAPI(
+        `bigLakeListNamespaces?catalog_name=${encodedCatalogName}`
+      );
+
+      if (data && data.namespaces) {
+        setNamespaceResponse({ catalogId, namespaces: data.namespaces });
+      } else {
+        setNamespaceResponse({ catalogId, namespaces: [] });
+      }
+    } catch (reason) {
+      Notification.emit(`Failed to fetch BigLake namespaces: ${reason}`, 'error', {
+        autoClose: 5000
+      });
+    } finally {
+      setIsIconLoading(false);
+    }
   };
+  // static listNamespaceAPIService = async (
+  //   settingRegistry: ISettingRegistry,
+  //   catalogId: string,
+  //   setNamespaceResponse: any,
+  //   projectId: string,
+  //   setIsIconLoading: (value: boolean) => void
+  // ) => {
+  //   try {
+  //     const settings = await settingRegistry.load(PLUGIN_ID);
+  //     const location = settings.get('bqRegion')?.['composite'] || 'US';
+  //     const data: any = await requestAPI(
+  //       `bigLakeListNamespaces?project_id=${projectId}&location=${location}&catalog_id=${catalogId}`
+  //     );
+  //     if (data && data.namespaces) {
+  //       setNamespaceResponse({ catalogId, namespaces: data.namespaces });
+  //     } else {
+  //       setNamespaceResponse({ catalogId, namespaces: [] });
+  //     }
+  //   } catch (reason) {
+  //     Notification.emit(`Failed to fetch BigLake namespaces: ${reason}`, 'error', {
+  //       autoClose: 5000
+  //     });
+  //   } finally {
+  //     setIsIconLoading(false);
+  //   }
+  // };
 }
