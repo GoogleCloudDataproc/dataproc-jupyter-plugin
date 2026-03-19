@@ -116,5 +116,24 @@ export class BigLakeWidgetService {
   //   } finally {
   //     setIsIconLoading(false);
   //   }
-  // };
+  //   };
+  static listTablesAPIService = async (
+    namespaceId: string,
+    setBigLakeTableResponse: any,
+    setIsIconLoading: (value: boolean) => void
+  ) => {
+    console.log('list tables in service file is called');
+    const mockData = (namespaceId === 'namespace1-1')
+        ? [
+            { tableReference: { tableId: 'table1-1-1' } },
+            { tableReference: { tableId: 'table1-1-2' } }
+        ]
+        : [
+            { tableReference: { tableId: 'table_other_1' } },
+            { tableReference: { tableId: 'table_other_2' } }
+        ];
+
+    setBigLakeTableResponse({namespaceId, tables: mockData});
+    setIsIconLoading(false);
+  };
 }

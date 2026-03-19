@@ -115,6 +115,7 @@ const CatalogComponent = ({
   const [biglakeCatalogNames, setBiglakeCatalogNames] = useState<string[]>([]);
   const [biglakeCatalogResponse, setBiglakeCatalogResponse] = useState<any>();
   const [namespaceResponse, setNamespaceResponse] = useState<any>();
+  const [biglakeTableResponse, setBiglakeTableResponse] = useState<any>();
   const [dataSetResponse, setDataSetResponse] = useState<any>();
   const [tableResponse, setTableResponse] = useState<any>();
   const [schemaResponse, setSchemaResponse] = useState<any>();
@@ -245,6 +246,50 @@ const CatalogComponent = ({
       }
     });
 
+    setTreeStructureData(tempData);
+  };
+
+  const treeStructureforBigLakeTables = () => {
+    let tempData = [...treeStructureData];
+    const namespaceName = currentNode.data.name;
+    const catalogName = currentNode.parent?.data.name;
+    const projectName = currentNode.parent?.parent?.parent?.data?.name;
+  
+    tempData.forEach((projectData: any) => {
+      if (projectData.name === projectName) {
+        const biglakeNode = projectData.children.find(
+          (child: any) => child.name === 'Biglake'
+        );
+  
+        if (biglakeNode) {
+          biglakeNode.children.forEach((catalog: any) => {
+            if (catalog.name === catalogName) {
+              catalog.children.forEach((namespace: any) => {
+                if (namespace.name === namespaceName) {
+                  if (
+                    biglakeTableResponse &&
+                    biglakeTableResponse.tables &&
+                    biglakeTableResponse.tables.length > 0
+                  ) {
+                    namespace['children'] = biglakeTableResponse.tables.map(
+                      (tableDetails: any) => ({
+                        id: uuidv4(),
+                        name: tableDetails.tableReference.tableId,
+                        children: [],
+                        isNodeOpen: false
+                      })
+                    );
+                  } else {
+                    namespace['children'] = false;
+                  }
+                }
+              });
+            }
+          });
+        }
+      }
+    });
+  
     setTreeStructureData(tempData);
   };
 
@@ -393,6 +438,17 @@ const CatalogComponent = ({
     );
   };
 
+  const getBiglakeTables = async (
+    namespaceId: string,
+    projectId: string
+  ) => {
+    await BigLakeWidgetService.listTablesAPIService(
+      namespaceId,
+      setBiglakeTableResponse,
+      setIsIconLoading
+    );
+  };
+
   const getBigQueryDatasets = async (projectId: string) => {
     const pageTokenForProject = nextPageTokens.get(projectId);
     const allDatasetsUnderProject = allDatasets.get(projectId) || [];
@@ -525,6 +581,13 @@ const CatalogComponent = ({
           const datasetId = node.parent?.data?.name;
           const projectId = node.parent?.parent?.parent?.data?.name;
           getBigQueryColumnDetails(node.data.name, datasetId, projectId);
+        } else if (node.parent?.parent?.data.name === 'Biglake') {
+            setCurrentNode(node);
+            const projectId = node.parent?.parent?.parent?.data?.name;
+            if (projectId) {
+                setIsIconLoading(true);
+                getBiglakeTables(node.data.name, projectId);
+            }
         }
       } else {
         node.toggle();
@@ -683,14 +746,28 @@ const CatalogComponent = ({
           </>
         );
       } else if (depth === 5) {
-        return (
-          <>
-            <iconColumns.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          </>
-        );
+        if (node.parent?.parent?.parent?.data.name === 'Biglake') {
+            return (
+              <>
+                {arrowIcon}
+                <div role="img" className="table-icon" onClick={handleIconClick}>
+                  <iconTable.react
+                    tag="div"
+                    className="icon-white logo-alignment-style"
+                  />
+                </div>
+              </>
+            );
+        } else {
+            return (
+              <>
+                <iconColumns.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              </>
+            );
+        }
       }
       return (
         <>
@@ -758,6 +835,12 @@ const CatalogComponent = ({
       treeStructureforNamespaces();
     }
   }, [namespaceResponse]);
+
+  useEffect(() => {
+    if (biglakeTableResponse) {
+      treeStructureforBigLakeTables();
+    }
+  }, [biglakeTableResponse]);
 
   useEffect(() => {
     if (dataSetResponse) {
