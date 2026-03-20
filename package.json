@@ -133,7 +133,7 @@
         "stylelint-config-standard": "^26.0.0",
         "stylelint-prettier": "^2.0.0",
         "typescript": "~5.0.2",
-        "webpack": "^5.94.0",
+        "webpack": "^5.104.1",
         "yjs": "^13.5.0"
     },
     "sideEffects": [
