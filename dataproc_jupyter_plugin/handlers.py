@@ -265,6 +265,7 @@ def setup_handlers(web_app):
         "checkApiEnabled": checkApiEnabled.CheckApiController,
         "bigLakeListCatalogs": biglake.ListCatalogsController,
         "bigLakeListNamespaces": biglake.ListNamespacesController,
+        "bigLakeListTables": biglake.ListTablesController,
 
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]

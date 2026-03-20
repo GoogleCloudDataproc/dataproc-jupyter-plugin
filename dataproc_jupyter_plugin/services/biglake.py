@@ -132,3 +132,38 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error fetching namespaces via REST API: {e}")
             return {"error": str(e), "namespaces": []}
+
+    async def list_tables(self, catalog_name, db_name):
+        try:
+            api_endpoint = f"https://biglake.googleapis.com/iceberg/v1/restcatalog/v1/{catalog_name}/namespaces/{db_name}/tables"
+            
+            headers = {
+                "Authorization": f"Bearer {self._access_token}",
+                "X-Goog-User-Project": self.project_id,
+                "Content-Type": "application/json"
+            }
+
+            async with self.client_session.get(api_endpoint, headers=headers) as response:
+                if response.status == 200:
+                    resp_json = await response.json()
+                    table_list = []
+                    
+                    # FIX: Look for 'identifiers' instead of 'tables'
+                    if "identifiers" in resp_json:
+                        for table in resp_json["identifiers"]:
+                            table_list.append({
+                                'name': table['name'], # This successfully grabs "flowers_iceberg"
+                                'type': 'TABLE'
+                            })
+                            
+                    # We still return the dictionary with the "tables" key 
+                    # because that is what your frontend service.tsx expects!
+                    return {"tables": table_list}
+                else:
+                    error_text = await response.text()
+                    self.log.error(f"BigLake REST API Error: {response.status} - {error_text}")
+                    return {"error": f"API returned {response.status}", "tables": []}
+            
+        except Exception as e:
+            self.log.exception(f"Error fetching tables via REST API: {e}")
+            return {"error": str(e), "tables": []}

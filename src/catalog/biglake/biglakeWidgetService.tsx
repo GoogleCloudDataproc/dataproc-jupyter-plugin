@@ -118,22 +118,31 @@ export class BigLakeWidgetService {
   //   }
   //   };
   static listTablesAPIService = async (
+    catalogId: string, // Changed from namespaceId
     namespaceId: string,
     setBigLakeTableResponse: any,
     setIsIconLoading: (value: boolean) => void
   ) => {
-    console.log('list tables in service file is called');
-    const mockData = (namespaceId === 'namespace1-1')
-        ? [
-            { tableReference: { tableId: 'table1-1-1' } },
-            { tableReference: { tableId: 'table1-1-2' } }
-        ]
-        : [
-            { tableReference: { tableId: 'table_other_1' } },
-            { tableReference: { tableId: 'table_other_2' } }
-        ];
+    try {
+      // Backend expects the full resource names, so we encode them
+      const encodedCatalog = encodeURIComponent(catalogId);
+      const encodedNamespace = encodeURIComponent(namespaceId);
+      
+      const data: any = await requestAPI(
+        `bigLakeListTables?catalog_name=${encodedCatalog}&namespace_name=${encodedNamespace}`
+      );
 
-    setBigLakeTableResponse({namespaceId, tables: mockData});
-    setIsIconLoading(false);
+      if (data && data.tables) {
+        setBigLakeTableResponse({ namespaceId, tables: data.tables });
+      } else {
+        setBigLakeTableResponse({ namespaceId, tables: [] });
+      }
+    } catch (reason) {
+      Notification.emit(`Failed to fetch BigLake tables: ${reason}`, 'error', {
+        autoClose: 5000
+      });
+    } finally {
+      setIsIconLoading(false);
+    }
   };
 }
