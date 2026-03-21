@@ -157,7 +157,8 @@
         },
         "extension": true,
         "outputDir": "dataproc_jupyter_plugin/labextension",
-        "schemaDir": "schema"
+        "schemaDir": "schema",
+        "webpackConfig": "./webpack.config.js"
     },
     "eslintIgnore": [
         "node_modules",
