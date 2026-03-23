@@ -120,8 +120,6 @@ export class BigLakeWidgetService {
       setIsIconLoading(false);
     }
   };
-
-  // NEW METHOD: Added method to mock BigLake column details
   static getBigLakeColumnDetailsAPIService = async (
     catalogName: string,
     namespaceName: string,
@@ -130,27 +128,26 @@ export class BigLakeWidgetService {
     setIsIconLoading: (value: boolean) => void
   ) => {
     try {
-      // Simulating network response delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Encode parameters to safely pass full resource paths
+      const encodedCatalog = encodeURIComponent(catalogName);
+      const encodedNamespace = encodeURIComponent(namespaceName);
+      const encodedTable = encodeURIComponent(tableName);
 
-      // Mock Data using standard BigQuery Schema format
-      const mockSchemaResponse = {
-        tableId: tableName,
-        schema: {
-          fields: [
-            { name: 'id', type: 'INTEGER', mode: 'NULLABLE' },
-            { name: 'name', type: 'STRING', mode: 'NULLABLE' },
-            { name: 'email', type: 'STRING', mode: 'NULLABLE' },
-            { name: 'created_at', type: 'TIMESTAMP', mode: 'NULLABLE' }
-          ]
-        }
-      };
+      const data: any = await requestAPI(
+        `bigLakeColumnDetails?catalog_name=${encodedCatalog}&namespace_name=${encodedNamespace}&table_name=${encodedTable}`
+      );
 
-      setBiglakeSchemaResponse(mockSchemaResponse);
+      if (data && data.schema) {
+        setBiglakeSchemaResponse(data);
+      } else {
+        // Fallback structure if the response is empty or invalid
+        setBiglakeSchemaResponse({ tableId: tableName, schema: { fields: [] } });
+      }
     } catch (reason) {
       Notification.emit(`Failed to fetch BigLake columns: ${reason}`, 'error', {
         autoClose: 5000
       });
+      setBiglakeSchemaResponse({ tableId: tableName, schema: { fields: [] } });
     } finally {
       setIsIconLoading(false);
     }

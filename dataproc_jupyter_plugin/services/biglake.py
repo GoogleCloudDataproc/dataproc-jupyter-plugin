@@ -167,3 +167,71 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error fetching tables via REST API: {e}")
             return {"error": str(e), "tables": []}
+
+        
+    async def get_column_details(self, catalog_name, db_name, table_name):
+        """Fetches table schema details using the BigLake Iceberg REST API."""
+        try:
+            # FIX: Ensure the catalog name includes the full Google Cloud resource path.
+            # If the frontend only passes "shubh-biglake-catalog", this builds the required full path.
+            if "projects/" not in catalog_name:
+                catalog_name = f"projects/{self.project_id}/catalogs/{catalog_name}"
+
+            # Construct the full REST path
+            api_endpoint = f"https://biglake.googleapis.com/iceberg/v1/restcatalog/v1/{catalog_name}/namespaces/{db_name}/tables/{table_name}"
+            
+            headers = {
+                "Authorization": f"Bearer {self._access_token}",
+                "X-Goog-User-Project": self.project_id,
+                "Content-Type": "application/json"
+            }
+
+            async with self.client_session.get(api_endpoint, headers=headers) as response:
+                if response.status == 200:
+                    resp_json = await response.json()
+                    
+                    # Extract the metadata dictionary
+                    metadata = resp_json.get("metadata", {})
+                    schemas = metadata.get("schemas", [])
+                    current_schema_id = metadata.get("current-schema-id", 0)
+                    
+                    # Find the active schema by ID (fallback to the first schema if ID matching fails)
+                    target_schema = next((s for s in schemas if s.get("schema-id") == current_schema_id), None)
+                    if not target_schema and schemas:
+                        target_schema = schemas[0]
+                        
+                    formatted_fields = []
+                    
+                    if target_schema:
+                        for field in target_schema.get("fields", []):
+                            # Map Iceberg types to generic BQ/SQL UI types to match your mock setup
+                            raw_type = field.get("type", "string")
+                            if isinstance(raw_type, str):
+                                type_str = raw_type.upper()
+                                if type_str == "INT": type_str = "INTEGER"
+                                elif type_str == "DOUBLE": type_str = "FLOAT"
+                                elif type_str == "TIMESTAMPTZ": type_str = "TIMESTAMP"
+                            else:
+                                # Fallback if 'type' is a complex struct object in Iceberg
+                                type_str = "RECORD/STRUCT"
+
+                            formatted_fields.append({
+                                "name": field.get("name"),
+                                "type": type_str,
+                                "mode": "REQUIRED" if field.get("required") else "NULLABLE"
+                            })
+
+                    return {
+                        "tableId": table_name,
+                        "schema": {
+                            "fields": formatted_fields
+                        }
+                    }
+                else:
+                    error_text = await response.text()
+                    self.log.error(f"BigLake REST API Error fetching columns: {response.status} - {error_text}")
+                    return {"error": f"API returned {response.status}", "tableId": table_name, "schema": {"fields": []}}
+            
+        except Exception as e:
+            self.log.exception(f"Error fetching columns via REST API: {e}")
+            return {"error": str(e), "tableId": table_name, "schema": {"fields": []}}

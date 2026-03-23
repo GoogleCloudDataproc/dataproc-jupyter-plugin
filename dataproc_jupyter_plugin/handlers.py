@@ -266,6 +266,7 @@ def setup_handlers(web_app):
         "bigLakeListCatalogs": biglake.ListCatalogsController,
         "bigLakeListNamespaces": biglake.ListNamespacesController,
         "bigLakeListTables": biglake.ListTablesController,
+        "bigLakeColumnDetails": biglake.GetColumnDetailsController,
 
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
