@@ -1,4 +1,3 @@
-
 import { JupyterLab } from '@jupyterlab/application';
 import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
@@ -72,7 +71,6 @@ const calculateDepth = (node: NodeApi): number => {
 };
 
 
-
 const CatalogComponent = ({
   app,
   settingRegistry,
@@ -87,7 +85,6 @@ const CatalogComponent = ({
   const [isResetLoading, setResetLoading] = useState(false);
   const [isIconLoading, setIsIconLoading] = useState(false);
 
-
   const [treeStructureData, setTreeStructureData] = useState<any>([]);
 
   const [currentNode, setCurrentNode] = useState<any>();
@@ -101,6 +98,10 @@ const CatalogComponent = ({
   const [biglakeCatalogResponse, setBiglakeCatalogResponse] = useState<any>();
   const [namespaceResponse, setNamespaceResponse] = useState<any>();
   const [biglakeTableResponse, setBiglakeTableResponse] = useState<any>();
+  
+  // NEW STATE: For biglake schema (columns)
+  const [biglakeSchemaResponse, setBiglakeSchemaResponse] = useState<any>();
+
   const [dataSetResponse, setDataSetResponse] = useState<any>();
   const [tableResponse, setTableResponse] = useState<any>();
   const [schemaResponse, setSchemaResponse] = useState<any>();
@@ -239,13 +240,13 @@ const CatalogComponent = ({
     const namespaceName = currentNode.data.name;
     const catalogName = currentNode.parent?.data.name;
     const projectName = currentNode.parent?.parent?.parent?.data?.name;
-  
+ 
     tempData.forEach((projectData: any) => {
       if (projectData.name === projectName) {
         const biglakeNode = projectData.children.find(
           (child: any) => child.name === 'Biglake'
         );
-  
+ 
         if (biglakeNode) {
           biglakeNode.children.forEach((catalog: any) => {
             if (catalog.name === catalogName) {
@@ -274,9 +275,55 @@ const CatalogComponent = ({
         }
       }
     });
-  
+ 
     setTreeStructureData(tempData);
   };
+
+  // NEW METHOD: Tree structure logic to append Columns for BigLake
+  const treeStructureforBigLakeSchema = () => {
+    let tempData = [...treeStructureData];
+    const namespaceName = currentNode.parent?.data.name;
+    const catalogName = currentNode.parent?.parent?.data.name;
+    const projectName = currentNode.parent?.parent?.parent?.parent?.data?.name;
+
+    tempData.forEach((projectData: any) => {
+      if (projectData.name === projectName) {
+        const biglakeNode = projectData.children.find(
+          (child: any) => child.name === 'Biglake'
+        );
+
+        if (biglakeNode) {
+          biglakeNode.children.forEach((catalog: any) => {
+            if (catalog.name === catalogName) {
+              catalog.children.forEach((namespace: any) => {
+                if (namespace.name === namespaceName) {
+                  namespace.children.forEach((table: any) => {
+                    if (table.name === biglakeSchemaResponse?.tableId) {
+                      if (biglakeSchemaResponse.schema?.fields) {
+                        table['children'] = biglakeSchemaResponse.schema.fields.map(
+                          (column: any) => ({
+                            id: uuidv4(),
+                            name: column.name,
+                            type: column.type,
+                            mode: column.mode,
+                            isNodeOpen: false
+                          })
+                        );
+                      } else {
+                        table['children'] = false;
+                      }
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      }
+    });
+    setTreeStructureData(tempData);
+  };
+
 
   const treeStructureforDatasets = () => {
     let tempData = [...treeStructureData];
@@ -435,6 +482,21 @@ const CatalogComponent = ({
     );
   };
 
+  // NEW METHOD: Call service to get columns
+  const getBiglakeColumns = async (
+    catalogName: string,
+    namespaceName: string,
+    tableName: string
+  ) => {
+    await BigLakeWidgetService.getBigLakeColumnDetailsAPIService(
+      catalogName,
+      namespaceName,
+      tableName,
+      setBiglakeSchemaResponse,
+      setIsIconLoading
+    );
+  };
+
   const getBigQueryDatasets = async (projectId: string) => {
     const pageTokenForProject = nextPageTokens.get(projectId);
     const allDatasetsUnderProject = allDatasets.get(projectId) || [];
@@ -576,10 +638,24 @@ const CatalogComponent = ({
                 getBiglakeTables(`projects/${projectName}/catalogs/${catalogName}`,node.data.name);
             }
         }
+      } else if (depth === 5 && !node.isOpen) {
+        // NEW LOGIC: Trigger column fetch for BigLake table
+        if (node.parent?.parent?.parent?.data.name === 'Biglake') {
+          setCurrentNode(node);
+          setIsIconLoading(true);
+          const namespaceName = node.parent?.data?.name;
+          const catalogName = node.parent?.parent?.data?.name;
+          if (catalogName && namespaceName) {
+            getBiglakeColumns(catalogName, namespaceName, node.data.name);
+          }
+        } else {
+          node.toggle();
+        }
       } else {
         node.toggle();
       }
     };
+    
     const handleIconClick = (event: React.MouseEvent) => {
       // `node.isOpen` is the default property of the library, which sometimes has incorrect initial behaviour.
       // This leads to, incorrect expand / collapase Icon in the UI.
@@ -601,11 +677,13 @@ const CatalogComponent = ({
 
     const depth = calculateDepth(node);
     const renderNodeIcon = () => {
-      const hasChildren =
-        (node.children && node.children.length > 0) ||
-        (depth !== 5 && node.children);
+      // Determines whether this node should render a dropdown arrow
+      const isBigQueryColumn = depth === 5 && node.parent?.parent?.parent?.data?.name === 'Bigquery';
+      const isBigLakeColumn = depth === 6 && node.parent?.parent?.parent?.parent?.data?.name === 'Biglake';
+      const hasChildren = (node.children && node.children.length > 0) || (!isBigQueryColumn && !isBigLakeColumn && node.data.children !== false);
+      
       const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
-        isIconLoading && currentNode.data.name === node.data.name ? (
+        isIconLoading && currentNode?.data?.name === node.data.name ? (
           <div className="big-query-loader-style">
             <CircularProgress
               size={16}
@@ -755,6 +833,16 @@ const CatalogComponent = ({
               </>
             );
         }
+      // NEW RENDER CONDITION: Depth 6 is solely for BigLake Columns
+      } else if (depth === 6) {
+        return (
+          <>
+            <iconColumns.react
+              tag="div"
+              className="icon-white logo-alignment-style"
+            />
+          </>
+        );
       }
       return (
         <>
@@ -828,6 +916,13 @@ const CatalogComponent = ({
       treeStructureforBigLakeTables();
     }
   }, [biglakeTableResponse]);
+  
+  // NEW EFFECT HOOK: Update BigLake Columns 
+  useEffect(() => {
+    if (biglakeSchemaResponse) {
+      treeStructureforBigLakeSchema();
+    }
+  }, [biglakeSchemaResponse]);
 
   useEffect(() => {
     if (dataSetResponse) {

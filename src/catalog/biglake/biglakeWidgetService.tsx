@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -91,32 +91,7 @@ export class BigLakeWidgetService {
       setIsIconLoading(false);
     }
   };
-  // static listNamespaceAPIService = async (
-  //   settingRegistry: ISettingRegistry,
-  //   catalogId: string,
-  //   setNamespaceResponse: any,
-  //   projectId: string,
-  //   setIsIconLoading: (value: boolean) => void
-  // ) => {
-  //   try {
-  //     const settings = await settingRegistry.load(PLUGIN_ID);
-  //     const location = settings.get('bqRegion')?.['composite'] || 'US';
-  //     const data: any = await requestAPI(
-  //       `bigLakeListNamespaces?project_id=${projectId}&location=${location}&catalog_id=${catalogId}`
-  //     );
-  //     if (data && data.namespaces) {
-  //       setNamespaceResponse({ catalogId, namespaces: data.namespaces });
-  //     } else {
-  //       setNamespaceResponse({ catalogId, namespaces: [] });
-  //     }
-  //   } catch (reason) {
-  //     Notification.emit(`Failed to fetch BigLake namespaces: ${reason}`, 'error', {
-  //       autoClose: 5000
-  //     });
-  //   } finally {
-  //     setIsIconLoading(false);
-  //   }
-  //   };
+  
   static listTablesAPIService = async (
     catalogId: string, // Changed from namespaceId
     namespaceId: string,
@@ -139,6 +114,41 @@ export class BigLakeWidgetService {
       }
     } catch (reason) {
       Notification.emit(`Failed to fetch BigLake tables: ${reason}`, 'error', {
+        autoClose: 5000
+      });
+    } finally {
+      setIsIconLoading(false);
+    }
+  };
+
+  // NEW METHOD: Added method to mock BigLake column details
+  static getBigLakeColumnDetailsAPIService = async (
+    catalogName: string,
+    namespaceName: string,
+    tableName: string,
+    setBiglakeSchemaResponse: any,
+    setIsIconLoading: (value: boolean) => void
+  ) => {
+    try {
+      // Simulating network response delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Mock Data using standard BigQuery Schema format
+      const mockSchemaResponse = {
+        tableId: tableName,
+        schema: {
+          fields: [
+            { name: 'id', type: 'INTEGER', mode: 'NULLABLE' },
+            { name: 'name', type: 'STRING', mode: 'NULLABLE' },
+            { name: 'email', type: 'STRING', mode: 'NULLABLE' },
+            { name: 'created_at', type: 'TIMESTAMP', mode: 'NULLABLE' }
+          ]
+        }
+      };
+
+      setBiglakeSchemaResponse(mockSchemaResponse);
+    } catch (reason) {
+      Notification.emit(`Failed to fetch BigLake columns: ${reason}`, 'error', {
         autoClose: 5000
       });
     } finally {
