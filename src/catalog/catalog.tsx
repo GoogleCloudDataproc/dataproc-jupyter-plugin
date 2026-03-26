@@ -3,6 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import 'style/catalog.css';
+import { MainAreaWidget } from '@jupyterlab/apputils';
+import { BigQueryDatasetWrapper } from '../bigQuery/bigQueryDatasetInfoWrapper';
+import { BigQueryTableWrapper } from '../bigQuery/bigQueryTableInfoWrapper';
+import databaseWidgetIcon from 'style/icons/database_widget_icon.svg';
+import datasetsIcon from 'style/icons/datasets_icon.svg';
 import rightArrowIcon from 'style/icons/right_arrow_icon.svg';
 import downArrowIcon from 'style/icons/down_arrow_icon.svg';
 import bigQueryProjectIcon from 'style/icons/bigquery_project_icon.svg';
@@ -35,6 +40,17 @@ const iconDownArrow = new LabIcon({
   name: 'launcher:down-arrow-icon',
   svgstr: downArrowIcon
 });
+
+const iconDatabaseWidget = new LabIcon({
+  name: 'launcher:databse-widget-icon',
+  svgstr: databaseWidgetIcon
+});
+
+const iconDatasets = new LabIcon({
+  name: 'launcher:datasets-icon',
+  svgstr: datasetsIcon
+});
+
 
 const iconBigQueryProject = new LabIcon({
   name: 'launcher:bigquery-project-icon',
@@ -903,6 +919,61 @@ const CatalogComponent = ({
     );
   };
 
+  const openedWidgets: Record<string, boolean> = {};
+  const handleNodeClick = (node: NodeApi) => {
+    const depth = calculateDepth(node);
+    const widgetTitle = node.data.name;
+
+    // Ensure we are in the BigQuery part of the tree
+    if (
+      node.parent?.data.name === 'Bigquery' ||
+      node.parent?.parent?.data.name === 'Bigquery'
+    ) {
+      if (!openedWidgets[widgetTitle]) {
+        if (depth === 3) {
+          // BigQuery Dataset
+          const content = new BigQueryDatasetWrapper(
+            node.data.name,
+            node?.parent?.parent?.data?.name!, // Project ID
+            themeManager
+          );
+          const widget = new MainAreaWidget<BigQueryDatasetWrapper>({
+            content
+          });
+          widget.id = `bigquery-dataset-info-${uuidv4()}`;
+          widget.title.label = node.data.name;
+          widget.title.closable = true;
+          widget.title.icon = iconDatabaseWidget; // Will need to be defined
+          app.shell.add(widget, 'main');
+          widget.disposed.connect(() => {
+            delete openedWidgets[widgetTitle];
+          });
+          openedWidgets[widgetTitle] = true;
+        } else if (depth === 4) {
+          // BigQuery Table
+          const datasetId = node.parent?.data.name;
+          const projectId = node.parent?.parent?.parent?.data.name;
+          const content = new BigQueryTableWrapper(
+            node.data.name,
+            datasetId!,
+            projectId!,
+            themeManager
+          );
+          const widget = new MainAreaWidget<BigQueryTableWrapper>({ content });
+          widget.id = `bigquery-table-info-${uuidv4()}`;
+          widget.title.label = node.data.name;
+          widget.title.closable = true;
+          widget.title.icon = iconDatasets; // Will need to be defined
+          app.shell.add(widget, 'main');
+          widget.disposed.connect(() => {
+            delete openedWidgets[widgetTitle];
+          });
+          openedWidgets[widgetTitle] = true;
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     getBigQueryProjects(false);
   }, []);
@@ -1016,7 +1087,7 @@ const CatalogComponent = ({
                             {(props: NodeRendererProps<any>) => (
                               <Node
                                 {...props}
-                                onClick={() => {}}
+                                onClick={handleNodeClick}
                               />
                             )}
                           </Tree>
