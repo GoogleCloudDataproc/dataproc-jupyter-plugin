@@ -2,6 +2,11 @@ import asyncio
 from google.cloud import biglake_v1
 from google.oauth2.credentials import Credentials
 
+# Import the constant for the public dataset project
+from dataproc_jupyter_plugin.commons.constants import (
+    BQ_PUBLIC_DATASET_PROJECT_ID,BASE_PROJECT_ID,PAGE_SIZE_LIMIT
+)
+
 class Client:
     def __init__(self, credentials, log, client_session):
         self.log = log
@@ -22,13 +27,51 @@ class Client:
         )
         self.iceberg_client = biglake_v1.IcebergCatalogServiceClient(credentials=creds)
 
-    async def list_catalogs(self):
-        """Fetches catalogs using the official BigLake Iceberg SDK."""
+    def _resolve_catalog_path(self, catalog_name: str) -> str:
+        """Helper to ensure the catalog name is a fully qualified Google Cloud resource path."""
+        if "projects/" in catalog_name:
+            return catalog_name
+            
+        # If it's the known public catalog, map it to the exact public path
+        if catalog_name == "biglake-public-nyc-taxi-iceberg":
+            return f"projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/catalogs/{catalog_name}"
+            
+        # Otherwise, fall back to the user's personal project path
+        return f"projects/{self.project_id}/catalogs/{catalog_name}"
+
+    def _get_rest_headers(self, catalog_path: str, needs_vended_credentials: bool = False) -> dict:
+        """Generates headers. Injects 'vended-credentials' ONLY when explicitly requested (for table metadata)."""
+        headers = {
+            "Authorization": f"Bearer {self._access_token}",
+            "X-Goog-User-Project": self.project_id,
+            "Content-Type": "application/json"
+        }
+        
+        # Mirroring TS: Only inject the header for get_column_details (table metadata) on the public catalog
+        if needs_vended_credentials and (BQ_PUBLIC_DATASET_PROJECT_ID in catalog_path or "biglake-public-nyc-taxi-iceberg" in catalog_path):
+            headers["X-Iceberg-Access-Delegation"] = "vended-credentials"
+            
+        return headers
+
+    async def list_catalogs(self, project_id=None):
+        """Fetches catalogs. Hardcodes the response for public datasets."""
         try:
             loop = asyncio.get_running_loop()
             catalog_list = []
             
-            parent = f"projects/{self.project_id}"
+            target_project = project_id if project_id else self.project_id
+            
+            # 1. Hardcoded Catalog Level (Matches listBigLakeCatalogs in TS)
+            if target_project == BQ_PUBLIC_DATASET_PROJECT_ID:
+                return {
+                    "catalogs": [{
+                        "name": "biglake-public-nyc-taxi-iceberg",
+                        "displayName": "biglake-public-nyc-taxi-iceberg"
+                    }]
+                }
+
+            # Normal execution for user projects
+            parent = f"projects/{target_project}"
 
             def _fetch_catalogs():
                 return list(self.iceberg_client.list_iceberg_catalogs(parent=parent))
@@ -48,73 +91,20 @@ class Client:
             self.log.exception(f"Error fetching Iceberg catalogs via SDK: {error_msg}")
             return {"error": error_msg, "catalogs": []}
 
-    # --- NEW METHOD FOR NAMESPACES ---
-    # async def list_namespaces(self, catalog_name):
-    #     """Fetches namespaces (databases) using the official PyIceberg SDK."""
-    #     try:
-    #         loop = asyncio.get_running_loop()
-    #         namespace_list = []
-
-    #         def _fetch_namespaces():
-    #             # Import inside the function to keep the global namespace fast and clean
-    #             from pyiceberg.catalog import load_catalog
-                
-    #             # Initialize the official Apache PyIceberg SDK for BigLake
-    #             # The PyIceberg REST catalog automatically handles the backend routing
-    #             catalog = load_catalog(
-    #                 "biglake_catalog",
-    #                 **{
-    #                     "type": "rest",
-    #                     # We pass the exact BigLake REST URI base
-    #                     "uri": "https://biglake.googleapis.com/iceberg/v1/restcatalog",
-    #                     # The prefix acts as the specific Google Cloud catalog path
-    #                     "prefix": f"v1/{catalog_name}", 
-    #                     "token": self._access_token,
-    #                     "header.x-goog-user-project": self.project_id
-    #                 }
-    #             )
-                
-    #             # The SDK perfectly wraps the REST endpoint you found in the docs!
-    #             return catalog.list_namespaces()
-
-    #         # Run it non-blocking
-    #         namespaces = await loop.run_in_executor(None, _fetch_namespaces)
-
-    #         # PyIceberg returns a list of tuples (e.g., ("default",) or ("sales", "eu"))
-    #         for ns in namespaces:
-    #             # Join the tuple into a clean string for your UI
-    #             name_str = ".".join(ns)
-    #             namespace_list.append({
-    #                 "name": name_str,
-    #                 "displayName": name_str.split(".")[-1]
-    #             })
-            
-    #         return {"namespaces": namespace_list}
-            
-    #     except Exception as e:
-    #         self.log.exception(f"Error fetching Iceberg namespaces via PyIceberg SDK: {e}")
-    #         return {"error": str(e), "namespaces": []}
     async def list_namespaces(self, catalog_name):
-        """Fetches namespaces using the exact BigLake Iceberg REST API endpoint."""
+        """Fetches namespaces dynamically. No special headers required."""
         try:
-            # 1. Hit the exact Google Cloud Data Plane URL
-            # catalog_name format: projects/{project_id}/catalogs/{catalog_id}
-            api_endpoint = f"https://biglake.googleapis.com/iceberg/v1/restcatalog/v1/{catalog_name}/namespaces"
+            catalog_path = self._resolve_catalog_path(catalog_name)
+            api_endpoint = f"https://biglake.googleapis.com/iceberg/v1/restcatalog/v1/{catalog_path}/namespaces"
             
-            # 2. Pass Google Auth + Billing headers
-            headers = {
-                "Authorization": f"Bearer {self._access_token}",
-                "X-Goog-User-Project": self.project_id,
-                "Content-Type": "application/json"
-            }
+            # 2. Dynamic Call, Standard Headers (Matches listBigLakeNamespaces in TS)
+            headers = self._get_rest_headers(catalog_path, needs_vended_credentials=False)
 
-            # 3. Fetch asynchronously using your existing aiohttp session
             async with self.client_session.get(api_endpoint, headers=headers) as response:
                 if response.status == 200:
                     resp_json = await response.json()
                     namespace_list = []
                     
-                    # The Iceberg REST spec returns nested arrays: {"namespaces": [["default"]]}
                     if "namespaces" in resp_json:
                         for ns_array in resp_json["namespaces"]:
                             name_str = ".".join(ns_array)
@@ -134,30 +124,26 @@ class Client:
             return {"error": str(e), "namespaces": []}
 
     async def list_tables(self, catalog_name, db_name):
+        """Fetches tables dynamically. No special headers required."""
         try:
-            api_endpoint = f"https://biglake.googleapis.com/iceberg/v1/restcatalog/v1/{catalog_name}/namespaces/{db_name}/tables"
+            catalog_path = self._resolve_catalog_path(catalog_name)
+            api_endpoint = f"https://biglake.googleapis.com/iceberg/v1/restcatalog/v1/{catalog_path}/namespaces/{db_name}/tables"
             
-            headers = {
-                "Authorization": f"Bearer {self._access_token}",
-                "X-Goog-User-Project": self.project_id,
-                "Content-Type": "application/json"
-            }
+            # 2. Dynamic Call, Standard Headers (Matches listBigLakeTables in TS)
+            headers = self._get_rest_headers(catalog_path, needs_vended_credentials=False)
 
             async with self.client_session.get(api_endpoint, headers=headers) as response:
                 if response.status == 200:
                     resp_json = await response.json()
                     table_list = []
                     
-                    # FIX: Look for 'identifiers' instead of 'tables'
                     if "identifiers" in resp_json:
                         for table in resp_json["identifiers"]:
                             table_list.append({
-                                'name': table['name'], # This successfully grabs "flowers_iceberg"
+                                'name': table['name'], 
                                 'type': 'TABLE'
                             })
                             
-                    # We still return the dictionary with the "tables" key 
-                    # because that is what your frontend service.tsx expects!
                     return {"tables": table_list}
                 else:
                     error_text = await response.text()
@@ -167,35 +153,25 @@ class Client:
         except Exception as e:
             self.log.exception(f"Error fetching tables via REST API: {e}")
             return {"error": str(e), "tables": []}
-
         
     async def get_column_details(self, catalog_name, db_name, table_name):
-        """Fetches table schema details using the BigLake Iceberg REST API."""
+        """Fetches table schema metadata. Injects vended-credentials for public datasets."""
         try:
-            # FIX: Ensure the catalog name includes the full Google Cloud resource path.
-            # If the frontend only passes "shubh-biglake-catalog", this builds the required full path.
-            if "projects/" not in catalog_name:
-                catalog_name = f"projects/{self.project_id}/catalogs/{catalog_name}"
-
-            # Construct the full REST path
-            api_endpoint = f"https://biglake.googleapis.com/iceberg/v1/restcatalog/v1/{catalog_name}/namespaces/{db_name}/tables/{table_name}"
+            catalog_path = self._resolve_catalog_path(catalog_name)
+            api_endpoint = f"https://biglake.googleapis.com/iceberg/v1/restcatalog/v1/{catalog_path}/namespaces/{db_name}/tables/{table_name}"
             
-            headers = {
-                "Authorization": f"Bearer {self._access_token}",
-                "X-Goog-User-Project": self.project_id,
-                "Content-Type": "application/json"
-            }
+            # 3. Dynamic Call, Vended Credentials Required (Matches getBigLakeTable in TS)
+            headers = self._get_rest_headers(catalog_path, needs_vended_credentials=True)
 
             async with self.client_session.get(api_endpoint, headers=headers) as response:
                 if response.status == 200:
                     resp_json = await response.json()
                     
-                    # Extract the metadata dictionary
-                    metadata = resp_json.get("metadata", {})
+                    # If 'metadata' is in the response, use it; otherwise, assume the whole response is the metadata.
+                    metadata = resp_json.get("metadata", resp_json)
                     schemas = metadata.get("schemas", [])
                     current_schema_id = metadata.get("current-schema-id", 0)
                     
-                    # Find the active schema by ID (fallback to the first schema if ID matching fails)
                     target_schema = next((s for s in schemas if s.get("schema-id") == current_schema_id), None)
                     if not target_schema and schemas:
                         target_schema = schemas[0]
@@ -204,7 +180,6 @@ class Client:
                     
                     if target_schema:
                         for field in target_schema.get("fields", []):
-                            # Map Iceberg types to generic BQ/SQL UI types to match your mock setup
                             raw_type = field.get("type", "string")
                             if isinstance(raw_type, str):
                                 type_str = raw_type.upper()
@@ -212,7 +187,6 @@ class Client:
                                 elif type_str == "DOUBLE": type_str = "FLOAT"
                                 elif type_str == "TIMESTAMPTZ": type_str = "TIMESTAMP"
                             else:
-                                # Fallback if 'type' is a complex struct object in Iceberg
                                 type_str = "RECORD/STRUCT"
 
                             formatted_fields.append({

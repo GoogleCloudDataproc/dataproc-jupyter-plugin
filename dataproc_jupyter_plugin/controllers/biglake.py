@@ -9,12 +9,16 @@ class ListCatalogsController(APIHandler):
     @tornado.web.authenticated
     async def get(self):
         try:
+            # 1. Retrieve the project_id sent from the frontend (default to None if not provided)
+            project_id = self.get_argument("project_id", default=None)
+
             async with aiohttp.ClientSession() as client_session:
                 client = biglake.Client(
                     await credentials.get_cached(), self.log, client_session
                 )
                 
-                catalogs_data = await client.list_catalogs()
+                # 2. Pass the project_id down so the service knows if it's querying public data
+                catalogs_data = await client.list_catalogs(project_id=project_id)
             
             self.finish(json.dumps(catalogs_data))
             

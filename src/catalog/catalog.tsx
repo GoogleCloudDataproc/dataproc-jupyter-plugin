@@ -8,6 +8,7 @@ import downArrowIcon from 'style/icons/down_arrow_icon.svg';
 import bigQueryProjectIcon from 'style/icons/bigquery_project_icon.svg';
 import bigqueryIcon from 'style/icons/dataset_explorer_icon.svg';
 import biglakeIcon from 'style/icons/biglake_icon.svg';
+import namespacesIcon from 'style/icons/namespaces_icon.svg';
 import datasetIcon from 'style/icons/dataset_icon.svg';
 import tableIcon from 'style/icons/table_icon.svg';
 import columnsIcon from 'style/icons/columns_icon.svg';
@@ -60,6 +61,12 @@ const iconColumns = new LabIcon({
   name: 'launcher:columns-icon',
   svgstr: columnsIcon
 });
+
+const iconNamespace = new LabIcon({
+  name: 'launcher:namespaces-icon',
+  svgstr: namespacesIcon
+});
+
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
@@ -782,10 +789,17 @@ const CatalogComponent = ({
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
+               { node.parent?.data.name === 'Biglake' ? (
+                <iconBiglake.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              ) : (
               <iconDataset.react
                 tag="div"
                 className="icon-white logo-alignment-style"
               />
+              )}
             </div>
           </>
         );
@@ -796,7 +810,7 @@ const CatalogComponent = ({
             <div role="img" className="table-icon" onClick={handleIconClick}>
              {
               node.parent?.parent?.data.name === 'Biglake' ? (
-                <iconDataset.react
+                <iconNamespace.react
                   tag="div"
                   className="icon-white logo-alignment-style"
                 />
