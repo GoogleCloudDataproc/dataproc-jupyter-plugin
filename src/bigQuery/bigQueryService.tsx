@@ -178,14 +178,6 @@ export class BigQueryService {
 
         let filterDatasetByLocation = allDatasetList;
 
-        if (DEFAULT_PUBLIC_PROJECT_ID !== projectId) {
-            filterDatasetByLocation = filterDatasetByLocation.filter(
-            (dataset: any) =>
-              dataset.entrySource?.location?.toLowerCase() ===
-              String(settings.get('bqRegion')['composite']).toLowerCase()
-            );
-        }
-
         if (filterDatasetByLocation.length === 0) {
           setDataSetResponse([]);
           setDatabaseNames([]);

@@ -104,8 +104,13 @@ async def test_list_datasets_user_specific(
 ):
     mock_response = AsyncMock()
     mock_response.status = 200
-    mock_response.json.return_value = {"entries": ["user_dataset1", "user_dataset2"]}
-    mock_client_session.get.return_value.__aenter__.return_value = mock_response
+    mock_response.json.return_value = {
+        "results": [
+            {"dataplexEntry": "user_dataset1"},
+            {"dataplexEntry": "user_dataset2"}
+        ]
+    }
+    mock_client_session.post.return_value.__aenter__.return_value = mock_response
 
     client = Client(mock_credentials, mock_log, mock_client_session)
     result = await client.list_datasets(
@@ -114,9 +119,18 @@ async def test_list_datasets_user_specific(
         location="us"
     )
 
-    expected_url = f"https://dataplex.googleapis.com//v1/projects/my-project-123/locations/us/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset&pageSize={PAGE_SIZE_LIMIT}"
-    mock_client_session.get.assert_called_once_with(expected_url, headers=client.create_headers())
-    assert result == {"entries": ["user_dataset1", "user_dataset2"]}
+    expected_url = f"https://dataplex.googleapis.com/v1/projects/mock-project-id/locations/global:searchEntries"
+    expected_payload = {
+        "query": f"system=BIGQUERY type=DATASET projectid=my-project-123",
+        "pageSize": PAGE_SIZE_LIMIT,
+    }
+    expected_headers = client.create_headers()
+    expected_headers["X-Goog-User-Project"] = "mock-project-id"
+    
+    mock_client_session.post.assert_called_once_with(
+        expected_url, headers=expected_headers, json=expected_payload
+    )
+    assert result == {"entries": ["user_dataset1", "user_dataset2"], "nextPageToken": None}
 
 @pytest.mark.asyncio
 async def test_list_datasets_api_error(
@@ -126,7 +140,7 @@ async def test_list_datasets_api_error(
     mock_response.status = 403
     mock_response.reason = "Forbidden"
     mock_response.text.return_value = "Permission denied"
-    mock_client_session.get.return_value.__aenter__.return_value = mock_response
+    mock_client_session.post.return_value.__aenter__.return_value = mock_response
 
     client = Client(mock_credentials, mock_log, mock_client_session)
     result = await client.list_datasets(
@@ -135,7 +149,7 @@ async def test_list_datasets_api_error(
         location="us"
     )
 
-    assert result["error"] == "Error response from BigQuery: Forbidden Permission denied"
+    assert result["error"] == "Error response from Dataplex: Forbidden Permission denied"
     mock_log.exception.assert_called_once_with("Error fetching datasets list")
 
 async def test_list_tables(monkeypatch, jp_fetch):
