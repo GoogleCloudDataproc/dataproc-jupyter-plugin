@@ -48,7 +48,7 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_datasets(self, page_token, project_id, location):
+    async def list_datasets(self, page_token, project_id):
         try:
             if project_id == BQ_PUBLIC_DATASET_PROJECT_ID:
                 # Use BigQuery API for public datasets

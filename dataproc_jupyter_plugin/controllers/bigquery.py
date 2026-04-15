@@ -54,9 +54,8 @@ class DatasetController(APIHandler):
         try:
             page_token = self.get_argument("pageToken")
             project_id = self.get_argument("project_id")
-            location = self.get_argument("location", default="us").lower()
             bq_client = await bigquery_client.get_client(self.log)
-            dataset_list = await bq_client.list_datasets(page_token, project_id, location)
+            dataset_list = await bq_client.list_datasets(page_token, project_id)
             self.finish(json.dumps(dataset_list))
         except Exception as e:
             self.log.exception("Error fetching datasets")

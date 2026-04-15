@@ -47,8 +47,7 @@ async def test_list_datasets_null_results(
     client = Client(mock_credentials, mock_log, mock_client_session)
     result = await client.list_datasets(
         page_token=None,
-        project_id="my-project-123",
-        location="us"
+        project_id="my-project-123"
     )
     assert result == {"entries": [], "nextPageToken": None}
 
@@ -71,8 +70,7 @@ async def test_list_datasets_filter_missing_dataplex_entry(
     client = Client(mock_credentials, mock_log, mock_client_session)
     result = await client.list_datasets(
         page_token=None,
-        project_id="my-project-123",
-        location="us"
+        project_id="my-project-123"
     )
     assert result["entries"] == [{"name": "entry1"}]
 

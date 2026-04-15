@@ -90,8 +90,7 @@ async def test_list_datasets_public_with_page_token(
     client = Client(mock_credentials, mock_log, mock_client_session)
     result = await client.list_datasets(
         page_token="next-page",
-        project_id=BQ_PUBLIC_DATASET_PROJECT_ID,
-        location="us"
+        project_id=BQ_PUBLIC_DATASET_PROJECT_ID
     )
 
     expected_url = f"https://bigquery.googleapis.com/bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets?maxResults={PAGE_SIZE_LIMIT}&pageToken=next-page"
@@ -115,8 +114,7 @@ async def test_list_datasets_user_specific(
     client = Client(mock_credentials, mock_log, mock_client_session)
     result = await client.list_datasets(
         page_token=None,
-        project_id="my-project-123",
-        location="us"
+        project_id="my-project-123"
     )
 
     expected_url = f"https://dataplex.googleapis.com/v1/projects/mock-project-id/locations/global:searchEntries"
@@ -145,8 +143,7 @@ async def test_list_datasets_api_error(
     client = Client(mock_credentials, mock_log, mock_client_session)
     result = await client.list_datasets(
         page_token=None,
-        project_id="my-project-123",
-        location="us"
+        project_id="my-project-123"
     )
 
     assert result["error"] == "Error response from Dataplex: Forbidden Permission denied"

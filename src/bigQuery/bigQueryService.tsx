@@ -147,11 +147,8 @@ export class BigQueryService {
     if (notebookValue) {
       const pageToken = nextPageToken ?? '';
       try {
-        const settings = await settingRegistry.load(PLUGIN_ID);
-        const location = settings.get('bqRegion')['composite']
-
         const data: any = await requestAPI(
-          `bigQueryDataset?project_id=${projectId}&location=${location}&pageToken=${pageToken}`
+          `bigQueryDataset?project_id=${projectId}&pageToken=${pageToken}`
         );
         if (!(data.entries || data.datasets)) {
           setDataSetResponse([]);
