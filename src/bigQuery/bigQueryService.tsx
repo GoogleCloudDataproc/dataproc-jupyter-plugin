@@ -354,6 +354,14 @@ export class BigQueryService {
       tableInfoTemp['Default collation'] = data.defaultCollation;
       tableInfoTemp['Default rounding mode'] = data.defaultRoundingMode;
       tableInfoTemp['Description'] = data.description;
+      tableInfoTemp['Schema'] = data.schema?.fields
+        ? data.schema.fields
+            .map(
+              (field: any) =>
+                `${field.name}: ${field.type}${field.mode ? ` ${field.mode}` : ''}`
+            )
+            .join(', ')
+        : '';
       tableInfoTemp['Case insensitive'] = datasetInfo['Case insensitive']
         ? datasetInfo['Case insensitive'].toString()
         : '';

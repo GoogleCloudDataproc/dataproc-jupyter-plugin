@@ -149,56 +149,118 @@ class Client:
 
     async def list_table(self, dataset_id, page_token, project_id):
         try:
-            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables?pageToken={page_token}"
-            async with self.client_session.get(
-                api_endpoint, headers=self.create_headers()
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    return resp
-                else:
-                    raise Exception(
-                        f"Error listing BigQuery tables: {response.reason} {await response.text()}"
-                    )
+            dataset_ref = bigquery.DatasetReference(project_id, dataset_id)
+
+            def _fetch_tables():
+                pager = self.bigquery_client.list_tables(
+                    dataset_ref,
+                    max_results=PAGE_SIZE_LIMIT,
+                    page_token=page_token or None,
+                )
+                first_page = next(pager.pages)
+                table_list = []
+                for table_item in first_page:
+                    table_list.append({
+                        "tableReference": {
+                            "projectId": getattr(table_item, "project", None),
+                            "datasetId": getattr(table_item, "dataset_id", None),
+                            "tableId": getattr(table_item, "table_id", None),
+                        },
+                        "type": getattr(table_item, "table_type", None),
+                        "friendlyName": getattr(table_item, "friendly_name", None),
+                        "description": getattr(table_item, "description", None),
+                    })
+                return {
+                    "tables": table_list,
+                    "nextPageToken": getattr(pager, "next_page_token", None),
+                }
+
+            return await asyncio.to_thread(_fetch_tables)
         except Exception as e:
             self.log.exception("Error fetching tables list")
             return {"error": str(e)}
 
     async def list_dataset_info(self, dataset_id, project_id):
         try:
-            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            api_endpoint = (
-                f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}"
-            )
-            async with self.client_session.get(
-                api_endpoint, headers=self.create_headers()
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    return resp
-                else:
-                    raise Exception(
-                        f"Error listing BigQuery dataset info: {response.reason} {await response.text()}"
-                    )
+            dataset_ref = bigquery.DatasetReference(project_id, dataset_id)
+
+            def _fetch_dataset_info():
+                dataset = self.bigquery_client.get_dataset(dataset_ref)
+                return {
+                    "id": getattr(dataset, "id", None),
+                    "creationTime": str(
+                        int(dataset.created.timestamp() * 1000)
+                    ) if getattr(dataset, "created", None) else None,
+                    "defaultTableExpirationMs": getattr(
+                        dataset, "default_table_expiration_ms", None
+                    ),
+                    "lastModifiedTime": str(
+                        int(dataset.modified.timestamp() * 1000)
+                    ) if getattr(dataset, "modified", None) else None,
+                    "location": getattr(dataset, "location", None),
+                    "description": getattr(dataset, "description", None),
+                    "defaultCollation": getattr(dataset, "default_collation", None),
+                    "defaultRoundingMode": getattr(dataset, "default_rounding_mode", None),
+                    "maxTimeTravelHours": getattr(dataset, "max_time_travel_hours", None),
+                    "storageBillingModel": getattr(dataset, "storage_billing_model", None),
+                    "isCaseInsensitive": getattr(dataset, "is_case_insensitive", None),
+                }
+
+            return await asyncio.to_thread(_fetch_dataset_info)
         except Exception as e:
             self.log.exception("Error fetching dataset info")
             return {"error": str(e)}
 
     async def list_table_info(self, dataset_id, table_id, project_id):
         try:
-            bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-            api_endpoint = f"{bigquery_url}bigquery/v2/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}"
-            async with self.client_session.get(
-                api_endpoint, headers=self.create_headers()
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    return resp
-                else:
-                    raise Exception(
-                        f"Error listing BigQuery table info: {response.reason} {await response.text()}"
-                    )
+            dataset_ref = bigquery.DatasetReference(project_id, dataset_id)
+            table_ref = bigquery.TableReference(dataset_ref, table_id)
+
+            def _fetch_table_info():
+                table = self.bigquery_client.get_table(table_ref)
+                schema_fields = []
+                if getattr(table, "schema", None):
+                    for field in table.schema:
+                        field_obj = {
+                            "name": field.name,
+                            "type": field.field_type,
+                            "mode": getattr(field, "mode", None),
+                        }
+                        if getattr(field, "fields", None):
+                            field_obj["fields"] = [
+                                {
+                                    "name": subfield.name,
+                                    "type": subfield.field_type,
+                                    "mode": getattr(subfield, "mode", None),
+                                }
+                                for subfield in field.fields
+                            ]
+                        schema_fields.append(field_obj)
+
+                return {
+                    "tableReference": {
+                        "projectId": project_id,
+                        "datasetId": dataset_id,
+                        "tableId": table_id,
+                    },
+                    "id": getattr(table, "full_table_id", None) or getattr(table, "table_id", None),
+                    "creationTime": str(
+                        int(table.created.timestamp() * 1000)
+                    ) if getattr(table, "created", None) else None,
+                    "lastModifiedTime": str(
+                        int(table.modified.timestamp() * 1000)
+                    ) if getattr(table, "modified", None) else None,
+                    "expirationTime": str(
+                        int(table.expires.timestamp() * 1000)
+                    ) if getattr(table, "expires", None) else None,
+                    "location": getattr(table, "location", None),
+                    "defaultCollation": getattr(table, "default_collation", None),
+                    "defaultRoundingMode": getattr(table, "default_rounding_mode", None),
+                    "description": getattr(table, "description", None),
+                    "schema": {"fields": schema_fields},
+                }
+
+            return await asyncio.to_thread(_fetch_table_info)
         except Exception as e:
             self.log.exception(f"Error fetching table information")
             return {"error": str(e)}
