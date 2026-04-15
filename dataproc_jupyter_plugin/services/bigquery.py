@@ -15,7 +15,7 @@
 
 import aiohttp
 import asyncio
-from google.cloud import dataplex_v1
+from google.cloud import bigquery, dataplex_v1
 from google.oauth2.credentials import Credentials
 from google.protobuf.json_format import MessageToDict
 
@@ -48,6 +48,7 @@ class Client:
 
         creds = Credentials(token=self._access_token, quota_project_id=self.project_id)
         self.dataplex_client = dataplex_v1.CatalogServiceClient(credentials=creds)
+        self.bigquery_client = bigquery.Client(credentials=creds, project=self.project_id)
 
     def create_headers(self):
         return {
@@ -93,22 +94,31 @@ class Client:
     async def list_datasets(self, page_token, project_id, location):
         try:
             if project_id == BQ_PUBLIC_DATASET_PROJECT_ID:
-                # Use BigQuery API for public datasets
-                bigquery_url = await urls.gcp_service_url(BIGQUERY_SERVICE_NAME)
-                api_endpoint = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets?maxResults={PAGE_SIZE_LIMIT}"
-                if page_token:
-                    api_endpoint += f"&pageToken={page_token}"
+                # Use BigQuery SDK for public datasets
+                loop = asyncio.get_running_loop()
 
-                async with self.client_session.get(
-                    api_endpoint, headers=self.create_headers()
-                ) as response:
-                    if response.status == 200:
-                        resp = await response.json()
-                        return resp
-                    else:
-                        raise Exception(
-                            f"Error response from BigQuery: {response.reason} {await response.text()}"
-                        )
+                def _fetch_public_datasets():
+                    pager = self.bigquery_client.list_datasets(
+                        project=BQ_PUBLIC_DATASET_PROJECT_ID,
+                        max_results=PAGE_SIZE_LIMIT,
+                        page_token=page_token or None,
+                    )
+                    first_page = next(pager.pages)
+                    dataset_list = []
+                    for dataset_item in first_page:
+                        dataset_list.append({
+                            "datasetReference": {
+                                "datasetId": getattr(dataset_item, "dataset_id", None),
+                                "projectId": getattr(dataset_item, "project", None),
+                            },
+                            "description": getattr(dataset_item, "description", None),
+                        })
+                    return {
+                        "datasets": dataset_list,
+                        "nextPageToken": getattr(pager, "next_page_token", None),
+                    }
+
+                return await loop.run_in_executor(None, _fetch_public_datasets)
             else:
                 # Use Dataplex SDK for user-specific datasets
                 loop = asyncio.get_running_loop()
