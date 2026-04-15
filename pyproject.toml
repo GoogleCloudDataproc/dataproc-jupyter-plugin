@@ -33,6 +33,8 @@ dependencies = [
     "aiofiles>=22.1.0,<23",
     "scheduler-jupyter-plugin>=0.1.0",
     "google-cloud-biglake>=0.2.0",
+    "google-cloud-bigquery>=3.13.0",
+    "google-cloud-dataplex>=1.0.0",
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 

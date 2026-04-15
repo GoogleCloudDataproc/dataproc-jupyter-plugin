@@ -14,6 +14,10 @@
 
 
 import aiohttp
+import asyncio
+from google.cloud import dataplex_v1
+from google.oauth2.credentials import Credentials
+from google.protobuf.json_format import MessageToDict
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
@@ -42,11 +46,49 @@ class Client:
         self.region_id = credentials["region_id"]
         self.client_session = client_session
 
+        creds = Credentials(token=self._access_token, quota_project_id=self.project_id)
+        self.dataplex_client = dataplex_v1.CatalogServiceClient(credentials=creds)
+
     def create_headers(self):
         return {
             "Content-Type": CONTENT_TYPE,
             "Authorization": f"Bearer {self._access_token}",
         }
+
+    def _entry_to_dict(self, entry):
+        # Dataplex SDK entries may be protobuf messages or wrapper objects.
+        if hasattr(entry, "_pb"):
+            entry_obj = entry._pb
+        else:
+            entry_obj = entry
+
+        try:
+            return MessageToDict(entry_obj)
+        except Exception:
+            entry_source = getattr(entry, "entry_source", None)
+            display_name = (
+                getattr(entry, "display_name", None)
+                or getattr(entry, "displayName", None)
+                or getattr(entry_source, "display_name", None)
+                or getattr(entry_source, "displayName", None)
+            )
+            return {
+                "name": getattr(entry, "name", None),
+                "displayName": display_name,
+                "entrySource": {
+                    "location": getattr(entry_source, "location", None),
+                    "displayName": (
+                        getattr(entry_source, "display_name", None)
+                        or getattr(entry_source, "displayName", None)
+                    ),
+                    "description": getattr(entry_source, "description", None),
+                    "resource": getattr(entry_source, "resource", None),
+                    "system": getattr(entry_source, "system", None),
+                    "platform": getattr(entry_source, "platform", None),
+                },
+                "asset": getattr(entry, "asset", None),
+                "type": getattr(entry, "type", None),
+            }
 
     async def list_datasets(self, page_token, project_id, location):
         try:
@@ -56,25 +98,41 @@ class Client:
                 api_endpoint = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets?maxResults={PAGE_SIZE_LIMIT}"
                 if page_token:
                     api_endpoint += f"&pageToken={page_token}"
+
+                async with self.client_session.get(
+                    api_endpoint, headers=self.create_headers()
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        return resp
+                    else:
+                        raise Exception(
+                            f"Error response from BigQuery: {response.reason} {await response.text()}"
+                        )
             else:
-                # Use Dataplex API for user-specific datasets
-                dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
-                api_endpoint = (
-                    f"{dataplex_url}/v1/projects/{project_id}/locations/{location}/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset&pageSize={PAGE_SIZE_LIMIT}"
+                # Use Dataplex SDK for user-specific datasets
+                loop = asyncio.get_running_loop()
+                parent = f"projects/{project_id}/locations/{location}/entryGroups/@bigquery"
+                filter_str = (
+                    f"entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset"
                 )
-                if page_token:
-                    api_endpoint += f"&pageToken={page_token}"
-            
-            async with self.client_session.get(
-                api_endpoint, headers=self.create_headers()
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    return resp
-                else:
-                    raise Exception(
-                        f"Error response from BigQuery: {response.reason} {await response.text()}"
+
+                def _fetch_datasets():
+                    request = dataplex_v1.ListEntriesRequest(
+                        parent=parent,
+                        filter=filter_str,
+                        page_size=PAGE_SIZE_LIMIT,
+                        page_token=page_token or "",
                     )
+                    pager = self.dataplex_client.list_entries(request=request)
+                    first_page = next(pager.pages)
+                    entries = [self._entry_to_dict(entry) for entry in first_page.entries]
+                    return {
+                        "entries": entries,
+                        "nextPageToken": first_page.next_page_token,
+                    }
+
+                return await loop.run_in_executor(None, _fetch_datasets)
         except Exception as e:
             self.log.exception("Error fetching datasets list")
             return {"error": str(e)}
