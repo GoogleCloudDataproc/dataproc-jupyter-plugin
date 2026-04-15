@@ -87,10 +87,15 @@ class Client:
                     if response.status == 200:
                         resp = await response.json()
                         # Map Search results to the format expected by the frontend
-                        entries = [r.get("dataplexEntry") for r in resp.get("results", [])]
+                        results = resp.get("results") or []
+                        entries = [
+                            r.get("dataplexEntry")
+                            for r in results
+                            if r.get("dataplexEntry")
+                        ]
                         return {
                             "entries": entries,
-                            "nextPageToken": resp.get("nextPageToken")
+                            "nextPageToken": resp.get("nextPageToken"),
                         }
                     else:
                         raise Exception(
@@ -222,8 +227,11 @@ class Client:
                     ) as response:
                         if response.status == 200:
                             resp = await response.json()
-                            if "results" in resp:
-                                search_results.extend(resp["results"])
+                            results = resp.get("results")
+                            if results:
+                                search_results.extend(
+                                    [r for r in results if r.get("dataplexEntry")]
+                                )
 
                             if "nextPageToken" in resp:
                                 payload["pageToken"] = resp["nextPageToken"]
