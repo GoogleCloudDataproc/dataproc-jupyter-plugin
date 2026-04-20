@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Tree, NodeRendererProps, NodeApi } from 'react-arborist';
 import { LabIcon } from '@jupyterlab/ui-components';
 import 'style/catalog.css';
-import { MainAreaWidget } from '@jupyterlab/apputils';
+import { MainAreaWidget, Notification } from '@jupyterlab/apputils';
 import { BigQueryDatasetWrapper } from '../bigQuery/bigQueryDatasetInfoWrapper';
 import { BigQueryTableWrapper } from '../bigQuery/bigQueryTableInfoWrapper';
 import databaseWidgetIcon from 'style/icons/database_widget_icon.svg';
@@ -29,7 +29,6 @@ import { BigLakeWidgetService } from './biglake/biglakeWidgetService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { DataprocWidget } from 'controls/DataprocWidget';
 import { handleDebounce } from 'utils/utils';
-import { BIGQUERY_API_URL } from 'utils/const';
 
 
 const iconRightArrow = new LabIcon({
@@ -111,10 +110,8 @@ const CatalogComponent = ({
   const [treeStructureData, setTreeStructureData] = useState<any>([]);
 
   const [currentNode, setCurrentNode] = useState<any>();
-  const [apiError, setApiError] = useState(false);
 
   const [height, setHeight] = useState(window.innerHeight - 125);
-  const [projectName, setProjectName] = useState<string>('');
   const [isLoadMoreLoading, setIsLoadMoreLoading] = useState(false);
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [biglakeCatalogNames, setBiglakeCatalogNames] = useState<string[]>([]);
@@ -469,16 +466,45 @@ const CatalogComponent = ({
     setTreeStructureData(tempData);
   };
 
+  /**
+   * Fetches BigLake catalogs for the specified project.
+   * API availability is checked independently and non-blocking.
+   * If the BigLake API is disabled, a warning is shown but the UI remains accessible.
+   * Blocking errors will only appear if the user attempts to access Big Lake features
+   * and the underlying API call fails.
+   */
   const getBiglakeCatalogs = async (projectId: string) => {
-    await BigLakeWidgetService.listCatalogAPIService(
-      settingRegistry,
-      setBiglakeCatalogNames,
-      setBiglakeCatalogResponse,
-      projectId,
-      setIsIconLoading,
-      setIsLoading
-    );
-  };
+    setIsLoading(true);
+
+    try {
+      // Check if BigLake API is enabled independently (non-blocking)
+      const isBigLakeEnabled = await BigLakeWidgetService.checkBigLakeApiEnabledAPIService();
+      if (!isBigLakeEnabled) {
+        // Show a non-blocking warning but continue to fetch catalogs
+        Notification.emit(
+          'BigLake API is not enabled..',
+          'error',
+          { autoClose: 5000 }
+        );
+      }
+
+      // Proceed to fetch catalogs regardless of API state
+      // The actual API call will handle blocking errors if needed
+      await BigLakeWidgetService.listCatalogAPIService(
+        settingRegistry,
+        setBiglakeCatalogNames,
+        setBiglakeCatalogResponse,
+        projectId,
+        setIsIconLoading,
+        setIsLoading
+      );
+    } catch (reason) {
+      Notification.emit(`Failed to fetch BigLake catalogs: ${reason}`, 'error');
+    } finally {
+      setIsLoading(false);
+      setIsIconLoading(false);
+    }
+  }
 
   const getBiglakeNamespaces = async (
     catalogId: string,
@@ -913,9 +939,7 @@ const CatalogComponent = ({
     }
     await BigQueryWidgetService.getBigQueryProjectsListAPIService(
       setProjectNameInfo,
-      setIsLoading,
-      setApiError,
-      setProjectName
+      setIsLoading
     );
   };
 
@@ -1064,9 +1088,8 @@ const CatalogComponent = ({
             </div>
           ) : (
             <div>
-              {!apiError && (
-                <div>
-                  <div className="tree-container">
+              <div>
+                <div className="tree-container">
                     {treeStructureData.length > 0 &&
                       treeStructureData[0].name !== '' && (
                         <>
@@ -1095,24 +1118,6 @@ const CatalogComponent = ({
                       )}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-          {apiError &&(
-            <div className="catalog-error">
-              <p>
-                Bigquery API is not enabled for this project.
-                Please{' '}
-                <a
-                  href={`${BIGQUERY_API_URL}?project=${projectName}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link-class"
-                >
-                  enable
-                </a>
-                <span> it. </span>
-              </p>
             </div>
           )}
         </div>

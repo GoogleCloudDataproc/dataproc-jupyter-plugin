@@ -1,33 +1,73 @@
+import asyncio
 from google.cloud import biglake_v1
+import google.auth
 
-def list_iceberg_namespaces(project_id, location, catalog_id):
-    """Lists Iceberg namespaces in a BigLake catalog."""
+async def test_list_namespaces():
+    # ==========================================
+    # HARDCODED VALUES FOR TESTING
+    # ==========================================
+    PROJECT_ID = "dataproc-jupyter-extension-dev"  
+    LOCATION = "us-central1"
+    CATALOG_ID = "shubh-biglake-catalog"
+    # ==========================================
+
+    print(f"Testing list_namespaces for catalog: {CATALOG_ID}")
     
-    # Create the client
-    client = biglake_v1.IcebergCatalogServiceAsyncClient()
+    # Authenticate using standard environment credentials
+    try:
+        credentials, _ = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        iceberg_client = biglake_v1.IcebergCatalogServiceClient(credentials=credentials)
+    except Exception as e:
+        print(f"Authentication failed. Make sure you are logged in (e.g., via `gcloud auth application-default login`). Error: {e}")
+        return
 
-    # Prepare the parent resource string
-    parent = f"projects/{project_id}/locations/{location}/catalogs/{catalog_id}"
+    try:
+        # Prepare the parent resource string
+        parent = f"projects/{PROJECT_ID}/locations/{LOCATION}/catalogs/{CATALOG_ID}"
+        print(f"Fetching namespaces from parent path: {parent} ...")
+        
+        loop = asyncio.get_running_loop()
+        
+        def _fetch_namespaces():
+            # Initialize the request using the Iceberg namespace method
+            request = biglake_v1.ListNamespacesRequest(parent=parent)
+            # Make the synchronous SDK request
+            return list(iceberg_client.list_namespaces(request=request))
 
-    # Initialize the request to list databases (namespaces)
-    request = biglake_v1.ListIcebergNamespaces(parent=parent)
+        # Run the SDK call in an executor so it doesn't block the async event loop
+        page_result = await loop.run_in_executor(None, _fetch_namespaces)
 
-    # Make the request
-    page_result = client.list_iceberg_namespaces(request=request)
+        namespace_list = []
+        for response in page_result:
+            # Iceberg namespaces are fundamentally arrays of strings.
+            # The SDK protobuf response typically stores this in a `namespace` property, 
+            # or a standard GCP `name` resource path. We handle both to ensure safety.
+            if hasattr(response, 'namespace'): 
+                ns_array = list(response.namespace) 
+                name_str = ".".join(ns_array)
+            elif hasattr(response, 'name'):
+                name_str = response.name.split("/")[-1]
+            else:
+                name_str = str(response)
 
-    print(f"Namespaces in catalog '{catalog_id}':")
-    for response in page_result:
-        # The 'name' is the full resource path; you can split to get the ID
-        namespace_id = response.name.split("/")[-1]
-        print(f"- {namespace_id}")
-# Example usage:
-# list_iceberg_namespaces("your-project-id", "us-central1", "your-catalog-id")
+            namespace_list.append({
+                "name": name_str,
+                "displayName": name_str.split(".")[-1]
+            })
+        
+        result = {"namespaces": namespace_list}
+        
+        print("\n[SUCCESS] Retrieved Namespaces:")
+        for ns in namespace_list:
+            print(f" -> {ns['displayName']}  (Identifier: {ns['name']})")
+            
+        return result
+        
+    except Exception as e:
+        print(f"\n[ERROR] Failed fetching namespaces: {e}")
 
 if __name__ == "__main__":
-    # Remove the '#' to make these active lines of code
-    PROJECT = "dataproc-jupyter-extension-dev"  # Replace with your actual project ID
-    LOCATION = "us-central1"
-    CATALOG = "shubh-biglake-catalog"
-    
-    print(f"Listing namespaces for {CATALOG}...")
-    list_iceberg_namespaces(PROJECT, LOCATION, CATALOG)
+    # Run the async test
+    asyncio.run(test_list_namespaces())

@@ -299,9 +299,12 @@ export const CLOUD_COMPOSER_API =
 
 export const DATAPROC_SERVICE_NAME = "dataproc";
 export const BIGQUERY_SERVICE_NAME = "bigquery";
+export const BIGLAKE_SERVICE_NAME = 'biglake.googleapis.com';
+
 
 export const PAGE_SIZE = 50;
 
 export const DEFAULT_PUBLIC_PROJECT_ID = 'bigquery-public-data';
 
 export const BIGQUERY_API_URL = 'https://console.cloud.google.com/apis/library/bigquery.googleapis.com';
+export const BIGLAKE_API_URL = 'https://console.cloud.google.com/apis/library/biglake.googleapis.com';

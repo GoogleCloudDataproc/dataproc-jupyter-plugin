@@ -18,6 +18,8 @@ import asyncio
 from google.cloud import bigquery, dataplex_v1
 from google.oauth2.credentials import Credentials
 from google.protobuf.json_format import MessageToDict
+from google.api_core import exceptions as gcp_exceptions
+from google.auth import exceptions as auth_exceptions
 
 from dataproc_jupyter_plugin import urls
 from dataproc_jupyter_plugin.commons.constants import (
@@ -143,8 +145,21 @@ class Client:
                     }
 
                 return await loop.run_in_executor(None, _fetch_datasets)
+                
+        except gcp_exceptions.NotFound:
+            self.log.warning(f"Datasets not found for project: {project_id}")
+            return {"error": "The requested resource could not be found."}
+        except gcp_exceptions.PermissionDenied:
+            self.log.warning(f"Permission denied accessing datasets for project: {project_id}")
+            return {"error": "You do not have permission to view this resource."}
+        except auth_exceptions.RefreshError:
+            self.log.warning("Authentication token expired.")
+            return {"error": "Authentication token expired. Please log in again."}
+        except gcp_exceptions.GoogleAPIError as e:
+            self.log.error(f"GCP API Error fetching datasets: {e.message}")
+            return {"error": "An error occurred while communicating with Google Cloud."}
         except Exception as e:
-            self.log.exception("Error fetching datasets list")
+            self.log.exception("Unexpected error fetching datasets list")
             return {"error": str(e)}
 
     async def list_table(self, dataset_id, page_token, project_id):
@@ -176,8 +191,21 @@ class Client:
                 }
 
             return await asyncio.to_thread(_fetch_tables)
+            
+        except gcp_exceptions.NotFound:
+            self.log.warning(f"Dataset {dataset_id} not found.")
+            return {"error": f"Dataset '{dataset_id}' could not be found."}
+        except gcp_exceptions.PermissionDenied:
+            self.log.warning(f"Permission denied accessing dataset: {dataset_id}")
+            return {"error": "You do not have permission to view tables in this dataset."}
+        except auth_exceptions.RefreshError:
+            self.log.warning("Authentication token expired.")
+            return {"error": "Authentication token expired. Please log in again."}
+        except gcp_exceptions.GoogleAPIError as e:
+            self.log.error(f"GCP API Error fetching tables: {e.message}")
+            return {"error": "An error occurred while communicating with Google Cloud."}
         except Exception as e:
-            self.log.exception("Error fetching tables list")
+            self.log.exception("Unexpected error fetching tables list")
             return {"error": str(e)}
 
     async def list_dataset_info(self, dataset_id, project_id):
@@ -207,8 +235,21 @@ class Client:
                 }
 
             return await asyncio.to_thread(_fetch_dataset_info)
+            
+        except gcp_exceptions.NotFound:
+            self.log.warning(f"Dataset info not found for: {dataset_id}")
+            return {"error": f"Dataset '{dataset_id}' could not be found."}
+        except gcp_exceptions.PermissionDenied:
+            self.log.warning(f"Permission denied accessing dataset info: {dataset_id}")
+            return {"error": "You do not have permission to view this dataset's details."}
+        except auth_exceptions.RefreshError:
+            self.log.warning("Authentication token expired.")
+            return {"error": "Authentication token expired. Please log in again."}
+        except gcp_exceptions.GoogleAPIError as e:
+            self.log.error(f"GCP API Error fetching dataset info: {e.message}")
+            return {"error": "An error occurred while communicating with Google Cloud."}
         except Exception as e:
-            self.log.exception("Error fetching dataset info")
+            self.log.exception("Unexpected error fetching dataset info")
             return {"error": str(e)}
 
     async def list_table_info(self, dataset_id, table_id, project_id):
@@ -261,8 +302,21 @@ class Client:
                 }
 
             return await asyncio.to_thread(_fetch_table_info)
+            
+        except gcp_exceptions.NotFound:
+            self.log.warning(f"Table info not found for: {table_id} in {dataset_id}")
+            return {"error": f"Table '{table_id}' could not be found."}
+        except gcp_exceptions.PermissionDenied:
+            self.log.warning(f"Permission denied accessing table info: {table_id}")
+            return {"error": "You do not have permission to view this table's details."}
+        except auth_exceptions.RefreshError:
+            self.log.warning("Authentication token expired.")
+            return {"error": "Authentication token expired. Please log in again."}
+        except gcp_exceptions.GoogleAPIError as e:
+            self.log.error(f"GCP API Error fetching table info: {e.message}")
+            return {"error": "An error occurred while communicating with Google Cloud."}
         except Exception as e:
-            self.log.exception(f"Error fetching table information")
+            self.log.exception(f"Unexpected error fetching table information")
             return {"error": str(e)}
 
     async def bigquery_preview_data(

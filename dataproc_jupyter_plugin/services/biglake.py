@@ -1,6 +1,8 @@
 import asyncio
 from google.cloud import biglake_v1
 from google.oauth2.credentials import Credentials
+from google.api_core import exceptions as gcp_exceptions
+from google.auth import exceptions as auth_exceptions
 
 # Import the constant for the public dataset project
 from dataproc_jupyter_plugin.commons.constants import (
@@ -86,9 +88,19 @@ class Client:
             
             return {"catalogs": catalog_list}
             
+        except gcp_exceptions.PermissionDenied as e:
+            error_msg = "You do not have permission to view BigLake catalogs. Please ensure the BigLake API is enabled and you have the correct IAM permissions."
+            self.log.warning(f"Permission denied fetching Iceberg catalogs: {getattr(e, 'message', str(e))}")
+            return {"error": error_msg, "catalogs": []}
+        except auth_exceptions.RefreshError:
+            self.log.warning("Authentication token expired.")
+            return {"error": "Authentication token expired. Please log in again.", "catalogs": []}
+        except gcp_exceptions.GoogleAPIError as e:
+            self.log.error(f"GCP API Error fetching Iceberg catalogs: {getattr(e, 'message', str(e))}")
+            return {"error": "An error occurred while communicating with Google Cloud.", "catalogs": []}
         except Exception as e:
             error_msg = getattr(e, 'message', str(e))
-            self.log.exception(f"Error fetching Iceberg catalogs via SDK: {error_msg}")
+            self.log.exception(f"Unexpected error fetching Iceberg catalogs via SDK: {error_msg}")
             return {"error": error_msg, "catalogs": []}
 
     async def list_namespaces(self, catalog_name):
@@ -114,13 +126,20 @@ class Client:
                             })
                             
                     return {"namespaces": namespace_list}
+                elif response.status == 403:
+                    error_text = await response.text()
+                    self.log.warning(f"Permission denied fetching BigLake namespaces: {error_text}")
+                    return {"error": "You do not have permission to view namespaces. Please ensure the BigLake API is enabled and you have the correct IAM permissions.", "namespaces": []}
                 else:
                     error_text = await response.text()
                     self.log.error(f"BigLake REST API Error: {response.status} - {error_text}")
-                    return {"error": f"API returned {response.status}", "namespaces": []}
+                    return {"error": f"An error occurred while fetching namespaces: API returned status {response.status}", "namespaces": []}
             
+        except auth_exceptions.RefreshError:
+            self.log.warning("Authentication token expired.")
+            return {"error": "Authentication token expired. Please log in again.", "namespaces": []}
         except Exception as e:
-            self.log.exception(f"Error fetching namespaces via REST API: {e}")
+            self.log.exception(f"Unexpected error fetching namespaces via REST API: {e}")
             return {"error": str(e), "namespaces": []}
 
     async def list_tables(self, catalog_name, db_name):
@@ -145,13 +164,20 @@ class Client:
                             })
                             
                     return {"tables": table_list}
+                elif response.status == 403:
+                    error_text = await response.text()
+                    self.log.warning(f"Permission denied fetching BigLake tables: {error_text}")
+                    return {"error": "You do not have permission to view tables. Please ensure the BigLake API is enabled and you have the correct IAM permissions.", "tables": []}
                 else:
                     error_text = await response.text()
                     self.log.error(f"BigLake REST API Error: {response.status} - {error_text}")
-                    return {"error": f"API returned {response.status}", "tables": []}
+                    return {"error": f"An error occurred while fetching tables: API returned status {response.status}", "tables": []}
             
+        except auth_exceptions.RefreshError:
+            self.log.warning("Authentication token expired.")
+            return {"error": "Authentication token expired. Please log in again.", "tables": []}
         except Exception as e:
-            self.log.exception(f"Error fetching tables via REST API: {e}")
+            self.log.exception(f"Unexpected error fetching tables via REST API: {e}")
             return {"error": str(e), "tables": []}
         
     async def get_column_details(self, catalog_name, db_name, table_name):
@@ -201,11 +227,18 @@ class Client:
                             "fields": formatted_fields
                         }
                     }
+                elif response.status == 403:
+                    error_text = await response.text()
+                    self.log.warning(f"Permission denied fetching BigLake column details: {error_text}")
+                    return {"error": "You do not have permission to view table details. Please ensure the BigLake API is enabled and you have the correct IAM permissions.", "tableId": table_name, "schema": {"fields": []}}
                 else:
                     error_text = await response.text()
                     self.log.error(f"BigLake REST API Error fetching columns: {response.status} - {error_text}")
-                    return {"error": f"API returned {response.status}", "tableId": table_name, "schema": {"fields": []}}
+                    return {"error": f"An error occurred while fetching table details: API returned status {response.status}", "tableId": table_name, "schema": {"fields": []}}
             
+        except auth_exceptions.RefreshError:
+            self.log.warning("Authentication token expired.")
+            return {"error": "Authentication token expired. Please log in again.", "tableId": table_name, "schema": {"fields": []}}
         except Exception as e:
-            self.log.exception(f"Error fetching columns via REST API: {e}")
+            self.log.exception(f"Unexpected error fetching columns via REST API: {e}")
             return {"error": str(e), "tableId": table_name, "schema": {"fields": []}}

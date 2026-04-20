@@ -17,9 +17,33 @@
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { Notification } from '@jupyterlab/apputils';
 import { requestAPI } from 'handler/handler';
-import { PLUGIN_ID } from 'utils/const'; // Make sure to import this!
+import { PLUGIN_ID, BIGLAKE_SERVICE_NAME } from 'utils/const'; // Make sure to import this!
 
 export class BigLakeWidgetService {
+  /**
+   * Checks if the BigLake API is enabled for the current project.
+   * This check is performed independently and does not block access to other features.
+   * Returns a boolean instead of blocking the user. Non-blocking warnings are shown
+   * when attempting to access BigLake features if the API is disabled.
+   * 
+   * @returns {Promise<boolean>} True if BigLake API is enabled, false otherwise.
+   */
+  static checkBigLakeApiEnabledAPIService = async (): Promise<boolean> => {
+    try {
+      const data: any = await requestAPI(
+        `checkApiEnabled?service_name=${BIGLAKE_SERVICE_NAME}`,
+        {
+          method: 'POST'
+        }
+      );
+      return data.is_enabled ?? false;
+    } catch (reason) {
+      console.error(`Error checking BigLake API status: ${reason}`);
+      // Return false if the check itself fails, assuming the API is disabled
+      return false;
+    }
+  };
+
   static listCatalogAPIService = async (
     settingRegistry: ISettingRegistry,
     setCatalogNames: (value: string[]) => void,

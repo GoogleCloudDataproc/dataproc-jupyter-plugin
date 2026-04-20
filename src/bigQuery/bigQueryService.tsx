@@ -493,4 +493,28 @@ export class BigQueryService {
       return reason;
     }
   };
+
+  /**
+   * Checks if the BigQuery API is enabled for the current project.
+   * This check is performed independently and does not block access to other features.
+   * Returns a boolean instead of blocking the user. Non-blocking warnings are shown
+   * when attempting to access BigQuery features if the API is disabled.
+   * 
+   * @returns {Promise<boolean>} True if BigQuery API is enabled, false otherwise.
+   */
+  static checkBigQueryApiEnabledAPIService = async (): Promise<boolean> => {
+    try {
+      const data: any = await requestAPI(
+        `checkApiEnabled?service_name=${BIGQUERY_SERVICE_NAME}`,
+        {
+          method: 'POST'
+        }
+      );
+      return data.is_enabled ?? false;
+    } catch (reason) {
+      console.error(`Error checking BigQuery API status: ${reason}`);
+      // Return false if the check itself fails, assuming the API is disabled
+      return false;
+    }
+  };
 }

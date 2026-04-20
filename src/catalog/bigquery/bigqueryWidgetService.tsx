@@ -18,38 +18,63 @@
 import { Notification } from '@jupyterlab/apputils';
 import { requestAPI } from 'handler/handler';
 import { BIGQUERY_SERVICE_NAME, DEFAULT_PUBLIC_PROJECT_ID, PLUGIN_ID } from 'utils/const';
-import { authApi } from 'utils/utils';
+// import { authApi } from 'utils/utils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 export class BigQueryWidgetService {
+  /**
+   * Checks if the BigQuery API is enabled for the current project.
+   * This check is performed independently and does not block access to other features.
+   * Returns a boolean instead of blocking the user. Non-blocking warnings are shown
+   * when attempting to access BigQuery features if the API is disabled.
+   * 
+   * @returns {Promise<boolean>} True if BigQuery API is enabled, false otherwise.
+   */
+  static checkBigQueryApiEnabledAPIService = async (): Promise<boolean> => {
+    try {
+      const data: any = await requestAPI(
+        `checkApiEnabled?service_name=${BIGQUERY_SERVICE_NAME}`,
+        {
+          method: 'POST'
+        }
+      );
+      return data.is_enabled ?? false;
+    } catch (reason) {
+      console.error(`Error checking BigQuery API status: ${reason}`);
+      // Return false if the check itself fails, assuming the API is disabled
+      return false;
+    }
+  };
+
   static getBigQueryProjectsListAPIService = async (
     setProjectNameInfo: any,
-    setIsLoading: (value: boolean) => void,
-    setApiError: (value: boolean) => void,
-    setProjectName: any
+    setIsLoading: (value: boolean) => void
   ) => {
     try {
-      const credentials = await authApi();
-      if (credentials) setProjectName(credentials.project_id || '');
-      const result: any =
-        await BigQueryWidgetService.checkBigQueryDatasetsAPIService();
-      if (result?.is_enabled) {
-        const data: any = await requestAPI(`bigQueryProjectsList`);
-        setProjectNameInfo(data);
-        setApiError(false);
-      } else {
-        setIsLoading(false);
-        setProjectNameInfo([]);
-        setApiError(true);
+      
+      // Check if BigQuery API is enabled independently (non-blocking)
+      const isBigQueryEnabled = await BigQueryWidgetService.checkBigQueryApiEnabledAPIService();
+      if (!isBigQueryEnabled) {
+        // Show a non-blocking warning but continue to fetch data
+        Notification.emit(
+          'BigQuery API is not enabled. You may encounter errors accessing BigQuery features.',
+          'warning',
+          { autoClose: 5000 }
+        );
       }
+
+      const data: any = await requestAPI(`bigQueryProjectsList`);
+      setProjectNameInfo(data);
     } catch (reason) {
       Notification.emit(
-        `Error in calling BigQurey Project List API : ${reason}`,
+        `Error in calling BigQuery Project List API : ${reason}`,
         'error',
         {
           autoClose: 5000
         }
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
