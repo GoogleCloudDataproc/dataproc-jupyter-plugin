@@ -51,18 +51,6 @@ export class BigQueryWidgetService {
     setIsLoading: (value: boolean) => void
   ) => {
     try {
-      
-      // Check if BigQuery API is enabled independently (non-blocking)
-      const isBigQueryEnabled = await BigQueryWidgetService.checkBigQueryApiEnabledAPIService();
-      if (!isBigQueryEnabled) {
-        // Show a non-blocking warning but continue to fetch data
-        Notification.emit(
-          'BigQuery API is not enabled. You may encounter errors accessing BigQuery features.',
-          'warning',
-          { autoClose: 5000 }
-        );
-      }
-
       const data: any = await requestAPI(`bigQueryProjectsList`);
       setProjectNameInfo(data);
     } catch (reason) {
@@ -73,6 +61,7 @@ export class BigQueryWidgetService {
           autoClose: 5000
         }
       );
+      setProjectNameInfo([]);
     } finally {
       setIsLoading(false);
     }

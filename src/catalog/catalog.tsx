@@ -29,6 +29,8 @@ import { BigLakeWidgetService } from './biglake/biglakeWidgetService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { DataprocWidget } from 'controls/DataprocWidget';
 import { handleDebounce } from 'utils/utils';
+import ApiEnableDialog from 'utils/apiErrorPopup';
+import { BIGLAKE_API_URL, BIGQUERY_API_URL } from 'utils/const';
 
 
 const iconRightArrow = new LabIcon({
@@ -128,6 +130,12 @@ const CatalogComponent = ({
 
   const [nextPageTokens, setNextPageTokens] = useState<Map<string, string | null>>(new Map());
   const [allDatasets, setAllDatasets] = useState<Map<string, any[]>>(new Map());
+  const [biglakeApiDialogOpen, setBiglakeApiDialogOpen] = useState(false);
+  const [biglakeEnableLink, setBiglakeEnableLink] = useState('');
+  const [apiDialogTitle, setApiDialogTitle] = useState('');
+  const [apiDialogMessage, setApiDialogMessage] = useState('');
+  const [bigqueryApiDialogOpen, setBigqueryApiDialogOpen] = useState(false);
+  const [bigqueryEnableLink, setBigqueryEnableLink] = useState('');
 
 
   function handleUpdateHeight() {
@@ -474,22 +482,30 @@ const CatalogComponent = ({
    * and the underlying API call fails.
    */
   const getBiglakeCatalogs = async (projectId: string) => {
-    setIsLoading(true);
-
     try {
-      // Check if BigLake API is enabled independently (non-blocking)
-      const isBigLakeEnabled = await BigLakeWidgetService.checkBigLakeApiEnabledAPIService();
-      if (!isBigLakeEnabled) {
-        // Show a non-blocking warning but continue to fetch catalogs
-        Notification.emit(
-          'BigLake API is not enabled..',
-          'error',
-          { autoClose: 5000 }
-        );
+      // 1. Verify BigQuery Prerequisite First
+      const isBigQueryEnabled = await BigQueryWidgetService.checkBigQueryApiEnabledAPIService();
+      if (!isBigQueryEnabled) {
+        setBiglakeEnableLink(`${BIGQUERY_API_URL}?project=${projectId}`);
+        setApiDialogTitle('BigQuery API Not Enabled');
+        setApiDialogMessage('The BigLake service relies on the BigQuery compute engine. Please enable the BigQuery API to access BigLake features.');
+        setBiglakeApiDialogOpen(true);
+        setIsIconLoading(false);
+        return;
       }
 
-      // Proceed to fetch catalogs regardless of API state
-      // The actual API call will handle blocking errors if needed
+      // 2. Check if BigLake API is enabled independently.
+      const isBigLakeEnabled = await BigLakeWidgetService.checkBigLakeApiEnabledAPIService();
+      if (!isBigLakeEnabled) {
+        setBiglakeEnableLink(`${BIGLAKE_API_URL}?project=${projectId}`);
+        setApiDialogTitle('BigLake API Not Enabled');
+        setApiDialogMessage('The BigLake API is not enabled for this project. Please enable it to access BigLake catalogs.');
+        setBiglakeApiDialogOpen(true);
+        setIsIconLoading(false);
+        return;
+      }
+
+      // 3. Proceed to fetch catalogs.
       await BigLakeWidgetService.listCatalogAPIService(
         settingRegistry,
         setBiglakeCatalogNames,
@@ -500,9 +516,6 @@ const CatalogComponent = ({
       );
     } catch (reason) {
       Notification.emit(`Failed to fetch BigLake catalogs: ${reason}`, 'error');
-    } finally {
-      setIsLoading(false);
-      setIsIconLoading(false);
     }
   }
 
@@ -547,38 +560,55 @@ const CatalogComponent = ({
   };
 
   const getBigQueryDatasets = async (projectId: string) => {
-    const pageTokenForProject = nextPageTokens.get(projectId);
-    const allDatasetsUnderProject = allDatasets.get(projectId) || [];
-
-    await BigQueryWidgetService.getBigQueryDatasetsAPIService(
-      settingRegistry,
-      setDatabaseNames,
-      setDataSetResponse,
-      projectId,
-      setIsIconLoading,
-      setIsLoading,
-      setIsLoadMoreLoading,
-      allDatasetsUnderProject,
-      (value: any[]) => {
-        setAllDatasets(prev => {
-          const newMap = new Map(prev);
-          newMap.set(projectId, value);
-          return newMap;
-        });
-      },
-      pageTokenForProject,
-      (projectId: string, token: string | null) => {
-        setNextPageTokens(prevTokens => {
-            const newMap = new Map(prevTokens);
-            if (token) {
-                newMap.set(projectId, token);
-            } else {
-                newMap.delete(projectId);
-            }
-            return newMap;
-        });
+    try {
+      // Check if BigQuery API is enabled
+      const isBigQueryEnabled = await BigQueryWidgetService.checkBigQueryApiEnabledAPIService();
+      if (!isBigQueryEnabled) {
+        setBigqueryEnableLink(`${BIGQUERY_API_URL}?project=${projectId}`);
+        setApiDialogTitle('BigQuery API Not Enabled');
+        setApiDialogMessage('The BigQuery API is not enabled for this project. Please enable it to access BigQuery datasets.');
+        setBigqueryApiDialogOpen(true);
+        setIsIconLoading(false);
+        setIsLoading(false);
+        setIsLoadMoreLoading(false);
+        return;
       }
-    );
+
+      const pageTokenForProject = nextPageTokens.get(projectId);
+      const allDatasetsUnderProject = allDatasets.get(projectId) || [];
+
+      await BigQueryWidgetService.getBigQueryDatasetsAPIService(
+        settingRegistry,
+        setDatabaseNames,
+        setDataSetResponse,
+        projectId,
+        setIsIconLoading,
+        setIsLoading,
+        setIsLoadMoreLoading,
+        allDatasetsUnderProject,
+        (value: any[]) => {
+          setAllDatasets(prev => {
+            const newMap = new Map(prev);
+            newMap.set(projectId, value);
+            return newMap;
+          });
+        },
+        pageTokenForProject,
+        (projectId: string, token: string | null) => {
+          setNextPageTokens(prevTokens => {
+              const newMap = new Map(prevTokens);
+              if (token) {
+                  newMap.set(projectId, token);
+              } else {
+                  newMap.delete(projectId);
+              }
+              return newMap;
+          });
+        }
+      );
+    } catch (reason) {
+      Notification.emit(`Failed to fetch BigQuery datasets: ${reason}`, 'error');
+    }
   };
 
   const getBigQueryTables = async (
@@ -1122,6 +1152,26 @@ const CatalogComponent = ({
           )}
         </div>
       </div>
+      {biglakeApiDialogOpen && (
+        <ApiEnableDialog
+          open={biglakeApiDialogOpen}
+          onCancel={() => setBiglakeApiDialogOpen(false)}
+          onEnable={() => setBiglakeApiDialogOpen(false)}
+          enableLink={biglakeEnableLink}
+          title={apiDialogTitle || "API Not Enabled"}
+          message={apiDialogMessage || "The API is not enabled for this project."}
+        />
+      )}
+      {bigqueryApiDialogOpen && (
+        <ApiEnableDialog
+          open={bigqueryApiDialogOpen}
+          onCancel={() => setBigqueryApiDialogOpen(false)}
+          onEnable={() => setBigqueryApiDialogOpen(false)}
+          enableLink={bigqueryEnableLink}
+          title="BigQuery API Not Enabled"
+          message="The BigQuery API is not enabled for this project. Please enable it to access BigQuery datasets."
+        />
+      )}
     </div>
   );
 };
