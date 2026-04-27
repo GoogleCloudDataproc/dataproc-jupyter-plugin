@@ -34,6 +34,7 @@ from traitlets.config import SingletonConfigurable
 
 from dataproc_jupyter_plugin import credentials, urls
 from dataproc_jupyter_plugin.commons import constants
+from dataproc_jupyter_plugin.commons.commands import async_run_command
 from dataproc_jupyter_plugin.controllers import (
     bigquery,
     checkApiEnabled
@@ -215,23 +216,8 @@ class ResourceManagerHandler(APIHandler):
             subcmd = f'projects describe {project} --format="value(projectNumber)"'
             cmd = f"gcloud {subcmd}"
 
-            def _run():
-                return subprocess.run(
-                    cmd,
-                    shell=True,
-                    stdin=subprocess.DEVNULL,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                )
+            await async_run_command(cmd)
 
-            loop = asyncio.get_running_loop()
-            p = await loop.run_in_executor(None, _run)
-
-            if p.returncode != 0:
-                raise subprocess.CalledProcessError(
-                    p.returncode, cmd, p.stdout, p.stderr
-                )
             self.finish({"status": "OK"})
         except subprocess.CalledProcessError as er:
             self.finish({"status": "ERROR", "error": er.stderr})
