@@ -43,5 +43,5 @@ async def async_run_command(cmd, stderr=subprocess.PIPE):
 
 async def async_run_gsutil_subcommand(cmd):
     """Run a specified command and return its output."""
-    p = await async_run_command(cmd, stderr=sys.stderr)
+    p = await async_run_command(cmd)
     return p.stdout.strip()
