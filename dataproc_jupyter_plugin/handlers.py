@@ -213,23 +213,25 @@ class ResourceManagerHandler(APIHandler):
         try:
             project = await credentials._gcp_project()
             subcmd = f'projects describe {project} --format="value(projectNumber)"'
-            with tempfile.TemporaryFile() as t:
-                with tempfile.TemporaryFile() as errt:
-                    p = await asyncio.create_subprocess_shell(
-                        f"gcloud {subcmd}",
-                        stdin=subprocess.DEVNULL,
-                        stderr=errt,
-                        stdout=t,
-                    )
-                    await p.wait()
-                    if p.returncode != 0:
-                        errt.seek(0)
-                        stderr_str = errt.read().decode("UTF-8").strip()
-                        raise subprocess.CalledProcessError(
-                            p.returncode, f"gcloud {subcmd}", None, stderr_str
-                        )
-                    t.seek(0)
-                    t.read().decode("UTF-8").strip()
+            cmd = f"gcloud {subcmd}"
+
+            def _run():
+                return subprocess.run(
+                    cmd,
+                    shell=True,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+
+            loop = asyncio.get_running_loop()
+            p = await loop.run_in_executor(None, _run)
+
+            if p.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    p.returncode, cmd, p.stdout, p.stderr
+                )
             self.finish({"status": "OK"})
         except subprocess.CalledProcessError as er:
             self.finish({"status": "ERROR", "error": er.stderr})

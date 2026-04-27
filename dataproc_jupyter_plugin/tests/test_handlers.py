@@ -234,17 +234,15 @@ async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
         "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
     )
 
-    async def mock_create_subprocess_shell(*args, **kwargs):
-        class MockProcess:
+    def mock_subprocess_run(*args, **kwargs):
+        class MockResult:
             def __init__(self):
                 self.returncode = 0
+                self.stdout = "OK"
+                self.stderr = ""
+        return MockResult()
 
-            async def wait(self):
-                pass
-
-        return MockProcess()
-
-    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
+    monkeypatch.setattr("subprocess.run", mock_subprocess_run)
 
     # Call the handler
     response = await jp_fetch(
@@ -267,38 +265,15 @@ async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
         "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
     )
 
-    # Mock the subprocess for gcloud command execution to simulate an error
-    async def mock_create_subprocess_shell(*args, **kwargs):
-        class MockProcess:
+    def mock_subprocess_run(*args, **kwargs):
+        class MockResult:
             def __init__(self):
                 self.returncode = 1
+                self.stdout = ""
+                self.stderr = "Simulated gcloud error"
+        return MockResult()
 
-            async def wait(self):
-                pass
-
-        return MockProcess()
-
-    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
-
-    # Mock the error output from the subprocess
-    def mock_tempfile():
-        class MockTempFile:
-            def __enter__(self):
-                self.content = b"Simulated gcloud error"
-                return self
-
-            def __exit__(self, exc_type, exc_val, exc_tb):
-                pass
-
-            def seek(self, pos):
-                pass
-
-            def read(self):
-                return self.content
-
-        return MockTempFile()
-
-    monkeypatch.setattr("tempfile.TemporaryFile", mock_tempfile)
+    monkeypatch.setattr("subprocess.run", mock_subprocess_run)
 
     # Call the handler
     response = await jp_fetch(

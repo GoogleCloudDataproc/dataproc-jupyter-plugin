@@ -21,15 +21,19 @@ import tempfile
 
 async def async_run_gsutil_subcommand(cmd):
     """Run a specified command and return its output."""
-    with tempfile.TemporaryFile() as t:
-        p = await asyncio.create_subprocess_shell(
-            f"{cmd}",
+    def _run():
+        return subprocess.run(
+            cmd,
+            shell=True,
             stdin=subprocess.DEVNULL,
             stderr=sys.stderr,
-            stdout=t,
+            stdout=subprocess.PIPE,
+            text=True,
         )
-        await p.wait()
-        if p.returncode != 0:
-            raise subprocess.CalledProcessError(p.returncode, None, None, None)
-        t.seek(0)
-        return t.read().decode("UTF-8").strip()
+
+    loop = asyncio.get_running_loop()
+    p = await loop.run_in_executor(None, _run)
+
+    if p.returncode != 0:
+        raise subprocess.CalledProcessError(p.returncode, cmd, p.stdout, None)
+    return p.stdout.strip()
