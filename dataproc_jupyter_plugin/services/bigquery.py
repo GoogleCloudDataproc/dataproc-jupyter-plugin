@@ -48,7 +48,7 @@ class Client:
             "Authorization": f"Bearer {self._access_token}",
         }
 
-    async def list_datasets(self, page_token, project_id, location):
+    async def list_datasets(self, page_token, project_id):
         try:
             if project_id == BQ_PUBLIC_DATASET_PROJECT_ID:
                 # Use BigQuery API for public datasets
@@ -56,25 +56,51 @@ class Client:
                 api_endpoint = f"{bigquery_url}bigquery/v2/projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/datasets?maxResults={PAGE_SIZE_LIMIT}"
                 if page_token:
                     api_endpoint += f"&pageToken={page_token}"
+                async with self.client_session.get(
+                    api_endpoint, headers=self.create_headers()
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        return resp
+                    else:
+                        raise Exception(
+                            f"Error response from BigQuery: {response.reason} {await response.text()}"
+                        )
             else:
-                # Use Dataplex API for user-specific datasets
+                # Use Dataplex Search API for user-specific datasets to get all regions
                 dataplex_url = await urls.gcp_service_url(DATAPLEX_SERVICE_NAME)
-                api_endpoint = (
-                    f"{dataplex_url}/v1/projects/{project_id}/locations/{location}/entryGroups/@bigquery/entries?filter=entry_type=projects/{BASE_PROJECT_ID}/locations/global/entryTypes/bigquery-dataset&pageSize={PAGE_SIZE_LIMIT}"
-                )
+                api_endpoint = f"{dataplex_url}v1/projects/{self.project_id}/locations/global:searchEntries"
+
+                payload = {
+                    "query": f"system=BIGQUERY type=DATASET projectid={project_id}",
+                    "pageSize": PAGE_SIZE_LIMIT,
+                }
                 if page_token:
-                    api_endpoint += f"&pageToken={page_token}"
-            
-            async with self.client_session.get(
-                api_endpoint, headers=self.create_headers()
-            ) as response:
-                if response.status == 200:
-                    resp = await response.json()
-                    return resp
-                else:
-                    raise Exception(
-                        f"Error response from BigQuery: {response.reason} {await response.text()}"
-                    )
+                    payload["pageToken"] = page_token
+
+                headers = self.create_headers()
+                headers["X-Goog-User-Project"] = self.project_id
+
+                async with self.client_session.post(
+                    api_endpoint, headers=headers, json=payload
+                ) as response:
+                    if response.status == 200:
+                        resp = await response.json()
+                        # Map Search results to the format expected by the frontend
+                        results = resp.get("results") or []
+                        entries = [
+                            r.get("dataplexEntry")
+                            for r in results
+                            if r.get("dataplexEntry")
+                        ]
+                        return {
+                            "entries": entries,
+                            "nextPageToken": resp.get("nextPageToken"),
+                        }
+                    else:
+                        raise Exception(
+                            f"Error response from Dataplex: {response.reason} {await response.text()}"
+                        )
         except Exception as e:
             self.log.exception("Error fetching datasets list")
             return {"error": str(e)}
@@ -201,8 +227,11 @@ class Client:
                     ) as response:
                         if response.status == 200:
                             resp = await response.json()
-                            if "results" in resp:
-                                search_results.extend(resp["results"])
+                            results = resp.get("results")
+                            if results:
+                                search_results.extend(
+                                    [r for r in results if r.get("dataplexEntry")]
+                                )
 
                             if "nextPageToken" in resp:
                                 payload["pageToken"] = resp["nextPageToken"]
