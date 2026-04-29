@@ -399,7 +399,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 autoClose: false
               });
             } else {
-              Notification.error(`Error in running gcloud command: ${error}`, {
+              Notification.error(`'Error resourceManager API': ${error}`, {
                 autoClose: false
               });
             }
