@@ -268,7 +268,9 @@ async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
 
     # Mock a failure in the gcloud command execution
     mock_run_gcloud = AsyncMock(
-        side_effect=subprocess.CalledProcessError(1, "gcloud projects describe")
+        side_effect=subprocess.CalledProcessError(
+            1, "gcloud projects describe", stderr="Simulated gcloud error"
+        )
     )
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
@@ -286,3 +288,4 @@ async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
     assert response.code == 200
     payload = json.loads(response.body)
     assert payload["status"] == "ERROR"
+    assert payload["error"] == "Simulated gcloud error"
