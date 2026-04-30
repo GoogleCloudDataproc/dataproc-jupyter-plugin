@@ -399,7 +399,7 @@ const extension: JupyterFrontEndPlugin<void> = {
                 autoClose: false
               });
             } else {
-              Notification.error(`Error resourceManager API: ${error}`, {
+              Notification.error(`Error calling into the Resource Manager API: ${error}`, {
                 autoClose: false
               });
             }
