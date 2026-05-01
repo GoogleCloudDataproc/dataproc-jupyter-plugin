@@ -48,7 +48,8 @@ async def test_get_default_config(jp_serverapp):
     assert server_config.DataprocPluginConfig.kernel_gateway_project_number == ""
     assert server_config.GatewayClient.gateway_retry_interval == 20
     assert server_config.GatewayClient.gateway_retry_max == 45
-    assert server_config.GatewayClient.request_timeout == 600
+    assert server_config.GatewayClient.request_timeout == 300
+    assert server_config.GatewayClient.connect_timeout == 300
 
 @pytest.mark.parametrize(
     "config_project_number,expected_calls",
