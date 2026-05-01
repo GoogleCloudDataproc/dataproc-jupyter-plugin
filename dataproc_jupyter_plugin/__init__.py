@@ -22,7 +22,10 @@ from kernels_mixer.websockets import DelegatingWebsocketConnection
 from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
 
 # In seconds
-MIN_GATEWAY_REQUEST_TIMEOUT = 600
+MIN_GATEWAY_REQUEST_TIMEOUT = 300
+
+# In seconds
+MIN_GATEWAY_CONNECT_TIMEOUT = 300
 
 # In seconds
 MIN_GATEWAY_RETRY_INTERVAL = 20
@@ -95,11 +98,15 @@ def _link_jupyter_server_extension(server_app):
         c.GatewayClient.gateway_retry_max, MIN_GATEWAY_RETRY_MAX
     )
 
+
     # The default gateway client request timeout is 42 seconds but the POST request to
-    # create a batch can take upwards to 600 seconds, so we want to increase the timeout
-    # so that the minimum is 600 seconds.
+    # create a batch can take upwards to 300 seconds, so we want to set the timeout
+    # based on the long tail latency of Component Gateway requests
     c.GatewayClient.request_timeout = _get_config_value_to_assign(
         c.GatewayClient.request_timeout, MIN_GATEWAY_REQUEST_TIMEOUT
+    )
+    c.GatewayClient.connect_timeout = _get_config_value_to_assign(
+        c.GatewayClient.connect_timeout, MIN_GATEWAY_CONNECT_TIMEOUT
     )
 
     # Version 2.8.0 of the `jupyter_server` package requires the `auth_token`
