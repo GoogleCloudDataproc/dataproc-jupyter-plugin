@@ -22,7 +22,7 @@ from kernels_mixer.websockets import DelegatingWebsocketConnection
 from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_handlers
 
 # In seconds
-MIN_GATEWAY_REQUEST_TIMEOUT = 600
+MIN_GATEWAY_REQUEST_TIMEOUT = 300
 
 # In seconds
 MIN_GATEWAY_CONNECT_TIMEOUT = 300
