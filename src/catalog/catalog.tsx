@@ -32,14 +32,14 @@ import { DataprocWidget } from 'controls/DataprocWidget';
 import { handleDebounce } from 'utils/utils';
 import { BIGQUERY_API_URL } from 'utils/const';
 
-interface IDataEntry {
+interface ITreeNodeData {
   id: string;
   name: string;
-  type: string;
+  type?: string;
   isLoadMoreNode?: boolean;
   isNodeOpen: boolean;
-  description: string;
-  children: any;
+  description?: string;
+  children: ITreeNodeData[] | null; // Null if no children fetched yet
 }
 
 const iconRightArrow = new LabIcon({
@@ -55,6 +55,7 @@ const iconBigQueryProject = new LabIcon({
   name: 'launcher:bigquery-project-icon',
   svgstr: bigQueryProjectIcon
 });
+
 const calculateDepth = (node: NodeApi): number => {
   let depth = 0;
   let currentNode = node;
@@ -78,7 +79,7 @@ const CatalogComponent = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isResetLoading, setResetLoading] = useState(false);
 
-  const [treeStructureData, setTreeStructureData] = useState<any>([]);
+  const [treeStructureData, setTreeStructureData] = useState<ITreeNodeData[]>([]);
 
   const [currentNode, setCurrentNode] = useState<any>();
   const [apiError, setApiError] = useState(false);
@@ -122,8 +123,8 @@ const CatalogComponent = ({
     setTreeStructureData(data);
   };
 
-  type NodeProps = NodeRendererProps<IDataEntry> & {
-    onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
+  type NodeProps = NodeRendererProps<ITreeNodeData> & {
+    onClick: (node: NodeRendererProps<ITreeNodeData>['node']) => void;
   };
   const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
@@ -293,7 +294,7 @@ const CatalogComponent = ({
                             padding={25}
                             idAccessor={(node: any) => node.id}
                           >
-                            {(props: NodeRendererProps<any>) => (
+                            {(props: NodeRendererProps<ITreeNodeData>) => (
                               <Node {...props} onClick={() => {}} />
                             )}
                           </Tree>
