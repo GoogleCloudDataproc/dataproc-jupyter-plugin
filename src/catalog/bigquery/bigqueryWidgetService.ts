@@ -22,25 +22,29 @@ import {
 } from 'utils/const';
 import { authApi } from 'utils/utils';
 
+interface ApiEnabledResponse {
+  success: boolean;
+  is_enabled: boolean;
+}
+
 export class BigQueryWidgetService {
   static getBigQueryProjectsListAPIService = async (
-    setProjectNameInfo: any,
+    setProjectNameList: (value: string[]) => void,
     setIsLoading: (value: boolean) => void,
     setApiError: (value: boolean) => void,
-    setProjectName: any
+    setProjectName: (value : string) => void,
   ) => {
     try {
       const credentials = await authApi();
       if (credentials) setProjectName(credentials.project_id || '');
-      const result: any =
+      const result: ApiEnabledResponse =
         await BigQueryWidgetService.checkBigQueryDatasetsAPIService();
       if (result?.is_enabled) {
-        const data: any = await requestAPI(`bigQueryProjectsList`);
-        setProjectNameInfo(data);
+        const data: string[] = await requestAPI(`bigQueryProjectsList`);
+        setProjectNameList(data);
         setApiError(false);
       } else {
-        setIsLoading(false);
-        setProjectNameInfo([]);
+        setProjectNameList([]);
         setApiError(true);
       }
     } catch (reason) {
@@ -52,11 +56,14 @@ export class BigQueryWidgetService {
         }
       );
     }
+    finally{
+      setIsLoading(false);
+    }
   };
 
-  static checkBigQueryDatasetsAPIService = async () => {
+  static checkBigQueryDatasetsAPIService = async (): Promise<ApiEnabledResponse> => {
     try {
-      const data: any = await requestAPI(
+      const data: ApiEnabledResponse = await requestAPI(
         `checkApiEnabled?service_name=${BIGQUERY_SERVICE_NAME}`,
         {
           method: 'POST'
@@ -64,7 +71,7 @@ export class BigQueryWidgetService {
       );
       return data;
     } catch (reason) {
-      return reason;
+      return { success: false, is_enabled: false };
     }
   };
 }

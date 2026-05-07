@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,7 @@ import bigQueryProjectIcon from 'style/icons/bigquery_project_icon.svg';
 import { v4 as uuidv4 } from 'uuid';
 import { auto } from '@popperjs/core';
 import { IThemeManager } from '@jupyterlab/apputils';
-import {
-  CircularProgress
-} from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import { TitleComponent } from 'controls/SidePanelTitleWidget';
 import { BigQueryWidgetService } from 'catalog/bigquery/bigqueryWidgetService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -34,6 +32,15 @@ import { DataprocWidget } from 'controls/DataprocWidget';
 import { handleDebounce } from 'utils/utils';
 import { BIGQUERY_API_URL } from 'utils/const';
 
+interface IDataEntry {
+  id: string;
+  name: string;
+  type: string;
+  isLoadMoreNode?: boolean;
+  isNodeOpen: boolean;
+  description: string;
+  children: any;
+}
 
 const iconRightArrow = new LabIcon({
   name: 'launcher:right-arrow-icon',
@@ -58,8 +65,6 @@ const calculateDepth = (node: NodeApi): number => {
   return depth;
 };
 
-
-
 const CatalogComponent = ({
   app,
   settingRegistry,
@@ -73,18 +78,21 @@ const CatalogComponent = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isResetLoading, setResetLoading] = useState(false);
 
-
   const [treeStructureData, setTreeStructureData] = useState<any>([]);
 
   const [currentNode, setCurrentNode] = useState<any>();
   const [apiError, setApiError] = useState(false);
 
-  const [height, setHeight] = useState(window.innerHeight - 125);
   const [projectName, setProjectName] = useState<string>('');
 
+  const WIDGET_HEADER_HEIGHT = 125;
+
+  const [height, setHeight] = useState(
+    window.innerHeight - WIDGET_HEADER_HEIGHT
+  );
 
   function handleUpdateHeight() {
-    let updateHeight = window.innerHeight - 125;
+    let updateHeight = window.innerHeight - WIDGET_HEADER_HEIGHT;
     setHeight(updateHeight);
   }
 
@@ -100,18 +108,6 @@ const CatalogComponent = ({
       window.removeEventListener('resize', debouncedHandleUpdateHeight);
     };
   }, []);
-
-
-
-  interface IDataEntry {
-    id: string;
-    name: string;
-    type: string;
-    isLoadMoreNode?: boolean;
-    isNodeOpen: boolean;
-    description: string;
-    children: any;
-  }
 
   const treeStructureforProjects = () => {
     const data = projectNameInfo.map(projectName => ({
@@ -129,98 +125,91 @@ const CatalogComponent = ({
   type NodeProps = NodeRendererProps<IDataEntry> & {
     onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
   };
-  const Node = ({ node, style, onClick}: NodeProps) => {
-
+  const Node = ({ node, style, onClick }: NodeProps) => {
     const handleToggle = () => {
-
       if (calculateDepth(node) === 1 && !node.isOpen) {
         setCurrentNode(node);
       } else {
         node.toggle();
       }
     };
+
     const handleIconClick = (event: React.MouseEvent) => {
       // `node.isOpen` is the default property of the library, which sometimes has incorrect initial behaviour.
       // This leads to, incorrect expand / collapase Icon in the UI.
       // using `isNodeOpen` this (custom) property to correct the node's intial expand/collapse state.
       // and prevent visual flickering when the user interacts with the tree.
-      if(node.isOpen !== node.data.isNodeOpen){
+      if (node.isOpen !== node.data.isNodeOpen) {
         node.toggle();
       }
       if (event.currentTarget.classList.contains('caret-icon')) {
-        node.data.isNodeOpen = ! node.data.isNodeOpen
+        node.data.isNodeOpen = !node.data.isNodeOpen;
         handleToggle();
       }
     };
+    
     const handleTextClick = (event: React.MouseEvent) => {
       event.stopPropagation();
       onClick(node);
     };
-
 
     const depth = calculateDepth(node);
     const renderNodeIcon = () => {
       const hasChildren =
         (node.children && node.children.length > 0) ||
         (depth !== 4 && node.children);
-      const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
-        node.isOpen ? (
-          <>
+      const arrowIcon =
+        hasChildren && !node.data.isLoadMoreNode ? (
+          node.isOpen ? (
+            <>
+              <div
+                role="treeitem"
+                className="caret-icon right"
+                onClick={handleIconClick}
+              >
+                <iconDownArrow.react
+                  tag="div"
+                  className="icon-white logo-alignment-style"
+                />
+              </div>
+            </>
+          ) : (
             <div
               role="treeitem"
-              className="caret-icon right"
+              className="caret-icon down"
               onClick={handleIconClick}
             >
-              <iconDownArrow.react
+              <iconRightArrow.react
                 tag="div"
                 className="icon-white logo-alignment-style"
               />
             </div>
-          </>
+          )
         ) : (
-          <div
-            role="treeitem"
-            className="caret-icon down"
-            onClick={handleIconClick}
-          >
-            <iconRightArrow.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          </div>
-        )
-      ) : (
-        <div style={{ width: '29px' }}></div>
-      );
+          <div style={{ width: '29px' }}></div>
+        );
 
       if (depth === 1) {
         return (
           <>
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
-                <iconBigQueryProject.react
-                  tag="div"
-                  className="icon-white logo-alignment-style"
-                />
+              <iconBigQueryProject.react
+                tag="div"
+                className="icon-white logo-alignment-style"
+              />
             </div>
           </>
         );
       }
-      return (
-        <>
-        </>
-      );
+      return <></>;
     };
 
     return (
       <>
         <div style={style}>
           {renderNodeIcon()}
-          <div
-            role="treeitem"
-            title={node.data.name}
-            onClick={handleTextClick}
-          >
+          <div role="treeitem" title={node.data.name} onClick={handleTextClick}>
             {node.data.name}
           </div>
         </div>
@@ -228,7 +217,7 @@ const CatalogComponent = ({
     );
   };
 
-  const getBigQueryProjects = async (isReset : boolean) => {
+  const getBigQueryProjects = async (isReset: boolean) => {
     if (isReset) {
       setResetLoading(true);
     }
@@ -250,7 +239,6 @@ const CatalogComponent = ({
     }
   }, [projectNameInfo]);
 
-
   useEffect(() => {
     if (treeStructureData.length > 0 && treeStructureData[0].name !== '') {
       setIsLoading(false);
@@ -260,7 +248,6 @@ const CatalogComponent = ({
       currentNode?.toggle();
     }
   }, [treeStructureData]);
-
 
   return (
     <div className="dpms-Wrapper">
@@ -307,10 +294,7 @@ const CatalogComponent = ({
                             idAccessor={(node: any) => node.id}
                           >
                             {(props: NodeRendererProps<any>) => (
-                              <Node
-                                {...props}
-                                onClick={() => {}}
-                              />
+                              <Node {...props} onClick={() => {}} />
                             )}
                           </Tree>
                         </>
@@ -320,11 +304,10 @@ const CatalogComponent = ({
               )}
             </div>
           )}
-          {apiError &&(
+          {apiError && (
             <div className="sidepanel-login-error">
               <p>
-                Bigquery API is not enabled for this project.
-                Please{' '}
+                Bigquery API is not enabled for this project. Please{' '}
                 <a
                   href={`${BIGQUERY_API_URL}?project=${projectName}`}
                   target="_blank"
