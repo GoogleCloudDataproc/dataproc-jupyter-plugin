@@ -299,7 +299,7 @@ export const CLOUD_COMPOSER_API =
 
 export const DATAPROC_SERVICE_NAME = "dataproc";
 export const BIGQUERY_SERVICE_NAME = "bigquery";
-export const BIGLAKE_SERVICE_NAME = 'biglake.googleapis.com';
+export const BIGLAKE_SERVICE_NAME = 'biglake';
 
 
 export const PAGE_SIZE = 50;
