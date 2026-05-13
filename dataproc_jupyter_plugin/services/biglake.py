@@ -1,50 +1,57 @@
 import asyncio
+import google.auth
+import google.auth.transport.requests
 from google.cloud import biglake_v1
-from google.oauth2.credentials import Credentials
 from google.api_core import exceptions as gcp_exceptions
 from google.auth import exceptions as auth_exceptions
 
 # Import the constant for the public dataset project
 from dataproc_jupyter_plugin.commons.constants import (
-    BQ_PUBLIC_DATASET_PROJECT_ID,BASE_PROJECT_ID,PAGE_SIZE_LIMIT
+    BQ_PUBLIC_DATASET_PROJECT_ID, BASE_PROJECT_ID, PAGE_SIZE_LIMIT
 )
 
 class Client:
-    def __init__(self, credentials, log, client_session):
+    def __init__(self, log, client_session, project_id=None):
         self.log = log
         self.client_session = client_session
-        if not (
-            ("access_token" in credentials)
-            and ("project_id" in credentials)
-        ):
-            self.log.exception("Missing required credentials")
-            raise ValueError("Missing required credentials")
-            
-        self._access_token = credentials["access_token"]
-        self.project_id = credentials["project_id"]
         
-        creds = Credentials(
-            token=self._access_token, 
-            quota_project_id=self.project_id
-        )
-        self.iceberg_client = biglake_v1.IcebergCatalogServiceClient(credentials=creds)
+        try:
+            # 1. Automatically load Application Default Credentials from the environment
+            self.credentials, default_project = google.auth.default(
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+            self.project_id = project_id or default_project
+            
+            if not self.project_id:
+                raise ValueError("Could not determine Google Cloud Project ID from ADC.")
+                
+            # 2. Pass the auto-refreshing credentials to the SDK
+            self.iceberg_client = biglake_v1.IcebergCatalogServiceClient(credentials=self.credentials)
+            
+        except google.auth.exceptions.DefaultCredentialsError as e:
+            self.log.error(f"Failed to load Application Default Credentials: {e}")
+            raise
 
     def _resolve_catalog_path(self, catalog_name: str) -> str:
         """Helper to ensure the catalog name is a fully qualified Google Cloud resource path."""
-        if "projects/" in catalog_name:
+        if "projects/" in catalog_name: 
             return catalog_name
-            
-        # If it's the known public catalog, map it to the exact public path
         if catalog_name == "biglake-public-nyc-taxi-iceberg":
             return f"projects/{BQ_PUBLIC_DATASET_PROJECT_ID}/catalogs/{catalog_name}"
-            
-        # Otherwise, fall back to the user's personal project path
         return f"projects/{self.project_id}/catalogs/{catalog_name}"
 
     def _get_rest_headers(self, catalog_path: str, needs_vended_credentials: bool = False) -> dict:
-        """Generates headers. Injects 'vended-credentials' ONLY when explicitly requested (for table metadata)."""
+        """Generates headers, auto-refreshing the ADC token if necessary."""
+        
+        # 3. Force ADC to refresh the token if it is expired or missing
+        if not self.credentials.valid:
+            auth_request = google.auth.transport.requests.Request()
+            self.credentials.refresh(auth_request)
+            
+        fresh_token = self.credentials.token
+        
         headers = {
-            "Authorization": f"Bearer {self._access_token}",
+            "Authorization": f"Bearer {fresh_token}",
             "X-Goog-User-Project": self.project_id,
             "Content-Type": "application/json"
         }
@@ -92,7 +99,7 @@ class Client:
             error_msg = "You do not have permission to view BigLake catalogs. Please ensure the BigLake API is enabled and you have the correct IAM permissions."
             self.log.warning(f"Permission denied fetching Iceberg catalogs: {getattr(e, 'message', str(e))}")
             return {"error": error_msg, "catalogs": []}
-        except auth_exceptions.RefreshError:
+        except (gcp_exceptions.Unauthenticated, auth_exceptions.RefreshError):
             self.log.warning("Authentication token expired.")
             return {"error": "Authentication token expired. Please log in again.", "catalogs": []}
         except gcp_exceptions.GoogleAPIError as e:
@@ -126,6 +133,9 @@ class Client:
                             })
                             
                     return {"namespaces": namespace_list}
+                elif response.status == 401:
+                    self.log.warning("Authentication token expired (401 from REST API).")
+                    return {"error": "Authentication token expired. Please log in again.", "namespaces": []}
                 elif response.status == 403:
                     error_text = await response.text()
                     self.log.warning(f"Permission denied fetching BigLake namespaces: {error_text}")
@@ -164,6 +174,9 @@ class Client:
                             })
                             
                     return {"tables": table_list}
+                elif response.status == 401:
+                    self.log.warning("Authentication token expired (401 from REST API).")
+                    return {"error": "Authentication token expired. Please log in again.", "tables": []}
                 elif response.status == 403:
                     error_text = await response.text()
                     self.log.warning(f"Permission denied fetching BigLake tables: {error_text}")
@@ -227,6 +240,9 @@ class Client:
                             "fields": formatted_fields
                         }
                     }
+                elif response.status == 401:
+                    self.log.warning("Authentication token expired (401 from REST API).")
+                    return {"error": "Authentication token expired. Please log in again.", "tableId": table_name, "schema": {"fields": []}}
                 elif response.status == 403:
                     error_text = await response.text()
                     self.log.warning(f"Permission denied fetching BigLake column details: {error_text}")

@@ -32,7 +32,7 @@ dependencies = [
     "google-cloud-storage~=2.18.2",
     "aiofiles>=22.1.0,<23",
     "scheduler-jupyter-plugin>=0.1.0",
-    "google-cloud-biglake>=0.1.0",
+    "google-cloud-biglake>=0.3.0",
     "google-cloud-bigquery>=3.13.0",
     "google-cloud-dataplex>=1.0.0",
 ]

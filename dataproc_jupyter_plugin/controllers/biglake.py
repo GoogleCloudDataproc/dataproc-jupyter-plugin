@@ -14,7 +14,7 @@ class ListCatalogsController(APIHandler):
 
             async with aiohttp.ClientSession() as client_session:
                 client = biglake.Client(
-                    await credentials.get_cached(), self.log, client_session
+                 self.log, client_session
                 )
                 
                 # 2. Pass the project_id down so the service knows if it's querying public data
@@ -34,7 +34,7 @@ class ListNamespacesController(APIHandler):
 
             async with aiohttp.ClientSession() as client_session:
                 client = biglake.Client(
-                    await credentials.get_cached(), self.log, client_session
+                 self.log, client_session
                 )
                 
                 namespaces_data = await client.list_namespaces(catalog_name)
@@ -55,9 +55,7 @@ class ListTablesController(APIHandler):
 
             # 2. Initialize the client session
             async with aiohttp.ClientSession() as client_session:
-                client = biglake.Client(
-                    await credentials.get_cached(), self.log, client_session
-                )
+                client = biglake.Client(self.log, client_session)
                 
                 # 3. Call the list_tables method from services/biglake.py
                 # Note: We pass namespace_name as the db_name parameter

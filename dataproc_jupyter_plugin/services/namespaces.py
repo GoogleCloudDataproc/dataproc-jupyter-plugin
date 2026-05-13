@@ -1,6 +1,6 @@
 import asyncio
-from google.cloud import biglake_v1
 import google.auth
+from google.cloud import bigquery_biglake_v1
 
 async def test_list_namespaces():
     # ==========================================
@@ -18,7 +18,8 @@ async def test_list_namespaces():
         credentials, _ = google.auth.default(
             scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
-        iceberg_client = biglake_v1.IcebergCatalogServiceClient(credentials=credentials)
+        # Initialize the client using the updated bigquery_biglake_v1 package
+        iceberg_client = bigquery_biglake_v1.IcebergCatalogServiceClient(credentials=credentials)
     except Exception as e:
         print(f"Authentication failed. Make sure you are logged in (e.g., via `gcloud auth application-default login`). Error: {e}")
         return
@@ -31,10 +32,8 @@ async def test_list_namespaces():
         loop = asyncio.get_running_loop()
         
         def _fetch_namespaces():
-            # Initialize the request using the Iceberg namespace method
-            request = biglake_v1.ListNamespacesRequest(parent=parent)
-            # Make the synchronous SDK request
-            return list(iceberg_client.list_namespaces(request=request))
+            # Pass the parent parameter directly to the flattened method
+            return list(iceberg_client.list_iceberg_namespaces(parent=parent))
 
         # Run the SDK call in an executor so it doesn't block the async event loop
         page_result = await loop.run_in_executor(None, _fetch_namespaces)
