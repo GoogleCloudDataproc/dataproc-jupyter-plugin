@@ -11,10 +11,13 @@ from dataproc_jupyter_plugin.commons.constants import (
 )
 
 class Client:
-    def __init__(self, log, client_session, project_id=None):
+    def __init__(self, credentials, client_session, log):
         self.log = log
         self.client_session = client_session
+        self.credentials = credentials
         
+        project_id = credentials.get("project_id") if isinstance(credentials, dict) else None
+
         try:
             # 1. Automatically load Application Default Credentials from the environment
             self.credentials, default_project = google.auth.default(

@@ -862,7 +862,7 @@ const CatalogComponent = ({
             {arrowIcon}
             <div role="img" className="db-icon" onClick={handleIconClick}>
                { node.parent?.data.name === 'Biglake' ? (
-                <iconBiglake.react
+                <iconNamespace.react
                   tag="div"
                   className="icon-white logo-alignment-style"
                 />
@@ -882,7 +882,7 @@ const CatalogComponent = ({
             <div role="img" className="table-icon" onClick={handleIconClick}>
              {
               node.parent?.parent?.data.name === 'Biglake' ? (
-                <iconNamespace.react
+                <iconDataset.react
                   tag="div"
                   className="icon-white logo-alignment-style"
                 />
