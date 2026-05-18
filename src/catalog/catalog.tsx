@@ -26,6 +26,7 @@ import {
 import { TitleComponent } from 'controls/SidePanelTitleWidget';
 import { BigQueryWidgetService } from 'catalog/bigquery/bigqueryWidgetService';
 import { BigLakeWidgetService } from './biglake/biglakeWidgetService';
+import { BigLakeTableWrapper } from './biglake/biglakeTableInfoWrapper';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { DataprocWidget } from 'controls/DataprocWidget';
 import { handleDebounce } from 'utils/utils';
@@ -735,21 +736,17 @@ const CatalogComponent = ({
       }
     };
     
-    const handleIconClick = (event: React.MouseEvent) => {
-      // `node.isOpen` is the default property of the library, which sometimes has incorrect initial behaviour.
-      // This leads to, incorrect expand / collapase Icon in the UI.
-      // using `isNodeOpen` this (custom) property to correct the node's intial expand/collapse state.
-      // and prevent visual flickering when the user interacts with the tree.
+    const handleRowClick = (event: React.MouseEvent) => {
+      event.stopPropagation();
+      if (node.data.isLoadMoreNode) {
+        handleToggle();
+        return;
+      }
       if(node.isOpen !== node.data.isNodeOpen){
         node.toggle();
       }
-      if (event.currentTarget.classList.contains('caret-icon')) {
-        node.data.isNodeOpen = ! node.data.isNodeOpen
-        handleToggle();
-      }
-    };
-    const handleTextClick = (event: React.MouseEvent) => {
-      event.stopPropagation();
+      node.data.isNodeOpen = !node.data.isNodeOpen;
+      handleToggle();
       onClick(node);
     };
 
@@ -762,7 +759,7 @@ const CatalogComponent = ({
       const hasChildren = (node.children && node.children.length > 0) || (!isBigQueryColumn && !isBigLakeColumn && node.data.children !== false);
       
       const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
-        isIconLoading && currentNode?.data?.name === node.data.name ? (
+        isIconLoading && currentNode?.id === node.id ? (
           <div className="big-query-loader-style">
             <CircularProgress
               size={16}
@@ -775,7 +772,6 @@ const CatalogComponent = ({
             <div
               role="treeitem"
               className="caret-icon right"
-              onClick={handleIconClick}
             >
               <iconDownArrow.react
                 tag="div"
@@ -787,7 +783,6 @@ const CatalogComponent = ({
           <div
             role="treeitem"
             className="caret-icon down"
-            onClick={handleIconClick}
           >
             <iconRightArrow.react
               tag="div"
@@ -816,7 +811,6 @@ const CatalogComponent = ({
         <div
           role="treeitem"
           className="caret-icon down load-more-icon"
-          onClick={handleToggle}
         >
           Load More...
         </div>
@@ -829,7 +823,7 @@ const CatalogComponent = ({
         return (
           <>
             {arrowIcon}
-            <div role="img" className="db-icon" onClick={handleIconClick}>
+            <div role="img" className="db-icon">
                 <iconBigQueryProject.react
                   tag="div"
                   className="icon-white logo-alignment-style"
@@ -841,7 +835,7 @@ const CatalogComponent = ({
         return (
           <>
             {arrowIcon}
-            <div role="img" className="db-icon" onClick={handleIconClick}>
+            <div role="img" className="db-icon">
               {node.data.name === 'Biglake' ? (
                 <iconBiglake.react
                   tag="div"
@@ -860,7 +854,7 @@ const CatalogComponent = ({
         return (
           <>
             {arrowIcon}
-            <div role="img" className="db-icon" onClick={handleIconClick}>
+            <div role="img" className="db-icon">
                { node.parent?.data.name === 'Biglake' ? (
                 <iconNamespace.react
                   tag="div"
@@ -879,7 +873,7 @@ const CatalogComponent = ({
         return (
           <>
             {arrowIcon}
-            <div role="img" className="table-icon" onClick={handleIconClick}>
+            <div role="img" className="table-icon">
              {
               node.parent?.parent?.data.name === 'Biglake' ? (
                 <iconDataset.react
@@ -901,7 +895,7 @@ const CatalogComponent = ({
             return (
               <>
                 {arrowIcon}
-                <div role="img" className="table-icon" onClick={handleIconClick}>
+                <div role="img" className="table-icon">
                   <iconTable.react
                     tag="div"
                     className="icon-white logo-alignment-style"
@@ -938,12 +932,11 @@ const CatalogComponent = ({
 
     return (
       <>
-        <div className="catalog-dataset-node" style={style}>
+        <div className="catalog-dataset-node" style={style} onClick={handleRowClick}>
           {renderNodeIcon()}
           <div
             role="treeitem"
             title={node.data.name}
-            onClick={handleTextClick}
             className="catalog-dataset-content"
           >
             <span className="catalog-dataset-name">{node.data.name}</span>
@@ -1015,6 +1008,36 @@ const CatalogComponent = ({
           );
           const widget = new MainAreaWidget<BigQueryTableWrapper>({ content });
           widget.id = `bigquery-table-info-${uuidv4()}`;
+          widget.title.label = node.data.name;
+          widget.title.closable = true;
+          widget.title.icon = iconDatasets; // Will need to be defined
+          app.shell.add(widget, 'main');
+          widget.disposed.connect(() => {
+            delete openedWidgets[widgetTitle];
+          });
+          openedWidgets[widgetTitle] = true;
+        }
+      }
+    } else if (
+      // Ensure we are in the BigLake part of the tree (Table level is at depth 5)
+      node.parent?.parent?.parent?.data.name === 'Biglake'
+    ) {
+      if (!openedWidgets[widgetTitle]) {
+        if (depth === 5) {
+          // BigLake Table
+          const namespaceId = node.parent?.data.name;
+          const catalogId = node.parent?.parent?.data.name;
+          const projectId = node.parent?.parent?.parent?.parent?.data.name;
+          console.log("expcetd to open biglake table widget for table: ", node.data.name, " in namespace: ", namespaceId, " catalog: ", catalogId, " project: ", projectId);
+          const content = new BigLakeTableWrapper(
+            node.data.name,
+            namespaceId!,
+            catalogId!,
+            projectId!,
+            themeManager
+          );
+          const widget = new MainAreaWidget<BigLakeTableWrapper>({ content });
+          widget.id = `biglake-table-info-${uuidv4()}`;
           widget.title.label = node.data.name;
           widget.title.closable = true;
           widget.title.icon = iconDatasets; // Will need to be defined
