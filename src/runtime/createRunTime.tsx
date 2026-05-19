@@ -337,16 +337,17 @@ function CreateRunTime({
   // This solves a race condition seen in certain environments where setting both states
   // in the same function call would fail.
   useEffect(() => {
-    if (labelDetail.length !== labelDetailUpdated.length) {
+    if (JSON.stringify(labelDetail) !== JSON.stringify(labelDetailUpdated)) {
       setLabelDetail(labelDetailUpdated);
     }
   }, [labelDetailUpdated, labelDetail]);
 
   useEffect(() => {
-    if (propertyDetail.length !== propertyDetailUpdated.length) {
+    if (JSON.stringify(propertyDetail) !== JSON.stringify(propertyDetailUpdated)) {
       setPropertyDetail(propertyDetailUpdated);
     }
   }, [propertyDetailUpdated, propertyDetail]);
+
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
