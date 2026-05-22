@@ -301,6 +301,13 @@ function CreateRunTime({
   }, [lightningEngineEnabled,othersList]);
 
   useEffect(() => {
+    console.log(
+      'lightningEngineEnabled state value updated:',
+      lightningEngineEnabled
+    );
+  }, [lightningEngineEnabled]);
+
+  useEffect(() => {
     const initializeRuntime = async () => {
       try {
         await checkConfig(setLoggedIn, setConfigError, setLoginError);
@@ -1469,6 +1476,7 @@ function CreateRunTime({
 
           updateTime: new Date().toISOString()
         };
+        console.log('Payload passed on click of save/create button:', payload);
         if (selectedRuntimeClone !== undefined) {
           updateRuntimeApi(payload);
         } else {
@@ -1802,9 +1810,13 @@ function CreateRunTime({
                     <Checkbox
                       size="small"
                       checked={lightningEngineEnabled}
-                      onChange={event =>
-                        setLightningEngineEnabled(event.target.checked)
-                      }
+                      onChange={event => {
+                        console.log(
+                          'Lightning engine checkbox target checked value:',
+                          event.target.checked
+                        );
+                        setLightningEngineEnabled(event.target.checked);
+                      }}
                       name="lightningEngine"
                     />
                   }
