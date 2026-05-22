@@ -752,10 +752,11 @@ const CatalogComponent = ({
 
 
     const depth = calculateDepth(node);
+    const isBigQueryColumn = depth === 5 && node.parent?.parent?.parent?.data?.name === 'Bigquery';
+    const isBigLakeColumn = depth === 6 && node.parent?.parent?.parent?.parent?.data?.name === 'Biglake';
+    const isClickable = !isBigQueryColumn && !isBigLakeColumn;
     const renderNodeIcon = () => {
       // Determines whether this node should render a dropdown arrow
-      const isBigQueryColumn = depth === 5 && node.parent?.parent?.parent?.data?.name === 'Bigquery';
-      const isBigLakeColumn = depth === 6 && node.parent?.parent?.parent?.parent?.data?.name === 'Biglake';
       const hasChildren = (node.children && node.children.length > 0) || (!isBigQueryColumn && !isBigLakeColumn && node.data.children !== false);
       
       const arrowIcon = hasChildren && !node.data.isLoadMoreNode ? (
@@ -932,7 +933,7 @@ const CatalogComponent = ({
 
     return (
       <>
-        <div className="catalog-dataset-node" style={style} onClick={handleRowClick}>
+        <div className={`catalog-dataset-node${isClickable ? ' clickable' : ''}`} style={style} onClick={handleRowClick}>
           {renderNodeIcon()}
           <div
             role="treeitem"

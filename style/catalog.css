@@ -247,6 +247,10 @@
   align-items: center;
 }
 
+.catalog-dataset-node.clickable {
+  cursor: pointer;
+}
+
 .catalog-dataset-content {
   display: flex;
   align-items: center;
