@@ -157,7 +157,9 @@ function CreateRunTime({
   const [expandGpu, setExpandGpu] = useState(false);
   const [gpuChecked, setGpuChecked] = useState(false);
   const [propertyDetail, setPropertyDetail] = useState<string[]>([]);
-  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>([]);
+  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>(
+    []
+  );
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [sparkValueValidation, setSparkValueValidation] = useState({
@@ -189,7 +191,8 @@ function CreateRunTime({
   const [displayNameValidation, setDisplayNameValidation] = useState(false);
   const [idleValidation, setIdleValidation] = useState(false);
   const [autoValidation, setAutoValidation] = useState(false);
-  const [versionBiglakeValidation, setVersionBiglakeValidation] = useState(false);
+  const [versionBiglakeValidation, setVersionBiglakeValidation] =
+    useState(false);
   const [idleTimeSelected, setIdleTimeSelected] = useState('');
   const [timeSelected, setTimeSelected] = useState('');
   const [autoTimeSelected, setAutoTimeSelected] = useState('');
@@ -222,8 +225,10 @@ function CreateRunTime({
   const [dataWarehouseDir, setDataWarehouseDir] = useState('');
   const [catalogName, setCatalogName] = useState('biglake');
   const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
-  const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
-  const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
+  const [metastoreDetailUpdated, setMetastoreDetailUpdated] =
+    useState(META_STORE_DEFAULT);
+  const gcsUrlRegex =
+    /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
   const bucketNameRegex = /^(?:gs:\/\/)?([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])$/;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
   const [isValidStagingBucketUrl, setIsValidStagingBucketUrl] = useState(true);
@@ -266,7 +271,7 @@ function CreateRunTime({
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [lightningEngineEnabled, setLightningEngineEnabled] = useState(false);
   const [enableLink, setEnableLink] = useState('');
-  const [othersList , setOthersList] = useState<string[]>([]);
+  const [othersList, setOthersList] = useState<string[]>([]);
   const runtimeOptions = [
     {
       value: '2.3',
@@ -287,25 +292,19 @@ function CreateRunTime({
   ];
 
   const updateLightningEngineProperty = (currentOthersList = othersList) => {
-    const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ":" + (lightningEngineEnabled
-    ? 'lightningEngine'
-    : 'default');
-  
+    const lightningProperty =
+      DATAPROC_LIGHTNING_ENGINE_PROPERTY +
+      ':' +
+      (lightningEngineEnabled ? 'lightningEngine' : 'default');
+
     const updatedProperties = [lightningProperty, ...currentOthersList];
     setPropertyDetailUpdated(updatedProperties);
     return updatedProperties;
-  }
+  };
 
   useEffect(() => {
     updateLightningEngineProperty();
-  }, [lightningEngineEnabled,othersList]);
-
-  useEffect(() => {
-    console.log(
-      'lightningEngineEnabled state value updated:',
-      lightningEngineEnabled
-    );
-  }, [lightningEngineEnabled]);
+  }, [lightningEngineEnabled, othersList]);
 
   useEffect(() => {
     const initializeRuntime = async () => {
@@ -350,11 +349,12 @@ function CreateRunTime({
   }, [labelDetailUpdated, labelDetail]);
 
   useEffect(() => {
-    if (JSON.stringify(propertyDetail) !== JSON.stringify(propertyDetailUpdated)) {
+    if (
+      JSON.stringify(propertyDetail) !== JSON.stringify(propertyDetailUpdated)
+    ) {
       setPropertyDetail(propertyDetailUpdated);
     }
   }, [propertyDetailUpdated, propertyDetail]);
-
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
@@ -504,7 +504,10 @@ function CreateRunTime({
     setKeySelected('');
   };
 
-  const handleMetastoreTypeAndVersionChange = (metastore: string, version: string) => {
+  const handleMetastoreTypeAndVersionChange = (
+    metastore: string,
+    version: string
+  ) => {
     setVersionSelected(version);
     setMetastoreType(metastore);
     setVersionBiglakeValidation(metastore === 'biglake' && version !== '2.3');
@@ -540,8 +543,8 @@ function CreateRunTime({
       if (!isEnabled && autoScalingDetailUpdated.length !== 2) {
         let filteredProperties = [dynamicAllocationState];
 
-        const shuffleEnabledState = autoScalingDetailUpdated.find(
-          (prop) => prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
+        const shuffleEnabledState = autoScalingDetailUpdated.find(prop =>
+          prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
         );
 
         if (shuffleEnabledState) {
@@ -553,11 +556,14 @@ function CreateRunTime({
       if (isEnabled && autoScalingDetailUpdated.length == 2) {
         updatedProperties = AUTO_SCALING_DEFAULT;
       }
-      if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !==
-      JSON.stringify(updatedProperties)) {
+      if (
+        updatedProperties &&
+        JSON.stringify(autoScalingDetailUpdated) !==
+          JSON.stringify(updatedProperties)
+      ) {
         setAutoScalingDetail(updatedProperties);
         setAutoScalingDetailUpdated(updatedProperties);
-         setSparkValueValidation(prev => ({
+        setSparkValueValidation(prev => ({
           ...prev,
           autoscaling: []
         }));
@@ -588,7 +594,9 @@ function CreateRunTime({
 
   const handleCatalogNameChange = (catalogName: string) => {
     setCatalogName(catalogName);
-    setIsValidCatalogName(catalogName === '' ? false : catalogNameRegEx.test(catalogName));
+    setIsValidCatalogName(
+      catalogName === '' ? false : catalogNameRegEx.test(catalogName)
+    );
   };
 
   const handleMetastoreExpand = () => {
@@ -686,10 +694,12 @@ function CreateRunTime({
                 gpuDetailList.push(property);
               } else if (property.startsWith('spark.sql.catalog.')) {
                 metaStoreDetailList.push(property);
-              } else if (property.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) {
+              } else if (
+                property.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)
+              ) {
                 const value = property.split(':')[1];
                 setLightningEngineEnabled(value === 'lightningEngine');
-              }  else {
+              } else {
                 otherDetailList.push(property);
               }
             });
@@ -892,7 +902,10 @@ function CreateRunTime({
     );
   };
 
-  const regionListAPI = async (currentprojectId: string, network: string | undefined) => {
+  const regionListAPI = async (
+    currentprojectId: string,
+    network: string | undefined
+  ) => {
     const credentials = await authApi();
     const regionId = credentials?.region_id ?? '';
 
@@ -906,7 +919,7 @@ function CreateRunTime({
         network
       );
 
-      if(response.isError){
+      if (response.isError) {
         setServicesList([]);
         Notification.emit(response?.message ?? 'Unknown error', 'error', {
           autoClose: 5000
@@ -914,23 +927,25 @@ function CreateRunTime({
         return;
       }
 
-      transformedServiceList = [...response.transformedServiceList, METASTORE_LOADING_LABEL];
+      transformedServiceList = [
+        ...response.transformedServiceList,
+        METASTORE_LOADING_LABEL
+      ];
       setServicesList(transformedServiceList);
 
       // Removing main spinner
       setIsLoadingService(false);
-      
+
       transformedServiceList = await RunTimeSerive.regionListAPIService(
         currentprojectId,
         network
       );
-      
+
       if (projectId === currentprojectId) {
         if (transformedServiceList.length !== 0) {
           setServicesList(transformedServiceList);
         }
       }
-
     } catch (error) {
       console.error(error);
     } finally {
@@ -1020,13 +1035,13 @@ function CreateRunTime({
     setAutoSelected(data.value!.toString());
   };
   const handleProjectIdChange = (data: any, network: string | undefined) => {
-    if(data && data !== ''){
+    if (data && data !== '') {
       setProjectId(data ?? '');
     }
   };
 
   useEffect(() => {
-    if(projectId !== '' && networkSelected !== ''){
+    if (projectId !== '' && networkSelected !== '') {
       setServicesList([]);
       setServicesSelected('');
       regionListAPI(projectId, networkSelected);
@@ -1081,19 +1096,9 @@ function CreateRunTime({
 
   const renderHelpIcon = (themeManager: IThemeManager) => {
     if (themeManager.theme && themeManager.isLight(themeManager.theme)) {
-      return (
-        <iconHelp.react
-          tag="div"
-          className="logo-alignment-style"
-        />
-      );
+      return <iconHelp.react tag="div" className="logo-alignment-style" />;
     }
-    return (
-      <iconHelpDark.react
-        tag="div"
-        className="logo-alignment-style"
-      />
-    );
+    return <iconHelpDark.react tag="div" className="logo-alignment-style" />;
   };
 
   const handleClusterSelected = (data: string | null) => {
@@ -1354,12 +1359,12 @@ function CreateRunTime({
           propertyObject[key] = value;
         });
         metastoreType === 'biglake' &&
-        metastoreDetailUpdated.forEach((label: string) => {
-          const firstColonIndex = label.indexOf(':');
-          const key = label.substring(0, firstColonIndex);
-          const value = label.substring(firstColonIndex + 1);
-          propertyObject[key] = value;
-        });
+          metastoreDetailUpdated.forEach((label: string) => {
+            const firstColonIndex = label.indexOf(':');
+            const key = label.substring(0, firstColonIndex);
+            const value = label.substring(firstColonIndex + 1);
+            propertyObject[key] = value;
+          });
         propertyDetailUpdated.forEach((label: string) => {
           const labelSplit = label.split(/:(.+)/);
           const key = labelSplit[0];
@@ -1460,11 +1465,14 @@ function CreateRunTime({
                   user_workload_authentication_type: 'END_USER_CREDENTIALS'
                 }
               }),
-              ...(stagingBucketPayload && { stagingBucket: stagingBucketPayload })
+              ...(stagingBucketPayload && {
+                stagingBucket: stagingBucketPayload
+              })
             },
             peripheralsConfig: {
               ...(metastoreType && {
-               metastoreService: metastoreType === 'none' ? '' : servicesSelected
+                metastoreService:
+                  metastoreType === 'none' ? '' : servicesSelected
               }),
               ...(clusterSelected !== '' && {
                 sparkHistoryServerConfig: {
@@ -1476,7 +1484,6 @@ function CreateRunTime({
 
           updateTime: new Date().toISOString()
         };
-        console.log('Payload passed on click of save/create button:', payload);
         if (selectedRuntimeClone !== undefined) {
           updateRuntimeApi(payload);
         } else {
@@ -1795,7 +1802,10 @@ function CreateRunTime({
                     ) || null
                   }
                   onChange={(event, newValue) => {
-                    handleMetastoreTypeAndVersionChange(metastoreType, newValue?.value || '');
+                    handleMetastoreTypeAndVersionChange(
+                      metastoreType,
+                      newValue?.value || ''
+                    );
                   }}
                   options={runtimeOptions}
                   getOptionLabel={option => option.text}
@@ -1811,10 +1821,6 @@ function CreateRunTime({
                       size="small"
                       checked={lightningEngineEnabled}
                       onChange={event => {
-                        console.log(
-                          'Lightning engine checkbox target checked value:',
-                          event.target.checked
-                        );
                         setLightningEngineEnabled(event.target.checked);
                       }}
                       name="lightningEngine"
@@ -1822,7 +1828,7 @@ function CreateRunTime({
                   }
                   label={
                     <div className="lightning-engine-label">
-                      Enable Lightning Engine {' '}
+                      Enable Lightning Engine{' '}
                       <div
                         className="submit-job-learn-more"
                         onClick={e => {
@@ -1839,7 +1845,10 @@ function CreateRunTime({
               {versionBiglakeValidation && (
                 <div className="error-key-parent">
                   <iconError.react tag="div" className="logo-alignment-style" />
-                  <div className="error-key-missing">To use BigLake Metastore, select runtime version 2.3 or higher.</div>
+                  <div className="error-key-missing">
+                    To use BigLake Metastore, select runtime version 2.3 or
+                    higher.
+                  </div>
                 </div>
               )}
               <div className="select-text-overlay">
@@ -1898,17 +1907,20 @@ function CreateRunTime({
               {!isValidStagingBucketUrl && (
                 <div>
                   <div className="error-key-parent">
-                    <iconError.react tag="div" className="logo-alignment-style" />
+                    <iconError.react
+                      tag="div"
+                      className="logo-alignment-style"
+                    />
                     <div className="staging-bucket-error">
-                      Invalid bucket name or format. Use 'gs://bucket-name' or 'bucket-name'.
-                      The bucket name must follow 
-                    <div
-                      className="gcs-guidelines-url"
-                      onClick={() => {
-                        window.open(`${STAGING_BUCKET_LEARN_MORE}`, '_blank');
-                      }}
-                    >
-                      GCS naming guidelines.
+                      Invalid bucket name or format. Use 'gs://bucket-name' or
+                      'bucket-name'. The bucket name must follow
+                      <div
+                        className="gcs-guidelines-url"
+                        onClick={() => {
+                          window.open(`${STAGING_BUCKET_LEARN_MORE}`, '_blank');
+                        }}
+                      >
+                        GCS naming guidelines.
                       </div>
                     </div>
                   </div>
@@ -1916,7 +1928,8 @@ function CreateRunTime({
               )}
 
               <div className="create-messagelist">
-                Cloud Storage bucket to be used for storing workload dependencies, job driver output, and config files.
+                Cloud Storage bucket to be used for storing workload
+                dependencies, job driver output, and config files.
               </div>
               <div className="select-text-overlay">
                 <Input
@@ -2120,7 +2133,10 @@ function CreateRunTime({
                           renderInput={params => (
                             <TextField
                               {...params}
-                              label={renderLoadingLabel('Primary network*', isloadingNetwork)}
+                              label={renderLoadingLabel(
+                                'Primary network*',
+                                isloadingNetwork
+                              )}
                               disabled={isloadingNetwork}
                             />
                           )}
@@ -2136,7 +2152,10 @@ function CreateRunTime({
                           renderInput={params => (
                             <TextField
                               {...params}
-                              label={renderLoadingLabel('Subnetwork*', isloadingSubNetwork)}
+                              label={renderLoadingLabel(
+                                'Subnetwork*',
+                                isloadingSubNetwork
+                              )}
                               disabled={isloadingSubNetwork}
                             />
                           )}
@@ -2157,7 +2176,8 @@ function CreateRunTime({
                       </div>
                     </div>
                   )}
-                {!isloadingNetwork && !isloadingSubNetwork &&
+                {!isloadingNetwork &&
+                  !isloadingSubNetwork &&
                   selectedNetworkRadio === 'projectNetwork' &&
                   networkSelected !== '' &&
                   subNetworkSelected === '' && (
@@ -2296,10 +2316,17 @@ function CreateRunTime({
                 <Autocomplete
                   className="create-runtime-style"
                   options={META_STORE_TYPES}
-                  value={META_STORE_TYPES.find(option => option.value === metastoreType) || null}
+                  value={
+                    META_STORE_TYPES.find(
+                      option => option.value === metastoreType
+                    ) || null
+                  }
                   getOptionLabel={option => option.label}
                   onChange={(event, newValue) => {
-                    handleMetastoreTypeAndVersionChange(newValue?.value || '', versionSelected);
+                    handleMetastoreTypeAndVersionChange(
+                      newValue?.value || '',
+                      versionSelected
+                    );
                   }}
                   renderInput={params => (
                     <TextField {...params} label="Metastore" />
@@ -2328,27 +2355,37 @@ function CreateRunTime({
                     />
                   </div>
 
-                    <div className="select-text-overlay">
-                      <Autocomplete
+                  <div className="select-text-overlay">
+                    <Autocomplete
                       options={servicesList}
                       value={servicesSelected}
                       onChange={(_event, val) => {
-                        if (typeof val === 'string' && val === METASTORE_LOADING_LABEL) {
-                        // don't select the loading placeholder
-                        return;
+                        if (
+                          typeof val === 'string' &&
+                          val === METASTORE_LOADING_LABEL
+                        ) {
+                          // don't select the loading placeholder
+                          return;
                         }
                         handleServiceSelected(val);
                       }}
-                      getOptionDisabled={(option) =>
-                        typeof option === 'string' && option === METASTORE_LOADING_LABEL
+                      getOptionDisabled={option =>
+                        typeof option === 'string' &&
+                        option === METASTORE_LOADING_LABEL
                       }
                       renderOption={(props, option) =>
-                        typeof option === 'string' && option === METASTORE_LOADING_LABEL ? (
+                        typeof option === 'string' &&
+                        option === METASTORE_LOADING_LABEL ? (
                           <li
                             {...props}
                             key="loading-meta"
                             aria-disabled="true"
-                            style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: 0.9 }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              opacity: 0.9
+                            }}
                           >
                             <CircularProgress size={16} />
                             <span>{METASTORE_LOADING_LABEL}</span>
@@ -2358,10 +2395,16 @@ function CreateRunTime({
                         )
                       }
                       renderInput={params => (
-                        <TextField {...params} label={renderLoadingLabel('Metastore service', isLoadingService)}/>
+                        <TextField
+                          {...params}
+                          label={renderLoadingLabel(
+                            'Metastore service',
+                            isLoadingService
+                          )}
+                        />
                       )}
-                      />
-                    </div>
+                    />
+                  </div>
                 </>
               )}
 
@@ -2369,9 +2412,15 @@ function CreateRunTime({
                 <>
                   <div className="select-text-overlay">
                     <Input
-                      className={`create-runtime-style ${!isValidDataWareHouseUrl && dataWarehouseDir ? 'input-error' : ''}`}
+                      className={`create-runtime-style ${
+                        !isValidDataWareHouseUrl && dataWarehouseDir
+                          ? 'input-error'
+                          : ''
+                      }`}
                       value={dataWarehouseDir}
-                      onChange={e => handleDataWareHouseUrlChange(e.target.value)}
+                      onChange={e =>
+                        handleDataWareHouseUrlChange(e.target.value)
+                      }
                       type="text"
                       Label="Data warehousing directory*"
                       placeholder="e.g, gs://<bucket-name>"
@@ -2379,8 +2428,13 @@ function CreateRunTime({
                   </div>
                   {!isValidDataWareHouseUrl && (
                     <div className="error-key-parent">
-                      <iconError.react tag="div" className="logo-alignment-style" />
-                      <div className="error-key-missing">Input does not match pattern : gs://bucket-name</div>
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        Input does not match pattern : gs://bucket-name
+                      </div>
                     </div>
                   )}
                   <div className="select-text-overlay">
@@ -2396,18 +2450,18 @@ function CreateRunTime({
                     />
                   </div>
                   {!isValidCatalogName && (
-                <div className="error-key-parent">
-                  <iconError.react
-                    tag="div"
-                    className="logo-alignment-style"
-                  />
-                  <div className="error-key-missing">
-                    {catalogName === ''
-                      ? 'Catalog Name is required'
-                      : 'Catalog Name must contain only letters, numbers, and underscores.'}
-                  </div>
-                </div>
-              )}
+                    <div className="error-key-parent">
+                      <iconError.react
+                        tag="div"
+                        className="logo-alignment-style"
+                      />
+                      <div className="error-key-missing">
+                        {catalogName === ''
+                          ? 'Catalog Name is required'
+                          : 'Catalog Name must contain only letters, numbers, and underscores.'}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -2574,14 +2628,16 @@ function CreateRunTime({
                 <>
                   <div className="spark-properties-sub-header-parent">
                     <div className="spark-properties-title">
-                      <div className="spark-properties-sub-header">Metastore</div>
+                      <div className="spark-properties-sub-header">
+                        Metastore
+                      </div>
                       <div
                         className="expand-icon"
                         onClick={() =>
                           window.open(`${SPARK_META_STORE_INFO_URL}`, '_blank')
                         }
-                        >
-                          {renderHelpIcon(themeManager)}
+                      >
+                        {renderHelpIcon(themeManager)}
                       </div>
                     </div>
                     <div
