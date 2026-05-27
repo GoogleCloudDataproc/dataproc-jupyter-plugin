@@ -248,7 +248,6 @@ function SparkProperties({
                               ? BOOLEAN_SELECT_OPTIONS
                               : TIER_SELECT_OPTIONS
                           }
-                          Label={`Value ${index + 1}`}
                         />
                       ) : (
                         <Input
@@ -268,14 +267,13 @@ function SparkProperties({
                               'spark.dataproc.executor.compute.tier' ||
                             (sparkSection === 'metastore' && index === 2)
                           }
-                          value={
+                          placeholder={
                             labelDetailUpdated[index]
                               ? labelDetailUpdated[index].substring(
                                   labelDetailUpdated[index].indexOf(':') + 1
                                 )
                               : ''
                           }
-                          Label={`Value ${index + 1}`}
                         />
                       )}
                     </div>
