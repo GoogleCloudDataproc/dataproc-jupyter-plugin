@@ -89,7 +89,7 @@
         "@babel/preset-react": "^7.22.5",
         "@babel/preset-typescript": "^7.22.11",
         "@googleapis/storage": "^6.0.0",
-        "@jupyterlab/builder": "^4.0.0",
+        "@jupyterlab/builder": "^4.5.7",
         "@jupyterlab/testutils": "^4.0.0",
         "@storybook/addon-essentials": "^7.4.0",
         "@storybook/addon-interactions": "^7.4.0",
@@ -135,6 +135,9 @@
         "typescript": "~5.0.2",
         "webpack": "^5.94.0",
         "yjs": "^13.5.0"
+    },
+    "overrides": {
+        "license-webpack-plugin": "^4.0.0"
     },
     "sideEffects": [
         "style/*.css",
