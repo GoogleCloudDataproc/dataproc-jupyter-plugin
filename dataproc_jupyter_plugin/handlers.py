@@ -104,6 +104,13 @@ class DataprocPluginConfig(SingletonConfigurable):
         help="Use this project number for kernel gateway and skip project number verification",
     )
 
+    custom_user_agent = Unicode(
+        "dataproc-jupyter-plugin",
+        config=True,
+        help="Custom User-Agent header value for outbound requests to the kernels mixer.",
+    )
+
+
 
 class SettingsHandler(APIHandler):
     @tornado.web.authenticated
