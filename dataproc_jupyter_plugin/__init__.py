@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.from ._version import __version__
 import logging
+import json
 
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 from jupyter_server.services.sessions.sessionmanager import SessionManager
@@ -87,7 +88,7 @@ def _link_jupyter_server_extension(server_app):
     }
     if plugin_config.custom_user_agent:
         headers["User-Agent"] = plugin_config.custom_user_agent
-    c.GatewayClient.headers = headers
+    c.GatewayClient.headers = json.dumps(headers)
     c.GatewayClient.gateway_token_renewer_class = CommandTokenRenewer
     c.CommandTokenRenewer.token_command = (
         'gcloud config config-helper --format="value(credential.access_token)"'
