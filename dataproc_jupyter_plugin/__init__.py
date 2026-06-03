@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.from ._version import __version__
 import logging
-import json
 
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 from jupyter_server.services.sessions.sessionmanager import SessionManager
