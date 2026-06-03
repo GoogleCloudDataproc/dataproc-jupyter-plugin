@@ -88,7 +88,7 @@ def _link_jupyter_server_extension(server_app):
     }
     if plugin_config.custom_user_agent:
         headers["User-Agent"] = plugin_config.custom_user_agent
-    c.GatewayClient.headers = json.dumps(headers)
+    c.GatewayClient.headers = headers
     c.GatewayClient.gateway_token_renewer_class = CommandTokenRenewer
     c.CommandTokenRenewer.token_command = (
         'gcloud config config-helper --format="value(credential.access_token)"'
