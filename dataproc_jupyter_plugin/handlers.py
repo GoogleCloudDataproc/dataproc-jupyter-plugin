@@ -111,7 +111,6 @@ class DataprocPluginConfig(SingletonConfigurable):
     )
 
 
-
 class SettingsHandler(APIHandler):
     @tornado.web.authenticated
     def get(self):
