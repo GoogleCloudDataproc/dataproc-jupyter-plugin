@@ -113,8 +113,18 @@ async def test_post_config_handler_success(jp_fetch, monkeypatch, jp_serverapp, 
 )
 async def test_valid_project_ids(jp_fetch, monkeypatch, project_id):
     mock_run_gcloud = AsyncMock()
+    mock_clear_cache = Mock()
+    mock_configure_gateway = Mock(return_value=True)
+
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.clear_gcloud_cache", mock_clear_cache
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.configure_gateway_client_url",
+        mock_configure_gateway,
     )
 
     body = {"projectId": project_id, "region": "us-central1"}
@@ -166,8 +176,18 @@ async def test_invalid_project_ids(jp_fetch, monkeypatch, invalid_project_id):
 )
 async def test_valid_regions(jp_fetch, monkeypatch, region):
     mock_run_gcloud = AsyncMock()
+    mock_clear_cache = Mock()
+    mock_configure_gateway = Mock(return_value=True)
+
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.clear_gcloud_cache", mock_clear_cache
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.configure_gateway_client_url",
+        mock_configure_gateway,
     )
 
     body = {"projectId": "valid-project-123", "region": region}
