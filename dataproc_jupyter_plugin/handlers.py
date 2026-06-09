@@ -41,6 +41,13 @@ from dataproc_jupyter_plugin.controllers.version import (
     tornado
 )
 
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("dataproc_jupyter_plugin")
+except PackageNotFoundError:
+    __version__ = "unknown"
+
 _region_not_set_error = """GCP region not set in gcloud.
 
 You must configure either the `compute/region` or `dataproc/region` setting
@@ -105,7 +112,7 @@ class DataprocPluginConfig(SingletonConfigurable):
     )
 
     custom_user_agent = Unicode(
-        "dataproc-jupyter-plugin",
+        f"dataproc-jupyter-plugin/{__version__}",
         config=True,
         help="Custom User-Agent header value for outbound requests to the kernels mixer.",
     )
