@@ -649,9 +649,9 @@ const CatalogComponent = ({
     onClick: (node: NodeRendererProps<IDataEntry>['node']) => void;
   };
   const Node = ({ node, style, onClick}: NodeProps) => {
+    const depth = calculateDepth(node);
 
     const handleToggle = () => {
-      const depth = calculateDepth(node);
       if (node.data.isLoadMoreNode) {
         const projectId =
           node.data.projectId || node.parent?.parent?.data?.name;
@@ -736,13 +736,36 @@ const CatalogComponent = ({
       }
     };
     
+    const handleArrowClick = (event: React.MouseEvent) => {
+      event.stopPropagation();
+      if (node.data.isLoadMoreNode) {
+        handleToggle();
+        return;
+      }
+      if (node.isOpen !== node.data.isNodeOpen) {
+        node.toggle();
+      }
+      node.data.isNodeOpen = !node.data.isNodeOpen;
+      handleToggle();
+    };
+
     const handleRowClick = (event: React.MouseEvent) => {
       event.stopPropagation();
       if (node.data.isLoadMoreNode) {
         handleToggle();
         return;
       }
-      if(node.isOpen !== node.data.isNodeOpen){
+      
+      const isBigQueryTable = depth === 4 && node.parent?.parent?.data?.name === 'Bigquery';
+      const isBigLakeTable = depth === 5 && node.parent?.parent?.parent?.data?.name === 'Biglake';
+      const isTableNode = isBigQueryTable || isBigLakeTable;
+
+      if (isTableNode) {
+        onClick(node);
+        return;
+      }
+
+      if (node.isOpen !== node.data.isNodeOpen) {
         node.toggle();
       }
       node.data.isNodeOpen = !node.data.isNodeOpen;
@@ -751,7 +774,6 @@ const CatalogComponent = ({
     };
 
 
-    const depth = calculateDepth(node);
     const isBigQueryColumn = depth === 5 && node.parent?.parent?.parent?.data?.name === 'Bigquery';
     const isBigLakeColumn = depth === 6 && node.parent?.parent?.parent?.parent?.data?.name === 'Biglake';
     const isClickable = !isBigQueryColumn && !isBigLakeColumn;
@@ -773,6 +795,7 @@ const CatalogComponent = ({
             <div
               role="treeitem"
               className="caret-icon right"
+              onClick={handleArrowClick}
             >
               <iconDownArrow.react
                 tag="div"
@@ -784,6 +807,7 @@ const CatalogComponent = ({
           <div
             role="treeitem"
             className="caret-icon down"
+            onClick={handleArrowClick}
           >
             <iconRightArrow.react
               tag="div"
