@@ -28,7 +28,7 @@ gcloud config set compute/region us-central1
 
 # Install dependencies.
 sudo apt-get update
-sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv
+sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv unzip wget
 
 # Install latest jupyter lab and build.
 python -m venv latest
@@ -81,7 +81,7 @@ jupyter server extension enable dataproc_jupyter_plugin
 # Run Playwright Tests for latest jupyter lab build
 cd ./ui-tests
 jlpm install
-jlpm playwright install
+jlpm playwright install chromium --with-deps
 PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-latest/sponge_log.xml jlpm playwright test --reporter=junit --output="test-results-latest"
 deactivate
 
@@ -89,11 +89,11 @@ deactivate
 cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
 python -m venv version_366
 source version_366/bin/activate
-pip install  --force-reinstall "jupyterlab==3.6.6"
+pip install --force-reinstall "jupyterlab==3.6.6"
 pip install dist/*.whl
 jupyter server extension enable dataproc_jupyter_plugin
 cd ./ui-tests-3.6.6
 jlpm install
-jlpm playwright install
+jlpm playwright install chromium --with-deps
 PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-3.6.6/sponge_log.xml jlpm playwright test --reporter=junit --output="test-results-3.6.6"
 deactivate
