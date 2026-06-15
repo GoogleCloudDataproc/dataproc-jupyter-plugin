@@ -4157,7 +4157,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:^1.32.0, @playwright/test@npm:^1.43.1":
+"@playwright/test@npm:^1.43.1":
   version: 1.48.1
   resolution: "@playwright/test@npm:1.48.1"
   dependencies:
@@ -4165,6 +4165,17 @@ __metadata:
   bin:
     playwright: cli.js
   checksum: 3f3f32dadeea9da4b9f835ba41d6bfabbd4c8d322bbba059250cb7bbdf2ae8fd32d547f64cef0bda492dff32128b4d4d802422525995570ebb57e62605c0557f
+  languageName: node
+  linkType: hard
+
+"@playwright/test@npm:^1.49.0":
+  version: 1.61.0
+  resolution: "@playwright/test@npm:1.61.0"
+  dependencies:
+    playwright: 1.61.0
+  bin:
+    playwright: cli.js
+  checksum: d9aeb311a5ee81837e011f096aefc32f90925c9b78e8fe9415f10a47b3e1eb58c00259f07092475e68b00c0b99304f39073077e4c4645937773684548634d2b7
   languageName: node
   linkType: hard
 
@@ -9327,7 +9338,7 @@ __metadata:
   resolution: "dataproc_jupyter_plugin-ui-tests@workspace:ui-tests"
   dependencies:
     "@jupyterlab/galata": ^5.0.0
-    "@playwright/test": ^1.32.0
+    "@playwright/test": ^1.49.0
   languageName: unknown
   linkType: soft
 
@@ -14892,6 +14903,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"playwright-core@npm:1.61.0":
+  version: 1.61.0
+  resolution: "playwright-core@npm:1.61.0"
+  bin:
+    playwright-core: cli.js
+  checksum: 0ea4653c7594388bafa39209a1ec0353aeeb977a905da22cfe60497be03b717944ce6e749232af7bf894fca3c217e7a2b624d87dde15ede60dad3abbd00c7598
+  languageName: node
+  linkType: hard
+
 "playwright@npm:1.48.1":
   version: 1.48.1
   resolution: "playwright@npm:1.48.1"
@@ -14904,6 +14924,21 @@ __metadata:
   bin:
     playwright: cli.js
   checksum: 81ca13392ad5e5ca87a226d0f5ff2da958c4e06a01dd6b56b4e4e5b4fec45ef8a8f7f0563ef0f4c725814265b931984d0c841e8524362b24480bcd527aa0c054
+  languageName: node
+  linkType: hard
+
+"playwright@npm:1.61.0":
+  version: 1.61.0
+  resolution: "playwright@npm:1.61.0"
+  dependencies:
+    fsevents: 2.3.2
+    playwright-core: 1.61.0
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    playwright: cli.js
+  checksum: e9b3225ced35f29dcda9829362434151eec9f9bf41be1416104107eea1b9ea499e512a8483a24c0cb7ad3efc9066bf45ed0a64407c7877afa2546c4561bb6bd5
   languageName: node
   linkType: hard
 
