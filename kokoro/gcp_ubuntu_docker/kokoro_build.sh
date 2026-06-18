@@ -61,10 +61,6 @@ cp "${SPARKMONITOR_G3_DIR}/LICENSE" "${PLUGIN_SRC_DIR}/SPARKMONITOR_LICENSE"
 
 # --- End Sparkmonitor Build and Stage ---
 
-# This clears out any 100% download freezes hanging the pipeline terminal.
-echo "=== Purging stale browser caches ==="
-rm -rf /root/.cache/ms-playwright
-
 # Navigate to repo.
 cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
 
