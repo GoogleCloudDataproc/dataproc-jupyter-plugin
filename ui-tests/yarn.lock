@@ -676,7 +676,7 @@ __metadata:
     "@jupyterlab/services": "npm:^7.0.5"
     "@jupyterlab/settingregistry": "npm:^4.0.5"
     "@lumino/coreutils": "npm:^2.1.2"
-    "@playwright/test": "npm:^1.32.2"
+    "@playwright/test": "npm:1.32.0"
     "@stdlib/stats": "npm:~0.0.13"
     fs-extra: "npm:^10.1.0"
     json5: "npm:^2.2.3"
@@ -1276,22 +1276,6 @@ __metadata:
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
   checksum: 8/6ad6a00fc4f2f2cfc6bff76fb1d88b8ee20bc0601e18ebb01b6d4be583733a860239a521a7fbca73b612e66705078809483549d2b18f370eb346c5155c8e4a0f
-  languageName: node
-  linkType: hard
-
-"@playwright/test@npm:^1.32.0, @playwright/test@npm:^1.32.2":
-  version: 1.37.1
-  resolution: "@playwright/test@npm:1.37.1"
-  dependencies:
-    "@types/node": "npm:*"
-    fsevents: "npm:2.3.2"
-    playwright-core: "npm:1.37.1"
-  dependenciesMeta:
-    fsevents:
-      optional: true
-  bin:
-    playwright: cli.js
-  checksum: 8/b7038f29000289103c08b215eff7aabdda70cdc1375fa7dad0e81651be71086a1e2fc0e0e29dc70348037c366cf0cc69f762373fda34ba1a74aa1658741d9195
   languageName: node
   linkType: hard
 
@@ -2272,7 +2256,7 @@ __metadata:
   resolution: "dataproc_jupyter_plugin-ui-tests@workspace:."
   dependencies:
     "@jupyterlab/galata": "npm:^5.0.0"
-    "@playwright/test": "npm:^1.32.0"
+    "@playwright/test": "npm:1.32.0"
   languageName: unknown
   linkType: soft
 
