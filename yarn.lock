@@ -3113,7 +3113,7 @@ __metadata:
     "@jupyterlab/services": ^7.2.5
     "@jupyterlab/settingregistry": ^4.2.5
     "@lumino/coreutils": ^2.1.2
-    "@playwright/test": 1.32.0
+    "@playwright/test": 1.44.0
     "@stdlib/stats": ~0.0.13
     fs-extra: ^10.1.0
     json5: ^2.2.3
@@ -9316,7 +9316,7 @@ __metadata:
   resolution: "dataproc_jupyter_plugin-ui-tests@workspace:ui-tests"
   dependencies:
     "@jupyterlab/galata": ^5.0.0
-    "@playwright/test": 1.32.0
+    "@playwright/test": 1.44.0
   languageName: unknown
   linkType: soft
 
