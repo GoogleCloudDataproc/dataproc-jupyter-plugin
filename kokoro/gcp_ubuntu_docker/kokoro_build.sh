@@ -76,8 +76,10 @@ jupyter server extension enable dataproc_jupyter_plugin
 
 # Run Playwright Tests for latest jupyter lab build
 cd ./ui-tests
+rm -rf node_modules yarn.lock
 jlpm install
-jlpm playwright install
+export PLAYWRIGHT_BROWSERS_PATH=0
+CI=true jlpm playwright install chromium --with-deps
 PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-latest/sponge_log.xml jlpm playwright test --reporter=junit --output="test-results-latest"
 deactivate
 
@@ -89,7 +91,9 @@ pip install  --force-reinstall "jupyterlab==3.6.6"
 pip install dist/*.whl
 jupyter server extension enable dataproc_jupyter_plugin
 cd ./ui-tests-3.6.6
+rm -rf node_modules yarn.lock
 jlpm install
-jlpm playwright install
+export PLAYWRIGHT_BROWSERS_PATH=0
+CI=true jlpm playwright install chromium --with-deps
 PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-3.6.6/sponge_log.xml jlpm playwright test --reporter=junit --output="test-results-3.6.6"
 deactivate
