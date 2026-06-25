@@ -77,6 +77,7 @@ jupyter server extension enable dataproc_jupyter_plugin
 # Run Playwright Tests for latest jupyter lab build
 cd ./ui-tests
 jlpm install
+jlpm playwright install-deps
 jlpm playwright install
 PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-results-latest/sponge_log.xml jlpm playwright test --reporter=junit --output="test-results-latest"
 deactivate
