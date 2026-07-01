@@ -33,7 +33,7 @@ sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv
 # Install latest jupyter lab and build.
 python -m venv latest
 source latest/bin/activate
-pip install jupyterlab build
+pip install "jupyterlab>=4.0.0,<4.3.0" build
 
 # --- Build and Stage Sparkmonitor from Piper using npm ---
 cd "${SPARKMONITOR_G3_DIR}"
