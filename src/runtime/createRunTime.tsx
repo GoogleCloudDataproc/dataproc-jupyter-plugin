@@ -232,6 +232,10 @@ function CreateRunTime({
   const catalogNameRegEx = /^[a-zA-Z0-9_]*$/;
   const [isValidCatalogName, setIsValidCatalogName] = useState(true);
 
+  const areStringArraysEqual = (left: string[], right: string[]) =>
+    left.length === right.length &&
+    left.every((item, index) => item === right[index]);
+
   useEffect(() => {
     if (metastoreType === 'biglake') {
       const catalogPrefix = `spark.sql.catalog.${catalogName}`;
@@ -337,15 +341,13 @@ function CreateRunTime({
   // This solves a race condition seen in certain environments where setting both states
   // in the same function call would fail.
   useEffect(() => {
-   if (JSON.stringify(labelDetail) !== JSON.stringify(labelDetailUpdated)) {
+    if (!areStringArraysEqual(labelDetail, labelDetailUpdated)) {
       setLabelDetail(labelDetailUpdated);
     }
   }, [labelDetailUpdated, labelDetail]);
 
   useEffect(() => {
-    if (
-      JSON.stringify(propertyDetail) !== JSON.stringify(propertyDetailUpdated)
-    ) {
+    if (!areStringArraysEqual(propertyDetail, propertyDetailUpdated)) {
       setPropertyDetail(propertyDetailUpdated);
     }
   }, [propertyDetailUpdated, propertyDetail]);
