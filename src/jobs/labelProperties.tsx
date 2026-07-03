@@ -75,7 +75,7 @@ function LabelProperties({
         setLabelDetail([DEFAULT_LABEL_DETAIL]);
         setLabelDetailUpdated([DEFAULT_LABEL_DETAIL]);
       } else {
-        if (!selectedRuntimeClone) {
+        if (!selectedRuntimeClone && labelDetail.length === 0) {
           setLabelDetailUpdated([]);
           setLabelDetail([]);
         }
@@ -197,7 +197,7 @@ function LabelProperties({
                   */
             const labelSplit = label.split(':');
             return (
-              <div key={label}>
+              <div key={index}>
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
@@ -223,7 +223,7 @@ function LabelProperties({
                         onChange={e =>
                           handleEditLabel(e.target.value, index, 'key')
                         }
-                        defaultValue={labelSplit[0]}
+                        value={labelSplit[0]}
                         Label={`Key ${index + 1}*`}
                       />
                     </div>
@@ -287,7 +287,7 @@ function LabelProperties({
                           buttonText === 'ADD LABEL') || label.startsWith(DATAPROC_TIER_PROPERTY)
                           || label.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)
                         }
-                        defaultValue={
+                        value={
                           labelSplit.length > 2
                             ? label.split(/:(.+)/)[1]
                             : labelSplit[1]
