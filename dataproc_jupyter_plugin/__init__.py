@@ -10,8 +10,10 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.from ._version import __version__
+# limitations under the License.
+
 import logging
+import json
 
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 from jupyter_server.services.sessions.sessionmanager import SessionManager
@@ -23,6 +25,9 @@ from .handlers import DataprocPluginConfig, configure_gateway_client_url, setup_
 
 # In seconds
 MIN_GATEWAY_REQUEST_TIMEOUT = 600
+
+# In seconds
+MIN_GATEWAY_CONNECT_TIMEOUT = 300
 
 # In seconds
 MIN_GATEWAY_RETRY_INTERVAL = 20
@@ -78,7 +83,13 @@ def _link_jupyter_server_extension(server_app):
     c.DelegatingWebsocketConnection.kernel_ws_protocol = ""
 
     c.GatewayClient.auth_scheme = "Bearer"
-    c.GatewayClient.headers = '{"Cookie": "_xsrf=XSRF", "X-XSRFToken": "XSRF"}'
+    headers = {
+        "Cookie": "_xsrf=XSRF",
+        "X-XSRFToken": "XSRF"
+    }
+    if plugin_config.custom_user_agent:
+        headers["User-Agent"] = plugin_config.custom_user_agent
+    c.GatewayClient.headers = json.dumps(headers)
     c.GatewayClient.gateway_token_renewer_class = CommandTokenRenewer
     c.CommandTokenRenewer.token_command = (
         'gcloud config config-helper --format="value(credential.access_token)"'
@@ -95,11 +106,15 @@ def _link_jupyter_server_extension(server_app):
         c.GatewayClient.gateway_retry_max, MIN_GATEWAY_RETRY_MAX
     )
 
+
     # The default gateway client request timeout is 42 seconds but the POST request to
     # create a batch can take upwards to 600 seconds, so we want to increase the timeout
     # so that the minimum is 600 seconds.
     c.GatewayClient.request_timeout = _get_config_value_to_assign(
         c.GatewayClient.request_timeout, MIN_GATEWAY_REQUEST_TIMEOUT
+    )
+    c.GatewayClient.connect_timeout = _get_config_value_to_assign(
+        c.GatewayClient.connect_timeout, MIN_GATEWAY_CONNECT_TIMEOUT
     )
 
     # Version 2.8.0 of the `jupyter_server` package requires the `auth_token`
