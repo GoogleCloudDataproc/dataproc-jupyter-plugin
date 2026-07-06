@@ -287,8 +287,8 @@ function CreateRunTime({
   ];
 
   useEffect(() => {
-    setPropertyDetailUpdated(prev => {
-      const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ":" + (lightningEngineEnabled ? 'lightningEngine' : 'default');
+    const updateList = (prev: string[]) => {
+      const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ':' + (lightningEngineEnabled ? 'lightningEngine' : 'default');
       const newList = [...prev];
       const index = newList.findIndex(prop => prop.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY + ':'));
       if (index !== -1) {
@@ -297,7 +297,9 @@ function CreateRunTime({
         newList.unshift(lightningProperty);
       }
       return newList;
-    });
+    };
+    setPropertyDetailUpdated(prev => updateList(prev));
+    setPropertyDetail(prev => updateList(prev));
   }, [lightningEngineEnabled]);
 
   useEffect(() => {
