@@ -149,15 +149,15 @@ function CreateRunTime({
     useState(AUTO_SCALING_DEFAULT);
   const [autoScalingDetailUpdated, setAutoScalingDetailUpdated] =
     useState(AUTO_SCALING_DEFAULT);
-  const [gpuDetail, setGpuDetail] = useState(['']);
-  const [gpuDetailUpdated, setGpuDetailUpdated] = useState(['']);
+  const [gpuDetail, setGpuDetail] = useState<string[]>([]);
+  const [gpuDetailUpdated, setGpuDetailUpdated] = useState<string[]>([]);
   const [expandResourceAllocation, setExpandResourceAllocation] =
     useState(false);
   const [expandAutoScaling, setExpandAutoScaling] = useState(false);
   const [expandGpu, setExpandGpu] = useState(false);
   const [gpuChecked, setGpuChecked] = useState(false);
-  const [propertyDetail, setPropertyDetail] = useState<string[]>([]);
-  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>([]);
+  const [propertyDetail, setPropertyDetail] = useState<string[]>([`${DATAPROC_LIGHTNING_ENGINE_PROPERTY}:default`]);
+  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>([`${DATAPROC_LIGHTNING_ENGINE_PROPERTY}:default`]);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [sparkValueValidation, setSparkValueValidation] = useState({
@@ -266,7 +266,7 @@ function CreateRunTime({
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [lightningEngineEnabled, setLightningEngineEnabled] = useState(false);
   const [enableLink, setEnableLink] = useState('');
-  const [othersList , setOthersList] = useState<string[]>([]);
+
   const runtimeOptions = [
     {
       value: '2.3',
@@ -286,19 +286,21 @@ function CreateRunTime({
     }
   ];
 
-  const updateLightningEngineProperty = (currentOthersList = othersList) => {
-    const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ":" + (lightningEngineEnabled
-    ? 'lightningEngine'
-    : 'default');
-  
-    const updatedProperties = [lightningProperty, ...currentOthersList];
-    setPropertyDetailUpdated(updatedProperties);
-    return updatedProperties;
-  }
-
   useEffect(() => {
-    updateLightningEngineProperty();
-  }, [lightningEngineEnabled,othersList]);
+    const updateList = (prev: string[]) => {
+      const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ':' + (lightningEngineEnabled ? 'lightningEngine' : 'default');
+      const newList = [...prev];
+      const index = newList.findIndex(prop => prop.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY + ':'));
+      if (index !== -1) {
+        newList[index] = lightningProperty;
+      } else {
+        newList.unshift(lightningProperty);
+      }
+      return newList;
+    };
+    setPropertyDetailUpdated(prev => updateList(prev));
+    setPropertyDetail(prev => updateList(prev));
+  }, [lightningEngineEnabled]);
 
   useEffect(() => {
     const initializeRuntime = async () => {
@@ -318,7 +320,7 @@ function CreateRunTime({
           listNetworksAPI();
           listKeyRingsAPI();
           runtimeSharedProject();
-          updateLightningEngineProperty(othersList);
+
         } else {
           setConfigLoading(false);
         }
@@ -654,6 +656,8 @@ function CreateRunTime({
             let gpuDetailList: string[] = [];
             let metaStoreDetailList: string[] = [];
             let otherDetailList: string[] = [];
+            let hasLightning = false;
+            let lightningValue = 'default';
             updatedPropertyDetail.forEach(property => {
               if (
                 RESOURCE_ALLOCATION_DEFAULT.some(item => {
@@ -679,9 +683,10 @@ function CreateRunTime({
               } else if (property.startsWith('spark.sql.catalog.')) {
                 metaStoreDetailList.push(property);
               } else if (property.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) {
-                const value = property.split(':')[1];
-                setLightningEngineEnabled(value === 'lightningEngine');
-              }  else {
+                lightningValue = property.split(':')[1];
+                setLightningEngineEnabled(lightningValue === 'lightningEngine');
+                hasLightning = true;
+              } else {
                 otherDetailList.push(property);
               }
             });
@@ -691,7 +696,10 @@ function CreateRunTime({
             setAutoScalingDetailUpdated(autoScalingDetailList);
             setMetastoreDetail(metaStoreDetailList);
             setMetastoreDetailUpdated(metaStoreDetailList);
-            setOthersList(otherDetailList);
+            const lightningPropStr = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ":" + (hasLightning ? lightningValue : 'default');
+            otherDetailList.unshift(lightningPropStr);
+            setPropertyDetail(otherDetailList);
+            setPropertyDetailUpdated(otherDetailList);
             if (metaStoreDetailList.length > 0) {
               setMetastoreType('biglake');
               const warehouseProperty = metaStoreDetailList.find(prop =>
