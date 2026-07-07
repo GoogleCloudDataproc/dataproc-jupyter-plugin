@@ -1279,19 +1279,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:^1.32.0, @playwright/test@npm:^1.32.2":
-  version: 1.37.1
-  resolution: "@playwright/test@npm:1.37.1"
+"@playwright/test@npm:^1.60.0":
+  version: 1.61.1
+  resolution: "@playwright/test@npm:1.61.1"
   dependencies:
-    "@types/node": "npm:*"
-    fsevents: "npm:2.3.2"
-    playwright-core: "npm:1.37.1"
-  dependenciesMeta:
-    fsevents:
-      optional: true
+    playwright: 1.61.1
   bin:
     playwright: cli.js
-  checksum: b7038f29000289103c08b215eff7aabdda70cdc1375fa7dad0e81651be71086a1e2fc0e0e29dc70348037c366cf0cc69f762373fda34ba1a74aa1658741d9195
+  checksum: cf664aa3f5ccc63061ec8a96cf957ad2160b0a300035b310b9fcf67da43f52681fb775755c6134230e0ace7b391a08d9cfe7ca9664546d1bb5d4cf02e1db170a
   languageName: node
   linkType: hard
 
@@ -1755,13 +1750,6 @@ __metadata:
   version: 7946.0.4
   resolution: "@types/geojson@npm:7946.0.4"
   checksum: 541aea46540c918b9fe21ab73f497fe17b1eaf4d0d3baeb5f5614029b7f488c37f63843b644c024a8178dc2fb66d3d6623c25d9cf61d7b553aa19c8dc7f99047
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:*":
-  version: 20.5.4
-  resolution: "@types/node@npm:20.5.4"
-  checksum: 18de76c990e1c298183661cfc7cf16c9384531538c8090cc27bc3cab801e7c46b9f6943591ab0433955dd57961601684cc0fb19ba2deee9609e137c91afd2e25
   languageName: node
   linkType: hard
 
@@ -2272,7 +2260,7 @@ __metadata:
   resolution: "dataproc_jupyter_plugin-ui-tests@workspace:."
   dependencies:
     "@jupyterlab/galata": ^5.0.0
-    "@playwright/test": ^1.32.0
+    "@playwright/test": ^1.60.0
   languageName: unknown
   linkType: soft
 
@@ -2507,7 +2495,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>":
+"fsevents@patch:fsevents@2.3.2#~builtin<compat/fsevents>":
   version: 2.3.2
   resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=df0bf1"
   dependencies:
@@ -2924,11 +2912,11 @@ __metadata:
   linkType: hard
 
 "minimatch@npm:^3.1.1":
-  version: 3.1.2
-  resolution: "minimatch@npm:3.1.2"
+  version: 3.1.5
+  resolution: "minimatch@npm:3.1.5"
   dependencies:
-    brace-expansion: "npm:^1.1.7"
-  checksum: c154e566406683e7bcb746e000b84d74465b3a832c45d59912b9b55cd50dee66e5c4b1e5566dba26154040e51672f9aa450a9aef0c97cfc7336b78b7afb9540a
+    brace-expansion: ^1.1.7
+  checksum: 47ef6f412c08be045a7291d11b1c40777925accf7252dc6d3caa39b1bfbb3a7ea390ba7aba464d762d783265c644143d2c8a204e6b5763145024d52ee65a1941
   languageName: node
   linkType: hard
 
@@ -3216,12 +3204,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.37.1":
-  version: 1.37.1
-  resolution: "playwright-core@npm:1.37.1"
+"playwright-core@npm:1.61.1":
+  version: 1.61.1
+  resolution: "playwright-core@npm:1.61.1"
   bin:
     playwright-core: cli.js
-  checksum: 69f818da2230057584140d5b3af7778a4f4a822b5b18d133abfc5d259128becb943c343a2ddf6b0635277a69f28983e83e2bc3fce23595ececb1e410475b6368
+  checksum: 69bd5c4eb1884a16e92674c0399ad25120ce91faecadd25227cb07eaa0892cce07f908c6bad51256363bf17634953759c30d42d7c253128c28bc8b86087a1f62
+  languageName: node
+  linkType: hard
+
+"playwright@npm:1.61.1":
+  version: 1.61.1
+  resolution: "playwright@npm:1.61.1"
+  dependencies:
+    fsevents: 2.3.2
+    playwright-core: 1.61.1
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    playwright: cli.js
+  checksum: 2d85be1b6a88dbeeb206c5800629182840f07bd0e5e74f154fa57de2f1df16631918df9139a1cb8ddde8f2f125c5c9e447686a0fdadb61552b668ba97ffcaaf1
   languageName: node
   linkType: hard
 
