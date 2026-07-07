@@ -149,8 +149,8 @@ function CreateRunTime({
     useState(AUTO_SCALING_DEFAULT);
   const [autoScalingDetailUpdated, setAutoScalingDetailUpdated] =
     useState(AUTO_SCALING_DEFAULT);
-  const [gpuDetail, setGpuDetail] = useState(['']);
-  const [gpuDetailUpdated, setGpuDetailUpdated] = useState(['']);
+  const [gpuDetail, setGpuDetail] = useState<string[]>([]);
+  const [gpuDetailUpdated, setGpuDetailUpdated] = useState<string[]>([]);
   const [expandResourceAllocation, setExpandResourceAllocation] =
     useState(false);
   const [expandAutoScaling, setExpandAutoScaling] = useState(false);

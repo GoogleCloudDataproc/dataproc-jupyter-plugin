@@ -147,7 +147,7 @@ function BatchDetails({
   });
   const [regionName, setRegionName] = useState('');
   const [errorView, setErrorView] = useState(false);
-  const [labelDetail, setLabelDetail] = useState(['']);
+  const [labelDetail, setLabelDetail] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletePopupOpen, setDeletePopupOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState('');
