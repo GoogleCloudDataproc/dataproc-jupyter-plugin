@@ -91,6 +91,7 @@
         "@babel/preset-env": "^7.22.14",
         "@babel/preset-react": "^7.22.5",
         "@babel/preset-typescript": "^7.22.11",
+        "@eslint/js": "^9.26.0",
         "@googleapis/storage": "^6.0.0",
         "@jupyterlab/builder": "^4.0.0",
         "@jupyterlab/testutils": "^4.0.0",
@@ -110,14 +111,12 @@
         "@types/react-table": "^7.7.14",
         "@types/react-tagsinput": "^3.20.0",
         "@types/react-window": "^1.8.5",
-        "@typescript-eslint/eslint-plugin": "^5.55.0",
-        "@typescript-eslint/parser": "^5.55.0",
         "css-loader": "^6.7.1",
         "eslint": "^9.26.0",
-        "eslint-config-prettier": "^8.7.0",
-        "eslint-plugin-prettier": "^4.2.1",
-        "eslint-plugin-storybook": "^0.6.13",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-storybook": "^0.12.0",
         "generate-license-file": "^2.0.0",
+        "globals": "^16.0.0",
         "jest": "^29.2.0",
         "mkdirp": "^1.0.3",
         "npm-run-all": "^4.1.5",
@@ -136,6 +135,7 @@
         "stylelint-config-standard": "^26.0.0",
         "stylelint-prettier": "^2.0.0",
         "typescript": "~5.0.2",
+        "typescript-eslint": "^8.63.0",
         "webpack": "^5.104.1",
         "yjs": "^13.5.0"
     },
@@ -161,70 +161,6 @@
         "extension": true,
         "outputDir": "dataproc_jupyter_plugin/labextension",
         "schemaDir": "schema"
-    },
-    "eslintIgnore": [
-        "node_modules",
-        "dist",
-        "coverage",
-        "**/*.d.ts",
-        "tests",
-        "**/__tests__",
-        "ui-tests"
-    ],
-    "eslintConfig": {
-        "extends": [
-            "eslint:recommended",
-            "plugin:@typescript-eslint/eslint-recommended",
-            "plugin:@typescript-eslint/recommended",
-            "plugin:prettier/recommended",
-            "plugin:storybook/recommended"
-        ],
-        "parser": "@typescript-eslint/parser",
-        "parserOptions": {
-            "project": "tsconfig.json",
-            "sourceType": "module"
-        },
-        "plugins": [
-            "@typescript-eslint"
-        ],
-        "rules": {
-            "@typescript-eslint/naming-convention": [
-                "error",
-                {
-                    "selector": "interface",
-                    "format": [
-                        "PascalCase"
-                    ],
-                    "custom": {
-                        "regex": "^I[A-Z]",
-                        "match": true
-                    }
-                }
-            ],
-            "@typescript-eslint/no-unused-vars": [
-                "warn",
-                {
-                    "args": "none"
-                }
-            ],
-            "@typescript-eslint/no-explicit-any": "off",
-            "@typescript-eslint/no-namespace": "off",
-            "@typescript-eslint/no-use-before-define": "off",
-            "@typescript-eslint/quotes": [
-                "error",
-                "single",
-                {
-                    "avoidEscape": true,
-                    "allowTemplateLiterals": false
-                }
-            ],
-            "curly": [
-                "error",
-                "all"
-            ],
-            "eqeqeq": "error",
-            "prefer-arrow-callback": "error"
-        }
     },
     "prettier": {
         "singleQuote": true,
