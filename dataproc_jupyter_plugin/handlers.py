@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
 import json
 import re
 import subprocess
-import sys
-import tempfile
 
 
 from google.cloud.jupyter_config.config import (
@@ -43,6 +40,13 @@ from dataproc_jupyter_plugin.controllers.version import (
     UpdatePackage,
     tornado
 )
+
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("dataproc_jupyter_plugin")
+except PackageNotFoundError:
+    __version__ = "unknown"
 
 _region_not_set_error = """GCP region not set in gcloud.
 
@@ -105,6 +109,12 @@ class DataprocPluginConfig(SingletonConfigurable):
         "",
         config=True,
         help="Use this project number for kernel gateway and skip project number verification",
+    )
+
+    custom_user_agent = Unicode(
+        f"dataproc-jupyter-plugin/{__version__}",
+        config=True,
+        help="Custom User-Agent header value for outbound requests to the kernels mixer.",
     )
 
 
@@ -212,24 +222,9 @@ class ResourceManagerHandler(APIHandler):
     async def post(self):
         try:
             project = await credentials._gcp_project()
-            subcmd = f'projects describe {project} --format="value(projectNumber)"'
-            with tempfile.TemporaryFile() as t:
-                with tempfile.TemporaryFile() as errt:
-                    p = await asyncio.create_subprocess_shell(
-                        f"gcloud {subcmd}",
-                        stdin=subprocess.DEVNULL,
-                        stderr=errt,
-                        stdout=t,
-                    )
-                    await p.wait()
-                    if p.returncode != 0:
-                        errt.seek(0)
-                        stderr_str = errt.read().decode("UTF-8").strip()
-                        raise subprocess.CalledProcessError(
-                            p.returncode, f"gcloud {subcmd}", None, stderr_str
-                        )
-                    t.seek(0)
-                    t.read().decode("UTF-8").strip()
+            await async_run_gcloud_subcommand(
+                f'projects describe {project} --format="value(projectNumber)"'
+            )
             self.finish({"status": "OK"})
         except subprocess.CalledProcessError as er:
             self.finish({"status": "ERROR", "error": er.stderr})

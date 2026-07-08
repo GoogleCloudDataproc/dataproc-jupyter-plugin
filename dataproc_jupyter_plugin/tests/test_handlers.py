@@ -49,6 +49,7 @@ async def test_get_default_config(jp_serverapp):
     assert server_config.GatewayClient.gateway_retry_interval == 20
     assert server_config.GatewayClient.gateway_retry_max == 45
     assert server_config.GatewayClient.request_timeout == 600
+    assert server_config.GatewayClient.connect_timeout == 300
 
 @pytest.mark.parametrize(
     "config_project_number,expected_calls",
@@ -112,8 +113,18 @@ async def test_post_config_handler_success(jp_fetch, monkeypatch, jp_serverapp, 
 )
 async def test_valid_project_ids(jp_fetch, monkeypatch, project_id):
     mock_run_gcloud = AsyncMock()
+    mock_clear_cache = Mock()
+    mock_configure_gateway = Mock(return_value=True)
+
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.clear_gcloud_cache", mock_clear_cache
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.configure_gateway_client_url",
+        mock_configure_gateway,
     )
 
     body = {"projectId": project_id, "region": "us-central1"}
@@ -165,8 +176,18 @@ async def test_invalid_project_ids(jp_fetch, monkeypatch, invalid_project_id):
 )
 async def test_valid_regions(jp_fetch, monkeypatch, region):
     mock_run_gcloud = AsyncMock()
+    mock_clear_cache = Mock()
+    mock_configure_gateway = Mock(return_value=True)
+
     monkeypatch.setattr(
         "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.clear_gcloud_cache", mock_clear_cache
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.configure_gateway_client_url",
+        mock_configure_gateway,
     )
 
     body = {"projectId": "valid-project-123", "region": region}
@@ -234,17 +255,11 @@ async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
         "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
     )
 
-    async def mock_create_subprocess_shell(*args, **kwargs):
-        class MockProcess:
-            def __init__(self):
-                self.returncode = 0
-
-            async def wait(self):
-                pass
-
-        return MockProcess()
-
-    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
+    # Mock the gcloud command execution
+    mock_run_gcloud = AsyncMock(return_value="123456789")
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
+    )
 
     # Call the handler
     response = await jp_fetch(
@@ -259,6 +274,11 @@ async def test_resource_manager_handler_success(jp_fetch, monkeypatch):
     payload = json.loads(response.body)
     assert payload["status"] == "OK"
 
+    # Verify the correct gcloud command was called
+    mock_run_gcloud.assert_called_once_with(
+        'projects describe my-project-123 --format="value(projectNumber)"'
+    )
+
 
 async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
     # Mock the project ID retrieval
@@ -267,38 +287,15 @@ async def test_resource_manager_handler_error(jp_fetch, monkeypatch):
         "dataproc_jupyter_plugin.handlers.credentials._gcp_project", mock_gcp_project
     )
 
-    # Mock the subprocess for gcloud command execution to simulate an error
-    async def mock_create_subprocess_shell(*args, **kwargs):
-        class MockProcess:
-            def __init__(self):
-                self.returncode = 1
-
-            async def wait(self):
-                pass
-
-        return MockProcess()
-
-    monkeypatch.setattr("asyncio.create_subprocess_shell", mock_create_subprocess_shell)
-
-    # Mock the error output from the subprocess
-    def mock_tempfile():
-        class MockTempFile:
-            def __enter__(self):
-                self.content = b"Simulated gcloud error"
-                return self
-
-            def __exit__(self, exc_type, exc_val, exc_tb):
-                pass
-
-            def seek(self, pos):
-                pass
-
-            def read(self):
-                return self.content
-
-        return MockTempFile()
-
-    monkeypatch.setattr("tempfile.TemporaryFile", mock_tempfile)
+    # Mock a failure in the gcloud command execution
+    mock_run_gcloud = AsyncMock(
+        side_effect=subprocess.CalledProcessError(
+            1, "gcloud projects describe", stderr="Simulated gcloud error"
+        )
+    )
+    monkeypatch.setattr(
+        "dataproc_jupyter_plugin.handlers.async_run_gcloud_subcommand", mock_run_gcloud
+    )
 
     # Call the handler
     response = await jp_fetch(
