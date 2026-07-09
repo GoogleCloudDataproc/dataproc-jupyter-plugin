@@ -2,6 +2,10 @@
 
 The extension can be published to `PyPI` and `npm` manually or using the [Jupyter Releaser](https://github.com/jupyter-server/jupyter_releaser).
 
+> **Continuous integration:** presubmit and continuous builds (extension build + Playwright UI
+> tests) run on Google's Kokoro CI (see [`kokoro/`](kokoro/)). Kokoro validates changes; it does
+> **not** publish releases. Publishing follows the manual or Jupyter Releaser steps below.
+
 ## Manual release
 
 ### Python package
