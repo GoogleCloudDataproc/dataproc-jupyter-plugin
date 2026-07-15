@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
-import { Select } from '../controls/MuiWrappedLabelSelect';
+import { TextField, MenuItem } from '@mui/material';
 import {
   BOOLEAN_SELECT_OPTIONS,
   CORE_RELATED_PROPERTIES,
@@ -43,29 +43,49 @@ function SparkProperties({
   sparkValueValidation,
   setSparkValueValidation,
   sparkSection,
-  setGpuDetailChangeDone
+  defaultSchema = []
 }: any) {
-  /*
-  labelDetail used to store the permanent label details when onblur
-  labelDetailUpdated used to store the temporay label details when onchange
-  */
+
+  useEffect(() => {
+    let updated = false;
+    const newLabels = labelDetailUpdated.map((label: string) => {
+      const parts = label.split(':');
+      const propertyKey = parts[0];
+      const userValue = parts[1] || '';
+
+      if (SELECT_FIELDS.includes(propertyKey) && sparkSection !== 'gpu' && !userValue) {
+        const matchDefault = defaultSchema.find((item: string) => item.startsWith(propertyKey + ':'));
+        const placeholderValue = matchDefault ? matchDefault.split(':')[1] : '';
+        const options = (placeholderValue === 'true' || placeholderValue === 'false')
+          ? BOOLEAN_SELECT_OPTIONS
+          : TIER_SELECT_OPTIONS;
+
+        if (options && options.length > 0) {
+          parts[1] = options[0].value.toString();
+          updated = true;
+          return parts.join(':');
+        }
+      }
+      return label;
+    });
+
+    if (updated) {
+      setLabelDetail(newLabels);
+      setLabelDetailUpdated(newLabels);
+    }
+  }, [labelDetailUpdated, sparkSection, defaultSchema, setLabelDetail, setLabelDetailUpdated]);
 
   const handleLabelDetailSelected = (
     event: React.SyntheticEvent<HTMLElement, Event>,
     data: string,
     index: number
   ) => {
-    const labelEdit = [...labelDetail];
-
-    labelEdit.forEach((labelData, dataNumber: number) => {
-      if (index === dataNumber) {
-        labelData = labelData.replace(
-          labelData.split(':')[1],
-          data!.toString()
-        );
-        labelEdit[dataNumber] = labelData;
-      }
-    });
+    const labelEdit = [...labelDetailUpdated];
+    if (labelEdit[index]) {
+      const parts = labelEdit[index].split(':');
+      parts[1] = data ? data.toString() : '';
+      labelEdit[index] = parts.join(':');
+    }
     setLabelDetail(labelEdit);
     setLabelDetailUpdated(labelEdit);
   };
@@ -76,10 +96,7 @@ function SparkProperties({
 
   const updateErrorIndexes = (index: number, hasError: boolean) => {
     let newErrorIndexes = { ...sparkValueValidation };
-
-    // Ensure deep copy for the specific section
     newErrorIndexes[sparkSection] = [...newErrorIndexes[sparkSection]];
-
     const errorIndex = newErrorIndexes[sparkSection].indexOf(index);
 
     if (hasError && errorIndex === -1) {
@@ -101,98 +118,57 @@ function SparkProperties({
     value = value.replace(DISALLOWED_CHARS_REGEX, '');
     const labelEdit = [...labelDetailUpdated];
 
-    labelEdit.forEach((data, dataNumber: number) => {
-      if (index === dataNumber) {
-        /*
-          allowed aplhanumeric and spaces and underscores values
-        */
-        if (MEMORY_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
+    if (labelEdit[index]) {
+      const parts = labelEdit[index].split(':');
+      const propertyKey = parts[0];
+      
+      parts[1] = value;
+      labelEdit[index] = parts.join(':');
 
-          if (value.search(regex) === -1) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (DISK_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          const regex = /^(0*[1-9][0-9]*)(k|m|g|t)$/i;
-
-          if (value.search(regex) === -1) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (CORE_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          if (
-            value.includes('.') ||
-            !Number.isInteger(Number(value)) ||
-            Number(value) <= 0
-          ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (EXECUTOR_RELATED_PROPERTIES.includes(data.split(':')[0])) {
-          if (
-            value.includes('.') ||
-            !Number.isInteger(Number(value)) ||
-            Number(value) < 2 ||
-            Number(value) > 2000
-          ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (
-          data.split(':')[0] === 'spark.dynamicAllocation.initialExecutors'
-        ) {
-          if (
-            value.includes('.') ||
-            !Number.isInteger(Number(value)) ||
-            Number(value) < 2 ||
-            Number(value) > 500
-          ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (
-          data.split(':')[0] === 'spark.dynamicAllocation.minExecutors'
-        ) {
-          if (
-            value.includes('.') ||
-            !Number.isInteger(Number(value)) ||
-            Number(value) < 2
-          ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        } else if (
-          data.split(':')[0] ===
-          'spark.dynamicAllocation.executorAllocationRatio'
-        ) {
-          if (
-            value.length === 0 ||
-            Number.isNaN(Number(value)) ||
-            Number(value) < 0 ||
-            Number(value) > 1
-          ) {
-            updateErrorIndexes(index, true);
-          } else {
-            updateErrorIndexes(index, false);
-          }
-        }
-        /*
-          value is split from labels
-          Example:"client:dataproc_jupyter_plugin"
-          */
-        let sparkProperties = data.split(':');
-        sparkProperties[1] = value.trim();
-        data = sparkProperties[0] + ':' + sparkProperties[1];
+      if (value.trim() === '') {
+        updateErrorIndexes(index, false);
+        setLabelDetailUpdated(labelEdit);
+        return;
       }
-      labelEdit[dataNumber] = data;
-    });
+
+      if (MEMORY_RELATED_PROPERTIES.includes(propertyKey)) {
+        const regex = /^(0*[1-9][0-9]*)(m|g|t)$/i;
+        updateErrorIndexes(index, value.search(regex) === -1);
+      } else if (DISK_RELATED_PROPERTIES.includes(propertyKey)) {
+        const regex = /^(0*[1-9][0-9]*)(k|m|g|t)$/i;
+        updateErrorIndexes(index, value.search(regex) === -1);
+      } else if (CORE_RELATED_PROPERTIES.includes(propertyKey)) {
+        if (value.includes('.') || !Number.isInteger(Number(value)) || Number(value) <= 0) {
+          updateErrorIndexes(index, true);
+        } else {
+          updateErrorIndexes(index, false);
+        }
+      } else if (EXECUTOR_RELATED_PROPERTIES.includes(propertyKey)) {
+        if (value.includes('.') || !Number.isInteger(Number(value)) || Number(value) < 2 || Number(value) > 2000) {
+          updateErrorIndexes(index, true);
+        } else {
+          updateErrorIndexes(index, false);
+        }
+      } else if (propertyKey === 'spark.dynamicAllocation.initialExecutors') {
+        if (value.includes('.') || !Number.isInteger(Number(value)) || Number(value) < 2 || Number(value) > 500) {
+          updateErrorIndexes(index, true);
+        } else {
+          updateErrorIndexes(index, false);
+        }
+      } else if (propertyKey === 'spark.dynamicAllocation.minExecutors') {
+        if (value.includes('.') || !Number.isInteger(Number(value)) || Number(value) < 2) {
+          updateErrorIndexes(index, true);
+        } else {
+          updateErrorIndexes(index, false);
+        }
+      } else if (propertyKey === 'spark.dynamicAllocation.executorAllocationRatio') {
+        if (value.length === 0 || Number.isNaN(Number(value)) || Number(value) < 0 || Number(value) > 1) {
+          updateErrorIndexes(index, true);
+        } else {
+          updateErrorIndexes(index, false);
+        }
+      }
+    }
     setLabelDetailUpdated(labelEdit);
   };
 
@@ -201,98 +177,92 @@ function SparkProperties({
       <div className="spark-property-parent">
         {labelDetail.length > 0 &&
           labelDetail.map((label: string, index: number) => {
-            /*
-                     Extracting key, value from label
-                      Example: "{client:dataProc_plugin}"
-                  */
             const labelSplit = label.split(':');
+            const propertyKey = labelSplit[0];
+            
+            const draftLabel = labelDetailUpdated[index] || '';
+            const draftColonIndex = draftLabel.indexOf(':');
+            const userValue = draftColonIndex !== -1 ? draftLabel.substring(draftColonIndex + 1) : '';
+
+            const matchDefault = defaultSchema.find((item: string) => item.startsWith(propertyKey + ':'));
+            const placeholderValue = matchDefault ? matchDefault.split(':')[1] : '';
+
+            const currentOptions = (placeholderValue === 'true' || placeholderValue === 'false'
+              ? BOOLEAN_SELECT_OPTIONS
+              : TIER_SELECT_OPTIONS
+            );
+            
+            const selectedValue = userValue || (currentOptions.length > 0 ? currentOptions[0].value : '');
+
             return (
-              <div key={label}>
+              <div key={propertyKey}>
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
-                    <div
-                      className="select-text-overlay-label"
-                      title={labelSplit[0]}
-                    >
+                    <div className="select-text-overlay-label" title={propertyKey}>
                       <Input
                         sx={{ margin: 0 }}
                         className={`edit-input-style`}
                         disabled={true}
                         onBlur={() => handleEditLabelSwitch()}
-                        onChange={e =>
-                          handleEditLabel(
-                            sparkSection,
-                            e.target.value,
-                            index,
-                            'key'
-                          )
-                        }
-                        defaultValue={labelSplit[0]}
+                        onChange={e => handleEditLabel(sparkSection, e.target.value, index, 'key')}
                         Label={`Key ${index + 1}*`}
+                        value={propertyKey}
+                        InputLabelProps={{ shrink: true }}
                       />
                     </div>
                   </div>
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
-                      {SELECT_FIELDS.includes(labelSplit[0]) &&
-                        sparkSection !== 'gpu' ? (
-                        <Select
-                          className="spark-properties-select-style"
-                          value={labelSplit[1]}
-                          onChange={(e, { value }) =>
-                            handleLabelDetailSelected(e, value as string, index)
-                          }
-                          options={
-                            labelSplit[1] === 'true' ||
-                              labelSplit[1] === 'false'
-                              ? BOOLEAN_SELECT_OPTIONS
-                              : TIER_SELECT_OPTIONS
-                          }
-                        />
+                      {SELECT_FIELDS.includes(propertyKey) && sparkSection !== 'gpu' ? (
+                        <TextField
+                          select
+                          fullWidth
+                          variant="outlined"
+                          className="edit-input-style"
+                          value={selectedValue}
+                          label={`Value ${index + 1}`}
+                          InputLabelProps={{ shrink: true }}
+                          SelectProps={{
+                            displayEmpty: true
+                          }}
+                          onChange={e => {
+                            handleLabelDetailSelected(e as any, e.target.value, index);
+                          }}
+                        >
+                          {currentOptions.map((option: any) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.text || option.label || option.value}
+                            </MenuItem>
+                          ))}
+                        </TextField>
                       ) : (
-                        <Input
-                          sx={{ margin: 0 }}
-                          className={`edit-input-style`}
+                        <TextField
+                          fullWidth
+                          size="medium"
+                          variant="outlined"
+                          className="edit-input-style"
                           onBlur={() => handleEditLabelSwitch()}
-                          onChange={e =>
-                            handleEditLabel(
-                              sparkSection,
-                              e.target.value,
-                              index,
-                              'value'
-                            )
-                          }
+                          onChange={e => handleEditLabel(sparkSection, e.target.value, index, 'value')}
                           disabled={
-                            labelSplit[0] ===
-                              'spark.dataproc.executor.compute.tier' ||
+                            propertyKey === 'spark.dataproc.executor.compute.tier' ||
                             (sparkSection === 'metastore' && index === 2)
                           }
-                          value={
-                            labelDetailUpdated[index]
-                              ? labelDetailUpdated[index].substring(
-                                  labelDetailUpdated[index].indexOf(':') + 1
-                                )
-                              : ''
-                          }
-                          placeholder={labelSplit[1]}
-                          Label={`Value ${index + 1}`}
+                          value={userValue}
+                          placeholder={placeholderValue}
+                          label={`Value ${index + 1}`}
                           InputLabelProps={{ shrink: true }}
                         />
                       )}
                     </div>
                     {sparkValueValidation[sparkSection].includes(index) && (
                       <div className="error-key-parent">
-                        <iconError.react
-                          tag="div"
-                          className="logo-alignment-style"
-                        />
+                        <iconError.react tag="div" className="logo-alignment-style" />
                         <div className="error-key-missing">
                           Invalid value. Consult Dataproc documentation
                         </div>
                       </div>
                     )}
                   </div>
-                  <></>
                 </div>
               </div>
             );
