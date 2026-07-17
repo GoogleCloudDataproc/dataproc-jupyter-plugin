@@ -2462,6 +2462,7 @@ function CreateRunTime({
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="resourceallocation"
                   setGpuDetailChangeDone={setGpuDetailChangeDone}
+                  defaultSchema={RESOURCE_ALLOCATION_DEFAULT}
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -2504,6 +2505,7 @@ function CreateRunTime({
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="autoscaling"
                   setGpuDetailChangeDone={setGpuDetailChangeDone}
+                  defaultSchema={AUTO_SCALING_DEFAULT}
                 />
               )}
               <div className="spark-properties-sub-header-parent">
@@ -2555,6 +2557,7 @@ function CreateRunTime({
                   setSparkValueValidation={setSparkValueValidation}
                   sparkSection="gpu"
                   setGpuDetailChangeDone={setGpuDetailChangeDone}
+                  defaultSchema={GPU_DEFAULT}
                 />
               )}
               {metastoreType === 'biglake' && (
