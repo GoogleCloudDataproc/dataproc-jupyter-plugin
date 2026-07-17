@@ -38,7 +38,7 @@ import { KernelAPI, KernelSpecAPI } from '@jupyterlab/services';
 import { authApi, iconDisplay } from './utils/utils';
 import { dpmsWidget } from './dpms/dpmsWidget';
 import dpmsIcon from '../style/icons/dpms_icon.svg';
-import datasetExplorerIcon from '../style/icons/dataset_explorer_icon.svg';
+import catalogIcon from '../style/icons/catalog_icon_light.svg';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import {
   PLUGIN_ID,
@@ -52,7 +52,7 @@ import {
   IDefaultFileBrowser
 } from '@jupyterlab/filebrowser';
 import dpmsIconDark from '../style/icons/dpms_icon_dark.svg';
-import datasetExplorerIconDark from '../style/icons/dataset_explorer_dark_icon.svg';
+import catalogIconDark from '../style/icons/catalog_icon_dark.svg';
 import { NotebookButtonExtension } from './controls/NotebookButtonExtension';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { IDocumentManager } from '@jupyterlab/docmanager';
@@ -62,7 +62,7 @@ import NotebookTemplateService from './notebookTemplates/notebookTemplatesServic
 import * as path from 'path';
 import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
-import { BigQueryWidget } from './bigQuery/bigQueryWidget';
+import { CatalogWidget } from './catalog/catalog';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
@@ -71,9 +71,9 @@ const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
 });
-const iconDatasetExplorer = new LabIcon({
-  name: 'launcher:dataset-explorer-icon',
-  svgstr: datasetExplorerIcon
+const iconCatalog = new LabIcon({
+  name: 'launcher:catalog-icon',
+  svgstr: catalogIcon
 });
 const iconPythonLogo = new LabIcon({
   name: 'launcher:python-bigquery-logo-icon',
@@ -129,9 +129,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: 'launcher:dpms-icon-dark',
       svgstr: dpmsIconDark
     });
-    const iconDatasetExplorerDark = new LabIcon({
-      name: 'launcher:dataset-explorer-icon-dark',
-      svgstr: datasetExplorerIconDark
+    const iconCatalogDark = new LabIcon({
+      name: 'launcher:catalog-icon-dark',
+      svgstr: catalogIconDark
     });
     window.addEventListener('beforeunload', () => {
       localStorage.removeItem('notebookValue');
@@ -167,7 +167,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     const settings = await settingRegistry.load(PLUGIN_ID);
 
     // The current value of whether or not preview features are enabled.
-    let panelDpms: Panel | undefined, panelDatasetExplorer: Panel | undefined;
+    let panelDpms: Panel | undefined, panelCatalog: Panel | undefined;
     await checkResourceManager();
 
     // Capture the signal
@@ -237,7 +237,7 @@ const extension: JupyterFrontEndPlugin<void> = {
      * Handler for when the Jupyter Lab theme changes.
      */
     const onThemeChanged = () => {
-      if (!panelDpms && !panelDatasetExplorer) return;
+      if (!panelDpms && !panelCatalog) return;
       const isLightTheme = themeManager.theme
         ? themeManager.isLight(themeManager.theme)
         : true;
@@ -245,15 +245,15 @@ const extension: JupyterFrontEndPlugin<void> = {
         if (bqFeature.enable_metastore_integration && panelDpms) {
           panelDpms.title.icon = iconDpms;
         }
-        if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
-          panelDatasetExplorer.title.icon = iconDatasetExplorer;
+        if (bqFeature.enable_bigquery_integration && panelCatalog) {
+          panelCatalog.title.icon = iconCatalog;
         }
       } else {
         if (bqFeature.enable_metastore_integration && panelDpms) {
           panelDpms.title.icon = iconDpmsDark;
         }
-        if (bqFeature.enable_bigquery_integration && panelDatasetExplorer) {
-          panelDatasetExplorer.title.icon = iconDatasetExplorerDark;
+        if (bqFeature.enable_bigquery_integration && panelCatalog) {
+          panelCatalog.title.icon = iconCatalogDark;
         }
       }
     };
@@ -277,20 +277,20 @@ const extension: JupyterFrontEndPlugin<void> = {
       const enableMetastore = toBoolean(bqFeature.enable_metastore_integration);
 
       // Clear any existing panels first
-      panelDatasetExplorer?.dispose();
-      panelDatasetExplorer = undefined;
+      panelCatalog?.dispose();
+      panelCatalog = undefined;
 
       panelDpms?.dispose();
       panelDpms = undefined;
 
       // Reinitialize panels based on individual flags
       if (enableBigQuery) {
-        panelDatasetExplorer = new Panel();
-        panelDatasetExplorer.id = 'dataset-explorer-tab';
-        panelDatasetExplorer.title.caption = 'Dataset Explorer - BigQuery';
-        panelDatasetExplorer.title.className = 'panel-icons-custom-style';
-        panelDatasetExplorer.addWidget(
-          new BigQueryWidget(
+        panelCatalog = new Panel();
+        panelCatalog.id = 'catalog-tab';
+        panelCatalog.title.caption = 'Catalog';
+        panelCatalog.title.className = 'panel-icons-custom-style';
+        panelCatalog.addWidget(
+          new CatalogWidget(
             app as JupyterLab,
             settingRegistry as ISettingRegistry,
             bqFeature.enable_bigquery_integration as boolean,
@@ -298,9 +298,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           )
         );
         onThemeChanged();
-        app.shell.add(panelDatasetExplorer, 'left', { rank: 1000 });
+        app.shell.add(panelCatalog, 'left', { rank: 1000 });
         DataprocLoggingService.log(
-          'Bigquery dataset explorer is enabled',
+          'Catalog is enabled',
           LOG_LEVEL.INFO
         );
       }
@@ -435,20 +435,20 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     const loadBigQueryWidget = (value: string) => {
       // If DPMS is not enabled, no-op.
-      if (!panelDatasetExplorer) return;
-      const existingWidgets = panelDatasetExplorer.widgets;
+      if (!panelCatalog) return;
+      const existingWidgets = panelCatalog.widgets;
       existingWidgets.forEach(widget => {
-        if (widget instanceof dpmsWidget) {
+        if (widget instanceof CatalogWidget) {
           widget.dispose();
         }
       });
-      const newWidget = new BigQueryWidget(
+      const newWidget = new CatalogWidget(
         app as JupyterLab,
         settingRegistry as ISettingRegistry,
         bqFeature.enable_bigquery_integration as boolean,
         themeManager
       );
-      panelDatasetExplorer.addWidget(newWidget);
+      panelCatalog.addWidget(newWidget);
     };
 
     let lastClusterName = localStorage.getItem('notebookValue') || '';

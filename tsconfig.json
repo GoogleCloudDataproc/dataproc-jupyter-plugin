@@ -19,7 +19,15 @@
     "strictNullChecks": true,
     "target": "ES2018",
     "types": ["jest", "node"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": "src",
+    "paths": {
+      "handler/*": ["handler/*"],
+      "utils/*": ["utils/*"],
+      "controls/*": ["controls/*"],
+      "style/*": ["style/*"],
+      "catalog/*": ["catalog/*"]
+    }
   },
   "include": ["src/*", "src/**/*"]
 }
