@@ -114,6 +114,11 @@ const iconHelpDark = new LabIcon({
 let networkUris: string[] = [];
 let key: string[] | (() => string[]) = [];
 let value: string[] | (() => string[]) = [];
+
+const initializeKeysOnly = (defaultArray: string[]) => {
+  return defaultArray.map(item => `${item.split(':')[0]}:`);
+};
+
 function CreateRunTime({
   setOpenCreateTemplate,
   selectedRuntimeClone,
@@ -141,14 +146,18 @@ function CreateRunTime({
     ...networkUris
   ]);
   const [resourceAllocationDetail, setResourceAllocationDetail] = useState(
-    RESOURCE_ALLOCATION_DEFAULT
+    initializeKeysOnly(RESOURCE_ALLOCATION_DEFAULT)
   );
-  const [resourceAllocationDetailUpdated, setResourceAllocationDetailUpdated] =
-    useState(RESOURCE_ALLOCATION_DEFAULT);
-  const [autoScalingDetail, setAutoScalingDetail] =
-    useState(AUTO_SCALING_DEFAULT);
-  const [autoScalingDetailUpdated, setAutoScalingDetailUpdated] =
-    useState(AUTO_SCALING_DEFAULT);
+  const [resourceAllocationDetailUpdated, setResourceAllocationDetailUpdated] = useState(
+    initializeKeysOnly(RESOURCE_ALLOCATION_DEFAULT)
+  );
+  const [autoScalingDetail, setAutoScalingDetail] = useState(
+    initializeKeysOnly(AUTO_SCALING_DEFAULT)
+  );
+  const [autoScalingDetailUpdated, setAutoScalingDetailUpdated] = useState(
+    initializeKeysOnly(AUTO_SCALING_DEFAULT)
+  );
+
   const [gpuDetail, setGpuDetail] = useState(['']);
   const [gpuDetailUpdated, setGpuDetailUpdated] = useState(['']);
   const [expandResourceAllocation, setExpandResourceAllocation] =
@@ -266,7 +275,6 @@ function CreateRunTime({
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [lightningEngineEnabled, setLightningEngineEnabled] = useState(false);
   const [enableLink, setEnableLink] = useState('');
-  const [othersList , setOthersList] = useState<string[]>([]);
   const runtimeOptions = [
     {
       value: '2.3',
@@ -286,19 +294,28 @@ function CreateRunTime({
     }
   ];
 
-  const updateLightningEngineProperty = (currentOthersList = othersList) => {
-    const lightningProperty = DATAPROC_LIGHTNING_ENGINE_PROPERTY + ":" + (lightningEngineEnabled
-    ? 'lightningEngine'
-    : 'default');
-  
-    const updatedProperties = [lightningProperty, ...currentOthersList];
-    setPropertyDetailUpdated(updatedProperties);
-    return updatedProperties;
-  }
+  const updateLightningEngineProperty = () => {
+    const lightningKey = DATAPROC_LIGHTNING_ENGINE_PROPERTY;
+    const targetValue = lightningEngineEnabled ? 'lightningEngine' : 'default';
+    const lightningProperty = `${lightningKey}:${targetValue}`;
+
+    // Filter existing lightning engine property from the current draft
+    const cleanOthers = propertyDetailUpdated.filter(
+      prop => !prop.startsWith(lightningKey + ':')
+    );
+
+    // Prepend the updated lightning property to the rest of the user's properties
+    const updatedProperties = [lightningProperty, ...cleanOthers];
+
+    // trigger update if the values are actually different
+    if (JSON.stringify(propertyDetailUpdated) !== JSON.stringify(updatedProperties)) {
+      setPropertyDetailUpdated(updatedProperties);
+    }
+  };
 
   useEffect(() => {
     updateLightningEngineProperty();
-  }, [lightningEngineEnabled,othersList]);
+  }, [lightningEngineEnabled]);
 
   useEffect(() => {
     const initializeRuntime = async () => {
@@ -318,7 +335,7 @@ function CreateRunTime({
           listNetworksAPI();
           listKeyRingsAPI();
           runtimeSharedProject();
-          updateLightningEngineProperty(othersList);
+          updateLightningEngineProperty();
         } else {
           setConfigLoading(false);
         }
@@ -343,7 +360,17 @@ function CreateRunTime({
   }, [labelDetailUpdated, labelDetail]);
 
   useEffect(() => {
-    if (propertyDetail.length !== propertyDetailUpdated.length) {
+    const getLightningVal = (arr: string[]) => 
+      arr.find(p => p.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY + ':'));
+
+    const lightningValDisplay = getLightningVal(propertyDetail);
+    const lightningValDraft = getLightningVal(propertyDetailUpdated);
+
+    const hasLengthChanged = propertyDetail.length !== propertyDetailUpdated.length;
+    const hasLightningChanged = lightningValDisplay !== lightningValDraft;
+
+    // sync when an item is added/removed, or the lightning toggle is clicked
+    if (hasLengthChanged || hasLightningChanged) {
       setPropertyDetail(propertyDetailUpdated);
     }
   }, [propertyDetailUpdated, propertyDetail]);
@@ -375,6 +402,64 @@ function CreateRunTime({
     }
   }, [networkSelected]);
 
+  useEffect(() => {
+    if (resourceAllocationDetailUpdated.length > 0) {
+      const structuralCheck = resourceAllocationDetailUpdated.map(item => {
+        const [key, value] = item.split(':');
+        if (value === undefined) return `${key}:`;
+        return item;
+      });
+      if (JSON.stringify(structuralCheck) !== JSON.stringify(resourceAllocationDetailUpdated)) {
+        setResourceAllocationDetail(structuralCheck);
+        setResourceAllocationDetailUpdated(structuralCheck);
+      }
+    }
+  }, [resourceAllocationDetailUpdated]);
+
+  useEffect(() => {
+    if (!gpuChecked || resourceAllocationDetailUpdated.length === 0) return;
+
+    const coresItem = resourceAllocationDetailUpdated.find(item =>
+      item.startsWith('spark.executor.cores:')
+    );
+    if (!coresItem) return;
+
+    const [, value] = coresItem.split(':');
+    const trimmedValue = value ? value.trim() : '';
+    let cores: number;
+
+    if (trimmedValue === '') {
+      const defaultCoresItem = RESOURCE_ALLOCATION_DEFAULT.find(d =>
+        d.startsWith('spark.executor.cores:')
+      );
+      const defaultCoresValue = defaultCoresItem ? defaultCoresItem.split(':')[1] : '4';
+      cores = Number(defaultCoresValue);
+    } else {
+      cores = Number(trimmedValue);
+    }
+
+    // Guardrail against 0, negative values, or string which causing division by zero
+    if (isNaN(cores) || cores <= 0) {
+      cores = 4;
+    }
+
+    const calculatedGpuValue = (1 / cores).toFixed(2);
+
+    const currentGpuState = [...gpuDetailUpdated];
+    const updatedGpuState = currentGpuState.map(gpuItem => {
+      const [gpuKey] = gpuItem.split(':');
+      if (gpuKey === 'spark.task.resource.gpu.amount') {
+        return `spark.task.resource.gpu.amount:${calculatedGpuValue}`;
+      }
+      return gpuItem;
+    });
+
+    if (JSON.stringify(gpuDetailUpdated) !== JSON.stringify(updatedGpuState)) {
+      setGpuDetail(updatedGpuState);
+      setGpuDetailUpdated(updatedGpuState);
+    }
+  }, [resourceAllocationDetailUpdated, gpuChecked]);
+
   const modifyResourceAllocation = () => {
     let resourceAllocationModify = [...resourceAllocationDetailUpdated];
     gpuDetailUpdated.forEach(item => {
@@ -394,22 +479,6 @@ function CreateRunTime({
             .filter((item): item is string => item !== null); // To filter out null values.'
           setResourceAllocationDetail(resourceAllocationModify);
           setResourceAllocationDetailUpdated(resourceAllocationModify);
-
-          let gpuDetailModify = [...gpuDetailUpdated];
-          resourceAllocationModify.forEach(item => {
-            const [key] = item.split(':');
-            if (key === 'spark.executor.cores') {
-              gpuDetailModify = gpuDetailModify.map(gpuItem => {
-                const [gpuKey, value] = gpuItem.split(':');
-                if (gpuKey === 'spark.task.resource.gpu.amount') {
-                  return `spark.task.resource.gpu.amount:${value}`;
-                }
-                return gpuItem;
-              });
-            }
-          });
-          setGpuDetail(gpuDetailModify);
-          setGpuDetailUpdated(gpuDetailModify);
           setGpuDetailChangeDone(true);
         } else {
           resourceAllocationModify = resourceAllocationModify
@@ -521,40 +590,53 @@ function CreateRunTime({
   }, [keyRingSelected]);
 
   useEffect(() => {
-    // filtering the 'spark.dynamicAllocation.enabled' property in the updated state
+    // Find the current toggle status
     const dynamicAllocationState = autoScalingDetailUpdated.find(prop =>
       prop.startsWith('spark.dynamicAllocation.enabled:')
     );
-    if (dynamicAllocationState) {
-      const isEnabled = dynamicAllocationState.endsWith('true');
-      let updatedProperties;
+    
+    if (!dynamicAllocationState) return;
+    const isEnabled = dynamicAllocationState.endsWith('true');
 
-      if (!isEnabled && autoScalingDetailUpdated.length !== 2) {
-        let filteredProperties = [dynamicAllocationState];
+    const hasExtraKeys = autoScalingDetailUpdated.some(prop => 
+      !prop.startsWith('spark.dynamicAllocation.enabled:') && 
+      !prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
+    );
 
-        const shuffleEnabledState = autoScalingDetailUpdated.find(
-          (prop) => prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
-        );
+    let updatedProperties = null;
 
-        if (shuffleEnabledState) {
-          filteredProperties.push(shuffleEnabledState);
-        }
-        updatedProperties = filteredProperties;
+    if (!isEnabled && hasExtraKeys) {
+      let filteredProperties = [dynamicAllocationState];
+      const shuffleEnabledState = autoScalingDetailUpdated.find(prop => 
+        prop.startsWith('spark.reducer.fetchMigratedShuffle.enabled:')
+      );
+      if (shuffleEnabledState) {
+        filteredProperties.push(shuffleEnabledState);
       }
-
-      if (isEnabled && autoScalingDetailUpdated.length == 2) {
-        updatedProperties = AUTO_SCALING_DEFAULT;
-      }
-      if (updatedProperties && JSON.stringify(autoScalingDetailUpdated) !==
-      JSON.stringify(updatedProperties)) {
-        setAutoScalingDetail(updatedProperties);
-        setAutoScalingDetailUpdated(updatedProperties);
-         setSparkValueValidation(prev => ({
-          ...prev,
-          autoscaling: []
-        }));
-      }
+      updatedProperties = filteredProperties;
     }
+
+    if (isEnabled && !hasExtraKeys) {
+      updatedProperties = initializeKeysOnly(AUTO_SCALING_DEFAULT);
+      
+      // Crucial: Retain the user's current values for the 2 persistent keys if they exist
+      updatedProperties = updatedProperties.map(defaultProp => {
+        const defaultKey = defaultProp.split(':')[0];
+        const existingProp = autoScalingDetailUpdated.find(p => p.startsWith(defaultKey + ':'));
+        return existingProp ? existingProp : defaultProp;
+      });
+    }
+
+    if (updatedProperties) {
+      setAutoScalingDetail(updatedProperties);
+      setAutoScalingDetailUpdated(updatedProperties);
+      setSparkValueValidation(prev => ({
+        ...prev,
+        autoscaling: []
+      }));
+    }
+    
+    // Keep the dependency array as is, but the condition guards above now prevent the loop
   }, [autoScalingDetailUpdated]);
 
   const displayUserInfo = async () => {
@@ -646,52 +728,76 @@ function CreateRunTime({
           }
 
           if (selectedRuntimeClone.runtimeConfig.hasOwnProperty('properties')) {
-            const updatedPropertyDetail = Object.entries(
-              selectedRuntimeClone.runtimeConfig.properties
-            ).map(([k, v]) => `${k}:${v}`);
-            let resourceAllocationDetailList: string[] = [];
-            let autoScalingDetailList: string[] = [];
-            let gpuDetailList: string[] = [];
+            const incomingProperties = selectedRuntimeClone.runtimeConfig.properties;
+
+            const incomingGpuType = incomingProperties['spark.dataproc.executor.resource.accelerator.type'];
+            const isL4Gpu = incomingGpuType === 'l4';
+
+            const isGpuActiveOnLoad = Object.keys(incomingProperties).some(k => 
+              GPU_DEFAULT.some(i => i.split(':')[0] === k)
+            );
+
+            const resourceAllocationDetailList = RESOURCE_ALLOCATION_DEFAULT.map(item => {
+              const key = item.split(':')[0];
+              const incomingVal = incomingProperties[key];
+
+              if (isGpuActiveOnLoad) {
+                if (key === 'spark.executor.memoryOverhead') {
+                  return null;
+                }
+                if (isL4Gpu && key === 'spark.dataproc.executor.disk.size') {
+                  return null;
+                }
+              }
+
+              return incomingVal !== undefined ? `${key}:${incomingVal}` : `${key}:`;
+            }).filter((item): item is string => item !== null);
+
+            const autoScalingDetailList = AUTO_SCALING_DEFAULT.map(item => {
+              const key = item.split(':')[0];
+              const incomingVal = incomingProperties[key];
+              return incomingVal !== undefined ? `${key}:${incomingVal}` : `${key}:`;
+            });
+
+            const gpuDetailList = GPU_DEFAULT.map(item => {
+              const key = item.split(':')[0];
+              const incomingVal = incomingProperties[key];
+              return incomingVal !== undefined ? `${key}:${incomingVal}` : `${key}:`;
+            });
+
             let metaStoreDetailList: string[] = [];
-            let otherDetailList: string[] = [];
-            updatedPropertyDetail.forEach(property => {
-              if (
-                RESOURCE_ALLOCATION_DEFAULT.some(item => {
-                  const [itemKey] = item.split(':');
-                  return itemKey === property.split(':')[0];
-                })
-              ) {
-                resourceAllocationDetailList.push(property);
-              } else if (
-                AUTO_SCALING_DEFAULT.some(item => {
-                  const [itemKey] = item.split(':');
-                  return itemKey === property.split(':')[0];
-                })
-              ) {
-                autoScalingDetailList.push(property);
-              } else if (
-                GPU_DEFAULT.some(item => {
-                  const [itemKey] = item.split(':');
-                  return itemKey === property.split(':')[0];
-                })
-              ) {
-                gpuDetailList.push(property);
-              } else if (property.startsWith('spark.sql.catalog.')) {
-                metaStoreDetailList.push(property);
-              } else if (property.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY)) {
-                const value = property.split(':')[1];
-                setLightningEngineEnabled(value === 'lightningEngine');
-              }  else {
-                otherDetailList.push(property);
+            Object.entries(incomingProperties).forEach(([k, v]) => {
+              if (k.startsWith('spark.sql.catalog.')) {
+                metaStoreDetailList.push(`${k}:${v}`);
               }
             });
+
+            let otherDetailList: string[] = [];
+            Object.entries(incomingProperties).forEach(([k, v]) => {
+              const configurationExists = 
+                RESOURCE_ALLOCATION_DEFAULT.some(i => i.split(':')[0] === k) ||
+                AUTO_SCALING_DEFAULT.some(i => i.split(':')[0] === k) ||
+                GPU_DEFAULT.some(i => i.split(':')[0] === k) ||
+                k.startsWith('spark.sql.catalog.') ||
+                k.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY);
+
+              if (!configurationExists) {
+                otherDetailList.push(`${k}:${v}`);
+              }
+            });
+
+            const lightningVal = incomingProperties[DATAPROC_LIGHTNING_ENGINE_PROPERTY];
+            setLightningEngineEnabled(lightningVal === 'lightningEngine');
+
             setResourceAllocationDetail(resourceAllocationDetailList);
             setResourceAllocationDetailUpdated(resourceAllocationDetailList);
             setAutoScalingDetail(autoScalingDetailList);
             setAutoScalingDetailUpdated(autoScalingDetailList);
             setMetastoreDetail(metaStoreDetailList);
             setMetastoreDetailUpdated(metaStoreDetailList);
-            setOthersList(otherDetailList);
+            setPropertyDetail(otherDetailList);
+            setPropertyDetailUpdated(otherDetailList);
+
             if (metaStoreDetailList.length > 0) {
               setMetastoreType('biglake');
               const warehouseProperty = metaStoreDetailList.find(prop =>
@@ -700,38 +806,34 @@ function CreateRunTime({
 
               if (warehouseProperty) {
                 const firstColonIndex = warehouseProperty.indexOf(':');
-                const warehouseUrl = warehouseProperty.substring(
-                  firstColonIndex + 1
-                );
-                const warehouseKey = warehouseProperty.substring(
-                  0,
-                  firstColonIndex
-                );
+                const warehouseUrl = warehouseProperty.substring(firstColonIndex + 1);
+                const warehouseKey = warehouseProperty.substring(0, firstColonIndex);
                 setDataWarehouseDir(warehouseUrl);
                 setIsValidDataWareHouseUrl(gcsUrlRegex.test(warehouseUrl));
                 const keyParts = warehouseKey.split('.');
                 if (keyParts.length > 3) {
-                  const extractedCatalogName = keyParts[3];
-                  setCatalogName(extractedCatalogName);
+                  setCatalogName(keyParts[3]);
                 }
               }
               setExpandMetastore(false);
             } else {
               setMetastoreType('none');
             }
-            if (gpuDetailList.length > 0) {
+
+            const identityGpuPresent = Object.keys(incomingProperties).some(k => 
+              GPU_DEFAULT.some(i => i.split(':')[0] === k)
+            );
+            if (identityGpuPresent) {
               setGpuChecked(true);
               setExpandGpu(true);
-            }
-            if (gpuChecked || gpuDetailList.length > 0) {
               setGpuDetail(gpuDetailList);
               setGpuDetailUpdated(gpuDetailList);
-              setGpuDetailChangeDone(false);
             } else {
-              setGpuDetail(['']);
-              setGpuDetailUpdated(['']);
-              setGpuDetailChangeDone(false);
+              setGpuChecked(false);
+              setGpuDetail(GPU_DEFAULT.map(item => `${item.split(':')[0]}:`));
+              setGpuDetailUpdated(GPU_DEFAULT.map(item => `${item.split(':')[0]}:`));
             }
+            setGpuDetailChangeDone(true);
           }
         }
       }
@@ -848,6 +950,10 @@ function CreateRunTime({
     } else {
       displayUserInfo();
       setCreateTime(new Date().toISOString());
+
+      const defaultEngineProp = `${DATAPROC_LIGHTNING_ENGINE_PROPERTY}:default`;
+      setPropertyDetail([defaultEngineProp]);
+      setPropertyDetailUpdated([defaultEngineProp]);
     }
   };
 
@@ -1322,42 +1428,53 @@ function CreateRunTime({
         const labelObject: { [key: string]: string } = {};
         labelDetailUpdated.forEach((label: string) => {
           const labelSplit = label.split(':');
-          const key = labelSplit[0];
-          const value = labelSplit[1];
-          labelObject[key] = value;
+          if (labelSplit[0] && labelSplit[1] !== undefined && labelSplit[1].trim() !== '') {
+            labelObject[labelSplit[0]] = labelSplit[1];
+          }
         });
+
         const propertyObject: { [key: string]: string } = {};
-        resourceAllocationDetailUpdated.forEach((label: string) => {
-          const labelSplit = label.split(':');
-          const key = labelSplit[0];
-          const value = labelSplit[1];
-          propertyObject[key] = value;
-        });
-        autoScalingDetailUpdated.forEach((label: string) => {
-          const labelSplit = label.split(':');
-          const key = labelSplit[0];
-          const value = labelSplit[1];
-          propertyObject[key] = value;
-        });
-        gpuDetailUpdated.forEach((label: string) => {
-          const labelSplit = label.split(':');
-          const key = labelSplit[0];
-          const value = labelSplit[1];
-          propertyObject[key] = value;
-        });
-        metastoreType === 'biglake' &&
-        metastoreDetailUpdated.forEach((label: string) => {
-          const firstColonIndex = label.indexOf(':');
-          const key = label.substring(0, firstColonIndex);
-          const value = label.substring(firstColonIndex + 1);
-          propertyObject[key] = value;
-        });
+        
+        const appendValidProperties = (propertyArray: string[]) => {
+          propertyArray.forEach((item: string) => {
+            const firstColon = item.indexOf(':');
+            if (firstColon !== -1) {
+              const key = item.substring(0, firstColon);
+              const value = item.substring(firstColon + 1);
+              if (value.trim() !== '') {
+                propertyObject[key] = value.trim();
+              }
+            }
+          });
+        };
+
+        appendValidProperties(resourceAllocationDetailUpdated);
+        appendValidProperties(autoScalingDetailUpdated);
+        
+        if (gpuChecked) {
+          appendValidProperties(gpuDetailUpdated);
+        }
+        
+        if (metastoreType === 'biglake') {
+          metastoreDetailUpdated.forEach((label: string) => {
+            const firstColonIndex = label.indexOf(':');
+            const key = label.substring(0, firstColonIndex);
+            const value = label.substring(firstColonIndex + 1);
+            if (value.trim() !== '') {
+              propertyObject[key] = value.trim();
+            }
+          });
+        }
+
         propertyDetailUpdated.forEach((label: string) => {
           const labelSplit = label.split(/:(.+)/);
           const key = labelSplit[0];
           const value = labelSplit[1];
-          propertyObject[key] = value;
+          if (key && value !== undefined && value.trim() !== '') {
+            propertyObject[key] = value.trim();
+          }
         });
+
         const inputValueHour = Number(idleTimeSelected) * 3600;
         const inputValueMin = Number(idleTimeSelected) * 60;
         const inputValueHourAuto = Number(autoTimeSelected) * 3600;
@@ -1505,7 +1622,7 @@ function CreateRunTime({
         .map((item: string) => {
           if (item === 'spark.dataproc.executor.disk.tier:standard') {
             return 'spark.dataproc.executor.disk.tier:premium';
-          } else if (item === 'spark.executor.memoryOverhead:1220m') {
+          } else if (item.startsWith('spark.executor.memoryOverhead:')) {
             // To remove the property if GPU checkbox is checked.
             return null;
           }
@@ -1515,20 +1632,6 @@ function CreateRunTime({
       setResourceAllocationDetail(resourceAllocationModify);
       setResourceAllocationDetailUpdated(resourceAllocationModify);
       setExpandGpu(true);
-      resourceAllocationModify.forEach(item => {
-        const [key, value] = item.split(':');
-        if (key === 'spark.executor.cores') {
-          const cores = Number(value);
-          const gpuValue = (1 / cores).toFixed(2);
-          gpuDetailModify = gpuDetailModify.map(gpuItem => {
-            const [gpuKey] = gpuItem.split(':');
-            if (gpuKey === 'spark.task.resource.gpu.amount') {
-              return `spark.task.resource.gpu.amount:${gpuValue}`;
-            }
-            return gpuItem;
-          });
-        }
-      });
       setGpuDetail(gpuDetailModify);
       setGpuDetailUpdated(gpuDetailModify);
       setGpuDetailChangeDone(false);
@@ -1536,42 +1639,40 @@ function CreateRunTime({
       let resourceAllocationModify = [...resourceAllocationDetailUpdated];
       resourceAllocationModify = resourceAllocationModify.map(
         (item: string) => {
-          if (item === 'spark.dataproc.executor.disk.tier:premium') {
-            return 'spark.dataproc.executor.disk.tier:standard';
-          } else if (item.includes('spark.executor.cores')) {
-            return 'spark.executor.cores:4';
+          if (item.startsWith('spark.dataproc.executor.disk.tier:')) {
+            return 'spark.dataproc.executor.disk.tier:standard'; // Will be optimized in Fix 3
+          } else if (item.startsWith('spark.executor.cores:')) {
+            return 'spark.executor.cores:'; // Reset to blank to allow placeholder to show
           }
           return item;
         }
       );
-      if (
-        !resourceAllocationModify.includes(
-          'spark.executor.memoryOverhead:1220m'
-        )
-      ) {
-        // To add the spark.executor.memoryOverhead:1220m at index 8.
+
+      const hasMemoryOverhead = resourceAllocationModify.some(property =>
+        property.startsWith('spark.executor.memoryOverhead:')
+      );
+      if (!hasMemoryOverhead) {
         resourceAllocationModify.splice(
           7,
           0,
-          'spark.executor.memoryOverhead:1220m'
+          'spark.executor.memoryOverhead:' // Mapped with an empty string value
         );
       }
-      if (
-        resourceAllocationModify.filter(property =>
-          property.includes('spark.dataproc.executor.disk.size')
-        ).length === 0
-      ) {
-        // To add the spark.dataproc.executor.disk.size:400g at index 9 when GPU is unchecked
+
+      const hasDiskSize = resourceAllocationModify.some(property =>
+        property.startsWith('spark.dataproc.executor.disk.size:')
+      );
+      if (!hasDiskSize) {
         resourceAllocationModify.splice(
           8,
           0,
-          'spark.dataproc.executor.disk.size:400g'
+          'spark.dataproc.executor.disk.size:' // Mapped with an empty string value
         );
       } else {
         resourceAllocationModify = resourceAllocationModify.map(
           (item: string) => {
-            if (item.includes('spark.dataproc.executor.disk.size')) {
-              return 'spark.dataproc.executor.disk.size:400g';
+            if (item.startsWith('spark.dataproc.executor.disk.size:')) {
+              return 'spark.dataproc.executor.disk.size:';
             }
             return item;
           }
