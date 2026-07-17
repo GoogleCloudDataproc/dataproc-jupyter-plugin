@@ -45,7 +45,6 @@ function SparkProperties({
   sparkSection,
   defaultSchema = []
 }: any) {
-
   useEffect(() => {
     let updated = false;
     const newLabels = labelDetailUpdated.map((label: string) => {
@@ -56,9 +55,9 @@ function SparkProperties({
       if (SELECT_FIELDS.includes(propertyKey) && sparkSection !== 'gpu' && !userValue) {
         const matchDefault = defaultSchema.find((item: string) => item.startsWith(propertyKey + ':'));
         const placeholderValue = matchDefault ? matchDefault.split(':')[1] : '';
-        const options = (placeholderValue === 'true' || placeholderValue === 'false')
-          ? BOOLEAN_SELECT_OPTIONS
-          : TIER_SELECT_OPTIONS;
+        
+        const isBoolean = propertyKey.includes('.enabled') || placeholderValue === 'true' || placeholderValue === 'false';
+        const options = isBoolean ? BOOLEAN_SELECT_OPTIONS : TIER_SELECT_OPTIONS;
 
         if (options && options.length > 0) {
           parts[1] = options[0].value.toString();
@@ -121,7 +120,7 @@ function SparkProperties({
     if (labelEdit[index]) {
       const parts = labelEdit[index].split(':');
       const propertyKey = parts[0];
-      
+
       parts[1] = value;
       labelEdit[index] = parts.join(':');
 
@@ -138,31 +137,56 @@ function SparkProperties({
         const regex = /^(0*[1-9][0-9]*)(k|m|g|t)$/i;
         updateErrorIndexes(index, value.search(regex) === -1);
       } else if (CORE_RELATED_PROPERTIES.includes(propertyKey)) {
-        if (value.includes('.') || !Number.isInteger(Number(value)) || Number(value) <= 0) {
+        if (
+          value.includes('.') ||
+          !Number.isInteger(Number(value)) ||
+          Number(value) <= 0
+        ) {
           updateErrorIndexes(index, true);
         } else {
           updateErrorIndexes(index, false);
         }
       } else if (EXECUTOR_RELATED_PROPERTIES.includes(propertyKey)) {
-        if (value.includes('.') || !Number.isInteger(Number(value)) || Number(value) < 2 || Number(value) > 2000) {
+        if (
+          value.includes('.') ||
+          !Number.isInteger(Number(value)) ||
+          Number(value) < 2 ||
+          Number(value) > 2000
+        ) {
           updateErrorIndexes(index, true);
         } else {
           updateErrorIndexes(index, false);
         }
       } else if (propertyKey === 'spark.dynamicAllocation.initialExecutors') {
-        if (value.includes('.') || !Number.isInteger(Number(value)) || Number(value) < 2 || Number(value) > 500) {
+        if (
+          value.includes('.') ||
+          !Number.isInteger(Number(value)) ||
+          Number(value) < 2 ||
+          Number(value) > 500
+        ) {
           updateErrorIndexes(index, true);
         } else {
           updateErrorIndexes(index, false);
         }
       } else if (propertyKey === 'spark.dynamicAllocation.minExecutors') {
-        if (value.includes('.') || !Number.isInteger(Number(value)) || Number(value) < 2) {
+        if (
+          value.includes('.') ||
+          !Number.isInteger(Number(value)) ||
+          Number(value) < 2
+        ) {
           updateErrorIndexes(index, true);
         } else {
           updateErrorIndexes(index, false);
         }
-      } else if (propertyKey === 'spark.dynamicAllocation.executorAllocationRatio') {
-        if (value.length === 0 || Number.isNaN(Number(value)) || Number(value) < 0 || Number(value) > 1) {
+      } else if (
+        propertyKey === 'spark.dynamicAllocation.executorAllocationRatio'
+      ) {
+        if (
+          value.length === 0 ||
+          Number.isNaN(Number(value)) ||
+          Number(value) < 0 ||
+          Number(value) > 1
+        ) {
           updateErrorIndexes(index, true);
         } else {
           updateErrorIndexes(index, false);
@@ -187,10 +211,12 @@ function SparkProperties({
             const matchDefault = defaultSchema.find((item: string) => item.startsWith(propertyKey + ':'));
             const placeholderValue = matchDefault ? matchDefault.split(':')[1] : '';
 
-            const currentOptions = (placeholderValue === 'true' || placeholderValue === 'false'
-              ? BOOLEAN_SELECT_OPTIONS
-              : TIER_SELECT_OPTIONS
-            );
+            const isBooleanOption = 
+              propertyKey.includes('.enabled') || 
+              userValue === 'true' || userValue === 'false' || 
+              placeholderValue === 'true' || placeholderValue === 'false';
+
+            const currentOptions = isBooleanOption ? BOOLEAN_SELECT_OPTIONS : TIER_SELECT_OPTIONS;
             
             const selectedValue = userValue || (currentOptions.length > 0 ? currentOptions[0].value : '');
 
@@ -198,13 +224,23 @@ function SparkProperties({
               <div key={propertyKey}>
                 <div className="job-label-edit-row">
                   <div className="key-message-wrapper">
-                    <div className="select-text-overlay-label" title={propertyKey}>
+                    <div
+                      className="select-text-overlay-label"
+                      title={propertyKey}
+                    >
                       <Input
                         sx={{ margin: 0 }}
                         className={`edit-input-style`}
                         disabled={true}
                         onBlur={() => handleEditLabelSwitch()}
-                        onChange={e => handleEditLabel(sparkSection, e.target.value, index, 'key')}
+                        onChange={e =>
+                          handleEditLabel(
+                            sparkSection,
+                            e.target.value,
+                            index,
+                            'key'
+                          )
+                        }
                         Label={`Key ${index + 1}*`}
                         value={propertyKey}
                         InputLabelProps={{ shrink: true }}
@@ -213,7 +249,8 @@ function SparkProperties({
                   </div>
                   <div className="key-message-wrapper">
                     <div className="select-text-overlay-label">
-                      {SELECT_FIELDS.includes(propertyKey) && sparkSection !== 'gpu' ? (
+                      {SELECT_FIELDS.includes(propertyKey) &&
+                      sparkSection !== 'gpu' ? (
                         <TextField
                           select
                           fullWidth
@@ -226,7 +263,11 @@ function SparkProperties({
                             displayEmpty: true
                           }}
                           onChange={e => {
-                            handleLabelDetailSelected(e as any, e.target.value, index);
+                            handleLabelDetailSelected(
+                              e as any,
+                              e.target.value,
+                              index
+                            );
                           }}
                         >
                           {currentOptions.map((option: any) => (
@@ -242,9 +283,17 @@ function SparkProperties({
                           variant="outlined"
                           className="edit-input-style"
                           onBlur={() => handleEditLabelSwitch()}
-                          onChange={e => handleEditLabel(sparkSection, e.target.value, index, 'value')}
+                          onChange={e =>
+                            handleEditLabel(
+                              sparkSection,
+                              e.target.value,
+                              index,
+                              'value'
+                            )
+                          }
                           disabled={
-                            propertyKey === 'spark.dataproc.executor.compute.tier' ||
+                            propertyKey ===
+                              'spark.dataproc.executor.compute.tier' ||
                             (sparkSection === 'metastore' && index === 2)
                           }
                           value={userValue}
@@ -256,7 +305,10 @@ function SparkProperties({
                     </div>
                     {sparkValueValidation[sparkSection].includes(index) && (
                       <div className="error-key-parent">
-                        <iconError.react tag="div" className="logo-alignment-style" />
+                        <iconError.react
+                          tag="div"
+                          className="logo-alignment-style"
+                        />
                         <div className="error-key-missing">
                           Invalid value. Consult Dataproc documentation
                         </div>
