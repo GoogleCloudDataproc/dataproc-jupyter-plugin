@@ -17,13 +17,11 @@
 
 import {
   ClusterStatus,
-  HTTP_METHOD,
   POLLING_TIME_LIMIT
 } from '../utils/const';
 import {
   authApi,
   getProjectId,
-  authenticatedFetch,
   statusValue,
   handleApiError
 } from '../utils/utils';
