@@ -123,10 +123,10 @@ function SubmitJob({
   const [querySourceTypeList, setQuerySourceTypeList] = useState([{}]);
 
   const [jobIdSelected, setJobIdSelected] = useState('');
-  const [propertyDetail, setPropertyDetail] = useState(['']);
-  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
-  const [parameterDetail, setParameterDetail] = useState(['']);
-  const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
+  const [propertyDetail, setPropertyDetail] = useState<string[]>([]);
+  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>([]);
+  const [parameterDetail, setParameterDetail] = useState<string[]>([]);
+  const [parameterDetailUpdated, setParameterDetailUpdated] = useState<string[]>([]);
   const [hexNumber, setHexNumber] = useState('');
   const [submitDisabled, setSubmitDisabled] = useState(true);
   let mainJarFileUri = '';

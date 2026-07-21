@@ -124,7 +124,7 @@ function SessionDetails({
     }
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [labelDetail, setLabelDetail] = useState(['']);
+  const [labelDetail, setLabelDetail] = useState<string[]>([]);
   const timer = useRef<NodeJS.Timeout | undefined>(undefined);
   const [errorView, setErrorView] = useState(false);
   const [selectedEngine, setSelectedEngine] = useState('Default');

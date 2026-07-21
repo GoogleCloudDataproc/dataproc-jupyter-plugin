@@ -113,7 +113,7 @@
         "@typescript-eslint/eslint-plugin": "^5.55.0",
         "@typescript-eslint/parser": "^5.55.0",
         "css-loader": "^6.7.1",
-        "eslint": "^8.36.0",
+        "eslint": "^9.26.0",
         "eslint-config-prettier": "^8.7.0",
         "eslint-plugin-prettier": "^4.2.1",
         "eslint-plugin-storybook": "^0.6.13",
@@ -128,7 +128,7 @@
         "rimraf": "^4.4.1",
         "semantic-ui-react": "^2.1.4",
         "source-map-loader": "^1.0.2",
-        "storybook": "^7.4.0",
+        "storybook": "^7.6.21",
         "style-loader": "^3.3.1",
         "stylelint": "^14.9.1",
         "stylelint-config-prettier": "^9.0.4",
@@ -136,7 +136,7 @@
         "stylelint-config-standard": "^26.0.0",
         "stylelint-prettier": "^2.0.0",
         "typescript": "~5.0.2",
-        "webpack": "^5.94.0",
+        "webpack": "^5.104.1",
         "yjs": "^13.5.0"
     },
     "sideEffects": [

@@ -226,10 +226,10 @@ function CreateBatch({
   const [networkTagSelected, setNetworkTagSelected] = useState([
     ...networkUris
   ]);
-  const [propertyDetail, setPropertyDetail] = useState(['']);
+  const [propertyDetail, setPropertyDetail] = useState<string[]>([]);
   const [selectedEncryptionRadio, setSelectedEncryptionRadio] =
     useState(selectedKeyType);
-  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState(['']);
+  const [propertyDetailUpdated, setPropertyDetailUpdated] = useState<string[]>([]);
   const [keyValidation, setKeyValidation] = useState(-1);
   const [valueValidation, setValueValidation] = useState(-1);
   const [duplicateKeyError, setDuplicateKeyError] = useState(-1);
@@ -247,8 +247,8 @@ function CreateBatch({
   const [subNetworkSelected, setSubNetworkSelected] = useState(subNetwork);
   const [isLoadingService, setIsLoadingService] = useState(false);
   const [error, setError] = useState({ isOpen: false, message: '' });
-  const [parameterDetail, setParameterDetail] = useState(['']);
-  const [parameterDetailUpdated, setParameterDetailUpdated] = useState(['']);
+  const [parameterDetail, setParameterDetail] = useState<string[]>([]);
+  const [parameterDetailUpdated, setParameterDetailUpdated] = useState<string[]>([]);
   const [additionalPythonFileSelected, setAdditionalPythonFileSelected] =
     useState([...pythonFileUris]);
   const [mainPythonSelected, setMainPythonSelected] =
