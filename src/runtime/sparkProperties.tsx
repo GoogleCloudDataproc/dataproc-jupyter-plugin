@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
@@ -45,35 +45,6 @@ function SparkProperties({
   sparkSection,
   defaultSchema = []
 }: any) {
-  useEffect(() => {
-    let updated = false;
-    const newLabels = labelDetailUpdated.map((label: string) => {
-      const parts = label.split(':');
-      const propertyKey = parts[0];
-      const userValue = parts[1] || '';
-
-      if (SELECT_FIELDS.includes(propertyKey) && sparkSection !== 'gpu' && !userValue) {
-        const matchDefault = defaultSchema.find((item: string) => item.startsWith(propertyKey + ':'));
-        const placeholderValue = matchDefault ? matchDefault.split(':')[1] : '';
-        
-        const isBoolean = propertyKey.includes('.enabled') || placeholderValue === 'true' || placeholderValue === 'false';
-        const options = isBoolean ? BOOLEAN_SELECT_OPTIONS : TIER_SELECT_OPTIONS;
-
-        if (options && options.length > 0) {
-          parts[1] = options[0].value.toString();
-          updated = true;
-          return parts.join(':');
-        }
-      }
-      return label;
-    });
-
-    if (updated) {
-      setLabelDetail(newLabels);
-      setLabelDetailUpdated(newLabels);
-    }
-  }, [labelDetailUpdated, sparkSection, defaultSchema, setLabelDetail, setLabelDetailUpdated]);
-
   const handleLabelDetailSelected = (
     event: React.SyntheticEvent<HTMLElement, Event>,
     data: string,
@@ -218,7 +189,7 @@ function SparkProperties({
 
             const currentOptions = isBooleanOption ? BOOLEAN_SELECT_OPTIONS : TIER_SELECT_OPTIONS;
             
-            const selectedValue = userValue || (currentOptions.length > 0 ? currentOptions[0].value : '');
+            const selectedValue = userValue || placeholderValue || (currentOptions.length > 0 ? currentOptions[0].value : '');
 
             return (
               <div key={propertyKey}>
