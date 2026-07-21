@@ -16,16 +16,12 @@
  */
 
 import {
-  API_HEADER_BEARER,
-  API_HEADER_CONTENT_TYPE,
   ClusterStatus,
   HTTP_METHOD,
-  POLLING_TIME_LIMIT,
-  gcpServiceUrls
+  POLLING_TIME_LIMIT
 } from '../utils/const';
 import {
   authApi,
-  loggedFetch,
   getProjectId,
   authenticatedFetch,
   statusValue,
@@ -33,6 +29,7 @@ import {
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
+import { requestAPI } from '../handler/handler';
 
 interface IClusterRenderData {
   status: { state: ClusterStatus };
@@ -86,13 +83,7 @@ export class ClusterService {
       queryParams.append('pageSize', '50');
       queryParams.append('pageToken', pageToken);
 
-      const response = await authenticatedFetch({
-        uri: 'clusters',
-        regionIdentifier: 'regions',
-        method: HTTP_METHOD.GET,
-        queryParams: queryParams
-      });
-      const formattedResponse = await response.json();
+      const formattedResponse: any = await requestAPI(`listClusters?${queryParams.toString()}`);
       let transformClusterListData = [];
       if (formattedResponse && formattedResponse.clusters) {
         transformClusterListData = formattedResponse.clusters.map(
@@ -181,55 +172,34 @@ export class ClusterService {
     setClusterInfo: (value: IClusterDetailsResponse) => void
   ) => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       setProjectName(credentials.project_id || '');
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${clusterSelected}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+      requestAPI(`clusterDetail?cluster=${clusterSelected}`)
+        .then((responseResult: any) => {
+          if (responseResult.error && responseResult.error.code === 404) {
+            setErrorView(true);
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IClusterDetailsResponse) => {
-              if (responseResult.error && responseResult.error.code === 404) {
-                setErrorView(true);
-              }
-              if (responseResult?.error?.code) {
-                Notification.emit(
-                  `Failed to fetch cluster details : ${responseResult?.error?.message}`,
-                  'error',
-                  {
-                    autoClose: 5000
-                  }
-                );
-              }
-              setClusterInfo(responseResult);
-              setIsLoading(false);
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
+          if (responseResult?.error?.code) {
+            Notification.emit(
+              `Failed to fetch cluster details : ${responseResult?.error?.message}`,
+              'error',
+              { autoClose: 5000 }
+            );
+          }
+          setClusterInfo(responseResult);
+          setIsLoading(false);
         })
-        .catch((err: Error) => {
+        .catch((err: any) => {
+          console.log(err);
           setIsLoading(false);
           DataprocLoggingService.log(
             'Error listing clusters Details',
             LOG_LEVEL.ERROR
           );
           Notification.emit(
-            `Failed to fetch cluster details : ${err}`,
+            `Failed to fetch cluster details : ${err.message || err}`,
             'error',
-            {
-              autoClose: 5000
-            }
+            { autoClose: 5000 }
           );
         });
     }
@@ -241,12 +211,7 @@ export class ClusterService {
     timer: any
   ) => {
     try {
-      const response = await authenticatedFetch({
-        uri: `clusters/${selectedCluster}`,
-        method: HTTP_METHOD.GET,
-        regionIdentifier: 'regions'
-      });
-      const formattedResponse = await response.json();
+      const formattedResponse: any = await requestAPI(`clusterDetail?cluster=${selectedCluster}`);
 
       if (formattedResponse.status.state === ClusterStatus.STATUS_STOPPED) {
         ClusterService.startClusterApi(selectedCluster);
@@ -284,12 +249,7 @@ export class ClusterService {
     setRestartEnabled(true);
 
     try {
-      const response = await authenticatedFetch({
-        uri: `clusters/${selectedCluster}:stop`,
-        method: HTTP_METHOD.POST,
-        regionIdentifier: 'regions'
-      });
-      const formattedResponse = await response.json();
+      const formattedResponse: any = await requestAPI(`stopCluster?cluster=${selectedCluster}`, { method: 'POST' });
       console.log(formattedResponse);
       listClustersAPI();
       timer.current = setInterval(() => {
@@ -322,48 +282,26 @@ export class ClusterService {
 
   static deleteClusterApi = async (selectedcluster: string) => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+      requestAPI(`deleteCluster?cluster=${selectedcluster}`, { method: 'DELETE' })
+        .then((responseResult: any) => {
+          if (responseResult?.error?.code) {
+            Notification.emit(
+              `Error deleting cluster : ${responseResult?.error?.message}`,
+              'error',
+              { autoClose: 5000 }
+            );
+          } else {
+            Notification.emit(
+              `Cluster ${selectedcluster} deleted successfully`,
+              'success',
+              { autoClose: 5000 }
+            );
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: Response) => {
-              console.log(responseResult);
-              const formattedResponse = await responseResult.json();
-              if (formattedResponse?.error?.code) {
-                Notification.emit(
-                  `Error deleting cluster : ${formattedResponse?.error?.message}`,
-                  'error',
-                  {
-                    autoClose: 5000
-                  }
-                );
-              } else {
-                Notification.emit(
-                  `Cluster ${selectedcluster} deleted successfully`,
-                  'success',
-                  {
-                    autoClose: 5000
-                  }
-                );
-              }
-            })
-            .catch((e: Error) => console.log(e));
         })
-        .catch((err: Error) => {
+        .catch((err: any) => {
           DataprocLoggingService.log('Error deleting cluster', LOG_LEVEL.ERROR);
-
-          Notification.emit(`Error deleting cluster : ${err}`, 'error', {
+          Notification.emit(`Error deleting cluster : ${err.message || err}`, 'error', {
             autoClose: 5000
           });
         });
@@ -375,39 +313,21 @@ export class ClusterService {
     operation: 'start' | 'stop'
   ) => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/regions/${credentials.region_id}/clusters/${selectedcluster}:${operation}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+      requestAPI(`${operation}Cluster?cluster=${selectedcluster}`, { method: 'POST' })
+        .then((responseResult: any) => {
+          if (responseResult?.error?.code) {
+            Notification.emit(responseResult?.error?.message, 'error', {
+              autoClose: 5000
+            });
           }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: Response) => {
-              console.log(responseResult);
-              const formattedResponse = await responseResult.json();
-              if (formattedResponse?.error?.code) {
-                Notification.emit(formattedResponse?.error?.message, 'error', {
-                  autoClose: 5000
-                });
-              }
-            })
-            .catch((e: Error) => console.log(e));
         })
-        .catch((err: Error) => {
+        .catch((err: any) => {
           DataprocLoggingService.log(
             `Error ${operation} cluster`,
             LOG_LEVEL.ERROR
           );
-
-          Notification.emit(`Error ${operation} cluster : ${err}`, 'error', {
+          Notification.emit(`Error ${operation} cluster : ${err.message || err}`, 'error', {
             autoClose: 5000
           });
         });
