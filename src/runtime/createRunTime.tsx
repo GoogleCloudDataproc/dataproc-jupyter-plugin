@@ -33,6 +33,8 @@ import {
   SPARK_RESOURCE_ALLOCATION_INFO_URL,
   SPARK_AUTOSCALING_INFO_URL,
   SELECT_FIELDS,
+  BOOLEAN_SELECT_OPTIONS,
+  TIER_SELECT_OPTIONS,
   RESOURCE_ALLOCATION_DEFAULT,
   AUTO_SCALING_DEFAULT,
   META_STORE_DEFAULT,
@@ -227,8 +229,12 @@ function CreateRunTime({
   const [metastoreType, setMetastoreType] = useState('none');
   const [dataWarehouseDir, setDataWarehouseDir] = useState('');
   const [catalogName, setCatalogName] = useState('biglake');
-  const [metastoreDetail, setMetastoreDetail] = useState(META_STORE_DEFAULT);
-  const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(META_STORE_DEFAULT);
+  const [metastoreDetail, setMetastoreDetail] = useState(
+    () => selectedRuntimeClone ? META_STORE_DEFAULT : initializeKeysOnly(META_STORE_DEFAULT)
+  );
+  const [metastoreDetailUpdated, setMetastoreDetailUpdated] = useState(
+    () => selectedRuntimeClone ? META_STORE_DEFAULT : initializeKeysOnly(META_STORE_DEFAULT)
+  );
   const gcsUrlRegex = /^gs:\/\/([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])(\/.*[^\/])?$/;
   const bucketNameRegex = /^(?:gs:\/\/)?([a-z0-9][a-z0-9_.-]{1,61}[a-z0-9])$/;
   const [isValidDataWareHouseUrl, setIsValidDataWareHouseUrl] = useState(false);
@@ -366,7 +372,6 @@ function CreateRunTime({
     const hasLengthChanged = propertyDetail.length !== propertyDetailUpdated.length;
     const hasLightningChanged = lightningValDisplay !== lightningValDraft;
 
-    // sync when an item is added/removed, or the lightning toggle is clicked
     if (hasLengthChanged || hasLightningChanged) {
       setPropertyDetail(propertyDetailUpdated);
     }
@@ -435,26 +440,27 @@ function CreateRunTime({
       cores = Number(trimmedValue);
     }
 
-    // Guardrail against 0, negative values, or string which causing division by zero
     if (isNaN(cores) || cores <= 0) {
       cores = 4;
     }
 
     const calculatedGpuValue = (1 / cores).toFixed(2);
 
-    const currentGpuState = [...gpuDetailUpdated];
-    const updatedGpuState = currentGpuState.map(gpuItem => {
-      const [gpuKey] = gpuItem.split(':');
-      if (gpuKey === 'spark.task.resource.gpu.amount') {
-        return `spark.task.resource.gpu.amount:${calculatedGpuValue}`;
-      }
-      return gpuItem;
-    });
+    setGpuDetailUpdated(prev => {
+      const updatedGpuState = prev.map(gpuItem => {
+        const [gpuKey] = gpuItem.split(':');
+        if (gpuKey === 'spark.task.resource.gpu.amount') {
+          return `spark.task.resource.gpu.amount:${calculatedGpuValue}`;
+        }
+        return gpuItem;
+      });
 
-    if (JSON.stringify(gpuDetailUpdated) !== JSON.stringify(updatedGpuState)) {
-      setGpuDetail(updatedGpuState);
-      setGpuDetailUpdated(updatedGpuState);
-    }
+      if (JSON.stringify(prev) !== JSON.stringify(updatedGpuState)) {
+        setGpuDetail(updatedGpuState);
+        return updatedGpuState;
+      }
+      return prev;
+    });
   }, [resourceAllocationDetailUpdated, gpuChecked]);
 
   const modifyResourceAllocation = () => {
@@ -467,16 +473,33 @@ function CreateRunTime({
             .map((item: string) => {
               const itemKey = item.split(':')[0];
               if (itemKey === 'spark.dataproc.executor.disk.size') {
+                // To remove the property if GPU checkbox is checked and 'spark.dataproc.executor.resource.accelerator.type:l4'.
                 return null;
               } else if (item === 'spark.executor.cores:12') {
                 return 'spark.executor.cores:4';
               }
               return item;
             })
-            .filter((item): item is string => item !== null);
+            .filter((item): item is string => item !== null); // To filter out null values.
 
           setResourceAllocationDetail(resourceAllocationModify);
           setResourceAllocationDetailUpdated(resourceAllocationModify);
+
+          let gpuDetailModify = [...gpuDetailUpdated];
+          resourceAllocationModify.forEach(item => {
+            const [key] = item.split(':');
+            if (key === 'spark.executor.cores') {
+              gpuDetailModify = gpuDetailModify.map(gpuItem => {
+                const [gpuKey, val] = gpuItem.split(':');
+                if (gpuKey === 'spark.task.resource.gpu.amount') {
+                  return `spark.task.resource.gpu.amount:${val}`;
+                }
+                return gpuItem;
+              });
+            }
+          });
+          setGpuDetail(gpuDetailModify);
+          setGpuDetailUpdated(gpuDetailModify);
           setGpuDetailChangeDone(true);
         } else {
           resourceAllocationModify = resourceAllocationModify
@@ -486,7 +509,7 @@ function CreateRunTime({
               }
               return item;
             })
-            .filter((item): item is string => item !== null);
+            .filter((item): item is string => item !== null); // To filter out null values.
 
           if (
             !resourceAllocationModify.some(prop =>
@@ -586,7 +609,6 @@ function CreateRunTime({
   }, [keyRingSelected]);
 
   useEffect(() => {
-    // Find the current toggle status
     const dynamicAllocationState = autoScalingDetailUpdated.find(prop =>
       prop.startsWith('spark.dynamicAllocation.enabled:')
     );
@@ -1445,14 +1467,18 @@ function CreateRunTime({
               if (value.trim() !== '') {
                 propertyObject[key] = value.trim();
               } else if (defaultSchemaArray && SELECT_FIELDS.includes(key)) {
-                // If the dropdown field is untouched, fallback to its schema default value for the API payload
                 const match = defaultSchemaArray.find(d =>
                   d.startsWith(`${key}:`)
                 );
-                if (match) {
-                  const defaultVal = match.split(':')[1];
-                  if (defaultVal) {
-                    propertyObject[key] = defaultVal;
+                const schemaDefault = match ? match.split(':')[1] : '';
+
+                if (schemaDefault && schemaDefault.trim() !== '') {
+                  propertyObject[key] = schemaDefault.trim();
+                } else {
+                  const isBoolean = key.includes('.enabled');
+                  const options = isBoolean ? BOOLEAN_SELECT_OPTIONS : TIER_SELECT_OPTIONS;
+                  if (options && options.length > 0) {
+                    propertyObject[key] = options[0].value.toString();
                   }
                 }
               }
@@ -1468,11 +1494,11 @@ function CreateRunTime({
           autoScalingDetailUpdated,
           AUTO_SCALING_DEFAULT
         );
-
+        
         if (gpuChecked) {
           appendValidProperties(gpuDetailUpdated, GPU_DEFAULT);
         }
-
+        
         if (metastoreType === 'biglake') {
           appendValidProperties(metastoreDetailUpdated, META_STORE_DEFAULT);
         }
@@ -1598,7 +1624,7 @@ function CreateRunTime({
     } catch (error) {
       console.error('Error saving runtime:', error);
     } finally {
-      setIsSaving(false); // Stop loading regardless of success/failure
+      setIsSaving(false);
     }
   };
 
@@ -1646,7 +1672,7 @@ function CreateRunTime({
       resourceAllocationModify = resourceAllocationModify.map(
         (item: string) => {
           if (item.startsWith('spark.dataproc.executor.disk.tier:')) {
-            return 'spark.dataproc.executor.disk.tier:standard';
+            return 'spark.dataproc.executor.disk.tier:';
           } else if (item.startsWith('spark.executor.cores:')) {
             return 'spark.executor.cores:';
           }

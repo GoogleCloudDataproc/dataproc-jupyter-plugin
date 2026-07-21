@@ -46,7 +46,6 @@ function SparkProperties({
   defaultSchema = []
 }: any) {
   const handleLabelDetailSelected = (
-    event: React.SyntheticEvent<HTMLElement, Event>,
     data: string,
     index: number
   ) => {
@@ -174,7 +173,7 @@ function SparkProperties({
           labelDetail.map((label: string, index: number) => {
             const labelSplit = label.split(':');
             const propertyKey = labelSplit[0];
-            
+
             const draftLabel = labelDetailUpdated[index] || '';
             const draftColonIndex = draftLabel.indexOf(':');
             const userValue = draftColonIndex !== -1 ? draftLabel.substring(draftColonIndex + 1) : '';
@@ -182,13 +181,13 @@ function SparkProperties({
             const matchDefault = defaultSchema.find((item: string) => item.startsWith(propertyKey + ':'));
             const placeholderValue = matchDefault ? matchDefault.split(':')[1] : '';
 
-            const isBooleanOption = 
-              propertyKey.includes('.enabled') || 
-              userValue === 'true' || userValue === 'false' || 
+            const isBooleanOption =
+              propertyKey.includes('.enabled') ||
+              userValue === 'true' || userValue === 'false' ||
               placeholderValue === 'true' || placeholderValue === 'false';
 
             const currentOptions = isBooleanOption ? BOOLEAN_SELECT_OPTIONS : TIER_SELECT_OPTIONS;
-            
+
             const selectedValue = userValue || placeholderValue || (currentOptions.length > 0 ? currentOptions[0].value : '');
 
             return (
@@ -233,9 +232,8 @@ function SparkProperties({
                           SelectProps={{
                             displayEmpty: true
                           }}
-                          onChange={e => {
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             handleLabelDetailSelected(
-                              e as any,
                               e.target.value,
                               index
                             );
