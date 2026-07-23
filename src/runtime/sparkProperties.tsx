@@ -19,7 +19,7 @@ import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import errorIcon from '../../style/icons/error_icon.svg';
 import { Input } from '../controls/MuiWrappedInput';
-import { TextField, MenuItem } from '@mui/material';
+import { TextField, Autocomplete } from '@mui/material';
 import {
   BOOLEAN_SELECT_OPTIONS,
   CORE_RELATED_PROPERTIES,
@@ -188,7 +188,7 @@ function SparkProperties({
 
             const currentOptions = isBooleanOption ? BOOLEAN_SELECT_OPTIONS : TIER_SELECT_OPTIONS;
 
-            const selectedValue = userValue || placeholderValue || (currentOptions.length > 0 ? currentOptions[0].value : '');
+            const selectedOption = currentOptions.find((opt: any) => String(opt.value) === userValue) || null;
 
             return (
               <div key={propertyKey}>
@@ -221,30 +221,32 @@ function SparkProperties({
                     <div className="select-text-overlay-label">
                       {SELECT_FIELDS.includes(propertyKey) &&
                       sparkSection !== 'gpu' ? (
-                        <TextField
-                          select
+                        <Autocomplete
                           fullWidth
-                          variant="outlined"
-                          className="edit-input-style"
-                          value={selectedValue}
-                          label={`Value ${index + 1}`}
-                          InputLabelProps={{ shrink: true }}
-                          SelectProps={{
-                            displayEmpty: true
-                          }}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          options={currentOptions}
+                          value={selectedOption}
+                          getOptionLabel={(option: any) =>
+                            typeof option === 'string'
+                              ? option
+                              : option.text || option.label || String(option.value)
+                          }
+                          onChange={(_event: any, newValue: any) => {
                             handleLabelDetailSelected(
-                              e.target.value,
+                              newValue ? String(newValue.value) : '',
                               index
                             );
                           }}
-                        >
-                          {currentOptions.map((option: any) => (
-                            <MenuItem key={option.value} value={option.value}>
-                              {option.text || option.label || option.value}
-                            </MenuItem>
-                          ))}
-                        </TextField>
+                          renderInput={params => (
+                            <TextField
+                              {...params}
+                              variant="outlined"
+                              className="edit-input-style"
+                              label={`Value ${index + 1}`}
+                              placeholder={placeholderValue}
+                              InputLabelProps={{ shrink: true }}
+                            />
+                          )}
+                        />
                       ) : (
                         <TextField
                           fullWidth

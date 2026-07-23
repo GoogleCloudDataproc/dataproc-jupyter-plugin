@@ -32,9 +32,6 @@ import {
   SPARK_GPU_INFO_URL,
   SPARK_RESOURCE_ALLOCATION_INFO_URL,
   SPARK_AUTOSCALING_INFO_URL,
-  SELECT_FIELDS,
-  BOOLEAN_SELECT_OPTIONS,
-  TIER_SELECT_OPTIONS,
   RESOURCE_ALLOCATION_DEFAULT,
   AUTO_SCALING_DEFAULT,
   META_STORE_DEFAULT,
@@ -299,20 +296,25 @@ function CreateRunTime({
 
   const updateLightningEngineProperty = () => {
     const lightningKey = DATAPROC_LIGHTNING_ENGINE_PROPERTY;
-    const targetValue = lightningEngineEnabled ? 'lightningEngine' : 'default';
-    const lightningProperty = `${lightningKey}:${targetValue}`;
 
-    setPropertyDetailUpdated(prev => {
-      const cleanOthers = prev.filter(
+    setResourceAllocationDetailUpdated(prev => {
+      const cleanList = prev.filter(
         prop => !prop.startsWith(lightningKey + ':')
       );
-
-      const updatedProperties = [lightningProperty, ...cleanOthers];
-
-      if (JSON.stringify(prev) !== JSON.stringify(updatedProperties)) {
-        return updatedProperties;
+      if (lightningEngineEnabled) {
+        return [...cleanList, `${lightningKey}:lightningEngine`];
       }
-      return prev;
+      return cleanList;
+    });
+
+    setResourceAllocationDetail(prev => {
+      const cleanList = prev.filter(
+        prop => !prop.startsWith(lightningKey + ':')
+      );
+      if (lightningEngineEnabled) {
+        return [...cleanList, `${lightningKey}:lightningEngine`];
+      }
+      return cleanList;
     });
   };
 
@@ -338,7 +340,6 @@ function CreateRunTime({
           listNetworksAPI();
           listKeyRingsAPI();
           runtimeSharedProject();
-          updateLightningEngineProperty();
         } else {
           setConfigLoading(false);
         }
@@ -361,21 +362,6 @@ function CreateRunTime({
       setLabelDetail(labelDetailUpdated);
     }
   }, [labelDetailUpdated, labelDetail]);
-
-  useEffect(() => {
-    const getLightningVal = (arr: string[]) => 
-      arr.find(p => p.startsWith(DATAPROC_LIGHTNING_ENGINE_PROPERTY + ':'));
-
-    const lightningValDisplay = getLightningVal(propertyDetail);
-    const lightningValDraft = getLightningVal(propertyDetailUpdated);
-
-    const hasLengthChanged = propertyDetail.length !== propertyDetailUpdated.length;
-    const hasLightningChanged = lightningValDisplay !== lightningValDraft;
-
-    if (hasLengthChanged || hasLightningChanged) {
-      setPropertyDetail(propertyDetailUpdated);
-    }
-  }, [propertyDetailUpdated, propertyDetail]);
 
   useEffect(() => {
     if (selectedRuntimeClone === undefined) {
@@ -969,10 +955,6 @@ function CreateRunTime({
     } else {
       displayUserInfo();
       setCreateTime(new Date().toISOString());
-
-      const defaultEngineProp = `${DATAPROC_LIGHTNING_ENGINE_PROPERTY}:default`;
-      setPropertyDetail([defaultEngineProp]);
-      setPropertyDetailUpdated([defaultEngineProp]);
     }
   };
 
@@ -1455,8 +1437,7 @@ function CreateRunTime({
         const propertyObject: { [key: string]: string } = {};
         
         const appendValidProperties = (
-          propertyArray: string[],
-          defaultSchemaArray?: string[]
+          propertyArray: string[]
         ) => {
           propertyArray.forEach((item: string) => {
             const firstColon = item.indexOf(':');
@@ -1466,41 +1447,20 @@ function CreateRunTime({
 
               if (value.trim() !== '') {
                 propertyObject[key] = value.trim();
-              } else if (defaultSchemaArray && SELECT_FIELDS.includes(key)) {
-                const match = defaultSchemaArray.find(d =>
-                  d.startsWith(`${key}:`)
-                );
-                const schemaDefault = match ? match.split(':')[1] : '';
-
-                if (schemaDefault && schemaDefault.trim() !== '') {
-                  propertyObject[key] = schemaDefault.trim();
-                } else {
-                  const isBoolean = key.includes('.enabled');
-                  const options = isBoolean ? BOOLEAN_SELECT_OPTIONS : TIER_SELECT_OPTIONS;
-                  if (options && options.length > 0) {
-                    propertyObject[key] = options[0].value.toString();
-                  }
-                }
               }
             }
           });
         };
 
-        appendValidProperties(
-          resourceAllocationDetailUpdated,
-          RESOURCE_ALLOCATION_DEFAULT
-        );
-        appendValidProperties(
-          autoScalingDetailUpdated,
-          AUTO_SCALING_DEFAULT
-        );
+        appendValidProperties(resourceAllocationDetailUpdated);
+        appendValidProperties(autoScalingDetailUpdated);
         
         if (gpuChecked) {
-          appendValidProperties(gpuDetailUpdated, GPU_DEFAULT);
+          appendValidProperties(gpuDetailUpdated);
         }
         
         if (metastoreType === 'biglake') {
-          appendValidProperties(metastoreDetailUpdated, META_STORE_DEFAULT);
+          appendValidProperties(metastoreDetailUpdated);
         }
 
         appendValidProperties(propertyDetailUpdated);
