@@ -207,7 +207,7 @@ export class BigQueryService {
           );
         } else {
           filterDatasetByLocation.forEach((data: any) => {
-            const name = data.entrySource.resource.split("/").pop() ?? data.entrySource.displayName;
+            const name = data.entrySource?.resource?.split("/").pop() ?? data.entrySource?.displayName;
             if (name !== undefined && !databaseNames.includes(name)) {
               databaseNames.push(name);
               const description = data.entrySource?.description || 'None';
