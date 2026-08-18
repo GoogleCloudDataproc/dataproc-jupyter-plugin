@@ -26,6 +26,13 @@ SPARKMONITOR_G3_DIR="${KOKORO_ARTIFACTS_DIR}/piper/google3/third_party/javascrip
 gcloud config set project dataproc-kokoro-tests
 gcloud config set compute/region us-central1
 
+# Update CA Certificates to trust Kokoro Proxy
+# This fixes Playwright download crashes and browser fetch API errors
+if [ -f /var/cache/proxy.crt ]; then
+  sudo cp /var/cache/proxy.crt /usr/local/share/ca-certificates/proxy.crt
+  sudo update-ca-certificates
+fi
+
 # Install dependencies.
 sudo apt-get update
 sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv
