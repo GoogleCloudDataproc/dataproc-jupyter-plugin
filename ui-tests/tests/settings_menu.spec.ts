@@ -18,6 +18,18 @@
 import { test, expect, galata } from '@jupyterlab/galata';
 
 test.describe('Settings Menu', () => {
+
+  // Intercept and log raw browser network errors before every test
+  test.beforeEach(async ({ page }) => {
+    page.on('requestfailed', request => {
+      console.log(`[NETWORK FAILURE] ${request.url()} failed with: ${request.failure()?.errorText}`);
+    });
+
+    page.on('pageerror', error => {
+      console.log(`[BROWSER CONSOLE ERROR] ${error.message}`);
+    });
+  });
+
   test('Can find settings menu', async ({ page }) => {
     await page
       .getByLabel('main menu', { exact: true })
