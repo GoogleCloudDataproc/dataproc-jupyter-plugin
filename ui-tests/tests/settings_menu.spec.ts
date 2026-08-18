@@ -42,7 +42,7 @@ test.describe('Settings Menu', () => {
 
     // Assert that we can save the project after we fill in project again.
     await page.getByRole('combobox', { name: 'Project ID' }).click();
-    await page.getByRole('combobox', { name: 'Project ID' }).fill('kokoro');
+    await page.getByRole('combobox', { name: 'Project ID' }).fill('dataproc');
     await page.getByRole('option', { name: 'dataproc-kokoro-tests' }).click();
     await expect(page.getByRole('button', { name: 'Save' })).not.toBeDisabled();
 
