@@ -34,6 +34,7 @@ module.exports = {
       width: 1280,
       height: 720
     },
+    ignoreHTTPSErrors: true,
     // Capture screenshot after each test failure.
     screenshot: 'only-on-failure',
     // Record trace only when retrying a test for the first time.
