@@ -34,8 +34,6 @@ module.exports = {
       width: 1280,
       height: 720
     },
-    // Tell the browser to connect even with the Kokoro proxy certificate
-    ignoreHTTPSErrors: true,
     // Capture screenshot after each test failure.
     screenshot: 'only-on-failure',
     // Record trace only when retrying a test for the first time.
