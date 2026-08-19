@@ -29,23 +29,23 @@ SPARKMONITOR_G3_DIR="${KOKORO_ARTIFACTS_DIR}/piper/google3/third_party/javascrip
 gcloud config set project dataproc-kokoro-tests
 gcloud config set compute/region us-central1
 
-# Fix for Playwright Chromium SSL errors behind Kokoro proxy
-# if [ -f /var/cache/proxy.crt ]; then
-#   echo "Installing Kokoro proxy certificate to Chromium NSS database..."
+# Fix SSL errors behind Kokoro proxy for both Python and Playwright
+if [ -f /var/cache/proxy.crt ]; then
+  echo "Installing Kokoro proxy certificate..."
   
-#   # Install NSS tools required to manage Chromium's cert database
-#   sudo apt-get update
-#   sudo apt-get install -y libnss3-tools
+  # 1. Fix the Python Backend (Jupyter Server connecting to Dataproc Kernels)
+  sudo cp /var/cache/proxy.crt /usr/local/share/ca-certificates/proxy.crt
+  sudo update-ca-certificates
+  export SSL_CERT_FILE=/var/cache/proxy.crt
+  export REQUESTS_CA_BUNDLE=/var/cache/proxy.crt
   
-#   # Create the NSS database directory if it doesn't exist
-#   mkdir -p $HOME/.pki/nssdb
-  
-#   # Inject the proxy certificate into the NSS database
-#   certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
-  
-#   # Explicitly export HOME so Playwright's isolated Chromium can find the NSS database
-#   export HOME=$HOME
-# fi
+  # 2. Fix the Playwright Frontend (Chromium connecting to GCP APIs)
+  sudo apt-get update
+  sudo apt-get install -y libnss3-tools
+  mkdir -p $HOME/.pki/nssdb
+  certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
+  export HOME=$HOME
+fi
 
 # Install dependencies.
 sudo apt-get update
