@@ -18,6 +18,9 @@ set -e
 
 export PATH="$HOME/.local/bin:$PATH"
 
+# Disable visual progress bars in Playwright to prevent Infinity crashes behind the proxy
+export CI=1
+
 # Define source directories
 PLUGIN_SRC_DIR="${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
 SPARKMONITOR_G3_DIR="${KOKORO_ARTIFACTS_DIR}/piper/google3/third_party/javascript/sparkmonitor"
@@ -27,22 +30,22 @@ gcloud config set project dataproc-kokoro-tests
 gcloud config set compute/region us-central1
 
 # Fix for Playwright Chromium SSL errors behind Kokoro proxy
-if [ -f /var/cache/proxy.crt ]; then
-  echo "Installing Kokoro proxy certificate to Chromium NSS database..."
+# if [ -f /var/cache/proxy.crt ]; then
+#   echo "Installing Kokoro proxy certificate to Chromium NSS database..."
   
-  # Install NSS tools required to manage Chromium's cert database
-  sudo apt-get update
-  sudo apt-get install -y libnss3-tools
+#   # Install NSS tools required to manage Chromium's cert database
+#   sudo apt-get update
+#   sudo apt-get install -y libnss3-tools
   
-  # Create the NSS database directory if it doesn't exist
-  mkdir -p $HOME/.pki/nssdb
+#   # Create the NSS database directory if it doesn't exist
+#   mkdir -p $HOME/.pki/nssdb
   
-  # Inject the proxy certificate into the NSS database
-  certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
+#   # Inject the proxy certificate into the NSS database
+#   certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
   
-  # Explicitly export HOME so Playwright's isolated Chromium can find the NSS database
-  export HOME=$HOME
-fi
+#   # Explicitly export HOME so Playwright's isolated Chromium can find the NSS database
+#   export HOME=$HOME
+# fi
 
 # Install dependencies.
 sudo apt-get update
