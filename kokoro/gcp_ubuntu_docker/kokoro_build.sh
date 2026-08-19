@@ -37,11 +37,11 @@ if [ -f /var/cache/proxy.crt ]; then
   export REQUESTS_CA_BUNDLE=/var/cache/proxy.crt
   
   # 2. Fix the Playwright Frontend (Chromium connecting to GCP APIs)
-  sudo apt-get update
-  sudo apt-get install -y libnss3-tools
-  mkdir -p $HOME/.pki/nssdb
-  certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
-  export HOME=$HOME
+  # sudo apt-get update
+  # sudo apt-get install -y libnss3-tools
+  # mkdir -p $HOME/.pki/nssdb
+  # certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
+  # export HOME=$HOME
 fi
 
 # Install dependencies.
