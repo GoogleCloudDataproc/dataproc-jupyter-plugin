@@ -18,9 +18,6 @@ set -e
 
 export PATH="$HOME/.local/bin:$PATH"
 
-# Disable visual progress bars in Playwright to prevent Infinity crashes behind the proxy
-export CI=1
-
 # Define source directories
 PLUGIN_SRC_DIR="${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
 SPARKMONITOR_G3_DIR="${KOKORO_ARTIFACTS_DIR}/piper/google3/third_party/javascript/sparkmonitor"
