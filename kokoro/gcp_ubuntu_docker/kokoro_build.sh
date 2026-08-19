@@ -31,17 +31,17 @@ if [ -f /var/cache/proxy.crt ]; then
   echo "Installing Kokoro proxy certificate..."
   
   # 1. Fix the Python Backend (Jupyter Server connecting to Dataproc Kernels)
-  sudo cp /var/cache/proxy.crt /usr/local/share/ca-certificates/proxy.crt
-  sudo update-ca-certificates
-  export SSL_CERT_FILE=/var/cache/proxy.crt
-  export REQUESTS_CA_BUNDLE=/var/cache/proxy.crt
+  # sudo cp /var/cache/proxy.crt /usr/local/share/ca-certificates/proxy.crt
+  # sudo update-ca-certificates
+  # export SSL_CERT_FILE=/var/cache/proxy.crt
+  # export REQUESTS_CA_BUNDLE=/var/cache/proxy.crt
   
   # 2. Fix the Playwright Frontend (Chromium connecting to GCP APIs)
-  # sudo apt-get update
-  # sudo apt-get install -y libnss3-tools
-  # mkdir -p $HOME/.pki/nssdb
-  # certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
-  # export HOME=$HOME
+  sudo apt-get update
+  sudo apt-get install -y libnss3-tools
+  mkdir -p $HOME/.pki/nssdb
+  certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
+  export HOME=$HOME
 fi
 
 # Install dependencies.
