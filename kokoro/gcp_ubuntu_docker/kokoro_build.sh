@@ -26,18 +26,6 @@ SPARKMONITOR_G3_DIR="${KOKORO_ARTIFACTS_DIR}/piper/google3/third_party/javascrip
 gcloud config set project dataproc-kokoro-tests
 gcloud config set compute/region us-central1
 
-# Fix SSL errors behind Kokoro proxy for both Python and Playwright
-# if [ -f /var/cache/proxy.crt ]; then
-#   echo "Installing Kokoro proxy certificate..."
-  
-#   # Fix the Playwright Frontend (Chromium connecting to GCP APIs)
-#   sudo apt-get update
-#   sudo apt-get install -y libnss3-tools
-#   mkdir -p $HOME/.pki/nssdb
-#   certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "Kokoro Proxy" -i /var/cache/proxy.crt
-#   export HOME=$HOME
-# fi
-
 # Install dependencies.
 sudo apt-get update
 sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv
