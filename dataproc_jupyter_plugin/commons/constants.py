@@ -62,7 +62,7 @@ AIRFLOW_JOB_REGEXP = re.compile("[a-zA-Z0-9_-]+")
 PROJECT_REGEXP = re.compile("^[a-z0-9.:-]+$")
 
 # Region pattern: standard GCP region format
-REGION_REGEXP = re.compile("^[a-z]+-[a-z]+\d+$")
+REGION_REGEXP = re.compile(r"^[a-z]+-[a-z]+\d+$")
 
 # Big Query Client Duration (seconds)
 BQ_CLIENT_EXPIRY_DURATION = 60 * 60  # 1 hour
