@@ -38,6 +38,7 @@ import {
 } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { Notification } from '@jupyterlab/apputils';
+import { requestAPI } from '../handler/handler';
 
 interface IBatchDetailsResponse {
   error: {
@@ -141,20 +142,6 @@ interface IApiResponse {
   };
 }
 
-interface INetworkResponse {
-  network: string;
-  error: {
-    message: string;
-    code: number;
-  };
-}
-
-type Network = {
-  selfLink: string;
-  network: string;
-  subnetworks: string;
-};
-
 type IKeyRings = {
   keyRings: Array<{
     name: string;
@@ -186,43 +173,39 @@ type Region = {
 export class BatchService {
   static deleteBatchAPIService = async (selectedBatch: string) => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${selectedBatch}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then(async (responseResult: Response) => {
-              console.log(responseResult);
-              Notification.emit(
-                `Batch ${selectedBatch} deleted successfully`,
-                'success',
-                {
-                  autoClose: 5000
-                }
-              );
-            })
-            .catch((e: Error) => console.log(e));
-        })
-        .catch((err: Error) => {
-          DataprocLoggingService.log('Error deleting batches', LOG_LEVEL.ERROR);
+      try {
+        const responseResult: any = await requestAPI(
+          `deleteBatch?batch=${encodeURIComponent(selectedBatch)}`,
+          { method: 'DELETE' }
+        );
+        if (responseResult?.error?.code) {
           Notification.emit(
-            `Failed to delete the batch ${selectedBatch} : ${err}`,
+            `Failed to delete the batch ${selectedBatch} : ${responseResult.error.message}`,
             'error',
             {
               autoClose: 5000
             }
           );
-        });
+        } else {
+          Notification.emit(
+            `Batch ${selectedBatch} deleted successfully`,
+            'success',
+            {
+              autoClose: 5000
+            }
+          );
+        }
+      } catch (err: any) {
+        DataprocLoggingService.log('Error deleting batches', LOG_LEVEL.ERROR);
+        Notification.emit(
+          `Failed to delete the batch ${selectedBatch} : ${err}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
+      }
     }
   };
 
@@ -236,61 +219,44 @@ export class BatchService {
     setErrorView: (value: boolean) => void
   ) => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches/${batchSelected}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
+      try {
+        const responseResult: IBatchDetailsResponse = await requestAPI(
+          `batchDetail?batch=${encodeURIComponent(batchSelected)}`,
+          { method: 'GET' }
+        );
+        if (responseResult?.error?.code === 404) {
+          setErrorView(true);
         }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IBatchDetailsResponse) => {
-              if (responseResult.error && responseResult.error.code === 404) {
-                setErrorView(true);
-              }
-              setBatchInfoResponse(responseResult);
-              if (responseResult.labels) {
-                const labelValue = Object.entries(responseResult.labels).map(
-                  ([key, value]) => `${key}:${value}`
-                );
-                setLabelDetail(labelValue);
-              }
-              setIsLoading(false);
-              if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          DataprocLoggingService.log(
-            'Error in getting Batch details',
-            LOG_LEVEL.ERROR
+        setBatchInfoResponse(responseResult);
+        if (responseResult.labels) {
+          const labelValue = Object.entries(responseResult.labels).map(
+            ([key, value]) => `${key}:${value}`
           );
-
-          Notification.emit(
-            `Failed to fetch batch details ${batchSelected} : ${err}`,
-            'error',
-            {
-              autoClose: 5000
-            }
-          );
-        });
+          setLabelDetail(labelValue);
+        }
+        setIsLoading(false);
+        if (responseResult?.error?.code) {
+          Notification.emit(responseResult?.error?.message, 'error', {
+            autoClose: 5000
+          });
+        }
+      } catch (err: any) {
+        setIsLoading(false);
+        DataprocLoggingService.log(
+          'Error in getting Batch details',
+          LOG_LEVEL.ERROR
+        );
+        Notification.emit(
+          `Failed to fetch batch details ${batchSelected} : ${err}`,
+          'error',
+          {
+            autoClose: 5000
+          }
+        );
+      }
     }
   };
 
@@ -310,7 +276,6 @@ export class BatchService {
     shouldUpdatePagination: boolean = true
   ) => {
     const credentials = await authApi();
-    const { DATAPROC } = await gcpServiceUrls;
     const pageToken =
       nextPageTokens.length > 0
         ? nextPageTokens[nextPageTokens.length - 1]
@@ -318,108 +283,96 @@ export class BatchService {
     if (credentials) {
       setRegionName(credentials.region_id || '');
       setProjectName(credentials.project_id || '');
-      loggedFetch(
-        `${DATAPROC}/projects/${credentials.project_id}/locations/${credentials.region_id}/batches?orderBy=create_time desc&&pageSize=${PAGE_SIZE}&pageToken=${pageToken}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
+      try {
+        let endpoint = `listBatches?pageSize=${PAGE_SIZE}`;
+        if (pageToken) {
+          endpoint += `&pageToken=${encodeURIComponent(pageToken)}`;
+        }
+        const responseResult: IBatchListResponse = await requestAPI(endpoint, {
+          method: 'GET'
+        });
+        let transformBatchListData: IBatchesList[] = [];
+        if (responseResult && responseResult.batches) {
+          transformBatchListData = responseResult.batches.map(
+            (data: IBatchData) => {
+              const startTimeDisplay = jobTimeFormat(data.createTime);
+              const startTime = new Date(data.createTime);
+              const elapsedTimeString = elapsedTime(
+                data.stateTime,
+                startTime
+              );
+              const batchType = Object.keys(data).filter(key =>
+                key.endsWith('Batch')
+              );
+              const batchTypeDisplay =
+                batchType.length > 0
+                  ? jobTypeDisplay(batchType[0].split('Batch')[0])
+                  : '';
+
+              const tier =
+                data.runtimeConfig?.properties?.['dataproc:dataproc.tier'] ??
+                'standard';
+              const engine =
+                data.runtimeConfig?.properties?.['spark:spark.dataproc.engine'] ??
+                'default';
+
+              return {
+                batchID: data.name.split('/')[5],
+                status: data.state,
+                location: data.name.split('/')[3],
+                tier: TierDisplayNameMap.get(tier),
+                engine: LightningEngineDisplayNameMap.get(engine),
+                creationTime: startTimeDisplay,
+                type: batchTypeDisplay,
+                elapsedTime: elapsedTimeString,
+                actions: renderActions(data)
+              };
+            }
+          );
+        }
+        if (
+          responseResult?.error?.code &&
+          !credentials?.login_error &&
+          !credentials?.config_error
+        ) {
+          handleApiError(
+            responseResult,
+            credentials,
+            setApiDialogOpen,
+            setEnableLink,
+            setPollingDisable,
+            'batches'
+          );
+        }
+        const existingBatchData = previousBatchesList ?? [];
+
+        let allBatchesData: IBatchesList[] = [
+          ...(existingBatchData as []),
+          ...transformBatchListData
+        ];
+        if (shouldUpdatePagination) {
+          if (responseResult?.nextPageToken) {
+            setBatchesList(allBatchesData);
+            setNextPageTokens([
+              ...nextPageTokens,
+              responseResult.nextPageToken
+            ]);
+            setIsLoading(false);
+            setLoggedIn(true);
+          } else {
+            setBatchesList(allBatchesData);
+            setNextPageTokens([]);
+            setIsLoading(false);
+            setLoggedIn(true);
           }
         }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: IBatchListResponse) => {
-              let transformBatchListData: IBatchesList[] = [];
-              if (responseResult && responseResult.batches) {
-                transformBatchListData = responseResult.batches.map(
-                  (data: IBatchData) => {
-                    const startTimeDisplay = jobTimeFormat(data.createTime);
-                    const startTime = new Date(data.createTime);
-                    const elapsedTimeString = elapsedTime(
-                      data.stateTime,
-                      startTime
-                    );
-                    const batchType = Object.keys(data).filter(key =>
-                      key.endsWith('Batch')
-                    );
-                    /*
-                   Extracting batchID, location from batchInfo.name
-                    Example: "projects/{project}/locations/{location}/batches/{batchID}"
-                  */
-                    const batchTypeDisplay = jobTypeDisplay(
-                      batchType[0].split('Batch')[0]
-                    );
-
-                    const tier = data.runtimeConfig?.properties?.['dataproc:dataproc.tier'] ?? 'standard';
-                    const engine = data.runtimeConfig?.properties?.['spark:spark.dataproc.engine'] ?? 'default';
-
-                    return {
-                      batchID: data.name.split('/')[5],
-                      status: data.state,
-                      location: data.name.split('/')[3],
-                      tier: TierDisplayNameMap.get(tier),
-                      engine: LightningEngineDisplayNameMap.get(engine),
-                      creationTime: startTimeDisplay,
-                      type: batchTypeDisplay,
-                      elapsedTime: elapsedTimeString,
-                      actions: renderActions(data)
-                    };
-                  }
-                );
-              }
-              if (
-                responseResult?.error?.code &&
-                !credentials?.login_error &&
-                !credentials?.config_error
-              ) {
-                handleApiError(
-                  responseResult,
-                  credentials,
-                  setApiDialogOpen,
-                  setEnableLink,
-                  setPollingDisable,
-                  'batches'
-                );
-              }
-              const existingBatchData = previousBatchesList ?? [];
-
-              let allBatchesData: IBatchesList[] = [
-                ...(existingBatchData as []),
-                ...transformBatchListData
-              ];
-              // Only update pagination tokens if shouldUpdatePagination is true
-              if (shouldUpdatePagination) {
-                if (responseResult?.nextPageToken) {
-                  setBatchesList(allBatchesData);
-                  setNextPageTokens([
-                    ...nextPageTokens,
-                    responseResult.nextPageToken
-                  ]);
-                  setIsLoading(false);
-                  setLoggedIn(true);
-                } else {
-                  setBatchesList(allBatchesData);
-                  setNextPageTokens([]);
-                  setIsLoading(false);
-                  setLoggedIn(true);
-                }
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-              setIsLoading(false);
-            });
-        })
-        .catch((err: Error) => {
-          setIsLoading(false);
-          DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
-
-          Notification.emit(`Failed to fetch batches : ${err}`, 'error', {
-            autoClose: 5000
-          });
+      } catch (err: any) {
+        setIsLoading(false);
+        DataprocLoggingService.log('Error listing batches', LOG_LEVEL.ERROR);
+        Notification.emit(`Failed to fetch batches : ${err}`, 'error', {
+          autoClose: 5000
         });
+      }
     }
   };
 
@@ -533,49 +486,34 @@ export class BatchService {
   ) => {
     setIsloadingNetwork(true);
     const credentials = await authApi();
-    const { COMPUTE } = await gcpServiceUrls;
     if (credentials) {
-      loggedFetch(
-        `${COMPUTE}/projects/${credentials.project_id}/regions/${credentials.region_id}/subnetworks/${subNetwork}`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
+      try {
+        const responseResult: any = await requestAPI(
+          `subNetwork?subNetwork=${encodeURIComponent(subNetwork)}`,
+          { method: 'GET' }
+        );
+        let transformedNetworkSelected = '';
+        if (responseResult?.network) {
+          const parts = responseResult.network.split('/');
+          transformedNetworkSelected = parts[parts.length - 1];
+          setNetworkSelected(transformedNetworkSelected);
         }
-      )
-        .then((response: Response) => {
-          response
-            .json()
-            .then((responseResult: INetworkResponse) => {
-              let transformedNetworkSelected = '';
-              /*
-             Extracting network from items
-             Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/subnetworks/",
-            */
-
-              transformedNetworkSelected = responseResult.network.split('/')[9];
-
-              setNetworkSelected(transformedNetworkSelected);
-              if (responseResult?.error?.code) {
-                Notification.emit(responseResult?.error?.message, 'error', {
-                  autoClose: 5000
-                });
-              }
-            })
-            .catch((e: Error) => {
-              console.log(e);
-            });
-        })
-        .catch((err: Error) => {
-          DataprocLoggingService.log(
-            'Error selecting Network',
-            LOG_LEVEL.ERROR
-          );
-          Notification.emit(`Error selecting Network : ${err}`, 'error', {
+        if (responseResult?.error?.code) {
+          Notification.emit(responseResult?.error?.message, 'error', {
             autoClose: 5000
           });
+        }
+      } catch (err: any) {
+        DataprocLoggingService.log(
+          'Error selecting Network',
+          LOG_LEVEL.ERROR
+        );
+        Notification.emit(`Error selecting Network : ${err}`, 'error', {
+          autoClose: 5000
         });
+      } finally {
+        setIsloadingNetwork(false);
+      }
     }
   };
 
@@ -588,66 +526,55 @@ export class BatchService {
     setIsloadingNetwork(true);
     try {
       const credentials = await authApi();
-      const { COMPUTE } = await gcpServiceUrls;
-
       if (!credentials) {
         setIsloadingNetwork(false);
         return;
       }
 
-      const response = await loggedFetch(
-        `${COMPUTE}/projects/${credentials.project_id}/global/networks`,
-        {
-          headers: {
-            'Content-Type': API_HEADER_CONTENT_TYPE,
-            Authorization: API_HEADER_BEARER + credentials.access_token
-          }
-        }
-      );
-
-      const responseResult: {
-        items: Network[];
-        error: {
-          message: string;
-          code: number;
-        };
-      } = await response.json();
+      const responseResult: any = await requestAPI('listNetworks', {
+        method: 'GET'
+      });
 
       if (responseResult?.error?.code) {
-        Notification.emit(responseResult.error.message, 'error', {
+        Notification.emit(responseResult?.error?.message, 'error', {
           autoClose: 5000
         });
-      }
-      else if (responseResult.items) {
-        /*
-         Extracting network from items
-         Example: "https://www.googleapis.com/compute/v1/projects/{projectName}/global/networks/",
-        */
-       
+      } else if (responseResult?.items) {
         const transformedNetworkList = responseResult.items.map(
-          (data: Network) => {
-            return data.selfLink.split('/')[9];
+          (data: any) => {
+            if (data.selfLink) {
+              const parts = data.selfLink.split('/');
+              return parts[parts.length - 1];
+            }
+            return data.name;
           }
         );
         setNetworklist(transformedNetworkList);
 
-        if (batchInfoResponse === undefined && transformedNetworkList.length > 0) {
+        if (
+          batchInfoResponse === undefined &&
+          transformedNetworkList.length > 0
+        ) {
           setNetworkSelected(transformedNetworkList[0]);
-        }
-        else if (transformedNetworkList.length === 0) {
-          DataprocLoggingService.log('No networks found (empty list).', LOG_LEVEL.ERROR);
+        } else if (transformedNetworkList.length === 0) {
+          DataprocLoggingService.log(
+            'No networks found (empty list).',
+            LOG_LEVEL.ERROR
+          );
           Notification.emit('No networks found.', 'error', {
             autoClose: 5000
           });
         }
-      }
-      else {
-        DataprocLoggingService.log('No networks found in response.', LOG_LEVEL.ERROR);
+      } else {
+        DataprocLoggingService.log(
+          'No networks found in response.',
+          LOG_LEVEL.ERROR
+        );
         Notification.emit('No networks found.', 'error', {
           autoClose: 5000
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       DataprocLoggingService.log('Error listing Networks', LOG_LEVEL.ERROR);
       Notification.emit(`Error listing Networks : ${err}`, 'error', {
         autoClose: 5000
