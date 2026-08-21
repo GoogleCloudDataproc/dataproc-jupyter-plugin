@@ -21,17 +21,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install "hatchling>=1.11.0" "hatch-jupyter-builder>=0.5" "jupyterlab>=3.6.0,<5"
         python -m pip install pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install package
       run: |
-        python -m pip install -e ".[test]"
+        python -m pip install ".[test]"
     - name: Test with pytest
       run: |
         pytest

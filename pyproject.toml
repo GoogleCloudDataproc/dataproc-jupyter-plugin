@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.5.0", "jupyterlab>=3.6.0,<5", "hatch-nodejs-version"]
+requires = ["hatchling>=1.11.0", "jupyterlab>=3.6.0,<5", "hatch-nodejs-version", "hatch-jupyter-builder>=0.5", "tomli>=1.2.2; python_version < '3.11'"]
 build-backend = "hatchling.build"
 
 [project]
@@ -31,7 +31,11 @@ dependencies = [
     "aiohttp~=3.9.5",
     "google-cloud-storage~=2.18.2",
     "aiofiles>=22.1.0,<23",
-    "scheduler-jupyter-plugin>=0.1.0"
+    "scheduler-jupyter-plugin>=0.1.0",
+    "google-cloud-dataproc>=5.10.2",
+    "tomli>=1.2.2; python_version < '3.11'",
+    "importlib-metadata>=4.8.3; python_version < '3.10'",
+    "typing-extensions>=4.0.0; python_version < '3.10'"
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
@@ -79,11 +83,11 @@ skip-if-exists = ["dataproc_jupyter_plugin/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
-npm = ["jlpm"]
+npm = ["jlpm", "yarn"]
 
 [tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
 build_cmd = "install:extension"
-npm = ["jlpm"]
+npm = ["jlpm", "yarn"]
 source_dir = "src"
 build_dir = "dataproc_jupyter_plugin/labextension"
 
