@@ -33,7 +33,8 @@ from dataproc_jupyter_plugin import credentials, urls
 from dataproc_jupyter_plugin.commons import constants
 from dataproc_jupyter_plugin.controllers import (
     bigquery,
-    checkApiEnabled
+    checkApiEnabled,
+    jobs
 )
 from dataproc_jupyter_plugin.controllers.version import (
     LatestVersionController,
@@ -257,6 +258,8 @@ def setup_handlers(web_app):
         "jupyterlabVersion": LatestVersionController,
         "updatePlugin": UpdatePackage,
         "checkApiEnabled": checkApiEnabled.CheckApiController,
+        "jobItem": jobs.JobItemController,
+        "jobCancel": jobs.JobCancelController,
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)
