@@ -15,6 +15,11 @@
 import logging
 import json
 
+from google.cloud.jupyter_config import (
+    DataprocGatewayKernelSpecManager,
+    DataprocGatewayMappingKernelManager,
+    DataprocGatewayWebSocketConnection,
+)
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 from jupyter_server.services.sessions.sessionmanager import SessionManager
 from kernels_mixer.kernels import MixingMappingKernelManager
@@ -77,9 +82,14 @@ def _link_jupyter_server_extension(server_app):
         return
 
     c.ServerApp.kernel_spec_manager_class = MixingKernelSpecManager
+    c.MixingKernelSpecManager.remote_kernel_spec_manager_class = DataprocGatewayKernelSpecManager
+
     c.ServerApp.kernel_manager_class = MixingMappingKernelManager
+    c.MixingMappingKernelManager.remote_kernel_manager_class = DataprocGatewayMappingKernelManager
+
     c.ServerApp.session_manager_class = SessionManager
     c.ServerApp.kernel_websocket_connection_class = DelegatingWebsocketConnection
+    c.DelegatingWebsocketConnection.remote_websocket_connection_class = DataprocGatewayWebSocketConnection
     c.DelegatingWebsocketConnection.kernel_ws_protocol = ""
 
     c.GatewayClient.auth_scheme = "Bearer"

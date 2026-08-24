@@ -66,6 +66,7 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
+import { setupNotificationSystem } from './notifications';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -863,6 +864,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       });
     }
+
+    setupNotificationSystem(app);
   }
 };
 
