@@ -22,6 +22,7 @@ const baseConfig = require('@jupyterlab/galata/lib/playwright-config');
 
 module.exports = {
   ...baseConfig,
+  timeout: 120000,
   webServer: {
     command: 'jlpm start --allow-root',
     url: 'http://localhost:8888/lab',
@@ -33,6 +34,9 @@ module.exports = {
       width: 1280,
       height: 720
     },
+    // Ignore HTTPS errors because the Kokoro CI environment uses a 
+    // transparent proxy that intercepts traffic with a self-signed certificate.
+    ignoreHTTPSErrors: true,
     // Capture screenshot after each test failure.
     screenshot: 'only-on-failure',
     // Record trace only when retrying a test for the first time.
