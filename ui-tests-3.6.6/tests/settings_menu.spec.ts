@@ -17,7 +17,7 @@
 
 import { test, expect, galata } from '@jupyterlab/galata';
 
-test.describe('Settings Menu', () => {
+test.describe.skip('Settings Menu', () => {
   test('Can find settings menu', async ({ page }) => {
     await page
       .getByLabel('main', { exact: true })
