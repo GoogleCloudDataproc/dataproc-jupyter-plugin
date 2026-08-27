@@ -27,9 +27,6 @@ type IEvent = any;
 
 const NOTIFICATION_SCHEMA_ID = 'http://cloud.google.com/dataproc-jupyter/notification';
 
-const seenEventIds = new Set<string>();
-let latestReport: INotificationEvent[] = [];
-
 /**
  * Sets up listeners for server-sent Jupyter Events and registers the
  * command to view the aggregated sticky notifications report.
@@ -39,6 +36,9 @@ export function setupNotificationSystem(app: JupyterFrontEnd): void {
     console.warn('JupyterLab EventManager service is not available.');
     return;
   }
+
+  const seenEventIds = new Set<string>();
+  const latestReport: INotificationEvent[] = [];
 
   app.serviceManager.events.stream.connect((sender, event: IEvent) => {
     if (event.schema_id === NOTIFICATION_SCHEMA_ID) {

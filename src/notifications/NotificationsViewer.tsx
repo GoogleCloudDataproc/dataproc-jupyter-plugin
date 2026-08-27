@@ -36,8 +36,10 @@ export const downloadNotificationsReport = (warnings: INotificationEvent[]): voi
     const a = document.createElement('a');
     a.href = url;
     a.download = 'dataproc_jupyter_plugin_report.json';
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   } catch (error) {
     console.error('Failed to download the report:', error);
   }
@@ -63,14 +65,16 @@ export const NotificationsViewer = ({
       <ul className="dp-notifications-list">
         {warnings.map((w, i) => {
           // Format timestamp for premium readability if it's a valid date string
-          let displayTime = w.created;
-          try {
-            const date = new Date(w.created);
-            if (!isNaN(date.getTime())) {
-              displayTime = date.toLocaleString();
+          let displayTime = w.created || '';
+          if (w.created) {
+            try {
+              const date = new Date(w.created);
+              if (!isNaN(date.getTime())) {
+                displayTime = date.toLocaleString();
+              }
+            } catch (e) {
+              // Fallback to raw string
             }
-          } catch (e) {
-            // Fallback to raw string
           }
 
           return (
