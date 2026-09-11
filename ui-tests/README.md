@@ -2,6 +2,10 @@
 
 This folder contains the integration tests of the extension.
 
+> This suite targets **JupyterLab 4.x** (Galata `^5.0.0`). The parallel
+> [`ui-tests-3.6.6`](../ui-tests-3.6.6) folder runs the same tests against
+> **JupyterLab 3.6.x** (Galata `4.5.6`). This README is the canonical reference for both.
+
 They are defined using [Playwright](https://playwright.dev/docs/intro) test runner
 and [Galata](https://github.com/jupyterlab/jupyterlab/tree/master/galata) helper.
 
