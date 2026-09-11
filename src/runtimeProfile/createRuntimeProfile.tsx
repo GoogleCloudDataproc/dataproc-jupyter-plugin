@@ -783,7 +783,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       control,
       handleSubmit,
       setValue,
-      formState: { errors, isSubmitting, isValid }
+      formState: { errors, isSubmitting }
     } = useForm<IRuntimeProfileFormData>({
       mode: 'onChange',
       defaultValues: {
@@ -1019,7 +1019,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                   <RuntimeEnvironmentSection
                     config={runtimeEnvironmentConfig}
                     onEdit={() => {
-                      console.log('Edit Runtime Environment clicked');
+                      // TODO - add the edit functionality for this section
                     }}
                   />
 
@@ -1027,9 +1027,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                   <ExecutorAndDriverSection
                     config={driverAndExecutorConfiguration}
                     onEdit={() => {
-                      console.log(
-                        'Edit Executor & Driver Configuration clicked'
-                      );
+                      // TODO - add the edit functionality for this section
                     }}
                   />
 
@@ -1037,7 +1035,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                   <AutoscalingSection
                     config={autoscalingConfig}
                     onEdit={() => {
-                      console.log('Edit Autoscaling clicked');
+                      // TODO - add the edit functionality for this section
                     }}
                   />
 
@@ -1045,7 +1043,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                   <MetastoreSection
                     config={metastoreConfig}
                     onEdit={() => {
-                      console.log('Edit Metastore Configuration clicked');
+                      // TODO - add the edit functionality for this section
                     }}
                   />
 
@@ -1053,7 +1051,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                   <NetworkSecuritySection
                     config={networkAndSecurityConfig}
                     onEdit={() => {
-                      console.log('Edit Network and Security clicked');
+                      // TODO - add the edit functionality for this section
                     }}
                   />
 
@@ -1061,7 +1059,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                   <SessionLifecycleSection
                     config={sessionLifecycleConfig}
                     onEdit={() => {
-                      console.log('Edit Session Lifecycle clicked');
+                      // TODO - add the edit functionality for this section
                     }}
                   />
 
@@ -1070,7 +1068,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                     sparkProperties={sparkProperties}
                     labels={labels}
                     onEdit={() => {
-                      console.log('Edit Other Customization clicked');
+                      // TODO - add the edit functionality for this section
                     }}
                   />
                 </div>
@@ -1079,14 +1077,11 @@ export const CreateRuntimeProfileComponent: React.FC<
 
             {/* Action Buttons */}
             <div className="runtime-profile-buttons">
+              {/* TODO - create functionality to be enabled during API integration process */}
               <button
                 type="submit"
-                disabled={!isValid || isSubmitting}
-                className={
-                  !isValid || isSubmitting
-                    ? 'submit-button-disable-style'
-                    : 'submit-button-style'
-                }
+                disabled={true}
+                className="submit-button-disable-style"
               >
                 {isSubmitting ? (
                   <CircularProgress size={16} color="inherit" />
