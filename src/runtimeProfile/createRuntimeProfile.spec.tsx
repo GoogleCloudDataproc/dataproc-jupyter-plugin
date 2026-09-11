@@ -29,7 +29,41 @@ jest.mock('../handler/handler', () => ({
 
 import {
   CreateRuntimeProfile,
-  CreateRuntimeProfileComponent
+  CreateRuntimeProfileComponent,
+  RuntimeEnvironmentSection,
+  DriverConfigSection,
+  ExecutorDiskSection,
+  ExecutorAndDriverSection,
+  DriverAndExecutorSection,
+  AutoscalingSection,
+  MetastoreSection,
+  NetworkSecuritySection,
+  SessionLifecycleSection,
+  SparkPropertiesSection,
+  ProfileLabelsSection,
+  OtherCustomizationSection,
+  formatRuntimeEnvironmentProperties,
+  formatDriverConfigProperties,
+  formatExecutorDiskProperties,
+  formatExecutorAndDriverProperties,
+  formatDriverAndExecutorProperties,
+  formatAutoscalingProperties,
+  formatMetastoreProperties,
+  formatNetworkSecurityProperties,
+  formatSessionLifecycleProperties,
+  formatSparkProperties,
+  formatProfileLabels,
+  formatOtherCustomizationProperties,
+  DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
+  DEFAULT_DRIVER_CONFIG,
+  DEFAULT_EXECUTOR_DISK_CONFIG,
+  DEFAULT_DRIVER_AND_EXECUTOR_CONFIG,
+  DEFAULT_AUTOSCALING_CONFIG,
+  DEFAULT_METASTORE_CONFIG,
+  DEFAULT_NETWORK_SECURITY_CONFIG,
+  DEFAULT_SESSION_LIFECYCLE_CONFIG,
+  DEFAULT_SPARK_PROPERTIES,
+  DEFAULT_PROFILE_LABELS
 } from './createRuntimeProfile';
 import { RuntimeProfileService } from './runtimeProfileService';
 
@@ -85,6 +119,190 @@ describe('CreateRuntimeProfile Component & Service', () => {
     expect(profile.region).toBe('us-east1');
     expect(profile.name).toBe(
       'projects/test-project/locations/us-east1/runtimeProfiles/custom-profile'
+    );
+  });
+
+  it('should format runtime environment config according to IRuntimeEnvironmentConfig interface', () => {
+    expect(RuntimeEnvironmentSection).toBeDefined();
+    expect(DriverConfigSection).toBeDefined();
+
+    const formatted = formatRuntimeEnvironmentProperties(
+      DEFAULT_RUNTIME_ENVIRONMENT_CONFIG
+    );
+    expect(formatted).toHaveLength(5);
+    expect(formatted.find(p => p.label === 'Runtime Profile ID')?.value).toBe(
+      'Name of the runtime profile'
+    );
+    expect(
+      formatted.find(p => p.label === 'Dataproc Runtime Version')?.value
+    ).toBe('2.3 LTS (Spark 3.5.1, Python 3.12)');
+
+    const emptyFormatted = formatRuntimeEnvironmentProperties(undefined);
+    expect(emptyFormatted).toEqual([]);
+  });
+
+  it('should format driver config according to IDriverConfig interface', () => {
+    const formatted = formatDriverConfigProperties(DEFAULT_DRIVER_CONFIG);
+    expect(formatted).toHaveLength(2);
+    expect(formatted.find(p => p.label === 'Machine type')?.value).toBe(
+      'Standard-4'
+    );
+    expect(formatted.find(p => p.label === 'Disk')?.value).toBe(
+      'standard persistent disk'
+    );
+
+    const emptyFormatted = formatDriverConfigProperties(undefined);
+    expect(emptyFormatted).toEqual([]);
+  });
+
+  it('should format executor disk config according to IExecutorDiskConfig interface', () => {
+    expect(ExecutorDiskSection).toBeDefined();
+    const formatted = formatExecutorDiskProperties(
+      DEFAULT_EXECUTOR_DISK_CONFIG
+    );
+    expect(formatted).toHaveLength(1);
+    expect(formatted.find(p => p.label === 'Disk type')?.value).toBe(
+      'Standard persistent disk (HDD), 100 GB'
+    );
+
+    expect(formatExecutorDiskProperties(undefined)).toEqual([]);
+  });
+
+  it('should format autoscaling config according to IAutoscalingConfig interface', () => {
+    expect(AutoscalingSection).toBeDefined();
+    const formatted = formatAutoscalingProperties(DEFAULT_AUTOSCALING_CONFIG);
+    expect(formatted).toHaveLength(4);
+    expect(formatted.find(p => p.label === 'Autoscaling')?.value).toBe(
+      'Enabled'
+    );
+    expect(formatted.find(p => p.label === 'Initial executors')?.value).toBe(2);
+    expect(formatted.find(p => p.label === 'Minimum executors')?.value).toBe(2);
+    expect(formatted.find(p => p.label === 'Maximum executors')?.value).toBe(10);
+
+    expect(formatAutoscalingProperties(undefined)).toEqual([]);
+  });
+
+  it('should format metastore config according to IMetastoreConfig interface', () => {
+    expect(MetastoreSection).toBeDefined();
+    const formatted = formatMetastoreProperties(DEFAULT_METASTORE_CONFIG);
+    expect(formatted).toHaveLength(2);
+    expect(formatted.find(p => p.label === 'Metastore')?.value).toBe(
+      'Lakehouse runtime catalog'
+    );
+    expect(formatted.find(p => p.label === 'Hive endpoint')?.value).toBe(
+      'Disabled'
+    );
+
+    expect(formatMetastoreProperties(undefined)).toEqual([]);
+  });
+
+  it('should format network and security config according to INetworkAndSecurityConfig interface', () => {
+    expect(NetworkSecuritySection).toBeDefined();
+    const formatted = formatNetworkSecurityProperties(
+      DEFAULT_NETWORK_SECURITY_CONFIG
+    );
+    expect(formatted).toHaveLength(3);
+    expect(formatted.find(p => p.label === 'Execution identity')?.value).toBe(
+      'Service account'
+    );
+    expect(
+      formatted.find(p => p.label === 'Network in this project')?.value
+    ).toBe('default');
+    expect(formatted.find(p => p.label === 'Encryption')?.value).toBe(
+      'Google-managed key'
+    );
+
+    expect(formatNetworkSecurityProperties(undefined)).toEqual([]);
+  });
+
+  it('should format session lifecycle config according to ISessionLifecycleConfig interface', () => {
+    expect(SessionLifecycleSection).toBeDefined();
+    const formatted = formatSessionLifecycleProperties(
+      DEFAULT_SESSION_LIFECYCLE_CONFIG
+    );
+    expect(formatted).toHaveLength(2);
+    expect(formatted.find(p => p.label === 'Maximum idle time')?.value).toBe(
+      '60 minutes'
+    );
+    expect(formatted.find(p => p.label === 'Maximum session time')?.value).toBe(
+      '3 days'
+    );
+
+    expect(formatSessionLifecycleProperties(undefined)).toEqual([]);
+  });
+
+  it('should format spark properties and labels according to key-value maps', () => {
+    expect(SparkPropertiesSection).toBeDefined();
+    expect(ProfileLabelsSection).toBeDefined();
+
+    const emptySpark = formatSparkProperties(DEFAULT_SPARK_PROPERTIES);
+    expect(emptySpark).toEqual([
+      { label: 'Spark properties', value: 'None' }
+    ]);
+
+    const customSpark = formatSparkProperties({ 'spark.driver.memory': '4g' });
+    expect(customSpark).toEqual([
+      { label: 'spark.driver.memory', value: '4g' }
+    ]);
+
+    const emptyLabels = formatProfileLabels(DEFAULT_PROFILE_LABELS);
+    expect(emptyLabels).toEqual([{ label: 'Labels', value: 'None' }]);
+
+    const customLabels = formatProfileLabels({ env: 'prod' });
+    expect(customLabels).toEqual([{ label: 'env', value: 'prod' }]);
+  });
+
+  it('should format merged executor & driver configuration according to IDriverAndExecutorConfiguration interface', () => {
+    expect(ExecutorAndDriverSection).toBeDefined();
+    expect(DriverAndExecutorSection).toBeDefined();
+
+    const formatted = formatExecutorAndDriverProperties(
+      DEFAULT_DRIVER_AND_EXECUTOR_CONFIG
+    );
+    expect(formatted).toHaveLength(5);
+    expect(formatted.find(p => p.label === 'Tier')?.value).toBe('Standard');
+    expect(formatted.find(p => p.label === 'Driver machine type')?.value).toBe(
+      'Standard-4'
+    );
+    expect(formatted.find(p => p.label === 'Driver disk')?.value).toBe(
+      'standard persistent disk'
+    );
+    expect(formatted.find(p => p.label === 'Executor type')?.value).toBe(
+      'standard'
+    );
+    expect(formatted.find(p => p.label === 'Executor disk')?.value).toBe(
+      'Standard persistent disk (HDD), 100 GB'
+    );
+
+    expect(formatDriverAndExecutorProperties(undefined)).toEqual([]);
+    expect(formatExecutorAndDriverProperties(undefined)).toEqual([]);
+  });
+
+  it('should format other customization section with spark properties and labels merged', () => {
+    expect(OtherCustomizationSection).toBeDefined();
+
+    const emptyCustomization = formatOtherCustomizationProperties(
+      DEFAULT_SPARK_PROPERTIES,
+      DEFAULT_PROFILE_LABELS
+    );
+    expect(emptyCustomization).toHaveLength(2);
+    expect(
+      emptyCustomization.find(p => p.label === 'Spark properties')?.value
+    ).toBe('None');
+    expect(emptyCustomization.find(p => p.label === 'Labels')?.value).toBe(
+      'None'
+    );
+
+    const customProps = formatOtherCustomizationProperties(
+      { 'spark.driver.memory': '4g', 'spark.executor.cores': '2' },
+      { env: 'prod', team: 'data' }
+    );
+    expect(customProps).toHaveLength(2);
+    expect(customProps.find(p => p.label === 'Spark properties')?.value).toBe(
+      'spark.driver.memory: 4g, spark.executor.cores: 2'
+    );
+    expect(customProps.find(p => p.label === 'Labels')?.value).toBe(
+      'env: prod, team: data'
     );
   });
 });
