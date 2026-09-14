@@ -417,7 +417,7 @@ export const RuntimeEnvironmentSection: React.FC<
   );
   return (
     <SectionDetail
-      title="Runtime Environment"
+      title="Runtime configuration"
       properties={properties}
       onEdit={onEdit}
       showEdit={showEdit}
@@ -442,7 +442,7 @@ export const ExecutorAndDriverSection: React.FC<
   );
   return (
     <SectionDetail
-      title="Executor & Driver Configuration"
+      title="Executor and driver configuration"
       properties={properties}
       onEdit={onEdit}
       showEdit={showEdit}
@@ -556,7 +556,7 @@ export const MetastoreSection: React.FC<IMetastoreSectionProps> = ({
   );
   return (
     <SectionDetail
-      title="Metastore Configuration"
+      title="Metastore configuration"
       properties={properties}
       onEdit={onEdit}
       showEdit={showEdit}
@@ -584,7 +584,7 @@ export const NetworkSecuritySection: React.FC<INetworkSecuritySectionProps> = ({
   );
   return (
     <SectionDetail
-      title="Network and Security"
+      title="Network and security"
       properties={properties}
       onEdit={onEdit}
       showEdit={showEdit}
@@ -609,7 +609,7 @@ export const SessionLifecycleSection: React.FC<
   );
   return (
     <SectionDetail
-      title="Session Lifecycle"
+      title="Session lifecycle"
       properties={properties}
       onEdit={onEdit}
       showEdit={showEdit}
@@ -669,7 +669,7 @@ export const OtherCustomizationSection: React.FC<
     );
     return (
       <SectionDetail
-        title="Other Customization"
+        title="Other customizations"
         properties={properties}
         onEdit={onEdit}
         showEdit={showEdit}
@@ -748,35 +748,35 @@ export const CreateRuntimeProfileComponent: React.FC<
       useState<boolean>(true);
 
     // Configuration states using domain interfaces
-  const [runtimeEnvironmentConfig] = useState<IRuntimeEnvironmentConfig>(
-    initialRuntimeEnvironmentConfig || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG
-  );
-  const [driverAndExecutorConfiguration] =
-    useState<IDriverAndExecutorConfiguration>(
-      initialDriverAndExecutorConfiguration || {
-        ...DEFAULT_DRIVER_AND_EXECUTOR_CONFIG,
-        ...(initialDriverConfig || {}),
-        ...(initialExecutorDiskConfig || {})
-      }
+    const [runtimeEnvironmentConfig] = useState<IRuntimeEnvironmentConfig>(
+      initialRuntimeEnvironmentConfig || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG
     );
-  const [autoscalingConfig] = useState<IAutoscalingConfig>(
-    initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
-  );
-  const [metastoreConfig] = useState<IMetastoreConfig>(
-    initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
-  );
-  const [networkAndSecurityConfig] = useState<INetworkAndSecurityConfig>(
-    initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG
-  );
-  const [sessionLifecycleConfig] = useState<ISessionLifecycleConfig>(
-    initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
-  );
-  const [sparkProperties] = useState<SparkProperties>(
-    initialSparkProperties || DEFAULT_SPARK_PROPERTIES
-  );
-  const [labels] = useState<ProfileLabels>(
-    initialLabels || DEFAULT_PROFILE_LABELS
-  );
+    const [driverAndExecutorConfiguration] =
+      useState<IDriverAndExecutorConfiguration>(
+        initialDriverAndExecutorConfiguration || {
+          ...DEFAULT_DRIVER_AND_EXECUTOR_CONFIG,
+          ...(initialDriverConfig || {}),
+          ...(initialExecutorDiskConfig || {})
+        }
+      );
+    const [autoscalingConfig] = useState<IAutoscalingConfig>(
+      initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
+    );
+    const [metastoreConfig] = useState<IMetastoreConfig>(
+      initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
+    );
+    const [networkAndSecurityConfig] = useState<INetworkAndSecurityConfig>(
+      initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG
+    );
+    const [sessionLifecycleConfig] = useState<ISessionLifecycleConfig>(
+      initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
+    );
+    const [sparkProperties] = useState<SparkProperties>(
+      initialSparkProperties || DEFAULT_SPARK_PROPERTIES
+    );
+    const [labels] = useState<ProfileLabels>(
+      initialLabels || DEFAULT_PROFILE_LABELS
+    );
 
     // React Hook Form initialization
     const {
@@ -892,10 +892,9 @@ export const CreateRuntimeProfileComponent: React.FC<
 
         <div className="runtime-profile-container">
           <div className="runtime-profile-intro-text">
-            A runtime profile is a named, reusable set of Serverless Spark runtime
-            settings — image version, engine identity, networking, autoscaling,
-            libraries and more. Once you configure it you can use it to submit
-            batches effortlessly.
+            A runtime profile is a reusable set of Serverless Spark runtime
+            settings, such as executor configuration. You can create interactive notebooksn and submit
+            workloads with a runtime profile.
           </div>
 
           <form className="runtime-profile-form" onSubmit={handleSubmit(onSubmit)}>
@@ -1086,7 +1085,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 {isSubmitting ? (
                   <CircularProgress size={16} color="inherit" />
                 ) : (
-                  'CREATE'
+                  'Create a runtime profile'
                 )}
               </button>
               <button
@@ -1094,7 +1093,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 className="job-cancel-button-style"
                 onClick={handleBack}
               >
-                CANCEL
+                Cancel
               </button>
             </div>
           </form>

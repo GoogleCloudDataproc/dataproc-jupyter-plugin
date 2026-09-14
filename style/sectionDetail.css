@@ -76,6 +76,13 @@
   pointer-events: none;
 }
 
+.section-detail-edit-button path {
+  fill: var(--jp-ui-font-color2, #5f6368);
+}
+
+.section-detail-edit-button:hover:not(.disabled) path {
+  fill: var(--jp-ui-font-color1, #3c4043);
+}
 .section-detail-edit-button .edit-label-text {
   font-family: Roboto, 'Segoe UI', Arial, sans-serif;
   font-style: normal;
@@ -92,7 +99,7 @@
 .section-detail-divider {
   width: 100%;
   height: 1px;
-  background-color: var(--jp-border-color2, #e0e0e0);
+  background-color: var(--jp-border-color1, #80868b);
   margin-top: 4px;
   margin-bottom: 8px;
 }
@@ -105,7 +112,7 @@
   box-sizing: border-box;
 }
 
-/* Key-value row with thinner border-bottom */
+/* Key-value row with 0.5px lighter border-bottom */
 .section-detail-row {
   display: flex !important;
   flex-direction: row !important;
@@ -113,7 +120,7 @@
   align-items: flex-start !important;
   min-height: 24px;
   padding: 6px 0;
-  border-bottom: 1px solid var(--jp-layout-color3);
+  border-bottom: 0.5px solid var(--jp-border-color2, #e0e0e0);
   font-family: Roboto, 'Segoe UI', Arial, sans-serif;
   width: 100%;
   box-sizing: border-box;
@@ -121,12 +128,12 @@
 
 .section-detail-label {
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
   font-size: 13px;
   line-height: 18px;
   width: 40%;
   min-width: 200px;
-  color: var(--jp-ui-font-color0);
+  color: var(--jp-ui-font-color1);
   text-align: left;
   flex-shrink: 0;
   overflow-wrap: anywhere;
@@ -139,7 +146,7 @@
   font-size: 13px;
   line-height: 18px;
   width: 60%;
-  color: var(--jp-ui-font-color2);
+  color: var(--jp-ui-font-color1);
   text-align: left;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -164,10 +171,13 @@
   text-align: left;
 }
 
-/* Additional configuration section styling (70% width, icon on rightmost side) */
+/* Additional configuration section styling (matches 620px width of intro text with border-top) */
 .additional-config-section {
-  width: 70%;
+  max-width: 620px;
+    width: 100%;
   margin-top: 24px;
+  padding-top: 16px;
+    border-top: 1px solid var(--jp-border-color2, #e0e0e0);
   box-sizing: border-box;
 }
 
@@ -200,7 +210,15 @@ body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button:hover:not
 }
 
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-divider {
-  background-color: var(--jp-border-color2, #3c4043);
+  background-color: var(--jp-border-color1, #9aa0a6);
+  }
+  
+  body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button path {
+    fill: var(--jp-ui-font-color2, #9aa0a6);
+  }
+  
+  body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button:hover:not(.disabled) path {
+    fill: var(--jp-ui-font-color0, #ffffff);
 }
 
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-link {
