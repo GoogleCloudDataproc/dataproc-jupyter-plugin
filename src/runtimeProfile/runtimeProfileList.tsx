@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { RuntimeProfileService } from './runtimeProfileService';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { Notification } from '@jupyterlab/apputils';
@@ -19,6 +20,8 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [profileToDelete, setProfileToDelete] = useState<IRuntimeProfile | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -57,25 +60,82 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
     fetchProfiles(pageTokens[currentPage]);
   }, [currentPage]);
 
-  const handleDelete = async (profileName: string, id: string) => {
-    if (confirm(`Are you sure you want to delete ${profileName}?`)) {
-      try {
-        await RuntimeProfileService.deleteRuntimeProfile(id, profileName);
-        Notification.emit(`${profileName} is deleted successfully`, 'success', {
-          autoClose: 5000
-        });
-        fetchProfiles(pageTokens[currentPage]);
-      } catch (error) {
-        DataprocLoggingService.log(`Error deleting profile: ${error}`, LOG_LEVEL.ERROR);
-        Notification.emit(`Failed to delete ${profileName}: ${error}`, 'error', {
-          autoClose: 5000
-        });
-      }
+  const openDeleteModal = (profile: IRuntimeProfile) => {
+    setOpenDropdownId(null);
+    setProfileToDelete(profile);
+  };
+
+  const confirmDelete = async () => {
+    if (!profileToDelete) return;
+    setIsDeleting(true);
+    try {
+      await RuntimeProfileService.deleteRuntimeProfile(profileToDelete.id, profileToDelete.name);
+      Notification.emit(`${profileToDelete.name} is deleted successfully`, 'success', {
+        autoClose: 5000
+      });
+      setProfileToDelete(null);
+      fetchProfiles(pageTokens[currentPage]);
+    } catch (error) {
+      DataprocLoggingService.log(`Error deleting profile: ${error}`, LOG_LEVEL.ERROR);
+      Notification.emit(`Failed to delete ${profileToDelete.name}: ${error}`, 'error', {
+        autoClose: 5000
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
     <div className="runtime-profile-wrapper">
+      {profileToDelete &&
+        createPortal(
+          <div
+            className="delete-profile-modal-backdrop"
+            onClick={() => !isDeleting && setProfileToDelete(null)}
+          >
+            <div
+              className="delete-profile-modal"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="delete-profile-modal-title">
+                Delete Runtime Profile
+              </div>
+              <div className="delete-profile-modal-banner">
+                <svg
+                  className="delete-profile-modal-info-icon"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                </svg>
+                <span>This operation cannot be undone.</span>
+              </div>
+              <div className="delete-profile-modal-body">
+                Do you want to delete runtime profile {profileToDelete.name}?
+              </div>
+              <div className="delete-profile-modal-actions">
+                <button
+                  className="delete-profile-modal-btn"
+                  onClick={() => setProfileToDelete(null)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="delete-profile-modal-btn"
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
       <div className="settings-header">
         <div className="settings-header-title">
           Serverless
@@ -133,7 +193,7 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
                       <div className="dropdown">
                         <span onClick={(e) => toggleDropdown(e, profile.id)}>&#8942;</span>
                         <div className={`dropdown-content ${openDropdownId === profile.id ? 'show' : ''}`}>
-                          <div onClick={() => handleDelete(profile.name, profile.id)}>Delete</div>
+                          <div onClick={() => openDeleteModal(profile)}>Delete</div>
                         </div>
                       </div>
                     </td>
