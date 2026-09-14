@@ -100,6 +100,7 @@ export default function Common({
       })
         .then((response: Response) => response.json().then((res: any) => {
           if (res?.error?.code && !credentials?.login_error && !credentials?.config_error) {
+            setIsLoadingUser(false);
             Notification.emit(res?.error?.message, 'error', { autoClose: 5000 });
           } else {
             setUserInfo(res);
@@ -113,7 +114,8 @@ export default function Common({
     }
   };
 
-  const handleLicenseClick = async () => {
+  const handleLicenseClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
     const licenseWindow = window.open('about:blank');
     if (licenseWindow) {
       const preEle = licenseWindow.document.createElement('pre');
@@ -133,11 +135,19 @@ export default function Common({
     init();
 
     authApi().then(credentials => {
-      displayUserInfo(credentials);
       if (credentials) {
+        displayUserInfo(credentials);
         if (credentials.project_id) setProjectId(credentials.project_id);
         if (credentials.region_id) setRegion(credentials.region_id);
         setConfigError(!!(credentials.config_error || credentials.login_error));
+      } else {
+        setIsLoadingUser(false);
+        setConfigError(true);
+        Notification.emit(
+          'Failed to fetch credentials. Please check your configuration.',
+          'error',
+          { autoClose: 5000 }
+        );
       }
     });
   }, []);

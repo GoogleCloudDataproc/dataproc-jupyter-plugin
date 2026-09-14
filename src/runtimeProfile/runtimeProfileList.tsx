@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { RuntimeProfileService } from './runtimeProfileService';
 import { LabIcon } from '@jupyterlab/ui-components';
+import { Notification } from '@jupyterlab/apputils';
 import addRuntimeIcon from '../../style/icons/add_runtime_template.svg';
 import refreshIcon from '../../style/icons/refresh_icon.svg';
 import { CircularProgress } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { IRuntimeProfile, runtimeProfileListMapper } from './runtimeProfileListMapper';
 
 const iconAddRuntime = new LabIcon({ name: 'launcher:add-runtime-icon', svgstr: addRuntimeIcon });
 const iconRefresh = new LabIcon({ name: 'launcher:refresh-icon', svgstr: refreshIcon });
 
-import { IRuntimeProfile, runtimeProfileListMapper } from './runtimeProfileListMapper';
-
-export default function RuntimeProfileList() {
-
+export default function RuntimeProfileList({ app }: { app?: any }) {
   const [profiles, setProfiles] = useState<IRuntimeProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageTokens, setPageTokens] = useState<string[]>(['']);
@@ -46,6 +45,9 @@ export default function RuntimeProfileList() {
       setNextPageToken(newNextPageToken || null);
     } catch (error) {
       DataprocLoggingService.log(`Error fetching runtime profiles: ${error}`, LOG_LEVEL.ERROR);
+      Notification.emit(`Failed to fetch runtime profiles: ${error}`, 'error', {
+        autoClose: 5000
+      });
     } finally {
       setIsLoading(false);
     }
@@ -59,9 +61,15 @@ export default function RuntimeProfileList() {
     if (confirm(`Are you sure you want to delete ${profileName}?`)) {
       try {
         await RuntimeProfileService.deleteRuntimeProfile(id, profileName);
+        Notification.emit(`${profileName} is deleted successfully`, 'success', {
+          autoClose: 5000
+        });
         fetchProfiles(pageTokens[currentPage]);
       } catch (error) {
         DataprocLoggingService.log(`Error deleting profile: ${error}`, LOG_LEVEL.ERROR);
+        Notification.emit(`Failed to delete ${profileName}: ${error}`, 'error', {
+          autoClose: 5000
+        });
       }
     }
   };
@@ -72,7 +80,10 @@ export default function RuntimeProfileList() {
         <div className="settings-header-title">
           Serverless
           <div className="settings-header-actions" style={{ marginLeft: '16px' }}>
-            <button className="secondary-action-btn">
+            <button
+              className="secondary-action-btn"
+              onClick={() => app?.commands.execute('create-runtime-profile-component')}
+            >
               <iconAddRuntime.react tag="div" />
               Create runtime profile
             </button>
@@ -105,8 +116,8 @@ export default function RuntimeProfileList() {
                 </tr>
               </thead>
               <tbody>
-                {profiles.map((profile, idx) => (
-                  <tr key={idx}>
+                {profiles.map((profile) => (
+                  <tr key={profile.id}>
                     <td className="profile-name-cell">{profile.name}</td>
                     <td>{profile.region}</td>
                     <td title={profile.description}>
@@ -120,9 +131,9 @@ export default function RuntimeProfileList() {
                     <td>{profile.lastUsed}</td>
                     <td className="actions-cell">
                       <div className="dropdown">
-                        <span onClick={(e) => toggleDropdown(e, (profile as any).id)}>&#8942;</span>
-                        <div className={`dropdown-content ${openDropdownId === (profile as any).id ? 'show' : ''}`}>
-                          <div onClick={() => handleDelete(profile.name, (profile as any).id)}>Delete</div>
+                        <span onClick={(e) => toggleDropdown(e, profile.id)}>&#8942;</span>
+                        <div className={`dropdown-content ${openDropdownId === profile.id ? 'show' : ''}`}>
+                          <div onClick={() => handleDelete(profile.name, profile.id)}>Delete</div>
                         </div>
                       </div>
                     </td>
@@ -132,7 +143,7 @@ export default function RuntimeProfileList() {
             </table>
             <div className="table-footer">
               {profiles.length > 0 ? (
-                `Showing ${currentPage * 10 + 1} – ${currentPage * 10 + profiles.length} profiles`
+                `Showing ${currentPage * 50 + 1} – ${currentPage * 50 + profiles.length} profiles`
               ) : (
                 'Showing 0 profiles'
               )}

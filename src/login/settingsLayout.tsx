@@ -61,7 +61,7 @@ export default function SettingsLayout({
         )}
 
         {activeTab === 'spark' && (
-          <RuntimeProfileList />
+          <RuntimeProfileList app={app} />
         )}
       </div>
     </div>

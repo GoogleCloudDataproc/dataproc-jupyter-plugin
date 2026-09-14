@@ -6,12 +6,13 @@ export interface IRuntimeProfile {
   runtimeVersion: string;
   creator: string;
   lastUsed: string;
-  id?: string;
+  id: string;
 }
 
 const formatLastUsed = (dateString: string) => {
   if (!dateString) return '';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
   const now = new Date();
 
   const isToday =

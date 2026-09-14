@@ -22,7 +22,6 @@ import {
   HTTP_METHOD
 } from '../utils/const';
 import { authApi, authenticatedFetch, loggedFetch } from '../utils/utils';
-import { RuntimeService } from '../runtime/runtimeService';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ICreateRuntimeProfilePayload,
@@ -71,7 +70,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     pageToken: string = ''
   ): Promise<{ templates: any[]; nextPageToken?: string }> {
     const queryParams = new URLSearchParams({
-      pageSize: '30',
+      pageSize: '50',
       pageToken: pageToken
     });
     const response = await authenticatedFetch({
@@ -81,6 +80,12 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       queryParams: queryParams
     });
     const data = await response.json();
+    if (!response.ok || (data as any)?.error) {
+      throw new Error(
+        (data as any)?.error?.message ||
+          `Failed to fetch runtime profiles: ${response.statusText}`
+      );
+    }
     return {
       templates: (data as any)?.sessionTemplates || [],
       nextPageToken: (data as any)?.nextPageToken
@@ -91,7 +96,29 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     id: string,
     displayName: string = id
   ): Promise<void> {
-    await RuntimeService.deleteRuntimeTemplateAPI(id, displayName);
+    const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
+    if (!credentials) {
+      throw new Error('Authentication failed');
+    }
+    const response = await loggedFetch(`${DATAPROC}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token
+      }
+    });
+    let data: any = {};
+    try {
+      data = await response.json();
+    } catch {
+      // Ignore JSON parse errors for empty responses
+    }
+    if (!response.ok || data?.error) {
+      throw new Error(
+        data?.error?.message || `Failed to delete runtime profile ${displayName}`
+      );
+    }
   }
 
   constructor(useMock: boolean = RUNTIME_PROFILE_USE_MOCK) {

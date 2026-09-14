@@ -1,17 +1,12 @@
 import { RuntimeProfileService } from '../runtimeProfile/runtimeProfileService';
-import { authenticatedFetch } from '../utils/utils';
-import { RuntimeService } from '../runtime/runtimeService';
+import { authenticatedFetch, loggedFetch, authApi } from '../utils/utils';
 import { HTTP_METHOD } from '../utils/const';
 
 jest.mock('../utils/utils', () => ({
   ...jest.requireActual('../utils/utils'),
-  authenticatedFetch: jest.fn()
-}));
-
-jest.mock('../runtime/runtimeService', () => ({
-  RuntimeService: {
-    deleteRuntimeTemplateAPI: jest.fn()
-  }
+  authenticatedFetch: jest.fn(),
+  loggedFetch: jest.fn(),
+  authApi: jest.fn()
 }));
 
 describe('RuntimeProfileService', () => {
@@ -23,6 +18,7 @@ describe('RuntimeProfileService', () => {
     it('fetches profiles successfully via authenticatedFetch to sessionTemplates', async () => {
       const mockData = { sessionTemplates: [{ name: 'template1' }], nextPageToken: 'next-token' };
       (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: jest.fn().mockResolvedValue(mockData)
       });
 
@@ -32,7 +28,7 @@ describe('RuntimeProfileService', () => {
         uri: 'sessionTemplates',
         method: HTTP_METHOD.GET,
         regionIdentifier: 'locations',
-        queryParams: new URLSearchParams({ pageSize: '30', pageToken: 'page-1' })
+        queryParams: new URLSearchParams({ pageSize: '50', pageToken: 'page-1' })
       });
       expect(result).toEqual({
         templates: mockData.sessionTemplates,
@@ -42,6 +38,7 @@ describe('RuntimeProfileService', () => {
 
     it('returns empty array if sessionTemplates is missing', async () => {
       (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
         json: jest.fn().mockResolvedValue({})
       });
 
@@ -51,12 +48,22 @@ describe('RuntimeProfileService', () => {
         uri: 'sessionTemplates',
         method: HTTP_METHOD.GET,
         regionIdentifier: 'locations',
-        queryParams: new URLSearchParams({ pageSize: '30', pageToken: '' })
+        queryParams: new URLSearchParams({ pageSize: '50', pageToken: '' })
       });
       expect(result).toEqual({
         templates: [],
         nextPageToken: undefined
       });
+    });
+
+    it('throws error if response is not ok or contains error payload', async () => {
+      (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        statusText: 'Forbidden',
+        json: jest.fn().mockResolvedValue({ error: { message: 'Permission denied' } })
+      });
+
+      await expect(RuntimeProfileService.fetchRuntimeProfiles()).rejects.toThrow('Permission denied');
     });
 
     it('throws error if authenticatedFetch fails', async () => {
@@ -67,19 +74,32 @@ describe('RuntimeProfileService', () => {
   });
 
   describe('deleteRuntimeProfile', () => {
-    it('deletes profile successfully via RuntimeService.deleteRuntimeTemplateAPI', async () => {
-      (RuntimeService.deleteRuntimeTemplateAPI as jest.Mock).mockResolvedValue({});
+    it('deletes profile successfully via loggedFetch', async () => {
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'test-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({})
+      });
 
       await RuntimeProfileService.deleteRuntimeProfile('profile1', 'Profile 1');
 
-      expect(RuntimeService.deleteRuntimeTemplateAPI).toHaveBeenCalledWith(
-        'profile1',
-        'Profile 1'
+      expect(loggedFetch).toHaveBeenCalledWith(
+        expect.stringContaining('profile1'),
+        expect.objectContaining({
+          method: 'DELETE',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer test-token'
+          })
+        })
       );
     });
 
-    it('throws error if deleteRuntimeTemplateAPI fails', async () => {
-      (RuntimeService.deleteRuntimeTemplateAPI as jest.Mock).mockRejectedValue(new Error('Delete error'));
+    it('throws error if delete fails', async () => {
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'test-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: jest.fn().mockResolvedValue({ error: { message: 'Delete error' } })
+      });
 
       await expect(RuntimeProfileService.deleteRuntimeProfile('profile1')).rejects.toThrow('Delete error');
     });
