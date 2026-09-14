@@ -22,11 +22,6 @@ export interface IRegionOption {
 
 export type ExecutorType = 'standard' | 'accelerated';
 
-export interface IExecutorConfig {
-  executorType?: ExecutorType;
-  machineType?: string;
-}
-
 export interface IRuntimeEnvironmentConfig {
   runtimeProfileId?: string;
   runtimeVersion?: string;
@@ -35,22 +30,16 @@ export interface IRuntimeEnvironmentConfig {
   pythonPackageRepository?: string;
 }
 
-export interface IDriverAndExecutorConfiguration {
+export interface IExecutorAndDriverConfig {
   tier?: string;
   driverMachineType?: string;
   driverDisk?: string;
-  executorType?: ExecutorType;
+  executorType?: ExecutorType | string;
   executorDisk?: string;
-  /** @deprecated Use executorDisk instead */
-  diskType?: string;
-  /** @deprecated Use driverMachineType instead */
-  machineType?: string;
-  /** @deprecated Use driverDisk instead */
-  disk?: string;
 }
 
-export type IDriverConfig = IDriverAndExecutorConfiguration;
-export type IExecutorDiskConfig = IDriverAndExecutorConfiguration;
+/** Backward-compatibility alias */
+export type IDriverAndExecutorConfiguration = IExecutorAndDriverConfig;
 
 export interface IAutoscalingConfig {
   autoscalingEnabled?: boolean;
@@ -111,11 +100,9 @@ export interface IRuntimeProfile {
   createTime?: string;
   updateTime?: string;
   state?: string;
-  executorConfig?: IExecutorConfig;
   runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
-  driverAndExecutorConfiguration?: IDriverAndExecutorConfiguration;
-  driverConfig?: IDriverConfig;
-  executorDiskConfig?: IExecutorDiskConfig;
+  executorAndDriverConfig?: IExecutorAndDriverConfig;
+  driverAndExecutorConfiguration?: IExecutorAndDriverConfig;
   autoscalingConfig?: IAutoscalingConfig;
   metastoreConfig?: IMetastoreConfig;
   networkAndSecurityConfig?: INetworkAndSecurityConfig;
@@ -129,11 +116,9 @@ export interface ICreateRuntimeProfilePayload {
   region: string;
   description?: string;
   tier?: string;
-  executorConfig?: IExecutorConfig;
   runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
-  driverAndExecutorConfiguration?: IDriverAndExecutorConfiguration;
-  driverConfig?: IDriverConfig;
-  executorDiskConfig?: IExecutorDiskConfig;
+  executorAndDriverConfig?: IExecutorAndDriverConfig;
+  driverAndExecutorConfiguration?: IExecutorAndDriverConfig;
   autoscalingConfig?: IAutoscalingConfig;
   metastoreConfig?: IMetastoreConfig;
   networkAndSecurityConfig?: INetworkAndSecurityConfig;
