@@ -76,7 +76,7 @@ import {
 } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { MuiChipsInput } from 'mui-chips-input';
-import { RunTimeSerive } from './runtimeService';
+import { RuntimeService } from './runtimeService';
 import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import helpIcon from '../../style/icons/help_icon.svg';
@@ -645,11 +645,11 @@ function CreateRunTime({
   }, [autoScalingDetailUpdated]);
 
   const displayUserInfo = async () => {
-    await RunTimeSerive.displayUserInfoService(setUserInfo);
+    await RuntimeService.displayUserInfoService(setUserInfo);
   };
 
   const runtimeSharedProject = async () => {
-    await RunTimeSerive.runtimeSharedProjectService(
+    await RuntimeService.runtimeSharedProjectService(
       setProjectInfo,
       setSharedSubNetworkList
     );
@@ -959,7 +959,7 @@ function CreateRunTime({
   };
 
   const listNetworksFromSubNetworkAPI = async (subnetwork: string) => {
-    await RunTimeSerive.listNetworksFromSubNetworkAPIService(
+    await RuntimeService.listNetworksFromSubNetworkAPIService(
       subnetwork,
       setIsloadingNetwork,
       setNetworkSelected,
@@ -968,11 +968,11 @@ function CreateRunTime({
     );
   };
   const listClustersAPI = async () => {
-    await RunTimeSerive.listClustersAPIService(setClustersList);
+    await RuntimeService.listClustersAPIService(setClustersList);
   };
 
   const listNetworksAPI = async () => {
-    await RunTimeSerive.listNetworksAPIService(
+    await RuntimeService.listNetworksAPIService(
       setNetworklist,
       setNetworkSelected,
       selectedRuntimeClone,
@@ -982,7 +982,7 @@ function CreateRunTime({
   };
 
   const listSubNetworksAPI = async (network: string) => {
-    await RunTimeSerive.listSubNetworksAPIService(
+    await RuntimeService.listSubNetworksAPIService(
       network,
       setSubNetworklist,
       setSubNetworkSelected,
@@ -999,7 +999,7 @@ function CreateRunTime({
     setIsLoadingService(true);
     try {
       let transformedServiceList: string[] = [];
-      let response = await RunTimeSerive.listMetaStoreAPIService(
+      let response = await RuntimeService.listMetaStoreAPIService(
         currentprojectId,
         regionId,
         network
@@ -1019,7 +1019,7 @@ function CreateRunTime({
       // Removing main spinner
       setIsLoadingService(false);
       
-      transformedServiceList = await RunTimeSerive.regionListAPIService(
+      transformedServiceList = await RuntimeService.regionListAPIService(
         currentprojectId,
         network
       );
@@ -1038,11 +1038,11 @@ function CreateRunTime({
   };
 
   const listKeyRingsAPI = async () => {
-    await RunTimeSerive.listKeyRingsAPIService(setKeyRinglist);
+    await RuntimeService.listKeyRingsAPIService(setKeyRinglist);
   };
 
   const listKeysAPI = async (keyRing: string) => {
-    await RunTimeSerive.listKeysAPIService(keyRing, setKeylist, setKeySelected);
+    await RuntimeService.listKeysAPIService(keyRing, setKeylist, setKeySelected);
   };
 
   const generateRandomHex = () => {
@@ -1410,7 +1410,7 @@ function CreateRunTime({
     }
   };
   const updateRuntimeApi = async (payload: any) => {
-    await RunTimeSerive.updateRuntimeApiService(
+    await RuntimeService.updateRuntimeApiService(
       payload,
       app,
       fromPage,

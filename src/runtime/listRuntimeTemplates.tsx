@@ -24,7 +24,7 @@ import GlobalFilter from '../utils/globalFilter';
 import TableData from '../utils/tableData';
 import { ICellProps } from '../utils/utils';
 import DeletePopup from '../utils/deletePopup';
-import { RunTimeSerive } from './runtimeService';
+import { RuntimeService } from './runtimeService';
 import { PaginationView } from '../utils/paginationView';
 import PollingTimer from '../utils/pollingTimer';
 import SubmitJobIcon from '../../style/icons/submit_job_icon.svg';
@@ -147,7 +147,7 @@ function ListRuntimeTemplates({
   );
 
   const listRuntimeTemplatesAPI = async () => {
-    await RunTimeSerive.listRuntimeTemplatesAPIService(
+    await RuntimeService.listRuntimeTemplatesAPIService(
       renderActions,
       setIsLoading,
       setRuntimeTemplateslist,
@@ -171,7 +171,7 @@ function ListRuntimeTemplates({
   };
 
   const handleDelete = async () => {
-    await RunTimeSerive.deleteRuntimeTemplateAPI(
+    await RuntimeService.deleteRuntimeTemplateAPI(
       selectedRuntimeTemplateValue,
       selectedRuntimeTemplateDisplayName
     );

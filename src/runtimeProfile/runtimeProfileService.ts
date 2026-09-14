@@ -18,9 +18,11 @@
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  gcpServiceUrls
+  gcpServiceUrls,
+  HTTP_METHOD
 } from '../utils/const';
-import { authApi, loggedFetch } from '../utils/utils';
+import { authApi, authenticatedFetch, loggedFetch } from '../utils/utils';
+import { RuntimeService } from '../runtime/runtimeService';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ICreateRuntimeProfilePayload,
@@ -64,6 +66,33 @@ const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
 export class RuntimeProfileService implements IRuntimeProfileService {
   private useMock: boolean;
   private inMemoryProfiles: IRuntimeProfile[] = [];
+
+  static async fetchRuntimeProfiles(
+    pageToken: string = ''
+  ): Promise<{ templates: any[]; nextPageToken?: string }> {
+    const queryParams = new URLSearchParams({
+      pageSize: '30',
+      pageToken: pageToken
+    });
+    const response = await authenticatedFetch({
+      uri: 'sessionTemplates',
+      method: HTTP_METHOD.GET,
+      regionIdentifier: 'locations',
+      queryParams: queryParams
+    });
+    const data = await response.json();
+    return {
+      templates: (data as any)?.sessionTemplates || [],
+      nextPageToken: (data as any)?.nextPageToken
+    };
+  }
+
+  static async deleteRuntimeProfile(
+    id: string,
+    displayName: string = id
+  ): Promise<void> {
+    await RuntimeService.deleteRuntimeTemplateAPI(id, displayName);
+  }
 
   constructor(useMock: boolean = RUNTIME_PROFILE_USE_MOCK) {
     this.useMock = useMock;

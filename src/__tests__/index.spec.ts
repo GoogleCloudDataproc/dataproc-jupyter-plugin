@@ -102,7 +102,7 @@ jest.mock('../bigQuery/bigQueryService', () => ({
 }));
 
 jest.mock('../runtime/runtimeService', () => ({
-  RunTimeSerive: {
+  RuntimeService: {
     checkDataprocApiEnabledService: jest
       .fn()
       .mockResolvedValue({ is_enabled: true })

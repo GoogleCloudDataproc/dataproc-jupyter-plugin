@@ -4,6 +4,8 @@ import { JupyterLab } from '@jupyterlab/application';
 import { ILauncher } from '@jupyterlab/launcher';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import '../../style/settingsLayout.css';
+import Common from './common';
+import RuntimeProfileList from '../runtimeProfile/runtimeProfileList';
 
 interface ISettingsLayoutProps {
   configError: boolean;
@@ -48,15 +50,18 @@ export default function SettingsLayout({
 
       <div className="settings-content-area">
         {activeTab === 'common' && (
-          <div className="settings-component">
-            {/* Common settings component to be added here */}
-          </div>
+          <Common
+            configError={configError}
+            setConfigError={setConfigError}
+            app={app}
+            launcher={launcher}
+            settingRegistry={settingRegistry}
+            themeManager={themeManager}
+          />
         )}
 
         {activeTab === 'spark' && (
-          <div className="settings-component">
-            {/* serverless listing component to be added here */}
-          </div>
+          <RuntimeProfileList />
         )}
       </div>
     </div>
