@@ -86,16 +86,16 @@ export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
 };
 
 export const DEFAULT_DRIVER_AND_EXECUTOR_CONFIG: IDriverAndExecutorConfiguration =
-{
-  tier: 'Standard',
-  driverMachineType: 'Standard-4',
-  driverDisk: 'standard persistent disk',
-  executorType: 'standard',
-  executorDisk: 'Standard persistent disk (HDD), 100 GB',
-  machineType: 'Standard-4',
-  disk: 'standard persistent disk',
-  diskType: 'Standard persistent disk (HDD), 100 GB'
-};
+  {
+    tier: 'Standard',
+    driverMachineType: 'Standard-4',
+    driverDisk: 'standard persistent disk',
+    executorType: 'standard',
+    executorDisk: 'Standard persistent disk (HDD), 100 GB',
+    machineType: 'Standard-4',
+    disk: 'standard persistent disk',
+    diskType: 'Standard persistent disk (HDD), 100 GB'
+  };
 
 export const DEFAULT_DRIVER_CONFIG: IDriverConfig =
   DEFAULT_DRIVER_AND_EXECUTOR_CONFIG;
@@ -663,20 +663,20 @@ export const OtherCustomizationSection: React.FC<
   showEdit = true,
   isEditDisabled = false
 }) => {
-    const properties = React.useMemo(
-      () => formatOtherCustomizationProperties(sparkProperties, labels),
-      [sparkProperties, labels]
-    );
-    return (
-      <SectionDetail
-        title="Other customizations"
-        properties={properties}
-        onEdit={onEdit}
-        showEdit={showEdit}
-        isEditDisabled={isEditDisabled}
-      />
-    );
-  };
+  const properties = React.useMemo(
+    () => formatOtherCustomizationProperties(sparkProperties, labels),
+    [sparkProperties, labels]
+  );
+  return (
+    <SectionDetail
+      title="Other customizations"
+      properties={properties}
+      onEdit={onEdit}
+      showEdit={showEdit}
+      isEditDisabled={isEditDisabled}
+    />
+  );
+};
 
 export interface IProfileLabelsSectionProps {
   labels?: ProfileLabels;
@@ -741,366 +741,380 @@ export const CreateRuntimeProfileComponent: React.FC<
   initialSparkProperties,
   initialLabels
 }): React.JSX.Element => {
-    // Options & Data State
-    const [regions, setRegions] = useState<IRegionOption[]>([]);
-    const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
-    const [expandAdditionalConfig, setExpandAdditionalConfig] =
-      useState<boolean>(true);
+  // Options & Data State
+  const [regions, setRegions] = useState<IRegionOption[]>([]);
+  const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
+  const [expandAdditionalConfig, setExpandAdditionalConfig] =
+    useState<boolean>(true);
 
-    // Configuration states using domain interfaces
-    const [runtimeEnvironmentConfig] = useState<IRuntimeEnvironmentConfig>(
-      initialRuntimeEnvironmentConfig || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG
-    );
-    const [driverAndExecutorConfiguration] =
-      useState<IDriverAndExecutorConfiguration>(
-        initialDriverAndExecutorConfiguration || {
-          ...DEFAULT_DRIVER_AND_EXECUTOR_CONFIG,
-          ...(initialDriverConfig || {}),
-          ...(initialExecutorDiskConfig || {})
-        }
-      );
-    const [autoscalingConfig] = useState<IAutoscalingConfig>(
-      initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
-    );
-    const [metastoreConfig] = useState<IMetastoreConfig>(
-      initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
-    );
-    const [networkAndSecurityConfig] = useState<INetworkAndSecurityConfig>(
-      initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG
-    );
-    const [sessionLifecycleConfig] = useState<ISessionLifecycleConfig>(
-      initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
-    );
-    const [sparkProperties] = useState<SparkProperties>(
-      initialSparkProperties || DEFAULT_SPARK_PROPERTIES
-    );
-    const [labels] = useState<ProfileLabels>(
-      initialLabels || DEFAULT_PROFILE_LABELS
-    );
-
-    // React Hook Form initialization
-    const {
-      control,
-      handleSubmit,
-      setValue,
-      formState: { errors, isSubmitting }
-    } = useForm<IRuntimeProfileFormData>({
-      mode: 'onChange',
-      defaultValues: {
-        displayName: '',
-        region: '',
-        description: ''
+  // Configuration states using domain interfaces
+  const [runtimeEnvironmentConfig] = useState<IRuntimeEnvironmentConfig>(
+    initialRuntimeEnvironmentConfig || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG
+  );
+  const [driverAndExecutorConfiguration] =
+    useState<IDriverAndExecutorConfiguration>(
+      initialDriverAndExecutorConfiguration || {
+        ...DEFAULT_DRIVER_AND_EXECUTOR_CONFIG,
+        ...(initialDriverConfig || {}),
+        ...(initialExecutorDiskConfig || {})
       }
-    });
+    );
+  const [autoscalingConfig] = useState<IAutoscalingConfig>(
+    initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
+  );
+  const [metastoreConfig] = useState<IMetastoreConfig>(
+    initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
+  );
+  const [networkAndSecurityConfig] = useState<INetworkAndSecurityConfig>(
+    initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG
+  );
+  const [sessionLifecycleConfig] = useState<ISessionLifecycleConfig>(
+    initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
+  );
+  const [sparkProperties] = useState<SparkProperties>(
+    initialSparkProperties || DEFAULT_SPARK_PROPERTIES
+  );
+  const [labels] = useState<ProfileLabels>(
+    initialLabels || DEFAULT_PROFILE_LABELS
+  );
 
-    // Load Regions from service
-    useEffect(() => {
-      let isMounted = true;
-      const loadInitialData = async () => {
-        setIsLoadingOptions(true);
-        try {
-          const loadedRegions = await service.getRegions();
+  // React Hook Form initialization
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm<IRuntimeProfileFormData>({
+    mode: 'onChange',
+    defaultValues: {
+      displayName: '',
+      region: '',
+      description: ''
+    }
+  });
 
-          if (isMounted) {
-            setRegions(loadedRegions);
-
-            if (loadedRegions.length > 0) {
-              setValue('region', loadedRegions[0].name, { shouldValidate: true });
-            }
-          }
-        } catch (error) {
-          console.error('Failed to load runtime profile initial data', error);
-        } finally {
-          if (isMounted) {
-            setIsLoadingOptions(false);
-          }
-        }
-      };
-
-      loadInitialData();
-
-      return () => {
-        isMounted = false;
-      };
-    }, [service, setValue]);
-
-    const handleBack = () => {
-      if (onBack) {
-        onBack();
-      } else if (app?.shell?.activeWidget) {
-        app.shell.activeWidget.close();
-      }
-    };
-
-    const onSubmit = async (data: IRuntimeProfileFormData) => {
+  // Load Regions from service
+  useEffect(() => {
+    let isMounted = true;
+    const loadInitialData = async () => {
+      setIsLoadingOptions(true);
       try {
-        const payload: ICreateRuntimeProfilePayload = {
-          displayName: data.displayName.trim(),
-          region: data.region,
-          description: data.description.trim() || undefined,
-          tier: driverAndExecutorConfiguration.tier,
-          runtimeEnvironmentConfig,
-          driverAndExecutorConfiguration,
-          driverConfig: driverAndExecutorConfiguration,
-          executorDiskConfig: driverAndExecutorConfiguration,
-          autoscalingConfig,
-          metastoreConfig,
-          networkAndSecurityConfig,
-          sessionLifecycleConfig,
-          sparkProperties,
-          labels
-        };
-        console.log("Payload", payload)
+        const loadedRegions = await service.getRegions();
 
-        await service.createRuntimeProfile(payload, undefined, data.region);
+        if (isMounted) {
+          setRegions(loadedRegions);
 
-        Notification.emit(
-          `Runtime profile "${data.displayName}" created successfully.`,
-          'success',
-          { autoClose: 5000 }
-        );
-
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          handleBack();
+          if (loadedRegions.length > 0) {
+            setValue('region', loadedRegions[0].name, { shouldValidate: true });
+          }
         }
-      } catch (error: any) {
-        const errorMessage =
-          error?.message || 'Failed to create runtime profile.';
-        Notification.emit(errorMessage, 'error', { autoClose: 5000 });
+      } catch (error) {
+        console.error('Failed to load runtime profile initial data', error);
+      } finally {
+        if (isMounted) {
+          setIsLoadingOptions(false);
+        }
       }
     };
 
-    return (
-      <div className="runtime-profile-main-wrapper">
-        <div className="cluster-details-header">
-          <div
-            className="back-arrow-icon"
-            onClick={handleBack}
-            role="button"
-            tabIndex={0}
-            aria-label="Back"
-          >
-            <iconLeftArrow.react
-              tag="div"
-              className="icon-white logo-alignment-style"
-            />
-          </div>
-          <div className="cluster-details-title">Create a runtime profile</div>
+    loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [service, setValue]);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else if (app?.shell?.activeWidget) {
+      app.shell.activeWidget.close();
+    }
+  };
+
+  const onSubmit = async (data: IRuntimeProfileFormData) => {
+    try {
+      const payload: ICreateRuntimeProfilePayload = {
+        displayName: data.displayName.trim(),
+        region: data.region,
+        description: data.description.trim() || undefined,
+        tier: driverAndExecutorConfiguration.tier,
+        runtimeEnvironmentConfig,
+        driverAndExecutorConfiguration,
+        driverConfig: driverAndExecutorConfiguration,
+        executorDiskConfig: driverAndExecutorConfiguration,
+        autoscalingConfig,
+        metastoreConfig,
+        networkAndSecurityConfig,
+        sessionLifecycleConfig,
+        sparkProperties,
+        labels
+      };
+
+      await service.createRuntimeProfile(payload, undefined, data.region);
+
+      Notification.emit(
+        `Runtime profile "${data.displayName}" created successfully.`,
+        'success',
+        { autoClose: 5000 }
+      );
+
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        handleBack();
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.message || 'Failed to create runtime profile.';
+      Notification.emit(errorMessage, 'error', { autoClose: 5000 });
+    }
+  };
+
+  return (
+    <div className="runtime-profile-main-wrapper">
+      <div className="cluster-details-header">
+        <div
+          className="back-arrow-icon"
+          onClick={handleBack}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              handleBack();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Back"
+        >
+          <iconLeftArrow.react
+            tag="div"
+            className="icon-white logo-alignment-style"
+          />
+        </div>
+        <div className="cluster-details-title">Create a runtime profile</div>
+      </div>
+
+      <div className="runtime-profile-container">
+        <div className="runtime-profile-intro-text">
+          A runtime profile is a reusable set of Serverless Spark runtime
+          settings, such as executor configuration. You can create interactive
+          notebooks and submit workloads with a runtime profile.
         </div>
 
-        <div className="runtime-profile-container">
-          <div className="runtime-profile-intro-text">
-            A runtime profile is a reusable set of Serverless Spark runtime
-            settings, such as executor configuration. You can create interactive notebooksn and submit
-            workloads with a runtime profile.
-          </div>
-
-          <form className="runtime-profile-form" onSubmit={handleSubmit(onSubmit)}>
-            {/* Row 1: Display name & Region */}
-            <div className="runtime-profile-row">
-              <div className="runtime-profile-col">
-                <Controller
-                  name="displayName"
-                  control={control}
-                  rules={{
-                    required: 'Display name is required',
-                    validate: value =>
-                      value.trim().length > 0 || 'Display name is required'
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      id="runtime-profile-display-name"
-                      label="Display name"
-                      placeholder="e.g. my-runtime-profile"
-                      variant="outlined"
-                      size="small"
-                      fullWidth
-                      error={Boolean(errors.displayName)}
-                      helperText={errors.displayName?.message}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  )}
-                />
-              </div>
-              <div className="runtime-profile-col">
-                <FormControl size="small" fullWidth variant="outlined">
-                  <InputLabel id="runtime-profile-region-label" shrink>
-                    Region *
-                  </InputLabel>
-                  <Controller
-                    name="region"
-                    control={control}
-                    rules={{ required: 'Region is required' }}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        labelId="runtime-profile-region-label"
-                        id="runtime-profile-region"
-                        label="Region *"
-                        notched
-                        disabled={isLoadingOptions}
-                      >
-                        {regions.map(r => (
-                          <MenuItem key={r.name} value={r.name}>
-                            {r.displayName}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    )}
-                  />
-                </FormControl>
-              </div>
-            </div>
-
-            {/* Row 2: Description */}
-            <div className="runtime-profile-full-row">
+        <form
+          className="runtime-profile-form"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          {/* Row 1: Display name & Region */}
+          <div className="runtime-profile-row">
+            <div className="runtime-profile-col">
               <Controller
-                name="description"
+                name="displayName"
                 control={control}
+                rules={{
+                  required: 'Display name is required',
+                  validate: value =>
+                    value.trim().length > 0 || 'Display name is required'
+                }}
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    id="runtime-profile-description"
-                    label="Description"
-                    placeholder="Optional description"
+                    id="runtime-profile-display-name"
+                    label="Display name"
+                    placeholder="e.g. my-runtime-profile"
                     variant="outlined"
                     size="small"
                     fullWidth
+                    error={Boolean(errors.displayName)}
+                    helperText={errors.displayName?.message}
                     InputLabelProps={{ shrink: true }}
                   />
                 )}
               />
             </div>
-            {/* TO DO:-
+            <div className="runtime-profile-col">
+              <FormControl size="small" fullWidth variant="outlined">
+                <InputLabel id="runtime-profile-region-label" shrink>
+                  Region *
+                </InputLabel>
+                <Controller
+                  name="region"
+                  control={control}
+                  rules={{ required: 'Region is required' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      labelId="runtime-profile-region-label"
+                      id="runtime-profile-region"
+                      label="Region *"
+                      notched
+                      disabled={isLoadingOptions}
+                    >
+                      {regions.map(r => (
+                        <MenuItem key={r.name} value={r.name}>
+                          {r.displayName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+              </FormControl>
+            </div>
+          </div>
+
+          {/* Row 2: Description */}
+          <div className="runtime-profile-full-row">
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  id="runtime-profile-description"
+                  label="Description"
+                  placeholder="Optional description"
+                  variant="outlined"
+                  size="small"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            />
+          </div>
+          {/* TO DO:-
           Executor configuration
           API integration of the form fields
           Will be taken care as part of upcoming development task */}
 
-            {/* Additional configuration (70% width) */}
-            <div className="additional-config-section">
-              <div
-                className="additional-config-header-container"
-                style={{
-                  marginBottom: expandAdditionalConfig ? '16px' : '0px'
-                }}
-                onClick={() => setExpandAdditionalConfig(!expandAdditionalConfig)}
-                role="button"
-                tabIndex={0}
-                aria-expanded={expandAdditionalConfig}
-              >
-                <div className="additional-config-header">
-                  Additional configuration
-                </div>
-                <div
-                  className="expand-icon"
-                  style={{ display: 'flex', alignItems: 'center' }}
-                >
-                  {expandAdditionalConfig ? (
-                    <iconExpandLess.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
-                  ) : (
-                    <iconExpandMore.react
-                      tag="div"
-                      className="logo-alignment-style"
-                    />
-                  )}
-                </div>
+          {/* Additional configuration (70% width) */}
+          <div className="additional-config-section">
+            <div
+              className="additional-config-header-container"
+              style={{
+                marginBottom: expandAdditionalConfig ? '16px' : '0px'
+              }}
+              onClick={() => setExpandAdditionalConfig(!expandAdditionalConfig)}
+              onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setExpandAdditionalConfig(!expandAdditionalConfig);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-expanded={expandAdditionalConfig}
+            >
+              <div className="additional-config-header">
+                Additional configuration
               </div>
-
-              {expandAdditionalConfig && (
-                <div className="additional-config-content">
-                  {/* Section 1: Runtime environment */}
-                  <RuntimeEnvironmentSection
-                    config={runtimeEnvironmentConfig}
-                    onEdit={() => {
-                      // TODO - add the edit functionality for this section
-                    }}
-                  />
-
-                  {/* Section 2: Executor & Driver Configuration */}
-                  <ExecutorAndDriverSection
-                    config={driverAndExecutorConfiguration}
-                    onEdit={() => {
-                      // TODO - add the edit functionality for this section
-                    }}
-                  />
-
-                  {/* Section 3: Autoscaling */}
-                  <AutoscalingSection
-                    config={autoscalingConfig}
-                    onEdit={() => {
-                      // TODO - add the edit functionality for this section
-                    }}
-                  />
-
-                  {/* Section 4: Metastore */}
-                  <MetastoreSection
-                    config={metastoreConfig}
-                    onEdit={() => {
-                      // TODO - add the edit functionality for this section
-                    }}
-                  />
-
-                  {/* Section 5: Network and Security */}
-                  <NetworkSecuritySection
-                    config={networkAndSecurityConfig}
-                    onEdit={() => {
-                      // TODO - add the edit functionality for this section
-                    }}
-                  />
-
-                  {/* Section 6: Session Lifecycle */}
-                  <SessionLifecycleSection
-                    config={sessionLifecycleConfig}
-                    onEdit={() => {
-                      // TODO - add the edit functionality for this section
-                    }}
-                  />
-
-                  {/* Section 7: Other Customization */}
-                  <OtherCustomizationSection
-                    sparkProperties={sparkProperties}
-                    labels={labels}
-                    onEdit={() => {
-                      // TODO - add the edit functionality for this section
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="runtime-profile-buttons">
-              {/* TODO - create functionality to be enabled during API integration process */}
-              <button
-                type="submit"
-                disabled={true}
-                className="submit-button-disable-style"
+              <div
+                className="expand-icon"
+                style={{ display: 'flex', alignItems: 'center' }}
               >
-                {isSubmitting ? (
-                  <CircularProgress size={16} color="inherit" />
+                {expandAdditionalConfig ? (
+                  <iconExpandLess.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 ) : (
-                  'Create a runtime profile'
+                  <iconExpandMore.react
+                    tag="div"
+                    className="logo-alignment-style"
+                  />
                 )}
-              </button>
-              <button
-                type="button"
-                className="job-cancel-button-style"
-                onClick={handleBack}
-              >
-                Cancel
-              </button>
+              </div>
             </div>
-          </form>
-        </div>
+
+            {expandAdditionalConfig && (
+              <div className="additional-config-content">
+                {/* Section 1: Runtime environment */}
+                <RuntimeEnvironmentSection
+                  config={runtimeEnvironmentConfig}
+                  onEdit={() => {
+                    // TODO - add the edit functionality for this section
+                  }}
+                />
+
+                {/* Section 2: Executor & Driver Configuration */}
+                <ExecutorAndDriverSection
+                  config={driverAndExecutorConfiguration}
+                  onEdit={() => {
+                    // TODO - add the edit functionality for this section
+                  }}
+                />
+
+                {/* Section 3: Autoscaling */}
+                <AutoscalingSection
+                  config={autoscalingConfig}
+                  onEdit={() => {
+                    // TODO - add the edit functionality for this section
+                  }}
+                />
+
+                {/* Section 4: Metastore */}
+                <MetastoreSection
+                  config={metastoreConfig}
+                  onEdit={() => {
+                    // TODO - add the edit functionality for this section
+                  }}
+                />
+
+                {/* Section 5: Network and Security */}
+                <NetworkSecuritySection
+                  config={networkAndSecurityConfig}
+                  onEdit={() => {
+                    // TODO - add the edit functionality for this section
+                  }}
+                />
+
+                {/* Section 6: Session Lifecycle */}
+                <SessionLifecycleSection
+                  config={sessionLifecycleConfig}
+                  onEdit={() => {
+                    // TODO - add the edit functionality for this section
+                  }}
+                />
+
+                {/* Section 7: Other Customization */}
+                <OtherCustomizationSection
+                  sparkProperties={sparkProperties}
+                  labels={labels}
+                  onEdit={() => {
+                    // TODO - add the edit functionality for this section
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="runtime-profile-buttons">
+            {/* TODO - create functionality to be enabled during API integration process */}
+            <button
+              type="submit"
+              disabled={true}
+              className="submit-button-disable-style"
+            >
+              {isSubmitting ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                'Create a runtime profile'
+              )}
+            </button>
+            <button
+              type="button"
+              className="job-cancel-button-style"
+              onClick={handleBack}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 export class CreateRuntimeProfile extends DataprocWidget {
   app: JupyterLab;
@@ -1132,4 +1146,3 @@ export class CreateRuntimeProfile extends DataprocWidget {
 }
 
 export { SectionDetail };
-

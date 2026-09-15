@@ -250,6 +250,12 @@ export const SectionDetail: React.FC<ISectionDetailProps> = ({
                     tabIndex={0}
                     className="section-detail-link"
                     onClick={prop.onLinkClick}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        prop.onLinkClick?.();
+                      }
+                    }}
                   >
                     {displayValue}
                   </span>

@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-@import url(https://fonts.googleapis.com/css?family=Roboto);
-
 .section-detail-wrapper {
   margin-bottom: 24px;
   width: 100%;
@@ -36,7 +34,7 @@
 
 /* Bolder header title */
 .section-detail-title {
-  font-family: Roboto, 'Segoe UI', Arial, sans-serif;
+  font-family: var(--jp-ui-font-family, Roboto, 'Segoe UI', Arial, sans-serif);
   font-style: normal;
   font-weight: 700;
   font-size: 14px;
@@ -84,7 +82,7 @@
   fill: var(--jp-ui-font-color1, #3c4043);
 }
 .section-detail-edit-button .edit-label-text {
-  font-family: Roboto, 'Segoe UI', Arial, sans-serif;
+  font-family: var(--jp-ui-font-family, Roboto, 'Segoe UI', Arial, sans-serif);
   font-style: normal;
   font-weight: 500;
   font-size: 12px;
@@ -121,7 +119,7 @@
   min-height: 24px;
   padding: 6px 0;
   border-bottom: 0.5px solid var(--jp-border-color2, #e0e0e0);
-  font-family: Roboto, 'Segoe UI', Arial, sans-serif;
+  font-family: var(--jp-ui-font-family, Roboto, 'Segoe UI', Arial, sans-serif);
   width: 100%;
   box-sizing: border-box;
 }
@@ -174,10 +172,10 @@
 /* Additional configuration section styling (matches 620px width of intro text with border-top) */
 .additional-config-section {
   max-width: 620px;
-    width: 100%;
+  width: 100%;
   margin-top: 24px;
   padding-top: 16px;
-    border-top: 1px solid var(--jp-border-color2, #e0e0e0);
+  border-top: 1px solid var(--jp-border-color2, #e0e0e0);
   box-sizing: border-box;
 }
 
@@ -194,7 +192,7 @@
 }
 
 .additional-config-header {
-  font-family: Roboto, 'Segoe UI', Arial, sans-serif;
+  font-family: var(--jp-ui-font-family, Roboto, 'Segoe UI', Arial, sans-serif);
   font-size: 16px;
   font-weight: 500;
   color: var(--jp-ui-font-color0);
@@ -205,20 +203,23 @@
 } */
 
 /* Dark mode adjustments */
-body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button:hover:not(.disabled) {
+body[data-jp-theme-name='JupyterLab Dark']
+  .section-detail-edit-button:hover:not(.disabled) {
   background-color: var(--jp-layout-color2);
 }
 
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-divider {
   background-color: var(--jp-border-color1, #9aa0a6);
-  }
-  
-  body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button path {
-    fill: var(--jp-ui-font-color2, #9aa0a6);
-  }
-  
-  body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button:hover:not(.disabled) path {
-    fill: var(--jp-ui-font-color0, #ffffff);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button path {
+  fill: var(--jp-ui-font-color2, #9aa0a6);
+}
+
+body[data-jp-theme-name='JupyterLab Dark']
+  .section-detail-edit-button:hover:not(.disabled)
+  path {
+  fill: var(--jp-ui-font-color0, #ffffff);
 }
 
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-link {
