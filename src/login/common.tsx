@@ -50,6 +50,9 @@ interface ICommonProps {
   themeManager: IThemeManager;
 }
 
+const IconGoogleCloud = new LabIcon({ name: 'launcher:google_cloud_icon', svgstr: googleCloudIcon });
+const iconHelp = new LabIcon({ name: 'launcher:help-spark-icon', svgstr: helpIcon });
+
 export default function Common({
   configError,
   setConfigError,
@@ -66,9 +69,6 @@ export default function Common({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({ email: '', picture: '' });
-
-  const IconGoogleCloud = new LabIcon({ name: 'launcher:google_cloud_icon', svgstr: googleCloudIcon });
-  const iconHelp = new LabIcon({ name: 'launcher:help-spark-icon', svgstr: helpIcon });
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -99,8 +99,8 @@ export default function Common({
         }
       }
     } catch (reason) {
-      Notification.emit(`Error on POST {dataToSend}.\n${reason}`, 'error', { autoClose: 5000 });
-      DataprocLoggingService.log(`Error on POST {dataToSend}.\n${reason}`, LOG_LEVEL.ERROR);
+      Notification.emit(`Error saving configuration: ${reason}`, 'error', { autoClose: 5000 });
+      DataprocLoggingService.log(`Error saving configuration: ${reason}`, LOG_LEVEL.ERROR);
     } finally {
       setIsSaving(false);
     }

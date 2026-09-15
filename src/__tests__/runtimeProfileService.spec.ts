@@ -15,6 +15,18 @@
  * limitations under the License.
  */
 
+jest.mock('../handler/handler', () => ({
+  requestAPI: jest.fn().mockResolvedValue({
+    dataproc_url: 'https://dataproc.googleapis.com/',
+    compute_url: 'https://compute.googleapis.com/compute',
+    metastore_url: 'https://metastore.googleapis.com/',
+    cloudkms_url: 'https://cloudkms.googleapis.com/',
+    cloudresourcemanager_url: 'https://cloudresourcemanager.googleapis.com/',
+    datacatalog_url: 'https://datacatalog.googleapis.com/',
+    storage_url: 'https://storage.googleapis.com/'
+  })
+}));
+
 import { RuntimeProfileService } from '../runtimeProfile/runtimeProfileService';
 import { authenticatedFetch, loggedFetch, authApi } from '../utils/utils';
 import { HTTP_METHOD } from '../utils/const';
@@ -83,6 +95,18 @@ describe('RuntimeProfileService', () => {
       await expect(RuntimeProfileService.fetchRuntimeProfiles()).rejects.toThrow('Permission denied');
     });
 
+    it('throws statusText error if response is not ok and body is non-JSON', async () => {
+      (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        statusText: 'Bad Gateway',
+        json: jest.fn().mockRejectedValue(new SyntaxError('Unexpected token < in JSON'))
+      });
+
+      await expect(RuntimeProfileService.fetchRuntimeProfiles()).rejects.toThrow(
+        'Failed to fetch runtime profiles: Bad Gateway'
+      );
+    });
+
     it('throws error if authenticatedFetch fails', async () => {
       (authenticatedFetch as jest.Mock).mockRejectedValue(new Error('API error'));
 
@@ -109,6 +133,18 @@ describe('RuntimeProfileService', () => {
           })
         })
       );
+    });
+
+    it('succeeds when delete response is ok with empty non-JSON body', async () => {
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'test-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockRejectedValue(new SyntaxError('Unexpected end of input'))
+      });
+
+      await expect(
+        RuntimeProfileService.deleteRuntimeProfile('profile1', 'Profile 1')
+      ).resolves.toBeUndefined();
     });
 
     it('throws error if delete fails', async () => {

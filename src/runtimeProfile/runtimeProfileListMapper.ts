@@ -45,7 +45,7 @@ const formatLastUsed = (dateString: string) => {
     date.getFullYear() === yesterday.getFullYear();
 
   if (isToday) {
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = Math.max(0, now.getTime() - date.getTime());
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     if (diffHours === 0) {
       const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -69,7 +69,7 @@ const formatLastUsed = (dateString: string) => {
       'Nov',
       'Dec'
     ];
-    return `${monthNames[date.getMonth()]} ${date.getDate()},${date.getFullYear()}`;
+    return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   }
 };
 

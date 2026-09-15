@@ -17,7 +17,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { RuntimeProfileService } from './runtimeProfileService';
+import {
+  DEFAULT_RUNTIME_PROFILE_PAGE_SIZE,
+  RuntimeProfileService
+} from './runtimeProfileService';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { Notification } from '@jupyterlab/apputils';
 import addRuntimeIcon from '../../style/icons/add_runtime_template.svg';
@@ -220,7 +223,7 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
             </table>
             <div className="table-footer">
               {profiles.length > 0 ? (
-                `Showing ${currentPage * 50 + 1} – ${currentPage * 50 + profiles.length} profiles`
+                `Showing ${currentPage * DEFAULT_RUNTIME_PROFILE_PAGE_SIZE + 1} – ${currentPage * DEFAULT_RUNTIME_PROFILE_PAGE_SIZE + profiles.length} profiles`
               ) : (
                 'Showing 0 profiles'
               )}

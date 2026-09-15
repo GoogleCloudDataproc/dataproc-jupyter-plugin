@@ -58,6 +58,8 @@ const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
   }
 };
 
+export const DEFAULT_RUNTIME_PROFILE_PAGE_SIZE = 50;
+
 /**
  * Service to manage Dataproc Runtime Profiles.
  * Provides mock data for current UI prototyping and integrates cleanly with GCP Dataproc APIs.
@@ -67,10 +69,11 @@ export class RuntimeProfileService implements IRuntimeProfileService {
   private inMemoryProfiles: IRuntimeProfile[] = [];
 
   static async fetchRuntimeProfiles(
-    pageToken: string = ''
+    pageToken: string = '',
+    pageSize: number = DEFAULT_RUNTIME_PROFILE_PAGE_SIZE
   ): Promise<{ templates: any[]; nextPageToken?: string }> {
     const queryParams = new URLSearchParams({
-      pageSize: '50',
+      pageSize: pageSize.toString(),
       pageToken: pageToken
     });
     const response = await authenticatedFetch({
@@ -79,16 +82,30 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       regionIdentifier: 'locations',
       queryParams: queryParams
     });
-    const data = await response.json();
-    if (!response.ok || (data as any)?.error) {
+    if (!response.ok) {
+      const errorData = await response.json().catch((err: unknown) => {
+        safeLog(
+          `Failed to parse error response JSON: ${err}`,
+          LOG_LEVEL.WARN
+        );
+        return null;
+      });
       throw new Error(
-        (data as any)?.error?.message ||
+        errorData?.error?.message ||
           `Failed to fetch runtime profiles: ${response.statusText}`
       );
     }
+
+    const data: any = await response.json();
+    if (data?.error) {
+      throw new Error(
+        data.error.message || 'Failed to fetch runtime profiles'
+      );
+    }
+
     return {
-      templates: (data as any)?.sessionTemplates || [],
-      nextPageToken: (data as any)?.nextPageToken
+      templates: data?.sessionTemplates || [],
+      nextPageToken: data?.nextPageToken
     };
   }
 
@@ -108,12 +125,15 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         Authorization: API_HEADER_BEARER + credentials.access_token
       }
     });
-    let data: any = {};
-    try {
-      data = await response.json();
-    } catch {
-      // Ignore JSON parse errors for empty responses
-    }
+
+    const data = await response.json().catch((err: unknown) => {
+      safeLog(
+        `Response body for DELETE ${displayName} is not JSON: ${err}`,
+        LOG_LEVEL.INFO
+      );
+      return null;
+    });
+
     if (!response.ok || data?.error) {
       throw new Error(
         data?.error?.message || `Failed to delete runtime profile ${displayName}`
