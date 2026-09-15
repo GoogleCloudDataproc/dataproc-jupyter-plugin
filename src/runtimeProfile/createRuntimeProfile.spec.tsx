@@ -31,8 +31,6 @@ import {
   CreateRuntimeProfile,
   CreateRuntimeProfileComponent,
   RuntimeEnvironmentSection,
-  DriverConfigSection,
-  ExecutorDiskSection,
   ExecutorAndDriverSection,
   DriverAndExecutorSection,
   AutoscalingSection,
@@ -43,8 +41,6 @@ import {
   ProfileLabelsSection,
   OtherCustomizationSection,
   formatRuntimeEnvironmentProperties,
-  formatDriverConfigProperties,
-  formatExecutorDiskProperties,
   formatExecutorAndDriverProperties,
   formatDriverAndExecutorProperties,
   formatAutoscalingProperties,
@@ -55,8 +51,7 @@ import {
   formatProfileLabels,
   formatOtherCustomizationProperties,
   DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
-  DEFAULT_DRIVER_CONFIG,
-  DEFAULT_EXECUTOR_DISK_CONFIG,
+  DEFAULT_EXECUTOR_AND_DRIVER_CONFIG,
   DEFAULT_DRIVER_AND_EXECUTOR_CONFIG,
   DEFAULT_AUTOSCALING_CONFIG,
   DEFAULT_METASTORE_CONFIG,
@@ -124,7 +119,6 @@ describe('CreateRuntimeProfile Component & Service', () => {
 
   it('should format runtime environment config according to IRuntimeEnvironmentConfig interface', () => {
     expect(RuntimeEnvironmentSection).toBeDefined();
-    expect(DriverConfigSection).toBeDefined();
 
     const formatted = formatRuntimeEnvironmentProperties(
       DEFAULT_RUNTIME_ENVIRONMENT_CONFIG
@@ -141,33 +135,6 @@ describe('CreateRuntimeProfile Component & Service', () => {
     expect(emptyFormatted).toEqual([]);
   });
 
-  it('should format driver config according to IDriverConfig interface', () => {
-    const formatted = formatDriverConfigProperties(DEFAULT_DRIVER_CONFIG);
-    expect(formatted).toHaveLength(2);
-    expect(formatted.find(p => p.label === 'Machine type')?.value).toBe(
-      'Standard-4'
-    );
-    expect(formatted.find(p => p.label === 'Disk')?.value).toBe(
-      'standard persistent disk'
-    );
-
-    const emptyFormatted = formatDriverConfigProperties(undefined);
-    expect(emptyFormatted).toEqual([]);
-  });
-
-  it('should format executor disk config according to IExecutorDiskConfig interface', () => {
-    expect(ExecutorDiskSection).toBeDefined();
-    const formatted = formatExecutorDiskProperties(
-      DEFAULT_EXECUTOR_DISK_CONFIG
-    );
-    expect(formatted).toHaveLength(1);
-    expect(formatted.find(p => p.label === 'Disk type')?.value).toBe(
-      'Standard persistent disk (HDD), 100 GB'
-    );
-
-    expect(formatExecutorDiskProperties(undefined)).toEqual([]);
-  });
-
   it('should format autoscaling config according to IAutoscalingConfig interface', () => {
     expect(AutoscalingSection).toBeDefined();
     const formatted = formatAutoscalingProperties(DEFAULT_AUTOSCALING_CONFIG);
@@ -177,7 +144,9 @@ describe('CreateRuntimeProfile Component & Service', () => {
     );
     expect(formatted.find(p => p.label === 'Initial executors')?.value).toBe(2);
     expect(formatted.find(p => p.label === 'Minimum executors')?.value).toBe(2);
-    expect(formatted.find(p => p.label === 'Maximum executors')?.value).toBe(10);
+    expect(formatted.find(p => p.label === 'Maximum executors')?.value).toBe(
+      10
+    );
 
     expect(formatAutoscalingProperties(undefined)).toEqual([]);
   });
@@ -236,9 +205,7 @@ describe('CreateRuntimeProfile Component & Service', () => {
     expect(ProfileLabelsSection).toBeDefined();
 
     const emptySpark = formatSparkProperties(DEFAULT_SPARK_PROPERTIES);
-    expect(emptySpark).toEqual([
-      { label: 'Spark properties', value: 'None' }
-    ]);
+    expect(emptySpark).toEqual([{ label: 'Spark properties', value: 'None' }]);
 
     const customSpark = formatSparkProperties({ 'spark.driver.memory': '4g' });
     expect(customSpark).toEqual([
@@ -252,12 +219,12 @@ describe('CreateRuntimeProfile Component & Service', () => {
     expect(customLabels).toEqual([{ label: 'env', value: 'prod' }]);
   });
 
-  it('should format merged executor & driver configuration according to IDriverAndExecutorConfiguration interface', () => {
+  it('should format merged executor & driver configuration according to IExecutorAndDriverConfig / IDriverAndExecutorConfiguration interface', () => {
     expect(ExecutorAndDriverSection).toBeDefined();
     expect(DriverAndExecutorSection).toBeDefined();
 
     const formatted = formatExecutorAndDriverProperties(
-      DEFAULT_DRIVER_AND_EXECUTOR_CONFIG
+      DEFAULT_EXECUTOR_AND_DRIVER_CONFIG
     );
     expect(formatted).toHaveLength(5);
     expect(formatted.find(p => p.label === 'Tier')?.value).toBe('Standard');
@@ -274,6 +241,9 @@ describe('CreateRuntimeProfile Component & Service', () => {
       'Standard persistent disk (HDD), 100 GB'
     );
 
+    expect(
+      formatDriverAndExecutorProperties(DEFAULT_DRIVER_AND_EXECUTOR_CONFIG)
+    ).toEqual(formatted);
     expect(formatDriverAndExecutorProperties(undefined)).toEqual([]);
     expect(formatExecutorAndDriverProperties(undefined)).toEqual([]);
   });

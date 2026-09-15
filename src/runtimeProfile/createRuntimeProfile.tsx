@@ -41,8 +41,7 @@ import {
   IAutoscalingConfig,
   ICreateRuntimeProfilePayload,
   IDriverAndExecutorConfiguration,
-  IDriverConfig,
-  IExecutorDiskConfig,
+  IExecutorAndDriverConfig,
   IMetastoreConfig,
   INetworkAndSecurityConfig,
   IRegionOption,
@@ -85,23 +84,16 @@ export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   pythonPackageRepository: 'Google Managed PyPI pull through cache'
 };
 
+export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
+  tier: 'Standard',
+  driverMachineType: 'Standard-4',
+  driverDisk: 'standard persistent disk',
+  executorType: 'standard',
+  executorDisk: 'Standard persistent disk (HDD), 100 GB'
+};
+
 export const DEFAULT_DRIVER_AND_EXECUTOR_CONFIG: IDriverAndExecutorConfiguration =
-  {
-    tier: 'Standard',
-    driverMachineType: 'Standard-4',
-    driverDisk: 'standard persistent disk',
-    executorType: 'standard',
-    executorDisk: 'Standard persistent disk (HDD), 100 GB',
-    machineType: 'Standard-4',
-    disk: 'standard persistent disk',
-    diskType: 'Standard persistent disk (HDD), 100 GB'
-  };
-
-export const DEFAULT_DRIVER_CONFIG: IDriverConfig =
-  DEFAULT_DRIVER_AND_EXECUTOR_CONFIG;
-
-export const DEFAULT_EXECUTOR_DISK_CONFIG: IExecutorDiskConfig =
-  DEFAULT_DRIVER_AND_EXECUTOR_CONFIG;
+  DEFAULT_EXECUTOR_AND_DRIVER_CONFIG;
 
 export const DEFAULT_AUTOSCALING_CONFIG: IAutoscalingConfig = {
   autoscalingEnabled: true,
@@ -163,7 +155,7 @@ export const formatRuntimeEnvironmentProperties = (
 };
 
 export const formatExecutorAndDriverProperties = (
-  config?: IDriverAndExecutorConfiguration
+  config?: IExecutorAndDriverConfig
 ): ISectionProperty[] => {
   if (!config) {
     return [];
@@ -175,11 +167,11 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Driver machine type',
-      value: config.driverMachineType || config.machineType || 'Standard-4'
+      value: config.driverMachineType || 'Standard-4'
     },
     {
       label: 'Driver disk',
-      value: config.driverDisk || config.disk || 'standard persistent disk'
+      value: config.driverDisk || 'standard persistent disk'
     },
     {
       label: 'Executor type',
@@ -187,51 +179,13 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Executor disk',
-      value:
-        config.executorDisk ||
-        config.diskType ||
-        'Standard persistent disk (HDD), 100 GB'
+      value: config.executorDisk || 'Standard persistent disk (HDD), 100 GB'
     }
   ];
 };
 
 export const formatDriverAndExecutorProperties =
   formatExecutorAndDriverProperties;
-
-export const formatDriverConfigProperties = (
-  config?: IDriverConfig
-): ISectionProperty[] => {
-  if (!config) {
-    return [];
-  }
-  return [
-    {
-      label: 'Machine type',
-      value: config.driverMachineType || config.machineType || 'Standard-4'
-    },
-    {
-      label: 'Disk',
-      value: config.driverDisk || config.disk || 'standard persistent disk'
-    }
-  ];
-};
-
-export const formatExecutorDiskProperties = (
-  config?: IExecutorDiskConfig
-): ISectionProperty[] => {
-  if (!config) {
-    return [];
-  }
-  return [
-    {
-      label: 'Disk type',
-      value:
-        config.executorDisk ||
-        config.diskType ||
-        'Standard persistent disk (HDD), 100 GB'
-    }
-  ];
-};
 
 export const formatAutoscalingProperties = (
   config?: IAutoscalingConfig
@@ -427,7 +381,7 @@ export const RuntimeEnvironmentSection: React.FC<
 };
 
 export interface IExecutorAndDriverSectionProps {
-  config?: IDriverAndExecutorConfiguration;
+  config?: IExecutorAndDriverConfig;
   onEdit?: () => void;
   showEdit?: boolean;
   isEditDisabled?: boolean;
@@ -452,62 +406,6 @@ export const ExecutorAndDriverSection: React.FC<
 };
 
 export const DriverAndExecutorSection = ExecutorAndDriverSection;
-
-export interface IDriverConfigSectionProps {
-  config?: IDriverConfig;
-  onEdit?: () => void;
-  showEdit?: boolean;
-  isEditDisabled?: boolean;
-}
-
-export const DriverConfigSection: React.FC<IDriverConfigSectionProps> = ({
-  config,
-  onEdit,
-  showEdit = true,
-  isEditDisabled = false
-}) => {
-  const properties = React.useMemo(
-    () => formatDriverConfigProperties(config),
-    [config]
-  );
-  return (
-    <SectionDetail
-      title="Driver Configuration"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
-};
-
-export interface IExecutorDiskSectionProps {
-  config?: IExecutorDiskConfig;
-  onEdit?: () => void;
-  showEdit?: boolean;
-  isEditDisabled?: boolean;
-}
-
-export const ExecutorDiskSection: React.FC<IExecutorDiskSectionProps> = ({
-  config,
-  onEdit,
-  showEdit = true,
-  isEditDisabled = false
-}) => {
-  const properties = React.useMemo(
-    () => formatExecutorDiskProperties(config),
-    [config]
-  );
-  return (
-    <SectionDetail
-      title="Executor Disk"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
-};
 
 export interface IAutoscalingSectionProps {
   config?: IAutoscalingConfig;
@@ -712,9 +610,8 @@ export interface ICreateRuntimeProfileComponentProps {
   onBack?: () => void;
   onSuccess?: () => void;
   initialRuntimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
+  initialExecutorAndDriverConfig?: IExecutorAndDriverConfig;
   initialDriverAndExecutorConfiguration?: IDriverAndExecutorConfiguration;
-  initialDriverConfig?: IDriverConfig;
-  initialExecutorDiskConfig?: IExecutorDiskConfig;
   initialAutoscalingConfig?: IAutoscalingConfig;
   initialMetastoreConfig?: IMetastoreConfig;
   initialNetworkAndSecurityConfig?: INetworkAndSecurityConfig;
@@ -731,9 +628,8 @@ export const CreateRuntimeProfileComponent: React.FC<
   onBack,
   onSuccess,
   initialRuntimeEnvironmentConfig,
+  initialExecutorAndDriverConfig,
   initialDriverAndExecutorConfiguration,
-  initialDriverConfig,
-  initialExecutorDiskConfig,
   initialAutoscalingConfig,
   initialMetastoreConfig,
   initialNetworkAndSecurityConfig,
@@ -751,14 +647,11 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [runtimeEnvironmentConfig] = useState<IRuntimeEnvironmentConfig>(
     initialRuntimeEnvironmentConfig || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG
   );
-  const [driverAndExecutorConfiguration] =
-    useState<IDriverAndExecutorConfiguration>(
-      initialDriverAndExecutorConfiguration || {
-        ...DEFAULT_DRIVER_AND_EXECUTOR_CONFIG,
-        ...(initialDriverConfig || {}),
-        ...(initialExecutorDiskConfig || {})
-      }
-    );
+  const [executorAndDriverConfig] = useState<IExecutorAndDriverConfig>(
+    initialExecutorAndDriverConfig ||
+      initialDriverAndExecutorConfiguration ||
+      DEFAULT_EXECUTOR_AND_DRIVER_CONFIG
+  );
   const [autoscalingConfig] = useState<IAutoscalingConfig>(
     initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
   );
@@ -838,11 +731,10 @@ export const CreateRuntimeProfileComponent: React.FC<
         displayName: data.displayName.trim(),
         region: data.region,
         description: data.description.trim() || undefined,
-        tier: driverAndExecutorConfiguration.tier,
+        tier: executorAndDriverConfig.tier,
         runtimeEnvironmentConfig,
-        driverAndExecutorConfiguration,
-        driverConfig: driverAndExecutorConfiguration,
-        executorDiskConfig: driverAndExecutorConfiguration,
+        executorAndDriverConfig,
+        driverAndExecutorConfiguration: executorAndDriverConfig,
         autoscalingConfig,
         metastoreConfig,
         networkAndSecurityConfig,
@@ -1038,7 +930,7 @@ export const CreateRuntimeProfileComponent: React.FC<
 
                 {/* Section 2: Executor & Driver Configuration */}
                 <ExecutorAndDriverSection
-                  config={driverAndExecutorConfiguration}
+                  config={executorAndDriverConfig}
                   onEdit={() => {
                     // TODO - add the edit functionality for this section
                   }}
