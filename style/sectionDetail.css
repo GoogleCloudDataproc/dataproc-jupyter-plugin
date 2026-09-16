@@ -34,7 +34,8 @@
 
 /* Bolder header title */
 .section-detail-title {
-  font-family: var(--jp-ui-font-family, Roboto, 'Segoe UI', Arial, sans-serif);
+  font-family: Roboto,
+    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
   font-style: normal;
   font-weight: 700;
   font-size: 14px;
@@ -82,7 +83,8 @@
   fill: var(--jp-ui-font-color1, #3c4043);
 }
 .section-detail-edit-button .edit-label-text {
-  font-family: var(--jp-ui-font-family, Roboto, 'Segoe UI', Arial, sans-serif);
+  font-family: Roboto,
+    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
   font-style: normal;
   font-weight: 500;
   font-size: 12px;
@@ -119,7 +121,8 @@
   min-height: 24px;
   padding: 6px 0;
   border-bottom: 0.5px solid var(--jp-border-color2, #e0e0e0);
-  font-family: var(--jp-ui-font-family, Roboto, 'Segoe UI', Arial, sans-serif);
+  font-family: Roboto,
+    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
   width: 100%;
   box-sizing: border-box;
 }
@@ -192,7 +195,8 @@
 }
 
 .additional-config-header {
-  font-family: var(--jp-ui-font-family, Roboto, 'Segoe UI', Arial, sans-serif);
+  font-family: Roboto,
+    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
   font-size: 16px;
   font-weight: 500;
   color: var(--jp-ui-font-color0);
