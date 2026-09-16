@@ -218,6 +218,20 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         displayName: payload.displayName,
         region: targetRegion,
         description: payload.description,
+        tier: payload.tier ?? payload.executorAndDriverConfig?.tier,
+        runtimeEnvironmentConfig: payload.runtimeEnvironmentConfig,
+        executorAndDriverConfig:
+          payload.executorAndDriverConfig ??
+          payload.driverAndExecutorConfiguration,
+        driverAndExecutorConfiguration:
+          payload.driverAndExecutorConfiguration ??
+          payload.executorAndDriverConfig,
+        autoscalingConfig: payload.autoscalingConfig,
+        metastoreConfig: payload.metastoreConfig,
+        networkAndSecurityConfig: payload.networkAndSecurityConfig,
+        sessionLifecycleConfig: payload.sessionLifecycleConfig,
+        sparkProperties: payload.sparkProperties,
+        labels: payload.labels,
         createTime: new Date().toISOString(),
         updateTime: new Date().toISOString(),
         state: 'ACTIVE'

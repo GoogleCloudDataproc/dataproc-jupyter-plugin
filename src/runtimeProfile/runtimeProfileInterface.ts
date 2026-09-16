@@ -15,40 +15,118 @@
  * limitations under the License.
  */
 
-/**
- * Interface representing a Region option with id and display name
- */
 export interface IRegionOption {
   name: string;
   displayName: string;
 }
 
-/**
- * Full Runtime Profile representation (matches backend model / future GCP Dataproc API)
- */
+export type ExecutorType = 'standard' | 'accelerated';
+
+export interface IRuntimeEnvironmentConfig {
+  runtimeProfileId?: string;
+  runtimeVersion?: string;
+  customSparkImage?: string;
+  stagingBucket?: string;
+  pythonPackageRepository?: string;
+}
+
+export interface IExecutorAndDriverConfig {
+  tier?: string;
+  driverMachineType?: string;
+  driverDisk?: string;
+  executorType?: ExecutorType | string;
+  executorDisk?: string;
+}
+
+/** Backward-compatibility alias */
+export type IDriverAndExecutorConfiguration = IExecutorAndDriverConfig;
+
+export interface IAutoscalingConfig {
+  autoscalingEnabled?: boolean;
+  initialExecutors?: number;
+  minExecutors?: number;
+  maxExecutors?: number;
+}
+
+export interface IMetastoreConfig {
+  metastore?: string;
+  hiveEndpointEnabled?: boolean;
+  projectId?: string;
+}
+
+export type ExecutionIdentityType = 'user_account' | 'service_account';
+export type EncryptionType = 'google_managed' | 'customer_managed_key';
+
+export interface INetworkAndSecurityConfig {
+  executionIdentity?: ExecutionIdentityType;
+  networkInThisProject?: string;
+  primaryNetwork?: string;
+  subnetwork?: string;
+  networkTags?: string[];
+  internalIpOnly?: boolean;
+  encryption?: EncryptionType;
+  kmsKeyName?: string;
+}
+
+export type TimeUnit =
+  | 'seconds'
+  | 'minutes'
+  | 'hours'
+  | 'days'
+  | 's'
+  | 'm'
+  | 'h'
+  | 'd';
+
+export interface ISessionLifecycleConfig {
+  maxIdleTime?: string;
+  maxIdleTimeQuantity?: number;
+  maxIdleTimeUnit?: TimeUnit;
+  maxSessionTime?: string;
+  maxSessionTimeQuantity?: number;
+  maxSessionTimeUnit?: TimeUnit;
+}
+
+export type SparkProperties = Record<string, string>;
+export type ProfileLabels = Record<string, string>;
+
 export interface IRuntimeProfile {
-  name?: string; // Resource name: projects/{project}/locations/{region}/runtimeProfiles/{profile}
+  name?: string;
   id?: string;
   displayName: string;
   region: string;
   description?: string;
+  tier?: string;
   createTime?: string;
   updateTime?: string;
   state?: string;
+  runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
+  executorAndDriverConfig?: IExecutorAndDriverConfig;
+  driverAndExecutorConfiguration?: IExecutorAndDriverConfig;
+  autoscalingConfig?: IAutoscalingConfig;
+  metastoreConfig?: IMetastoreConfig;
+  networkAndSecurityConfig?: INetworkAndSecurityConfig;
+  sessionLifecycleConfig?: ISessionLifecycleConfig;
+  sparkProperties?: SparkProperties;
+  labels?: ProfileLabels;
 }
 
-/**
- * Payload sent when creating a new Runtime Profile
- */
 export interface ICreateRuntimeProfilePayload {
   displayName: string;
   region: string;
   description?: string;
+  tier?: string;
+  runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
+  executorAndDriverConfig?: IExecutorAndDriverConfig;
+  driverAndExecutorConfiguration?: IExecutorAndDriverConfig;
+  autoscalingConfig?: IAutoscalingConfig;
+  metastoreConfig?: IMetastoreConfig;
+  networkAndSecurityConfig?: INetworkAndSecurityConfig;
+  sessionLifecycleConfig?: ISessionLifecycleConfig;
+  sparkProperties?: SparkProperties;
+  labels?: ProfileLabels;
 }
 
-/**
- * Service contract for Runtime Profile operations
- */
 export interface IRuntimeProfileService {
   getRegions(projectId?: string): Promise<IRegionOption[]>;
   createRuntimeProfile(
