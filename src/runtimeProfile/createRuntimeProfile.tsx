@@ -364,7 +364,7 @@ export interface IRuntimeEnvironmentSectionProps {
 
 export const RuntimeEnvironmentSection: React.FC<
   IRuntimeEnvironmentSectionProps
-> = ({ config, onEdit, showEdit = true, isEditDisabled = false }) => {
+> = ({ config, onEdit, showEdit = true, isEditDisabled = true }) => {
   const properties = React.useMemo(
     () => formatRuntimeEnvironmentProperties(config),
     [config]
@@ -389,7 +389,7 @@ export interface IExecutorAndDriverSectionProps {
 
 export const ExecutorAndDriverSection: React.FC<
   IExecutorAndDriverSectionProps
-> = ({ config, onEdit, showEdit = true, isEditDisabled = false }) => {
+> = ({ config, onEdit, showEdit = true, isEditDisabled = true }) => {
   const properties = React.useMemo(
     () => formatExecutorAndDriverProperties(config),
     [config]
@@ -418,7 +418,7 @@ export const AutoscalingSection: React.FC<IAutoscalingSectionProps> = ({
   config,
   onEdit,
   showEdit = true,
-  isEditDisabled = false
+  isEditDisabled = true
 }) => {
   const properties = React.useMemo(
     () => formatAutoscalingProperties(config),
@@ -446,7 +446,7 @@ export const MetastoreSection: React.FC<IMetastoreSectionProps> = ({
   config,
   onEdit,
   showEdit = true,
-  isEditDisabled = false
+  isEditDisabled = true
 }) => {
   const properties = React.useMemo(
     () => formatMetastoreProperties(config),
@@ -474,7 +474,7 @@ export const NetworkSecuritySection: React.FC<INetworkSecuritySectionProps> = ({
   config,
   onEdit,
   showEdit = true,
-  isEditDisabled = false
+  isEditDisabled = true
 }) => {
   const properties = React.useMemo(
     () => formatNetworkSecurityProperties(config),
@@ -500,7 +500,7 @@ export interface ISessionLifecycleSectionProps {
 
 export const SessionLifecycleSection: React.FC<
   ISessionLifecycleSectionProps
-> = ({ config, onEdit, showEdit = true, isEditDisabled = false }) => {
+> = ({ config, onEdit, showEdit = true, isEditDisabled = true }) => {
   const properties = React.useMemo(
     () => formatSessionLifecycleProperties(config),
     [config]
@@ -527,7 +527,7 @@ export const SparkPropertiesSection: React.FC<ISparkPropertiesSectionProps> = ({
   properties,
   onEdit,
   showEdit = true,
-  isEditDisabled = false
+  isEditDisabled = true
 }) => {
   const sectionProperties = React.useMemo(
     () => formatSparkProperties(properties),
@@ -559,7 +559,7 @@ export const OtherCustomizationSection: React.FC<
   labels,
   onEdit,
   showEdit = true,
-  isEditDisabled = false
+  isEditDisabled = true
 }) => {
   const properties = React.useMemo(
     () => formatOtherCustomizationProperties(sparkProperties, labels),
@@ -587,7 +587,7 @@ export const ProfileLabelsSection: React.FC<IProfileLabelsSectionProps> = ({
   labels,
   onEdit,
   showEdit = true,
-  isEditDisabled = false
+  isEditDisabled = true
 }) => {
   const properties = React.useMemo(() => formatProfileLabels(labels), [labels]);
   return (
@@ -923,6 +923,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 {/* Section 1: Runtime environment */}
                 <RuntimeEnvironmentSection
                   config={runtimeEnvironmentConfig}
+                  isEditDisabled={true}
                   onEdit={() => {
                     // TODO - add the edit functionality for this section
                   }}
@@ -931,6 +932,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 {/* Section 2: Executor & Driver Configuration */}
                 <ExecutorAndDriverSection
                   config={executorAndDriverConfig}
+                  isEditDisabled={true}
                   onEdit={() => {
                     // TODO - add the edit functionality for this section
                   }}
@@ -939,6 +941,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 {/* Section 3: Autoscaling */}
                 <AutoscalingSection
                   config={autoscalingConfig}
+                  isEditDisabled={true}
                   onEdit={() => {
                     // TODO - add the edit functionality for this section
                   }}
@@ -947,6 +950,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 {/* Section 4: Metastore */}
                 <MetastoreSection
                   config={metastoreConfig}
+                  isEditDisabled={true}
                   onEdit={() => {
                     // TODO - add the edit functionality for this section
                   }}
@@ -955,6 +959,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 {/* Section 5: Network and Security */}
                 <NetworkSecuritySection
                   config={networkAndSecurityConfig}
+                  isEditDisabled={true}
                   onEdit={() => {
                     // TODO - add the edit functionality for this section
                   }}
@@ -963,6 +968,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 {/* Section 6: Session Lifecycle */}
                 <SessionLifecycleSection
                   config={sessionLifecycleConfig}
+                  isEditDisabled={true}
                   onEdit={() => {
                     // TODO - add the edit functionality for this section
                   }}
@@ -972,6 +978,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 <OtherCustomizationSection
                   sparkProperties={sparkProperties}
                   labels={labels}
+                  isEditDisabled={true}
                   onEdit={() => {
                     // TODO - add the edit functionality for this section
                   }}
