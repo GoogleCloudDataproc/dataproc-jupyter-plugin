@@ -27,7 +27,7 @@ jest.mock('../handler/handler', () => ({
   })
 }));
 
-import { RuntimeProfileService } from '../runtimeProfile/runtimeProfileService';
+import { RuntimeProfileService } from './runtimeProfileService';
 import { authenticatedFetch, loggedFetch, authApi } from '../utils/utils';
 import { HTTP_METHOD } from '../utils/const';
 

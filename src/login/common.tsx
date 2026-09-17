@@ -61,7 +61,7 @@ export default function Common({
   settingRegistry,
   themeManager
 }: ICommonProps) {
-  const [bigQueryFeatureEnable, setbigQueryFeatureEnable] = useState(false);
+  const [bigQueryFeatureEnable, setBigQueryFeatureEnable] = useState(false);
   const [isProjectIdEditable, setIsProjectIdEditable] = useState(true);
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
@@ -108,26 +108,26 @@ export default function Common({
 
   const displayUserInfo = async (credentials: IAuthCredentials | undefined) => {
     if (credentials) {
-      loggedFetch(USER_INFO_URL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': API_HEADER_CONTENT_TYPE,
-          Authorization: API_HEADER_BEARER + credentials.access_token
-        }
-      })
-        .then((response: Response) => response.json().then((res: any) => {
-          if (res?.error?.code && !credentials?.login_error && !credentials?.config_error) {
-            setIsLoadingUser(false);
-            Notification.emit(res?.error?.message, 'error', { autoClose: 5000 });
-          } else {
-            setUserInfo(res);
-            setIsLoadingUser(false);
+      try {
+        const response = await loggedFetch(USER_INFO_URL, {
+          method: 'GET',
+          headers: {
+            'Content-Type': API_HEADER_CONTENT_TYPE,
+            Authorization: API_HEADER_BEARER + credentials.access_token
           }
-        }))
-        .catch((err: Error) => {
-          setIsLoadingUser(false);
-          Notification.emit(`Failed to fetch user information : ${err}`, 'error', { autoClose: 5000 });
         });
+        const res = await response.json();
+        if (res?.error?.code && !credentials?.login_error && !credentials?.config_error) {
+          setIsLoadingUser(false);
+          Notification.emit(res?.error?.message, 'error', { autoClose: 5000 });
+        } else {
+          setUserInfo(res);
+          setIsLoadingUser(false);
+        }
+      } catch (err) {
+        setIsLoadingUser(false);
+        Notification.emit(`Failed to fetch user information : ${err}`, 'error', { autoClose: 5000 });
+      }
     }
   };
 
@@ -146,7 +146,7 @@ export default function Common({
       const settings = await settingRegistry?.load(PLUGIN_ID);
       setBigQueryRegion(settings?.get('bqRegion')?.['composite']);
       const bqFeature: any = await requestAPI('settings');
-      if (bqFeature.enable_bigquery_integration) setbigQueryFeatureEnable(true);
+      if (bqFeature.enable_bigquery_integration) setBigQueryFeatureEnable(true);
       if (bqFeature.kernel_gateway_project_number) setIsProjectIdEditable(false);
     };
     init();
