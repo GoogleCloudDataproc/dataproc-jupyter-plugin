@@ -31,3 +31,5 @@ import './databaseInfo.css';
 import './paginationView.css';
 import './runtimeTemplate.css';
 import './notebookTemplates.css';
+import './settingsLayout.css';
+import './runtimeProfile.css';
