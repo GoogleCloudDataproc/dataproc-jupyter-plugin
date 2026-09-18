@@ -164,21 +164,6 @@
   animation: dpFadeIn 0.4s ease-out;
 }
 
-.dp-notifications-empty-icon {
-  color: #34a853 !important;
-  /* Google Success Green */
-  font-size: 64px !important;
-  margin-bottom: 16px;
-  filter: drop-shadow(0 2px 8px rgba(52, 168, 83, 0.2));
-}
-
-.dp-notifications-empty h3 {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--jp-content-font-color1, #333333);
-}
-
 .dp-notifications-empty p {
   margin: 0;
   font-size: 13px;

@@ -27,9 +27,11 @@ type IEvent = any;
 
 const NOTIFICATION_SCHEMA_ID = 'http://cloud.google.com/dataproc-jupyter/notification';
 
+const SHOW_WARNINGS_COMMAND = 'dataproc:show-warnings';
+
 /**
  * Sets up listeners for server-sent Jupyter Events and registers the
- * command to view the aggregated sticky notifications report.
+ * command to view the aggregated notifications report.
  */
 export function setupNotificationSystem(app: JupyterFrontEnd): void {
   if (!app.serviceManager.events) {
@@ -45,29 +47,45 @@ export function setupNotificationSystem(app: JupyterFrontEnd): void {
       const eventId = (event.id || event.data?.id) as string;
       const message = (event.message || event.data?.message) as string;
       const created = (event.created || event.data?.created) as string;
-      const sticky = (event.sticky || event.data?.sticky) as boolean;
 
       if (eventId && message && !seenEventIds.has(eventId)) {
         seenEventIds.add(eventId);
 
-        const report = {
+        latestReport.push({
           id: eventId,
           created,
           message,
-        };
+        });
 
-        if (sticky) {
-          latestReport.push(report);
-        }
-
+        // JupyterLab truncates toast messages at 140 characters, so the full
+        // text is only available through the report dialog.
         Notification.warning(message, {
-          autoClose: false
+          autoClose: false,
+          actions: [
+            {
+              label: 'View Details',
+              caption: 'Show the full text of all reported issues',
+              displayType: 'link',
+              callback: (clickEvent: MouseEvent) => {
+                // Keep the toast open so it is not lost behind the dialog.
+                clickEvent.preventDefault();
+                void app.commands
+                  .execute(SHOW_WARNINGS_COMMAND)
+                  .catch(error =>
+                    console.error(
+                      'Failed to open the Dataproc notifications report:',
+                      error
+                    )
+                  );
+              }
+            }
+          ]
         });
       }
     }
   });
 
-  app.commands.addCommand('dataproc:show-warnings', {
+  app.commands.addCommand(SHOW_WARNINGS_COMMAND, {
     label: 'View Dataproc Jupyter Plugin Notifications',
     execute: () => {
       showDialog({
