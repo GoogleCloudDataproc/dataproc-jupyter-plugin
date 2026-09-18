@@ -141,7 +141,7 @@ describe('RuntimeProfileList Component & Mapper', () => {
     });
 
     it('should execute create-runtime-profile-component command when Create button is clicked', async () => {
-      const mockApp = {
+      const mockApp: any = {
         commands: {
           execute: jest.fn()
         }
@@ -268,6 +268,122 @@ describe('RuntimeProfileList Component & Mapper', () => {
       expect(
         RuntimeProfileService.deleteRuntimeProfile
       ).not.toHaveBeenCalled();
+    });
+
+    it('should update pagination range accurately when navigating next and previous pages', async () => {
+      (RuntimeProfileService.fetchRuntimeProfiles as jest.Mock)
+        .mockReset()
+        .mockResolvedValueOnce({
+          templates: mockTemplates,
+          nextPageToken: 'token-page-2'
+        })
+        .mockResolvedValueOnce({
+          templates: mockTemplates,
+          nextPageToken: ''
+        })
+        .mockResolvedValueOnce({
+          templates: mockTemplates,
+          nextPageToken: 'token-page-2'
+        });
+
+      await act(async () => {
+        root.render(<RuntimeProfileList />);
+      });
+
+      const footer = container.querySelector('.table-footer');
+      expect(footer?.textContent).toContain('Showing 1 – 2 profiles');
+
+      const paginationButtons = container.querySelectorAll('.pagination-btn');
+      const nextBtn = paginationButtons[1] as HTMLElement;
+
+      await act(async () => {
+        nextBtn.click();
+      });
+
+      const footerPage2 = container.querySelector('.table-footer');
+      expect(footerPage2?.textContent).toContain('Showing 3 – 4 profiles');
+
+      const prevBtn = container.querySelectorAll('.pagination-btn')[0] as HTMLElement;
+      await act(async () => {
+        prevBtn.click();
+      });
+
+      const footerPage1Again = container.querySelector('.table-footer');
+      expect(footerPage1Again?.textContent).toContain('Showing 1 – 2 profiles');
+    });
+
+    it('should display empty state and emit error notification when fetchRuntimeProfiles fails', async () => {
+      (RuntimeProfileService.fetchRuntimeProfiles as jest.Mock).mockRejectedValueOnce(
+        new Error('API unavailable')
+      );
+
+      await act(async () => {
+        root.render(<RuntimeProfileList />);
+      });
+
+      const emptyMsg = container.querySelector('.no-profiles-message');
+      expect(emptyMsg?.textContent).toBe('No runtime profiles found');
+      expect(container.querySelector('.runtime-profile-table')).toBeNull();
+      expect(Notification.emit).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to fetch runtime profiles:'),
+        'error',
+        { autoClose: 5000 }
+      );
+    });
+
+    it('should emit error notification when deleteRuntimeProfile fails', async () => {
+      (RuntimeProfileService.deleteRuntimeProfile as jest.Mock).mockRejectedValueOnce(
+        new Error('Delete denied')
+      );
+
+      await act(async () => {
+        root.render(<RuntimeProfileList />);
+      });
+
+      const actionTriggers = container.querySelectorAll('.actions-cell span');
+      act(() => {
+        (actionTriggers[0] as HTMLElement).click();
+      });
+
+      const deleteOption = container.querySelector(
+        '.dropdown-content.show div'
+      ) as HTMLElement;
+      act(() => {
+        deleteOption.click();
+      });
+
+      const confirmDeleteBtn = Array.from(
+        document.body.querySelectorAll('.delete-profile-modal-btn')
+      ).find(btn => btn.textContent === 'Delete') as HTMLButtonElement;
+
+      await act(async () => {
+        confirmDeleteBtn.click();
+      });
+
+      expect(Notification.emit).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to delete profile-1:'),
+        'error',
+        { autoClose: 5000 }
+      );
+    });
+
+    it('should close action dropdown when clicking outside on document', async () => {
+      await act(async () => {
+        root.render(<RuntimeProfileList />);
+      });
+
+      const actionTriggers = container.querySelectorAll('.actions-cell span');
+      act(() => {
+        (actionTriggers[0] as HTMLElement).click();
+      });
+
+      expect(container.querySelector('.dropdown-content.show')).not.toBeNull();
+
+      act(() => {
+        document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+
+      expect(container.querySelector('.dropdown-content.show')).toBeNull();
     });
   });
 });

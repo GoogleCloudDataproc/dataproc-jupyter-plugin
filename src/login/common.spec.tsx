@@ -320,4 +320,104 @@ describe('Common Settings Component', () => {
 
     mockOpen.mockRestore();
   });
+
+  it('should await settings.set for bqRegion before completing save when BigQuery feature is enabled', async () => {
+    const callOrder: string[] = [];
+    const originalLocation = window.location;
+    delete (window as any).location;
+    (window as any).location = {
+      ...originalLocation,
+      reload: jest.fn().mockImplementation(() => {
+        callOrder.push('location.reload');
+      })
+    };
+
+    (authApi as jest.Mock).mockResolvedValue({
+      access_token: 'mock-token',
+      project_id: 'my-gcp-project',
+      region_id: 'us-central1'
+    });
+
+    (requestAPI as jest.Mock).mockImplementation((endpoint: string) => {
+      if (endpoint === 'settings') {
+        return Promise.resolve({
+          enable_bigquery_integration: true,
+          kernel_gateway_project_number: null
+        });
+      }
+      if (endpoint === 'configuration') {
+        return Promise.resolve({ config: 'Configuration saved' });
+      }
+      return Promise.resolve(defaultServiceUrls);
+    });
+
+    const mockSet = jest.fn().mockImplementation(() =>
+      Promise.resolve().then(() => {
+        callOrder.push('settings.set');
+      })
+    );
+    const mockSettingRegistry: any = {
+      load: jest.fn().mockResolvedValue({
+        get: jest.fn().mockReturnValue({ composite: 'us-central1' }),
+        set: mockSet
+      })
+    };
+
+    await act(async () => {
+      root.render(
+        <Common
+          configError={false}
+          setConfigError={jest.fn()}
+          settingRegistry={mockSettingRegistry}
+          themeManager={mockThemeManager}
+        />
+      );
+    });
+
+    const saveBtn = Array.from(container.querySelectorAll('button')).find(
+      btn => btn.textContent === 'Save'
+    ) as HTMLButtonElement;
+
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(mockSettingRegistry.load).toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalledWith('bqRegion', 'us-central1');
+    expect(callOrder).toEqual(['settings.set', 'location.reload']);
+
+    (window as any).location = originalLocation;
+  });
+
+  it('should render read-only project ID with help tooltip when kernel_gateway_project_number is present', async () => {
+    (authApi as jest.Mock).mockResolvedValue({
+      access_token: 'mock-token',
+      project_id: 'my-gcp-project',
+      region_id: 'us-central1'
+    });
+
+    (requestAPI as jest.Mock).mockImplementation((endpoint: string) => {
+      if (endpoint === 'settings') {
+        return Promise.resolve({
+          enable_bigquery_integration: false,
+          kernel_gateway_project_number: '123456789'
+        });
+      }
+      return Promise.resolve(defaultServiceUrls);
+    });
+
+    await act(async () => {
+      root.render(
+        <Common
+          configError={false}
+          setConfigError={jest.fn()}
+          themeManager={mockThemeManager}
+        />
+      );
+    });
+
+    expect(
+      container.querySelector('.info-icon-container')?.getAttribute('title')
+    ).toBe('Project Id is set at Jupyter Lab startup');
+  });
 });

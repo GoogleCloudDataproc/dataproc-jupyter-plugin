@@ -45,7 +45,10 @@ describe('RuntimeProfileService', () => {
 
   describe('fetchRuntimeProfiles', () => {
     it('fetches profiles successfully via authenticatedFetch to sessionTemplates', async () => {
-      const mockData = { sessionTemplates: [{ name: 'template1' }], nextPageToken: 'next-token' };
+      const mockData = {
+        sessionTemplates: [{ name: 'template1', jupyterSession: {} }],
+        nextPageToken: 'next-token'
+      };
       (authenticatedFetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: jest.fn().mockResolvedValue(mockData)
@@ -53,6 +56,7 @@ describe('RuntimeProfileService', () => {
 
       const result = await RuntimeProfileService.fetchRuntimeProfiles('page-1');
 
+      expect(authenticatedFetch).toHaveBeenCalledTimes(1);
       expect(authenticatedFetch).toHaveBeenCalledWith({
         uri: 'sessionTemplates',
         method: HTTP_METHOD.GET,
@@ -62,6 +66,35 @@ describe('RuntimeProfileService', () => {
       expect(result).toEqual({
         templates: mockData.sessionTemplates,
         nextPageToken: 'next-token'
+      });
+    });
+
+    it('skips blank pages containing no jupyterSession items and stops immediately once a non-empty page is found', async () => {
+      const blankPage = {
+        sessionTemplates: [{ name: 'non-jupyter-1' }],
+        nextPageToken: 'token-2'
+      };
+      const validPage = {
+        sessionTemplates: [{ name: 'valid-template', jupyterSession: {} }],
+        nextPageToken: 'token-3'
+      };
+
+      (authenticatedFetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(blankPage)
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue(validPage)
+        });
+
+      const result = await RuntimeProfileService.fetchRuntimeProfiles('token-1');
+
+      expect(authenticatedFetch).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({
+        templates: validPage.sessionTemplates,
+        nextPageToken: 'token-3'
       });
     });
 

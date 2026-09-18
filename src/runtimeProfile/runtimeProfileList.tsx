@@ -17,25 +17,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  DEFAULT_RUNTIME_PROFILE_PAGE_SIZE,
-  RuntimeProfileService
-} from './runtimeProfileService';
+import { RuntimeProfileService } from './runtimeProfileService';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { Notification } from '@jupyterlab/apputils';
-import addRuntimeIcon from '../../style/icons/add_runtime_template.svg';
+import addRuntimeIcon from '../../style/icons/plus_icon.svg';
 import refreshIcon from '../../style/icons/refresh_icon.svg';
 import { CircularProgress } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { IRuntimeProfile, runtimeProfileListMapper } from './runtimeProfileListMapper';
+import { JupyterLab } from '@jupyterlab/application';
 
-const iconAddRuntime = new LabIcon({ name: 'launcher:add-runtime-icon', svgstr: addRuntimeIcon });
-const iconRefresh = new LabIcon({ name: 'launcher:refresh-icon', svgstr: refreshIcon });
+const iconAddRuntime = new LabIcon({ name: 'runtime-profile:add-runtime-icon', svgstr: addRuntimeIcon });
+const iconRefresh = new LabIcon({ name: 'runtime-profile:refresh-icon', svgstr: refreshIcon });
 
-export default function RuntimeProfileList({ app }: { app?: any }) {
+export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
   const [profiles, setProfiles] = useState<IRuntimeProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageTokens, setPageTokens] = useState<string[]>(['']);
+  const [pageOffsets, setPageOffsets] = useState<number[]>([0]);
   const [currentPage, setCurrentPage] = useState(0);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
 
@@ -94,7 +93,11 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
         autoClose: 5000
       });
       setProfileToDelete(null);
-      fetchProfiles(pageTokens[currentPage]);
+      if (profiles.length === 1 && currentPage > 0) {
+        setCurrentPage(currentPage - 1);
+      } else {
+        fetchProfiles(pageTokens[currentPage]);
+      }
     } catch (error) {
       DataprocLoggingService.log(`Error deleting profile: ${error}`, LOG_LEVEL.ERROR);
       Notification.emit(`Failed to delete ${profileToDelete.name}: ${error}`, 'error', {
@@ -159,7 +162,7 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
       <div className="settings-header">
         <div className="settings-header-title">
           Serverless
-          <div className="settings-header-actions" style={{ marginLeft: '16px' }}>
+          <div className="settings-header-actions">
             <button
               className="secondary-action-btn"
               onClick={() => app?.commands.execute('create-runtime-profile-component')}
@@ -180,6 +183,8 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
           <div className="loading-spinner-container">
             <CircularProgress size={24} />
           </div>
+        ) : profiles.length === 0 ? (
+          <div className="no-profiles-message">No runtime profiles found</div>
         ) : (
           <>
             <table className="runtime-profile-table">
@@ -188,7 +193,7 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
                     <th>Runtime profile name</th>
                   <th>Region</th>
                   <th>Description</th>
-                  <th>Machine Type</th>
+                    <th>Machine type</th>
                   <th>Runtime version</th>
                   <th>Creator</th>
                   <th>Last used</th>
@@ -200,10 +205,8 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
                   <tr key={profile.id}>
                     <td className="profile-name-cell">{profile.name}</td>
                     <td>{profile.region}</td>
-                    <td title={profile.description}>
-                      {profile.description.length > 40
-                        ? `${profile.description.substring(0, 40)}...`
-                        : profile.description}
+                    <td className="description-cell" title={profile.description}>
+                      {profile.description}
                     </td>
                     <td>{profile.machineType}</td>
                     <td>{profile.runtimeVersion}</td>
@@ -223,7 +226,7 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
             </table>
             <div className="table-footer">
               {profiles.length > 0 ? (
-                `Showing ${currentPage * DEFAULT_RUNTIME_PROFILE_PAGE_SIZE + 1} – ${currentPage * DEFAULT_RUNTIME_PROFILE_PAGE_SIZE + profiles.length} profiles`
+                  `Showing ${(pageOffsets[currentPage] ?? 0) + 1} – ${(pageOffsets[currentPage] ?? 0) + profiles.length} profiles`
               ) : (
                 'Showing 0 profiles'
               )}
@@ -238,6 +241,9 @@ export default function RuntimeProfileList({ app }: { app?: any }) {
                     const newTokens = [...pageTokens];
                     newTokens[currentPage + 1] = nextPageToken;
                     setPageTokens(newTokens);
+                    const newOffsets = [...pageOffsets];
+                    newOffsets[currentPage + 1] = (pageOffsets[currentPage] ?? 0) + profiles.length;
+                    setPageOffsets(newOffsets);
                     setCurrentPage(currentPage + 1);
                   }
                 }}

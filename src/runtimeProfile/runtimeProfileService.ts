@@ -29,6 +29,7 @@ import {
   IRuntimeProfile,
   IRuntimeProfileService
 } from './runtimeProfileInterface';
+import { ISessionTemplate } from './runtimeProfileListMapper';
 
 /**
  * Flag to enable mock mode for UI development/testing until the skeleton form
@@ -71,41 +72,52 @@ export class RuntimeProfileService implements IRuntimeProfileService {
   static async fetchRuntimeProfiles(
     pageToken: string = '',
     pageSize: number = DEFAULT_RUNTIME_PROFILE_PAGE_SIZE
-  ): Promise<{ templates: any[]; nextPageToken?: string }> {
-    const queryParams = new URLSearchParams({
-      pageSize: pageSize.toString(),
-      pageToken: pageToken
-    });
-    const response = await authenticatedFetch({
-      uri: 'sessionTemplates',
-      method: HTTP_METHOD.GET,
-      regionIdentifier: 'locations',
-      queryParams: queryParams
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch((err: unknown) => {
-        safeLog(
-          `Failed to parse error response JSON: ${err}`,
-          LOG_LEVEL.WARN
-        );
-        return null;
-      });
-      throw new Error(
-        errorData?.error?.message ||
-          `Failed to fetch runtime profiles: ${response.statusText}`
-      );
-    }
+  ): Promise<{ templates: ISessionTemplate[]; nextPageToken?: string }> {
+    let currentToken: string | undefined = pageToken;
+    let validTemplates: ISessionTemplate[] = [];
 
-    const data: any = await response.json();
-    if (data?.error) {
-      throw new Error(
-        data.error.message || 'Failed to fetch runtime profiles'
+    do {
+      const queryParams = new URLSearchParams({
+        pageSize: pageSize.toString(),
+        pageToken: currentToken || ''
+      });
+      const response = await authenticatedFetch({
+        uri: 'sessionTemplates',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'locations',
+        queryParams: queryParams
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch((err: unknown) => {
+          safeLog(
+            `Failed to parse error response JSON: ${err}`,
+            LOG_LEVEL.WARN
+          );
+          return null;
+        });
+        throw new Error(
+          errorData?.error?.message ||
+            `Failed to fetch runtime profiles: ${response.statusText}`
+        );
+      }
+
+      const data: any = await response.json();
+      if (data?.error) {
+        throw new Error(
+          data.error.message || 'Failed to fetch runtime profiles'
+        );
+      }
+
+      const rawTemplates: ISessionTemplate[] = data?.sessionTemplates || [];
+      validTemplates = rawTemplates.filter((t: ISessionTemplate) =>
+        Boolean(t.jupyterSession)
       );
-    }
+      currentToken = data?.nextPageToken;
+    } while (validTemplates.length === 0 && Boolean(currentToken));
 
     return {
-      templates: data?.sessionTemplates || [],
-      nextPageToken: data?.nextPageToken
+      templates: validTemplates,
+      nextPageToken: currentToken
     };
   }
 

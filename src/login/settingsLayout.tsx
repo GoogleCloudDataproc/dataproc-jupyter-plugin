@@ -20,7 +20,6 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
 import { ILauncher } from '@jupyterlab/launcher';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import '../../style/settingsLayout.css';
 import Common from './common';
 import RuntimeProfileList from '../runtimeProfile/runtimeProfileList';
 
@@ -44,7 +43,7 @@ export default function SettingsLayout({
   const [activeTab, setActiveTab] = useState<'common' | 'spark'>('common');
 
   return (
-    <div className="settings-Layout-container">
+    <div className="settings-layout-container">
       <div className="settings-sidebar">
         <div className="settings-sidebar-header">
           Google Cloud Settings
@@ -70,8 +69,6 @@ export default function SettingsLayout({
           <Common
             configError={configError}
             setConfigError={setConfigError}
-            app={app}
-            launcher={launcher}
             settingRegistry={settingRegistry}
             themeManager={themeManager}
           />

@@ -72,7 +72,7 @@ describe('runtimeProfileListMapper', () => {
       name: 'Display Profile',
       region: 'europe-west1',
       description: 'Full description',
-      machineType: 'n1-standard-4',
+      machineType: '',
       runtimeVersion: '2.2',
       creator: 'alice',
       lastUsed: 'Mar 10, 2024'

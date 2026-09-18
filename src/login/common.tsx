@@ -33,8 +33,6 @@ import { Button, CircularProgress } from '@mui/material';
 import { RegionDropdown } from '../controls/RegionDropdown';
 import { projectListAPI } from '../utils/projectService';
 import { DynamicDropdown } from '../controls/DynamicDropdown';
-import { JupyterLab } from '@jupyterlab/application';
-import { ILauncher } from '@jupyterlab/launcher';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { BigQueryRegionDropdown } from '../controls/BigQueryRegionDropdown';
@@ -44,20 +42,16 @@ import { requestAPI } from '../handler/handler';
 interface ICommonProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
-  app?: JupyterLab;
-  launcher?: ILauncher;
   settingRegistry?: ISettingRegistry;
   themeManager: IThemeManager;
 }
 
-const IconGoogleCloud = new LabIcon({ name: 'launcher:google_cloud_icon', svgstr: googleCloudIcon });
-const iconHelp = new LabIcon({ name: 'launcher:help-spark-icon', svgstr: helpIcon });
+const iconGoogleCloud = new LabIcon({ name: 'settings-common:google-cloud-icon', svgstr: googleCloudIcon });
+const iconHelp = new LabIcon({ name: 'settings-common:help-icon', svgstr: helpIcon });
 
 export default function Common({
   configError,
   setConfigError,
-  app,
-  launcher,
   settingRegistry,
   themeManager
 }: ICommonProps) {
@@ -65,7 +59,7 @@ export default function Common({
   const [isProjectIdEditable, setIsProjectIdEditable] = useState(true);
   const [projectId, setProjectId] = useState('');
   const [region, setRegion] = useState('');
-  const [bigQueryRegion, setBigQueryRegion] = useState<any>('');
+  const [bigQueryRegion, setBigQueryRegion] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userInfo, setUserInfo] = useState({ email: '', picture: '' });
@@ -86,7 +80,7 @@ export default function Common({
           } else {
             if (bigQueryFeatureEnable) {
               const settings = await settingRegistry?.load(PLUGIN_ID);
-              settings?.set('bqRegion', bigQueryRegion);
+              await settings?.set('bqRegion', bigQueryRegion);
             }
             Notification.emit(
               `${configStatus} - You will need to restart Jupyter in order for the new project and region to fully take effect.`,
@@ -131,7 +125,7 @@ export default function Common({
     }
   };
 
-  const handleLicenseClick = async (e: React.MouseEvent) => {
+  const handleLicenseClick = (e: React.MouseEvent) => {
     e.preventDefault();
     const licenseWindow = window.open('about:blank');
     if (licenseWindow) {
@@ -143,30 +137,40 @@ export default function Common({
 
   useEffect(() => {
     const init = async () => {
-      const settings = await settingRegistry?.load(PLUGIN_ID);
-      setBigQueryRegion(settings?.get('bqRegion')?.['composite']);
-      const bqFeature: any = await requestAPI('settings');
-      if (bqFeature.enable_bigquery_integration) setBigQueryFeatureEnable(true);
-      if (bqFeature.kernel_gateway_project_number) setIsProjectIdEditable(false);
+      try {
+        const settings = await settingRegistry?.load(PLUGIN_ID);
+        setBigQueryRegion(String(settings?.get('bqRegion')?.['composite'] || ''));
+        const bqFeature: any = await requestAPI('settings');
+        if (bqFeature.enable_bigquery_integration) setBigQueryFeatureEnable(true);
+        if (bqFeature.kernel_gateway_project_number) setIsProjectIdEditable(false);
+      } catch (reason) {
+        DataprocLoggingService.log(`Error initializing settings: ${reason}`, LOG_LEVEL.ERROR);
+      }
     };
     init();
 
-    authApi().then(credentials => {
-      if (credentials) {
-        displayUserInfo(credentials);
-        if (credentials.project_id) setProjectId(credentials.project_id);
-        if (credentials.region_id) setRegion(credentials.region_id);
-        setConfigError(!!(credentials.config_error || credentials.login_error));
-      } else {
+    authApi()
+      .then(credentials => {
+        if (credentials) {
+          displayUserInfo(credentials);
+          if (credentials.project_id) setProjectId(credentials.project_id);
+          if (credentials.region_id) setRegion(credentials.region_id);
+          setConfigError(!!(credentials.config_error || credentials.login_error));
+        } else {
+          setIsLoadingUser(false);
+          setConfigError(true);
+          Notification.emit(
+            'Failed to fetch credentials. Please check your configuration.',
+            'error',
+            { autoClose: 5000 }
+          );
+        }
+      })
+      .catch(reason => {
         setIsLoadingUser(false);
         setConfigError(true);
-        Notification.emit(
-          'Failed to fetch credentials. Please check your configuration.',
-          'error',
-          { autoClose: 5000 }
-        );
-      }
-    });
+        DataprocLoggingService.log(`Error fetching credentials: ${reason}`, LOG_LEVEL.ERROR);
+      });
   }, []);
 
   if (isLoadingUser && !configError) {
@@ -181,11 +185,11 @@ export default function Common({
   return (
     <div className="settings-component">
       <div className="settings-overlay">
-        <div><IconGoogleCloud.react tag="div" className="logo-alignment-style" /></div>
+        <div><iconGoogleCloud.react tag="div" className="logo-alignment-style" /></div>
         <div className="settings-text">Settings</div>
       </div>
       <div className="settings-separator"></div>
-      <div className="project-header">Google Cloud Project Settings </div>
+      <div className="project-header">Google Cloud Project Settings</div>
       <div className="config-overlay">
         <div className="config-form">
           <div className="project-overlay">
@@ -214,7 +218,7 @@ export default function Common({
           </div>
           {bigQueryFeatureEnable && (
             <>
-              <div className="bigquery-region-header">BigQuery Settings </div>
+              <div className="bigquery-region-header">BigQuery Settings</div>
               <div className="region-overlay">
                 <BigQueryRegionDropdown
                   projectId={projectId}

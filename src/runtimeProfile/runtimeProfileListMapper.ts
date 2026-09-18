@@ -73,10 +73,29 @@ const formatLastUsed = (dateString: string) => {
   }
 };
 
-export const runtimeProfileListMapper = (templates: any[]): IRuntimeProfile[] => {
-  const jupyterTemplates = templates.filter((t: any) => t.jupyterSession);
+export interface ISessionTemplate {
+  name: string;
+  description?: string;
+  jupyterSession?: {
+    displayName?: string;
+    kernel?: string;
+  };
+  runtimeConfig?: {
+    version?: string;
+    properties?: Record<string, string>;
+  };
+  creator?: string;
+  updateTime?: string;
+}
 
-  return jupyterTemplates.map((t: any) => {
+export const runtimeProfileListMapper = (
+  templates: ISessionTemplate[]
+): IRuntimeProfile[] => {
+  const jupyterTemplates = templates.filter(
+    (t: ISessionTemplate) => t.jupyterSession
+  );
+
+  return jupyterTemplates.map((t: ISessionTemplate) => {
     const nameParts = t.name?.split('/') || [];
     const region = nameParts[3] || '';
 
@@ -84,10 +103,14 @@ export const runtimeProfileListMapper = (templates: any[]): IRuntimeProfile[] =>
       name: t.jupyterSession?.displayName || t.name,
       region: region,
       description: t.description || '',
-      machineType: t.runtimeConfig?.properties?.['machineType'] || '',
+      // TODO: Machine type mapping from Spark properties will be added once the derivation logic is clarified/finalized.
+      machineType: '',
       runtimeVersion: t.runtimeConfig?.version || '',
-      creator: t.creator && t.creator.includes('@') ? t.creator.split('@')[0] : t.creator,
-      lastUsed: formatLastUsed(t.updateTime),
+      creator:
+        (t.creator && t.creator.includes('@')
+          ? t.creator.split('@')[0]
+          : t.creator) || '',
+      lastUsed: formatLastUsed(t.updateTime || ''),
       id: t.name // To use for deletion
     };
   });

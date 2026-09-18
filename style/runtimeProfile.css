@@ -217,3 +217,288 @@ body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.selected {
   border-color: #8ab4f8;
   background-color: rgba(138, 180, 248, 0.08);
 }
+
+/* Runtime Profile List & Delete Modal Styles */
+.runtime-profile-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.runtime-profile-table-container {
+  padding: 24px;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border: 1px solid var(--jp-border-color2);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.filter-bar input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  margin-left: 8px;
+  color: var(--jp-ui-font-color1);
+}
+
+.runtime-profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--jp-border-color2);
+}
+
+.runtime-profile-table th,
+.runtime-profile-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--jp-border-color2);
+  font-size: 13px;
+}
+
+.runtime-profile-table th {
+  color: var(--jp-ui-font-color2);
+  font-weight: 500;
+  background-color: var(--jp-layout-color2);
+}
+
+.runtime-profile-table th:first-child,
+.runtime-profile-table td:first-child {
+  border-right: 2px solid var(--jp-border-color2);
+}
+
+.runtime-profile-table th:last-child,
+.runtime-profile-table td:last-child {
+  border-left: 2px solid var(--jp-border-color2);
+  text-align: center;
+}
+
+.runtime-profile-table tr:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.runtime-profile-table tr {
+  vertical-align: top;
+}
+
+.description-cell {
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-name-cell {
+  color: var(--jp-brand-color1);
+  cursor: pointer;
+}
+
+.actions-cell {
+  text-align: center;
+  cursor: pointer;
+}
+
+.active-sessions {
+  color: var(--jp-brand-color1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.table-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border: 1px solid var(--jp-border-color2);
+  border-top: none;
+  color: var(--jp-ui-font-color2);
+  font-size: 13px;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination-btn {
+  padding: 0 8px;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.pagination-btn.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.loading-spinner-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: var(--jp-layout-color1);
+  min-width: 120px;
+  box-shadow: var(--jp-elevation-z4, 0px 8px 16px 0px rgba(0, 0, 0, 0.2));
+  z-index: 1;
+  text-align: left;
+}
+
+.dropdown-content div {
+  color: var(--jp-ui-font-color1);
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content div:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.dropdown-content.show {
+  display: block;
+}
+
+.secondary-action-btn {
+  background-color: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 24px !important;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.secondary-action-btn:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+body[data-jp-theme-light='true'] .secondary-action-btn,
+body[data-jp-theme-name='JupyterLab Light'] .secondary-action-btn {
+  color: #2E3A4E;
+}
+
+.delete-profile-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.delete-profile-modal {
+  background-color: var(--jp-layout-color1, #ffffff);
+  color: var(--jp-ui-font-color1, #202124);
+  border-radius: 8px;
+  box-shadow: 0 11px 15px -7px rgba(0, 0, 0, 0.2),
+    0 24px 38px 3px rgba(0, 0, 0, 0.14),
+    0 9px 46px 8px rgba(0, 0, 0, 0.12);
+  width: 480px;
+  max-width: 90vw;
+  overflow: hidden;
+  font-family: var(--jp-ui-font-family);
+}
+
+.delete-profile-modal-title {
+  padding: 24px 24px 16px 24px;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 28px;
+  color: var(--jp-ui-font-color1, #202124);
+}
+
+.delete-profile-modal-banner {
+  background-color: #f1f3f4;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--jp-ui-font-color1, #202124);
+}
+
+body[data-jp-theme-light='false'] .delete-profile-modal-banner,
+body[data-jp-theme-name='JupyterLab Dark'] .delete-profile-modal-banner {
+  background-color: var(--jp-layout-color2, #2d2e30);
+}
+
+.delete-profile-modal-info-icon {
+  color: #202124;
+  flex-shrink: 0;
+}
+
+body[data-jp-theme-light='false'] .delete-profile-modal-info-icon,
+body[data-jp-theme-name='JupyterLab Dark'] .delete-profile-modal-info-icon {
+  color: var(--jp-ui-font-color1, #e8eaed);
+}
+
+.delete-profile-modal-body {
+  padding: 24px 24px 20px 24px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--jp-ui-font-color1, #3c4043);
+}
+
+.delete-profile-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px 20px 24px;
+}
+
+.delete-profile-modal-btn {
+  background: transparent;
+  border: none;
+  color: #1a73e8;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.delete-profile-modal-btn:hover:not(:disabled) {
+  background-color: rgba(26, 115, 232, 0.08);
+}
+
+body[data-jp-theme-light='false'] .delete-profile-modal-btn,
+body[data-jp-theme-name='JupyterLab Dark'] .delete-profile-modal-btn {
+  color: #8ab4f8;
+}
+
+body[data-jp-theme-light='false'] .delete-profile-modal-btn:hover:not(:disabled),
+body[data-jp-theme-name='JupyterLab Dark'] .delete-profile-modal-btn:hover:not(:disabled) {
+  background-color: rgba(138, 180, 248, 0.08);
+}
+
+.delete-profile-modal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
