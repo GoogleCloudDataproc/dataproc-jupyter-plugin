@@ -67,6 +67,10 @@ import { BigQueryWidget } from './bigQuery/bigQueryWidget';
 import { RunTimeSerive } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
+import {
+  setupNotificationListener,
+  setupReportListener
+} from './notifications/notifications';
 
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
@@ -108,6 +112,9 @@ const extension: JupyterFrontEndPlugin<void> = {
     documentManager: IDocumentManager
   ) => {
     DataprocLoggingService.attach();
+    (window as any).jupyterapp = app;
+    setupNotificationListener(app);
+    setupReportListener(app);
     const { commands } = app;
 
     const iconAddRuntime = new LabIcon({

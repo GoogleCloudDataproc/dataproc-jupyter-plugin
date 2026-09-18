@@ -16,6 +16,15 @@
             "rank": 99
           }
         ]
+      },
+      {
+        "id": "jp-mainmenu-help",
+        "items": [
+          {
+            "command": "dataproc:show-warnings",
+            "rank": 100
+          }
+        ]
       }
     ]
   },
