@@ -41,7 +41,6 @@ test.describe('Settings Menu', () => {
     await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
 
     // Assert that we can save the project after we fill in project again.
-    await page.getByRole('combobox', { name: 'Project ID' }).click();
     await page.getByRole('combobox', { name: 'Project ID' }).fill('kokoro');
     await page.getByRole('option', { name: 'dataproc-kokoro-tests' }).click();
     await expect(page.getByRole('button', { name: 'Save' })).not.toBeDisabled();
@@ -49,5 +48,54 @@ test.describe('Settings Menu', () => {
     // Do not actually save. Due to tests running in parallel, changing the project
     // can cause other tests to fail as their access tokens get revoked from
     // underneath them.
+  });
+  test('Renders SettingsLayout when enable_runtime_profile_integration flag is true', async ({ page }) => {
+    // Mock the settings API response to enable the new UI
+    await page.route('**/dataproc-plugin/settings*', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ enable_runtime_profile_integration: true })
+      });
+    });
+
+    await page
+      .getByLabel('main menu', { exact: true })
+      .getByText('Settings')
+      .click();
+    const cloudSettings = page.getByText('Google Cloud Settings');
+    await cloudSettings.click();
+
+    // The SettingsLayout renders sidebar tabs instead of the standard config selection.
+    // Verify the 'common' and 'spark' tabs or sidebar layout elements are visible.
+    const commonTab = page.locator('.settings-tab').filter({ hasText: 'common' });
+    await expect(commonTab).toBeVisible();
+  });
+
+  test('Renders ConfigSelection when enable_runtime_profile_integration flag is false', async ({ page }) => {
+    // Mock the settings API response to disable the new UI
+    await page.route('**/dataproc-plugin/settings*', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ enable_runtime_profile_integration: false })
+      });
+    });
+
+    await page
+      .getByLabel('main menu', { exact: true })
+      .getByText('Settings')
+      .click();
+    const cloudSettings = page.getByText('Google Cloud Settings');
+    await cloudSettings.click();
+
+    // The ConfigSelection renders the old layout without the sidebar tabs.
+    // Verify that the 'common' tab from SettingsLayout is not visible.
+    const commonTab = page.locator('.settings-tab').filter({ hasText: 'common' });
+    await expect(commonTab).toHaveCount(0);
+
+    // Ensure the main configuration form title is visible (rendered by ConfigSelection)
+    const projectHeader = page.getByText('Google Cloud Project Settings');
+    await expect(projectHeader).toBeVisible();
   });
 });

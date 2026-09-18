@@ -27,19 +27,24 @@ async def test_get_default_settings(jp_fetch):
     assert response.code == 200
     payload = json.loads(response.body)
     assert "enable_bigquery_integration" in payload
+    assert "enable_runtime_profile_integration" in payload
     assert "log_path" in payload
     assert payload["enable_bigquery_integration"] is False
+    assert payload["enable_runtime_profile_integration"] is False
     assert payload["log_path"] == ""
 
 
 async def test_get_modified_settings(jp_fetch, jp_serverapp):
     jp_serverapp.config.DataprocPluginConfig.enable_bigquery_integration = True
+    jp_serverapp.config.DataprocPluginConfig.enable_runtime_profile_integration = True
     response = await jp_fetch("dataproc-plugin", "settings")
     assert response.code == 200
     payload = json.loads(response.body)
     assert "enable_bigquery_integration" in payload
+    assert "enable_runtime_profile_integration" in payload
     assert "log_path" in payload
     assert payload["enable_bigquery_integration"] is True
+    assert payload["enable_runtime_profile_integration"] is True
     assert payload["log_path"] == ""
 
 

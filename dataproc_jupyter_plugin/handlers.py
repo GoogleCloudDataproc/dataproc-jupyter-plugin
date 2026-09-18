@@ -41,6 +41,7 @@ from dataproc_jupyter_plugin.controllers.version import (
     tornado
 )
 
+
 from importlib.metadata import version, PackageNotFoundError
 
 try:
@@ -95,6 +96,12 @@ class DataprocPluginConfig(SingletonConfigurable):
         False,
         config=True,
         help="Enable integration with BigQuery in JupyterLab",
+    )
+
+    enable_runtime_profile_integration = Bool(
+        False,
+        config=True,
+        help="Enable runtime profile UI in JupyterLab",
     )
 
     enable_metastore_integration = Bool(
@@ -257,6 +264,7 @@ def setup_handlers(web_app):
         "jupyterlabVersion": LatestVersionController,
         "updatePlugin": UpdatePackage,
         "checkApiEnabled": checkApiEnabled.CheckApiController,
+        
     }
     handlers = [(full_path(name), handler) for name, handler in handlersMap.items()]
     web_app.add_handlers(host_pattern, handlers)

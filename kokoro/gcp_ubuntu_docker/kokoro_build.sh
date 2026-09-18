@@ -31,7 +31,7 @@ sudo apt-get update
 sudo apt-get --assume-yes install python3 python3-pip nodejs python3-venv
 
 # Install latest jupyter lab and build.
-python -m venv latest
+python -m venv --copies latest
 source latest/bin/activate
 pip install "jupyterlab>=4.0.0,<4.3.0" build
 
@@ -83,7 +83,7 @@ deactivate
 
 # Test 3.6.6
 cd "${KOKORO_ARTIFACTS_DIR}/github/dataproc-jupyter-plugin"
-python -m venv version_366
+python -m venv --copies version_366
 source version_366/bin/activate
 pip install  --force-reinstall "jupyterlab==3.6.6"
 pip install dist/*.whl

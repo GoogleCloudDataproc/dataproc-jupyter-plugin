@@ -47,6 +47,7 @@ import {
   VERSION_DETAIL
 } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
+import { CreateRuntimeProfile } from './runtimeProfile/createRuntimeProfile';
 import {
   IFileBrowserFactory,
   IDefaultFileBrowser
@@ -141,6 +142,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       enable_metastore_integration?: boolean;
       enable_cloud_storage_integration?: boolean;
       enable_bigquery_integration?: boolean;
+      enable_runtime_profile_integration?: boolean;
     }
 
     const executeApiChecks = async () => {
@@ -164,6 +166,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         console.error('Error during app restoration:', error);
       });
     let bqFeature: SettingsResponse = await requestAPI('settings');
+    const runtimeProfileUiEnabled = Boolean(bqFeature?.enable_runtime_profile_integration);
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
 
@@ -655,6 +658,29 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
+    const createRuntimeProfileComponentCommand =
+      'create-runtime-profile-component';
+    if (runtimeProfileUiEnabled) {
+      commands.addCommand(createRuntimeProfileComponentCommand, {
+        caption: 'Create Runtime Profile',
+        label: 'Create Runtime Profile',
+        // @ts-ignore jupyter lab icon command issue
+        icon: args => (args['isPalette'] ? null : iconAddRuntime),
+        execute: () => {
+          const content = new CreateRuntimeProfile(
+            app as JupyterLab,
+            launcher as ILauncher,
+            themeManager,
+            settingRegistry
+          );
+          const widget = new MainAreaWidget<CreateRuntimeProfile>({ content });
+          widget.title.label = 'Create Runtime Profile';
+          widget.title.icon = iconServerless;
+          app.shell.add(widget, 'main');
+        }
+      });
+    }
+
     const createClusterComponentCommand = 'create-cluster-component';
     commands.addCommand(createClusterComponentCommand, {
       caption: 'Clusters',
@@ -820,11 +846,21 @@ const extension: JupyterFrontEndPlugin<void> = {
           });
         }
       });
-      launcher.add({
-        command: createRuntimeTemplateComponentCommand,
-        category: 'Dataproc Serverless Spark',
-        rank: serverlessIndex + 2
-      });
+
+      if (runtimeProfileUiEnabled) {
+        launcher.add({
+          command: createRuntimeProfileComponentCommand,
+          category: 'Dataproc Serverless Spark',
+          rank: serverlessIndex + 3
+        });
+      } else {
+        launcher.add({
+          command: createRuntimeTemplateComponentCommand,
+          category: 'Dataproc Serverless Spark',
+          rank: serverlessIndex + 2
+        });
+      }
+
       launcher.add({
         command: createClusterComponentCommand,
         category: TITLE_LAUNCHER_CATEGORY,

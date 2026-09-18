@@ -20,6 +20,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import signinGoogleIcon from '../../style/icons/signin_google_icon.svg';
 import { requestAPI } from '../handler/handler';
 import ConfigSelection from './configSelection';
+import SettingsLayout from './settingsLayout';
 import { LOGIN_STATE, STATUS_SUCCESS } from '../utils/const';
 import { checkConfig } from '../utils/utils';
 import { DataprocWidget } from '../controls/DataprocWidget';
@@ -51,6 +52,8 @@ const AuthLoginComponent = ({
   const [configError, setConfigError] = useState(false);
   const [loginError, setLoginError] = useState(false);
   const [configLoading, setConfigLoading] = useState(true);
+  const [runtimeProfileUiEnabled, setRuntimeProfileUiEnabled] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   const login = async () => {
     setIsloginDisabled(true);
@@ -78,6 +81,18 @@ const AuthLoginComponent = ({
     if (loginState) {
       setConfigLoading(false);
     }
+    
+    // Fetch the feature flag
+    requestAPI('settings')
+      .then((data: any) => {
+        setRuntimeProfileUiEnabled(Boolean(data?.enable_runtime_profile_integration));
+      })
+      .catch(err => {
+        console.error('Error fetching settings for feature flag', err);
+      })
+      .finally(() => {
+        setSettingsLoading(false);
+      });
   }, []);
 
   return (
@@ -93,7 +108,17 @@ const AuthLoginComponent = ({
           Loading Config Setup
         </div>
       )}
-      {!loginError && loginState && (
+      {!loginError && loginState && !settingsLoading && runtimeProfileUiEnabled && (
+        <SettingsLayout
+          configError={configError}
+          setConfigError={setConfigError}
+          app={app}
+          launcher={launcher}
+          settingRegistry={settingRegistry}
+          themeManager={themeManager}
+        />
+      )}
+      {!loginError && loginState && !settingsLoading && !runtimeProfileUiEnabled && (
         <ConfigSelection
           configError={configError}
           setConfigError={setConfigError}

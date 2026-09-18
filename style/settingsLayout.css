@@ -1,0 +1,186 @@
+.settings-view-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background-color: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  font-family: var(--jp-ui-font-family);
+}
+
+.settings-sidebar {
+  width: 250px;
+  border-right: 1px solid var(--jp-border-color2);
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-tab {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid transparent;
+  color: var(--jp-ui-font-color2);
+}
+
+.settings-tab:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.settings-tab.active {
+  background-color: var(--jp-layout-color2);
+  border-left-color: var(--jp-brand-color1);
+  color: var(--jp-brand-color1);
+  font-weight: 500;
+}
+
+.settings-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--jp-border-color2);
+}
+
+.settings-header-title {
+  color: var(--jp-ui-font-color1);
+  font-size: 18px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.runtime-profile-table-container {
+  padding: 24px;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border: 1px solid var(--jp-border-color2);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.filter-bar input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  margin-left: 8px;
+  color: var(--jp-ui-font-color1);
+}
+
+.runtime-profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--jp-border-color2);
+}
+
+.runtime-profile-table th,
+.runtime-profile-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--jp-border-color2);
+  font-size: 13px;
+}
+
+.runtime-profile-table th {
+  color: var(--jp-ui-font-color2);
+  font-weight: 500;
+  background-color: var(--jp-layout-color2);
+}
+
+.runtime-profile-table tr:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.active-sessions {
+  color: var(--jp-brand-color1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.table-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border: 1px solid var(--jp-border-color2);
+  border-top: none;
+  color: var(--jp-ui-font-color2);
+  font-size: 13px;
+  align-items: center;
+  gap: 16px;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: var(--jp-layout-color1);
+  min-width: 120px;
+  box-shadow: var(--jp-elevation-z4, 0px 8px 16px 0px rgba(0, 0, 0, 0.2));
+  z-index: 1;
+  text-align: left;
+}
+
+.dropdown-content div {
+  color: var(--jp-ui-font-color1);
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content div:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.dropdown-content.show {
+  display: block;
+}
+
+.secondary-action-btn {
+  background-color: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 24px !important;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secondary-action-btn:hover {
+  background-color: var(--jp-layout-color2);
+}
+.settings-sidebar-header {
+  padding: 16px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  border-bottom: 1px solid var(--jp-border-color2);
+}
