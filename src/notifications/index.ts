@@ -42,6 +42,11 @@ export function setupNotificationSystem(app: JupyterFrontEnd): void {
   const seenEventIds = new Set<string>();
   const latestReport: INotificationEvent[] = [];
 
+  const clearReport = (): void => {
+    latestReport.length = 0;
+    seenEventIds.clear();
+  };
+
   app.serviceManager.events.stream.connect((sender, event: IEvent) => {
     if (event.schema_id === NOTIFICATION_SCHEMA_ID) {
       const eventId = (event.id || event.data?.id) as string;
@@ -92,12 +97,15 @@ export function setupNotificationSystem(app: JupyterFrontEnd): void {
         title: 'Managed Service for Apache Spark',
         body: React.createElement(NotificationsViewer, { warnings: latestReport }),
         buttons: [
+          Dialog.createButton({ label: 'Clear Messages', className: 'jp-Dialog-button jp-mod-reject' }),
           Dialog.createButton({ label: 'Download Report', className: 'jp-Dialog-button jp-mod-reject' }),
           Dialog.okButton({ label: 'Close' })
         ]
       }).then(result => {
         if (result.button.label === 'Download Report') {
           downloadNotificationsReport(latestReport);
+        } else if (result.button.label === 'Clear Messages') {
+          clearReport();
         }
       });
     }
