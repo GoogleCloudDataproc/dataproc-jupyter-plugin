@@ -18,28 +18,7 @@
 import { runtimeProfileListMapper } from './runtimeProfileListMapper';
 
 describe('runtimeProfileListMapper', () => {
-  const realDate = Date;
 
-  afterEach(() => {
-    global.Date = realDate;
-  });
-
-  it('should filter out templates without jupyterSession', () => {
-    const templates = [
-      {
-        name: 'projects/p1/locations/us-central1/sessionTemplates/t1',
-        jupyterSession: { displayName: 'Jupyter Profile' }
-      },
-      {
-        name: 'projects/p1/locations/us-central1/sessionTemplates/t2',
-        sparkStandaloneSession: {}
-      }
-    ];
-
-    const result = runtimeProfileListMapper(templates);
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Jupyter Profile');
-  });
 
   it('should map all fields properly and fallback when optional fields are missing', () => {
     const templates = [
@@ -48,16 +27,13 @@ describe('runtimeProfileListMapper', () => {
         description: 'Full description',
         jupyterSession: { displayName: 'Display Profile' },
         runtimeConfig: {
-          version: '2.2',
-          properties: {
-            machineType: 'n1-standard-4'
-          }
+          version: '2.2'
         },
         creator: 'alice@google.com',
         updateTime: '2024-03-10T12:00:00Z'
       },
       {
-        // Minimal template without displayName, description, properties, or @ in creator
+        // Minimal template without displayName, description, or @ in creator
         name: 'short-name',
         jupyterSession: {},
         creator: 'system-service',
@@ -72,7 +48,6 @@ describe('runtimeProfileListMapper', () => {
       name: 'Display Profile',
       region: 'europe-west1',
       description: 'Full description',
-      machineType: '',
       runtimeVersion: '2.2',
       creator: 'alice',
       lastUsed: 'Mar 10, 2024'
@@ -83,7 +58,6 @@ describe('runtimeProfileListMapper', () => {
       name: 'short-name',
       region: '',
       description: '',
-      machineType: '',
       runtimeVersion: '',
       creator: 'system-service',
       lastUsed: ''
@@ -105,7 +79,7 @@ describe('runtimeProfileListMapper', () => {
     it('should return empty string for invalid or empty dates', () => {
       const result = runtimeProfileListMapper([
         {
-          name: 'p/1/l/us-central1/s/t1',
+          name: 'projects/test-proj/locations/us-central1/sessionTemplates/t1',
           jupyterSession: {},
           updateTime: 'invalid-date-string'
         }
@@ -117,7 +91,7 @@ describe('runtimeProfileListMapper', () => {
       const thirtySecsAgo = new Date(fixedNow.getTime() - 30 * 1000).toISOString();
       const result = runtimeProfileListMapper([
         {
-          name: 'p/1/l/us-central1/s/t1',
+          name: 'projects/test-proj/locations/us-central1/sessionTemplates/t1',
           jupyterSession: {},
           updateTime: thirtySecsAgo
         }
@@ -129,7 +103,7 @@ describe('runtimeProfileListMapper', () => {
       const fifteenMinsAgo = new Date(fixedNow.getTime() - 15 * 60 * 1000).toISOString();
       const result = runtimeProfileListMapper([
         {
-          name: 'p/1/l/us-central1/s/t1',
+          name: 'projects/test-proj/locations/us-central1/sessionTemplates/t1',
           jupyterSession: {},
           updateTime: fifteenMinsAgo
         }
@@ -141,7 +115,7 @@ describe('runtimeProfileListMapper', () => {
       const oneHourAgo = new Date(fixedNow.getTime() - 65 * 60 * 1000).toISOString();
       const result = runtimeProfileListMapper([
         {
-          name: 'p/1/l/us-central1/s/t1',
+          name: 'projects/test-proj/locations/us-central1/sessionTemplates/t1',
           jupyterSession: {},
           updateTime: oneHourAgo
         }
@@ -153,7 +127,7 @@ describe('runtimeProfileListMapper', () => {
       const threeHoursAgo = new Date(fixedNow.getTime() - 3 * 60 * 60 * 1000).toISOString();
       const result = runtimeProfileListMapper([
         {
-          name: 'p/1/l/us-central1/s/t1',
+          name: 'projects/test-proj/locations/us-central1/sessionTemplates/t1',
           jupyterSession: {},
           updateTime: threeHoursAgo
         }
@@ -165,7 +139,7 @@ describe('runtimeProfileListMapper', () => {
       const yesterday = new Date('2026-06-14T10:00:00Z').toISOString();
       const result = runtimeProfileListMapper([
         {
-          name: 'p/1/l/us-central1/s/t1',
+          name: 'projects/test-proj/locations/us-central1/sessionTemplates/t1',
           jupyterSession: {},
           updateTime: yesterday
         }
@@ -177,7 +151,7 @@ describe('runtimeProfileListMapper', () => {
       const olderDate = new Date('2025-11-05T10:00:00Z').toISOString();
       const result = runtimeProfileListMapper([
         {
-          name: 'p/1/l/us-central1/s/t1',
+          name: 'projects/test-proj/locations/us-central1/sessionTemplates/t1',
           jupyterSession: {},
           updateTime: olderDate
         }

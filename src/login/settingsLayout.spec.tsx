@@ -33,15 +33,6 @@ describe('SettingsLayout Component', () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  const mockThemeManager: any = {
-    theme: 'JupyterLab Light',
-    isLight: () => true,
-    themeChanged: {
-      connect: jest.fn(),
-      disconnect: jest.fn()
-    }
-  };
-
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -61,7 +52,6 @@ describe('SettingsLayout Component', () => {
         <SettingsLayout
           configError={false}
           setConfigError={jest.fn()}
-          themeManager={mockThemeManager}
         />
       );
     });
@@ -79,7 +69,6 @@ describe('SettingsLayout Component', () => {
         <SettingsLayout
           configError={false}
           setConfigError={jest.fn()}
-          themeManager={mockThemeManager}
         />
       );
     });
@@ -106,7 +95,6 @@ describe('SettingsLayout Component', () => {
         <SettingsLayout
           configError={false}
           setConfigError={jest.fn()}
-          themeManager={mockThemeManager}
         />
       );
     });

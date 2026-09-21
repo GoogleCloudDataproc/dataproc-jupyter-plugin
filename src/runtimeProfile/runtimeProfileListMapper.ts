@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-export interface IRuntimeProfile {
+export interface IRuntimeProfileRow {
   name: string;
   region: string;
   description: string;
-  machineType: string;
   runtimeVersion: string;
   creator: string;
   lastUsed: string;
@@ -73,7 +72,7 @@ const formatLastUsed = (dateString: string) => {
   }
 };
 
-export interface ISessionTemplate {
+export interface IRuntimeProfileTemplate {
   name: string;
   description?: string;
   jupyterSession?: {
@@ -82,20 +81,15 @@ export interface ISessionTemplate {
   };
   runtimeConfig?: {
     version?: string;
-    properties?: Record<string, string>;
   };
   creator?: string;
   updateTime?: string;
 }
 
 export const runtimeProfileListMapper = (
-  templates: ISessionTemplate[]
-): IRuntimeProfile[] => {
-  const jupyterTemplates = templates.filter(
-    (t: ISessionTemplate) => t.jupyterSession
-  );
-
-  return jupyterTemplates.map((t: ISessionTemplate) => {
+  templates: IRuntimeProfileTemplate[]
+): IRuntimeProfileRow[] => {
+  return templates.map((t: IRuntimeProfileTemplate) => {
     const nameParts = t.name?.split('/') || [];
     const region = nameParts[3] || '';
 
@@ -103,8 +97,6 @@ export const runtimeProfileListMapper = (
       name: t.jupyterSession?.displayName || t.name,
       region: region,
       description: t.description || '',
-      // TODO: Machine type mapping from Spark properties will be added once the derivation logic is clarified/finalized.
-      machineType: '',
       runtimeVersion: t.runtimeConfig?.version || '',
       creator:
         (t.creator && t.creator.includes('@')

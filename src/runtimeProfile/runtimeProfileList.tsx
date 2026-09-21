@@ -24,14 +24,14 @@ import addRuntimeIcon from '../../style/icons/plus_icon.svg';
 import refreshIcon from '../../style/icons/refresh_icon.svg';
 import { CircularProgress } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import { IRuntimeProfile, runtimeProfileListMapper } from './runtimeProfileListMapper';
+import { IRuntimeProfileRow, runtimeProfileListMapper } from './runtimeProfileListMapper';
 import { JupyterLab } from '@jupyterlab/application';
 
 const iconAddRuntime = new LabIcon({ name: 'runtime-profile:add-runtime-icon', svgstr: addRuntimeIcon });
 const iconRefresh = new LabIcon({ name: 'runtime-profile:refresh-icon', svgstr: refreshIcon });
 
 export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
-  const [profiles, setProfiles] = useState<IRuntimeProfile[]>([]);
+  const [profiles, setProfiles] = useState<IRuntimeProfileRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageTokens, setPageTokens] = useState<string[]>(['']);
   const [pageOffsets, setPageOffsets] = useState<number[]>([0]);
@@ -39,7 +39,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [profileToDelete, setProfileToDelete] = useState<IRuntimeProfile | null>(null);
+  const [profileToDelete, setProfileToDelete] = useState<IRuntimeProfileRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -66,6 +66,8 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
       setProfiles(mappedProfiles);
       setNextPageToken(newNextPageToken || null);
     } catch (error) {
+      setProfiles([]);
+      setNextPageToken(null);
       DataprocLoggingService.log(`Error fetching runtime profiles: ${error}`, LOG_LEVEL.ERROR);
       Notification.emit(`Failed to fetch runtime profiles: ${error}`, 'error', {
         autoClose: 5000
@@ -79,7 +81,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
     fetchProfiles(pageTokens[currentPage]);
   }, [currentPage]);
 
-  const openDeleteModal = (profile: IRuntimeProfile) => {
+  const openDeleteModal = (profile: IRuntimeProfileRow) => {
     setOpenDropdownId(null);
     setProfileToDelete(profile);
   };
@@ -130,6 +132,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
                   height="20"
                   viewBox="0 0 24 24"
                   fill="currentColor"
+                  aria-hidden="true"
                 >
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
                 </svg>
@@ -184,16 +187,15 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
             <CircularProgress size={24} />
           </div>
         ) : profiles.length === 0 ? (
-          <div className="no-profiles-message">No runtime profiles found</div>
+          <div className="no-profiles-message">No rows to display</div>
         ) : (
           <>
             <table className="runtime-profile-table">
               <thead>
                 <tr>
-                    <th>Runtime profile name</th>
+                  <th>Runtime profile name</th>
                   <th>Region</th>
                   <th>Description</th>
-                    <th>Machine type</th>
                   <th>Runtime version</th>
                   <th>Creator</th>
                   <th>Last used</th>
@@ -208,7 +210,6 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
                     <td className="description-cell" title={profile.description}>
                       {profile.description}
                     </td>
-                    <td>{profile.machineType}</td>
                     <td>{profile.runtimeVersion}</td>
                     <td>{profile.creator}</td>
                     <td>{profile.lastUsed}</td>
@@ -225,11 +226,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
               </tbody>
             </table>
             <div className="table-footer">
-              {profiles.length > 0 ? (
-                  `Showing ${(pageOffsets[currentPage] ?? 0) + 1} – ${(pageOffsets[currentPage] ?? 0) + profiles.length} profiles`
-              ) : (
-                'Showing 0 profiles'
-              )}
+              {`Showing ${(pageOffsets[currentPage] ?? 0) + 1} – ${(pageOffsets[currentPage] ?? 0) + profiles.length} profiles`}
               <span
                 className={`pagination-btn ${currentPage === 0 ? 'disabled' : ''}`}
                 onClick={() => { if (currentPage > 0) setCurrentPage(currentPage - 1); }}

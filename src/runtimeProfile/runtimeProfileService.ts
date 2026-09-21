@@ -29,7 +29,7 @@ import {
   IRuntimeProfile,
   IRuntimeProfileService
 } from './runtimeProfileInterface';
-import { ISessionTemplate } from './runtimeProfileListMapper';
+import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
 
 /**
  * Flag to enable mock mode for UI development/testing until the skeleton form
@@ -59,7 +59,7 @@ const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
   }
 };
 
-export const DEFAULT_RUNTIME_PROFILE_PAGE_SIZE = 50;
+const DEFAULT_RUNTIME_PROFILE_PAGE_SIZE = 50;
 
 /**
  * Service to manage Dataproc Runtime Profiles.
@@ -72,9 +72,9 @@ export class RuntimeProfileService implements IRuntimeProfileService {
   static async fetchRuntimeProfiles(
     pageToken: string = '',
     pageSize: number = DEFAULT_RUNTIME_PROFILE_PAGE_SIZE
-  ): Promise<{ templates: ISessionTemplate[]; nextPageToken?: string }> {
+  ): Promise<{ templates: IRuntimeProfileTemplate[]; nextPageToken?: string }> {
     let currentToken: string | undefined = pageToken;
-    let validTemplates: ISessionTemplate[] = [];
+    let validTemplates: IRuntimeProfileTemplate[] = [];
 
     do {
       const queryParams = new URLSearchParams({
@@ -108,8 +108,8 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         );
       }
 
-      const rawTemplates: ISessionTemplate[] = data?.sessionTemplates || [];
-      validTemplates = rawTemplates.filter((t: ISessionTemplate) =>
+      const rawTemplates: IRuntimeProfileTemplate[] = data?.sessionTemplates || [];
+      validTemplates = rawTemplates.filter((t: IRuntimeProfileTemplate) =>
         Boolean(t.jupyterSession)
       );
       currentToken = data?.nextPageToken;

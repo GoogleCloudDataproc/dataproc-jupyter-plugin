@@ -56,6 +56,7 @@ jest.mock('../handler/handler', () => ({
 }));
 
 jest.mock('@jupyterlab/apputils', () => ({
+  ...jest.requireActual('@jupyterlab/apputils'),
   Notification: {
     emit: jest.fn()
   }
@@ -106,14 +107,6 @@ describe('Common Settings Component', () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  const mockThemeManager: any = {
-    theme: 'JupyterLab Light',
-    isLight: () => true,
-    themeChanged: {
-      connect: jest.fn(),
-      disconnect: jest.fn()
-    }
-  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -158,7 +151,6 @@ describe('Common Settings Component', () => {
         <Common
           configError={false}
           setConfigError={jest.fn()}
-          themeManager={mockThemeManager}
         />
       );
     });
@@ -182,7 +174,6 @@ describe('Common Settings Component', () => {
         <Common
           configError={false}
           setConfigError={setConfigError}
-          themeManager={mockThemeManager}
         />
       );
     });
@@ -211,7 +202,6 @@ describe('Common Settings Component', () => {
         <Common
           configError={false}
           setConfigError={setConfigError}
-          themeManager={mockThemeManager}
         />
       );
     });
@@ -245,7 +235,6 @@ describe('Common Settings Component', () => {
         <Common
           configError={false}
           setConfigError={jest.fn()}
-          themeManager={mockThemeManager}
         />
       );
     });
@@ -296,7 +285,6 @@ describe('Common Settings Component', () => {
         <Common
           configError={false}
           setConfigError={jest.fn()}
-          themeManager={mockThemeManager}
         />
       );
     });
@@ -332,61 +320,62 @@ describe('Common Settings Component', () => {
       })
     };
 
-    (authApi as jest.Mock).mockResolvedValue({
-      access_token: 'mock-token',
-      project_id: 'my-gcp-project',
-      region_id: 'us-central1'
-    });
+    try {
+      (authApi as jest.Mock).mockResolvedValue({
+        access_token: 'mock-token',
+        project_id: 'my-gcp-project',
+        region_id: 'us-central1'
+      });
 
-    (requestAPI as jest.Mock).mockImplementation((endpoint: string) => {
-      if (endpoint === 'settings') {
-        return Promise.resolve({
-          enable_bigquery_integration: true,
-          kernel_gateway_project_number: null
-        });
-      }
-      if (endpoint === 'configuration') {
-        return Promise.resolve({ config: 'Configuration saved' });
-      }
-      return Promise.resolve(defaultServiceUrls);
-    });
+      (requestAPI as jest.Mock).mockImplementation((endpoint: string) => {
+        if (endpoint === 'settings') {
+          return Promise.resolve({
+            enable_bigquery_integration: true,
+            kernel_gateway_project_number: null
+          });
+        }
+        if (endpoint === 'configuration') {
+          return Promise.resolve({ config: 'Configuration saved' });
+        }
+        return Promise.resolve(defaultServiceUrls);
+      });
 
-    const mockSet = jest.fn().mockImplementation(() =>
-      Promise.resolve().then(() => {
-        callOrder.push('settings.set');
-      })
-    );
-    const mockSettingRegistry: any = {
-      load: jest.fn().mockResolvedValue({
-        get: jest.fn().mockReturnValue({ composite: 'us-central1' }),
-        set: mockSet
-      })
-    };
-
-    await act(async () => {
-      root.render(
-        <Common
-          configError={false}
-          setConfigError={jest.fn()}
-          settingRegistry={mockSettingRegistry}
-          themeManager={mockThemeManager}
-        />
+      const mockSet = jest.fn().mockImplementation(() =>
+        Promise.resolve().then(() => {
+          callOrder.push('settings.set');
+        })
       );
-    });
+      const mockSettingRegistry: any = {
+        load: jest.fn().mockResolvedValue({
+          get: jest.fn().mockReturnValue({ composite: 'us-central1' }),
+          set: mockSet
+        })
+      };
 
-    const saveBtn = Array.from(container.querySelectorAll('button')).find(
-      btn => btn.textContent === 'Save'
-    ) as HTMLButtonElement;
+      await act(async () => {
+        root.render(
+          <Common
+            configError={false}
+            setConfigError={jest.fn()}
+            settingRegistry={mockSettingRegistry}
+          />
+        );
+      });
 
-    await act(async () => {
-      saveBtn.click();
-    });
+      const saveBtn = Array.from(container.querySelectorAll('button')).find(
+        btn => btn.textContent === 'Save'
+      ) as HTMLButtonElement;
 
-    expect(mockSettingRegistry.load).toHaveBeenCalled();
-    expect(mockSet).toHaveBeenCalledWith('bqRegion', 'us-central1');
-    expect(callOrder).toEqual(['settings.set', 'location.reload']);
+      await act(async () => {
+        saveBtn.click();
+      });
 
-    (window as any).location = originalLocation;
+      expect(mockSettingRegistry.load).toHaveBeenCalled();
+      expect(mockSet).toHaveBeenCalledWith('bqRegion', 'us-central1');
+      expect(callOrder).toEqual(['settings.set', 'location.reload']);
+    } finally {
+      (window as any).location = originalLocation;
+    }
   });
 
   it('should render read-only project ID with help tooltip when kernel_gateway_project_number is present', async () => {
@@ -411,7 +400,6 @@ describe('Common Settings Component', () => {
         <Common
           configError={false}
           setConfigError={jest.fn()}
-          themeManager={mockThemeManager}
         />
       );
     });

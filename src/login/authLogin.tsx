@@ -113,9 +113,7 @@ const AuthLoginComponent = ({
           configError={configError}
           setConfigError={setConfigError}
           app={app}
-          launcher={launcher}
           settingRegistry={settingRegistry}
-          themeManager={themeManager}
         />
       )}
       {!loginError && loginState && !settingsLoading && !runtimeProfileUiEnabled && (

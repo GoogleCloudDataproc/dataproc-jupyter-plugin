@@ -16,9 +16,7 @@
  */
 
 import React, { useState } from 'react';
-import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import { ILauncher } from '@jupyterlab/launcher';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import Common from './common';
 import RuntimeProfileList from '../runtimeProfile/runtimeProfileList';
@@ -27,18 +25,14 @@ interface ISettingsLayoutProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
   app?: JupyterLab;
-  launcher?: ILauncher;
   settingRegistry?: ISettingRegistry;
-  themeManager: IThemeManager;
 }
 
 export default function SettingsLayout({
   configError,
   setConfigError,
   app,
-  launcher,
-  settingRegistry,
-  themeManager
+  settingRegistry
 }: ISettingsLayoutProps) {
   const [activeTab, setActiveTab] = useState<'common' | 'spark'>('common');
 
@@ -70,7 +64,6 @@ export default function SettingsLayout({
             configError={configError}
             setConfigError={setConfigError}
             settingRegistry={settingRegistry}
-            themeManager={themeManager}
           />
         )}
 

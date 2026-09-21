@@ -27,7 +27,7 @@ import {
   VERSION_DETAIL
 } from '../utils/const';
 import { IAuthCredentials, authApi, loggedFetch } from '../utils/utils';
-import { IThemeManager, Notification } from '@jupyterlab/apputils';
+import { Notification } from '@jupyterlab/apputils';
 import THIRD_PARTY_LICENSES from '../../third-party-licenses.txt';
 import { Button, CircularProgress } from '@mui/material';
 import { RegionDropdown } from '../controls/RegionDropdown';
@@ -43,7 +43,6 @@ interface ICommonProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
   settingRegistry?: ISettingRegistry;
-  themeManager: IThemeManager;
 }
 
 const iconGoogleCloud = new LabIcon({ name: 'settings-common:google-cloud-icon', svgstr: googleCloudIcon });
@@ -52,8 +51,7 @@ const iconHelp = new LabIcon({ name: 'settings-common:help-icon', svgstr: helpIc
 export default function Common({
   configError,
   setConfigError,
-  settingRegistry,
-  themeManager
+  settingRegistry
 }: ICommonProps) {
   const [bigQueryFeatureEnable, setBigQueryFeatureEnable] = useState(false);
   const [isProjectIdEditable, setIsProjectIdEditable] = useState(true);
