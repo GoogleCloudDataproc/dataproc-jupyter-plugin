@@ -19,24 +19,25 @@
   margin-bottom: 24px;
   width: 100%;
   box-sizing: border-box;
+  font-family: Roboto,
+    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+}
+
+.section-detail-wrapper * {
+  box-sizing: border-box;
 }
 
 .section-detail-header {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: space-between !important;
-  align-items: center !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   min-height: 36px;
   padding: 0 4px;
   width: 100%;
-  box-sizing: border-box;
 }
 
 /* Bolder header title */
 .section-detail-title {
-  font-family: Roboto,
-    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
-  font-style: normal;
   font-weight: 700;
   font-size: 14px;
   line-height: 20px;
@@ -46,17 +47,15 @@
 }
 
 .section-detail-header-actions {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 .section-detail-edit-button {
   cursor: pointer;
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
+  display: flex;
+  align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 4px;
@@ -82,10 +81,8 @@
 .section-detail-edit-button:hover:not(.disabled) path {
   fill: var(--jp-ui-font-color1, #3c4043);
 }
+
 .section-detail-edit-button .edit-label-text {
-  font-family: Roboto,
-    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
-  font-style: normal;
   font-weight: 500;
   font-size: 12px;
   line-height: 16px;
@@ -109,49 +106,37 @@
   flex-direction: column;
   padding: 0 4px;
   width: 100%;
-  box-sizing: border-box;
 }
 
 /* Key-value row with 0.5px lighter border-bottom */
 .section-detail-row {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: flex-start !important;
-  align-items: flex-start !important;
+  display: flex;
+  align-items: flex-start;
   min-height: 24px;
   padding: 6px 0;
   border-bottom: 0.5px solid var(--jp-border-color2, #e0e0e0);
-  font-family: Roboto,
-    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
   width: 100%;
-  box-sizing: border-box;
+}
+
+.section-detail-label,
+.section-detail-value {
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--jp-ui-font-color1);
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .section-detail-label {
-  font-style: normal;
-  font-weight: 400;
-  font-size: 13px;
-  line-height: 18px;
   width: 40%;
   min-width: 200px;
-  color: var(--jp-ui-font-color1);
-  text-align: left;
   flex-shrink: 0;
-  overflow-wrap: anywhere;
-  box-sizing: border-box;
 }
 
 .section-detail-value {
-  font-style: normal;
-  font-weight: 400;
-  font-size: 13px;
-  line-height: 18px;
   width: 60%;
-  color: var(--jp-ui-font-color1);
-  text-align: left;
-  overflow-wrap: anywhere;
   word-break: break-word;
-  box-sizing: border-box;
 }
 
 .section-detail-link {
@@ -172,46 +157,7 @@
   text-align: left;
 }
 
-/* Additional configuration section styling (matches 620px width of intro text with border-top) */
-.additional-config-section {
-  max-width: 620px;
-  width: 100%;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--jp-border-color2, #e0e0e0);
-  box-sizing: border-box;
-}
-
-.additional-config-header-container {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  width: 100%;
-  padding: 0 4px;
-  cursor: pointer;
-  user-select: none;
-  box-sizing: border-box;
-}
-
-.additional-config-header {
-  font-family: Roboto,
-    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--jp-ui-font-color0);
-}
-
-/* .additional-config-header-container:hover .additional-config-header {
-  color: var(--jp-brand-color1, #3367d6);
-} */
-
 /* Dark mode adjustments */
-body[data-jp-theme-name='JupyterLab Dark']
-  .section-detail-edit-button:hover:not(.disabled) {
-  background-color: var(--jp-layout-color2);
-}
-
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-divider {
   background-color: var(--jp-border-color1, #9aa0a6);
 }

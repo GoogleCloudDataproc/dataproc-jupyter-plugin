@@ -172,12 +172,21 @@ export const SectionDetail: React.FC<ISectionDetailProps> = ({
       (event.key === 'Enter' || event.key === ' ')
     ) {
       event.preventDefault();
+      event.stopPropagation();
       onEdit();
     }
   };
 
+  const EditIconComponent = isEditDisabled
+    ? iconEditDisable.react
+    : iconEdit.react;
+  const editAriaLabel = editTooltip || `Edit ${title}`;
+
   return (
-    <div className={`section-detail-wrapper ${className || ''}`} style={style}>
+    <div
+      className={['section-detail-wrapper', className].filter(Boolean).join(' ')}
+      style={style}
+    >
       {/* Header with Title on Left and Edit Icon on Right in the same line */}
       <div className="section-detail-header">
         <div className="section-detail-title">{title}</div>
@@ -187,29 +196,20 @@ export const SectionDetail: React.FC<ISectionDetailProps> = ({
             <div
               role="button"
               tabIndex={isEditDisabled ? -1 : 0}
-              aria-label={editTooltip || `Edit ${title}`}
-              title={editTooltip || `Edit ${title}`}
-              className={`section-detail-edit-button ${
-                isEditDisabled ? 'disabled' : ''
+              aria-label={editAriaLabel}
+              title={editAriaLabel}
+              className={`section-detail-edit-button${
+                isEditDisabled ? ' disabled' : ''
               }`}
               onClick={handleEditClick}
               onKeyDown={handleKeyDown}
             >
-              {isEditDisabled ? (
-                <iconEditDisable.react
-                  tag="div"
-                  className="logo-alignment-style"
-                />
-              ) : (
-                <iconEdit.react tag="div" className="logo-alignment-style" />
-              )}
+              <EditIconComponent tag="div" className="logo-alignment-style" />
               {editLabel && (
                 <span
-                  className={
-                    isEditDisabled
-                      ? 'edit-label-text disabled'
-                      : 'edit-label-text'
-                  }
+                  className={`edit-label-text${
+                    isEditDisabled ? ' disabled' : ''
+                  }`}
                 >
                   {editLabel}
                 </span>
@@ -235,7 +235,9 @@ export const SectionDetail: React.FC<ISectionDetailProps> = ({
           return (
             <div
               key={`${prop.label}-${idx}`}
-              className={`section-detail-row ${prop.className || ''}`}
+              className={`section-detail-row${
+                prop.className ? ` ${prop.className}` : ''
+              }`}
             >
               <div
                 className="section-detail-label"
@@ -244,7 +246,7 @@ export const SectionDetail: React.FC<ISectionDetailProps> = ({
                 {prop.label}
               </div>
               <div className="section-detail-value">
-                {prop.isLink && typeof displayValue === 'string' ? (
+                {prop.isLink && !isValueEmpty && prop.onLinkClick ? (
                   <span
                     role="button"
                     tabIndex={0}
@@ -253,6 +255,7 @@ export const SectionDetail: React.FC<ISectionDetailProps> = ({
                     onKeyDown={event => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
+                        event.stopPropagation();
                         prop.onLinkClick?.();
                       }
                     }}
