@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { RuntimeProfileService } from './runtimeProfileService';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -41,6 +41,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [profileToDelete, setProfileToDelete] = useState<IRuntimeProfileRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const fetchIdRef = useRef(0);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -58,14 +59,21 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
   };
 
   const fetchProfiles = async (token: string = '') => {
+    const fetchId = ++fetchIdRef.current;
     setIsLoading(true);
     try {
       const { templates, nextPageToken: newNextPageToken } = await RuntimeProfileService.fetchRuntimeProfiles(token);
+      if (fetchId !== fetchIdRef.current) {
+        return;
+      }
 
       const mappedProfiles = runtimeProfileListMapper(templates);
       setProfiles(mappedProfiles);
       setNextPageToken(newNextPageToken || null);
     } catch (error) {
+      if (fetchId !== fetchIdRef.current) {
+        return;
+      }
       setProfiles([]);
       setNextPageToken(null);
       DataprocLoggingService.log(`Error fetching runtime profiles: ${error}`, LOG_LEVEL.ERROR);
@@ -73,7 +81,9 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         autoClose: 5000
       });
     } finally {
-      setIsLoading(false);
+      if (fetchId === fetchIdRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 

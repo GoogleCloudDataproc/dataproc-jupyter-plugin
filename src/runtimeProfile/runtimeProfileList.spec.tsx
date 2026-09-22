@@ -162,6 +162,48 @@ describe('RuntimeProfileList Component', () => {
     expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenLastCalledWith('');
   });
 
+  it('should ignore stale out-of-order fetch response when Refresh triggers a newer request', async () => {
+    let resolveFirstFetch!: (value: any) => void;
+    const firstFetchPromise = new Promise(resolve => {
+      resolveFirstFetch = resolve;
+    });
+
+    (RuntimeProfileService.fetchRuntimeProfiles as jest.Mock)
+      .mockReset()
+      .mockReturnValueOnce(firstFetchPromise)
+      .mockResolvedValueOnce({
+        templates: [mockTemplates[0]],
+        nextPageToken: ''
+      });
+
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+
+    const refreshBtn = Array.from(container.querySelectorAll('button')).find(
+      btn => btn.textContent?.includes('Refresh')
+    ) as HTMLButtonElement;
+
+    await act(async () => {
+      refreshBtn.click();
+    });
+
+    expect(container.textContent).toContain('profile-1');
+    expect(container.textContent).not.toContain('profile-2');
+
+    // Now resolve the older first request with stale data (both profile-1 and profile-2)
+    await act(async () => {
+      resolveFirstFetch({
+        templates: mockTemplates,
+        nextPageToken: 'stale-token'
+      });
+    });
+
+    // Stale response must be ignored; only profile-1 remains
+    expect(container.textContent).toContain('profile-1');
+    expect(container.textContent).not.toContain('profile-2');
+  });
+
   it('should open custom centered delete modal via portal and delete profile on confirmation', async () => {
     await act(async () => {
       root.render(<RuntimeProfileList />);

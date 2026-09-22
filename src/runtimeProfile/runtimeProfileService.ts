@@ -60,6 +60,7 @@ const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
 };
 
 const DEFAULT_RUNTIME_PROFILE_PAGE_SIZE = 50;
+const MAX_EMPTY_PAGE_HOPS = 10;
 
 /**
  * Service to manage Dataproc Runtime Profiles.
@@ -75,6 +76,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
   ): Promise<{ templates: IRuntimeProfileTemplate[]; nextPageToken?: string }> {
     let currentToken: string | undefined = pageToken;
     let validTemplates: IRuntimeProfileTemplate[] = [];
+    let hops = 0;
 
     do {
       const queryParams = new URLSearchParams({
@@ -113,7 +115,12 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         Boolean(t.jupyterSession)
       );
       currentToken = data?.nextPageToken;
-    } while (validTemplates.length === 0 && Boolean(currentToken));
+      hops += 1;
+    } while (
+      validTemplates.length === 0 &&
+      Boolean(currentToken) &&
+      hops < MAX_EMPTY_PAGE_HOPS
+    );
 
     return {
       templates: validTemplates,

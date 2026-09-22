@@ -98,6 +98,24 @@ describe('RuntimeProfileService', () => {
       });
     });
 
+    it('caps empty-page skipping at 10 hops when pages contain only non-Jupyter templates', async () => {
+      (authenticatedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          sessionTemplates: [{ name: 'non-jupyter' }],
+          nextPageToken: 'still-more-tokens'
+        })
+      });
+
+      const result = await RuntimeProfileService.fetchRuntimeProfiles('token-1');
+
+      expect(authenticatedFetch).toHaveBeenCalledTimes(10);
+      expect(result).toEqual({
+        templates: [],
+        nextPageToken: 'still-more-tokens'
+      });
+    });
+
     it('returns empty array if sessionTemplates is missing', async () => {
       (authenticatedFetch as jest.Mock).mockResolvedValue({
         ok: true,
