@@ -1,0 +1,171 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.dp-notifications-container {
+  font-family: var(--jp-ui-font-family, 'Roboto', 'Helvetica Neue', Arial, sans-serif);
+  padding: 0;
+  max-width: 600px;
+  min-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: dpFadeIn 0.3s ease-out;
+}
+
+@keyframes dpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dp-notifications-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--jp-layout-color2, #f5f5f5);
+  border-radius: 6px;
+  border-left: 4px solid #f9ab00;
+  /* Google Warning Orange/Yellow */
+  font-weight: 500;
+  color: var(--jp-content-font-color1, #333333);
+}
+
+.dp-notifications-header p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dp-notifications-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+.dp-notifications-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dp-notifications-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dp-notifications-list::-webkit-scrollbar-thumb {
+  background: var(--jp-border-color2, #e0e0e0);
+  border-radius: 3px;
+}
+
+.dp-notifications-list::-webkit-scrollbar-thumb:hover {
+  background: var(--jp-border-color1, #cccccc);
+}
+
+.dp-notifications-item {
+  display: flex;
+  padding: 10px 14px;
+  background: var(--jp-layout-color1, #ffffff);
+  border: 1px solid var(--jp-border-color2, #e0e0e0);
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: dpSlideIn 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes dpSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.dp-notifications-item:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.dp-notifications-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.dp-notifications-item:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.dp-notifications-item:nth-child(n+4) {
+  animation-delay: 0.2s;
+}
+
+.dp-notifications-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+  border-color: var(--jp-border-color1, #cccccc);
+}
+
+.dp-notifications-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.dp-notifications-item-time {
+  font-size: 11px;
+  color: var(--jp-content-font-color2, #888888);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.dp-notifications-item-message {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--jp-content-font-color1, #333333);
+  word-break: break-word;
+}
+
+/* Empty State Styling */
+.dp-notifications-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+  animation: dpFadeIn 0.4s ease-out;
+}
+
+.dp-notifications-empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--jp-content-font-color2, #888888);
+}

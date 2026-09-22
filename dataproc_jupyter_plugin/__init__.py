@@ -15,6 +15,17 @@
 import logging
 import json
 
+try:
+    from google.cloud.jupyter_config import (
+        DataprocGatewayKernelSpecManager,
+        DataprocGatewayMappingKernelManager,
+        DataprocGatewayWebSocketConnection,
+    )
+except ImportError:
+    DataprocGatewayKernelSpecManager = None
+    DataprocGatewayMappingKernelManager = None
+    DataprocGatewayWebSocketConnection = None
+
 from google.cloud.jupyter_config.tokenrenewer import CommandTokenRenewer
 from jupyter_server.services.sessions.sessionmanager import SessionManager
 from kernels_mixer.kernels import MixingMappingKernelManager
@@ -77,9 +88,17 @@ def _link_jupyter_server_extension(server_app):
         return
 
     c.ServerApp.kernel_spec_manager_class = MixingKernelSpecManager
+    if DataprocGatewayKernelSpecManager is not None:
+        c.MixingKernelSpecManager.remote_kernel_spec_manager_class = DataprocGatewayKernelSpecManager
+
     c.ServerApp.kernel_manager_class = MixingMappingKernelManager
+    if DataprocGatewayMappingKernelManager is not None:
+        c.MixingMappingKernelManager.remote_kernel_manager_class = DataprocGatewayMappingKernelManager
+
     c.ServerApp.session_manager_class = SessionManager
     c.ServerApp.kernel_websocket_connection_class = DelegatingWebsocketConnection
+    if DataprocGatewayWebSocketConnection is not None:
+        c.DelegatingWebsocketConnection.remote_websocket_connection_class = DataprocGatewayWebSocketConnection
     c.DelegatingWebsocketConnection.kernel_ws_protocol = ""
 
     c.GatewayClient.auth_scheme = "Bearer"
