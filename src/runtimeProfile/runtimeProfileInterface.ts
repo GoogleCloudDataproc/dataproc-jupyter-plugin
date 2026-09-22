@@ -38,9 +38,6 @@ export interface IExecutorAndDriverConfig {
   executorDisk?: string;
 }
 
-/** Backward-compatibility alias */
-export type IDriverAndExecutorConfiguration = IExecutorAndDriverConfig;
-
 export interface IAutoscalingConfig {
   autoscalingEnabled?: boolean;
   initialExecutors?: number;
@@ -102,7 +99,6 @@ export interface IRuntimeProfile {
   state?: string;
   runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   executorAndDriverConfig?: IExecutorAndDriverConfig;
-  driverAndExecutorConfiguration?: IExecutorAndDriverConfig;
   autoscalingConfig?: IAutoscalingConfig;
   metastoreConfig?: IMetastoreConfig;
   networkAndSecurityConfig?: INetworkAndSecurityConfig;
@@ -118,7 +114,6 @@ export interface ICreateRuntimeProfilePayload {
   tier?: string;
   runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   executorAndDriverConfig?: IExecutorAndDriverConfig;
-  driverAndExecutorConfiguration?: IExecutorAndDriverConfig;
   autoscalingConfig?: IAutoscalingConfig;
   metastoreConfig?: IMetastoreConfig;
   networkAndSecurityConfig?: INetworkAndSecurityConfig;

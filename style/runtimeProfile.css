@@ -46,18 +46,17 @@
   display: flex;
   gap: 20px;
   margin-bottom: 16px;
-  max-width: 620px;
+  max-width: 496px;
 }
 
 .runtime-profile-col {
   flex: 1;
   min-width: 0;
-  width: 300px;
 }
 
 .runtime-profile-full-row {
   margin-bottom: 24px;
-  max-width: 620px;
+  max-width: 496px;
 }
 
 .runtime-profile-section {
@@ -186,6 +185,15 @@
   border: none;
   outline: none;
   font-family: inherit;
+  margin-right: 0;
+}
+
+.runtime-profile-buttons .submit-button-disable-style,
+.runtime-profile-buttons .submit-button-style {
+  width: auto;
+  min-width: 180px;
+  padding: 0 16px;
+  white-space: nowrap;
 }
 
 /* Dark mode overrides */
@@ -193,18 +201,12 @@ body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-main-wrapper {
   background-color: var(--jp-layout-color1);
 }
 
-body[data-jp-theme-name='JupyterLab Dark']
-  .runtime-profile-container
-  .MuiInputLabel-outlined.MuiInputLabel-shrink,
-body[data-jp-theme-name='JupyterLab Dark']
-  .runtime-profile-container
-  .MuiFormLabel-root.MuiInputLabel-shrink {
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-container .MuiInputLabel-outlined.MuiInputLabel-shrink,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-container .MuiFormLabel-root.MuiInputLabel-shrink {
   background-color: var(--jp-layout-color1) !important;
 }
 
-body[data-jp-theme-name='JupyterLab Dark']
-  .runtime-profile-container
-  .MuiOutlinedInput-root {
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-container .MuiOutlinedInput-root {
   background-color: var(--jp-layout-color0);
 }
 
@@ -476,4 +478,3 @@ body[data-jp-theme-name='JupyterLab Dark'] .delete-profile-modal-btn:hover:not(:
   opacity: 0.5;
   cursor: not-allowed;
 }
-

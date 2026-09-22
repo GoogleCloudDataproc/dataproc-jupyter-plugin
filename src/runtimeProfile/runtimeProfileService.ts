@@ -239,12 +239,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         description: payload.description,
         tier: payload.tier ?? payload.executorAndDriverConfig?.tier,
         runtimeEnvironmentConfig: payload.runtimeEnvironmentConfig,
-        executorAndDriverConfig:
-          payload.executorAndDriverConfig ??
-          payload.driverAndExecutorConfiguration,
-        driverAndExecutorConfiguration:
-          payload.driverAndExecutorConfiguration ??
-          payload.executorAndDriverConfig,
+        executorAndDriverConfig: payload.executorAndDriverConfig,
         autoscalingConfig: payload.autoscalingConfig,
         metastoreConfig: payload.metastoreConfig,
         networkAndSecurityConfig: payload.networkAndSecurityConfig,
