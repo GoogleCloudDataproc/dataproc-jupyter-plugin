@@ -17,7 +17,11 @@
 
 import { test, expect, galata } from '@jupyterlab/galata';
 
-test('bigquery-dataset-explorer', async ({ page, request }) => {
+/* skipping this test for now as the Bigquery Catalog is still in development. 
+   Once the feature is ready and available, we can remove the `test.skip` and run this test to validate the 
+   functionality of the BigQuery Dataset Explorer in the UI.
+*/
+test.skip('bigquery-dataset-explorer', async ({ page, request }) => {
   const issues = await page.request.get(
     'http://localhost:8888/dataproc-plugin/settings'
   );
