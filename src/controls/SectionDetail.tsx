@@ -196,6 +196,7 @@ export const SectionDetail: React.FC<ISectionDetailProps> = ({
             <div
               role="button"
               tabIndex={isEditDisabled ? -1 : 0}
+              aria-disabled={isEditDisabled}
               aria-label={editAriaLabel}
               title={editAriaLabel}
               className={`section-detail-edit-button${
