@@ -491,30 +491,38 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(true);
 
-  // Configuration states using domain interfaces
-  const [runtimeEnvironmentConfig] = useState<IRuntimeEnvironmentConfig>(
-    initialRuntimeEnvironmentConfig || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG
+  // Configuration values derived from initial props or defaults
+  const runtimeEnvironmentConfig = useMemo<IRuntimeEnvironmentConfig>(
+    () => initialRuntimeEnvironmentConfig || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
+    [initialRuntimeEnvironmentConfig]
   );
-  const [executorAndDriverConfig] = useState<IExecutorAndDriverConfig>(
-    initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG
+  const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(
+    () => initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG,
+    [initialExecutorAndDriverConfig]
   );
-  const [autoscalingConfig] = useState<IAutoscalingConfig>(
-    initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
+  const autoscalingConfig = useMemo<IAutoscalingConfig>(
+    () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG,
+    [initialAutoscalingConfig]
   );
-  const [metastoreConfig] = useState<IMetastoreConfig>(
-    initialMetastoreConfig || DEFAULT_METASTORE_CONFIG
+  const metastoreConfig = useMemo<IMetastoreConfig>(
+    () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG,
+    [initialMetastoreConfig]
   );
-  const [networkAndSecurityConfig] = useState<INetworkAndSecurityConfig>(
-    initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG
+  const networkAndSecurityConfig = useMemo<INetworkAndSecurityConfig>(
+    () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG,
+    [initialNetworkAndSecurityConfig]
   );
-  const [sessionLifecycleConfig] = useState<ISessionLifecycleConfig>(
-    initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
+  const sessionLifecycleConfig = useMemo<ISessionLifecycleConfig>(
+    () => initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG,
+    [initialSessionLifecycleConfig]
   );
-  const [sparkProperties] = useState<SparkProperties>(
-    initialSparkProperties || DEFAULT_SPARK_PROPERTIES
+  const sparkProperties = useMemo<SparkProperties>(
+    () => initialSparkProperties || DEFAULT_SPARK_PROPERTIES,
+    [initialSparkProperties]
   );
-  const [labels] = useState<ProfileLabels>(
-    initialLabels || DEFAULT_PROFILE_LABELS
+  const labels = useMemo<ProfileLabels>(
+    () => initialLabels || DEFAULT_PROFILE_LABELS,
+    [initialLabels]
   );
 
   // React Hook Form initialization
