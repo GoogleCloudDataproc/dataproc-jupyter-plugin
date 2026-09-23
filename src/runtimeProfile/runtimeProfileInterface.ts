@@ -28,6 +28,7 @@ export interface IRuntimeEnvironmentConfig {
   customSparkImage?: string;
   stagingBucket?: string;
   pythonPackageRepository?: string;
+  lightningEngineEnabled?: boolean;
 }
 
 export interface IExecutorAndDriverConfig {
@@ -94,6 +95,7 @@ export interface IRuntimeProfile {
   region: string;
   description?: string;
   tier?: string;
+  lightningEngineEnabled?: boolean;
   createTime?: string;
   updateTime?: string;
   state?: string;
@@ -112,6 +114,7 @@ export interface ICreateRuntimeProfilePayload {
   region: string;
   description?: string;
   tier?: string;
+  lightningEngineEnabled?: boolean;
   runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   executorAndDriverConfig?: IExecutorAndDriverConfig;
   autoscalingConfig?: IAutoscalingConfig;
@@ -130,3 +133,4 @@ export interface IRuntimeProfileService {
     region?: string
   ): Promise<IRuntimeProfile>;
 }
+

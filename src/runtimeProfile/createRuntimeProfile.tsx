@@ -23,8 +23,10 @@ import { ILauncher } from '@jupyterlab/launcher';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { LabIcon } from '@jupyterlab/ui-components';
 import {
+  Checkbox,
   CircularProgress,
   FormControl,
+  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
@@ -37,6 +39,20 @@ import expandLessIcon from '../../style/icons/expand_less.svg';
 import expandMoreIcon from '../../style/icons/expand_more.svg';
 import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import '../../style/runtimeProfile.css';
+import {
+  DATAPROC_TIER_DOC,
+  LIGHTNING_ENGINE_DOC,
+  RUNTIME_PROFILE_INTRO_TEXT,
+  TIER_SECTION_TITLE,
+  TIER_SECTION_SUBTITLE,
+  TIER_PREMIUM_TITLE,
+  TIER_PREMIUM_DESC,
+  TIER_STANDARD_TITLE,
+  TIER_STANDARD_DESC,
+  TIER_STANDARD_INFO_BANNER,
+  LIGHTNING_ENGINE_CHECKBOX_LABEL,
+  LIGHTNING_ENGINE_CHECKBOX_DESC
+} from '../utils/const';
 import {
   IAutoscalingConfig,
   ICreateRuntimeProfilePayload,
@@ -348,12 +364,15 @@ export interface ICreateRuntimeProfileComponentProps {
   service?: RuntimeProfileService;
   onBack?: () => void;
   onSuccess?: () => void;
+  initialTier?: string;
+  initialLightningEngineEnabled?: boolean;
   initialRuntimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   initialExecutorAndDriverConfig?: IExecutorAndDriverConfig;
   initialAutoscalingConfig?: IAutoscalingConfig;
   initialMetastoreConfig?: IMetastoreConfig;
   initialNetworkAndSecurityConfig?: INetworkAndSecurityConfig;
   initialSessionLifecycleConfig?: ISessionLifecycleConfig;
+
   initialSparkProperties?: SparkProperties;
   initialLabels?: ProfileLabels;
 }
@@ -365,6 +384,8 @@ export const CreateRuntimeProfileComponent: React.FC<
   service = runtimeProfileService,
   onBack,
   onSuccess,
+  initialTier,
+  initialLightningEngineEnabled,
   initialRuntimeEnvironmentConfig,
   initialExecutorAndDriverConfig,
   initialAutoscalingConfig,
@@ -379,6 +400,16 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(true);
+
+  // Tier and Lightning Engine state
+  const [tier, setTier] = useState<string>(
+    initialTier || initialExecutorAndDriverConfig?.tier || 'Premium'
+  );
+  const [lightningEngineEnabled, setLightningEngineEnabled] = useState<boolean>(
+    initialLightningEngineEnabled !== undefined
+      ? initialLightningEngineEnabled
+      : true
+  );
 
   const defaultRuntimeId = useMemo<string>(
     () =>
@@ -486,6 +517,9 @@ export const CreateRuntimeProfileComponent: React.FC<
     ]
   );
 
+  const handleTierChange = (selectedTier: string) => {
+    setTier(selectedTier);
+  };
   // Load Regions from service
   useEffect(() => {
     let isMounted = true;
@@ -527,13 +561,19 @@ export const CreateRuntimeProfileComponent: React.FC<
 
   const onSubmit = async (data: IRuntimeProfileFormData) => {
     try {
+      const isLightningEngineActive =
+        tier === 'Premium' && Boolean(lightningEngineEnabled);
       const payload: ICreateRuntimeProfilePayload = {
         displayName: data.displayName.trim(),
         region: data.region,
         description: data.description.trim() || undefined,
-        tier: executorAndDriverConfig.tier,
+        tier,
+        lightningEngineEnabled: isLightningEngineActive,
         runtimeEnvironmentConfig,
-        executorAndDriverConfig,
+        executorAndDriverConfig: {
+          ...executorAndDriverConfig,
+          tier
+        },
         autoscalingConfig,
         metastoreConfig,
         networkAndSecurityConfig,
@@ -592,9 +632,7 @@ export const CreateRuntimeProfileComponent: React.FC<
 
       <div className="runtime-profile-container">
         <div className="runtime-profile-intro-text">
-          A runtime profile is a reusable set of Serverless Spark runtime
-          settings, such as executor configuration. You can create interactive
-          notebooks and submit workloads with a runtime profile.
+          {RUNTIME_PROFILE_INTRO_TEXT}
         </div>
 
         <form
@@ -617,7 +655,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                   <TextField
                     {...field}
                     id="runtime-profile-display-name"
-                    label="Display name"
+                    label="Display name *"
                     placeholder="e.g. my-runtime-profile"
                     variant="outlined"
                     size="small"
@@ -678,6 +716,125 @@ export const CreateRuntimeProfileComponent: React.FC<
               )}
             />
           </div>
+
+          {/* Section: Tier */}
+          <div className="runtime-profile-section">
+            <div className="runtime-profile-section-title">
+              {TIER_SECTION_TITLE}
+            </div>
+            <div className="runtime-profile-section-subtitle">
+              {TIER_SECTION_SUBTITLE}{' '}
+              <span
+                role="button"
+                tabIndex={0}
+                className="runtime-profile-learn-more"
+                onClick={() => window.open(DATAPROC_TIER_DOC, '_blank')}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    window.open(DATAPROC_TIER_DOC, '_blank');
+                  }
+                }}
+              >
+                Learn more
+              </span>
+            </div>
+
+            {/* Tier Cards: Premium & Standard */}
+            <div className="node-config-cards-container">
+              <div
+                className={`node-config-card ${
+                  tier === 'Premium' ? 'selected' : ''
+                }`}
+                onClick={() => handleTierChange('Premium')}
+                role="button"
+                tabIndex={0}
+                aria-pressed={tier === 'Premium'}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleTierChange('Premium');
+                  }
+                }}
+              >
+                <div className="node-config-card-title">
+                  {TIER_PREMIUM_TITLE}
+                </div>
+                <div className="node-config-card-desc">{TIER_PREMIUM_DESC}</div>
+              </div>
+
+              <div
+                className={`node-config-card ${
+                  tier === 'Standard' ? 'selected' : ''
+                }`}
+                onClick={() => handleTierChange('Standard')}
+                role="button"
+                tabIndex={0}
+                aria-pressed={tier === 'Standard'}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleTierChange('Standard');
+                  }
+                }}
+              >
+                <div className="node-config-card-title">
+                  {TIER_STANDARD_TITLE}
+                </div>
+                <div className="node-config-card-desc">
+                  {TIER_STANDARD_DESC}
+                </div>
+              </div>
+            </div>
+
+            {/* Premium: Enable Lightning Engine Checkbox / Standard: Info Banner */}
+            {tier === 'Premium' ? (
+              <div className="runtime-profile-checkbox-section">
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={lightningEngineEnabled}
+                      onChange={e =>
+                        setLightningEngineEnabled(e.target.checked)
+                      }
+                      name="lightningEngine"
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <span className="runtime-profile-checkbox-title">
+                      {LIGHTNING_ENGINE_CHECKBOX_LABEL}
+                    </span>
+                  }
+                />
+                <div className="runtime-profile-checkbox-desc">
+                  {LIGHTNING_ENGINE_CHECKBOX_DESC}{' '}
+                  <span
+                    className="runtime-profile-learn-more"
+                    onClick={e => {
+                      e.preventDefault();
+                      window.open(LIGHTNING_ENGINE_DOC, '_blank');
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        window.open(LIGHTNING_ENGINE_DOC, '_blank');
+                      }
+                    }}
+                  >
+                    Learn more
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="runtime-profile-tier-info-banner">
+                <div className="runtime-profile-tier-info-icon" />
+                <div className="runtime-profile-tier-info-text">
+                  {TIER_STANDARD_INFO_BANNER}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* TO DO:-
           Executor configuration
           API integration of the form fields
@@ -725,6 +882,7 @@ export const CreateRuntimeProfileComponent: React.FC<
               </div>
             )}
           </div>
+
 
           {/* Action Buttons */}
           <div className="runtime-profile-buttons">

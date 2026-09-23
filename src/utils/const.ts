@@ -148,13 +148,15 @@ export const RESTART_JOB_URL =
   'https://cloud.google.com/dataproc/docs/concepts/jobs/restartable-jobs';
 export const SELF_MANAGED_CLUSTER =
   'https://cloud.google.com/dataproc-metastore/docs/attach-dataproc';
-export const LIGHTNING_ENGINE_DOC = 
-  'https://cloud.google.com/dataproc-serverless/docs/guides/lightning-engine'
+export const DATAPROC_TIER_DOC =
+  'https://cloud.google.com/dataproc-serverless/docs/concepts/pricing';
+export const LIGHTNING_ENGINE_DOC =
+  'https://cloud.google.com/dataproc-serverless/docs/guides/lightning-engine';
 export const SECURITY_KEY =
   'https://console.cloud.google.com/security/kms/keyrings';
 export const SERVICE_ACCOUNT =
   'https://cloud.google.com/compute/docs/access/service-accounts';
-export  const STAGING_BUCKET_LEARN_MORE =
+export const STAGING_BUCKET_LEARN_MORE =
   'https://cloud.google.com/storage/docs/buckets#naming';
 export const CUSTOM_CONTAINERS =
   'https://cloud.google.com/dataproc-serverless/docs/guides/custom-containers';
@@ -164,7 +166,8 @@ export const CONTAINER_REGISTERY = 'https://console.cloud.google.com/gcr';
 export const ARTIFACT_REGISTERY = 'https://console.cloud.google.com/artifacts';
 export const METASTORE_MESSAGE =
   'We recommend this option to persist table metadata when the batch finishes processing. A metastore can be shared across many serverless batches in different projects and GCP regions.';
-export const METASTORE_LOADING_LABEL = 'Loading Metastore Service From Other Regions';
+export const METASTORE_LOADING_LABEL =
+  'Loading Metastore Service From Other Regions';
 export const CUSTOM_CONTAINER_MESSAGE =
   'Specify a custom container image to add Java or Python dependencies not provided by the default container';
 export const CUSTOM_CONTAINER_MESSAGE_PART =
@@ -285,7 +288,7 @@ export const TIER_SELECT_OPTIONS = [
 
 export const LightningEngineDisplayNameMap = new Map<string, string>([
   ['default', 'Default'],
-  ['lightningEngine', 'Lightning Engine'],
+  ['lightningEngine', 'Lightning Engine']
 ]);
 
 export const TierDisplayNameMap = new Map<string, string>([
@@ -293,15 +296,40 @@ export const TierDisplayNameMap = new Map<string, string>([
   ['standard', 'Standard']
 ]);
 
-
 export const CLOUD_COMPOSER_API =
   'https://console.developers.google.com/apis/api/composer.googleapis.com';
 
-export const DATAPROC_SERVICE_NAME = "dataproc";
-export const BIGQUERY_SERVICE_NAME = "bigquery";
+export const DATAPROC_SERVICE_NAME = 'dataproc';
+export const BIGQUERY_SERVICE_NAME = 'bigquery';
 
 export const PAGE_SIZE = 50;
 
 export const DEFAULT_PUBLIC_PROJECT_ID = 'bigquery-public-data';
 
-export const BIGQUERY_API_URL = 'https://console.cloud.google.com/apis/library/bigquery.googleapis.com';
+export const BIGQUERY_API_URL =
+  'https://console.cloud.google.com/apis/library/bigquery.googleapis.com';
+
+/**
+ * Runtime Profile form intro text
+ */
+export const RUNTIME_PROFILE_INTRO_TEXT =
+  'A runtime profile is a reusable set of Serverless Spark runtime settings, such as executor configuration. You can create interactive notebooks and submit workloads with a runtime profile.';
+
+/**
+ * Tier section constants
+ */
+export const TIER_SECTION_TITLE = 'Tier';
+export const TIER_SECTION_SUBTITLE =
+  'Managed Service for Apache Spark offers two tiers for workload execution. Use premium tier for accelerated machine types and faster workload execution.';
+export const TIER_PREMIUM_TITLE = 'Premium';
+export const TIER_PREMIUM_DESC =
+  'Optimized for complex or latency-sensitive queries with acceleration engines.';
+export const TIER_STANDARD_TITLE = 'Standard';
+export const TIER_STANDARD_DESC =
+  'Standard Spark execution environment for routine data processing.';
+export const TIER_STANDARD_INFO_BANNER =
+  'Standard tier will only affect batch execution. Interactive sessions always execute on premium tier.';
+export const LIGHTNING_ENGINE_CHECKBOX_LABEL =
+  'Enable Lightning Engine to accelerate performance';
+export const LIGHTNING_ENGINE_CHECKBOX_DESC =
+  'Turn on to accelerate your Spark jobs with Lightning Engine.';
