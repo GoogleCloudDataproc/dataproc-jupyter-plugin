@@ -131,152 +131,167 @@ export interface ISectionDetailProps {
   style?: React.CSSProperties;
 }
 
-export const SectionDetail: React.FC<ISectionDetailProps> = ({
-  title,
-  properties,
-  onEdit,
-  showEdit = true,
-  isEditDisabled = false,
-  editTooltip,
-  editLabel,
-  headerActions,
-  emptyPlaceholder = '-',
-  children,
-  className,
-  style
-}) => {
-  const normalizedProperties: ISectionProperty[] = useMemo(() => {
-    if (!properties) {
-      return [];
-    }
-    if (Array.isArray(properties)) {
-      return properties;
-    }
-    return Object.entries(properties).map(([label, value]) => ({
-      label,
-      value
-    }));
-  }, [properties]);
+export const SectionDetail = React.forwardRef<
+  HTMLDivElement,
+  ISectionDetailProps
+>(
+  (
+    {
+      title,
+      properties,
+      onEdit,
+      showEdit = true,
+      isEditDisabled = false,
+      editTooltip,
+      editLabel,
+      headerActions,
+      emptyPlaceholder = '-',
+      children,
+      className,
+      style
+    },
+    ref
+  ) => {
+    const normalizedProperties: ISectionProperty[] = useMemo(() => {
+      if (!properties) {
+        return [];
+      }
+      if (Array.isArray(properties)) {
+        return properties;
+      }
+      return Object.entries(properties).map(([label, value]) => ({
+        label,
+        value
+      }));
+    }, [properties]);
 
-  const handleEditClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    event.stopPropagation();
-    if (!isEditDisabled && onEdit) {
-      onEdit();
-    }
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (
-      !isEditDisabled &&
-      onEdit &&
-      (event.key === 'Enter' || event.key === ' ')
-    ) {
-      event.preventDefault();
+    const handleEditClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.stopPropagation();
-      onEdit();
-    }
-  };
+      if (!isEditDisabled && onEdit) {
+        onEdit();
+      }
+    };
 
-  const EditIconComponent = isEditDisabled
-    ? iconEditDisable.react
-    : iconEdit.react;
-  const editAriaLabel = editTooltip || `Edit ${title}`;
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (
+        !isEditDisabled &&
+        onEdit &&
+        (event.key === 'Enter' || event.key === ' ')
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        onEdit();
+      }
+    };
 
-  return (
-    <div
-      className={['section-detail-wrapper', className].filter(Boolean).join(' ')}
-      style={style}
-    >
-      {/* Header with Title on Left and Edit Icon on Right in the same line */}
-      <div className="section-detail-header">
-        <div className="section-detail-title">{title}</div>
-        <div className="section-detail-header-actions">
-          {headerActions}
-          {showEdit && (
-            <div
-              role="button"
-              tabIndex={isEditDisabled ? -1 : 0}
-              aria-disabled={isEditDisabled}
-              aria-label={editAriaLabel}
-              title={editAriaLabel}
-              className={`section-detail-edit-button${
-                isEditDisabled ? ' disabled' : ''
-              }`}
-              onClick={handleEditClick}
-              onKeyDown={handleKeyDown}
-            >
-              <EditIconComponent tag="div" className="logo-alignment-style" />
-              {editLabel && (
-                <span
-                  className={`edit-label-text${
-                    isEditDisabled ? ' disabled' : ''
-                  }`}
+    const EditIconComponent = isEditDisabled
+      ? iconEditDisable.react
+      : iconEdit.react;
+    const editAriaLabel = editTooltip || `Edit ${title}`;
+
+    return (
+      <div
+        ref={ref}
+        className={['section-detail-wrapper', className]
+          .filter(Boolean)
+          .join(' ')}
+        style={style}
+      >
+        {/* Header with Title on Left and Edit Icon on Right in the same line */}
+        <div className="section-detail-header">
+          <div className="section-detail-title">{title}</div>
+          <div className="section-detail-header-actions">
+            {headerActions}
+            {showEdit && (
+              <div
+                role="button"
+                tabIndex={isEditDisabled ? -1 : 0}
+                aria-disabled={isEditDisabled}
+                aria-label={editAriaLabel}
+                title={editAriaLabel}
+                className={`section-detail-edit-button${
+                  isEditDisabled ? ' disabled' : ''
+                }`}
+                onClick={handleEditClick}
+                onKeyDown={handleKeyDown}
+              >
+                <EditIconComponent tag="div" className="logo-alignment-style" />
+                {editLabel && (
+                  <span
+                    className={`edit-label-text${
+                      isEditDisabled ? ' disabled' : ''
+                    }`}
+                  >
+                    {editLabel}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Horizontal Divider Line */}
+        <div className="section-detail-divider" />
+
+        {/* Key-Value Pairs List: Key (Label) and Value in the same line */}
+        <div className="section-detail-content">
+          {normalizedProperties.map((prop, idx) => {
+            const isValueEmpty =
+              prop.value === undefined ||
+              prop.value === null ||
+              prop.value === '';
+
+            const displayValue = isValueEmpty ? emptyPlaceholder : prop.value;
+
+            return (
+              <div
+                key={`${prop.label}-${idx}`}
+                className={`section-detail-row${
+                  prop.className ? ` ${prop.className}` : ''
+                }`}
+              >
+                <div
+                  className="section-detail-label"
+                  title={prop.tooltip || prop.label}
                 >
-                  {editLabel}
-                </span>
-              )}
-            </div>
-          )}
+                  {prop.label}
+                </div>
+                <div className="section-detail-value">
+                  {prop.isLink && !isValueEmpty && prop.onLinkClick ? (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      className="section-detail-link"
+                      onClick={prop.onLinkClick}
+                      onKeyDown={event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          prop.onLinkClick?.();
+                        }
+                      }}
+                    >
+                      {displayValue}
+                    </span>
+                  ) : (
+                    displayValue
+                  )}
+                  {prop.subValue && (
+                    <div className="section-detail-subvalue">
+                      {prop.subValue}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {children}
         </div>
       </div>
+    );
+  }
+);
 
-      {/* Horizontal Divider Line */}
-      <div className="section-detail-divider" />
-
-      {/* Key-Value Pairs List: Key (Label) and Value in the same line */}
-      <div className="section-detail-content">
-        {normalizedProperties.map((prop, idx) => {
-          const isValueEmpty =
-            prop.value === undefined ||
-            prop.value === null ||
-            prop.value === '';
-
-          const displayValue = isValueEmpty ? emptyPlaceholder : prop.value;
-
-          return (
-            <div
-              key={`${prop.label}-${idx}`}
-              className={`section-detail-row${
-                prop.className ? ` ${prop.className}` : ''
-              }`}
-            >
-              <div
-                className="section-detail-label"
-                title={prop.tooltip || prop.label}
-              >
-                {prop.label}
-              </div>
-              <div className="section-detail-value">
-                {prop.isLink && !isValueEmpty && prop.onLinkClick ? (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    className="section-detail-link"
-                    onClick={prop.onLinkClick}
-                    onKeyDown={event => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        prop.onLinkClick?.();
-                      }
-                    }}
-                  >
-                    {displayValue}
-                  </span>
-                ) : (
-                  displayValue
-                )}
-                {prop.subValue && (
-                  <div className="section-detail-subvalue">{prop.subValue}</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        {children}
-      </div>
-    </div>
-  );
-};
+SectionDetail.displayName = 'SectionDetail';
 
 export default SectionDetail;
