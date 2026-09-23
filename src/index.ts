@@ -64,7 +64,7 @@ import * as path from 'path';
 import { requestAPI } from './handler/handler';
 import { eventEmitter } from './utils/signalEmitter';
 import { BigQueryWidget } from './bigQuery/bigQueryWidget';
-import { RunTimeSerive } from './runtime/runtimeService';
+import { RuntimeService } from './runtime/runtimeService';
 import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
 import { setupNotificationSystem } from './notifications';
@@ -191,7 +191,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
       if (!credentials?.login_error && !credentials?.config_error) {
         dataprocClusterResponse =
-          await RunTimeSerive.checkDataprocApiEnabledService();
+          await RuntimeService.checkDataprocApiEnabledService();
         if (bqFeature.enable_bigquery_integration) {
           bigqueryDatasetsResponse =
             await BigQueryService.checkBigQueryDatasetsAPIService();

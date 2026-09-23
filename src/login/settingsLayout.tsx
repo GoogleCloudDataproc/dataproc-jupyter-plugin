@@ -1,31 +1,43 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useState } from 'react';
-import { IThemeManager } from '@jupyterlab/apputils';
 import { JupyterLab } from '@jupyterlab/application';
-import { ILauncher } from '@jupyterlab/launcher';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import '../../style/settingsLayout.css';
+import Common from './common';
+import RuntimeProfileList from '../runtimeProfile/runtimeProfileList';
 
 interface ISettingsLayoutProps {
   configError: boolean;
   setConfigError: (error: boolean) => void;
   app?: JupyterLab;
-  launcher?: ILauncher;
   settingRegistry?: ISettingRegistry;
-  themeManager: IThemeManager;
 }
 
 export default function SettingsLayout({
   configError,
   setConfigError,
   app,
-  launcher,
-  settingRegistry,
-  themeManager
+  settingRegistry
 }: ISettingsLayoutProps) {
   const [activeTab, setActiveTab] = useState<'common' | 'spark'>('common');
 
   return (
-    <div className="settings-Layout-container">
+    <div className="settings-layout-container">
       <div className="settings-sidebar">
         <div className="settings-sidebar-header">
           Google Cloud Settings
@@ -48,15 +60,15 @@ export default function SettingsLayout({
 
       <div className="settings-content-area">
         {activeTab === 'common' && (
-          <div className="settings-component">
-            {/* Common settings component to be added here */}
-          </div>
+          <Common
+            configError={configError}
+            setConfigError={setConfigError}
+            settingRegistry={settingRegistry}
+          />
         )}
 
         {activeTab === 'spark' && (
-          <div className="settings-component">
-            {/* serverless listing component to be added here */}
-          </div>
+          <RuntimeProfileList app={app} />
         )}
       </div>
     </div>

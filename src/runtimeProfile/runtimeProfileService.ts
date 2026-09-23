@@ -18,9 +18,10 @@
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
-  gcpServiceUrls
+  gcpServiceUrls,
+  HTTP_METHOD
 } from '../utils/const';
-import { authApi, loggedFetch } from '../utils/utils';
+import { authApi, authenticatedFetch, loggedFetch } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ICreateRuntimeProfilePayload,
@@ -28,6 +29,7 @@ import {
   IRuntimeProfile,
   IRuntimeProfileService
 } from './runtimeProfileInterface';
+import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
 
 /**
  * Flag to enable mock mode for UI development/testing until the skeleton form
@@ -57,6 +59,9 @@ const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
   }
 };
 
+const DEFAULT_RUNTIME_PROFILE_PAGE_SIZE = 50;
+const MAX_EMPTY_PAGE_HOPS = 10;
+
 /**
  * Service to manage Dataproc Runtime Profiles.
  * Provides mock data for current UI prototyping and integrates cleanly with GCP Dataproc APIs.
@@ -64,6 +69,96 @@ const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
 export class RuntimeProfileService implements IRuntimeProfileService {
   private useMock: boolean;
   private inMemoryProfiles: IRuntimeProfile[] = [];
+
+  static async fetchRuntimeProfiles(
+    pageToken: string = '',
+    pageSize: number = DEFAULT_RUNTIME_PROFILE_PAGE_SIZE
+  ): Promise<{ templates: IRuntimeProfileTemplate[]; nextPageToken?: string }> {
+    let currentToken: string | undefined = pageToken;
+    let validTemplates: IRuntimeProfileTemplate[] = [];
+    let hops = 0;
+
+    do {
+      const queryParams = new URLSearchParams({
+        pageSize: pageSize.toString(),
+        pageToken: currentToken || ''
+      });
+      const response = await authenticatedFetch({
+        uri: 'sessionTemplates',
+        method: HTTP_METHOD.GET,
+        regionIdentifier: 'locations',
+        queryParams: queryParams
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch((err: unknown) => {
+          safeLog(
+            `Failed to parse error response JSON: ${err}`,
+            LOG_LEVEL.WARN
+          );
+          return null;
+        });
+        throw new Error(
+          errorData?.error?.message ||
+            `Failed to fetch runtime profiles: ${response.statusText}`
+        );
+      }
+
+      const data: any = await response.json();
+      if (data?.error) {
+        throw new Error(
+          data.error.message || 'Failed to fetch runtime profiles'
+        );
+      }
+
+      const rawTemplates: IRuntimeProfileTemplate[] = data?.sessionTemplates || [];
+      validTemplates = rawTemplates.filter((t: IRuntimeProfileTemplate) =>
+        Boolean(t.jupyterSession)
+      );
+      currentToken = data?.nextPageToken;
+      hops += 1;
+    } while (
+      validTemplates.length === 0 &&
+      Boolean(currentToken) &&
+      hops < MAX_EMPTY_PAGE_HOPS
+    );
+
+    return {
+      templates: validTemplates,
+      nextPageToken: currentToken
+    };
+  }
+
+  static async deleteRuntimeProfile(
+    id: string,
+    displayName: string = id
+  ): Promise<void> {
+    const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
+    if (!credentials) {
+      throw new Error('Authentication failed');
+    }
+    const response = await loggedFetch(`${DATAPROC}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token
+      }
+    });
+
+    const data = await response.json().catch((err: unknown) => {
+      safeLog(
+        `Response body for DELETE ${displayName} is not JSON: ${err}`,
+        LOG_LEVEL.INFO
+      );
+      return null;
+    });
+
+    if (!response.ok || data?.error) {
+      throw new Error(
+        data?.error?.message || `Failed to delete runtime profile ${displayName}`
+      );
+    }
+  }
 
   constructor(useMock: boolean = RUNTIME_PROFILE_USE_MOCK) {
     this.useMock = useMock;

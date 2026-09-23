@@ -111,7 +111,7 @@ interface MetastoreServiceResponse {
     message?: string; // Optional message for errors
 }
 
-export class RunTimeSerive {
+export class RuntimeService {
   static deleteRuntimeTemplateAPI = async (
     selectedRuntimeTemplate: string,
     selectedRuntimeTemplateDisplayName: string

@@ -96,7 +96,7 @@ const AuthLoginComponent = ({
   }, []);
 
   return (
-    <div className="component-level">
+    <div className="component-level settings-wrapper">
       {configLoading && !loginState && !configError && !loginError && (
         <div className="spin-loader-main">
           <CircularProgress
@@ -113,9 +113,7 @@ const AuthLoginComponent = ({
           configError={configError}
           setConfigError={setConfigError}
           app={app}
-          launcher={launcher}
           settingRegistry={settingRegistry}
-          themeManager={themeManager}
         />
       )}
       {!loginError && loginState && !settingsLoading && !runtimeProfileUiEnabled && (
