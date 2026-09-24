@@ -78,14 +78,29 @@
   fill: var(--jp-ui-font-color2, #5f6368);
 }
 
+body[data-jp-theme-light='false'] .section-detail-edit-button path,
+body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button path {
+  fill: var(--jp-ui-font-color2, #9aa0a6);
+}
+
 .section-detail-edit-button:hover:not(.disabled) path {
   fill: var(--jp-ui-font-color1, #3c4043);
+}
+
+body[data-jp-theme-light='false']
+  .section-detail-edit-button:hover:not(.disabled)
+  path,
+body[data-jp-theme-name='JupyterLab Dark']
+  .section-detail-edit-button:hover:not(.disabled)
+  path {
+  fill: var(--jp-ui-font-color0, #fff);
 }
 
 .section-detail-edit-button .edit-label-text {
   font-weight: 500;
   font-size: 12px;
   line-height: 16px;
+  color: var(--jp-ui-font-color1);
 }
 
 .section-detail-edit-button .edit-label-text.disabled {
@@ -140,7 +155,7 @@
 }
 
 .section-detail-link {
-  color: #3367d6;
+  color: var(--jp-content-link-color, #3367d6);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -157,25 +172,18 @@
   text-align: left;
 }
 
-/* Dark mode adjustments */
+/* Dark mode adjustments (supports JupyterLab Dark and custom dark themes via data-jp-theme-light='false') */
+body[data-jp-theme-light='false'] .section-detail-divider,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-divider {
   background-color: var(--jp-border-color1, #9aa0a6);
 }
 
-body[data-jp-theme-name='JupyterLab Dark'] .section-detail-edit-button path {
-  fill: var(--jp-ui-font-color2, #9aa0a6);
-}
-
-body[data-jp-theme-name='JupyterLab Dark']
-  .section-detail-edit-button:hover:not(.disabled)
-  path {
-  fill: var(--jp-ui-font-color0, #ffffff);
-}
-
+body[data-jp-theme-light='false'] .section-detail-link,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-link {
-  color: #8ab4f8;
+  color: var(--jp-content-link-color, #8ab4f8);
 }
 
+body[data-jp-theme-light='false'] .section-detail-link:hover,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-link:hover {
   color: #aecbfa;
 }

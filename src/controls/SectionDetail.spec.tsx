@@ -221,8 +221,10 @@ describe('SectionDetail Component', () => {
     expect(editBtn).toBeNull();
   });
 
-  it('renders clickable links and handles link click and keyboard events', () => {
+  it('renders clickable links and handles link click and keyboard events without propagating to parent', () => {
     const onLinkClickMock = jest.fn();
+    const parentClickMock = jest.fn();
+    const parentKeyDownMock = jest.fn();
     const properties: ISectionProperty[] = [
       {
         label: 'Cluster Link',
@@ -241,7 +243,11 @@ describe('SectionDetail Component', () => {
     ];
 
     act(() => {
-      root.render(<SectionDetail title="Links" properties={properties} />);
+      root.render(
+        <div onClick={parentClickMock} onKeyDown={parentKeyDownMock}>
+          <SectionDetail title="Links" properties={properties} />
+        </div>
+      );
     });
 
     const row = container.querySelector('.custom-row');
@@ -259,6 +265,7 @@ describe('SectionDetail Component', () => {
       linkEl.click();
     });
     expect(onLinkClickMock).toHaveBeenCalledTimes(1);
+    expect(parentClickMock).not.toHaveBeenCalled();
 
     act(() => {
       linkEl.dispatchEvent(
@@ -266,6 +273,7 @@ describe('SectionDetail Component', () => {
       );
     });
     expect(onLinkClickMock).toHaveBeenCalledTimes(2);
+    expect(parentKeyDownMock).not.toHaveBeenCalled();
   });
 
   it('renders headerActions, children, custom className, style, and forwards ref to root div', () => {

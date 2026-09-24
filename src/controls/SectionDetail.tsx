@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { LabIcon } from '@jupyterlab/ui-components';
 import EditIcon from '../../style/icons/edit_icon.svg';
 import EditIconDisable from '../../style/icons/edit_icon_disable.svg';
@@ -152,18 +152,14 @@ export const SectionDetail = React.forwardRef<
     },
     ref
   ) => {
-    const normalizedProperties: ISectionProperty[] = useMemo(() => {
-      if (!properties) {
-        return [];
-      }
-      if (Array.isArray(properties)) {
-        return properties;
-      }
-      return Object.entries(properties).map(([label, value]) => ({
-        label,
-        value
-      }));
-    }, [properties]);
+    const normalizedProperties: ISectionProperty[] = !properties
+      ? []
+      : Array.isArray(properties)
+      ? properties
+      : Object.entries(properties).map(([label, value]) => ({
+          label,
+          value
+        }));
 
     const handleEditClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.stopPropagation();
@@ -262,7 +258,10 @@ export const SectionDetail = React.forwardRef<
                       role="button"
                       tabIndex={0}
                       className="section-detail-link"
-                      onClick={prop.onLinkClick}
+                      onClick={event => {
+                        event.stopPropagation();
+                        prop.onLinkClick?.();
+                      }}
                       onKeyDown={event => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
