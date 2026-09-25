@@ -85,6 +85,12 @@ const ENCRYPTION_DISPLAY_MAP: Record<string, string> = {
   customer_managed_key: 'Customer-managed key'
 };
 
+/**
+ * Initial default Serverless Spark runtime configuration for a new Runtime Profile.
+ * Note: Dynamic options (such as staging buckets, subnetworks, metastore instances,
+ * and service accounts) will be fetched from the backend APIs in subsequent
+ * edit-drawer and API-integration PRs.
+ */
 export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   runtimeProfileId: 'Name of the runtime profile',
   runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
@@ -137,25 +143,32 @@ export const formatRuntimeEnvironmentProperties = (
   return [
     {
       label: 'Runtime Profile ID',
-      value: config.runtimeProfileId || 'Name of the runtime profile'
+      value:
+        config.runtimeProfileId ||
+        DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.runtimeProfileId
     },
     {
       label: 'Dataproc Runtime Version',
-      value: config.runtimeVersion || '2.3 LTS (Spark 3.5.1, Python 3.12)'
+      value:
+        config.runtimeVersion ||
+        DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.runtimeVersion
     },
     {
       label: 'Custom spark image',
-      value: config.customSparkImage || 'None'
+      value:
+        config.customSparkImage ||
+        DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.customSparkImage
     },
     {
       label: 'Cloud Storage Staging bucket',
-      value: config.stagingBucket || 'Auto'
+      value:
+        config.stagingBucket || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.stagingBucket
     },
     {
       label: 'Python package repository',
       value:
         config.pythonPackageRepository ||
-        'Google Managed PyPI pull through cache'
+        DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.pythonPackageRepository
     }
   ];
 };
@@ -169,23 +182,27 @@ export const formatExecutorAndDriverProperties = (
   return [
     {
       label: 'Tier',
-      value: config.tier || 'Standard'
+      value: config.tier || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.tier
     },
     {
       label: 'Driver machine type',
-      value: config.driverMachineType || 'Standard-4'
+      value:
+        config.driverMachineType ||
+        DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.driverMachineType
     },
     {
       label: 'Driver disk',
-      value: config.driverDisk || 'standard persistent disk'
+      value: config.driverDisk || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.driverDisk
     },
     {
       label: 'Executor type',
-      value: config.executorType || 'standard'
+      value:
+        config.executorType || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorType
     },
     {
       label: 'Executor disk',
-      value: config.executorDisk || 'Standard persistent disk (HDD), 100 GB'
+      value:
+        config.executorDisk || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorDisk
     }
   ];
 };
@@ -196,22 +213,25 @@ export const formatAutoscalingProperties = (
   if (!config) {
     return [];
   }
+  const isEnabled =
+    config.autoscalingEnabled ?? DEFAULT_AUTOSCALING_CONFIG.autoscalingEnabled;
   return [
     {
       label: 'Autoscaling',
-      value: (config.autoscalingEnabled ?? true) ? 'Enabled' : 'Disabled'
+      value: isEnabled ? 'Enabled' : 'Disabled'
     },
     {
       label: 'Initial executors',
-      value: config.initialExecutors ?? 2
+      value:
+        config.initialExecutors ?? DEFAULT_AUTOSCALING_CONFIG.initialExecutors
     },
     {
       label: 'Minimum executors',
-      value: config.minExecutors ?? 2
+      value: config.minExecutors ?? DEFAULT_AUTOSCALING_CONFIG.minExecutors
     },
     {
       label: 'Maximum executors',
-      value: config.maxExecutors ?? 10
+      value: config.maxExecutors ?? DEFAULT_AUTOSCALING_CONFIG.maxExecutors
     }
   ];
 };
@@ -222,14 +242,16 @@ export const formatMetastoreProperties = (
   if (!config) {
     return [];
   }
+  const isHiveEnabled =
+    config.hiveEndpointEnabled ?? DEFAULT_METASTORE_CONFIG.hiveEndpointEnabled;
   return [
     {
       label: 'Metastore',
-      value: config.metastore || 'None'
+      value: config.metastore || DEFAULT_METASTORE_CONFIG.metastore
     },
     {
       label: 'Hive endpoint',
-      value: config.hiveEndpointEnabled ? 'Enabled' : 'Disabled'
+      value: isHiveEnabled ? 'Enabled' : 'Disabled'
     }
   ];
 };
@@ -240,25 +262,26 @@ export const formatNetworkSecurityProperties = (
   if (!config) {
     return [];
   }
+  const identityKey =
+    config.executionIdentity ||
+    DEFAULT_NETWORK_SECURITY_CONFIG.executionIdentity ||
+    '';
+  const encryptionKey =
+    config.encryption || DEFAULT_NETWORK_SECURITY_CONFIG.encryption || '';
   return [
     {
       label: 'Execution identity',
-      value:
-        (config.executionIdentity &&
-          EXECUTION_IDENTITY_DISPLAY_MAP[config.executionIdentity]) ||
-        config.executionIdentity ||
-        'Service account'
+      value: EXECUTION_IDENTITY_DISPLAY_MAP[identityKey] || identityKey
     },
     {
       label: 'Network in this project',
-      value: config.networkInThisProject || 'default'
+      value:
+        config.networkInThisProject ||
+        DEFAULT_NETWORK_SECURITY_CONFIG.networkInThisProject
     },
     {
       label: 'Encryption',
-      value:
-        (config.encryption && ENCRYPTION_DISPLAY_MAP[config.encryption]) ||
-        config.encryption ||
-        'Google-managed key'
+      value: ENCRYPTION_DISPLAY_MAP[encryptionKey] || encryptionKey
     }
   ];
 };
@@ -272,11 +295,12 @@ export const formatSessionLifecycleProperties = (
   return [
     {
       label: 'Maximum idle time',
-      value: config.maxIdleTime || '60 minutes'
+      value: config.maxIdleTime || DEFAULT_SESSION_LIFECYCLE_CONFIG.maxIdleTime
     },
     {
       label: 'Maximum session time',
-      value: config.maxSessionTime || '3 days'
+      value:
+        config.maxSessionTime || DEFAULT_SESSION_LIFECYCLE_CONFIG.maxSessionTime
     }
   ];
 };
@@ -302,153 +326,6 @@ export const formatOtherCustomizationProperties = (
       value: formatKeyValueMap(labels)
     }
   ];
-};
-
-export interface ISectionProps<T> {
-  config?: T;
-  onEdit?: () => void;
-  showEdit?: boolean;
-  isEditDisabled?: boolean;
-}
-
-export const RuntimeEnvironmentSection: React.FC<
-  ISectionProps<IRuntimeEnvironmentConfig>
-> = ({ config, onEdit, showEdit = true, isEditDisabled = true }) => {
-  const properties = useMemo(
-    () => formatRuntimeEnvironmentProperties(config),
-    [config]
-  );
-  return (
-    <SectionDetail
-      title="Runtime configuration"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
-};
-
-export const ExecutorAndDriverSection: React.FC<
-  ISectionProps<IExecutorAndDriverConfig>
-> = ({ config, onEdit, showEdit = true, isEditDisabled = true }) => {
-  const properties = useMemo(
-    () => formatExecutorAndDriverProperties(config),
-    [config]
-  );
-  return (
-    <SectionDetail
-      title="Executor and driver configuration"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
-};
-
-export const AutoscalingSection: React.FC<
-  ISectionProps<IAutoscalingConfig>
-> = ({ config, onEdit, showEdit = true, isEditDisabled = true }) => {
-  const properties = useMemo(
-    () => formatAutoscalingProperties(config),
-    [config]
-  );
-  return (
-    <SectionDetail
-      title="Autoscaling"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
-};
-
-export const MetastoreSection: React.FC<ISectionProps<IMetastoreConfig>> = ({
-  config,
-  onEdit,
-  showEdit = true,
-  isEditDisabled = true
-}) => {
-  const properties = useMemo(() => formatMetastoreProperties(config), [config]);
-  return (
-    <SectionDetail
-      title="Metastore configuration"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
-};
-
-export const NetworkSecuritySection: React.FC<
-  ISectionProps<INetworkAndSecurityConfig>
-> = ({ config, onEdit, showEdit = true, isEditDisabled = true }) => {
-  const properties = useMemo(
-    () => formatNetworkSecurityProperties(config),
-    [config]
-  );
-  return (
-    <SectionDetail
-      title="Network and security"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
-};
-
-export const SessionLifecycleSection: React.FC<
-  ISectionProps<ISessionLifecycleConfig>
-> = ({ config, onEdit, showEdit = true, isEditDisabled = true }) => {
-  const properties = useMemo(
-    () => formatSessionLifecycleProperties(config),
-    [config]
-  );
-  return (
-    <SectionDetail
-      title="Session lifecycle"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
-};
-
-export interface IOtherCustomizationSectionProps {
-  sparkProperties?: SparkProperties;
-  labels?: ProfileLabels;
-  onEdit?: () => void;
-  showEdit?: boolean;
-  isEditDisabled?: boolean;
-}
-
-export const OtherCustomizationSection: React.FC<
-  IOtherCustomizationSectionProps
-> = ({
-  sparkProperties,
-  labels,
-  onEdit,
-  showEdit = true,
-  isEditDisabled = true
-}) => {
-  const properties = useMemo(
-    () => formatOtherCustomizationProperties(sparkProperties, labels),
-    [sparkProperties, labels]
-  );
-  return (
-    <SectionDetail
-      title="Other customizations"
-      properties={properties}
-      onEdit={onEdit}
-      showEdit={showEdit}
-      isEditDisabled={isEditDisabled}
-    />
-  );
 };
 
 export interface ICreateRuntimeProfileComponentProps {
@@ -523,6 +400,49 @@ export const CreateRuntimeProfileComponent: React.FC<
   const labels = useMemo<ProfileLabels>(
     () => initialLabels || DEFAULT_PROFILE_LABELS,
     [initialLabels]
+  );
+
+  const additionalConfigSections = useMemo(
+    () => [
+      {
+        title: 'Runtime configuration',
+        properties: formatRuntimeEnvironmentProperties(runtimeEnvironmentConfig)
+      },
+      {
+        title: 'Executor and driver configuration',
+        properties: formatExecutorAndDriverProperties(executorAndDriverConfig)
+      },
+      {
+        title: 'Autoscaling',
+        properties: formatAutoscalingProperties(autoscalingConfig)
+      },
+      {
+        title: 'Metastore configuration',
+        properties: formatMetastoreProperties(metastoreConfig)
+      },
+      {
+        title: 'Network and security',
+        properties: formatNetworkSecurityProperties(networkAndSecurityConfig)
+      },
+      {
+        title: 'Session lifecycle',
+        properties: formatSessionLifecycleProperties(sessionLifecycleConfig)
+      },
+      {
+        title: 'Other customizations',
+        properties: formatOtherCustomizationProperties(sparkProperties, labels)
+      }
+    ],
+    [
+      runtimeEnvironmentConfig,
+      executorAndDriverConfig,
+      autoscalingConfig,
+      metastoreConfig,
+      networkAndSecurityConfig,
+      sessionLifecycleConfig,
+      sparkProperties,
+      labels
+    ]
   );
 
   // React Hook Form initialization
@@ -767,16 +687,14 @@ export const CreateRuntimeProfileComponent: React.FC<
             {expandAdditionalConfig && (
               <div className="additional-config-content">
                 {/* TODO: Wire up onEdit handlers for each section in upcoming edit drawer tasks */}
-                <RuntimeEnvironmentSection config={runtimeEnvironmentConfig} />
-                <ExecutorAndDriverSection config={executorAndDriverConfig} />
-                <AutoscalingSection config={autoscalingConfig} />
-                <MetastoreSection config={metastoreConfig} />
-                <NetworkSecuritySection config={networkAndSecurityConfig} />
-                <SessionLifecycleSection config={sessionLifecycleConfig} />
-                <OtherCustomizationSection
-                  sparkProperties={sparkProperties}
-                  labels={labels}
-                />
+                {additionalConfigSections.map(section => (
+                  <SectionDetail
+                    key={section.title}
+                    title={section.title}
+                    properties={section.properties}
+                    isEditDisabled={true}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -837,5 +755,3 @@ export class CreateRuntimeProfile extends DataprocWidget {
     );
   }
 }
-
-export { SectionDetail };
