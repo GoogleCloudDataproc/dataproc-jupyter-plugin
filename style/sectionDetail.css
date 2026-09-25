@@ -172,6 +172,44 @@ body[data-jp-theme-name='JupyterLab Dark']
   text-align: left;
 }
 
+/* Additional configuration section styling (matches 620px width of intro text with border-top) */
+.additional-config-section {
+  max-width: 620px;
+  width: 100%;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--jp-border-color2, #e0e0e0);
+  box-sizing: border-box;
+}
+
+.additional-config-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 4px;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.additional-config-header-container.expanded {
+  margin-bottom: 16px;
+}
+
+.additional-config-header {
+  font-family: Roboto,
+    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--jp-ui-font-color0);
+}
+
+.expand-icon {
+  display: flex;
+  align-items: center;
+}
+
 /* Dark mode adjustments (supports JupyterLab Dark and custom dark themes via data-jp-theme-light='false') */
 body[data-jp-theme-light='false'] .section-detail-divider,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-divider {
@@ -187,3 +225,4 @@ body[data-jp-theme-light='false'] .section-detail-link:hover,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-link:hover {
   color: #aecbfa;
 }
+
