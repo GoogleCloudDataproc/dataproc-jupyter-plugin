@@ -366,7 +366,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
 
   it('should export valid tier documentation URLs and constants', () => {
     expect(DATAPROC_TIER_DOC).toBe(
-      'https://cloud.google.com/dataproc-serverless/docs/concepts/pricing'
+      'https://docs.cloud.google.com/managed-spark/docs/tiers'
     );
     expect(LIGHTNING_ENGINE_DOC).toBe(
       'https://cloud.google.com/dataproc-serverless/docs/guides/lightning-engine'

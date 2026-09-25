@@ -149,7 +149,7 @@ export const RESTART_JOB_URL =
 export const SELF_MANAGED_CLUSTER =
   'https://cloud.google.com/dataproc-metastore/docs/attach-dataproc';
 export const DATAPROC_TIER_DOC =
-  'https://cloud.google.com/dataproc-serverless/docs/concepts/pricing';
+  'https://docs.cloud.google.com/managed-spark/docs/tiers';
 export const LIGHTNING_ENGINE_DOC =
   'https://cloud.google.com/dataproc-serverless/docs/guides/lightning-engine';
 export const SECURITY_KEY =
