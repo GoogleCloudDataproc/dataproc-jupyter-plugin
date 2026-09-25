@@ -310,6 +310,158 @@ export const BIGQUERY_API_URL =
   'https://console.cloud.google.com/apis/library/bigquery.googleapis.com';
 
 /**
+ * Predefined Dataproc Serverless Standard (CPU only) machine types
+ * Ref: One-Pager: Executor Configuration & Sizing Option Mapping
+ */
+export const DATAPROC_STANDARD_MACHINE_TYPES = [
+  {
+    name: 'standard-4',
+    label: 'standard-4 (4 vCPU, 16 GB)',
+    vCPUs: 4,
+    memoryGb: 16,
+    memory: '16g',
+    category: 'general' as const
+  },
+  {
+    name: 'highmem-4',
+    label: 'highmem-4 (4 vCPU, 32 GB)',
+    vCPUs: 4,
+    memoryGb: 32,
+    memory: '32g',
+    category: 'general' as const
+  },
+  {
+    name: 'standard-8',
+    label: 'standard-8 (8 vCPU, 32 GB)',
+    vCPUs: 8,
+    memoryGb: 32,
+    memory: '32g',
+    category: 'general' as const
+  },
+  {
+    name: 'highmem-8',
+    label: 'highmem-8 (8 vCPU, 64 GB)',
+    vCPUs: 8,
+    memoryGb: 64,
+    memory: '64g',
+    category: 'general' as const
+  },
+  {
+    name: 'standard-16',
+    label: 'standard-16 (16 vCPU, 64 GB)',
+    vCPUs: 16,
+    memoryGb: 64,
+    memory: '64g',
+    category: 'general' as const
+  },
+  {
+    name: 'highmem-16',
+    label: 'highmem-16 (16 vCPU, 128 GB)',
+    vCPUs: 16,
+    memoryGb: 128,
+    memory: '128g',
+    category: 'general' as const
+  }
+];
+
+/**
+ * Predefined Dataproc Serverless Accelerated (GPU-attached) machine types
+ * Ref: One-Pager: Executor Configuration & Sizing Option Mapping
+ */
+export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
+  {
+    name: 'l4-4',
+    label: 'L4 (4 cores)',
+    vCPUs: 4,
+    memory: '13384m',
+    computeTier: 'premium',
+    acceleratorType: 'l4',
+    gpuCount: 1,
+    category: 'accelerated' as const
+  },
+  {
+    name: 'l4-8',
+    label: 'L4 (8 cores)',
+    vCPUs: 8,
+    memory: '26768m',
+    computeTier: 'premium',
+    acceleratorType: 'l4',
+    gpuCount: 1,
+    category: 'accelerated' as const
+  },
+  {
+    name: 'l4-12',
+    label: 'L4 (12 cores)',
+    vCPUs: 12,
+    memory: '40152m',
+    computeTier: 'premium',
+    acceleratorType: 'l4',
+    gpuCount: 1,
+    category: 'accelerated' as const
+  },
+  {
+    name: 'l4-16',
+    label: 'L4 (16 cores)',
+    vCPUs: 16,
+    memory: '53536m',
+    computeTier: 'premium',
+    acceleratorType: 'l4',
+    gpuCount: 1,
+    category: 'accelerated' as const
+  },
+  {
+    name: 'l4-24',
+    label: 'L4 (24 cores)',
+    vCPUs: 24,
+    memory: '113072m',
+    computeTier: 'premium',
+    acceleratorType: 'l4',
+    gpuCount: 2,
+    category: 'accelerated' as const
+  },
+  {
+    name: 'l4-48',
+    label: 'L4 (48 cores)',
+    vCPUs: 48,
+    memory: '160608m',
+    computeTier: 'premium',
+    acceleratorType: 'l4',
+    gpuCount: 4,
+    category: 'accelerated' as const
+  },
+  {
+    name: 'l4-96',
+    label: 'L4 (96 cores)',
+    vCPUs: 96,
+    memory: '321216m',
+    computeTier: 'premium',
+    acceleratorType: 'l4',
+    gpuCount: 8,
+    category: 'accelerated' as const
+  },
+  {
+    name: 'a100-40',
+    label: 'A100 (40 GB)',
+    vCPUs: 12,
+    memory: '78040m',
+    computeTier: 'premium',
+    acceleratorType: 'a100-40',
+    gpuCount: 1,
+    category: 'accelerated' as const
+  },
+  {
+    name: 'a100-80',
+    label: 'A100 (80 GB)',
+    vCPUs: 12,
+    memory: '165080m',
+    computeTier: 'premium',
+    acceleratorType: 'a100-80',
+    gpuCount: 1,
+    category: 'accelerated' as const
+  }
+];
+
+/**
  * Runtime Profile form intro text
  */
 export const RUNTIME_PROFILE_INTRO_TEXT =
@@ -333,3 +485,23 @@ export const LIGHTNING_ENGINE_CHECKBOX_LABEL =
   'Enable Lightning Engine to accelerate performance';
 export const LIGHTNING_ENGINE_CHECKBOX_DESC =
   'Turn on to accelerate your Spark jobs with Lightning Engine.';
+
+/**
+ * Executor configuration section constants
+ */
+export const EXECUTOR_CONFIG_SECTION_TITLE = 'Executor configuration';
+export const EXECUTOR_CONFIG_SECTION_SUBTITLE =
+  'The size and configuration of the Spark driver and executors that run your workload. You can choose a separate configuration for the driver under additional configuration.';
+export const EXECUTOR_CATEGORY_GENERAL_TITLE = 'General';
+export const EXECUTOR_CATEGORY_GENERAL_SUB1 = 'CPU only';
+export const EXECUTOR_CATEGORY_GENERAL_SUB2 = 'Suited for most ETL workloads';
+export const EXECUTOR_CATEGORY_ACCELERATED_TITLE = 'Accelerated';
+export const EXECUTOR_CATEGORY_ACCELERATED_SUB1 = 'Includes GPUs';
+export const EXECUTOR_CATEGORY_ACCELERATED_SUB2 =
+  'Best for data science and AI/ML workloads';
+export const EXECUTOR_CATEGORY_ACCELERATED_SUB3 =
+  'Available with premium tier only';
+export const EXECUTOR_SHAPES_SUBHEADING =
+  'Shapes for common workloads, optimized for cost and flexibility';
+export const EXECUTOR_ACCELERATED_SHAPES_SUBHEADING =
+  'Shapes with GPUs attached, for training and inference workloads';

@@ -143,6 +143,24 @@
   margin-top: 2px;
 }
 
+.node-config-card-sub3 {
+  font-size: 12px;
+  color: var(--jp-ui-font-color2, #5f6368);
+  line-height: 16px;
+  margin-top: 4px;
+}
+
+.node-config-card.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-color: var(--jp-border-color1, #dadce0);
+  background-color: var(--jp-layout-color2, #f8f9fa);
+}
+
+.node-config-card.disabled:hover {
+  border-color: var(--jp-border-color1, #dadce0);
+}
+
 .runtime-profile-checkbox-section {
   margin-top: -12px;
   margin-bottom: 24px;
@@ -212,8 +230,37 @@
 }
 
 .machine-type-select-wrapper {
-  width: 300px;
+  max-width: 512px;
+  width: 100%;
   margin-bottom: 24px;
+}
+
+.runtime-profile-divider {
+  height: 1px;
+  background-color: var(--jp-border-color2, #e0e0e0);
+  margin: 28px 0 20px 0;
+  max-width: 620px;
+}
+
+.machine-type-group-header,
+.MuiListSubheader-root.machine-type-group-header {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 28px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: var(--jp-ui-font-color2, #5f6368) !important;
+  background-color: var(--jp-layout-color1, #ffffff) !important;
+  pointer-events: none !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .machine-type-group-header,
+body[data-jp-theme-name='JupyterLab Dark']
+  .MuiListSubheader-root.machine-type-group-header {
+  background-color: var(--jp-layout-color0, #212121) !important;
+  color: var(--jp-ui-font-color2, #9aa0a6) !important;
 }
 
 /* Fix floating labels in outlined inputs so border line never crosses text */
@@ -247,11 +294,11 @@
 .runtime-profile-buttons {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-  padding-top: 16px;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 20px;
   border-top: 1px solid var(--jp-border-color2, #e0e0e0);
-  max-width: 620px;
+  width: 100%;
 }
 
 .runtime-profile-buttons button {
@@ -259,6 +306,74 @@
   outline: none;
   font-family: inherit;
   margin-right: 0;
+  border-radius: 8px;
+}
+
+.runtime-profile-submit-btn {
+  background-color: #3367d6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.runtime-profile-submit-btn:hover:not(:disabled) {
+  background-color: #2850a7;
+}
+
+.runtime-profile-submit-btn:disabled {
+  background-color: #dadce0;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+.runtime-profile-cancel-btn {
+  background: transparent;
+  color: #3367d6;
+  border: none;
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background-color 0.2s ease;
+}
+
+.runtime-profile-cancel-btn:hover {
+  background-color: rgba(51, 103, 214, 0.04);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-submit-btn {
+  background-color: #8ab4f8;
+  color: #202124;
+}
+
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-profile-submit-btn:hover:not(:disabled) {
+  background-color: #aecbfa;
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-cancel-btn {
+  color: #8ab4f8;
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-cancel-btn:hover {
+  background-color: rgba(138, 180, 248, 0.08);
 }
 
 .runtime-profile-buttons .submit-button-disable-style,
@@ -315,6 +430,11 @@ body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-tier-info-text {
   color: #e8eaed;
 }
 
+body[data-jp-theme-name='JupyterLab Dark'] .node-config-card.disabled {
+  background-color: var(--jp-layout-color2);
+  border-color: var(--jp-border-color2);
+  opacity: 0.45;
+}
 
 /* Runtime Profile List & Delete Modal Styles */
 .runtime-profile-wrapper {

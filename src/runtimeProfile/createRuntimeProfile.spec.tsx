@@ -38,7 +38,10 @@ jest.mock('@jupyterlab/apputils', () => ({
 
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { CreateRuntimeProfileComponent } from './createRuntimeProfile';
+import {
+  CreateRuntimeProfileComponent,
+  generateAutoDisplayName
+} from './createRuntimeProfile';
 import { RuntimeProfileService } from './runtimeProfileService';
 import {
   DATAPROC_TIER_DOC,
@@ -51,7 +54,18 @@ import {
   TIER_STANDARD_DESC,
   TIER_STANDARD_INFO_BANNER,
   LIGHTNING_ENGINE_CHECKBOX_LABEL,
-  LIGHTNING_ENGINE_CHECKBOX_DESC
+  LIGHTNING_ENGINE_CHECKBOX_DESC,
+  EXECUTOR_CONFIG_SECTION_TITLE,
+  EXECUTOR_CONFIG_SECTION_SUBTITLE,
+  EXECUTOR_CATEGORY_GENERAL_TITLE,
+  EXECUTOR_CATEGORY_GENERAL_SUB1,
+  EXECUTOR_CATEGORY_GENERAL_SUB2,
+  EXECUTOR_CATEGORY_ACCELERATED_TITLE,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB1,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB2,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB3,
+  EXECUTOR_SHAPES_SUBHEADING,
+  EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
 } from '../utils/const';
 
 describe('CreateRuntimeProfileComponent UI & Service', () => {
@@ -396,7 +410,10 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     );
     expect(displayNameLabel?.textContent).toContain('Display name *');
 
-    const tierCards = container.querySelectorAll('.node-config-card');
+    const cardContainers = container.querySelectorAll(
+      '.node-config-cards-container'
+    );
+    const tierCards = cardContainers[0].querySelectorAll('.node-config-card');
     expect(tierCards).toHaveLength(2);
 
     const premiumCard = tierCards[0] as HTMLDivElement;
@@ -503,5 +520,182 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     expect(standardElement.props.initialTier).toBe('Standard');
     expect(standardElement.props.initialLightningEngineEnabled).toBe(false);
+  });
+
+  it('generates a valid auto-populated display name', () => {
+    const name = generateAutoDisplayName();
+    expect(name).toMatch(/^runtime-profile-[a-f0-9]{6}$/);
+  });
+
+  it('should export executor configuration section constants', () => {
+    expect(EXECUTOR_CONFIG_SECTION_TITLE).toBe('Executor configuration');
+    expect(EXECUTOR_CONFIG_SECTION_SUBTITLE).toBeDefined();
+    expect(EXECUTOR_CATEGORY_GENERAL_TITLE).toBe('General');
+    expect(EXECUTOR_CATEGORY_GENERAL_SUB1).toBe('CPU only');
+    expect(EXECUTOR_CATEGORY_GENERAL_SUB2).toBe(
+      'Suited for most ETL workloads'
+    );
+    expect(EXECUTOR_CATEGORY_ACCELERATED_TITLE).toBe('Accelerated');
+    expect(EXECUTOR_CATEGORY_ACCELERATED_SUB1).toBe('Includes GPUs');
+    expect(EXECUTOR_CATEGORY_ACCELERATED_SUB2).toBe(
+      'Best for data science and AI/ML workloads'
+    );
+    expect(EXECUTOR_CATEGORY_ACCELERATED_SUB3).toBe(
+      'Available with premium tier only'
+    );
+    expect(EXECUTOR_SHAPES_SUBHEADING).toBe(
+      'Shapes for common workloads, optimized for cost and flexibility'
+    );
+    expect(EXECUTOR_ACCELERATED_SHAPES_SUBHEADING).toBe(
+      'Shapes with GPUs attached, for training and inference workloads'
+    );
+  });
+
+  it('renders Executor category cards and machine type dropdown', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const cardContainers = container.querySelectorAll(
+      '.node-config-cards-container'
+    );
+    expect(cardContainers).toHaveLength(2);
+
+    const executorCards =
+      cardContainers[1].querySelectorAll('.node-config-card');
+    expect(executorCards).toHaveLength(2);
+
+    const generalCard = executorCards[0] as HTMLDivElement;
+    const acceleratedCard = executorCards[1] as HTMLDivElement;
+
+    expect(generalCard.textContent).toContain('General');
+    expect(generalCard.textContent).toContain('CPU only');
+    expect(acceleratedCard.textContent).toContain('Accelerated');
+    expect(acceleratedCard.textContent).toContain('Includes GPUs');
+
+    expect(generalCard.classList.contains('selected')).toBe(true);
+    expect(acceleratedCard.classList.contains('selected')).toBe(false);
+
+    // Subheading for general category
+    const subheading = container.querySelector('.machine-type-subheading');
+    expect(subheading?.textContent).toBe(EXECUTOR_SHAPES_SUBHEADING);
+
+    // Switch to Accelerated category
+    await act(async () => {
+      acceleratedCard.click();
+    });
+    expect(acceleratedCard.classList.contains('selected')).toBe(true);
+    expect(generalCard.classList.contains('selected')).toBe(false);
+    expect(subheading?.textContent).toBe(
+      EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
+    );
+
+    // Switch back to General category via keyboard Space
+    await act(async () => {
+      generalCard.dispatchEvent(
+        new KeyboardEvent('keydown', { key: ' ', bubbles: true })
+      );
+    });
+    expect(generalCard.classList.contains('selected')).toBe(true);
+    expect(acceleratedCard.classList.contains('selected')).toBe(false);
+  });
+
+  it('disables Accelerated category when Standard tier is selected and resets to General', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const cardContainers = container.querySelectorAll(
+      '.node-config-cards-container'
+    );
+    const tierCards = cardContainers[0].querySelectorAll('.node-config-card');
+    const executorCards =
+      cardContainers[1].querySelectorAll('.node-config-card');
+
+    const standardTierCard = tierCards[1] as HTMLDivElement;
+    const generalExecutorCard = executorCards[0] as HTMLDivElement;
+    const acceleratedExecutorCard = executorCards[1] as HTMLDivElement;
+
+    // First select Accelerated category while in Premium tier
+    await act(async () => {
+      acceleratedExecutorCard.click();
+    });
+    expect(acceleratedExecutorCard.classList.contains('selected')).toBe(true);
+
+    // Now switch tier to Standard
+    await act(async () => {
+      standardTierCard.click();
+    });
+    expect(standardTierCard.classList.contains('selected')).toBe(true);
+
+    // Accelerated card should be disabled and selection reset to General
+    expect(acceleratedExecutorCard.classList.contains('disabled')).toBe(true);
+    expect(acceleratedExecutorCard.getAttribute('aria-disabled')).toBe('true');
+    expect(generalExecutorCard.classList.contains('selected')).toBe(true);
+
+    // Clicking disabled accelerated card should do nothing
+    await act(async () => {
+      acceleratedExecutorCard.click();
+    });
+    expect(generalExecutorCard.classList.contains('selected')).toBe(true);
+  });
+
+  it('should create a runtime profile with executorConfig via service', async () => {
+    const profile = await mockService.createRuntimeProfile({
+      displayName: 'executor-test-profile',
+      region: 'us-central1',
+      tier: 'Premium',
+      lightningEngineEnabled: true,
+      executorConfig: {
+        executorType: 'accelerated',
+        machineType: 'l4-4'
+      }
+    });
+
+    expect(profile.displayName).toBe('executor-test-profile');
+    expect(profile.tier).toBe('Premium');
+    expect(profile.executorConfig?.executorType).toBe('accelerated');
+    expect(profile.executorConfig?.machineType).toBe('l4-4');
+  });
+
+  it('should instantiate CreateRuntimeProfileComponent with initial executor props', () => {
+    const element = React.createElement(CreateRuntimeProfileComponent, {
+      initialTier: 'Premium',
+      initialLightningEngineEnabled: true,
+      initialExecutorCategory: 'accelerated',
+      initialExecutorType: 'l4-8'
+    });
+
+    expect(element).toBeDefined();
+    expect(element.type).toBe(CreateRuntimeProfileComponent);
+    expect(element.props.initialExecutorCategory).toBe('accelerated');
+    expect(element.props.initialExecutorType).toBe('l4-8');
+  });
+
+  it('supports clean normalized payload with driverAndExecutorConfiguration', async () => {
+    const cleanPayload = {
+      displayName: 'clean-normalized-profile',
+      region: 'us-central1',
+      tier: 'Premium',
+      lightningEngineEnabled: true,
+      executorConfig: {
+        executorType: 'accelerated',
+        machineType: 'l4-4'
+      },
+      driverAndExecutorConfiguration: {
+        driverMachineType: 'Standard-4',
+        driverDisk: 'standard persistent disk',
+        executorDisk: 'Standard persistent disk (HDD), 100 GB'
+      }
+    };
+
+    const created = await mockService.createRuntimeProfile(cleanPayload);
+    expect(created.displayName).toBe('clean-normalized-profile');
+    expect(created.tier).toBe('Premium');
+    expect(created.executorConfig?.executorType).toBe('accelerated');
+    expect(created.executorConfig?.machineType).toBe('l4-4');
+    expect(created.driverAndExecutorConfiguration?.driverMachineType).toBe(
+      'Standard-4'
+    );
   });
 });

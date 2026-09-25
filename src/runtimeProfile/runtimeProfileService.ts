@@ -19,15 +19,19 @@ import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
   gcpServiceUrls,
-  HTTP_METHOD
+  HTTP_METHOD,
+  DATAPROC_STANDARD_MACHINE_TYPES,
+  DATAPROC_ACCELERATED_MACHINE_TYPES
 } from '../utils/const';
 import { authApi, authenticatedFetch, loggedFetch } from '../utils/utils';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
 import {
   ICreateRuntimeProfilePayload,
+  IMachineTypeOption,
   IRegionOption,
   IRuntimeProfile,
-  IRuntimeProfileService
+  IRuntimeProfileService,
+  ExecutorCategoryType
 } from './runtimeProfileInterface';
 import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
 
@@ -45,6 +49,24 @@ export const MOCK_REGIONS: IRegionOption[] = [
   { name: 'us-central1', displayName: 'us-central1 (Iowa)' },
   { name: 'us-east1', displayName: 'us-east1 (South Carolina)' }
 ];
+
+/**
+ * Dataproc Serverless standard machine types (CPU only)
+ */
+export const STANDARD_MACHINE_TYPES: IMachineTypeOption[] =
+  DATAPROC_STANDARD_MACHINE_TYPES;
+
+/**
+ * Dataproc Serverless accelerated machine types (GPUs attached)
+ */
+export const ACCELERATED_MACHINE_TYPES: IMachineTypeOption[] =
+  DATAPROC_ACCELERATED_MACHINE_TYPES;
+
+/**
+ * Backward compatibility aliases for existing imports
+ */
+export const MOCK_GENERAL_MACHINE_TYPES = STANDARD_MACHINE_TYPES;
+export const MOCK_ACCELERATED_MACHINE_TYPES = ACCELERATED_MACHINE_TYPES;
 
 const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
   if (process.env.NODE_ENV === 'test' || Boolean(process.env.JEST_WORKER_ID)) {
@@ -209,6 +231,18 @@ export class RuntimeProfileService implements IRuntimeProfileService {
   }
 
   /**
+   * Retrieves available executor machine types based on executor category
+   */
+  async getMachineTypes(
+    category: ExecutorCategoryType = 'general'
+  ): Promise<IMachineTypeOption[]> {
+    if (category === 'accelerated') {
+      return MOCK_ACCELERATED_MACHINE_TYPES;
+    }
+    return MOCK_GENERAL_MACHINE_TYPES;
+  }
+
+  /**
    * Creates a new Runtime Profile.
    * Uses mock simulation or sends request to Dataproc API when live.
    */
@@ -243,8 +277,22 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         lightningEngineEnabled:
           payload.lightningEngineEnabled ??
           payload.runtimeEnvironmentConfig?.lightningEngineEnabled,
+        executorConfig: payload.executorConfig,
         runtimeEnvironmentConfig: payload.runtimeEnvironmentConfig,
-        executorAndDriverConfig: payload.executorAndDriverConfig,
+        executorAndDriverConfig:
+          payload.executorAndDriverConfig ??
+          payload.driverAndExecutorConfiguration,
+        driverAndExecutorConfiguration:
+          payload.driverAndExecutorConfiguration ??
+          payload.executorAndDriverConfig,
+        driverConfig:
+          payload.driverConfig ??
+          payload.executorAndDriverConfig ??
+          payload.driverAndExecutorConfiguration,
+        executorDiskConfig:
+          payload.executorDiskConfig ??
+          payload.executorAndDriverConfig ??
+          payload.driverAndExecutorConfiguration,
         autoscalingConfig: payload.autoscalingConfig,
         metastoreConfig: payload.metastoreConfig,
         networkAndSecurityConfig: payload.networkAndSecurityConfig,
