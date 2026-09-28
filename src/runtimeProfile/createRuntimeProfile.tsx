@@ -441,13 +441,24 @@ export const CreateRuntimeProfileComponent: React.FC<
     () => ({
       ...DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
       ...initialRuntimeEnvironmentConfig,
-      runtimeProfileId: watchedDisplayName?.trim() || defaultRuntimeId
+      runtimeProfileId: watchedDisplayName?.trim() || defaultRuntimeId,
+      lightningEngineEnabled:
+        tier === 'Premium' && Boolean(lightningEngineEnabled)
     }),
-    [initialRuntimeEnvironmentConfig, watchedDisplayName, defaultRuntimeId]
+    [
+      initialRuntimeEnvironmentConfig,
+      watchedDisplayName,
+      defaultRuntimeId,
+      tier,
+      lightningEngineEnabled
+    ]
   );
   const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(
-    () => initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG,
-    [initialExecutorAndDriverConfig]
+    () => ({
+      ...(initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG),
+      tier
+    }),
+    [initialExecutorAndDriverConfig, tier]
   );
   const autoscalingConfig = useMemo<IAutoscalingConfig>(
     () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG,
@@ -882,7 +893,6 @@ export const CreateRuntimeProfileComponent: React.FC<
               </div>
             )}
           </div>
-
 
           {/* Action Buttons */}
           <div className="runtime-profile-buttons">

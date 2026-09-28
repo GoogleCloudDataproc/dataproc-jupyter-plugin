@@ -406,6 +406,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(standardCard.textContent).toContain('Standard');
     expect(premiumCard.classList.contains('selected')).toBe(true);
     expect(standardCard.classList.contains('selected')).toBe(false);
+    expect(getFieldValue('Tier')).toBe('Premium');
 
     // Switch to Standard tier
     await act(async () => {
@@ -413,6 +414,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     expect(standardCard.classList.contains('selected')).toBe(true);
     expect(premiumCard.classList.contains('selected')).toBe(false);
+    expect(getFieldValue('Tier')).toBe('Standard');
     expect(
       container.querySelector('.runtime-profile-tier-info-banner')
     ).not.toBeNull();
@@ -424,6 +426,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
     });
     expect(premiumCard.classList.contains('selected')).toBe(true);
+    expect(getFieldValue('Tier')).toBe('Premium');
     expect(
       container.querySelector('.runtime-profile-checkbox-section')
     ).not.toBeNull();
