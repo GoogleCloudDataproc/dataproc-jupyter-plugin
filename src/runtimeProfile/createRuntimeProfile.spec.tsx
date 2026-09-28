@@ -66,6 +66,18 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     container.remove();
   });
 
+  const getFieldValue = (label: string): string | undefined => {
+    const rows = Array.from(container.querySelectorAll('.section-detail-row'));
+    const matchingRow = rows.find(
+      row =>
+        row.querySelector('.section-detail-label')?.textContent?.trim() ===
+        label
+    );
+    return matchingRow
+      ?.querySelector('.section-detail-value')
+      ?.textContent?.trim();
+  };
+
   it('renders Additional configuration expanded by default with all 7 SectionDetail sections', async () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
@@ -98,6 +110,23 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     editButtons.forEach(btn => {
       expect(btn.getAttribute('aria-disabled')).toBe('true');
     });
+
+    const displayNameInput = container.querySelector(
+      '#runtime-profile-display-name'
+    ) as HTMLInputElement;
+    expect(displayNameInput?.value).toMatch(/^runtime-[0-9a-f]{12}$/);
+    expect(getFieldValue('Runtime Profile ID')).toBe(displayNameInput?.value);
+    expect(getFieldValue('Dataproc Runtime Version')).toBe(
+      '2.3 LTS (Spark 3.5.1, Python 3.12)'
+    );
+    expect(getFieldValue('Custom spark image')).toBe('None');
+    expect(getFieldValue('Cloud Storage Staging bucket')).toBe('Auto');
+    expect(getFieldValue('Python package repository')).toBe(
+      'Google Managed PyPI pull through cache'
+    );
+    expect(getFieldValue('Autoscaling')).toBe('Enabled');
+    expect(getFieldValue('Metastore')).toBe('Lakehouse runtime catalog');
+    expect(getFieldValue('Hive endpoint')).toBe('Disabled');
   });
 
   it('collapses and re-expands Additional configuration on click and keyboard Enter/Space', async () => {
@@ -190,27 +219,39 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       );
     });
 
-    const renderedText = container.textContent || '';
-    expect(renderedText).toContain('custom-runtime-id');
-    expect(renderedText).toContain('gcr.io/my-project/spark:latest');
-    expect(renderedText).toContain('gs://my-staging-bucket');
-    expect(renderedText).toContain('Premium');
-    expect(renderedText).toContain('highmem-8');
-    expect(renderedText).toContain('Disabled');
-    expect(renderedText).toContain('50');
-    expect(renderedText).toContain(
+    expect(getFieldValue('Runtime Profile ID')).toBe('custom-runtime-id');
+    expect(getFieldValue('Dataproc Runtime Version')).toBe('2.2 LTS');
+    expect(getFieldValue('Custom spark image')).toBe(
+      'gcr.io/my-project/spark:latest'
+    );
+    expect(getFieldValue('Cloud Storage Staging bucket')).toBe(
+      'gs://my-staging-bucket'
+    );
+    expect(getFieldValue('Python package repository')).toBe(
+      'https://pypi.org/simple'
+    );
+    expect(getFieldValue('Tier')).toBe('Premium');
+    expect(getFieldValue('Driver machine type')).toBe('highmem-8');
+    expect(getFieldValue('Driver disk')).toBe('SSD 200 GB');
+    expect(getFieldValue('Executor type')).toBe('highmem-4');
+    expect(getFieldValue('Executor disk')).toBe('SSD 400 GB');
+    expect(getFieldValue('Autoscaling')).toBe('Disabled');
+    expect(getFieldValue('Initial executors')).toBe('4');
+    expect(getFieldValue('Minimum executors')).toBe('2');
+    expect(getFieldValue('Maximum executors')).toBe('50');
+    expect(getFieldValue('Metastore')).toBe(
       'projects/p/locations/l/services/my-metastore'
     );
-    expect(renderedText).toContain('Enabled');
-    expect(renderedText).toContain('User account');
-    expect(renderedText).toContain('custom-vpc');
-    expect(renderedText).toContain('Customer-managed key');
-    expect(renderedText).toContain('120 minutes');
-    expect(renderedText).toContain('7 days');
-    expect(renderedText).toContain(
+    expect(getFieldValue('Hive endpoint')).toBe('Enabled');
+    expect(getFieldValue('Execution identity')).toBe('User account');
+    expect(getFieldValue('Network in this project')).toBe('custom-vpc');
+    expect(getFieldValue('Encryption')).toBe('Customer-managed key');
+    expect(getFieldValue('Maximum idle time')).toBe('120 minutes');
+    expect(getFieldValue('Maximum session time')).toBe('7 days');
+    expect(getFieldValue('Spark properties')).toBe(
       'spark.driver.memory: 8g, spark.executor.cores: 4'
     );
-    expect(renderedText).toContain('env: staging, team: analytics');
+    expect(getFieldValue('Labels')).toBe('env: staging, team: analytics');
   });
 
   it('invokes onBack when clicking Back arrow, pressing Enter on Back arrow, or clicking Cancel', async () => {

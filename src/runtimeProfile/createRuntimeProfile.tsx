@@ -85,18 +85,33 @@ const ENCRYPTION_DISPLAY_MAP: Record<string, string> = {
   customer_managed_key: 'Customer-managed key'
 };
 
+const RUNTIME_VERSION_DISPLAY_MAP: Record<string, string> = {
+  '2.3': '2.3 LTS (Spark 3.5.1, Python 3.12)'
+};
+
+export const generateRandomHex = (): string => {
+  const cryptoObj = window.crypto || (window as any).Crypto;
+  const array = new Uint32Array(1);
+  cryptoObj.getRandomValues(array);
+  const hex = array[0].toString(16);
+  const paddedHex = hex.padStart(12, '0');
+  return `runtime-${paddedHex}`;
+};
+
 /**
  * Initial default Serverless Spark runtime configuration for a new Runtime Profile.
+ * Unset optional fields default to empty strings ('') so UI display placeholders
+ * (e.g., 'None', 'Auto') are not sent to the backend API.
  * Note: Dynamic options (such as staging buckets, subnetworks, metastore instances,
  * and service accounts) will be fetched from the backend APIs in subsequent
  * edit-drawer and API-integration PRs.
  */
 export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
-  runtimeProfileId: 'Name of the runtime profile',
-  runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
-  customSparkImage: 'None',
-  stagingBucket: 'Auto',
-  pythonPackageRepository: 'Google Managed PyPI pull through cache'
+  runtimeProfileId: '',
+  runtimeVersion: '2.3',
+  customSparkImage: '',
+  stagingBucket: '',
+  pythonPackageRepository: ''
 };
 
 export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
@@ -115,7 +130,7 @@ export const DEFAULT_AUTOSCALING_CONFIG: IAutoscalingConfig = {
 };
 
 export const DEFAULT_METASTORE_CONFIG: IMetastoreConfig = {
-  metastore: 'Lakehouse runtime catalog',
+  metastore: '',
   hiveEndpointEnabled: false
 };
 
@@ -140,35 +155,32 @@ export const formatRuntimeEnvironmentProperties = (
   if (!config) {
     return [];
   }
+  const versionKey =
+    config.runtimeVersion ||
+    DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.runtimeVersion ||
+    '';
   return [
     {
       label: 'Runtime Profile ID',
-      value:
-        config.runtimeProfileId ||
-        DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.runtimeProfileId
+      value: config.runtimeProfileId || '-'
     },
     {
       label: 'Dataproc Runtime Version',
-      value:
-        config.runtimeVersion ||
-        DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.runtimeVersion
+      value: RUNTIME_VERSION_DISPLAY_MAP[versionKey] || versionKey
     },
     {
       label: 'Custom spark image',
-      value:
-        config.customSparkImage ||
-        DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.customSparkImage
+      value: config.customSparkImage || 'None'
     },
     {
       label: 'Cloud Storage Staging bucket',
-      value:
-        config.stagingBucket || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.stagingBucket
+      value: config.stagingBucket || 'Auto'
     },
     {
       label: 'Python package repository',
       value:
         config.pythonPackageRepository ||
-        DEFAULT_RUNTIME_ENVIRONMENT_CONFIG.pythonPackageRepository
+        'Google Managed PyPI pull through cache'
     }
   ];
 };
@@ -247,7 +259,7 @@ export const formatMetastoreProperties = (
   return [
     {
       label: 'Metastore',
-      value: config.metastore || DEFAULT_METASTORE_CONFIG.metastore
+      value: config.metastore || 'Lakehouse runtime catalog'
     },
     {
       label: 'Hive endpoint',
@@ -368,10 +380,39 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(true);
 
-  // Configuration values derived from initial props or defaults
+  const defaultRuntimeId = useMemo<string>(
+    () =>
+      initialRuntimeEnvironmentConfig?.runtimeProfileId || generateRandomHex(),
+    [initialRuntimeEnvironmentConfig?.runtimeProfileId]
+  );
+
+  // React Hook Form initialization
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting }
+  } = useForm<IRuntimeProfileFormData>({
+    mode: 'onChange',
+    defaultValues: {
+      displayName: defaultRuntimeId,
+      region: '',
+      description: ''
+    }
+  });
+
+  const watchedDisplayName = watch('displayName');
+
+  // Configuration values derived from initial props or defaults.
+  // TODO: Validation on runtimeProfileId / displayName field will be handled in upcoming PRs.
   const runtimeEnvironmentConfig = useMemo<IRuntimeEnvironmentConfig>(
-    () => initialRuntimeEnvironmentConfig || DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
-    [initialRuntimeEnvironmentConfig]
+    () => ({
+      ...DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
+      ...initialRuntimeEnvironmentConfig,
+      runtimeProfileId: watchedDisplayName?.trim() || defaultRuntimeId
+    }),
+    [initialRuntimeEnvironmentConfig, watchedDisplayName, defaultRuntimeId]
   );
   const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(
     () => initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG,
@@ -444,21 +485,6 @@ export const CreateRuntimeProfileComponent: React.FC<
       labels
     ]
   );
-
-  // React Hook Form initialization
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitting }
-  } = useForm<IRuntimeProfileFormData>({
-    mode: 'onChange',
-    defaultValues: {
-      displayName: '',
-      region: '',
-      description: ''
-    }
-  });
 
   // Load Regions from service
   useEffect(() => {
@@ -578,6 +604,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           {/* Row 1: Display name & Region */}
           <div className="runtime-profile-row">
             <div className="runtime-profile-col">
+              {/* TODO: Full validation on runtime-id / displayName field will be added in upcoming PRs */}
               <Controller
                 name="displayName"
                 control={control}
