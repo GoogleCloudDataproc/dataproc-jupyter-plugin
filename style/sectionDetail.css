@@ -19,8 +19,13 @@
   margin-bottom: 24px;
   width: 100%;
   box-sizing: border-box;
-  font-family: Roboto,
-    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+  font-family: var(
+    --jp-ui-font-family,
+    Roboto,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif
+  );
 }
 
 .section-detail-wrapper * {
@@ -198,8 +203,13 @@ body[data-jp-theme-name='JupyterLab Dark']
 }
 
 .additional-config-header {
-  font-family: Roboto,
-    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+  font-family: var(
+    --jp-ui-font-family,
+    Roboto,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif
+  );
   font-size: 16px;
   font-weight: 500;
   color: var(--jp-ui-font-color0);

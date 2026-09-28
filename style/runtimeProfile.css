@@ -20,8 +20,13 @@
   overflow-y: auto;
   overflow-x: hidden;
   background-color: var(--jp-layout-color1, #ffffff);
-  font-family: Roboto,
-    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+  font-family: var(
+    --jp-ui-font-family,
+    Roboto,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif
+  );
 }
 
 .runtime-profile-container {
