@@ -208,4 +208,92 @@ describe('RuntimeProfileService', () => {
       await expect(RuntimeProfileService.deleteRuntimeProfile('profile1')).rejects.toThrow('Delete error');
     });
   });
+
+  describe('createRuntimeProfile', () => {
+    it('persists executorAndDriverConfig, derives tier from executorAndDriverConfig, and stores additional config in mock mode', async () => {
+      const service = new RuntimeProfileService(true);
+      const profile = await service.createRuntimeProfile(
+        {
+          displayName: 'runtime-00001234abcd',
+          region: 'us-central1',
+          description: 'Test profile',
+          executorAndDriverConfig: {
+            tier: 'Premium',
+            driverMachineType: 'Standard-8',
+            driverDisk: 'standard persistent disk',
+            executorType: 'highmem-4',
+            executorDisk: 'Standard persistent disk (HDD), 200 GB'
+          },
+          runtimeEnvironmentConfig: {
+            runtimeProfileId: 'runtime-00001234abcd',
+            runtimeVersion: '2.3'
+          },
+          autoscalingConfig: {
+            autoscalingEnabled: true,
+            initialExecutors: 2,
+            minExecutors: 2,
+            maxExecutors: 10
+          }
+        },
+        'my-project',
+        'us-central1'
+      );
+
+      expect(profile.tier).toBe('Premium');
+      expect(profile.executorAndDriverConfig).toEqual({
+        tier: 'Premium',
+        driverMachineType: 'Standard-8',
+        driverDisk: 'standard persistent disk',
+        executorType: 'highmem-4',
+        executorDisk: 'Standard persistent disk (HDD), 200 GB'
+      });
+      expect(profile.runtimeEnvironmentConfig?.runtimeProfileId).toBe(
+        'runtime-00001234abcd'
+      );
+      expect(profile.autoscalingConfig?.maxExecutors).toBe(10);
+    });
+
+    it('sends payload including executorAndDriverConfig via loggedFetch in live mode', async () => {
+      const service = new RuntimeProfileService(false);
+      const payload = {
+        displayName: 'runtime-live',
+        region: 'us-east1',
+        executorAndDriverConfig: {
+          tier: 'Standard',
+          driverMachineType: 'Standard-4',
+          driverDisk: 'standard persistent disk',
+          executorType: 'standard',
+          executorDisk: 'Standard persistent disk (HDD), 100 GB'
+        }
+      };
+
+      (authApi as jest.Mock).mockResolvedValue({
+        access_token: 'live-token',
+        project_id: 'live-project'
+      });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          name: 'projects/live-project/locations/us-east1/sessionTemplates/runtime-live',
+          ...payload
+        })
+      });
+
+      const result = await service.createRuntimeProfile(payload);
+
+      expect(loggedFetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'projects/live-project/locations/us-east1/sessionTemplates'
+        ),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
+      );
+      expect(result.executorAndDriverConfig).toEqual(
+        payload.executorAndDriverConfig
+      );
+    });
+  });
 });
+
