@@ -309,6 +309,9 @@ export const DEFAULT_PUBLIC_PROJECT_ID = 'bigquery-public-data';
 export const BIGQUERY_API_URL =
   'https://console.cloud.google.com/apis/library/bigquery.googleapis.com';
 
+export const DEFAULT_GENERAL_EXECUTOR_TYPE = 'highmem-4';
+export const DEFAULT_ACCELERATED_EXECUTOR_TYPE = 'l4-4';
+
 /**
  * Predefined Dataproc Serverless Standard (CPU only) machine types
  * Ref: One-Pager: Executor Configuration & Sizing Option Mapping
@@ -318,7 +321,6 @@ export const DATAPROC_STANDARD_MACHINE_TYPES = [
     name: 'standard-4',
     label: 'standard-4 (4 vCPU, 16 GB)',
     vCPUs: 4,
-    memoryGb: 16,
     memory: '16g',
     category: 'general' as const
   },
@@ -326,7 +328,6 @@ export const DATAPROC_STANDARD_MACHINE_TYPES = [
     name: 'highmem-4',
     label: 'highmem-4 (4 vCPU, 32 GB)',
     vCPUs: 4,
-    memoryGb: 32,
     memory: '32g',
     category: 'general' as const
   },
@@ -334,7 +335,6 @@ export const DATAPROC_STANDARD_MACHINE_TYPES = [
     name: 'standard-8',
     label: 'standard-8 (8 vCPU, 32 GB)',
     vCPUs: 8,
-    memoryGb: 32,
     memory: '32g',
     category: 'general' as const
   },
@@ -342,7 +342,6 @@ export const DATAPROC_STANDARD_MACHINE_TYPES = [
     name: 'highmem-8',
     label: 'highmem-8 (8 vCPU, 64 GB)',
     vCPUs: 8,
-    memoryGb: 64,
     memory: '64g',
     category: 'general' as const
   },
@@ -350,7 +349,6 @@ export const DATAPROC_STANDARD_MACHINE_TYPES = [
     name: 'standard-16',
     label: 'standard-16 (16 vCPU, 64 GB)',
     vCPUs: 16,
-    memoryGb: 64,
     memory: '64g',
     category: 'general' as const
   },
@@ -358,7 +356,6 @@ export const DATAPROC_STANDARD_MACHINE_TYPES = [
     name: 'highmem-16',
     label: 'highmem-16 (16 vCPU, 128 GB)',
     vCPUs: 16,
-    memoryGb: 128,
     memory: '128g',
     category: 'general' as const
   }
@@ -374,7 +371,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'L4 (4 cores)',
     vCPUs: 4,
     memory: '13384m',
-    computeTier: 'premium',
     acceleratorType: 'l4',
     gpuCount: 1,
     category: 'accelerated' as const
@@ -384,7 +380,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'L4 (8 cores)',
     vCPUs: 8,
     memory: '26768m',
-    computeTier: 'premium',
     acceleratorType: 'l4',
     gpuCount: 1,
     category: 'accelerated' as const
@@ -394,7 +389,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'L4 (12 cores)',
     vCPUs: 12,
     memory: '40152m',
-    computeTier: 'premium',
     acceleratorType: 'l4',
     gpuCount: 1,
     category: 'accelerated' as const
@@ -404,7 +398,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'L4 (16 cores)',
     vCPUs: 16,
     memory: '53536m',
-    computeTier: 'premium',
     acceleratorType: 'l4',
     gpuCount: 1,
     category: 'accelerated' as const
@@ -414,7 +407,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'L4 (24 cores)',
     vCPUs: 24,
     memory: '113072m',
-    computeTier: 'premium',
     acceleratorType: 'l4',
     gpuCount: 2,
     category: 'accelerated' as const
@@ -424,7 +416,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'L4 (48 cores)',
     vCPUs: 48,
     memory: '160608m',
-    computeTier: 'premium',
     acceleratorType: 'l4',
     gpuCount: 4,
     category: 'accelerated' as const
@@ -434,7 +425,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'L4 (96 cores)',
     vCPUs: 96,
     memory: '321216m',
-    computeTier: 'premium',
     acceleratorType: 'l4',
     gpuCount: 8,
     category: 'accelerated' as const
@@ -444,7 +434,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'A100 (40 GB)',
     vCPUs: 12,
     memory: '78040m',
-    computeTier: 'premium',
     acceleratorType: 'a100-40',
     gpuCount: 1,
     category: 'accelerated' as const
@@ -454,7 +443,6 @@ export const DATAPROC_ACCELERATED_MACHINE_TYPES = [
     label: 'A100 (80 GB)',
     vCPUs: 12,
     memory: '165080m',
-    computeTier: 'premium',
     acceleratorType: 'a100-80',
     gpuCount: 1,
     category: 'accelerated' as const

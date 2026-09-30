@@ -20,24 +20,21 @@ export interface IRegionOption {
   displayName: string;
 }
 
-export type ExecutorType = 'standard' | 'accelerated' | 'general' | string;
-export type ExecutorCategoryType = 'general' | 'accelerated' | 'standard';
+export type ExecutorType = string;
+export type ExecutorCategoryType = 'general' | 'accelerated';
 
 export interface IMachineTypeOption {
   name: string;
   label: string;
   vCPUs: number;
-  memoryGb?: number;
-  memory?: string;
+  memory: string;
   category: ExecutorCategoryType;
   acceleratorType?: string;
-  acceleratorCount?: number;
   gpuCount?: number;
-  computeTier?: string;
 }
 
 export interface IExecutorConfig {
-  executorType?: ExecutorCategoryType | string;
+  executorType?: ExecutorCategoryType;
   machineType?: string;
 }
 
@@ -54,18 +51,9 @@ export interface IExecutorAndDriverConfig {
   tier?: string;
   driverMachineType?: string;
   driverDisk?: string;
-  executorType?: ExecutorType | string;
+  executorType?: ExecutorType;
   executorDisk?: string;
-  /** Legacy compatibility fields */
-  machineType?: string;
-  disk?: string;
-  diskType?: string;
 }
-
-/** Backward-compatibility aliases */
-export type IDriverAndExecutorConfiguration = IExecutorAndDriverConfig;
-export type IDriverConfig = IExecutorAndDriverConfig;
-export type IExecutorDiskConfig = IExecutorAndDriverConfig;
 
 export interface IAutoscalingConfig {
   autoscalingEnabled?: boolean;
@@ -130,9 +118,6 @@ export interface IRuntimeProfile {
   state?: string;
   runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   executorAndDriverConfig?: IExecutorAndDriverConfig;
-  driverAndExecutorConfiguration?: IExecutorAndDriverConfig;
-  driverConfig?: IDriverConfig;
-  executorDiskConfig?: IExecutorDiskConfig;
   autoscalingConfig?: IAutoscalingConfig;
   metastoreConfig?: IMetastoreConfig;
   networkAndSecurityConfig?: INetworkAndSecurityConfig;
@@ -150,9 +135,6 @@ export interface ICreateRuntimeProfilePayload {
   executorConfig?: IExecutorConfig;
   runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   executorAndDriverConfig?: IExecutorAndDriverConfig;
-  driverAndExecutorConfiguration?: IExecutorAndDriverConfig;
-  driverConfig?: IDriverConfig;
-  executorDiskConfig?: IExecutorDiskConfig;
   autoscalingConfig?: IAutoscalingConfig;
   metastoreConfig?: IMetastoreConfig;
   networkAndSecurityConfig?: INetworkAndSecurityConfig;
@@ -163,13 +145,9 @@ export interface ICreateRuntimeProfilePayload {
 
 export interface IRuntimeProfileService {
   getRegions(projectId?: string): Promise<IRegionOption[]>;
-  getMachineTypes?(
-    category?: ExecutorCategoryType
-  ): Promise<IMachineTypeOption[]>;
   createRuntimeProfile(
     payload: ICreateRuntimeProfilePayload,
     projectId?: string,
     region?: string
   ): Promise<IRuntimeProfile>;
 }
-

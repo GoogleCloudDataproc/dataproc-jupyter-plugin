@@ -64,16 +64,17 @@ import {
   EXECUTOR_CATEGORY_ACCELERATED_SUB2,
   EXECUTOR_CATEGORY_ACCELERATED_SUB3,
   EXECUTOR_SHAPES_SUBHEADING,
-  EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
+  EXECUTOR_ACCELERATED_SHAPES_SUBHEADING,
+  DATAPROC_STANDARD_MACHINE_TYPES,
+  DATAPROC_ACCELERATED_MACHINE_TYPES,
+  DEFAULT_GENERAL_EXECUTOR_TYPE,
+  DEFAULT_ACCELERATED_EXECUTOR_TYPE
 } from '../utils/const';
 import {
   ExecutorCategoryType,
   IAutoscalingConfig,
   ICreateRuntimeProfilePayload,
-  IDriverAndExecutorConfiguration,
-  IDriverConfig,
   IExecutorAndDriverConfig,
-  IExecutorDiskConfig,
   IMachineTypeOption,
   IMetastoreConfig,
   INetworkAndSecurityConfig,
@@ -85,11 +86,7 @@ import {
 } from './runtimeProfileInterface';
 import {
   RuntimeProfileService,
-  runtimeProfileService,
-  STANDARD_MACHINE_TYPES,
-  ACCELERATED_MACHINE_TYPES,
-  MOCK_GENERAL_MACHINE_TYPES,
-  MOCK_ACCELERATED_MACHINE_TYPES
+  runtimeProfileService
 } from './runtimeProfileService';
 
 interface IRuntimeProfileFormData {
@@ -378,23 +375,6 @@ export const formatOtherCustomizationProperties = (
   ];
 };
 
-/**
- * Generates an auto-populated display name for a new runtime profile
- */
-export const generateAutoDisplayName = (): string => {
-  const cryptoObj =
-    typeof window !== 'undefined'
-      ? window.crypto || (window as any).Crypto
-      : undefined;
-  if (cryptoObj?.getRandomValues) {
-    const array = new Uint32Array(1);
-    cryptoObj.getRandomValues(array);
-    const hex = array[0].toString(16).padStart(6, '0').slice(-6);
-    return `runtime-profile-${hex}`;
-  }
-  return `runtime-profile-${Math.random().toString(16).substring(2, 8)}`;
-};
-
 export interface ICreateRuntimeProfileComponentProps {
   app?: JupyterLab;
   launcher?: ILauncher;
@@ -403,16 +383,12 @@ export interface ICreateRuntimeProfileComponentProps {
   service?: RuntimeProfileService;
   onBack?: () => void;
   onSuccess?: () => void;
-  initialDisplayName?: string;
   initialTier?: string;
   initialLightningEngineEnabled?: boolean;
   initialExecutorCategory?: ExecutorCategoryType;
   initialExecutorType?: string;
   initialRuntimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   initialExecutorAndDriverConfig?: IExecutorAndDriverConfig;
-  initialDriverAndExecutorConfiguration?: IDriverAndExecutorConfiguration;
-  initialDriverConfig?: IDriverConfig;
-  initialExecutorDiskConfig?: IExecutorDiskConfig;
   initialAutoscalingConfig?: IAutoscalingConfig;
   initialMetastoreConfig?: IMetastoreConfig;
   initialNetworkAndSecurityConfig?: INetworkAndSecurityConfig;
@@ -421,6 +397,76 @@ export interface ICreateRuntimeProfileComponentProps {
   initialLabels?: ProfileLabels;
 }
 
+const ALL_MACHINE_TYPES: IMachineTypeOption[] = [
+  ...DATAPROC_STANDARD_MACHINE_TYPES,
+  ...DATAPROC_ACCELERATED_MACHINE_TYPES
+];
+
+const MACHINE_TYPE_GROUPS: Record<
+  ExecutorCategoryType,
+  { prefix: string; label: string }[]
+> = {
+  general: [
+    { prefix: 'standard', label: 'Standard' },
+    { prefix: 'highmem', label: 'High memory' }
+  ],
+  accelerated: [
+    { prefix: 'l4', label: 'L4' },
+    { prefix: 'a100', label: 'A100' }
+  ]
+};
+
+/**
+ * Renders machine types grouped under subheaders (by name prefix);
+ * anything unmatched is listed under "Other".
+ */
+export const renderGroupedMachineOptions = (
+  machineTypes: IMachineTypeOption[],
+  category: ExecutorCategoryType
+): React.JSX.Element[] => {
+  const items: React.JSX.Element[] = [];
+  const matched = new Set<string>();
+  const pushGroup = (
+    key: string,
+    label: string,
+    types: IMachineTypeOption[]
+  ) => {
+    if (types.length === 0) {
+      return;
+    }
+    items.push(
+      <ListSubheader
+        key={`header-${key}`}
+        className="machine-type-group-header"
+        disableSticky
+      >
+        {label}
+      </ListSubheader>
+    );
+    types.forEach(m =>
+      items.push(
+        <MenuItem key={m.name} value={m.name}>
+          {m.label}
+        </MenuItem>
+      )
+    );
+  };
+
+  MACHINE_TYPE_GROUPS[category].forEach(({ prefix, label }) => {
+    const types = machineTypes.filter(m =>
+      m.name.toLowerCase().startsWith(prefix)
+    );
+    types.forEach(m => matched.add(m.name));
+    pushGroup(prefix, label, types);
+  });
+  pushGroup(
+    'other',
+    'Other',
+    machineTypes.filter(m => !matched.has(m.name))
+  );
+  return items;
+};
+
 export const CreateRuntimeProfileComponent: React.FC<
   ICreateRuntimeProfileComponentProps
 > = ({
@@ -428,16 +474,12 @@ export const CreateRuntimeProfileComponent: React.FC<
   service = runtimeProfileService,
   onBack,
   onSuccess,
-  initialDisplayName,
   initialTier,
   initialLightningEngineEnabled,
   initialExecutorCategory,
   initialExecutorType,
   initialRuntimeEnvironmentConfig,
   initialExecutorAndDriverConfig,
-  initialDriverAndExecutorConfiguration,
-  initialDriverConfig,
-  initialExecutorDiskConfig,
   initialAutoscalingConfig,
   initialMetastoreConfig,
   initialNetworkAndSecurityConfig,
@@ -453,10 +495,7 @@ export const CreateRuntimeProfileComponent: React.FC<
 
   // Tier and Lightning Engine state
   const [tier, setTier] = useState<string>(
-    initialTier ||
-      initialExecutorAndDriverConfig?.tier ||
-      initialDriverAndExecutorConfiguration?.tier ||
-      'Premium'
+    initialTier || initialExecutorAndDriverConfig?.tier || 'Premium'
   );
   const [lightningEngineEnabled, setLightningEngineEnabled] = useState<boolean>(
     initialLightningEngineEnabled !== undefined
@@ -468,20 +507,20 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [executorCategory, setExecutorCategory] =
     useState<ExecutorCategoryType>(initialExecutorCategory || 'general');
   const [executorType, setExecutorType] = useState<string>(
-    initialExecutorType || 'highmem-4'
+    initialExecutorType ||
+      (initialExecutorCategory === 'accelerated'
+        ? DEFAULT_ACCELERATED_EXECUTOR_TYPE
+        : DEFAULT_GENERAL_EXECUTOR_TYPE)
   );
-  const [machineTypes, setMachineTypes] = useState<IMachineTypeOption[]>(
-    (initialExecutorCategory || 'general') === 'accelerated'
-      ? MOCK_ACCELERATED_MACHINE_TYPES
-      : MOCK_GENERAL_MACHINE_TYPES
-  );
+  const machineTypes: IMachineTypeOption[] =
+    executorCategory === 'accelerated'
+      ? DATAPROC_ACCELERATED_MACHINE_TYPES
+      : DATAPROC_STANDARD_MACHINE_TYPES;
 
   const defaultRuntimeId = useMemo<string>(
     () =>
-      initialDisplayName ||
-      initialRuntimeEnvironmentConfig?.runtimeProfileId ||
-      generateRandomHex(),
-    [initialDisplayName, initialRuntimeEnvironmentConfig?.runtimeProfileId]
+      initialRuntimeEnvironmentConfig?.runtimeProfileId || generateRandomHex(),
+    [initialRuntimeEnvironmentConfig?.runtimeProfileId]
   );
 
   // React Hook Form initialization
@@ -521,29 +560,15 @@ export const CreateRuntimeProfileComponent: React.FC<
     ]
   );
   const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(() => {
-    const base =
-      initialExecutorAndDriverConfig ||
-      initialDriverAndExecutorConfiguration ||
-      initialDriverConfig ||
-      initialExecutorDiskConfig ||
-      DEFAULT_EXECUTOR_AND_DRIVER_CONFIG;
-    const allTypes = [...STANDARD_MACHINE_TYPES, ...ACCELERATED_MACHINE_TYPES];
-    const selectedMachine = allTypes.find(m => m.name === executorType);
+    const selectedMachine = ALL_MACHINE_TYPES.find(
+      m => m.name === executorType
+    );
     return {
-      ...base,
+      ...(initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG),
       tier,
-      executorType:
-        initialExecutorAndDriverConfig?.executorType ||
-        (selectedMachine ? selectedMachine.label : executorType)
+      executorType: selectedMachine?.label ?? executorType
     };
-  }, [
-    initialExecutorAndDriverConfig,
-    initialDriverAndExecutorConfiguration,
-    initialDriverConfig,
-    initialExecutorDiskConfig,
-    tier,
-    executorType
-  ]);
+  }, [initialExecutorAndDriverConfig, tier, executorType]);
   const autoscalingConfig = useMemo<IAutoscalingConfig>(
     () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG,
     [initialAutoscalingConfig]
@@ -612,52 +637,25 @@ export const CreateRuntimeProfileComponent: React.FC<
     ]
   );
 
-  const handleTierChange = (selectedTier: string) => {
-    setTier(selectedTier);
-    if (selectedTier === 'Standard') {
-      if (executorCategory === 'accelerated') {
-        setExecutorCategory('general');
-        setExecutorType('highmem-4');
-        setMachineTypes(MOCK_GENERAL_MACHINE_TYPES);
-      }
-    }
-  };
   const handleExecutorCategoryChange = (category: ExecutorCategoryType) => {
     if (tier === 'Standard' && category === 'accelerated') {
       return;
     }
     setExecutorCategory(category);
-    if (category === 'general') {
-      setExecutorType('highmem-4');
-      setMachineTypes(MOCK_GENERAL_MACHINE_TYPES);
-    } else if (category === 'accelerated') {
-      setExecutorType('l4-4');
-      setMachineTypes(MOCK_ACCELERATED_MACHINE_TYPES);
-    }
+    setExecutorType(
+      category === 'accelerated'
+        ? DEFAULT_ACCELERATED_EXECUTOR_TYPE
+        : DEFAULT_GENERAL_EXECUTOR_TYPE
+    );
   };
 
-  // Load machine types when executorCategory changes
-  useEffect(() => {
-    let isMounted = true;
-    const loadMachineTypes = async () => {
-      if (service?.getMachineTypes) {
-        try {
-          const types = await service.getMachineTypes(executorCategory);
-          if (isMounted && types && types.length > 0) {
-            setMachineTypes(types);
-          }
-        } catch (error) {
-          console.error('Failed to load machine types', error);
-        }
-      }
-    };
-
-    loadMachineTypes();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [service, executorCategory]);
+  const handleTierChange = (selectedTier: string) => {
+    setTier(selectedTier);
+    if (selectedTier === 'Standard' && executorCategory === 'accelerated') {
+      setExecutorCategory('general');
+      setExecutorType(DEFAULT_GENERAL_EXECUTOR_TYPE);
+    }
+  };
 
   // Load Regions from service
   useEffect(() => {
@@ -714,9 +712,6 @@ export const CreateRuntimeProfileComponent: React.FC<
         },
         runtimeEnvironmentConfig,
         executorAndDriverConfig,
-        driverAndExecutorConfiguration: executorAndDriverConfig,
-        driverConfig: executorAndDriverConfig,
-        executorDiskConfig: executorAndDriverConfig,
         autoscalingConfig,
         metastoreConfig,
         networkAndSecurityConfig,
@@ -1018,20 +1013,13 @@ export const CreateRuntimeProfileComponent: React.FC<
                 className={`node-config-card ${
                   executorCategory === 'accelerated' ? 'selected' : ''
                 } ${tier === 'Standard' ? 'disabled' : ''}`}
-                onClick={() => {
-                  if (tier !== 'Standard') {
-                    handleExecutorCategoryChange('accelerated');
-                  }
-                }}
+                onClick={() => handleExecutorCategoryChange('accelerated')}
                 role="button"
                 tabIndex={tier === 'Standard' ? -1 : 0}
                 aria-disabled={tier === 'Standard'}
                 aria-pressed={executorCategory === 'accelerated'}
                 onKeyDown={e => {
-                  if (
-                    tier !== 'Standard' &&
-                    (e.key === 'Enter' || e.key === ' ')
-                  ) {
+                  if (e.key === 'Enter' || e.key === ' ') {
                     handleExecutorCategoryChange('accelerated');
                   }
                 }}
@@ -1072,161 +1060,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                   }
                   notched
                 >
-                  {executorCategory === 'accelerated'
-                    ? (() => {
-                        const l4Types = machineTypes.filter(
-                          m =>
-                            m.acceleratorType === 'l4' ||
-                            m.name.toLowerCase().startsWith('l4')
-                        );
-                        const a100Types = machineTypes.filter(
-                          m =>
-                            m.acceleratorType?.startsWith('a100') ||
-                            m.name.toLowerCase().startsWith('a100')
-                        );
-                        const otherTypes = machineTypes.filter(
-                          m => !l4Types.includes(m) && !a100Types.includes(m)
-                        );
-                        const items: React.JSX.Element[] = [];
-
-                        if (l4Types.length > 0) {
-                          items.push(
-                            <ListSubheader
-                              key="header-l4"
-                              className="machine-type-group-header"
-                              disableSticky
-                            >
-                              L4
-                            </ListSubheader>
-                          );
-                          l4Types.forEach(m => {
-                            items.push(
-                              <MenuItem key={m.name} value={m.name}>
-                                {m.label}
-                              </MenuItem>
-                            );
-                          });
-                        }
-
-                        if (a100Types.length > 0) {
-                          items.push(
-                            <ListSubheader
-                              key="header-a100"
-                              className="machine-type-group-header"
-                              disableSticky
-                            >
-                              A100
-                            </ListSubheader>
-                          );
-                          a100Types.forEach(m => {
-                            items.push(
-                              <MenuItem key={m.name} value={m.name}>
-                                {m.label}
-                              </MenuItem>
-                            );
-                          });
-                        }
-
-                        if (otherTypes.length > 0) {
-                          items.push(
-                            <ListSubheader
-                              key="header-other"
-                              className="machine-type-group-header"
-                              disableSticky
-                            >
-                              Other
-                            </ListSubheader>
-                          );
-                          otherTypes.forEach(m => {
-                            items.push(
-                              <MenuItem key={m.name} value={m.name}>
-                                {m.label}
-                              </MenuItem>
-                            );
-                          });
-                        }
-
-                        return items;
-                      })()
-                    : (() => {
-                        const standardTypes = machineTypes.filter(m =>
-                          m.name.toLowerCase().startsWith('standard')
-                        );
-                        const highmemTypes = machineTypes.filter(m =>
-                          m.name.toLowerCase().startsWith('highmem')
-                        );
-                        const otherTypes = machineTypes.filter(
-                          m =>
-                            !m.name.toLowerCase().startsWith('standard') &&
-                            !m.name.toLowerCase().startsWith('highmem')
-                        );
-                        if (
-                          standardTypes.length > 0 ||
-                          highmemTypes.length > 0
-                        ) {
-                          const items: React.JSX.Element[] = [];
-                          if (standardTypes.length > 0) {
-                            items.push(
-                              <ListSubheader
-                                key="header-standard"
-                                className="machine-type-group-header"
-                                disableSticky
-                              >
-                                Standard
-                              </ListSubheader>
-                            );
-                            standardTypes.forEach(m => {
-                              items.push(
-                                <MenuItem key={m.name} value={m.name}>
-                                  {m.label}
-                                </MenuItem>
-                              );
-                            });
-                          }
-                          if (highmemTypes.length > 0) {
-                            items.push(
-                              <ListSubheader
-                                key="header-highmem"
-                                className="machine-type-group-header"
-                                disableSticky
-                              >
-                                High memory
-                              </ListSubheader>
-                            );
-                            highmemTypes.forEach(m => {
-                              items.push(
-                                <MenuItem key={m.name} value={m.name}>
-                                  {m.label}
-                                </MenuItem>
-                              );
-                            });
-                          }
-                          if (otherTypes.length > 0) {
-                            items.push(
-                              <ListSubheader
-                                key="header-general-other"
-                                className="machine-type-group-header"
-                                disableSticky
-                              >
-                                Other
-                              </ListSubheader>
-                            );
-                            otherTypes.forEach(m => {
-                              items.push(
-                                <MenuItem key={m.name} value={m.name}>
-                                  {m.label}
-                                </MenuItem>
-                              );
-                            });
-                          }
-                          return items;
-                        }
-                        return machineTypes.map(m => (
-                          <MenuItem key={m.name} value={m.name}>
-                            {m.label}
-                          </MenuItem>
-                        ));
-                      })()}
+                  {renderGroupedMachineOptions(machineTypes, executorCategory)}
                 </Select>
               </FormControl>
             </div>

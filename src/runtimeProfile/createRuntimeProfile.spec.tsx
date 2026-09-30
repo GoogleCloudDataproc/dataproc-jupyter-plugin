@@ -40,7 +40,7 @@ import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import {
   CreateRuntimeProfileComponent,
-  generateAutoDisplayName
+  renderGroupedMachineOptions
 } from './createRuntimeProfile';
 import { RuntimeProfileService } from './runtimeProfileService';
 import {
@@ -260,7 +260,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Tier')).toBe('Premium');
     expect(getFieldValue('Driver machine type')).toBe('highmem-8');
     expect(getFieldValue('Driver disk')).toBe('SSD 200 GB');
-    expect(getFieldValue('Executor type')).toBe('highmem-4');
+    // Executor type always reflects the shape selected in the dropdown
+    expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
     expect(getFieldValue('Executor disk')).toBe('SSD 400 GB');
     expect(getFieldValue('Autoscaling')).toBe('Disabled');
     expect(getFieldValue('Initial executors')).toBe('4');
@@ -522,9 +523,67 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(standardElement.props.initialLightningEngineEnabled).toBe(false);
   });
 
-  it('generates a valid auto-populated display name', () => {
-    const name = generateAutoDisplayName();
-    expect(name).toMatch(/^runtime-profile-[a-f0-9]{6}$/);
+  it('groups machine types under prefix subheaders with an Other fallback', () => {
+    const general = renderGroupedMachineOptions(
+      [
+        {
+          name: 'standard-4',
+          label: 's4',
+          vCPUs: 4,
+          memory: '16g',
+          category: 'general'
+        },
+        {
+          name: 'highmem-4',
+          label: 'h4',
+          vCPUs: 4,
+          memory: '32g',
+          category: 'general'
+        },
+        {
+          name: 'custom-8',
+          label: 'c8',
+          vCPUs: 8,
+          memory: '32g',
+          category: 'general'
+        }
+      ],
+      'general'
+    );
+    expect(general.map(e => e.key)).toEqual([
+      'header-standard',
+      'standard-4',
+      'header-highmem',
+      'highmem-4',
+      'header-other',
+      'custom-8'
+    ]);
+
+    const accelerated = renderGroupedMachineOptions(
+      [
+        {
+          name: 'a100-40',
+          label: 'a',
+          vCPUs: 12,
+          memory: '78040m',
+          category: 'accelerated'
+        },
+        {
+          name: 'l4-4',
+          label: 'l',
+          vCPUs: 4,
+          memory: '13384m',
+          category: 'accelerated'
+        }
+      ],
+      'accelerated'
+    );
+    expect(accelerated.map(e => e.key)).toEqual([
+      'header-l4',
+      'l4-4',
+      'header-a100',
+      'a100-40'
+    ]);
   });
 
   it('should export executor configuration section constants', () => {
@@ -672,30 +731,25 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(element.props.initialExecutorType).toBe('l4-8');
   });
 
-  it('supports clean normalized payload with driverAndExecutorConfiguration', async () => {
-    const cleanPayload = {
-      displayName: 'clean-normalized-profile',
-      region: 'us-central1',
-      tier: 'Premium',
-      lightningEngineEnabled: true,
-      executorConfig: {
-        executorType: 'accelerated',
-        machineType: 'l4-4'
-      },
-      driverAndExecutorConfiguration: {
-        driverMachineType: 'Standard-4',
-        driverDisk: 'standard persistent disk',
-        executorDisk: 'Standard persistent disk (HDD), 100 GB'
-      }
-    };
+  it('updates Executor type in the summary when switching executor category', async () => {
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          initialExecutorAndDriverConfig={{ executorType: 'stale-value' }}
+        />
+      );
+    });
 
-    const created = await mockService.createRuntimeProfile(cleanPayload);
-    expect(created.displayName).toBe('clean-normalized-profile');
-    expect(created.tier).toBe('Premium');
-    expect(created.executorConfig?.executorType).toBe('accelerated');
-    expect(created.executorConfig?.machineType).toBe('l4-4');
-    expect(created.driverAndExecutorConfiguration?.driverMachineType).toBe(
-      'Standard-4'
-    );
+    expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
+
+    const executorCards = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card');
+    await act(async () => {
+      (executorCards[1] as HTMLDivElement).click();
+    });
+
+    expect(getFieldValue('Executor type')).toBe('L4 (4 cores)');
   });
 });
