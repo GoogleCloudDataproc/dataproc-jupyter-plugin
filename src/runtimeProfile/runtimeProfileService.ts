@@ -110,7 +110,8 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         );
       }
 
-      const rawTemplates: IRuntimeProfileTemplate[] = data?.sessionTemplates || [];
+      const rawTemplates: IRuntimeProfileTemplate[] =
+        data?.sessionTemplates || [];
       validTemplates = rawTemplates.filter((t: IRuntimeProfileTemplate) =>
         Boolean(t.jupyterSession)
       );
@@ -155,7 +156,8 @@ export class RuntimeProfileService implements IRuntimeProfileService {
 
     if (!response.ok || data?.error) {
       throw new Error(
-        data?.error?.message || `Failed to delete runtime profile ${displayName}`
+        data?.error?.message ||
+          `Failed to delete runtime profile ${displayName}`
       );
     }
   }
@@ -238,6 +240,9 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         region: targetRegion,
         description: payload.description,
         tier: payload.tier ?? payload.executorAndDriverConfig?.tier,
+        lightningEngineEnabled:
+          payload.lightningEngineEnabled ??
+          payload.runtimeEnvironmentConfig?.lightningEngineEnabled,
         runtimeEnvironmentConfig: payload.runtimeEnvironmentConfig,
         executorAndDriverConfig: payload.executorAndDriverConfig,
         autoscalingConfig: payload.autoscalingConfig,

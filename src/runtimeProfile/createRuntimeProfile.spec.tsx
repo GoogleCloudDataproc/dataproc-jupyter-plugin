@@ -40,6 +40,19 @@ import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { CreateRuntimeProfileComponent } from './createRuntimeProfile';
 import { RuntimeProfileService } from './runtimeProfileService';
+import {
+  DATAPROC_TIER_DOC,
+  LIGHTNING_ENGINE_DOC,
+  TIER_SECTION_TITLE,
+  TIER_SECTION_SUBTITLE,
+  TIER_PREMIUM_TITLE,
+  TIER_PREMIUM_DESC,
+  TIER_STANDARD_TITLE,
+  TIER_STANDARD_DESC,
+  TIER_STANDARD_INFO_BANNER,
+  LIGHTNING_ENGINE_CHECKBOX_LABEL,
+  LIGHTNING_ENGINE_CHECKBOX_DESC
+} from '../utils/const';
 
 describe('CreateRuntimeProfileComponent UI & Service', () => {
   let mockService: RuntimeProfileService;
@@ -349,5 +362,146 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       'spark.sql.shuffle.partitions': '200'
     });
     expect(profile.labels).toEqual({ cost_center: 'ds' });
+  });
+
+  it('should export valid tier documentation URLs and constants', () => {
+    expect(DATAPROC_TIER_DOC).toBe(
+      'https://docs.cloud.google.com/managed-spark/docs/tiers'
+    );
+    expect(LIGHTNING_ENGINE_DOC).toBe(
+      'https://cloud.google.com/dataproc-serverless/docs/guides/lightning-engine'
+    );
+    expect(TIER_SECTION_TITLE).toBe('Tier');
+    expect(TIER_SECTION_SUBTITLE).toBeDefined();
+    expect(TIER_PREMIUM_TITLE).toBe('Premium');
+    expect(TIER_PREMIUM_DESC).toBeDefined();
+    expect(TIER_STANDARD_TITLE).toBe('Standard');
+    expect(TIER_STANDARD_DESC).toBeDefined();
+    expect(TIER_STANDARD_INFO_BANNER).toBe(
+      'Standard tier will only affect batch execution. Interactive sessions always execute on premium tier.'
+    );
+    expect(LIGHTNING_ENGINE_CHECKBOX_LABEL).toBe(
+      'Enable Lightning Engine to accelerate performance'
+    );
+    expect(LIGHTNING_ENGINE_CHECKBOX_DESC).toBeDefined();
+  });
+
+  it('renders Tier cards, Display name * label, and allows toggling between tiers', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const displayNameLabel = container.querySelector(
+      'label[for="runtime-profile-display-name"]'
+    );
+    expect(displayNameLabel?.textContent).toContain('Display name *');
+
+    const tierCards = container.querySelectorAll('.node-config-card');
+    expect(tierCards).toHaveLength(2);
+
+    const premiumCard = tierCards[0] as HTMLDivElement;
+    const standardCard = tierCards[1] as HTMLDivElement;
+
+    expect(premiumCard.textContent).toContain('Premium');
+    expect(standardCard.textContent).toContain('Standard');
+    expect(premiumCard.classList.contains('selected')).toBe(true);
+    expect(standardCard.classList.contains('selected')).toBe(false);
+    expect(getFieldValue('Tier')).toBe('Premium');
+
+    // Switch to Standard tier
+    await act(async () => {
+      standardCard.click();
+    });
+    expect(standardCard.classList.contains('selected')).toBe(true);
+    expect(premiumCard.classList.contains('selected')).toBe(false);
+    expect(getFieldValue('Tier')).toBe('Standard');
+    expect(
+      container.querySelector('.runtime-profile-tier-info-banner')
+    ).not.toBeNull();
+
+    // Switch back to Premium via keyboard Enter
+    await act(async () => {
+      premiumCard.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+      );
+    });
+    expect(premiumCard.classList.contains('selected')).toBe(true);
+    expect(getFieldValue('Tier')).toBe('Premium');
+    expect(
+      container.querySelector('.runtime-profile-checkbox-section')
+    ).not.toBeNull();
+  });
+
+  it('renders Lightning Engine checkbox and opens documentation links', async () => {
+    const originalOpen = window.open;
+    window.open = jest.fn();
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const learnMoreLinks = container.querySelectorAll(
+      '.runtime-profile-learn-more'
+    );
+    expect(learnMoreLinks.length).toBeGreaterThanOrEqual(2);
+
+    // Click Tier subtitle learn more link
+    await act(async () => {
+      (learnMoreLinks[0] as HTMLElement).click();
+    });
+    expect(window.open).toHaveBeenCalledWith(DATAPROC_TIER_DOC, '_blank');
+
+    // Click Lightning Engine learn more link
+    await act(async () => {
+      (learnMoreLinks[1] as HTMLElement).click();
+    });
+    expect(window.open).toHaveBeenCalledWith(LIGHTNING_ENGINE_DOC, '_blank');
+
+    window.open = originalOpen;
+  });
+
+  it('should create a runtime profile with tier and lightningEngineEnabled', async () => {
+    const premiumProfile = await mockService.createRuntimeProfile({
+      displayName: 'premium-tier-profile',
+      region: 'us-central1',
+      description: 'Profile with Premium tier and Lightning Engine',
+      tier: 'Premium',
+      lightningEngineEnabled: true
+    });
+
+    expect(premiumProfile.displayName).toBe('premium-tier-profile');
+    expect(premiumProfile.tier).toBe('Premium');
+    expect(premiumProfile.lightningEngineEnabled).toBe(true);
+
+    const standardProfile = await mockService.createRuntimeProfile({
+      displayName: 'standard-tier-profile',
+      region: 'us-central1',
+      description: 'Profile with Standard tier',
+      tier: 'Standard',
+      lightningEngineEnabled: false
+    });
+
+    expect(standardProfile.displayName).toBe('standard-tier-profile');
+    expect(standardProfile.tier).toBe('Standard');
+    expect(standardProfile.lightningEngineEnabled).toBe(false);
+  });
+
+  it('should instantiate CreateRuntimeProfileComponent with initial tier and lightningEngineEnabled props', () => {
+    const element = React.createElement(CreateRuntimeProfileComponent, {
+      initialTier: 'Premium',
+      initialLightningEngineEnabled: true
+    });
+
+    expect(element).toBeDefined();
+    expect(element.type).toBe(CreateRuntimeProfileComponent);
+    expect(element.props.initialTier).toBe('Premium');
+    expect(element.props.initialLightningEngineEnabled).toBe(true);
+
+    const standardElement = React.createElement(CreateRuntimeProfileComponent, {
+      initialTier: 'Standard',
+      initialLightningEngineEnabled: false
+    });
+    expect(standardElement.props.initialTier).toBe('Standard');
+    expect(standardElement.props.initialLightningEngineEnabled).toBe(false);
   });
 });
