@@ -36,7 +36,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 36px;
+  min-height: 32px;
   padding: 0 4px;
   width: 100%;
 }
@@ -133,7 +133,7 @@ body[data-jp-theme-name='JupyterLab Dark']
   display: flex;
   align-items: flex-start;
   min-height: 24px;
-  padding: 6px 0;
+  padding: 4px 0;
   border-bottom: 0.5px solid var(--jp-border-color2, #e0e0e0);
   width: 100%;
 }
@@ -177,9 +177,9 @@ body[data-jp-theme-name='JupyterLab Dark']
   text-align: left;
 }
 
-/* Additional configuration section styling (matches 620px width of intro text with border-top) */
+/* Additional configuration section styling (spans full container width with border-top) */
 .additional-config-section {
-  max-width: 620px;
+  max-width: 100%;
   width: 100%;
   margin-top: 24px;
   padding-top: 16px;

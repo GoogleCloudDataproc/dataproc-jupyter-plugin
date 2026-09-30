@@ -30,7 +30,7 @@
 }
 
 .runtime-profile-container {
-  padding: 24px 32px 40px 32px;
+  padding: 20px 24px 32px 20px;
   max-width: 720px;
 }
 
@@ -51,7 +51,7 @@
   display: flex;
   gap: 20px;
   margin-bottom: 16px;
-  max-width: 496px;
+  max-width: 620px;
 }
 
 .runtime-profile-col {
@@ -61,7 +61,7 @@
 
 .runtime-profile-full-row {
   margin-bottom: 24px;
-  max-width: 496px;
+  max-width: 620px;
 }
 
 .runtime-profile-section {
@@ -69,7 +69,7 @@
 }
 
 .runtime-profile-section-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--jp-ui-font-color0, #202124);
   margin-bottom: 4px;
@@ -85,7 +85,7 @@
 
 .node-config-cards-container {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   max-width: 620px;
   margin-bottom: 24px;
 }
@@ -93,10 +93,9 @@
 .node-config-card {
   flex: 1;
   min-width: 0;
-  width: 300px;
   border: 1px solid var(--jp-border-color1, #dadce0);
   border-radius: 8px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   cursor: pointer;
   background-color: var(--jp-layout-color0, #ffffff);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out,
@@ -113,7 +112,7 @@
 
 .node-config-card.selected {
   border: 2px solid #1a73e8;
-  padding: 13px 15px;
+  padding: 11px 13px;
   background-color: rgba(26, 115, 232, 0.02);
 }
 
@@ -230,7 +229,7 @@
 }
 
 .machine-type-select-wrapper {
-  max-width: 512px;
+  max-width: 465px;
   width: 100%;
   margin-bottom: 24px;
 }
@@ -239,7 +238,7 @@
   height: 1px;
   background-color: var(--jp-border-color2, #e0e0e0);
   margin: 28px 0 20px 0;
-  max-width: 620px;
+  width: 100%;
 }
 
 .machine-type-group-header,
@@ -294,9 +293,9 @@ body[data-jp-theme-name='JupyterLab Dark']
 .runtime-profile-buttons {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 32px;
-  padding-top: 20px;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
   border-top: 1px solid var(--jp-border-color2, #e0e0e0);
   width: 100%;
 }
@@ -314,7 +313,7 @@ body[data-jp-theme-name='JupyterLab Dark']
   color: #ffffff;
   border: none;
   border-radius: 8px;
-  height: 36px;
+  height: 32px;
   padding: 0 16px;
   font-size: 13px;
   font-weight: 500;
@@ -342,7 +341,7 @@ body[data-jp-theme-name='JupyterLab Dark']
   color: #3367d6;
   border: none;
   border-radius: 8px;
-  height: 36px;
+  height: 32px;
   padding: 0 8px;
   font-size: 13px;
   font-weight: 500;

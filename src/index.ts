@@ -166,7 +166,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         console.error('Error during app restoration:', error);
       });
     let bqFeature: SettingsResponse = await requestAPI('settings');
-    const runtimeProfileUiEnabled = Boolean(bqFeature?.enable_runtime_profile_integration);
+    const runtimeProfileUiEnabled = true
+    //Boolean(bqFeature?.enable_runtime_profile_integration);
     // START -- Enable Preview Features.
     const settings = await settingRegistry.load(PLUGIN_ID);
 
@@ -417,7 +418,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-        new NotebookButtonExtension(
+      new NotebookButtonExtension(
         app as JupyterLab,
         launcher,
         themeManager
@@ -589,16 +590,14 @@ const extension: JupyterFrontEndPlugin<void> = {
       // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
 
       const urlParts = notebookUrl.split('/');
-      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
-        urlParts[urlParts.length - 1]
-      }`;
+      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${urlParts[urlParts.length - 1]
+        }`;
 
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] = `REGION = '${
-          settings.get('bqRegion')['composite']
-        }'\n`;
+        notebookContent.cells[2].source[2] = `REGION = '${settings.get('bqRegion')['composite']
+          }'\n`;
       }
 
       // Save the file to the workspace

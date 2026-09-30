@@ -1149,51 +1149,76 @@ export const CreateRuntimeProfileComponent: React.FC<
                         return items;
                       })()
                     : (() => {
-                        const standardTypes = machineTypes.filter(
-                          m =>
-                            m.name.toLowerCase().startsWith('standard') ||
-                            !m.name.toLowerCase().startsWith('highmem')
+                        const standardTypes = machineTypes.filter(m =>
+                          m.name.toLowerCase().startsWith('standard')
                         );
                         const highmemTypes = machineTypes.filter(m =>
                           m.name.toLowerCase().startsWith('highmem')
                         );
+                        const otherTypes = machineTypes.filter(
+                          m =>
+                            !m.name.toLowerCase().startsWith('standard') &&
+                            !m.name.toLowerCase().startsWith('highmem')
+                        );
                         if (
-                          standardTypes.length > 0 &&
+                          standardTypes.length > 0 ||
                           highmemTypes.length > 0
                         ) {
                           const items: React.JSX.Element[] = [];
-                          items.push(
-                            <ListSubheader
-                              key="header-standard"
-                              className="machine-type-group-header"
-                              disableSticky
-                            >
-                              Standard
-                            </ListSubheader>
-                          );
-                          standardTypes.forEach(m => {
+                          if (standardTypes.length > 0) {
                             items.push(
-                              <MenuItem key={m.name} value={m.name}>
-                                {m.label}
-                              </MenuItem>
+                              <ListSubheader
+                                key="header-standard"
+                                className="machine-type-group-header"
+                                disableSticky
+                              >
+                                Standard
+                              </ListSubheader>
                             );
-                          });
-                          items.push(
-                            <ListSubheader
-                              key="header-highmem"
-                              className="machine-type-group-header"
-                              disableSticky
-                            >
-                              High memory
-                            </ListSubheader>
-                          );
-                          highmemTypes.forEach(m => {
+                            standardTypes.forEach(m => {
+                              items.push(
+                                <MenuItem key={m.name} value={m.name}>
+                                  {m.label}
+                                </MenuItem>
+                              );
+                            });
+                          }
+                          if (highmemTypes.length > 0) {
                             items.push(
-                              <MenuItem key={m.name} value={m.name}>
-                                {m.label}
-                              </MenuItem>
+                              <ListSubheader
+                                key="header-highmem"
+                                className="machine-type-group-header"
+                                disableSticky
+                              >
+                                High memory
+                              </ListSubheader>
                             );
-                          });
+                            highmemTypes.forEach(m => {
+                              items.push(
+                                <MenuItem key={m.name} value={m.name}>
+                                  {m.label}
+                                </MenuItem>
+                              );
+                            });
+                          }
+                          if (otherTypes.length > 0) {
+                            items.push(
+                              <ListSubheader
+                                key="header-general-other"
+                                className="machine-type-group-header"
+                                disableSticky
+                              >
+                                Other
+                              </ListSubheader>
+                            );
+                            otherTypes.forEach(m => {
+                              items.push(
+                                <MenuItem key={m.name} value={m.name}>
+                                  {m.label}
+                                </MenuItem>
+                              );
+                            });
+                          }
                           return items;
                         }
                         return machineTypes.map(m => (
