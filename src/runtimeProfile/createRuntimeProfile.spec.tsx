@@ -752,4 +752,21 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
 
     expect(getFieldValue('Executor type')).toBe('L4 (4 cores)');
   });
+
+  it('initializes executor category and type from a valid initial config machine id', async () => {
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          initialExecutorAndDriverConfig={{ executorType: 'l4-8' }}
+        />
+      );
+    });
+
+    const executorCards = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card');
+    expect(executorCards[1].classList.contains('selected')).toBe(true);
+    expect(getFieldValue('Executor type')).toBe('L4 (8 cores)');
+  });
 });

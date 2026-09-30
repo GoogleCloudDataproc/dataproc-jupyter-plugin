@@ -149,6 +149,15 @@ export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   pythonPackageRepository: ''
 };
 
+const ALL_MACHINE_TYPES: IMachineTypeOption[] = [
+  ...DATAPROC_STANDARD_MACHINE_TYPES,
+  ...DATAPROC_ACCELERATED_MACHINE_TYPES
+];
+
+// Display-only: maps a machine id (e.g. 'highmem-4') to its label; falls back to the raw value.
+const getMachineTypeLabel = (machineName?: string): string | undefined =>
+  ALL_MACHINE_TYPES.find(m => m.name === machineName)?.label ?? machineName;
+
 export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
   tier: 'Standard',
   driverMachineType: 'Standard-4',
@@ -243,8 +252,9 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Executor type',
-      value:
+      value: getMachineTypeLabel(
         config.executorType || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorType
+      )
     },
     {
       label: 'Executor disk',
@@ -397,11 +407,6 @@ export interface ICreateRuntimeProfileComponentProps {
   initialLabels?: ProfileLabels;
 }
 
-const ALL_MACHINE_TYPES: IMachineTypeOption[] = [
-  ...DATAPROC_STANDARD_MACHINE_TYPES,
-  ...DATAPROC_ACCELERATED_MACHINE_TYPES
-];
-
 const MACHINE_TYPE_GROUPS: Record<
   ExecutorCategoryType,
   { prefix: string; label: string }[]
@@ -503,12 +508,21 @@ export const CreateRuntimeProfileComponent: React.FC<
       : true
   );
 
-  // Executor category and machine type state
+  // Executor category and machine type state. Seeded from explicit props,
+  // then from a known machine id in the initial config, then defaults.
+  const initialConfigMachine = ALL_MACHINE_TYPES.find(
+    m => m.name === initialExecutorAndDriverConfig?.executorType
+  );
+  const resolvedInitialCategory: ExecutorCategoryType =
+    initialExecutorCategory || initialConfigMachine?.category || 'general';
   const [executorCategory, setExecutorCategory] =
-    useState<ExecutorCategoryType>(initialExecutorCategory || 'general');
+    useState<ExecutorCategoryType>(resolvedInitialCategory);
   const [executorType, setExecutorType] = useState<string>(
     initialExecutorType ||
-      (initialExecutorCategory === 'accelerated'
+      (initialConfigMachine?.category === resolvedInitialCategory
+        ? initialConfigMachine.name
+        : undefined) ||
+      (resolvedInitialCategory === 'accelerated'
         ? DEFAULT_ACCELERATED_EXECUTOR_TYPE
         : DEFAULT_GENERAL_EXECUTOR_TYPE)
   );
@@ -559,16 +573,14 @@ export const CreateRuntimeProfileComponent: React.FC<
       lightningEngineEnabled
     ]
   );
-  const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(() => {
-    const selectedMachine = ALL_MACHINE_TYPES.find(
-      m => m.name === executorType
-    );
-    return {
+  const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(
+    () => ({
       ...(initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG),
       tier,
-      executorType: selectedMachine?.label ?? executorType
-    };
-  }, [initialExecutorAndDriverConfig, tier, executorType]);
+      executorType
+    }),
+    [initialExecutorAndDriverConfig, tier, executorType]
+  );
   const autoscalingConfig = useMemo<IAutoscalingConfig>(
     () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG,
     [initialAutoscalingConfig]
@@ -994,6 +1006,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 aria-pressed={executorCategory === 'general'}
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
                     handleExecutorCategoryChange('general');
                   }
                 }}
@@ -1020,6 +1033,7 @@ export const CreateRuntimeProfileComponent: React.FC<
                 aria-pressed={executorCategory === 'accelerated'}
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
                     handleExecutorCategoryChange('accelerated');
                   }
                 }}
