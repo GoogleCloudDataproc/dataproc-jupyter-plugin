@@ -37,7 +37,7 @@
   justify-content: space-between;
   align-items: center;
   min-height: 32px;
-  padding: 0 4px;
+  padding: 0;
   width: 100%;
 }
 
@@ -124,16 +124,15 @@ body[data-jp-theme-name='JupyterLab Dark']
 .section-detail-content {
   display: flex;
   flex-direction: column;
-  padding: 0 4px;
   width: 100%;
 }
 
-/* Key-value row with 0.5px lighter border-bottom */
+/* Key-value row with 0.5px lighter border-bottom (full width, aligned with divider) */
 .section-detail-row {
   display: flex;
   align-items: flex-start;
-  min-height: 24px;
-  padding: 4px 0;
+  min-height: 40px;
+  padding: 11px 0;
   border-bottom: 0.5px solid var(--jp-border-color2, #e0e0e0);
   width: 100%;
 }
@@ -148,14 +147,17 @@ body[data-jp-theme-name='JupyterLab Dark']
   overflow-wrap: anywhere;
 }
 
+/* Labels are indented relative to the section title/divider per UX reference */
 .section-detail-label {
-  width: 40%;
+  width: 46%;
   min-width: 200px;
+  padding-left: 16px;
+  padding-right: 16px;
   flex-shrink: 0;
 }
 
 .section-detail-value {
-  width: 60%;
+  width: 54%;
   word-break: break-word;
 }
 
@@ -235,4 +237,3 @@ body[data-jp-theme-light='false'] .section-detail-link:hover,
 body[data-jp-theme-name='JupyterLab Dark'] .section-detail-link:hover {
   color: #aecbfa;
 }
-
