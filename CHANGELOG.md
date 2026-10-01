@@ -1,5 +1,21 @@
 # Changelog
 <!-- <START NEW CHANGELOG ENTRY> -->
+## 0.1.98
+* feat(Runtime profile): tier config by @srinivasan-acn in #459
+* feat(runtime-profile): additional configuration static UI by @srinivasan-acn in #458
+* feat(runtime-profile): section detail reusable component by @srinivasan-acn in #457
+* Common Settings Component & Runtime profile listing UI by @srinivasan-acn in #455
+* feat: add runtime profile configuration interface by @srinivasan-acn in #454
+* feat: Added Create Runtime Profile UI form Skeleton by @srinivasan-acn in #450
+* Add support for displaying Dataproc notifications via Jupyter Events by @ojarjur in #444
+* Feature flag setup and new settings page layout for Runtime Profiles by @srinivasan-acn in #443
+* Increase timeout to 120 seconds in Playwright config by @srinivasan-acn in #442
+* Fixed usage of display name as data source for fetching BigQuery Data by @srinivasan-acn in #411
+* Fix failing kokoro test runs by @srinivasan-acn in #439
+* Add container_properties to presubmit by @dparikh in #438
+* Add Docker image to continuous.cfg by @dparikh in #437
+<!-- <END NEW CHANGELOG ENTRY> -->
+<!-- <START NEW CHANGELOG ENTRY> -->
 ## 0.1.96
 * Bug fix/BigQuery Datasets are not loading for some regions by @srinivasan-acn in #351
 <!-- <END NEW CHANGELOG ENTRY> -->
