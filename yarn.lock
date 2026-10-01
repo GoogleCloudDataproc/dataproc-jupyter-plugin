@@ -10177,6 +10177,7 @@ __metadata:
     react: ^18.2.0
     react-arborist: ^3.1.0
     react-dom: ^18.2.0
+    react-hook-form: ^7.87.0
     react-js-cron: ^5.0.1
     react-spinners: ^0.13.8
     react-table: ^7.8.0
@@ -17179,6 +17180,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-hook-form@npm:^7.87.0":
+  version: 7.89.0
+  resolution: "react-hook-form@npm:7.89.0"
+  peerDependencies:
+    "@types/react": "*"
+    react: ^16.8.0 || ^17 || ^18 || ^19
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 804c78996afcb17c7fe8e8c6c1c9344ac51c7e7a1e96531dba6896405f91a97061f64e7be17829e4e56496254f04bd06747d5ad1d12f2b91797696689418f27c
+  languageName: node
+  linkType: hard
+
 "react-is@npm:18.1.0":
   version: 18.1.0
   resolution: "react-is@npm:18.1.0"
@@ -19541,11 +19555,11 @@ __metadata:
 
 "typescript@patch:typescript@~5.0.2#~builtin<compat/typescript>":
   version: 5.0.4
-  resolution: "typescript@patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=b5f058"
+  resolution: "typescript@patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=85af82"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: d26b6ba97b6d163c55dbdffd9bbb4c211667ebebc743accfeb2c8c0154aace7afd097b51165a72a5bad2cf65a4612259344ff60f8e642362aa1695c760d303ac
+  checksum: bb309d320c59a26565fb3793dba550576ab861018ff3fd1b7fccabbe46ae4a35546bc45f342c0a0b6f265c801ccdf64ffd68f548f117ceb7f0eac4b805cd52a9
   languageName: node
   linkType: hard
 
