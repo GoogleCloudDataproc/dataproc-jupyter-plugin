@@ -20,7 +20,23 @@ export interface IRegionOption {
   displayName: string;
 }
 
-export type ExecutorType = 'standard' | 'accelerated';
+export type ExecutorType = string;
+export type ExecutorCategoryType = 'general' | 'accelerated';
+
+export interface IMachineTypeOption {
+  name: string;
+  label: string;
+  vCPUs: number;
+  memory: string;
+  category: ExecutorCategoryType;
+  acceleratorType?: string;
+  gpuCount?: number;
+}
+
+export interface IExecutorConfig {
+  executorType?: ExecutorCategoryType;
+  machineType?: string;
+}
 
 export interface IRuntimeEnvironmentConfig {
   runtimeProfileId?: string;
@@ -35,7 +51,7 @@ export interface IExecutorAndDriverConfig {
   tier?: string;
   driverMachineType?: string;
   driverDisk?: string;
-  executorType?: ExecutorType | string;
+  executorType?: ExecutorType;
   executorDisk?: string;
 }
 
@@ -96,6 +112,7 @@ export interface IRuntimeProfile {
   description?: string;
   tier?: string;
   lightningEngineEnabled?: boolean;
+  executorConfig?: IExecutorConfig;
   createTime?: string;
   updateTime?: string;
   state?: string;
@@ -115,6 +132,7 @@ export interface ICreateRuntimeProfilePayload {
   description?: string;
   tier?: string;
   lightningEngineEnabled?: boolean;
+  executorConfig?: IExecutorConfig;
   runtimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   executorAndDriverConfig?: IExecutorAndDriverConfig;
   autoscalingConfig?: IAutoscalingConfig;
@@ -133,4 +151,3 @@ export interface IRuntimeProfileService {
     region?: string
   ): Promise<IRuntimeProfile>;
 }
-

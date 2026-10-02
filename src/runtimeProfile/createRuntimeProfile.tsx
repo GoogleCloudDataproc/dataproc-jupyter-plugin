@@ -28,8 +28,10 @@ import {
   FormControl,
   FormControlLabel,
   InputLabel,
+  ListSubheader,
   MenuItem,
   Select,
+  SelectChangeEvent,
   TextField
 } from '@mui/material';
 
@@ -51,12 +53,29 @@ import {
   TIER_STANDARD_DESC,
   TIER_STANDARD_INFO_BANNER,
   LIGHTNING_ENGINE_CHECKBOX_LABEL,
-  LIGHTNING_ENGINE_CHECKBOX_DESC
+  LIGHTNING_ENGINE_CHECKBOX_DESC,
+  EXECUTOR_CONFIG_SECTION_TITLE,
+  EXECUTOR_CONFIG_SECTION_SUBTITLE,
+  EXECUTOR_CATEGORY_GENERAL_TITLE,
+  EXECUTOR_CATEGORY_GENERAL_SUB1,
+  EXECUTOR_CATEGORY_GENERAL_SUB2,
+  EXECUTOR_CATEGORY_ACCELERATED_TITLE,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB1,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB2,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB3,
+  EXECUTOR_SHAPES_SUBHEADING,
+  EXECUTOR_ACCELERATED_SHAPES_SUBHEADING,
+  DATAPROC_STANDARD_MACHINE_TYPES,
+  DATAPROC_ACCELERATED_MACHINE_TYPES,
+  DEFAULT_GENERAL_EXECUTOR_TYPE,
+  DEFAULT_ACCELERATED_EXECUTOR_TYPE
 } from '../utils/const';
 import {
+  ExecutorCategoryType,
   IAutoscalingConfig,
   ICreateRuntimeProfilePayload,
   IExecutorAndDriverConfig,
+  IMachineTypeOption,
   IMetastoreConfig,
   INetworkAndSecurityConfig,
   IRegionOption,
@@ -129,6 +148,15 @@ export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   stagingBucket: '',
   pythonPackageRepository: ''
 };
+
+const ALL_MACHINE_TYPES: IMachineTypeOption[] = [
+  ...DATAPROC_STANDARD_MACHINE_TYPES,
+  ...DATAPROC_ACCELERATED_MACHINE_TYPES
+];
+
+// Display-only: maps a machine id (e.g. 'highmem-4') to its label; falls back to the raw value.
+const getMachineTypeLabel = (machineName?: string): string | undefined =>
+  ALL_MACHINE_TYPES.find(m => m.name === machineName)?.label ?? machineName;
 
 export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
   tier: 'Standard',
@@ -224,8 +252,9 @@ export const formatExecutorAndDriverProperties = (
     },
     {
       label: 'Executor type',
-      value:
+      value: getMachineTypeLabel(
         config.executorType || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG.executorType
+      )
     },
     {
       label: 'Executor disk',
@@ -366,16 +395,82 @@ export interface ICreateRuntimeProfileComponentProps {
   onSuccess?: () => void;
   initialTier?: string;
   initialLightningEngineEnabled?: boolean;
+  initialExecutorCategory?: ExecutorCategoryType;
+  initialExecutorType?: string;
   initialRuntimeEnvironmentConfig?: IRuntimeEnvironmentConfig;
   initialExecutorAndDriverConfig?: IExecutorAndDriverConfig;
   initialAutoscalingConfig?: IAutoscalingConfig;
   initialMetastoreConfig?: IMetastoreConfig;
   initialNetworkAndSecurityConfig?: INetworkAndSecurityConfig;
   initialSessionLifecycleConfig?: ISessionLifecycleConfig;
-
   initialSparkProperties?: SparkProperties;
   initialLabels?: ProfileLabels;
 }
+
+const MACHINE_TYPE_GROUPS: Record<
+  ExecutorCategoryType,
+  { prefix: string; label: string }[]
+> = {
+  general: [
+    { prefix: 'standard', label: 'Standard' },
+    { prefix: 'highmem', label: 'High memory' }
+  ],
+  accelerated: [
+    { prefix: 'l4', label: 'L4' },
+    { prefix: 'a100', label: 'A100' }
+  ]
+};
+
+/**
+ * Renders machine types grouped under subheaders (by name prefix);
+ * anything unmatched is listed under "Other".
+ */
+export const renderGroupedMachineOptions = (
+  machineTypes: IMachineTypeOption[],
+  category: ExecutorCategoryType
+): React.JSX.Element[] => {
+  const items: React.JSX.Element[] = [];
+  const matched = new Set<string>();
+  const pushGroup = (
+    key: string,
+    label: string,
+    types: IMachineTypeOption[]
+  ) => {
+    if (types.length === 0) {
+      return;
+    }
+    items.push(
+      <ListSubheader
+        key={`header-${key}`}
+        className="machine-type-group-header"
+        disableSticky
+      >
+        {label}
+      </ListSubheader>
+    );
+    types.forEach(m =>
+      items.push(
+        <MenuItem key={m.name} value={m.name}>
+          {m.label}
+        </MenuItem>
+      )
+    );
+  };
+
+  MACHINE_TYPE_GROUPS[category].forEach(({ prefix, label }) => {
+    const types = machineTypes.filter(m =>
+      m.name.toLowerCase().startsWith(prefix)
+    );
+    types.forEach(m => matched.add(m.name));
+    pushGroup(prefix, label, types);
+  });
+  pushGroup(
+    'other',
+    'Other',
+    machineTypes.filter(m => !matched.has(m.name))
+  );
+  return items;
+};
 
 export const CreateRuntimeProfileComponent: React.FC<
   ICreateRuntimeProfileComponentProps
@@ -386,6 +481,8 @@ export const CreateRuntimeProfileComponent: React.FC<
   onSuccess,
   initialTier,
   initialLightningEngineEnabled,
+  initialExecutorCategory,
+  initialExecutorType,
   initialRuntimeEnvironmentConfig,
   initialExecutorAndDriverConfig,
   initialAutoscalingConfig,
@@ -410,6 +507,29 @@ export const CreateRuntimeProfileComponent: React.FC<
       ? initialLightningEngineEnabled
       : true
   );
+
+  // Executor category and machine type state. Seeded from explicit props,
+  // then from a known machine id in the initial config, then defaults.
+  const initialConfigMachine = ALL_MACHINE_TYPES.find(
+    m => m.name === initialExecutorAndDriverConfig?.executorType
+  );
+  const resolvedInitialCategory: ExecutorCategoryType =
+    initialExecutorCategory || initialConfigMachine?.category || 'general';
+  const [executorCategory, setExecutorCategory] =
+    useState<ExecutorCategoryType>(resolvedInitialCategory);
+  const [executorType, setExecutorType] = useState<string>(
+    initialExecutorType ||
+      (initialConfigMachine?.category === resolvedInitialCategory
+        ? initialConfigMachine.name
+        : undefined) ||
+      (resolvedInitialCategory === 'accelerated'
+        ? DEFAULT_ACCELERATED_EXECUTOR_TYPE
+        : DEFAULT_GENERAL_EXECUTOR_TYPE)
+  );
+  const machineTypes: IMachineTypeOption[] =
+    executorCategory === 'accelerated'
+      ? DATAPROC_ACCELERATED_MACHINE_TYPES
+      : DATAPROC_STANDARD_MACHINE_TYPES;
 
   const defaultRuntimeId = useMemo<string>(
     () =>
@@ -456,9 +576,10 @@ export const CreateRuntimeProfileComponent: React.FC<
   const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(
     () => ({
       ...(initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG),
-      tier
+      tier,
+      executorType
     }),
-    [initialExecutorAndDriverConfig, tier]
+    [initialExecutorAndDriverConfig, tier, executorType]
   );
   const autoscalingConfig = useMemo<IAutoscalingConfig>(
     () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG,
@@ -528,9 +649,26 @@ export const CreateRuntimeProfileComponent: React.FC<
     ]
   );
 
+  const handleExecutorCategoryChange = (category: ExecutorCategoryType) => {
+    if (tier === 'Standard' && category === 'accelerated') {
+      return;
+    }
+    setExecutorCategory(category);
+    setExecutorType(
+      category === 'accelerated'
+        ? DEFAULT_ACCELERATED_EXECUTOR_TYPE
+        : DEFAULT_GENERAL_EXECUTOR_TYPE
+    );
+  };
+
   const handleTierChange = (selectedTier: string) => {
     setTier(selectedTier);
+    if (selectedTier === 'Standard' && executorCategory === 'accelerated') {
+      setExecutorCategory('general');
+      setExecutorType(DEFAULT_GENERAL_EXECUTOR_TYPE);
+    }
   };
+
   // Load Regions from service
   useEffect(() => {
     let isMounted = true;
@@ -580,11 +718,12 @@ export const CreateRuntimeProfileComponent: React.FC<
         description: data.description.trim() || undefined,
         tier,
         lightningEngineEnabled: isLightningEngineActive,
-        runtimeEnvironmentConfig,
-        executorAndDriverConfig: {
-          ...executorAndDriverConfig,
-          tier
+        executorConfig: {
+          executorType: executorCategory,
+          machineType: executorType
         },
+        runtimeEnvironmentConfig,
+        executorAndDriverConfig,
         autoscalingConfig,
         metastoreConfig,
         networkAndSecurityConfig,
@@ -846,10 +985,100 @@ export const CreateRuntimeProfileComponent: React.FC<
             )}
           </div>
 
-          {/* TO DO:-
-          Executor configuration
-          API integration of the form fields
-          Will be taken care as part of upcoming development task */}
+          {/* Section: Executor configuration */}
+          <div className="runtime-profile-section">
+            <div className="runtime-profile-section-title">
+              {EXECUTOR_CONFIG_SECTION_TITLE}
+            </div>
+            <div className="runtime-profile-section-subtitle">
+              {EXECUTOR_CONFIG_SECTION_SUBTITLE}
+            </div>
+
+            {/* Executor Category Cards: General & Accelerated */}
+            <div className="node-config-cards-container">
+              <div
+                className={`node-config-card ${
+                  executorCategory === 'general' ? 'selected' : ''
+                }`}
+                onClick={() => handleExecutorCategoryChange('general')}
+                role="button"
+                tabIndex={0}
+                aria-pressed={executorCategory === 'general'}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleExecutorCategoryChange('general');
+                  }
+                }}
+              >
+                <div className="node-config-card-title">
+                  {EXECUTOR_CATEGORY_GENERAL_TITLE}
+                </div>
+                <div className="node-config-card-sub1">
+                  {EXECUTOR_CATEGORY_GENERAL_SUB1}
+                </div>
+                <div className="node-config-card-sub2">
+                  {EXECUTOR_CATEGORY_GENERAL_SUB2}
+                </div>
+              </div>
+
+              <div
+                className={`node-config-card ${
+                  executorCategory === 'accelerated' ? 'selected' : ''
+                } ${tier === 'Standard' ? 'disabled' : ''}`}
+                onClick={() => handleExecutorCategoryChange('accelerated')}
+                role="button"
+                tabIndex={tier === 'Standard' ? -1 : 0}
+                aria-disabled={tier === 'Standard'}
+                aria-pressed={executorCategory === 'accelerated'}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleExecutorCategoryChange('accelerated');
+                  }
+                }}
+              >
+                <div className="node-config-card-title">
+                  {EXECUTOR_CATEGORY_ACCELERATED_TITLE}
+                </div>
+                <div className="node-config-card-sub1">
+                  {EXECUTOR_CATEGORY_ACCELERATED_SUB1}
+                </div>
+                <div className="node-config-card-sub2">
+                  {EXECUTOR_CATEGORY_ACCELERATED_SUB2}
+                </div>
+                <div className="node-config-card-sub3">
+                  {EXECUTOR_CATEGORY_ACCELERATED_SUB3}
+                </div>
+              </div>
+            </div>
+
+            {/* Machine Type Subheading & Select */}
+            <div className="machine-type-subheading">
+              {executorCategory === 'accelerated'
+                ? EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
+                : EXECUTOR_SHAPES_SUBHEADING}
+            </div>
+            <div className="machine-type-select-wrapper">
+              <FormControl size="small" fullWidth variant="outlined">
+                <InputLabel id="runtime-profile-executor-type-label" shrink>
+                  Executor type
+                </InputLabel>
+                <Select
+                  labelId="runtime-profile-executor-type-label"
+                  id="runtime-profile-executor-type"
+                  value={executorType}
+                  label="Executor type"
+                  onChange={(e: SelectChangeEvent) =>
+                    setExecutorType(e.target.value as string)
+                  }
+                  notched
+                >
+                  {renderGroupedMachineOptions(machineTypes, executorCategory)}
+                </Select>
+              </FormControl>
+            </div>
+          </div>
 
           {/* Additional configuration (70% width) */}
           <div className="additional-config-section">
@@ -900,7 +1129,7 @@ export const CreateRuntimeProfileComponent: React.FC<
             <button
               type="submit"
               disabled={true}
-              className="submit-button-disable-style"
+              className="runtime-profile-submit-btn submit-button-disable-style"
             >
               {isSubmitting ? (
                 <CircularProgress size={16} color="inherit" />
@@ -910,7 +1139,7 @@ export const CreateRuntimeProfileComponent: React.FC<
             </button>
             <button
               type="button"
-              className="job-cancel-button-style"
+              className="runtime-profile-cancel-btn job-cancel-button-style"
               onClick={handleBack}
             >
               Cancel
