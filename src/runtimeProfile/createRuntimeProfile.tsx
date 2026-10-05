@@ -653,6 +653,10 @@ export const CreateRuntimeProfileComponent: React.FC<
     if (tier === 'Standard' && category === 'accelerated') {
       return;
     }
+    // Re-selecting the current category should preserve the chosen machine type
+    if (category === executorCategory) {
+      return;
+    }
     setExecutorCategory(category);
     setExecutorType(
       category === 'accelerated'

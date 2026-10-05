@@ -699,22 +699,94 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(generalExecutorCard.classList.contains('selected')).toBe(true);
   });
 
-  it('should create a runtime profile with executorConfig via service', async () => {
-    const profile = await mockService.createRuntimeProfile({
-      displayName: 'executor-test-profile',
-      region: 'us-central1',
-      tier: 'Premium',
-      lightningEngineEnabled: true,
-      executorConfig: {
-        executorType: 'accelerated',
-        machineType: 'l4-4'
-      }
+  // Opens the MUI executor type Select and picks the option with the given value
+  const selectExecutorType = async (machineName: string) => {
+    const selectTrigger = container.querySelector(
+      '.machine-type-select-wrapper [aria-haspopup="listbox"]'
+    ) as HTMLElement;
+    expect(selectTrigger).not.toBeNull();
+    await act(async () => {
+      selectTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const option = document.body.querySelector(
+      `li[role="option"][data-value="${machineName}"]`
+    ) as HTMLElement;
+    expect(option).not.toBeNull();
+    await act(async () => {
+      option.click();
+    });
+  };
+
+  it('keeps the selected machine type when re-clicking the already selected category', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
     });
 
-    expect(profile.displayName).toBe('executor-test-profile');
-    expect(profile.tier).toBe('Premium');
-    expect(profile.executorConfig?.executorType).toBe('accelerated');
-    expect(profile.executorConfig?.machineType).toBe('l4-4');
+    await selectExecutorType('highmem-16');
+    expect(getFieldValue('Executor type')).toContain('highmem-16');
+
+    const generalCard = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card')[0] as HTMLDivElement;
+
+    // Re-click via mouse and keyboard; selection must not reset to highmem-4
+    await act(async () => {
+      generalCard.click();
+    });
+    await act(async () => {
+      generalCard.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+      );
+    });
+
+    expect(generalCard.classList.contains('selected')).toBe(true);
+    expect(getFieldValue('Executor type')).toContain('highmem-16');
+  });
+
+  it('submits executorConfig from the UI selection to the service', async () => {
+    const createSpy = jest
+      .spyOn(mockService, 'createRuntimeProfile')
+      .mockResolvedValue({} as any);
+    const onSuccess = jest.fn();
+
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          onSuccess={onSuccess}
+        />
+      );
+    });
+
+    const acceleratedCard = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card')[1] as HTMLDivElement;
+    await act(async () => {
+      acceleratedCard.click();
+    });
+    await selectExecutorType('l4-8');
+
+    // Submit button is disabled until API integration, so submit the form directly
+    const form = container.querySelector('form') as HTMLFormElement;
+    await act(async () => {
+      form.dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true })
+      );
+    });
+
+    expect(createSpy).toHaveBeenCalledTimes(1);
+    const [payload, , region] = createSpy.mock.calls[0];
+    expect(region).toBe('us-central1');
+    expect(payload.tier).toBe('Premium');
+    expect(payload.executorConfig).toEqual({
+      executorType: 'accelerated',
+      machineType: 'l4-8'
+    });
+    // API payload must carry the raw machine id, not the display label
+    expect(payload.executorAndDriverConfig?.executorType).toBe('l4-8');
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
   it('should instantiate CreateRuntimeProfileComponent with initial executor props', () => {
