@@ -49,8 +49,10 @@ describe('runtimeProfileMapper', () => {
       expect(extractRuntimeVersion('2.1')).toBe('2.1');
     });
 
-    it('should return undefined for empty or None', () => {
+    it('should return undefined for empty, whitespace-only, or None', () => {
       expect(extractRuntimeVersion('')).toBeUndefined();
+      expect(extractRuntimeVersion('   ')).toBeUndefined();
+      expect(extractRuntimeVersion(' None ')).toBeUndefined();
       expect(extractRuntimeVersion('None')).toBeUndefined();
       expect(extractRuntimeVersion(undefined)).toBeUndefined();
     });
@@ -117,6 +119,11 @@ describe('runtimeProfileMapper', () => {
       expect(parseDiskSpec('SSD persistent disk (SSD), 500 GB')).toEqual({
         tier: 'premium',
         size: '500g'
+      });
+      // Numbers without a size unit must not be parsed as disk size
+      expect(parseDiskSpec('pd-standard-2')).toEqual({
+        tier: 'standard',
+        size: '400g'
       });
     });
   });
@@ -296,6 +303,37 @@ describe('runtimeProfileMapper', () => {
       expect(props?.['spark.executor.memory']).toBe('32g');
       // Highmem shape has 8 GB RAM per core, so it must set premium compute tier
       expect(props?.['spark.dataproc.executor.compute.tier']).toBe('premium');
+    });
+
+    it('should let user sparkProperties override derived autoscaling values', () => {
+      const payload: ICreateRuntimeProfilePayload = {
+        displayName: 'Override Profile',
+        region: 'us-central1',
+        tier: 'Premium',
+        autoscalingConfig: {
+          autoscalingEnabled: true,
+          minExecutors: 2,
+          maxExecutors: 20
+        },
+        sparkProperties: {
+          'spark.dynamicAllocation.maxExecutors': '50',
+          [DATAPROC_TIER_PROPERTY]: 'standard'
+        }
+      };
+
+      const props = mapRuntimeProfileToSessionTemplate(
+        payload,
+        'test-project',
+        'us-central1'
+      ).runtimeConfig?.properties;
+
+      // User-provided value wins over the autoscaling form value
+      expect(props?.['spark.dynamicAllocation.maxExecutors']).toBe('50');
+      // Keys not provided by the user are still derived from the form
+      expect(props?.['spark.dynamicAllocation.minExecutors']).toBe('2');
+      expect(props?.['spark.dynamicAllocation.enabled']).toBe('true');
+      // Tier is an explicit UI control and intentionally overrides sparkProperties
+      expect(props?.[DATAPROC_TIER_PROPERTY]).toBe('premium');
     });
   });
 });

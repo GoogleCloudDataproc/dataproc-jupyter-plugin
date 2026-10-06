@@ -57,11 +57,12 @@ export interface ISessionTemplateApiPayload {
 export const extractRuntimeVersion = (
   rawVersion?: string
 ): string | undefined => {
-  if (!rawVersion || rawVersion === 'None') {
+  const trimmed = rawVersion?.trim();
+  if (!trimmed || trimmed === 'None') {
     return undefined;
   }
-  const match = rawVersion.trim().match(/^([0-9]+\.[0-9]+)/);
-  return match ? match[1] : rawVersion.trim();
+  const match = trimmed.match(/^([0-9]+\.[0-9]+)/);
+  return match ? match[1] : trimmed;
 };
 
 export interface IMachineSpec {
@@ -134,7 +135,8 @@ export const parseDiskSpec = (
   const tier =
     lower.includes('ssd') || lower.includes('premium') ? 'premium' : 'standard';
 
-  const sizeMatch = lower.match(/(\d+)\s*(?:gb|g)?/);
+  // Require a size unit so unrelated numbers (e.g. 'pd-standard-2') are not parsed as size
+  const sizeMatch = lower.match(/(\d+)\s*(?:gib|gb|g)\b/);
   let size = defaultSize;
   if (sizeMatch) {
     const parsedNum = parseInt(sizeMatch[1], 10);
@@ -178,14 +180,16 @@ export const sanitizeSessionTemplateId = (
     }
   }
 
-  // Generate random 12-char hex matching createRunTime.tsx
+  // Generate random 12-char hex ID (6 random bytes = 48 bits of entropy)
   try {
     const cryptoObj: Crypto | undefined =
       typeof window !== 'undefined' ? window.crypto : undefined;
     if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
-      const array = new Uint32Array(1);
+      const array = new Uint8Array(6);
       cryptoObj.getRandomValues(array);
-      const hex = array[0].toString(16).padStart(12, '0');
+      const hex = Array.from(array, b => b.toString(16).padStart(2, '0')).join(
+        ''
+      );
       return 'runtime-' + hex;
     }
   } catch (e) {
@@ -219,6 +223,15 @@ export function mapRuntimeProfileToSessionTemplate(
     ...(payload.sparkProperties || {})
   };
 
+  /** Sets a derived property only if the user did not provide it in sparkProperties. */
+  const setIfAbsent = (key: string, value?: string): void => {
+    if (value !== undefined && properties[key] === undefined) {
+      properties[key] = value;
+    }
+  };
+
+  // Tier and Lightning Engine come from explicit UI controls and intentionally
+  // override sparkProperties (consistent with createBatch.tsx).
   // Compute tier (standard vs premium)
   const tier = payload.tier || executorAndDriverConfig?.tier;
   if (tier) {
@@ -233,28 +246,27 @@ export function mapRuntimeProfileToSessionTemplate(
     properties[DATAPROC_LIGHTNING_ENGINE_PROPERTY] = 'lightningEngine';
   }
 
-  // Autoscaling / Dynamic allocation properties
-  if (payload.autoscalingConfig) {
-    if (payload.autoscalingConfig.autoscalingEnabled !== undefined) {
-      properties['spark.dynamicAllocation.enabled'] = String(
-        payload.autoscalingConfig.autoscalingEnabled
-      );
-    }
-    if (payload.autoscalingConfig.initialExecutors !== undefined) {
-      properties['spark.dynamicAllocation.initialExecutors'] = String(
-        payload.autoscalingConfig.initialExecutors
-      );
-    }
-    if (payload.autoscalingConfig.minExecutors !== undefined) {
-      properties['spark.dynamicAllocation.minExecutors'] = String(
-        payload.autoscalingConfig.minExecutors
-      );
-    }
-    if (payload.autoscalingConfig.maxExecutors !== undefined) {
-      properties['spark.dynamicAllocation.maxExecutors'] = String(
-        payload.autoscalingConfig.maxExecutors
-      );
-    }
+  // Autoscaling / Dynamic allocation properties (user sparkProperties take precedence)
+  const autoscaling = payload.autoscalingConfig;
+  if (autoscaling) {
+    const asString = (v?: number | boolean): string | undefined =>
+      v === undefined ? undefined : String(v);
+    setIfAbsent(
+      'spark.dynamicAllocation.enabled',
+      asString(autoscaling.autoscalingEnabled)
+    );
+    setIfAbsent(
+      'spark.dynamicAllocation.initialExecutors',
+      asString(autoscaling.initialExecutors)
+    );
+    setIfAbsent(
+      'spark.dynamicAllocation.minExecutors',
+      asString(autoscaling.minExecutors)
+    );
+    setIfAbsent(
+      'spark.dynamicAllocation.maxExecutors',
+      asString(autoscaling.maxExecutors)
+    );
   }
 
   // Driver machine type & disk properties
