@@ -38,7 +38,10 @@ jest.mock('@jupyterlab/apputils', () => ({
 
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { CreateRuntimeProfileComponent } from './createRuntimeProfile';
+import {
+  CreateRuntimeProfileComponent,
+  renderGroupedMachineOptions
+} from './createRuntimeProfile';
 import { RuntimeProfileService } from './runtimeProfileService';
 import {
   DATAPROC_TIER_DOC,
@@ -51,7 +54,18 @@ import {
   TIER_STANDARD_DESC,
   TIER_STANDARD_INFO_BANNER,
   LIGHTNING_ENGINE_CHECKBOX_LABEL,
-  LIGHTNING_ENGINE_CHECKBOX_DESC
+  LIGHTNING_ENGINE_CHECKBOX_DESC,
+  EXECUTOR_CONFIG_SECTION_TITLE,
+  EXECUTOR_CONFIG_SECTION_SUBTITLE,
+  EXECUTOR_CATEGORY_GENERAL_TITLE,
+  EXECUTOR_CATEGORY_GENERAL_SUB1,
+  EXECUTOR_CATEGORY_GENERAL_SUB2,
+  EXECUTOR_CATEGORY_ACCELERATED_TITLE,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB1,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB2,
+  EXECUTOR_CATEGORY_ACCELERATED_SUB3,
+  EXECUTOR_SHAPES_SUBHEADING,
+  EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
 } from '../utils/const';
 
 describe('CreateRuntimeProfileComponent UI & Service', () => {
@@ -246,7 +260,8 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getFieldValue('Tier')).toBe('Premium');
     expect(getFieldValue('Driver machine type')).toBe('highmem-8');
     expect(getFieldValue('Driver disk')).toBe('SSD 200 GB');
-    expect(getFieldValue('Executor type')).toBe('highmem-4');
+    // Executor type always reflects the shape selected in the dropdown
+    expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
     expect(getFieldValue('Executor disk')).toBe('SSD 400 GB');
     expect(getFieldValue('Autoscaling')).toBe('Disabled');
     expect(getFieldValue('Initial executors')).toBe('4');
@@ -396,7 +411,10 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     );
     expect(displayNameLabel?.textContent).toContain('Display name *');
 
-    const tierCards = container.querySelectorAll('.node-config-card');
+    const cardContainers = container.querySelectorAll(
+      '.node-config-cards-container'
+    );
+    const tierCards = cardContainers[0].querySelectorAll('.node-config-card');
     expect(tierCards).toHaveLength(2);
 
     const premiumCard = tierCards[0] as HTMLDivElement;
@@ -503,5 +521,324 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     expect(standardElement.props.initialTier).toBe('Standard');
     expect(standardElement.props.initialLightningEngineEnabled).toBe(false);
+  });
+
+  it('groups machine types under prefix subheaders with an Other fallback', () => {
+    const general = renderGroupedMachineOptions(
+      [
+        {
+          name: 'standard-4',
+          label: 's4',
+          vCPUs: 4,
+          memory: '16g',
+          category: 'general'
+        },
+        {
+          name: 'highmem-4',
+          label: 'h4',
+          vCPUs: 4,
+          memory: '32g',
+          category: 'general'
+        },
+        {
+          name: 'custom-8',
+          label: 'c8',
+          vCPUs: 8,
+          memory: '32g',
+          category: 'general'
+        }
+      ],
+      'general'
+    );
+    expect(general.map(e => e.key)).toEqual([
+      'header-standard',
+      'standard-4',
+      'header-highmem',
+      'highmem-4',
+      'header-other',
+      'custom-8'
+    ]);
+
+    const accelerated = renderGroupedMachineOptions(
+      [
+        {
+          name: 'a100-40',
+          label: 'a',
+          vCPUs: 12,
+          memory: '78040m',
+          category: 'accelerated'
+        },
+        {
+          name: 'l4-4',
+          label: 'l',
+          vCPUs: 4,
+          memory: '13384m',
+          category: 'accelerated'
+        }
+      ],
+      'accelerated'
+    );
+    expect(accelerated.map(e => e.key)).toEqual([
+      'header-l4',
+      'l4-4',
+      'header-a100',
+      'a100-40'
+    ]);
+  });
+
+  it('should export executor configuration section constants', () => {
+    expect(EXECUTOR_CONFIG_SECTION_TITLE).toBe('Executor configuration');
+    expect(EXECUTOR_CONFIG_SECTION_SUBTITLE).toBeDefined();
+    expect(EXECUTOR_CATEGORY_GENERAL_TITLE).toBe('General');
+    expect(EXECUTOR_CATEGORY_GENERAL_SUB1).toBe('CPU only');
+    expect(EXECUTOR_CATEGORY_GENERAL_SUB2).toBe(
+      'Suited for most ETL workloads'
+    );
+    expect(EXECUTOR_CATEGORY_ACCELERATED_TITLE).toBe('Accelerated');
+    expect(EXECUTOR_CATEGORY_ACCELERATED_SUB1).toBe('Includes GPUs');
+    expect(EXECUTOR_CATEGORY_ACCELERATED_SUB2).toBe(
+      'Best for data science and AI/ML workloads'
+    );
+    expect(EXECUTOR_CATEGORY_ACCELERATED_SUB3).toBe(
+      'Available with premium tier only'
+    );
+    expect(EXECUTOR_SHAPES_SUBHEADING).toBe(
+      'Shapes for common workloads, optimized for cost and flexibility'
+    );
+    expect(EXECUTOR_ACCELERATED_SHAPES_SUBHEADING).toBe(
+      'Shapes with GPUs attached, for training and inference workloads'
+    );
+  });
+
+  it('renders Executor category cards and machine type dropdown', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const cardContainers = container.querySelectorAll(
+      '.node-config-cards-container'
+    );
+    expect(cardContainers).toHaveLength(2);
+
+    const executorCards =
+      cardContainers[1].querySelectorAll('.node-config-card');
+    expect(executorCards).toHaveLength(2);
+
+    const generalCard = executorCards[0] as HTMLDivElement;
+    const acceleratedCard = executorCards[1] as HTMLDivElement;
+
+    expect(generalCard.textContent).toContain('General');
+    expect(generalCard.textContent).toContain('CPU only');
+    expect(acceleratedCard.textContent).toContain('Accelerated');
+    expect(acceleratedCard.textContent).toContain('Includes GPUs');
+
+    expect(generalCard.classList.contains('selected')).toBe(true);
+    expect(acceleratedCard.classList.contains('selected')).toBe(false);
+
+    // Subheading for general category
+    const subheading = container.querySelector('.machine-type-subheading');
+    expect(subheading?.textContent).toBe(EXECUTOR_SHAPES_SUBHEADING);
+
+    // Switch to Accelerated category
+    await act(async () => {
+      acceleratedCard.click();
+    });
+    expect(acceleratedCard.classList.contains('selected')).toBe(true);
+    expect(generalCard.classList.contains('selected')).toBe(false);
+    expect(subheading?.textContent).toBe(
+      EXECUTOR_ACCELERATED_SHAPES_SUBHEADING
+    );
+
+    // Switch back to General category via keyboard Space
+    await act(async () => {
+      generalCard.dispatchEvent(
+        new KeyboardEvent('keydown', { key: ' ', bubbles: true })
+      );
+    });
+    expect(generalCard.classList.contains('selected')).toBe(true);
+    expect(acceleratedCard.classList.contains('selected')).toBe(false);
+  });
+
+  it('disables Accelerated category when Standard tier is selected and resets to General', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const cardContainers = container.querySelectorAll(
+      '.node-config-cards-container'
+    );
+    const tierCards = cardContainers[0].querySelectorAll('.node-config-card');
+    const executorCards =
+      cardContainers[1].querySelectorAll('.node-config-card');
+
+    const standardTierCard = tierCards[1] as HTMLDivElement;
+    const generalExecutorCard = executorCards[0] as HTMLDivElement;
+    const acceleratedExecutorCard = executorCards[1] as HTMLDivElement;
+
+    // First select Accelerated category while in Premium tier
+    await act(async () => {
+      acceleratedExecutorCard.click();
+    });
+    expect(acceleratedExecutorCard.classList.contains('selected')).toBe(true);
+
+    // Now switch tier to Standard
+    await act(async () => {
+      standardTierCard.click();
+    });
+    expect(standardTierCard.classList.contains('selected')).toBe(true);
+
+    // Accelerated card should be disabled and selection reset to General
+    expect(acceleratedExecutorCard.classList.contains('disabled')).toBe(true);
+    expect(acceleratedExecutorCard.getAttribute('aria-disabled')).toBe('true');
+    expect(generalExecutorCard.classList.contains('selected')).toBe(true);
+
+    // Clicking disabled accelerated card should do nothing
+    await act(async () => {
+      acceleratedExecutorCard.click();
+    });
+    expect(generalExecutorCard.classList.contains('selected')).toBe(true);
+  });
+
+  // Opens the MUI executor type Select and picks the option with the given value
+  const selectExecutorType = async (machineName: string) => {
+    const selectTrigger = container.querySelector(
+      '.machine-type-select-wrapper [aria-haspopup="listbox"]'
+    ) as HTMLElement;
+    expect(selectTrigger).not.toBeNull();
+    await act(async () => {
+      selectTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const option = document.body.querySelector(
+      `li[role="option"][data-value="${machineName}"]`
+    ) as HTMLElement;
+    expect(option).not.toBeNull();
+    await act(async () => {
+      option.click();
+    });
+  };
+
+  it('keeps the selected machine type when re-clicking the already selected category', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    await selectExecutorType('highmem-16');
+    expect(getFieldValue('Executor type')).toContain('highmem-16');
+
+    const generalCard = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card')[0] as HTMLDivElement;
+
+    // Re-click via mouse and keyboard; selection must not reset to highmem-4
+    await act(async () => {
+      generalCard.click();
+    });
+    await act(async () => {
+      generalCard.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+      );
+    });
+
+    expect(generalCard.classList.contains('selected')).toBe(true);
+    expect(getFieldValue('Executor type')).toContain('highmem-16');
+  });
+
+  it('submits executorConfig from the UI selection to the service', async () => {
+    const createSpy = jest
+      .spyOn(mockService, 'createRuntimeProfile')
+      .mockResolvedValue({} as any);
+    const onSuccess = jest.fn();
+
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          onSuccess={onSuccess}
+        />
+      );
+    });
+
+    const acceleratedCard = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card')[1] as HTMLDivElement;
+    await act(async () => {
+      acceleratedCard.click();
+    });
+    await selectExecutorType('l4-8');
+
+    // Submit button is disabled until API integration, so submit the form directly
+    const form = container.querySelector('form') as HTMLFormElement;
+    await act(async () => {
+      form.dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: true })
+      );
+    });
+
+    expect(createSpy).toHaveBeenCalledTimes(1);
+    const [payload, , region] = createSpy.mock.calls[0];
+    expect(region).toBe('us-central1');
+    expect(payload.tier).toBe('Premium');
+    expect(payload.executorConfig).toEqual({
+      executorType: 'accelerated',
+      machineType: 'l4-8'
+    });
+    // API payload must carry the raw machine id, not the display label
+    expect(payload.executorAndDriverConfig?.executorType).toBe('l4-8');
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('should instantiate CreateRuntimeProfileComponent with initial executor props', () => {
+    const element = React.createElement(CreateRuntimeProfileComponent, {
+      initialTier: 'Premium',
+      initialLightningEngineEnabled: true,
+      initialExecutorCategory: 'accelerated',
+      initialExecutorType: 'l4-8'
+    });
+
+    expect(element).toBeDefined();
+    expect(element.type).toBe(CreateRuntimeProfileComponent);
+    expect(element.props.initialExecutorCategory).toBe('accelerated');
+    expect(element.props.initialExecutorType).toBe('l4-8');
+  });
+
+  it('updates Executor type in the summary when switching executor category', async () => {
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          initialExecutorAndDriverConfig={{ executorType: 'stale-value' }}
+        />
+      );
+    });
+
+    expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
+
+    const executorCards = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card');
+    await act(async () => {
+      (executorCards[1] as HTMLDivElement).click();
+    });
+
+    expect(getFieldValue('Executor type')).toBe('L4 (4 cores)');
+  });
+
+  it('initializes executor category and type from a valid initial config machine id', async () => {
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          initialExecutorAndDriverConfig={{ executorType: 'l4-8' }}
+        />
+      );
+    });
+
+    const executorCards = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card');
+    expect(executorCards[1].classList.contains('selected')).toBe(true);
+    expect(getFieldValue('Executor type')).toBe('L4 (8 cores)');
   });
 });
