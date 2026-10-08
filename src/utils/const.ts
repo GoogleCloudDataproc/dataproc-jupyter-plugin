@@ -276,6 +276,8 @@ export const EXECUTOR_RELATED_PROPERTIES = [
 
 export const DATAPROC_TIER_PROPERTY = 'dataproc.tier';
 export const DATAPROC_LIGHTNING_ENGINE_PROPERTY = 'spark.dataproc.engine';
+// Default GPU accelerator used for 'accelerated' Dataproc Serverless executors.
+export const DATAPROC_DEFAULT_ACCELERATOR = 'l4';
 
 export const BOOLEAN_SELECT_OPTIONS = [
   { key: 'true', value: 'true', text: 'true' },

@@ -67,6 +67,15 @@ describe('runtimeProfileMapper', () => {
         'preferred-id-123'
       );
     });
+
+    it('should prefix ids that do not start with a letter', () => {
+      expect(sanitizeSessionTemplateId('1st Finance Profile')).toBe(
+        'runtime-1st-finance-profile'
+      );
+      expect(sanitizeSessionTemplateId('', '2024-profile')).toBe(
+        'runtime-2024-profile'
+      );
+    });
   });
 
   describe('parseMachineTypeSpec', () => {

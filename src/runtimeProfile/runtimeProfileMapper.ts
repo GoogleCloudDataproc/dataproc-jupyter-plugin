@@ -17,6 +17,7 @@
 
 import {
   DATAPROC_ACCELERATED_MACHINE_TYPES,
+  DATAPROC_DEFAULT_ACCELERATOR,
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
   DATAPROC_STANDARD_MACHINE_TYPES,
   DATAPROC_TIER_PROPERTY
@@ -151,6 +152,23 @@ export const parseDiskSpec = (
 };
 
 /**
+ * Lowercases and hyphenates a value into a session template ID.
+ * Dataproc resource IDs must start with a letter, so IDs beginning with a
+ * digit (e.g. "1st Finance Profile") are prefixed with 'runtime-'.
+ */
+const toSessionTemplateId = (value: string): string => {
+  const sanitized = value
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  if (!sanitized) {
+    return '';
+  }
+  return /^[a-z]/.test(sanitized) ? sanitized : `runtime-${sanitized}`;
+};
+
+/**
  * Generates a clean session template ID from profile display name or ID
  */
 export const sanitizeSessionTemplateId = (
@@ -162,22 +180,14 @@ export const sanitizeSessionTemplateId = (
     preferredId.trim() !== '' &&
     preferredId !== 'Name of the runtime profile'
   ) {
-    const sanitized = preferredId
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+    const sanitized = toSessionTemplateId(preferredId);
     if (sanitized) {
       return sanitized;
     }
   }
 
   if (displayName && displayName.trim() !== '') {
-    const sanitized = displayName
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+    const sanitized = toSessionTemplateId(displayName);
     if (sanitized) {
       return sanitized;
     }
@@ -344,7 +354,8 @@ export function mapRuntimeProfileToSessionTemplate(
       properties['spark.dataproc.executor.compute.tier'] = 'premium';
     }
     if (!properties['spark.dataproc.executor.resource.accelerator.type']) {
-      properties['spark.dataproc.executor.resource.accelerator.type'] = 'l4';
+      properties['spark.dataproc.executor.resource.accelerator.type'] =
+        DATAPROC_DEFAULT_ACCELERATOR;
     }
   }
 
