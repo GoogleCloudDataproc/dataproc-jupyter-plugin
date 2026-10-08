@@ -1,5 +1,11 @@
 # Changelog
 <!-- <START NEW CHANGELOG ENTRY> -->
+## 0.1.99
+* chore(deps): add ipywidgets and anywidget dependencies for cell monitoring by @rao23 in #468
+* feat(runtime-profile): executor configuration and machine type selection by @aditee-accenture in #460
+<!-- <END NEW CHANGELOG ENTRY> -->
+
+<!-- <START NEW CHANGELOG ENTRY> -->
 ## 0.1.98
 * feat(Runtime profile): tier config by @srinivasan-acn in #459
 * feat(runtime-profile): additional configuration static UI by @srinivasan-acn in #458

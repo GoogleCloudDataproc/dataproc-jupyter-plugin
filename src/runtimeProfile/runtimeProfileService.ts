@@ -243,6 +243,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         lightningEngineEnabled:
           payload.lightningEngineEnabled ??
           payload.runtimeEnvironmentConfig?.lightningEngineEnabled,
+        executorConfig: payload.executorConfig,
         runtimeEnvironmentConfig: payload.runtimeEnvironmentConfig,
         executorAndDriverConfig: payload.executorAndDriverConfig,
         autoscalingConfig: payload.autoscalingConfig,
