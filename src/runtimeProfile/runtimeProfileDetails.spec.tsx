@@ -26,7 +26,10 @@ jest.mock('../handler/handler', () => ({
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import RuntimeProfileDetails, {
-  formatCreateTime
+  formatCreateTime,
+  formatDiskConfig,
+  formatDurationTtl,
+  stripPropertyPrefix
 } from './runtimeProfileDetails';
 import {
   formatLastUsed,
@@ -51,7 +54,39 @@ describe('RuntimeProfileDetails Component', () => {
     creator: 'user@example.com',
     createTime: '2026-09-16T08:02:03Z',
     updateTime: '2026-09-16T08:02:03Z',
-    jupyterSession: { displayName: 'sample-profile', kernel: 'PYTHON' }
+    jupyterSession: { displayName: 'sample-profile', kernel: 'PYTHON' },
+    environmentConfig: {
+      executionConfig: {
+        subnetworkUri: 'default',
+        idleTtl: '3600s',
+        ttl: '259200s',
+        authenticationConfig: {
+          userWorkloadAuthenticationType: 'END_USER_CREDENTIALS'
+        }
+      }
+    },
+    runtimeConfig: {
+      version: '2.3',
+      properties: {
+        'dataproc:dataproc.tier': 'premium',
+        'spark:spark.dataproc.engine': 'lightningEngine',
+        'spark:spark.dataproc.driver.disk.tier': 'standard',
+        'spark:spark.dataproc.driver.disk.size': '400g',
+        'spark:spark.dataproc.executor.disk.tier': 'standard',
+        'spark:spark.dataproc.executor.disk.size': '100g',
+        'spark:spark.dynamicAllocation.enabled': 'true',
+        'spark:spark.dynamicAllocation.initialExecutors': '2',
+        'spark:spark.dynamicAllocation.minExecutors': '2',
+        'spark:spark.dynamicAllocation.maxExecutors': '10',
+        'spark:spark.sql.catalog.biglake':
+          'org.apache.iceberg.spark.SparkCatalog',
+        'spark:spark.sql.catalog.biglake.type': 'hadoop'
+      }
+    },
+    labels: {
+      env: 'dev',
+      team: 'analytics'
+    }
   };
 
   beforeEach(() => {
@@ -77,18 +112,22 @@ describe('RuntimeProfileDetails Component', () => {
     container.remove();
   });
 
-  const renderDetails = (onBack = jest.fn(), onDeleteSuccess?: () => void) =>
+  const renderDetails = (
+    onBack = jest.fn(),
+    onDeleteSuccess?: () => void,
+    profile: IRuntimeProfileTemplate = mockProfile
+  ) =>
     act(async () => {
       root.render(
         <RuntimeProfileDetails
-          profile={mockProfile}
+          profile={profile}
           onBack={onBack}
           onDeleteSuccess={onDeleteSuccess}
         />
       );
     });
 
-  it('should render Basic Information and handle Back and Copy actions', async () => {
+  it('should render Basic Information, Configuration subsections, and handle Back and Copy actions', async () => {
     const onBackMock = jest.fn();
     const writeTextMock = jest
       .fn()
@@ -112,6 +151,53 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('user@example.com');
     expect(container.textContent).toContain('test123');
     expect(container.textContent).toContain('PYTHON');
+
+    // Runtime configuration
+    expect(container.textContent).toContain('Runtime configuration');
+    expect(container.textContent).toContain('Spark runtime version');
+    expect(container.textContent).toContain('2.3');
+    expect(container.textContent).toContain('Configuration type');
+    expect(container.textContent).toContain('Jupyter');
+
+    // Executor and driver configuration
+    expect(container.textContent).toContain(
+      'Executor and driver configuration'
+    );
+    expect(container.textContent).toContain('Lightning Engine');
+    expect(container.textContent).toContain('Enabled');
+    expect(container.textContent).toContain('Standard persistent disk, 400GB');
+    expect(container.textContent).toContain('Standard persistent disk, 100GB');
+
+    // Autoscaling, Metastore, Network and security, Session lifecycle, Other customizations
+    expect(container.textContent).toContain('Autoscaling');
+    expect(container.textContent).toContain('On');
+    expect(container.textContent).toContain('Initial executors');
+    expect(container.textContent).toContain('Minimum executors');
+    expect(container.textContent).toContain('Maximum executors');
+    expect(container.textContent).toContain('Metastore configuration');
+    expect(container.textContent).toContain('Encryption type');
+    expect(container.textContent).toContain('Google-managed');
+    expect(container.textContent).toContain('Network and security');
+    expect(container.textContent).toContain('Session lifecycle');
+    expect(container.textContent).toContain('Max idle time');
+    expect(container.textContent).toContain('1 hr');
+    expect(container.textContent).toContain('Max session time');
+    expect(container.textContent).toContain('3 days');
+    expect(container.textContent).toContain('Other customizations');
+
+    // Spark properties & Labels
+    expect(container.textContent).toContain('Spark properties');
+    expect(container.textContent).toContain('Labels');
+    const propAndLabelLines = Array.from(
+      container.querySelectorAll('.runtime-profile-details-spark-prop-line')
+    ).map(el => el.textContent);
+    expect(propAndLabelLines).toEqual([
+      'dataproc.tier=premium',
+      'spark.sql.catalog.biglake=org.apache.iceberg.spark.SparkCatalog',
+      'spark.sql.catalog.biglake.type=hadoop',
+      'env=dev',
+      'team=analytics'
+    ]);
 
     const editBtn = Array.from(
       container.querySelectorAll('.secondary-action-btn')
@@ -159,6 +245,60 @@ describe('RuntimeProfileDetails Component', () => {
       backBtn.click();
     });
     expect(onBackMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should render Customer-managed encryption, Disabled Lightning Engine, Autoscaling Off (hiding executor rows), custom Metastore, and toggle Configuration section', async () => {
+    const customProfile: IRuntimeProfileTemplate = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/custom-profile',
+      jupyterSession: { displayName: 'custom-profile', kernel: 'PYTHON' },
+      environmentConfig: {
+        executionConfig: {
+          kmsKey: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k'
+        },
+        peripheralsConfig: {
+          metastoreService: 'projects/p/locations/l/services/my-metastore'
+        }
+      },
+      runtimeConfig: {
+        version: '2.2',
+        properties: { 'spark.dynamicAllocation.enabled': 'false' }
+      }
+    };
+
+    await renderDetails(jest.fn(), undefined, customProfile);
+
+    expect(container.textContent).toContain('Customer-managed');
+    expect(container.textContent).toContain('Disabled');
+    expect(container.textContent).toContain('Off');
+    expect(container.textContent).not.toContain('Initial executors');
+    expect(container.textContent).not.toContain('Minimum executors');
+    expect(container.textContent).not.toContain('Maximum executors');
+    expect(container.textContent).toContain(
+      'projects/p/locations/l/services/my-metastore'
+    );
+    expect(container.textContent).toContain('None');
+
+    const configHeader = container.querySelector(
+      '.runtime-profile-details-section-header.collapsible'
+    ) as HTMLElement;
+    act(() => {
+      configHeader.click();
+    });
+    expect(container.textContent).not.toContain('Runtime configuration');
+
+    act(() => {
+      configHeader.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+      );
+    });
+    expect(container.textContent).toContain('Runtime configuration');
+
+    act(() => {
+      configHeader.dispatchEvent(
+        new KeyboardEvent('keydown', { key: ' ', bubbles: true })
+      );
+    });
+    expect(container.textContent).not.toContain('Runtime configuration');
   });
 
   it('should open delete modal, handle Escape/Cancel, and delete or notify on error', async () => {
@@ -218,7 +358,7 @@ describe('RuntimeProfileDetails Component', () => {
     expect(onDeleteSuccessMock).toHaveBeenCalledTimes(1);
   });
 
-  it('should format createTime and lastUsed dates deterministically', () => {
+  it('should format createTime, lastUsed, diskConfig, durationTtl, and stripPropertyPrefix deterministically', () => {
     expect(formatCreateTime('')).toBe('');
     expect(formatCreateTime('invalid-date')).toBe('');
     expect(formatCreateTime('2026-09-16T08:02:03Z')).toBe(
@@ -252,5 +392,35 @@ describe('RuntimeProfileDetails Component', () => {
     ][expectedDate.getMonth()];
     const expectedString = `${expectedMonth} ${expectedDate.getDate()}, ${expectedDate.getFullYear()}`;
     expect(formatLastUsed('2026-01-10T15:37:20Z', true)).toBe(expectedString);
+
+    expect(formatDiskConfig('Standard', '200g')).toBe(
+      'Standard persistent disk, 200GB'
+    );
+    expect(formatDiskConfig('Standard', '200gb')).toBe(
+      'Standard persistent disk, 200GB'
+    );
+    expect(formatDiskConfig('Standard', '')).toBe('Standard persistent disk');
+    expect(formatDiskConfig('', '200g')).toBe('200GB');
+    expect(formatDiskConfig('', '')).toBe('');
+
+    expect(formatDurationTtl('')).toBe('');
+    expect(formatDurationTtl('0s')).toBe('0 sec');
+    expect(formatDurationTtl('1s')).toBe('1 sec');
+    expect(formatDurationTtl('45s')).toBe('45 secs');
+    expect(formatDurationTtl('60s')).toBe('1 min');
+    expect(formatDurationTtl('1800s')).toBe('30 mins');
+    expect(formatDurationTtl('3600s')).toBe('1 hr');
+    expect(formatDurationTtl('7200s')).toBe('2 hrs');
+    expect(formatDurationTtl('86400s')).toBe('1 day');
+    expect(formatDurationTtl('259200s')).toBe('3 days');
+    expect(formatDurationTtl('3 days')).toBe('3 days');
+
+    expect(stripPropertyPrefix('spark:spark.executor.cores')).toBe(
+      'spark.executor.cores'
+    );
+    expect(stripPropertyPrefix('dataproc:dataproc.tier')).toBe('dataproc.tier');
+    expect(stripPropertyPrefix('spark.executor.cores')).toBe(
+      'spark.executor.cores'
+    );
   });
 });

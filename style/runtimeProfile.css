@@ -764,7 +764,8 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
 }
 
 .runtime-profile-details-back-btn,
-.runtime-profile-details-copy-btn {
+.runtime-profile-details-copy-btn,
+.runtime-profile-details-subsection-edit-btn {
   background: transparent;
   border: none;
   padding: 4px;
@@ -776,8 +777,14 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
   color: var(--rp-details-text-color);
 }
 
+.runtime-profile-details-subsection-edit-btn {
+  padding: 2px 4px;
+  margin-right: 8px;
+}
+
 .runtime-profile-details-back-btn:hover,
-.runtime-profile-details-copy-btn:hover {
+.runtime-profile-details-copy-btn:hover,
+.runtime-profile-details-subsection-edit-btn:hover {
   background-color: var(--jp-layout-color2);
 }
 
@@ -787,8 +794,15 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
   display: block;
 }
 
+.runtime-profile-details-subsection-edit-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
 .runtime-profile-details-back-btn svg path,
-.runtime-profile-details-copy-btn svg path {
+.runtime-profile-details-copy-btn svg path,
+.runtime-profile-details-expand-icon svg path {
   fill: var(--rp-details-text-color);
 }
 
@@ -812,13 +826,18 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
   font-weight: 600;
 }
 
-.runtime-profile-details-header-actions .secondary-action-btn:disabled {
+.runtime-profile-details-header-actions .secondary-action-btn:disabled,
+.runtime-profile-details-subsection-edit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.runtime-profile-details-header-actions .secondary-action-btn div,
-.runtime-profile-details-copy-btn div {
+.runtime-profile-details-wrapper .runtime-profile-details-copy-btn div,
+.runtime-profile-details-wrapper .runtime-profile-details-expand-icon div,
+.runtime-profile-details-wrapper
+  .runtime-profile-details-subsection-edit-btn
+  div,
+.runtime-profile-details-wrapper .secondary-action-btn div {
   display: flex;
   align-items: center;
 }
@@ -831,6 +850,7 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
 
 .runtime-profile-details-title-row,
 .runtime-profile-details-section-header,
+.runtime-profile-details-subsection-header,
 .runtime-profile-details-row {
   display: flex;
   border-bottom: 1px solid var(--rp-details-border-color);
@@ -851,18 +871,41 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
 }
 
 .runtime-profile-details-section-header,
-.runtime-profile-details-row {
+.runtime-profile-details-subsection-header {
+  justify-content: space-between;
+  align-items: center;
   padding: 8px 0;
   font-size: 13px;
+  font-weight: 600;
   line-height: 18px;
 }
 
-.runtime-profile-details-section-header {
-  font-weight: 600;
+.runtime-profile-details-subsection-header {
+  padding-left: 24px;
+}
+
+.runtime-profile-details-section-header.collapsible {
+  cursor: pointer;
+  user-select: none;
+}
+
+.runtime-profile-details-section-header.configuration-header {
+  font-size: 16px;
+  line-height: 22px;
+  padding: 10px 0;
+}
+
+.runtime-profile-details-expand-icon {
+  display: flex;
+  align-items: center;
+  padding-right: 12px;
 }
 
 .runtime-profile-details-row {
   align-items: flex-start;
+  padding: 8px 0;
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .runtime-profile-details-label,
@@ -875,7 +918,14 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
   font-weight: 600;
   width: 45%;
   flex-shrink: 0;
+}
+
+.runtime-profile-details-label.level-1 {
   padding-left: 24px;
+}
+
+.runtime-profile-details-label.level-2 {
+  padding-left: 48px;
 }
 
 .runtime-profile-details-value {
@@ -883,9 +933,23 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
   width: 55%;
 }
 
+.runtime-profile-details-spark-prop-line {
+  line-height: 20px;
+}
+
+.runtime-profile-details-spark-prop-line
+  + .runtime-profile-details-spark-prop-line {
+  margin-top: 2px;
+}
+
 body[data-jp-theme-light='false']
   .runtime-profile-details-wrapper
   .secondary-action-btn
+  svg
+  path,
+body[data-jp-theme-light='false']
+  .runtime-profile-details-wrapper
+  .runtime-profile-details-subsection-edit-btn
   svg
   path {
   fill: var(--jp-brand-color1, #8ab4f8);

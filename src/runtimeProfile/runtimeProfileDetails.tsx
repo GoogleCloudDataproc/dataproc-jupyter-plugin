@@ -23,6 +23,8 @@ import LeftArrowIcon from '../../style/icons/left_arrow_icon.svg';
 import EditIcon from '../../style/icons/edit_icon.svg';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
 import CloneIcon from '../../style/icons/clone_icon.svg';
+import ExpandLessIcon from '../../style/icons/expand_less.svg';
+import ExpandMoreIcon from '../../style/icons/expand_more.svg';
 import {
   formatLastUsed,
   IRuntimeProfileTemplate,
@@ -30,6 +32,7 @@ import {
 } from './runtimeProfileListMapper';
 import { RuntimeProfileService } from './runtimeProfileService';
 import { LOG_LEVEL, safeLog } from '../utils/loggingService';
+import { DATAPROC_LIGHTNING_ENGINE_PROPERTY } from '../utils/const';
 
 const makeIcon = (name: string, svgstr: string) =>
   new LabIcon({ name: `runtime-profile-details:${name}`, svgstr });
@@ -37,6 +40,8 @@ const iconLeftArrow = makeIcon('left-arrow-icon', LeftArrowIcon);
 const iconEdit = makeIcon('edit-icon', EditIcon);
 const iconDelete = makeIcon('delete-icon', DeleteClusterIcon);
 const iconCopy = makeIcon('copy-icon', CloneIcon);
+const iconExpandLess = makeIcon('expand-less-icon', ExpandLessIcon);
+const iconExpandMore = makeIcon('expand-more-icon', ExpandMoreIcon);
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = 'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec'.split(',');
@@ -55,6 +60,71 @@ export const formatCreateTime = (dateString?: string): string => {
   )}:${pad(date.getUTCSeconds())}`;
   return `${datePart} ${timePart} GMT+0000 (Coordinated Universal Time)`;
 };
+
+export const stripPropertyPrefix = (key: string): string =>
+  key.replace(/^(?:spark|dataproc):/, '');
+
+const getPropertyValue = (props: Record<string, string>, key: string): string =>
+  props[key] ?? props[`spark:${key}`] ?? props[`dataproc:${key}`] ?? '';
+
+export const formatDiskConfig = (tier?: string, size?: string): string => {
+  const trimmedTier = tier?.trim() || '';
+  const trimmedSize = size?.trim() || '';
+  if (!trimmedTier && !trimmedSize) {
+    return '';
+  }
+  const formattedTier = trimmedTier
+    ? `${trimmedTier.charAt(0).toUpperCase()}${trimmedTier
+        .slice(1)
+        .toLowerCase()} persistent disk`
+    : '';
+  const formattedSize = trimmedSize
+    ? trimmedSize.replace(
+        /^(\d+)\s*([gGmMtT])[bB]?$/,
+        (_, num, unit) => `${num}${unit.toUpperCase()}B`
+      )
+    : '';
+  return formattedTier && formattedSize
+    ? `${formattedTier}, ${formattedSize}`
+    : formattedTier || formattedSize;
+};
+
+export const formatDurationTtl = (ttl?: string): string => {
+  const trimmed = ttl?.trim() || '';
+  const match = /^(\d+)\s*s$/i.exec(trimmed);
+  if (!match) {
+    return trimmed;
+  }
+  const secs = Number(match[1]);
+  if (secs <= 0) {
+    return '0 sec';
+  }
+  const units: Array<[number, string, string]> = [
+    [86400, 'day', 'days'],
+    [3600, 'hr', 'hrs'],
+    [60, 'min', 'mins'],
+    [1, 'sec', 'secs']
+  ];
+  for (const [divisor, singular, plural] of units) {
+    if (secs % divisor === 0) {
+      const count = secs / divisor;
+      return `${count} ${count === 1 ? singular : plural}`;
+    }
+  }
+  return `${secs} secs`;
+};
+
+const HANDLED_SPARK_PROPERTY_KEYS = new Set<string>([
+  DATAPROC_LIGHTNING_ENGINE_PROPERTY,
+  'spark.dataproc.driver.disk.tier',
+  'spark.dataproc.driver.disk.size',
+  'spark.dataproc.executor.disk.tier',
+  'spark.dataproc.executor.disk.size',
+  'spark.dynamicAllocation.enabled',
+  'spark.dynamicAllocation.initialExecutors',
+  'spark.dynamicAllocation.minExecutors',
+  'spark.dynamicAllocation.maxExecutors'
+]);
 
 export interface IDeleteConfirmationModalProps {
   profileName: string;
@@ -145,6 +215,7 @@ export default function RuntimeProfileDetails({
   onBack,
   onDeleteSuccess
 }: IRuntimeProfileDetailsProps) {
+  const [isConfigExpanded, setIsConfigExpanded] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -152,6 +223,37 @@ export default function RuntimeProfileDetails({
     profile.name
   );
   const displayName = profile.jupyterSession?.displayName || shortName;
+  const properties = profile.runtimeConfig?.properties || {};
+  const executionConfig = profile.environmentConfig?.executionConfig;
+  const getProp = (key: string) => getPropertyValue(properties, key);
+
+  const encryptionType = executionConfig?.kmsKey
+    ? 'Customer-managed'
+    : 'Google-managed';
+  const lightningEngine =
+    getProp(DATAPROC_LIGHTNING_ENGINE_PROPERTY) === 'lightningEngine'
+      ? 'Enabled'
+      : 'Disabled';
+  const driverDisk = formatDiskConfig(
+    getProp('spark.dataproc.driver.disk.tier'),
+    getProp('spark.dataproc.driver.disk.size')
+  );
+  const executorDisk = formatDiskConfig(
+    getProp('spark.dataproc.executor.disk.tier'),
+    getProp('spark.dataproc.executor.disk.size')
+  );
+  const autoscalingStatus =
+    getProp('spark.dynamicAllocation.enabled').toLowerCase() === 'false'
+      ? 'Off'
+      : 'On';
+
+  const sparkPropertyMap = new Map<string, string>();
+  Object.entries(properties).forEach(([rawKey, value]) => {
+    const normalizedKey = stripPropertyPrefix(rawKey);
+    if (!HANDLED_SPARK_PROPERTY_KEYS.has(normalizedKey)) {
+      sparkPropertyMap.set(normalizedKey, value);
+    }
+  });
 
   const handleCopyName = async () => {
     if (!shortName) {
@@ -215,6 +317,10 @@ export default function RuntimeProfileDetails({
     }
   };
 
+  const ExpandChevron = isConfigExpanded
+    ? iconExpandLess.react
+    : iconExpandMore.react;
+
   const basicInfoRows = [
     { label: 'Name', value: shortName },
     { label: 'Region', value: region },
@@ -224,6 +330,101 @@ export default function RuntimeProfileDetails({
     { label: 'Description', value: profile.description || '' },
     { label: 'Display name', value: profile.jupyterSession?.displayName || '' },
     { label: 'Jupyter kernel', value: profile.jupyterSession?.kernel || '' }
+  ];
+
+  const runtimeVersion = profile.runtimeConfig?.version || '';
+  const configType = profile.jupyterSession ? 'Jupyter' : '';
+  const initialExec = getProp('spark.dynamicAllocation.initialExecutors');
+  const minExec = getProp('spark.dynamicAllocation.minExecutors');
+  const maxExec = getProp('spark.dynamicAllocation.maxExecutors');
+  const metastore =
+    profile.environmentConfig?.peripheralsConfig?.metastoreService || 'None';
+  const maxIdleTime = formatDurationTtl(executionConfig?.idleTtl);
+  const maxSessionTime = formatDurationTtl(executionConfig?.ttl);
+
+  const configSections: Array<{
+    title: string;
+    editable?: boolean;
+    rows: Array<{ label: string; value: React.ReactNode }>;
+  }> = [
+    {
+      title: 'Runtime configuration',
+      editable: true,
+      rows: [
+        { label: 'Spark runtime version', value: runtimeVersion },
+        { label: 'Configuration type', value: configType }
+      ]
+    },
+    {
+      title: 'Executor and driver configuration',
+      rows: [
+        { label: 'Lightning Engine', value: lightningEngine },
+        { label: 'Driver disk', value: driverDisk },
+        { label: 'Executor disk', value: executorDisk }
+      ]
+    },
+    {
+      title: 'Autoscaling',
+      editable: true,
+      rows:
+        autoscalingStatus === 'Off'
+          ? [{ label: 'Autoscaling', value: autoscalingStatus }]
+          : [
+              { label: 'Autoscaling', value: autoscalingStatus },
+              { label: 'Initial executors', value: initialExec },
+              { label: 'Minimum executors', value: minExec },
+              { label: 'Maximum executors', value: maxExec }
+            ]
+    },
+    {
+      title: 'Metastore configuration',
+      rows: [{ label: 'Metastore', value: metastore }]
+    },
+    {
+      title: 'Network and security',
+      rows: [{ label: 'Encryption type', value: encryptionType }]
+    },
+    {
+      title: 'Session lifecycle',
+      editable: true,
+      rows: [
+        { label: 'Max idle time', value: maxIdleTime },
+        { label: 'Max session time', value: maxSessionTime }
+      ]
+    },
+    {
+      title: 'Other customizations',
+      rows: [
+        {
+          label: 'Spark properties',
+          value:
+            sparkPropertyMap.size > 0
+              ? Array.from(sparkPropertyMap.entries()).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="runtime-profile-details-spark-prop-line"
+                  >
+                    {`${key}=${value}`}
+                  </div>
+                ))
+              : 'None'
+        },
+        {
+          label: 'Labels',
+          value:
+            Object.keys(profile.labels || {}).length > 0
+              ? Object.entries(profile.labels || {}).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="runtime-profile-details-spark-prop-line"
+                  >
+                    {`${key}=${value}`}
+                  </div>
+                ))
+              : 'None'
+        }
+      ]
+    }
   ];
 
   return (
@@ -285,10 +486,71 @@ export default function RuntimeProfileDetails({
 
         {basicInfoRows.map(row => (
           <div className="runtime-profile-details-row" key={row.label}>
-            <div className="runtime-profile-details-label">{row.label}</div>
+            <div className="runtime-profile-details-label level-1">
+              {row.label}
+            </div>
             <div className="runtime-profile-details-value">{row.value}</div>
           </div>
         ))}
+
+        <div
+          className="runtime-profile-details-section-header collapsible configuration-header"
+          onClick={() => setIsConfigExpanded(prev => !prev)}
+          role="button"
+          tabIndex={0}
+          aria-expanded={isConfigExpanded}
+          aria-controls="runtime-profile-config-content"
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsConfigExpanded(prev => !prev);
+            }
+          }}
+        >
+          <span>Configuration</span>
+          <span
+            className="runtime-profile-details-expand-icon"
+            aria-hidden="true"
+          >
+            <ExpandChevron tag="div" aria-hidden="true" />
+          </span>
+        </div>
+
+        {isConfigExpanded && (
+          <div id="runtime-profile-config-content">
+            {configSections.map(section => (
+              <React.Fragment key={section.title}>
+                <div className="runtime-profile-details-subsection-header">
+                  <span>{section.title}</span>
+                  {section.editable && (
+                    <button
+                      type="button"
+                      className="runtime-profile-details-subsection-edit-btn"
+                      aria-label={`Edit ${section.title}`}
+                      title={`Edit ${section.title}`}
+                      disabled
+                    >
+                      <iconEdit.react tag="div" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                {section.rows.map(row => (
+                  <div
+                    className="runtime-profile-details-row"
+                    key={`${section.title}-${row.label}`}
+                  >
+                    <div className="runtime-profile-details-label level-2">
+                      {row.label}
+                    </div>
+                    <div className="runtime-profile-details-value">
+                      {row.value}
+                    </div>
+                  </div>
+                ))}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

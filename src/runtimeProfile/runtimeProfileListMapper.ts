@@ -89,10 +89,27 @@ export interface IRuntimeProfileTemplate {
   };
   runtimeConfig?: {
     version?: string;
+    properties?: Record<string, string>;
+  };
+  environmentConfig?: {
+    executionConfig?: {
+      networkUri?: string;
+      subnetworkUri?: string;
+      kmsKey?: string;
+      idleTtl?: string;
+      ttl?: string;
+      authenticationConfig?: {
+        userWorkloadAuthenticationType?: string;
+      };
+    };
+    peripheralsConfig?: {
+      metastoreService?: string;
+    };
   };
   creator?: string;
   createTime?: string;
   updateTime?: string;
+  labels?: Record<string, string>;
 }
 
 const SESSION_TEMPLATE_RESOURCE_PATTERN =
