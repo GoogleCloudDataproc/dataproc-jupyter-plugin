@@ -83,15 +83,37 @@ export interface IRuntimeProfileTemplate {
     version?: string;
   };
   creator?: string;
+  createTime?: string;
   updateTime?: string;
 }
+
+const SESSION_TEMPLATE_RESOURCE_PATTERN =
+  /^projects\/[^/]+\/(?:locations|regions)\/([^/]+)\/sessionTemplates\/([^/]+)$/;
+
+export const parseRuntimeProfileResourceName = (
+  resourceName?: string
+): { region: string; profileId: string } => {
+  if (!resourceName) {
+    return { region: '', profileId: '' };
+  }
+  const match = SESSION_TEMPLATE_RESOURCE_PATTERN.exec(resourceName.trim());
+  if (match) {
+    return {
+      region: match[1] || '',
+      profileId: match[2] || ''
+    };
+  }
+  return {
+    region: '',
+    profileId: resourceName
+  };
+};
 
 export const runtimeProfileListMapper = (
   templates: IRuntimeProfileTemplate[]
 ): IRuntimeProfileRow[] => {
   return templates.map((t: IRuntimeProfileTemplate) => {
-    const nameParts = t.name?.split('/') || [];
-    const region = nameParts[3] || '';
+    const { region } = parseRuntimeProfileResourceName(t.name);
 
     return {
       name: t.jupyterSession?.displayName || t.name,
