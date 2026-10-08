@@ -472,4 +472,29 @@ describe('RuntimeProfileList Component', () => {
 
     expect(container.querySelector('.dropdown-content.show')).toBeNull();
   });
+
+  it('should open RuntimeProfileDetails on profile click and return on Back click', async () => {
+    await act(async () => {
+      root.render(<RuntimeProfileList />);
+    });
+
+    act(() => {
+      (container.querySelector('.profile-name-cell') as HTMLElement).click();
+    });
+
+    expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledTimes(1);
+    expect(container.textContent).toContain('Resource details');
+    expect(container.textContent).toContain('Basic Information');
+    expect(container.textContent).toContain('alice@example.com');
+
+    act(() => {
+      (
+        container.querySelector(
+          '.runtime-profile-details-back-btn'
+        ) as HTMLButtonElement
+      ).click();
+    });
+
+    expect(container.querySelector('.runtime-profile-table')).not.toBeNull();
+  });
 });

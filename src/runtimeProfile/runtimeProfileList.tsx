@@ -24,14 +24,21 @@ import addRuntimeIcon from '../../style/icons/plus_icon.svg';
 import refreshIcon from '../../style/icons/refresh_icon.svg';
 import { CircularProgress } from '@mui/material';
 import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
-import { IRuntimeProfileRow, runtimeProfileListMapper } from './runtimeProfileListMapper';
+import {
+  IRuntimeProfileRow,
+  IRuntimeProfileTemplate,
+  runtimeProfileListMapper
+} from './runtimeProfileListMapper';
 import { JupyterLab } from '@jupyterlab/application';
+import RuntimeProfileDetails from './runtimeProfileDetails';
 
 const iconAddRuntime = new LabIcon({ name: 'runtime-profile:add-runtime-icon', svgstr: addRuntimeIcon });
 const iconRefresh = new LabIcon({ name: 'runtime-profile:refresh-icon', svgstr: refreshIcon });
 
 export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
   const [profiles, setProfiles] = useState<IRuntimeProfileRow[]>([]);
+  const [rawTemplates, setRawTemplates] = useState<IRuntimeProfileTemplate[]>([]);
+  const [selectedProfile, setSelectedProfile] = useState<IRuntimeProfileTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageTokens, setPageTokens] = useState<string[]>(['']);
   const [pageOffsets, setPageOffsets] = useState<number[]>([0]);
@@ -67,6 +74,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         return;
       }
 
+      setRawTemplates(templates);
       const mappedProfiles = runtimeProfileListMapper(templates);
       setProfiles(mappedProfiles);
       setNextPageToken(newNextPageToken || null);
@@ -74,6 +82,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
       if (fetchId !== fetchIdRef.current) {
         return;
       }
+      setRawTemplates([]);
       setProfiles([]);
       setNextPageToken(null);
       DataprocLoggingService.log(`Error fetching runtime profiles: ${error}`, LOG_LEVEL.ERROR);
@@ -119,6 +128,31 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
       setIsDeleting(false);
     }
   };
+
+  const handleProfileClick = (profileId: string) => {
+    const matchedTemplate = rawTemplates.find(t => t.name === profileId);
+    if (matchedTemplate) {
+      setSelectedProfile(matchedTemplate);
+    }
+  };
+
+  if (selectedProfile) {
+    return (
+      <RuntimeProfileDetails
+        key={selectedProfile.name}
+        profile={selectedProfile}
+        onBack={() => setSelectedProfile(null)}
+        onDeleteSuccess={() => {
+          setSelectedProfile(null);
+          if (profiles.length === 1 && currentPage > 0) {
+            setCurrentPage(currentPage - 1);
+          } else {
+            fetchProfiles(pageTokens[currentPage]);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="runtime-profile-wrapper">
@@ -215,7 +249,20 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
               <tbody>
                 {profiles.map((profile) => (
                   <tr key={profile.id}>
-                    <td className="profile-name-cell">{profile.name}</td>
+                    <td
+                      className="profile-name-cell"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleProfileClick(profile.id)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleProfileClick(profile.id);
+                        }
+                      }}
+                    >
+                      {profile.name}
+                    </td>
                     <td>{profile.region}</td>
                     <td className="description-cell" title={profile.description}>
                       {profile.description}

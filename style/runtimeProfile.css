@@ -692,3 +692,153 @@ body[data-jp-theme-name='JupyterLab Dark']
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Runtime Profile Details Page Styles */
+.runtime-profile-details-wrapper {
+  --rp-details-text-color: #17365d;
+  --rp-details-border-color: #c5d1e0;
+  --rp-details-btn-border-color: #b8cce4;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--jp-layout-color1);
+  color: var(--rp-details-text-color);
+  font-family: var(--jp-ui-font-family);
+}
+
+body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
+  --rp-details-text-color: var(--jp-ui-font-color1);
+  --rp-details-border-color: var(--jp-border-color2);
+  --rp-details-btn-border-color: var(--jp-border-color1);
+}
+
+.runtime-profile-details-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px 8px;
+  flex-shrink: 0;
+}
+
+.runtime-profile-details-back-btn,
+.runtime-profile-details-copy-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--rp-details-text-color);
+}
+
+.runtime-profile-details-back-btn:hover,
+.runtime-profile-details-copy-btn:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.runtime-profile-details-back-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.runtime-profile-details-back-btn svg path,
+.runtime-profile-details-copy-btn svg path {
+  fill: var(--rp-details-text-color);
+}
+
+.runtime-profile-details-header-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.runtime-profile-details-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.runtime-profile-details-wrapper
+  .runtime-profile-details-header-actions
+  .secondary-action-btn {
+  color: var(--rp-details-text-color);
+  border-color: var(--rp-details-btn-border-color);
+  font-weight: 600;
+}
+
+.runtime-profile-details-header-actions .secondary-action-btn div,
+.runtime-profile-details-copy-btn div {
+  display: flex;
+  align-items: center;
+}
+
+.runtime-profile-details-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 40px;
+}
+
+.runtime-profile-details-title-row,
+.runtime-profile-details-section-header,
+.runtime-profile-details-row {
+  display: flex;
+  border-bottom: 1px solid var(--rp-details-border-color);
+  width: 75%;
+  box-sizing: border-box;
+}
+
+.runtime-profile-details-title-row {
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+}
+
+.runtime-profile-details-name {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 28px;
+}
+
+.runtime-profile-details-section-header,
+.runtime-profile-details-row {
+  padding: 8px 0;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.runtime-profile-details-section-header {
+  font-weight: 600;
+}
+
+.runtime-profile-details-row {
+  align-items: flex-start;
+}
+
+.runtime-profile-details-label,
+.runtime-profile-details-value {
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+.runtime-profile-details-label {
+  font-weight: 600;
+  width: 45%;
+  flex-shrink: 0;
+  padding-left: 24px;
+}
+
+.runtime-profile-details-value {
+  font-weight: 500;
+  width: 55%;
+}
+
+body[data-jp-theme-light='false']
+  .runtime-profile-details-wrapper
+  .secondary-action-btn
+  svg
+  path {
+  fill: var(--jp-brand-color1, #8ab4f8);
+}
