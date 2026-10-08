@@ -62,6 +62,7 @@ export interface IRuntimeProfileDetailsProps {
   onDeleteSuccess?: () => void;
 }
 
+/** Renders resource details for a selected Serverless Runtime Profile. */
 export default function RuntimeProfileDetails({
   profile,
   onBack,
