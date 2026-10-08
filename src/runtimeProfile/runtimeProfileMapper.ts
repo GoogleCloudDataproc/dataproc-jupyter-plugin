@@ -121,12 +121,17 @@ export const parseMachineTypeSpec = (
 };
 
 /**
+ * Default disk size for Dataproc Serverless driver and executors
+ * (matches RESOURCE_ALLOCATION_DEFAULT in const.ts).
+ */
+export const DEFAULT_DISK_SIZE = '400g';
+
+/**
  * Parses disk specification string into disk tier ('standard' | 'premium') and size (e.g. '400g').
- * Dataproc Serverless requires a minimum disk size of 250 GB.
  */
 export const parseDiskSpec = (
   diskStr?: string,
-  defaultSize = '400g'
+  defaultSize = DEFAULT_DISK_SIZE
 ): { tier?: string; size?: string } => {
   if (!diskStr || diskStr.trim() === '') {
     return {};
@@ -140,9 +145,7 @@ export const parseDiskSpec = (
   let size = defaultSize;
   if (sizeMatch) {
     const parsedNum = parseInt(sizeMatch[1], 10);
-    // Dataproc Serverless enforces a minimum disk size of 250 GB
-    const clampedNum = parsedNum < 250 ? 250 : parsedNum;
-    size = `${clampedNum}g`;
+    size = `${parsedNum}g`;
   }
   return { tier, size };
 };
@@ -282,7 +285,10 @@ export function mapRuntimeProfileToSessionTemplate(
     }
   }
 
-  const driverDisk = parseDiskSpec(executorAndDriverConfig?.driverDisk, '400g');
+  const driverDisk = parseDiskSpec(
+    executorAndDriverConfig?.driverDisk,
+    DEFAULT_DISK_SIZE
+  );
   if (driverDisk.tier && !properties['spark.dataproc.driver.disk.tier']) {
     properties['spark.dataproc.driver.disk.tier'] = driverDisk.tier;
     if (
@@ -345,7 +351,7 @@ export function mapRuntimeProfileToSessionTemplate(
   // Executor disk properties
   const executorDisk = parseDiskSpec(
     executorAndDriverConfig?.executorDisk,
-    '400g'
+    DEFAULT_DISK_SIZE
   );
   if (executorDisk.tier && !properties['spark.dataproc.executor.disk.tier']) {
     properties['spark.dataproc.executor.disk.tier'] = executorDisk.tier;

@@ -107,14 +107,14 @@ describe('runtimeProfileMapper', () => {
   });
 
   describe('parseDiskSpec', () => {
-    it('should parse standard and premium disk types and sizes and enforce minimum 250g', () => {
+    it('should parse standard and premium disk types and pass through specified sizes', () => {
       expect(parseDiskSpec('standard persistent disk')).toEqual({
         tier: 'standard',
         size: '400g'
       });
       expect(parseDiskSpec('Standard persistent disk (HDD), 100 GB')).toEqual({
         tier: 'standard',
-        size: '250g'
+        size: '100g'
       });
       expect(parseDiskSpec('SSD persistent disk (SSD), 500 GB')).toEqual({
         tier: 'premium',
@@ -238,7 +238,7 @@ describe('runtimeProfileMapper', () => {
       ).toBe('standard');
       expect(
         result.runtimeConfig?.properties?.['spark.dataproc.executor.disk.size']
-      ).toBe('250g');
+      ).toBe('100g');
     });
 
     it('should map accelerated executor machine type and SSD executor disk to properties', () => {
@@ -277,8 +277,7 @@ describe('runtimeProfileMapper', () => {
         'l4'
       );
       expect(props?.['spark.dataproc.executor.disk.tier']).toBe('premium');
-      // 200 GB is clamped to minimum 250g enforced by Dataproc Serverless
-      expect(props?.['spark.dataproc.executor.disk.size']).toBe('250g');
+      expect(props?.['spark.dataproc.executor.disk.size']).toBe('200g');
     });
 
     it('should automatically set spark.dataproc.executor.compute.tier to premium for highmem shapes', () => {
