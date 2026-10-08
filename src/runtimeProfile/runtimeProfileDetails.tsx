@@ -24,11 +24,12 @@ import EditIcon from '../../style/icons/edit_icon.svg';
 import DeleteClusterIcon from '../../style/icons/delete_cluster_icon.svg';
 import CloneIcon from '../../style/icons/clone_icon.svg';
 import {
+  formatLastUsed,
   IRuntimeProfileTemplate,
   parseRuntimeProfileResourceName
 } from './runtimeProfileListMapper';
 import { RuntimeProfileService } from './runtimeProfileService';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { LOG_LEVEL, safeLog } from '../utils/loggingService';
 
 const makeIcon = (name: string, svgstr: string) =>
   new LabIcon({ name: `runtime-profile-details:${name}`, svgstr });
@@ -36,15 +37,6 @@ const iconLeftArrow = makeIcon('left-arrow-icon', LeftArrowIcon);
 const iconEdit = makeIcon('edit-icon', EditIcon);
 const iconDelete = makeIcon('delete-icon', DeleteClusterIcon);
 const iconCopy = makeIcon('copy-icon', CloneIcon);
-
-const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO): void => {
-  if (process.env.NODE_ENV === 'test' || Boolean(process.env.JEST_WORKER_ID)) {
-    return;
-  }
-  DataprocLoggingService.log(message, level).catch(() => {
-    // Ignore background logging transport errors
-  });
-};
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = 'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec'.split(',');
@@ -62,35 +54,6 @@ export const formatCreateTime = (dateString?: string): string => {
     date.getUTCMinutes()
   )}:${pad(date.getUTCSeconds())}`;
   return `${datePart} ${timePart} GMT+0000 (Coordinated Universal Time)`;
-};
-
-export const formatDetailsLastUsed = (dateString?: string): string => {
-  const date = dateString ? new Date(dateString) : null;
-  if (!date || isNaN(date.getTime())) {
-    return '';
-  }
-  const now = new Date();
-  const isSameDay = (a: Date, b: Date) =>
-    a.getDate() === b.getDate() &&
-    a.getMonth() === b.getMonth() &&
-    a.getFullYear() === b.getFullYear();
-
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-
-  if (isSameDay(date, now)) {
-    const diffMs = Math.max(0, now.getTime() - date.getTime());
-    const diffHours = Math.floor(diffMs / 3600000);
-    if (diffHours === 0) {
-      const diffMins = Math.floor(diffMs / 60000);
-      return diffMins === 1 ? '1 minute ago' : `${diffMins} minutes ago`;
-    }
-    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
-  }
-  if (isSameDay(date, yesterday)) {
-    return 'yesterday';
-  }
-  return `${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 };
 
 export interface IRuntimeProfileDetailsProps {
@@ -131,9 +94,17 @@ export default function RuntimeProfileDetails({
     try {
       if (shortName && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shortName);
+        Notification.emit('Name copied to clipboard', 'success', {
+          autoClose: 2000
+        });
+      } else {
+        throw new Error('Clipboard API not available');
       }
     } catch (error) {
       safeLog(`Failed to copy runtime profile name: ${error}`, LOG_LEVEL.WARN);
+      Notification.emit('Failed to copy name to clipboard', 'error', {
+        autoClose: 3000
+      });
     }
   };
 
@@ -150,7 +121,6 @@ export default function RuntimeProfileDetails({
       Notification.emit(`${displayName} is deleted successfully`, 'success', {
         autoClose: 5000
       });
-      setShowDeleteModal(false);
       if (onDeleteSuccess) {
         onDeleteSuccess();
       } else {
@@ -161,7 +131,6 @@ export default function RuntimeProfileDetails({
       Notification.emit(`Failed to delete ${displayName}: ${error}`, 'error', {
         autoClose: 5000
       });
-    } finally {
       setIsDeleting(false);
     }
   };
@@ -171,7 +140,7 @@ export default function RuntimeProfileDetails({
     { label: 'Region', value: region },
     { label: 'Create time', value: formatCreateTime(profile.createTime) },
     { label: 'Creator', value: profile.creator || '' },
-    { label: 'Last used', value: formatDetailsLastUsed(profile.updateTime) },
+    { label: 'Last used', value: formatLastUsed(profile.updateTime, true) },
     { label: 'Description', value: profile.description || '' },
     { label: 'Display name', value: profile.jupyterSession?.displayName || '' },
     { label: 'Jupyter kernel', value: profile.jupyterSession?.kernel || '' }
@@ -246,7 +215,7 @@ export default function RuntimeProfileDetails({
           Resource details
         </div>
         <div className="runtime-profile-details-header-actions">
-          <button type="button" className="secondary-action-btn">
+          <button type="button" className="secondary-action-btn" disabled>
             <iconEdit.react tag="div" aria-hidden="true" />
             Edit
           </button>

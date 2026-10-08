@@ -22,7 +22,7 @@ import {
   HTTP_METHOD
 } from '../utils/const';
 import { authApi, authenticatedFetch, loggedFetch } from '../utils/utils';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { LOG_LEVEL, safeLog } from '../utils/loggingService';
 import {
   ICreateRuntimeProfilePayload,
   IRegionOption,
@@ -45,19 +45,6 @@ export const MOCK_REGIONS: IRegionOption[] = [
   { name: 'us-central1', displayName: 'us-central1 (Iowa)' },
   { name: 'us-east1', displayName: 'us-east1 (South Carolina)' }
 ];
-
-const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
-  if (process.env.NODE_ENV === 'test' || Boolean(process.env.JEST_WORKER_ID)) {
-    return;
-  }
-  try {
-    DataprocLoggingService.log(message, level).catch(() => {
-      // Ignore background log transport errors
-    });
-  } catch {
-    // Ignore synchronous logging errors
-  }
-};
 
 const DEFAULT_RUNTIME_PROFILE_PAGE_SIZE = 50;
 const MAX_EMPTY_PAGE_HOPS = 10;
