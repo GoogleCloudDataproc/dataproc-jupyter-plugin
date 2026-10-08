@@ -313,6 +313,8 @@ export const BIGQUERY_API_URL =
 
 export const DEFAULT_GENERAL_EXECUTOR_TYPE = 'highmem-4';
 export const DEFAULT_ACCELERATED_EXECUTOR_TYPE = 'l4-4';
+// Standard tier allows <= 7,424 MB memory per core (incl. 40% overhead), so highmem shapes are not supported.
+export const DEFAULT_STANDARD_TIER_EXECUTOR_TYPE = 'standard-4';
 
 /**
  * Predefined Dataproc Serverless Standard (CPU only) machine types

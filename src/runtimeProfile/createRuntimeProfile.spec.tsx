@@ -36,6 +36,11 @@ jest.mock('@jupyterlab/apputils', () => ({
   }
 }));
 
+jest.mock('../utils/utils', () => ({
+  ...jest.requireActual('../utils/utils'),
+  authApi: jest.fn().mockResolvedValue(undefined)
+}));
+
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import {
@@ -43,6 +48,8 @@ import {
   renderGroupedMachineOptions
 } from './createRuntimeProfile';
 import { RuntimeProfileService } from './runtimeProfileService';
+import { Notification } from '@jupyterlab/apputils';
+import { authApi } from '../utils/utils';
 import {
   DATAPROC_TIER_DOC,
   LIGHTNING_ENGINE_DOC,
@@ -719,6 +726,114 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
   };
 
+  it('switches a highmem executor to standard-4 when Standard tier is selected', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    expect(getFieldValue('Executor type')).toBe('highmem-4 (4 vCPU, 32 GB)');
+
+    const standardTierCard = container
+      .querySelectorAll('.node-config-cards-container')[0]
+      .querySelectorAll('.node-config-card')[1] as HTMLDivElement;
+    await act(async () => {
+      standardTierCard.click();
+    });
+
+    expect(getFieldValue('Executor type')).toBe('standard-4 (4 vCPU, 16 GB)');
+
+    // Re-selecting the General card on Standard tier keeps the Standard default
+    const generalExecutorCard = container
+      .querySelectorAll('.node-config-cards-container')[1]
+      .querySelectorAll('.node-config-card')[0] as HTMLDivElement;
+    await act(async () => {
+      generalExecutorCard.click();
+    });
+
+    expect(getFieldValue('Executor type')).toBe('standard-4 (4 vCPU, 16 GB)');
+  });
+
+  it('submits the form payload to the service and notifies on success', async () => {
+    const createSpy = jest
+      .spyOn(mockService, 'createRuntimeProfile')
+      .mockResolvedValue({ displayName: 'created', region: 'us-central1' });
+    const onSuccess = jest.fn();
+
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          onSuccess={onSuccess}
+        />
+      );
+    });
+
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
+    expect(submitButton.disabled).toBe(false);
+
+    await act(async () => {
+      submitButton.click();
+    });
+
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        region: 'us-central1',
+        tier: 'Premium',
+        executorConfig: { executorType: 'general', machineType: 'highmem-4' }
+      }),
+      undefined,
+      'us-central1'
+    );
+    expect(Notification.emit).toHaveBeenCalledWith(
+      expect.stringContaining('created successfully'),
+      'success',
+      expect.anything()
+    );
+    expect(onSuccess).toHaveBeenCalled();
+  });
+
+  it('pre-selects the region saved in Settings when it is in the list', async () => {
+    (authApi as jest.Mock).mockResolvedValueOnce({ region_id: 'us-east1' });
+    const createSpy = jest
+      .spyOn(mockService, 'createRuntimeProfile')
+      .mockResolvedValue({ displayName: 'created', region: 'us-east1' });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+    await act(async () => {
+      (
+        container.querySelector('button[type="submit"]') as HTMLButtonElement
+      ).click();
+    });
+
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ region: 'us-east1' }),
+      undefined,
+      'us-east1'
+    );
+  });
+
+  it('shows an error notification when regions fail to load', async () => {
+    jest
+      .spyOn(mockService, 'getRegions')
+      .mockRejectedValue(new Error('Permission denied'));
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    expect(Notification.emit).toHaveBeenCalledWith(
+      'Permission denied',
+      'error',
+      { autoClose: 5000 }
+    );
+    consoleSpy.mockRestore();
+  });
+
   it('keeps the selected machine type when re-clicking the already selected category', async () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);
@@ -768,12 +883,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     await selectExecutorType('l4-8');
 
-    // Submit button is disabled until API integration, so submit the form directly
-    const form = container.querySelector('form') as HTMLFormElement;
+    const submitButton = container.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement;
     await act(async () => {
-      form.dispatchEvent(
-        new Event('submit', { bubbles: true, cancelable: true })
-      );
+      submitButton.click();
     });
 
     expect(createSpy).toHaveBeenCalledTimes(1);

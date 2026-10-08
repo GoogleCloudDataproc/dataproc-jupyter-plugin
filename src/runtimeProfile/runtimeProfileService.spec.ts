@@ -28,6 +28,7 @@ jest.mock('../handler/handler', () => ({
 }));
 
 import { RuntimeProfileService } from './runtimeProfileService';
+import { mapRuntimeProfileToSessionTemplate } from './runtimeProfileMapper';
 import { authenticatedFetch, loggedFetch, authApi } from '../utils/utils';
 import { HTTP_METHOD } from '../utils/const';
 
@@ -61,7 +62,10 @@ describe('RuntimeProfileService', () => {
         uri: 'sessionTemplates',
         method: HTTP_METHOD.GET,
         regionIdentifier: 'locations',
-        queryParams: new URLSearchParams({ pageSize: '50', pageToken: 'page-1' })
+        queryParams: new URLSearchParams({
+          pageSize: '50',
+          pageToken: 'page-1'
+        })
       });
       expect(result).toEqual({
         templates: mockData.sessionTemplates,
@@ -89,7 +93,9 @@ describe('RuntimeProfileService', () => {
           json: jest.fn().mockResolvedValue(validPage)
         });
 
-      const result = await RuntimeProfileService.fetchRuntimeProfiles('token-1');
+      const result = await RuntimeProfileService.fetchRuntimeProfiles(
+        'token-1'
+      );
 
       expect(authenticatedFetch).toHaveBeenCalledTimes(2);
       expect(result).toEqual({
@@ -107,7 +113,9 @@ describe('RuntimeProfileService', () => {
         })
       });
 
-      const result = await RuntimeProfileService.fetchRuntimeProfiles('token-1');
+      const result = await RuntimeProfileService.fetchRuntimeProfiles(
+        'token-1'
+      );
 
       expect(authenticatedFetch).toHaveBeenCalledTimes(10);
       expect(result).toEqual({
@@ -140,28 +148,38 @@ describe('RuntimeProfileService', () => {
       (authenticatedFetch as jest.Mock).mockResolvedValue({
         ok: false,
         statusText: 'Forbidden',
-        json: jest.fn().mockResolvedValue({ error: { message: 'Permission denied' } })
+        json: jest
+          .fn()
+          .mockResolvedValue({ error: { message: 'Permission denied' } })
       });
 
-      await expect(RuntimeProfileService.fetchRuntimeProfiles()).rejects.toThrow('Permission denied');
+      await expect(
+        RuntimeProfileService.fetchRuntimeProfiles()
+      ).rejects.toThrow('Permission denied');
     });
 
     it('throws statusText error if response is not ok and body is non-JSON', async () => {
       (authenticatedFetch as jest.Mock).mockResolvedValue({
         ok: false,
         statusText: 'Bad Gateway',
-        json: jest.fn().mockRejectedValue(new SyntaxError('Unexpected token < in JSON'))
+        json: jest
+          .fn()
+          .mockRejectedValue(new SyntaxError('Unexpected token < in JSON'))
       });
 
-      await expect(RuntimeProfileService.fetchRuntimeProfiles()).rejects.toThrow(
-        'Failed to fetch runtime profiles: Bad Gateway'
-      );
+      await expect(
+        RuntimeProfileService.fetchRuntimeProfiles()
+      ).rejects.toThrow('Failed to fetch runtime profiles: Bad Gateway');
     });
 
     it('throws error if authenticatedFetch fails', async () => {
-      (authenticatedFetch as jest.Mock).mockRejectedValue(new Error('API error'));
+      (authenticatedFetch as jest.Mock).mockRejectedValue(
+        new Error('API error')
+      );
 
-      await expect(RuntimeProfileService.fetchRuntimeProfiles()).rejects.toThrow('API error');
+      await expect(
+        RuntimeProfileService.fetchRuntimeProfiles()
+      ).rejects.toThrow('API error');
     });
   });
 
@@ -190,7 +208,9 @@ describe('RuntimeProfileService', () => {
       (authApi as jest.Mock).mockResolvedValue({ access_token: 'test-token' });
       (loggedFetch as jest.Mock).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockRejectedValue(new SyntaxError('Unexpected end of input'))
+        json: jest
+          .fn()
+          .mockRejectedValue(new SyntaxError('Unexpected end of input'))
       });
 
       await expect(
@@ -202,10 +222,65 @@ describe('RuntimeProfileService', () => {
       (authApi as jest.Mock).mockResolvedValue({ access_token: 'test-token' });
       (loggedFetch as jest.Mock).mockResolvedValue({
         ok: false,
-        json: jest.fn().mockResolvedValue({ error: { message: 'Delete error' } })
+        json: jest
+          .fn()
+          .mockResolvedValue({ error: { message: 'Delete error' } })
       });
 
-      await expect(RuntimeProfileService.deleteRuntimeProfile('profile1')).rejects.toThrow('Delete error');
+      await expect(
+        RuntimeProfileService.deleteRuntimeProfile('profile1')
+      ).rejects.toThrow('Delete error');
+    });
+  });
+
+  describe('getRegions', () => {
+    it('returns regions from the API in live mode', async () => {
+      (authApi as jest.Mock).mockResolvedValue({
+        access_token: 'live-token',
+        project_id: 'my-project'
+      });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          items: [{ name: 'asia-east1' }, { name: 'us-central1' }]
+        })
+      });
+
+      const regions = await new RuntimeProfileService(false).getRegions();
+
+      expect((loggedFetch as jest.Mock).mock.calls[0][0]).toContain(
+        '/my-project/regions'
+      );
+      expect(regions).toEqual([
+        { name: 'asia-east1', displayName: 'asia-east1' },
+        { name: 'us-central1', displayName: 'us-central1' }
+      ]);
+    });
+
+    it('throws the API error instead of falling back to mock regions', async () => {
+      (authApi as jest.Mock).mockResolvedValue({
+        access_token: 'live-token',
+        project_id: 'my-project'
+      });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        json: jest
+          .fn()
+          .mockResolvedValue({ error: { message: 'Permission denied' } })
+      });
+
+      await expect(
+        new RuntimeProfileService(false).getRegions()
+      ).rejects.toThrow('Permission denied');
+    });
+
+    it('returns an empty list when no project ID is available', async () => {
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+
+      const regions = await new RuntimeProfileService(false).getRegions();
+
+      expect(regions).toEqual([]);
+      expect(loggedFetch).not.toHaveBeenCalled();
     });
   });
 
@@ -253,7 +328,7 @@ describe('RuntimeProfileService', () => {
       expect(profile.autoscalingConfig?.maxExecutors).toBe(10);
     });
 
-    it('sends payload including executorAndDriverConfig via loggedFetch in live mode', async () => {
+    it('maps payload to SessionTemplate schema and sends it via loggedFetch in live mode', async () => {
       const service = new RuntimeProfileService(false);
       const payload = {
         displayName: 'runtime-live',
@@ -287,13 +362,54 @@ describe('RuntimeProfileService', () => {
         ),
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify(payload)
+          body: JSON.stringify(
+            mapRuntimeProfileToSessionTemplate(
+              payload,
+              'live-project',
+              'us-east1'
+            )
+          )
         })
       );
       expect(result.executorAndDriverConfig).toEqual(
         payload.executorAndDriverConfig
       );
     });
+
+    it('throws API error message when live create response is not ok', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({
+        access_token: 'live-token',
+        project_id: 'live-project'
+      });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: jest
+          .fn()
+          .mockResolvedValue({ error: { message: 'Invalid session template' } })
+      });
+
+      await expect(
+        service.createRuntimeProfile({
+          displayName: 'runtime-live',
+          region: 'us-east1'
+        })
+      ).rejects.toThrow('Invalid session template');
+    });
+
+    it('throws when no project ID is available in live mode', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+
+      await expect(
+        service.createRuntimeProfile({
+          displayName: 'runtime-live',
+          region: 'us-east1'
+        })
+      ).rejects.toThrow('GCP Project ID is required');
+      expect(loggedFetch).not.toHaveBeenCalled();
+    });
   });
 });
-
