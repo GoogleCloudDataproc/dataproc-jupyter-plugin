@@ -399,6 +399,29 @@ describe('RuntimeProfileService', () => {
       ).rejects.toThrow('Invalid session template');
     });
 
+    it('throws a readable error when the live create response is not JSON', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({
+        access_token: 'live-token',
+        project_id: 'live-project'
+      });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+        json: jest
+          .fn()
+          .mockRejectedValue(new SyntaxError("Unexpected token '<'"))
+      });
+
+      await expect(
+        service.createRuntimeProfile({
+          displayName: 'runtime-live',
+          region: 'us-east1'
+        })
+      ).rejects.toThrow('Failed to create runtime profile (502: Bad Gateway)');
+    });
+
     it('throws when no project ID is available in live mode', async () => {
       const service = new RuntimeProfileService(false);
       (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });

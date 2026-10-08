@@ -834,6 +834,23 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     consoleSpy.mockRestore();
   });
 
+  it('clears the loading state and shows an error when authApi fails', async () => {
+    (authApi as jest.Mock).mockRejectedValueOnce(new Error('Auth failed'));
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    expect(Notification.emit).toHaveBeenCalledWith('Auth failed', 'error', {
+      autoClose: 5000
+    });
+    const regionSelect = container.querySelector('#runtime-profile-region');
+    expect(regionSelect).not.toBeNull();
+    expect(regionSelect?.getAttribute('aria-disabled')).not.toBe('true');
+    consoleSpy.mockRestore();
+  });
+
   it('keeps the selected machine type when re-clicking the already selected category', async () => {
     await act(async () => {
       root.render(<CreateRuntimeProfileComponent service={mockService} />);

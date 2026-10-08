@@ -292,7 +292,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         body: JSON.stringify(apiPayload)
       });
 
-      const result = await response.json();
+      const result = await response.json().catch(() => null);
       if (!response.ok || result?.error) {
         throw new Error(
           result?.error?.message ||

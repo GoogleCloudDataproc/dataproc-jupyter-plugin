@@ -90,7 +90,7 @@ import {
   runtimeProfileService
 } from './runtimeProfileService';
 import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
-import { authApi } from '../utils/utils';
+import { authApi, IAuthCredentials } from '../utils/utils';
 
 interface IRuntimeProfileFormData {
   displayName: string;
@@ -696,8 +696,9 @@ export const CreateRuntimeProfileComponent: React.FC<
     let isMounted = true;
     const loadInitialData = async () => {
       setIsLoadingOptions(true);
-      const credentials = await authApi();
+      let credentials: IAuthCredentials | undefined;
       try {
+        credentials = await authApi();
         const loadedRegions = await service.getRegions();
 
         if (isMounted) {
