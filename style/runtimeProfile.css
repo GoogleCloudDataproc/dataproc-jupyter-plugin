@@ -769,6 +769,11 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
   font-weight: 600;
 }
 
+.runtime-profile-details-header-actions .secondary-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .runtime-profile-details-header-actions .secondary-action-btn div,
 .runtime-profile-details-copy-btn div {
   display: flex;

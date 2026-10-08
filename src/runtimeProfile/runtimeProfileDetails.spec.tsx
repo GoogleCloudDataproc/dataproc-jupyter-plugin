@@ -26,10 +26,12 @@ jest.mock('../handler/handler', () => ({
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import RuntimeProfileDetails, {
-  formatCreateTime,
-  formatDetailsLastUsed
+  formatCreateTime
 } from './runtimeProfileDetails';
-import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
+import {
+  formatLastUsed,
+  IRuntimeProfileTemplate
+} from './runtimeProfileListMapper';
 import { RuntimeProfileService } from './runtimeProfileService';
 import { Notification } from '@jupyterlab/apputils';
 
@@ -111,6 +113,11 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('test123');
     expect(container.textContent).toContain('PYTHON');
 
+    const editBtn = Array.from(
+      container.querySelectorAll('.secondary-action-btn')
+    ).find(btn => btn.textContent?.includes('Edit')) as HTMLButtonElement;
+    expect(editBtn.disabled).toBe(true);
+
     const copyBtn = container.querySelector(
       '.runtime-profile-details-copy-btn'
     ) as HTMLButtonElement;
@@ -118,11 +125,21 @@ describe('RuntimeProfileDetails Component', () => {
       copyBtn.click();
     });
     expect(writeTextMock).toHaveBeenCalledWith('aditee-test1234');
+    expect(Notification.emit).toHaveBeenCalledWith(
+      'Name copied to clipboard',
+      'success',
+      { autoClose: 2000 }
+    );
 
     await act(async () => {
       copyBtn.click();
     });
     expect(writeTextMock).toHaveBeenCalledTimes(2);
+    expect(Notification.emit).toHaveBeenCalledWith(
+      'Failed to copy name to clipboard',
+      'error',
+      { autoClose: 3000 }
+    );
 
     const backBtn = container.querySelector(
       '.runtime-profile-details-back-btn'
@@ -197,12 +214,29 @@ describe('RuntimeProfileDetails Component', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-09-29T15:37:20Z'));
 
-    expect(formatDetailsLastUsed('')).toBe('');
-    expect(formatDetailsLastUsed('invalid-date')).toBe('');
-    expect(formatDetailsLastUsed('2026-09-29T15:37:20Z')).toBe('0 minutes ago');
-    expect(formatDetailsLastUsed('2026-09-29T15:36:10Z')).toBe('1 minute ago');
-    expect(formatDetailsLastUsed('2026-09-29T13:37:20Z')).toBe('2 hours ago');
-    expect(formatDetailsLastUsed('2026-09-28T15:37:20Z')).toBe('yesterday');
-    expect(formatDetailsLastUsed('2026-01-10T15:37:20Z')).toBe('Jan 10, 2026');
+    expect(formatLastUsed('', true)).toBe('');
+    expect(formatLastUsed('invalid-date', true)).toBe('');
+    expect(formatLastUsed('2026-09-29T15:37:20Z', true)).toBe('0 minutes ago');
+    expect(formatLastUsed('2026-09-29T15:36:10Z', true)).toBe('1 minute ago');
+    expect(formatLastUsed('2026-09-29T13:37:20Z', true)).toBe('2 hours ago');
+    expect(formatLastUsed('2026-09-28T15:37:20Z', true)).toBe('yesterday');
+
+    const expectedDate = new Date('2026-01-10T15:37:20Z');
+    const expectedMonth = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ][expectedDate.getMonth()];
+    const expectedString = `${expectedMonth} ${expectedDate.getDate()}, ${expectedDate.getFullYear()}`;
+    expect(formatLastUsed('2026-01-10T15:37:20Z', true)).toBe(expectedString);
   });
 });

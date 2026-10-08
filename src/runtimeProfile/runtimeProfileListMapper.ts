@@ -25,7 +25,10 @@ export interface IRuntimeProfileRow {
   id: string;
 }
 
-const formatLastUsed = (dateString: string) => {
+export const formatLastUsed = (
+  dateString?: string,
+  useLongUnits: boolean = false
+): string => {
   if (!dateString) return '';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return '';
@@ -48,6 +51,9 @@ const formatLastUsed = (dateString: string) => {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     if (diffHours === 0) {
       const diffMins = Math.floor(diffMs / (1000 * 60));
+      if (useLongUnits) {
+        return diffMins === 1 ? '1 minute ago' : `${diffMins} minutes ago`;
+      }
       return diffMins <= 1 ? '1 min ago' : `${diffMins} mins ago`;
     }
     return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;

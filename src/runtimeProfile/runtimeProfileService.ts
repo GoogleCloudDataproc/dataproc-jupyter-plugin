@@ -22,7 +22,7 @@ import {
   HTTP_METHOD
 } from '../utils/const';
 import { authApi, authenticatedFetch, loggedFetch } from '../utils/utils';
-import { DataprocLoggingService, LOG_LEVEL } from '../utils/loggingService';
+import { LOG_LEVEL, safeLog } from '../utils/loggingService';
 import {
   ICreateRuntimeProfilePayload,
   IRegionOption,
@@ -57,19 +57,6 @@ export const MOCK_BUCKET_OBJECTS: string[] = [
   'notebooks/etl_pipeline.ipynb',
   'scripts/spark_job.py'
 ];
-
-const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
-  if (process.env.NODE_ENV === 'test' || Boolean(process.env.JEST_WORKER_ID)) {
-    return;
-  }
-  try {
-    DataprocLoggingService.log(message, level).catch(() => {
-      // Ignore background log transport errors
-    });
-  } catch {
-    // Ignore synchronous logging errors
-  }
-};
 
 const DEFAULT_RUNTIME_PROFILE_PAGE_SIZE = 50;
 const MAX_EMPTY_PAGE_HOPS = 10;
@@ -111,7 +98,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
         });
         throw new Error(
           errorData?.error?.message ||
-            `Failed to fetch runtime profiles: ${response.statusText}`
+          `Failed to fetch runtime profiles: ${response.statusText}`
         );
       }
 
@@ -169,7 +156,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || data?.error) {
       throw new Error(
         data?.error?.message ||
-          `Failed to delete runtime profile ${displayName}`
+        `Failed to delete runtime profile ${displayName}`
       );
     }
   }
@@ -209,7 +196,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-          `Failed to fetch regions: ${response.statusText}`
+        `Failed to fetch regions: ${response.statusText}`
       );
     }
 
@@ -252,7 +239,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-          `Failed to fetch buckets: ${response.statusText}`
+        `Failed to fetch buckets: ${response.statusText}`
       );
     }
 
@@ -289,7 +276,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-          `Failed to fetch objects for bucket ${bucketName}: ${response.statusText}`
+        `Failed to fetch objects for bucket ${bucketName}: ${response.statusText}`
       );
     }
 
@@ -334,7 +321,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     if (!response.ok || result?.error) {
       throw new Error(
         result?.error?.message ||
-          `Failed to create bucket ${trimmedName}: ${response.statusText}`
+        `Failed to create bucket ${trimmedName}: ${response.statusText}`
       );
     }
 
@@ -432,7 +419,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       if (!response.ok || result?.error) {
         throw new Error(
           result?.error?.message ||
-            `Failed to create runtime profile (${response.status}: ${response.statusText})`
+          `Failed to create runtime profile (${response.status}: ${response.statusText})`
         );
       }
       return result as IRuntimeProfile;
