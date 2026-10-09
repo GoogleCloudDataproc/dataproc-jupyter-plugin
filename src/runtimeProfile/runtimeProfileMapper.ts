@@ -462,7 +462,9 @@ export const parseDiskTierAndSize = (
         ? formatted
         : DEFAULT_SSD_DISK_SIZE;
     } else {
-      size = HDD_DISK_SIZES.includes(formatted) ? formatted : `${rawNum} GiB`;
+      size = HDD_DISK_SIZES.includes(formatted)
+        ? formatted
+        : DEFAULT_HDD_DISK_SIZE;
     }
   }
   return { tier, size };
