@@ -42,6 +42,11 @@ import expandMoreIcon from '../../style/icons/expand_more.svg';
 import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import '../../style/runtimeProfile.css';
 import {
+  RuntimeEnvironmentEditDrawer,
+  RUNTIME_VERSION_OPTIONS,
+  SelectBucketEditDrawer
+} from './runtimeProfileEditDrawers';
+import {
   DATAPROC_TIER_DOC,
   LIGHTNING_ENGINE_DOC,
   RUNTIME_PROFILE_INTRO_TEXT,
@@ -146,7 +151,7 @@ export const generateRandomHex = (): string => {
  */
 export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   runtimeProfileId: '',
-  runtimeVersion: '2.3',
+  runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
   customSparkImage: '',
   stagingBucket: '',
   pythonPackageRepository: ''
@@ -502,6 +507,8 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(true);
+  const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
+    useState<boolean>(false);
 
   // Tier and Lightning Engine state
   const initialTierValue =
@@ -549,7 +556,6 @@ export const CreateRuntimeProfileComponent: React.FC<
     control,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors, isSubmitting }
   } = useForm<IRuntimeProfileFormData>({
     mode: 'onChange',
@@ -560,25 +566,30 @@ export const CreateRuntimeProfileComponent: React.FC<
     }
   });
 
-  const watchedDisplayName = watch('displayName');
-
   // Configuration values derived from initial props or defaults.
   // TODO: Validation on runtimeProfileId / displayName field will be handled in upcoming PRs.
-  const runtimeEnvironmentConfig = useMemo<IRuntimeEnvironmentConfig>(
+  const [runtimeEnvironmentConfig, setRuntimeEnvironmentConfig] =
+    useState<IRuntimeEnvironmentConfig>(() => {
+      const baseConfig = {
+        ...DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
+        ...initialRuntimeEnvironmentConfig
+      };
+      return {
+        ...baseConfig,
+        runtimeProfileId:
+          baseConfig.runtimeProfileId && baseConfig.runtimeProfileId !== '-'
+            ? baseConfig.runtimeProfileId
+            : defaultRuntimeId
+      };
+    });
+
+  const activeRuntimeEnvironmentConfig = useMemo<IRuntimeEnvironmentConfig>(
     () => ({
-      ...DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
-      ...initialRuntimeEnvironmentConfig,
-      runtimeProfileId: watchedDisplayName?.trim() || defaultRuntimeId,
+      ...runtimeEnvironmentConfig,
       lightningEngineEnabled:
         tier === 'Premium' && Boolean(lightningEngineEnabled)
     }),
-    [
-      initialRuntimeEnvironmentConfig,
-      watchedDisplayName,
-      defaultRuntimeId,
-      tier,
-      lightningEngineEnabled
-    ]
+    [runtimeEnvironmentConfig, tier, lightningEngineEnabled]
   );
   const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(
     () => ({
@@ -617,35 +628,51 @@ export const CreateRuntimeProfileComponent: React.FC<
     () => [
       {
         title: 'Runtime configuration',
-        properties: formatRuntimeEnvironmentProperties(runtimeEnvironmentConfig)
+        properties: formatRuntimeEnvironmentProperties(
+          activeRuntimeEnvironmentConfig
+        ),
+        isEditDisabled: false,
+        onEdit: () => setIsRuntimeConfigDrawerOpen(true)
       },
       {
         title: 'Executor and driver configuration',
-        properties: formatExecutorAndDriverProperties(executorAndDriverConfig)
+        properties: formatExecutorAndDriverProperties(executorAndDriverConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Autoscaling',
-        properties: formatAutoscalingProperties(autoscalingConfig)
+        properties: formatAutoscalingProperties(autoscalingConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Metastore configuration',
-        properties: formatMetastoreProperties(metastoreConfig)
+        properties: formatMetastoreProperties(metastoreConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Network and security',
-        properties: formatNetworkSecurityProperties(networkAndSecurityConfig)
+        properties: formatNetworkSecurityProperties(networkAndSecurityConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Session lifecycle',
-        properties: formatSessionLifecycleProperties(sessionLifecycleConfig)
+        properties: formatSessionLifecycleProperties(sessionLifecycleConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Other customizations',
-        properties: formatOtherCustomizationProperties(sparkProperties, labels)
+        properties: formatOtherCustomizationProperties(sparkProperties, labels),
+        isEditDisabled: true,
+        onEdit: undefined
       }
     ],
     [
-      runtimeEnvironmentConfig,
+      activeRuntimeEnvironmentConfig,
       executorAndDriverConfig,
       autoscalingConfig,
       metastoreConfig,
@@ -761,7 +788,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           executorType: executorCategory,
           machineType: executorType
         },
-        runtimeEnvironmentConfig,
+        runtimeEnvironmentConfig: activeRuntimeEnvironmentConfig,
         executorAndDriverConfig,
         autoscalingConfig,
         metastoreConfig,
@@ -1166,7 +1193,8 @@ export const CreateRuntimeProfileComponent: React.FC<
                     key={section.title}
                     title={section.title}
                     properties={section.properties}
-                    isEditDisabled={true}
+                    isEditDisabled={section.isEditDisabled}
+                    onEdit={section.onEdit}
                   />
                 ))}
               </div>
@@ -1200,6 +1228,17 @@ export const CreateRuntimeProfileComponent: React.FC<
           </div>
         </form>
       </div>
+
+      <RuntimeEnvironmentEditDrawer
+        open={isRuntimeConfigDrawerOpen}
+        config={activeRuntimeEnvironmentConfig}
+        service={service}
+        onClose={() => setIsRuntimeConfigDrawerOpen(false)}
+        onSave={(updatedConfig: IRuntimeEnvironmentConfig) => {
+          setRuntimeEnvironmentConfig(updatedConfig);
+          setIsRuntimeConfigDrawerOpen(false);
+        }}
+      />
     </div>
   );
 };
@@ -1232,3 +1271,11 @@ export class CreateRuntimeProfile extends DataprocWidget {
     );
   }
 }
+
+export {
+  SectionDetail,
+  RuntimeEnvironmentEditDrawer,
+  SelectBucketEditDrawer,
+  RUNTIME_VERSION_OPTIONS
+};
+

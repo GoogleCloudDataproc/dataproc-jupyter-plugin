@@ -46,6 +46,18 @@ export const MOCK_REGIONS: IRegionOption[] = [
   { name: 'us-east1', displayName: 'us-east1 (South Carolina)' }
 ];
 
+export const MOCK_STORAGE_BUCKETS: string[] = [
+  'dataproc-staging-bucket',
+  'spark-notebooks-bucket',
+  'analytics-data-bucket'
+];
+
+export const MOCK_BUCKET_OBJECTS: string[] = [
+  'notebooks/sample_analysis.ipynb',
+  'notebooks/etl_pipeline.ipynb',
+  'scripts/spark_job.py'
+];
+
 const safeLog = (message: string, level: LOG_LEVEL = LOG_LEVEL.INFO) => {
   if (process.env.NODE_ENV === 'test' || Boolean(process.env.JEST_WORKER_ID)) {
     return;
@@ -203,6 +215,130 @@ export class RuntimeProfileService implements IRuntimeProfileService {
 
     const items: { name: string }[] = result?.items ?? [];
     return items.map(item => ({ name: item.name, displayName: item.name }));
+  }
+
+  private getBucketsEndpoint(storageUrl: string): string {
+    const trimmed = storageUrl.replace(/\/+$/, '');
+    return trimmed.endsWith('/b') ? trimmed : `${trimmed}/b`;
+  }
+
+  /**
+   * Retrieves available Cloud Storage buckets for the project.
+   */
+  async getStorageBuckets(projectId?: string): Promise<string[]> {
+    if (this.useMock) {
+      return MOCK_STORAGE_BUCKETS;
+    }
+
+    const credentials = await authApi().catch(() => undefined);
+    const targetProject = projectId || credentials?.project_id;
+    if (!targetProject || !credentials?.access_token) {
+      return [];
+    }
+
+    const { STORAGE } = await gcpServiceUrls;
+    const bucketsEndpoint = this.getBucketsEndpoint(STORAGE);
+    const response = await loggedFetch(
+      `${bucketsEndpoint}?project=${encodeURIComponent(targetProject)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      }
+    );
+    const result = await response.json().catch(() => null);
+    if (!response.ok || result?.error) {
+      throw new Error(
+        result?.error?.message ||
+          `Failed to fetch buckets: ${response.statusText}`
+      );
+    }
+
+    const items: { name: string }[] = result?.items ?? [];
+    return items.map(item => item.name);
+  }
+
+  /**
+   * Retrieves objects (notebooks/files/folders) inside a given Cloud Storage bucket.
+   */
+  async getBucketObjects(bucketName: string): Promise<string[]> {
+    if (this.useMock) {
+      return MOCK_BUCKET_OBJECTS;
+    }
+
+    const credentials = await authApi().catch(() => undefined);
+    if (!bucketName || !credentials?.access_token) {
+      return [];
+    }
+
+    const { STORAGE } = await gcpServiceUrls;
+    const bucketsEndpoint = this.getBucketsEndpoint(STORAGE);
+    const response = await loggedFetch(
+      `${bucketsEndpoint}/${encodeURIComponent(bucketName)}/o`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        }
+      }
+    );
+    const result = await response.json().catch(() => null);
+    if (!response.ok || result?.error) {
+      throw new Error(
+        result?.error?.message ||
+          `Failed to fetch objects for bucket ${bucketName}: ${response.statusText}`
+      );
+    }
+
+    const prefixes: string[] = result?.prefixes ?? [];
+    const items: { name: string }[] = result?.items ?? [];
+    const itemNames = items.map(item => item.name);
+    return Array.from(new Set([...prefixes, ...itemNames]));
+  }
+
+  /**
+   * Creates a new Cloud Storage bucket in the project.
+   */
+  async createStorageBucket(
+    bucketName: string,
+    projectId?: string
+  ): Promise<string> {
+    const trimmedName = bucketName.trim();
+    if (this.useMock) {
+      return trimmedName;
+    }
+
+    const credentials = await authApi().catch(() => undefined);
+    const targetProject = projectId || credentials?.project_id;
+    if (!targetProject || !credentials?.access_token) {
+      throw new Error('Authentication failed or GCP Project ID missing.');
+    }
+
+    const { STORAGE } = await gcpServiceUrls;
+    const bucketsEndpoint = this.getBucketsEndpoint(STORAGE);
+    const response = await loggedFetch(
+      `${bucketsEndpoint}?project=${encodeURIComponent(targetProject)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
+        },
+        body: JSON.stringify({ name: trimmedName })
+      }
+    );
+    const result = await response.json().catch(() => null);
+    if (!response.ok || result?.error) {
+      throw new Error(
+        result?.error?.message ||
+          `Failed to create bucket ${trimmedName}: ${response.statusText}`
+      );
+    }
+
+    return result?.name || trimmedName;
   }
 
   /**
