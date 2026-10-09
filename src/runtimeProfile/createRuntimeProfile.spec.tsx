@@ -45,14 +45,25 @@ import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import {
   CreateRuntimeProfileComponent,
+  ExecutorAndDriverEditDrawer,
   RuntimeEnvironmentEditDrawer,
   generateRandomHex,
   renderGroupedMachineOptions
 } from './createRuntimeProfile';
+import {
+  DISK_TIER_OPTIONS,
+  HDD_DISK_SIZES,
+  SSD_DISK_SIZES,
+  isAcceleratedMachine,
+  normalizeMachineTypeName,
+  parseDiskTierAndSize
+} from './runtimeProfileEditDrawers';
 import { RuntimeProfileService } from './runtimeProfileService';
 import { Notification } from '@jupyterlab/apputils';
 import { authApi } from '../utils/utils';
 import {
+  DATAPROC_ACCELERATED_MACHINE_TYPES,
+  DATAPROC_STANDARD_MACHINE_TYPES,
   DATAPROC_TIER_DOC,
   LIGHTNING_ENGINE_DOC,
   TIER_SECTION_TITLE,
@@ -144,8 +155,9 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     );
     expect(editButtons).toHaveLength(7);
     expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
+    expect(editButtons[1].getAttribute('aria-disabled')).toBe('false');
     Array.from(editButtons)
-      .slice(1)
+      .slice(2)
       .forEach(btn => {
         expect(btn.getAttribute('aria-disabled')).toBe('true');
       });
@@ -1218,5 +1230,124 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       document.body.querySelector('.bucket-input-adornment-icon.valid')
     ).not.toBeNull();
     expect(getSaveBtn()?.disabled).toBe(false);
+  });
+
+  it('should export ExecutorAndDriverEditDrawer and disk constants', () => {
+    expect(ExecutorAndDriverEditDrawer).toBeDefined();
+    expect(typeof ExecutorAndDriverEditDrawer).toBe('function');
+    expect(DISK_TIER_OPTIONS).toEqual(['HDD (standard)', 'SSD (premium)']);
+    expect(HDD_DISK_SIZES.length).toBe(14);
+    expect(HDD_DISK_SIZES[0]).toBe('200 GiB');
+    expect(HDD_DISK_SIZES[HDD_DISK_SIZES.length - 1]).toBe('1500 GiB');
+    expect(SSD_DISK_SIZES.length).toBe(6);
+    expect(SSD_DISK_SIZES[0]).toBe('375 GiB');
+    expect(SSD_DISK_SIZES[SSD_DISK_SIZES.length - 1]).toBe('9000 GiB');
+  });
+
+  it('should parse disk tier and size correctly with parseDiskTierAndSize', () => {
+    expect(parseDiskTierAndSize('HDD (standard), 200 GiB')).toEqual({
+      tier: 'HDD (standard)',
+      size: '200 GiB'
+    });
+    expect(parseDiskTierAndSize('SSD (premium), 375 GiB')).toEqual({
+      tier: 'SSD (premium)',
+      size: '375 GiB'
+    });
+    expect(parseDiskTierAndSize('SSD persistent disk, 750 GB')).toEqual({
+      tier: 'SSD (premium)',
+      size: '750 GiB'
+    });
+    expect(parseDiskTierAndSize('')).toEqual({
+      tier: 'HDD (standard)',
+      size: '200 GiB'
+    });
+    expect(parseDiskTierAndSize(undefined, 'SSD (premium)')).toEqual({
+      tier: 'SSD (premium)',
+      size: '375 GiB'
+    });
+  });
+
+  it('should normalize machine type names correctly', () => {
+    expect(normalizeMachineTypeName('highmem-4 (4 vCPU, 32 GB)')).toBe(
+      'highmem-4'
+    );
+    expect(normalizeMachineTypeName('standard-4 (4 vCPU, 16 GB)')).toBe(
+      'standard-4'
+    );
+    expect(normalizeMachineTypeName('L4 (4 cores)')).toBe('l4-4');
+    expect(normalizeMachineTypeName('A100 (40 GB)')).toBe('a100-40');
+    expect(normalizeMachineTypeName('highmem-4')).toBe('highmem-4');
+    expect(normalizeMachineTypeName('')).toBe('highmem-4');
+  });
+
+  it('should detect accelerated machine shapes with isAcceleratedMachine', () => {
+    expect(
+      isAcceleratedMachine('l4-4', DATAPROC_ACCELERATED_MACHINE_TYPES)
+    ).toBe(true);
+    expect(
+      isAcceleratedMachine('a100-40', DATAPROC_ACCELERATED_MACHINE_TYPES)
+    ).toBe(true);
+    expect(
+      isAcceleratedMachine('h100-26', DATAPROC_ACCELERATED_MACHINE_TYPES)
+    ).toBe(true);
+    expect(
+      isAcceleratedMachine('g2-standard-4', DATAPROC_ACCELERATED_MACHINE_TYPES)
+    ).toBe(true);
+    expect(
+      isAcceleratedMachine('standard-4', DATAPROC_STANDARD_MACHINE_TYPES)
+    ).toBe(false);
+    expect(
+      isAcceleratedMachine('highmem-4', DATAPROC_STANDARD_MACHINE_TYPES)
+    ).toBe(false);
+  });
+
+  it('should instantiate ExecutorAndDriverEditDrawer with props and save updated configuration from UI', async () => {
+    const onSaveMock = jest.fn();
+    const onCloseMock = jest.fn();
+    const element = React.createElement(ExecutorAndDriverEditDrawer, {
+      open: true,
+      config: {
+        tier: 'Premium',
+        lightningEngineEnabled: true,
+        executorType: 'highmem-4 (4 vCPU, 32 GB)',
+        executorDisk: 'HDD (standard), 200 GiB',
+        driverMachineType: 'highmem-4 (4 vCPU, 32 GB)',
+        driverDisk: 'HDD (standard), 200 GiB',
+        useDifferentDriverConfig: false
+      },
+      onClose: onCloseMock,
+      onSave: onSaveMock
+    });
+
+    expect(element).toBeDefined();
+    expect(element.type).toBe(ExecutorAndDriverEditDrawer);
+    expect(element.props.open).toBe(true);
+    expect(element.props.config.tier).toBe('Premium');
+    expect(element.props.config.useDifferentDriverConfig).toBe(false);
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[1] as HTMLButtonElement).click();
+    });
+
+    const drawerTitle = Array.from(
+      document.body.querySelectorAll('.edit-drawer-title')
+    ).map(el => el.textContent);
+    expect(drawerTitle).toContain('Executor and driver configuration');
+
+    const saveBtn = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+    expect(saveBtn).not.toBeNull();
+
+    await act(async () => {
+      saveBtn.click();
+    });
   });
 });
