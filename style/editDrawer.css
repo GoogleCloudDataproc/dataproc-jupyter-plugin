@@ -1,0 +1,187 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.edit-drawer-paper {
+  max-width: 100vw;
+  background-color: var(--jp-layout-color1, #ffffff) !important;
+  color: var(--jp-ui-font-color0, #202124) !important;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+.edit-drawer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  font-family: Roboto,
+    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+}
+
+.edit-drawer-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--jp-border-color2, #e0e0e0);
+}
+
+.edit-drawer-header-top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-drawer-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--jp-ui-font-color0, #202124);
+}
+
+.edit-drawer-subtitle {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--jp-ui-font-color2, #5f6368);
+}
+
+.edit-drawer-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--jp-ui-font-color2, #5f6368);
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-drawer-close-btn:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+  color: var(--jp-ui-font-color0, #202124);
+}
+
+.edit-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.edit-drawer-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-drawer-helper-text {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--jp-ui-font-color2, #5f6368);
+}
+
+.edit-drawer-input-with-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.edit-drawer-browse-btn {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--jp-border-color1, #dadce0);
+  border-radius: 4px;
+  background-color: var(--jp-layout-color0, #ffffff);
+  color: var(--jp-brand-color1, #1a73e8);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.edit-drawer-browse-btn:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+  border-color: var(--jp-brand-color1, #1a73e8);
+}
+
+.edit-drawer-container .MuiInputLabel-outlined.MuiInputLabel-shrink,
+.edit-drawer-container .MuiFormLabel-root.MuiInputLabel-shrink {
+  background-color: var(--jp-layout-color1, #ffffff) !important;
+  padding: 0 4px !important;
+  z-index: 2 !important;
+}
+
+.edit-drawer-container .MuiOutlinedInput-root {
+  background-color: var(--jp-layout-color0, #ffffff);
+  border-radius: 4px;
+}
+
+.edit-drawer-container .MuiOutlinedInput-input {
+  font-size: 13px;
+  color: var(--jp-ui-font-color0, #202124);
+}
+
+.edit-drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--jp-border-color2, #e0e0e0);
+  background-color: var(--jp-layout-color1, #ffffff);
+}
+
+.edit-drawer-footer button {
+  border: none;
+  outline: none;
+  font-family: inherit;
+  margin-right: 0;
+}
+
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiInputLabel-outlined.MuiInputLabel-shrink,
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiFormLabel-root.MuiInputLabel-shrink {
+  background-color: var(--jp-layout-color1) !important;
+}
+
+body[data-jp-theme-name='JupyterLab Dark']
+  .edit-drawer-container
+  .MuiOutlinedInput-root {
+  background-color: var(--jp-layout-color0);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-browse-btn {
+  background-color: var(--jp-layout-color0);
+  border-color: var(--jp-border-color1);
+  color: #8ab4f8;
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-browse-btn:hover {
+  background-color: var(--jp-layout-color2);
+  border-color: #8ab4f8;
+}
