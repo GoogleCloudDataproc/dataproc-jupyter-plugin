@@ -1309,7 +1309,9 @@ export const ExecutorAndDriverEditDrawer: React.FC<
             role="button"
             tabIndex={0}
             className="section-detail-link"
-            onClick={() => window.open(DATAPROC_TIER_DOC, '_blank')}
+            onClick={() =>
+              window.open(DATAPROC_TIER_DOC, '_blank', 'noopener,noreferrer')
+            }
             onKeyDown={e => {
               if (e.key === 'Enter' || e.key === ' ') {
                 window.open(DATAPROC_TIER_DOC, '_blank');
@@ -1414,7 +1416,13 @@ export const ExecutorAndDriverEditDrawer: React.FC<
                 role="button"
                 tabIndex={0}
                 className="section-detail-link"
-                onClick={() => window.open(LIGHTNING_ENGINE_DOC, '_blank')}
+                onClick={() =>
+                  window.open(
+                    LIGHTNING_ENGINE_DOC,
+                    '_blank',
+                    'noopener,noreferrer'
+                  )
+                }
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     window.open(LIGHTNING_ENGINE_DOC, '_blank');
