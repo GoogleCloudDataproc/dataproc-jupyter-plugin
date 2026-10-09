@@ -29,6 +29,7 @@ export interface IMachineTypeOption {
   vCPUs: number;
   memory: string;
   category: ExecutorCategoryType;
+  subgroup?: string;
   acceleratorType?: string;
   gpuCount?: number;
 }
@@ -53,6 +54,18 @@ export interface IExecutorAndDriverConfig {
   driverDisk?: string;
   executorType?: ExecutorType;
   executorDisk?: string;
+  useDifferentDriverConfig?: boolean;
+  executorDiskTier?: string;
+  executorDiskSize?: string;
+  driverDiskTier?: string;
+  driverDiskSize?: string;
+  lightningEngineEnabled?: boolean;
+  executorCategory?: ExecutorCategoryType;
+  executorMachineType?: string;
+  /** Legacy compatibility fields */
+  machineType?: string;
+  disk?: string;
+  diskType?: string;
 }
 
 export interface IAutoscalingConfig {
@@ -154,5 +167,3 @@ export interface IRuntimeProfileService {
     region?: string
   ): Promise<IRuntimeProfile>;
 }
-
-

@@ -221,6 +221,26 @@
   color: var(--jp-ui-font-color0, #202124);
 }
 
+.runtime-profile-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background-color: #e8f0fe;
+  color: #1967d2;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-info-banner {
+  background-color: rgba(66, 133, 244, 0.15);
+  color: #8ab4f8;
+}
+
 .machine-type-subheading {
   font-size: 13px;
   font-weight: 500;

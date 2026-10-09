@@ -101,8 +101,11 @@ export const parseMachineTypeSpec = (
   if (!machineTypeName || machineTypeName.trim() === '') {
     return undefined;
   }
-  const cleanName = machineTypeName.trim().toLowerCase().split(' ')[0];
-  const known = KNOWN_MACHINE_TYPES.find(m => m.name === cleanName);
+  const trimmedLower = machineTypeName.trim().toLowerCase();
+  const cleanName = trimmedLower.split(' ')[0];
+  const known = KNOWN_MACHINE_TYPES.find(
+    m => m.name === cleanName || m.label.toLowerCase() === trimmedLower
+  );
   if (known) {
     return {
       cores: known.vCPUs,
@@ -315,6 +318,7 @@ export function mapRuntimeProfileToSessionTemplate(
   // Executor machine type & accelerator properties
   const executorMachineType =
     payload.executorConfig?.machineType ||
+    executorAndDriverConfig?.executorMachineType ||
     executorAndDriverConfig?.executorType;
 
   const executorMachine = parseMachineTypeSpec(executorMachineType);
