@@ -47,7 +47,10 @@ import {
   RUNTIME_VERSION_OPTIONS,
   SelectBucketEditDrawer
 } from './runtimeProfileEditDrawers';
-import { normalizeMachineTypeName } from './runtimeProfileMapper';
+import {
+  isAcceleratedMachine,
+  normalizeMachineTypeName
+} from './runtimeProfileMapper';
 import {
   DATAPROC_TIER_DOC,
   LIGHTNING_ENGINE_DOC,
@@ -738,16 +741,31 @@ export const CreateRuntimeProfileComponent: React.FC<
       setExecutorType(DEFAULT_STANDARD_TIER_EXECUTOR_TYPE);
     }
     if (selectedTier === 'Standard') {
-      setExecutorAndDriverConfigState(prev => ({
-        ...prev,
-        tier: 'Standard',
-        executorDiskTier: DISK_TIER_HDD,
-        executorDiskSize: DEFAULT_HDD_DISK_SIZE,
-        executorDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`,
-        driverDiskTier: DISK_TIER_HDD,
-        driverDiskSize: DEFAULT_HDD_DISK_SIZE,
-        driverDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`
-      }));
+      setExecutorAndDriverConfigState(prev => {
+        // Standard tier supports neither accelerated nor highmem driver shapes.
+        const driverName = normalizeMachineTypeName(
+          prev.driverMachineType,
+          ALL_MACHINE_TYPES
+        );
+        const isDriverUnsupported =
+          isAcceleratedMachine(driverName, ALL_MACHINE_TYPES) ||
+          driverName.includes('highmem');
+        return {
+          ...prev,
+          ...(isDriverUnsupported && {
+            driverMachineType: getMachineTypeLabel(
+              DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
+            )
+          }),
+          tier: 'Standard',
+          executorDiskTier: DISK_TIER_HDD,
+          executorDiskSize: DEFAULT_HDD_DISK_SIZE,
+          executorDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`,
+          driverDiskTier: DISK_TIER_HDD,
+          driverDiskSize: DEFAULT_HDD_DISK_SIZE,
+          driverDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`
+        };
+      });
     } else {
       setExecutorAndDriverConfigState(prev => ({
         ...prev,
