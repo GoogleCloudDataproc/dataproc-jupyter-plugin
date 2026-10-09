@@ -166,7 +166,7 @@ export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
   driverMachineType: 'Standard-4',
   driverDisk: 'standard persistent disk',
   executorType: 'standard',
-  executorDisk: 'Standard persistent disk (HDD), 400 GB'
+  executorDisk: 'Standard persistent disk (HDD), 200 GB'
 };
 
 export const DEFAULT_AUTOSCALING_CONFIG: IAutoscalingConfig = {

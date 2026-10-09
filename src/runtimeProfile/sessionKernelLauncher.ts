@@ -16,7 +16,7 @@
  */
 
 import { JupyterLab } from '@jupyterlab/application';
-import { IThemeManager } from '@jupyterlab/apputils';
+import { IThemeManager, Notification } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { KernelSpecAPI } from '@jupyterlab/services';
 import { iconDisplay } from '../utils/utils';
@@ -50,26 +50,36 @@ export const registerSessionKernelsInLauncher = async (
         ? () => iconDisplay(kernelsData, themeManager)
         : undefined,
       execute: async () => {
-        const model = await app.commands.execute('docmanager:new-untitled', {
-          type: 'notebook',
-          path: '',
-          kernel: { name: kernelsData?.name }
-        });
-        await app.commands.execute('docmanager:open', {
-          kernel: { name: kernelsData?.name },
-          path: model.path,
-          factory: 'notebook'
-        });
+        try {
+          const model = await app.commands.execute('docmanager:new-untitled', {
+            type: 'notebook',
+            path: '',
+            kernel: { name: kernelsData?.name }
+          });
+          await app.commands.execute('docmanager:open', {
+            kernel: { name: kernelsData?.name },
+            path: model.path,
+            factory: 'notebook'
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          Notification.emit(
+            `Failed to create notebook: ${message}`,
+            'error',
+            { autoClose: 5000 }
+          );
+        }
       }
     });
 
     launcher.add({
       command: commandNotebook,
       category: 'Dataproc Serverless Spark',
-      //@ts-ignore jupyter lab Launcher type issue
+      // @ts-expect-error jupyter lab Launcher type issue
       metadata: kernelsData?.metadata,
       rank: index + 1,
-      //@ts-ignore jupyter lab Launcher type issue
+      // @ts-expect-error jupyter lab Launcher type issue
       args: kernelsData?.argv
     });
   });
