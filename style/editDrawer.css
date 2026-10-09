@@ -143,6 +143,17 @@
   color: var(--jp-ui-font-color0, #202124);
 }
 
+.edit-drawer-container .MuiOutlinedInput-input::placeholder {
+  color: var(--jp-ui-font-color0, #202124);
+  opacity: 1;
+}
+
+.create-bucket-step-body .MuiOutlinedInput-input::placeholder,
+.bucket-browser-hierarchy-wrapper .MuiOutlinedInput-input::placeholder {
+  color: var(--jp-ui-font-color2, #5f6368);
+  opacity: 1;
+}
+
 .edit-drawer-footer {
   display: flex;
   align-items: center;
@@ -185,3 +196,254 @@ body[data-jp-theme-name='JupyterLab Dark'] .edit-drawer-browse-btn:hover {
   background-color: var(--jp-layout-color2);
   border-color: #8ab4f8;
 }
+
+.bucket-browser-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.bucket-browser-hierarchy-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.bucket-browser-icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--jp-ui-font-color1, #2b3a4a);
+  transition: background-color 0.15s ease-in-out;
+}
+
+.bucket-browser-icon-btn:hover:not(:disabled) {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+}
+
+.bucket-browser-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bucket-browser-list-container {
+  border: 1px solid var(--jp-border-color1, #dadce0);
+  border-radius: 4px;
+  flex: 1;
+  min-height: 360px;
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  background-color: var(--jp-layout-color0, #ffffff);
+}
+
+.bucket-browser-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  gap: 12px;
+  transition: background-color 0.12s ease-in-out;
+}
+
+.bucket-browser-item:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+}
+
+.bucket-browser-item.selected {
+  background-color: rgba(26, 115, 232, 0.12);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .bucket-browser-item.selected {
+  background-color: rgba(138, 180, 248, 0.16);
+}
+
+.bucket-browser-item-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bucket-browser-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--jp-ui-font-color1, #2b3a4a);
+}
+
+.bucket-browser-item-name {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--jp-ui-font-color0, #1f334d);
+  word-break: break-word;
+}
+
+.bucket-browser-open-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--jp-ui-font-color1, #2b3a4a);
+  flex-shrink: 0;
+}
+
+.bucket-browser-open-btn:hover {
+  background-color: var(--jp-layout-color3, #e8eaed);
+}
+
+.bucket-browser-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--jp-ui-font-color2, #5f6368);
+}
+
+.bucket-input-adornment-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--jp-ui-font-color1, #2b3a4a);
+}
+
+.bucket-input-adornment-icon.valid {
+  color: #188038;
+}
+
+.bucket-input-adornment-icon.invalid {
+  color: #d93025;
+}
+
+.edit-drawer-error-text {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #d93025;
+  margin-top: 2px;
+}
+
+.edit-drawer-error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #d93025;
+}
+
+.create-bucket-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.create-bucket-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.create-bucket-step-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+.create-bucket-step-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--jp-ui-font-color2, #4b5e78);
+  flex-shrink: 0;
+}
+
+.create-bucket-step-dot.active {
+  background-color: #3b67c4;
+}
+
+.create-bucket-step-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--jp-ui-font-color0, #1f334d);
+}
+
+.create-bucket-step-body {
+  margin-left: 3px;
+  padding-left: 18px;
+  border-left: 1px solid var(--jp-border-color1, #8a9bb2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.create-bucket-subtitle {
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--jp-ui-font-color1, #1f334d);
+}
+
+.create-bucket-tip {
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--jp-ui-font-color2, #374c69);
+  margin-top: -4px;
+  padding-left: 12px;
+}
+
+.create-bucket-labels-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 6px 0;
+  font-size: 13.5px;
+  color: var(--jp-ui-font-color0, #1f334d);
+}
+
+.create-bucket-continue-btn {
+  align-self: flex-start;
+  padding: 6px 16px;
+  border: 1px solid var(--jp-border-color1, #b0bec5);
+  border-radius: 18px;
+  background-color: transparent;
+  color: var(--jp-ui-font-color0, #1f334d);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.create-bucket-continue-btn:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+}
+
+.create-bucket-summary-line {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--jp-ui-font-color1, #1f334d);
+}
+
+
