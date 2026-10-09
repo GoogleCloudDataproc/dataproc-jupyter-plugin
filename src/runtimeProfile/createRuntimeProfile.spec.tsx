@@ -1350,4 +1350,49 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       saveBtn.click();
     });
   });
+
+  it('maintains Lightning Engine checkbox state when toggling between Premium and Standard tier in ExecutorAndDriverEditDrawer', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[1] as HTMLButtonElement).click();
+    });
+
+    const drawerBody = document.body.querySelector('.edit-drawer-body');
+    expect(drawerBody).not.toBeNull();
+
+    const getDrawerCheckbox = () =>
+      drawerBody?.querySelector(
+        '.runtime-profile-checkbox-section input[type="checkbox"]'
+      ) as HTMLInputElement;
+
+    // Initially checked on Premium tier
+    expect(getDrawerCheckbox()?.checked).toBe(true);
+
+    // User unchecks Lightning Engine
+    await act(async () => {
+      getDrawerCheckbox().click();
+    });
+    expect(getDrawerCheckbox()?.checked).toBe(false);
+
+    // User switches to Standard tier and back to Premium tier inside the drawer
+    const tierCards = drawerBody?.querySelectorAll(
+      '.node-config-card'
+    ) as NodeListOf<HTMLDivElement>;
+    await act(async () => {
+      tierCards[1].click(); // Standard
+    });
+    expect(getDrawerCheckbox()).toBeNull();
+
+    await act(async () => {
+      tierCards[0].click(); // Premium
+    });
+    // Unchecked state must be preserved
+    expect(getDrawerCheckbox()?.checked).toBe(false);
+  });
 });

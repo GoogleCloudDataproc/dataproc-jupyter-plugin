@@ -241,6 +241,25 @@ body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-info-banner {
   color: #8ab4f8;
 }
 
+.executor-driver-section-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.executor-driver-disk-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+}
+
+.executor-driver-disk-col {
+  flex: 1;
+  min-width: 0;
+}
+
 .machine-type-subheading {
   font-size: 13px;
   font-weight: 500;

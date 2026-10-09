@@ -30,11 +30,32 @@ import {
 } from '@mui/material';
 import { EditDrawer } from '../controls/EditDrawer';
 import {
-  IExecutorAndDriverConfig,
+  DEFAULT_HDD_DISK_SIZE,
+  DISK_TIER_HDD,
+  DISK_TIER_OPTIONS,
+  DISK_TIER_SSD,
+  HDD_DISK_SIZES,
+  IExecutorAndDriverDraftConfig,
+  IExecutorAndDriverEditDrawerProps,
   IMachineTypeOption,
   IRuntimeEnvironmentConfig,
-  IRuntimeProfileService
+  IRuntimeProfileService,
+  SSD_DISK_SIZES
 } from './runtimeProfileInterface';
+import {
+  applyDriverDiskTierChangeToDraft,
+  applyDriverTypeChangeToDraft,
+  applyExecutorDiskTierChangeToDraft,
+  applyExecutorTypeChangeToDraft,
+  applyTierChangeToDraft,
+  buildInitialExecutorAndDriverDraft,
+  buildSavedExecutorAndDriverConfig,
+  getDiskHelperText,
+  groupAndFilterMachineTypes,
+  isAcceleratedMachine,
+  normalizeMachineTypeName,
+  parseDiskTierAndSize
+} from './runtimeProfileMapper';
 import { runtimeProfileService } from './runtimeProfileService';
 import {
   CUSTOM_CONTAINERS,
@@ -43,7 +64,26 @@ import {
   DATAPROC_ACCELERATED_MACHINE_TYPES,
   DATAPROC_STANDARD_MACHINE_TYPES,
   DATAPROC_TIER_DOC,
-  LIGHTNING_ENGINE_DOC
+  DEFAULT_GENERAL_EXECUTOR_TYPE,
+  DIFFERENT_DRIVER_CHECKBOX_DESC,
+  DIFFERENT_DRIVER_CHECKBOX_LABEL,
+  DRIVER_CONFIG_SECTION_SUBTITLE,
+  DRIVER_CONFIG_SECTION_TITLE,
+  EXECUTOR_CONFIG_SECTION_TITLE,
+  EXECUTOR_DRIVER_DRAWER_SUBTITLE,
+  EXECUTOR_DRIVER_DRAWER_TITLE,
+  EXECUTOR_ONLY_SUBTITLE,
+  EXECUTOR_SHARED_SUBTITLE,
+  LIGHTNING_ENGINE_CHECKBOX_DESC,
+  LIGHTNING_ENGINE_CHECKBOX_LABEL,
+  LIGHTNING_ENGINE_DOC,
+  TIER_PREMIUM_DESC,
+  TIER_PREMIUM_TITLE,
+  TIER_SECTION_SUBTITLE,
+  TIER_SECTION_TITLE,
+  TIER_STANDARD_DESC,
+  TIER_STANDARD_INFO_BANNER,
+  TIER_STANDARD_TITLE
 } from '../utils/const';
 
 export const RUNTIME_VERSION_OPTIONS: string[] = [
@@ -1012,108 +1052,15 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
   );
 };
 
-export const DISK_TIER_OPTIONS: string[] = ['HDD (standard)', 'SSD (premium)'];
-
-export const HDD_DISK_SIZES: string[] = [
-  '200 GiB',
-  '300 GiB',
-  '400 GiB',
-  '500 GiB',
-  '600 GiB',
-  '700 GiB',
-  '800 GiB',
-  '900 GiB',
-  '1000 GiB',
-  '1100 GiB',
-  '1200 GiB',
-  '1300 GiB',
-  '1400 GiB',
-  '1500 GiB'
-];
-
-export const SSD_DISK_SIZES: string[] = [
-  '375 GiB',
-  '750 GiB',
-  '1500 GiB',
-  '3000 GiB',
-  '6000 GiB',
-  '9000 GiB'
-];
-
-export const parseDiskTierAndSize = (
-  diskStr?: string,
-  defaultTier: string = 'HDD (standard)'
-): { tier: string; size: string } => {
-  if (!diskStr || diskStr.trim() === '') {
-    return {
-      tier: defaultTier,
-      size: defaultTier === 'SSD (premium)' ? '375 GiB' : '200 GiB'
-    };
-  }
-  const lower = diskStr.toLowerCase();
-  const isSsd = lower.includes('ssd') || lower.includes('premium');
-  const tier = isSsd ? 'SSD (premium)' : 'HDD (standard)';
-  const match = diskStr.match(/(\d+)\s*(?:gib|gb|g)?/i);
-  let size = isSsd ? '375 GiB' : '200 GiB';
-  if (match) {
-    const rawNum = match[1];
-    const formatted = `${rawNum} GiB`;
-    if (isSsd) {
-      size = SSD_DISK_SIZES.includes(formatted) ? formatted : '375 GiB';
-    } else {
-      size = HDD_DISK_SIZES.includes(formatted) ? formatted : `${rawNum} GiB`;
-    }
-  }
-  return { tier, size };
+export {
+  DISK_TIER_OPTIONS,
+  HDD_DISK_SIZES,
+  IExecutorAndDriverEditDrawerProps,
+  SSD_DISK_SIZES,
+  isAcceleratedMachine,
+  normalizeMachineTypeName,
+  parseDiskTierAndSize
 };
-
-export const normalizeMachineTypeName = (
-  raw?: string,
-  allTypes: IMachineTypeOption[] = [
-    ...DATAPROC_STANDARD_MACHINE_TYPES,
-    ...DATAPROC_ACCELERATED_MACHINE_TYPES
-  ]
-): string => {
-  if (!raw || raw.trim() === '') return 'highmem-4';
-  const clean = raw.trim().toLowerCase();
-  const byName = allTypes.find(m => m.name.toLowerCase() === clean);
-  if (byName) return byName.name;
-  const byLabel = allTypes.find(m => m.label.toLowerCase() === clean);
-  if (byLabel) return byLabel.name;
-  const firstWord = clean.split(' ')[0];
-  const byFirstWord = allTypes.find(m => m.name.toLowerCase() === firstWord);
-  if (byFirstWord) return byFirstWord.name;
-  return firstWord || raw;
-};
-
-export const isAcceleratedMachine = (
-  name: string,
-  allTypes: IMachineTypeOption[] = [
-    ...DATAPROC_STANDARD_MACHINE_TYPES,
-    ...DATAPROC_ACCELERATED_MACHINE_TYPES
-  ]
-): boolean => {
-  const match = allTypes.find(m => m.name === name);
-  if (match) {
-    return match.category === 'accelerated' || Boolean(match.acceleratorType);
-  }
-  const clean = name.toLowerCase();
-  return (
-    clean.startsWith('l4-') ||
-    clean.startsWith('a100-') ||
-    clean.startsWith('h100-') ||
-    clean.startsWith('g2-') ||
-    clean.startsWith('a2-')
-  );
-};
-
-export interface IExecutorAndDriverEditDrawerProps {
-  open: boolean;
-  config: IExecutorAndDriverConfig;
-  onClose: () => void;
-  onSave: (updatedConfig: IExecutorAndDriverConfig) => void;
-  availableMachineTypes?: IMachineTypeOption[];
-}
 
 export const ExecutorAndDriverEditDrawer: React.FC<
   IExecutorAndDriverEditDrawerProps
@@ -1129,155 +1076,32 @@ export const ExecutorAndDriverEditDrawer: React.FC<
     [availableMachineTypes]
   );
 
-  const [draftConfig, setDraftConfig] = useState<{
-    tier: string;
-    lightningEngineEnabled: boolean;
-    executorType: string;
-    executorDiskTier: string;
-    executorDiskSize: string;
-    useDifferentDriverConfig: boolean;
-    driverMachineType: string;
-    driverDiskTier: string;
-    driverDiskSize: string;
-  }>({
-    tier: 'Premium',
-    lightningEngineEnabled: true,
-    executorType: 'highmem-4',
-    executorDiskTier: 'HDD (standard)',
-    executorDiskSize: '200 GiB',
-    useDifferentDriverConfig: false,
-    driverMachineType: 'highmem-4',
-    driverDiskTier: 'HDD (standard)',
-    driverDiskSize: '200 GiB'
-  });
+  const [draftConfig, setDraftConfig] = useState<IExecutorAndDriverDraftConfig>(
+    {
+      tier: 'Premium',
+      lightningEngineEnabled: true,
+      executorType: DEFAULT_GENERAL_EXECUTOR_TYPE,
+      executorDiskTier: DISK_TIER_HDD,
+      executorDiskSize: DEFAULT_HDD_DISK_SIZE,
+      useDifferentDriverConfig: false,
+      driverMachineType: DEFAULT_GENERAL_EXECUTOR_TYPE,
+      driverDiskTier: DISK_TIER_HDD,
+      driverDiskSize: DEFAULT_HDD_DISK_SIZE
+    }
+  );
 
   const [executorSearch, setExecutorSearch] = useState<string>('');
   const [driverSearch, setDriverSearch] = useState<string>('');
 
   useEffect(() => {
     if (open) {
-      const initialTier = config.tier || 'Premium';
-      const initialExecType = normalizeMachineTypeName(
-        config.executorMachineType ||
-          (typeof config.executorType === 'string'
-            ? config.executorType
-            : undefined),
-        allMachineTypes
+      setDraftConfig(
+        buildInitialExecutorAndDriverDraft(config, allMachineTypes)
       );
-      const isExecAcc = isAcceleratedMachine(initialExecType, allMachineTypes);
-      const defaultExecDiskTier = isExecAcc
-        ? 'SSD (premium)'
-        : initialTier === 'Standard'
-        ? 'HDD (standard)'
-        : 'HDD (standard)';
-      const parsedExecDisk = parseDiskTierAndSize(
-        config.executorDisk || config.diskType,
-        defaultExecDiskTier
-      );
-      const initialDriverType = normalizeMachineTypeName(
-        config.driverMachineType || config.machineType || initialExecType,
-        allMachineTypes
-      );
-      const isDrvAcc = isAcceleratedMachine(initialDriverType, allMachineTypes);
-      const defaultDrvDiskTier = isDrvAcc
-        ? 'SSD (premium)'
-        : initialTier === 'Standard'
-        ? 'HDD (standard)'
-        : 'HDD (standard)';
-      const parsedDrvDisk = parseDiskTierAndSize(
-        config.driverDisk || config.disk,
-        defaultDrvDiskTier
-      );
-      const diffDriver = Boolean(config.useDifferentDriverConfig);
-
-      const execDiskTier = isExecAcc
-        ? 'SSD (premium)'
-        : initialTier === 'Standard'
-        ? 'HDD (standard)'
-        : config.executorDiskTier || parsedExecDisk.tier;
-      const execDiskSize =
-        execDiskTier === 'SSD (premium)'
-          ? SSD_DISK_SIZES.includes(
-              config.executorDiskSize || parsedExecDisk.size
-            )
-            ? config.executorDiskSize || parsedExecDisk.size
-            : '375 GiB'
-          : config.executorDiskSize || parsedExecDisk.size;
-
-      const drvDiskTier = diffDriver
-        ? isDrvAcc
-          ? 'SSD (premium)'
-          : initialTier === 'Standard'
-          ? 'HDD (standard)'
-          : config.driverDiskTier || parsedDrvDisk.tier
-        : execDiskTier;
-
-      const drvDiskSize = diffDriver
-        ? drvDiskTier === 'SSD (premium)'
-          ? SSD_DISK_SIZES.includes(config.driverDiskSize || parsedDrvDisk.size)
-            ? config.driverDiskSize || parsedDrvDisk.size
-            : '375 GiB'
-          : config.driverDiskSize || parsedDrvDisk.size
-        : execDiskSize;
-
-      setDraftConfig({
-        tier: initialTier,
-        lightningEngineEnabled:
-          config.lightningEngineEnabled !== undefined
-            ? config.lightningEngineEnabled
-            : initialTier === 'Premium',
-        executorType: initialExecType,
-        executorDiskTier: execDiskTier,
-        executorDiskSize: execDiskSize,
-        useDifferentDriverConfig: diffDriver,
-        driverMachineType: diffDriver ? initialDriverType : initialExecType,
-        driverDiskTier: drvDiskTier,
-        driverDiskSize: drvDiskSize
-      });
       setExecutorSearch('');
       setDriverSearch('');
     }
   }, [open, config, allMachineTypes]);
-
-  const handleTierChange = (selectedTier: string) => {
-    setDraftConfig(prev => {
-      if (selectedTier === 'Standard') {
-        const fallbackExec =
-          isAcceleratedMachine(prev.executorType, allMachineTypes) ||
-          prev.executorType.includes('highmem')
-            ? 'standard-4'
-            : prev.executorType;
-        const fallbackDriver =
-          isAcceleratedMachine(prev.driverMachineType, allMachineTypes) ||
-          prev.driverMachineType.includes('highmem')
-            ? 'standard-4'
-            : prev.driverMachineType;
-        return {
-          ...prev,
-          tier: 'Standard',
-          lightningEngineEnabled: false,
-          executorType: fallbackExec,
-          executorDiskTier: 'HDD (standard)',
-          executorDiskSize: SSD_DISK_SIZES.includes(prev.executorDiskSize)
-            ? '200 GiB'
-            : prev.executorDiskSize,
-          driverMachineType: prev.useDifferentDriverConfig
-            ? fallbackDriver
-            : fallbackExec,
-          driverDiskTier: 'HDD (standard)',
-          driverDiskSize: SSD_DISK_SIZES.includes(prev.driverDiskSize)
-            ? '200 GiB'
-            : prev.driverDiskSize
-        };
-      } else {
-        return {
-          ...prev,
-          tier: 'Premium',
-          lightningEngineEnabled: true
-        };
-      }
-    });
-  };
 
   const isExecutorAccelerated = isAcceleratedMachine(
     draftConfig.executorType,
@@ -1288,58 +1112,22 @@ export const ExecutorAndDriverEditDrawer: React.FC<
     allMachineTypes
   );
 
+  const handleTierChange = (selectedTier: string) => {
+    setDraftConfig(prev =>
+      applyTierChangeToDraft(prev, selectedTier, allMachineTypes)
+    );
+  };
+
   const handleExecutorTypeChange = (selectedType: string) => {
-    const isAcc = isAcceleratedMachine(selectedType, allMachineTypes);
-    setDraftConfig(prev => {
-      const nextDiskTier = isAcc ? 'SSD (premium)' : prev.executorDiskTier;
-      let nextDiskSize = prev.executorDiskSize;
-      if (isAcc && !SSD_DISK_SIZES.includes(nextDiskSize)) {
-        nextDiskSize = '375 GiB';
-      }
-      return {
-        ...prev,
-        executorType: selectedType,
-        executorDiskTier: nextDiskTier,
-        executorDiskSize: nextDiskSize,
-        driverMachineType: prev.useDifferentDriverConfig
-          ? prev.driverMachineType
-          : selectedType,
-        driverDiskTier: prev.useDifferentDriverConfig
-          ? prev.driverDiskTier
-          : nextDiskTier,
-        driverDiskSize: prev.useDifferentDriverConfig
-          ? prev.driverDiskSize
-          : nextDiskSize
-      };
-    });
+    setDraftConfig(prev =>
+      applyExecutorTypeChangeToDraft(prev, selectedType, allMachineTypes)
+    );
   };
 
   const handleExecutorDiskTierChange = (selectedTier: string) => {
-    setDraftConfig(prev => {
-      let nextSize = prev.executorDiskSize;
-      if (
-        selectedTier === 'SSD (premium)' &&
-        !SSD_DISK_SIZES.includes(nextSize)
-      ) {
-        nextSize = '375 GiB';
-      } else if (
-        selectedTier === 'HDD (standard)' &&
-        !HDD_DISK_SIZES.includes(nextSize)
-      ) {
-        nextSize = '200 GiB';
-      }
-      return {
-        ...prev,
-        executorDiskTier: selectedTier,
-        executorDiskSize: nextSize,
-        driverDiskTier: prev.useDifferentDriverConfig
-          ? prev.driverDiskTier
-          : selectedTier,
-        driverDiskSize: prev.useDifferentDriverConfig
-          ? prev.driverDiskSize
-          : nextSize
-      };
-    });
+    setDraftConfig(prev =>
+      applyExecutorDiskTierChangeToDraft(prev, selectedTier)
+    );
   };
 
   const handleExecutorDiskSizeChange = (selectedSize: string) => {
@@ -1363,42 +1151,15 @@ export const ExecutorAndDriverEditDrawer: React.FC<
   };
 
   const handleDriverMachineTypeChange = (selectedType: string) => {
-    const isAcc = isAcceleratedMachine(selectedType, allMachineTypes);
-    setDraftConfig(prev => {
-      const nextDiskTier = isAcc ? 'SSD (premium)' : prev.driverDiskTier;
-      let nextDiskSize = prev.driverDiskSize;
-      if (isAcc && !SSD_DISK_SIZES.includes(nextDiskSize)) {
-        nextDiskSize = '375 GiB';
-      }
-      return {
-        ...prev,
-        driverMachineType: selectedType,
-        driverDiskTier: nextDiskTier,
-        driverDiskSize: nextDiskSize
-      };
-    });
+    setDraftConfig(prev =>
+      applyDriverTypeChangeToDraft(prev, selectedType, allMachineTypes)
+    );
   };
 
   const handleDriverDiskTierChange = (selectedTier: string) => {
-    setDraftConfig(prev => {
-      let nextSize = prev.driverDiskSize;
-      if (
-        selectedTier === 'SSD (premium)' &&
-        !SSD_DISK_SIZES.includes(nextSize)
-      ) {
-        nextSize = '375 GiB';
-      } else if (
-        selectedTier === 'HDD (standard)' &&
-        !HDD_DISK_SIZES.includes(nextSize)
-      ) {
-        nextSize = '200 GiB';
-      }
-      return {
-        ...prev,
-        driverDiskTier: selectedTier,
-        driverDiskSize: nextSize
-      };
-    });
+    setDraftConfig(prev =>
+      applyDriverDiskTierChangeToDraft(prev, selectedTier)
+    );
   };
 
   const handleDriverDiskSizeChange = (selectedSize: string) => {
@@ -1409,56 +1170,9 @@ export const ExecutorAndDriverEditDrawer: React.FC<
   };
 
   const handleSave = () => {
-    const execObj = allMachineTypes.find(
-      m => m.name === draftConfig.executorType
+    onSave(
+      buildSavedExecutorAndDriverConfig(config, draftConfig, allMachineTypes)
     );
-    const drvObj = allMachineTypes.find(
-      m => m.name === draftConfig.driverMachineType
-    );
-
-    const execLabel = execObj ? execObj.label : draftConfig.executorType;
-    const drvLabel = draftConfig.useDifferentDriverConfig
-      ? drvObj
-        ? drvObj.label
-        : draftConfig.driverMachineType
-      : execLabel;
-
-    const drvDiskTier = draftConfig.useDifferentDriverConfig
-      ? draftConfig.driverDiskTier
-      : draftConfig.executorDiskTier;
-    const drvDiskSize = draftConfig.useDifferentDriverConfig
-      ? draftConfig.driverDiskSize
-      : draftConfig.executorDiskSize;
-
-    const updated: IExecutorAndDriverConfig = {
-      ...config,
-      tier: draftConfig.tier,
-      lightningEngineEnabled:
-        draftConfig.tier === 'Premium'
-          ? draftConfig.lightningEngineEnabled
-          : false,
-      executorCategory: isAcceleratedMachine(
-        draftConfig.executorType,
-        allMachineTypes
-      )
-        ? 'accelerated'
-        : 'general',
-      executorType: execLabel,
-      executorMachineType: draftConfig.executorType,
-      executorDiskTier: draftConfig.executorDiskTier,
-      executorDiskSize: draftConfig.executorDiskSize,
-      executorDisk: `${draftConfig.executorDiskTier}, ${draftConfig.executorDiskSize}`,
-      useDifferentDriverConfig: draftConfig.useDifferentDriverConfig,
-      driverMachineType: drvLabel,
-      driverDiskTier: drvDiskTier,
-      driverDiskSize: drvDiskSize,
-      driverDisk: `${drvDiskTier}, ${drvDiskSize}`,
-      machineType: drvLabel,
-      disk: `${drvDiskTier}, ${drvDiskSize}`,
-      diskType: `${draftConfig.executorDiskTier}, ${draftConfig.executorDiskSize}`
-    };
-
-    onSave(updated);
   };
 
   const renderMachineTypeDropdown = (
@@ -1470,44 +1184,11 @@ export const ExecutorAndDriverEditDrawer: React.FC<
     onSearchChange: (q: string) => void,
     activeTier: string
   ) => {
-    const allowed =
-      activeTier === 'Standard'
-        ? allMachineTypes.filter(
-            m =>
-              m.category === 'general' &&
-              !m.name.toLowerCase().includes('highmem')
-          )
-        : allMachineTypes;
-
-    const filtered = searchQuery.trim()
-      ? allowed.filter(
-          m =>
-            m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            m.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (m.subgroup &&
-              m.subgroup.toLowerCase().includes(searchQuery.toLowerCase()))
-        )
-      : allowed;
-
-    const groups: Record<string, IMachineTypeOption[]> = {};
-    filtered.forEach(m => {
-      const lowerName = m.name.toLowerCase();
-      const g =
-        m.subgroup ||
-        (m.category === 'accelerated'
-          ? lowerName.startsWith('a100')
-            ? 'Accelerated (A100)'
-            : lowerName.startsWith('l4')
-            ? 'Accelerated (L4)'
-            : 'Accelerated'
-          : lowerName.startsWith('highmem')
-          ? 'General (High memory)'
-          : 'General (Standard)');
-      if (!groups[g]) {
-        groups[g] = [];
-      }
-      groups[g].push(m);
-    });
+    const groups = groupAndFilterMachineTypes(
+      allMachineTypes,
+      activeTier,
+      searchQuery
+    );
 
     return (
       <FormControl size="small" fullWidth variant="outlined">
@@ -1578,43 +1259,21 @@ export const ExecutorAndDriverEditDrawer: React.FC<
     );
   };
 
-  const getExecutorHelperText = () => {
-    if (draftConfig.tier === 'Standard') {
-      return 'HDD (standard) is used for batch workloads on standard tier.';
-    }
-    if (isExecutorAccelerated) {
-      return 'SSD (premium) is used for accelerated machine types.';
-    }
-    return 'HDD (standard) suits most workloads. SSD (premium) costs more and pays off on shuffle-heavy or spill-heavy jobs.';
-  };
-
-  const getDriverHelperText = () => {
-    if (draftConfig.tier === 'Standard') {
-      return 'HDD (standard) is used for batch workloads on standard tier.';
-    }
-    if (isDriverAccelerated) {
-      return 'SSD (premium) is used for accelerated machine types.';
-    }
-    return 'HDD (standard) suits most workloads. SSD (premium) costs more and pays off on shuffle-heavy or spill-heavy jobs.';
-  };
-
   return (
     <EditDrawer
       open={open}
-      title="Executor and driver configuration"
-      subtitle="Customize compute tier, driver, and executor configuration for your workloads."
+      title={EXECUTOR_DRIVER_DRAWER_TITLE}
+      subtitle={EXECUTOR_DRIVER_DRAWER_SUBTITLE}
       onClose={onClose}
       onSave={handleSave}
     >
       {/* Tier Section */}
       <div className="edit-drawer-field-group">
         <div className="runtime-profile-section-title" style={{ fontSize: 14 }}>
-          Tier
+          {TIER_SECTION_TITLE}
         </div>
         <div className="edit-drawer-helper-text">
-          Managed Service for Apache Spark offers two tiers for workload
-          execution. Use premium tier for accelerated machine types and faster
-          workload execution.{' '}
+          {TIER_SECTION_SUBTITLE}{' '}
           <span
             role="button"
             tabIndex={0}
@@ -1654,11 +1313,8 @@ export const ExecutorAndDriverEditDrawer: React.FC<
               }
             }}
           >
-            <div className="node-config-card-title">Premium</div>
-            <div className="node-config-card-desc">
-              Optimized for complex or latency-sensitive queries with
-              acceleration engines.
-            </div>
+            <div className="node-config-card-title">{TIER_PREMIUM_TITLE}</div>
+            <div className="node-config-card-desc">{TIER_PREMIUM_DESC}</div>
           </div>
 
           <div
@@ -1676,10 +1332,8 @@ export const ExecutorAndDriverEditDrawer: React.FC<
               }
             }}
           >
-            <div className="node-config-card-title">Standard</div>
-            <div className="node-config-card-desc">
-              Standard Spark execution environment for routine data processing.
-            </div>
+            <div className="node-config-card-title">{TIER_STANDARD_TITLE}</div>
+            <div className="node-config-card-desc">{TIER_STANDARD_DESC}</div>
           </div>
         </div>
 
@@ -1694,10 +1348,7 @@ export const ExecutorAndDriverEditDrawer: React.FC<
             >
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
             </svg>
-            <span>
-              Standard tier will only affect batch execution. Interactive
-              sessions always execute on premium tier.
-            </span>
+            <span>{TIER_STANDARD_INFO_BANNER}</span>
           </div>
         )}
 
@@ -1722,12 +1373,12 @@ export const ExecutorAndDriverEditDrawer: React.FC<
               }
               label={
                 <span className="runtime-profile-checkbox-title">
-                  Enable Lightning Engine to accelerate performance
+                  {LIGHTNING_ENGINE_CHECKBOX_LABEL}
                 </span>
               }
             />
             <div className="runtime-profile-checkbox-desc">
-              Turn on to accelerate your Spark jobs with Lightning Engine.{' '}
+              {LIGHTNING_ENGINE_CHECKBOX_DESC}{' '}
               <span
                 role="button"
                 tabIndex={0}
@@ -1750,86 +1401,98 @@ export const ExecutorAndDriverEditDrawer: React.FC<
       <div className="edit-drawer-field-group">
         <div className="runtime-profile-section-title" style={{ fontSize: 14 }}>
           {draftConfig.useDifferentDriverConfig
-            ? 'Executor configuration'
-            : 'Executor and driver configuration'}
+            ? EXECUTOR_CONFIG_SECTION_TITLE
+            : EXECUTOR_DRIVER_DRAWER_TITLE}
         </div>
         <div className="edit-drawer-subtitle">
           {draftConfig.useDifferentDriverConfig
-            ? 'Executors run your tasks.'
-            : 'The driver and executors will share the same machine type and disk configuration.'}
+            ? EXECUTOR_ONLY_SUBTITLE
+            : EXECUTOR_SHARED_SUBTITLE}
         </div>
 
-        {renderMachineTypeDropdown(
-          'edit-executor-machine-type',
-          'Executor type',
-          draftConfig.executorType,
-          handleExecutorTypeChange,
-          executorSearch,
-          setExecutorSearch,
-          draftConfig.tier
-        )}
+        <div className="executor-driver-section-fields">
+          {renderMachineTypeDropdown(
+            'edit-executor-machine-type',
+            'Executor type',
+            draftConfig.executorType,
+            handleExecutorTypeChange,
+            executorSearch,
+            setExecutorSearch,
+            draftConfig.tier
+          )}
 
-        <FormControl size="small" fullWidth variant="outlined">
-          <InputLabel id="edit-executor-disk-tier-label" shrink>
-            {draftConfig.useDifferentDriverConfig
-              ? 'Executor disk tier'
-              : 'Disk tier'}
-          </InputLabel>
-          <Select
-            labelId="edit-executor-disk-tier-label"
-            id="edit-executor-disk-tier"
-            label={
-              draftConfig.useDifferentDriverConfig
-                ? 'Executor disk tier'
-                : 'Disk tier'
-            }
-            notched
-            value={draftConfig.executorDiskTier}
-            disabled={isExecutorAccelerated || draftConfig.tier === 'Standard'}
-            onChange={e =>
-              handleExecutorDiskTierChange(e.target.value as string)
-            }
-          >
-            {DISK_TIER_OPTIONS.map(opt => (
-              <MenuItem key={opt} value={opt}>
-                {opt}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          <div className="executor-driver-disk-row">
+            <div className="executor-driver-disk-col">
+              <FormControl size="small" fullWidth variant="outlined">
+                <InputLabel id="edit-executor-disk-tier-label" shrink>
+                  {draftConfig.useDifferentDriverConfig
+                    ? 'Executor disk tier'
+                    : 'Disk tier'}
+                </InputLabel>
+                <Select
+                  labelId="edit-executor-disk-tier-label"
+                  id="edit-executor-disk-tier"
+                  label={
+                    draftConfig.useDifferentDriverConfig
+                      ? 'Executor disk tier'
+                      : 'Disk tier'
+                  }
+                  notched
+                  value={draftConfig.executorDiskTier}
+                  disabled={
+                    isExecutorAccelerated || draftConfig.tier === 'Standard'
+                  }
+                  onChange={e =>
+                    handleExecutorDiskTierChange(e.target.value as string)
+                  }
+                >
+                  {DISK_TIER_OPTIONS.map(opt => (
+                    <MenuItem key={opt} value={opt}>
+                      {opt}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
 
-        <FormControl size="small" fullWidth variant="outlined">
-          <InputLabel id="edit-executor-disk-size-label" shrink>
-            {draftConfig.useDifferentDriverConfig
-              ? 'Executor disk size'
-              : 'Disk size'}
-          </InputLabel>
-          <Select
-            labelId="edit-executor-disk-size-label"
-            id="edit-executor-disk-size"
-            label={
-              draftConfig.useDifferentDriverConfig
-                ? 'Executor disk size'
-                : 'Disk size'
-            }
-            notched
-            value={draftConfig.executorDiskSize}
-            onChange={e =>
-              handleExecutorDiskSizeChange(e.target.value as string)
-            }
-          >
-            {(draftConfig.executorDiskTier === 'SSD (premium)'
-              ? SSD_DISK_SIZES
-              : HDD_DISK_SIZES
-            ).map(size => (
-              <MenuItem key={size} value={size}>
-                {size}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            <div className="executor-driver-disk-col">
+              <FormControl size="small" fullWidth variant="outlined">
+                <InputLabel id="edit-executor-disk-size-label" shrink>
+                  {draftConfig.useDifferentDriverConfig
+                    ? 'Executor disk size'
+                    : 'Disk size'}
+                </InputLabel>
+                <Select
+                  labelId="edit-executor-disk-size-label"
+                  id="edit-executor-disk-size"
+                  label={
+                    draftConfig.useDifferentDriverConfig
+                      ? 'Executor disk size'
+                      : 'Disk size'
+                  }
+                  notched
+                  value={draftConfig.executorDiskSize}
+                  onChange={e =>
+                    handleExecutorDiskSizeChange(e.target.value as string)
+                  }
+                >
+                  {(draftConfig.executorDiskTier === DISK_TIER_SSD
+                    ? SSD_DISK_SIZES
+                    : HDD_DISK_SIZES
+                  ).map(size => (
+                    <MenuItem key={size} value={size}>
+                      {size}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+          </div>
+        </div>
 
-        <div className="edit-drawer-helper-text">{getExecutorHelperText()}</div>
+        <div className="edit-drawer-helper-text">
+          {getDiskHelperText(draftConfig.tier, isExecutorAccelerated)}
+        </div>
       </div>
 
       {/* Different configuration for driver checkbox */}
@@ -1847,7 +1510,7 @@ export const ExecutorAndDriverEditDrawer: React.FC<
           }
           label={
             <span className="runtime-profile-checkbox-title">
-              Use different configuration for driver
+              {DIFFERENT_DRIVER_CHECKBOX_LABEL}
             </span>
           }
         />
@@ -1855,7 +1518,7 @@ export const ExecutorAndDriverEditDrawer: React.FC<
           className="edit-drawer-helper-text"
           style={{ marginLeft: 28, marginTop: -6 }}
         >
-          Driver will match executor settings unless checked.
+          {DIFFERENT_DRIVER_CHECKBOX_DESC}
         </div>
       </div>
 
@@ -1872,71 +1535,83 @@ export const ExecutorAndDriverEditDrawer: React.FC<
             className="runtime-profile-section-title"
             style={{ fontSize: 14 }}
           >
-            Driver configuration
+            {DRIVER_CONFIG_SECTION_TITLE}
           </div>
           <div className="edit-drawer-subtitle">
-            The driver coordinates your executors and manages metadata.
+            {DRIVER_CONFIG_SECTION_SUBTITLE}
           </div>
 
-          {renderMachineTypeDropdown(
-            'edit-driver-machine-type',
-            'Driver machine type',
-            draftConfig.driverMachineType,
-            handleDriverMachineTypeChange,
-            driverSearch,
-            setDriverSearch,
-            draftConfig.tier
-          )}
+          <div className="executor-driver-section-fields">
+            {renderMachineTypeDropdown(
+              'edit-driver-machine-type',
+              'Driver machine type',
+              draftConfig.driverMachineType,
+              handleDriverMachineTypeChange,
+              driverSearch,
+              setDriverSearch,
+              draftConfig.tier
+            )}
 
-          <FormControl size="small" fullWidth variant="outlined">
-            <InputLabel id="edit-driver-disk-tier-label" shrink>
-              Driver disk tier
-            </InputLabel>
-            <Select
-              labelId="edit-driver-disk-tier-label"
-              id="edit-driver-disk-tier"
-              label="Driver disk tier"
-              notched
-              value={draftConfig.driverDiskTier}
-              disabled={isDriverAccelerated || draftConfig.tier === 'Standard'}
-              onChange={e =>
-                handleDriverDiskTierChange(e.target.value as string)
-              }
-            >
-              {DISK_TIER_OPTIONS.map(opt => (
-                <MenuItem key={opt} value={opt}>
-                  {opt}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            <div className="executor-driver-disk-row">
+              <div className="executor-driver-disk-col">
+                <FormControl size="small" fullWidth variant="outlined">
+                  <InputLabel id="edit-driver-disk-tier-label" shrink>
+                    Driver disk tier
+                  </InputLabel>
+                  <Select
+                    labelId="edit-driver-disk-tier-label"
+                    id="edit-driver-disk-tier"
+                    label="Driver disk tier"
+                    notched
+                    value={draftConfig.driverDiskTier}
+                    disabled={
+                      isDriverAccelerated || draftConfig.tier === 'Standard'
+                    }
+                    onChange={e =>
+                      handleDriverDiskTierChange(e.target.value as string)
+                    }
+                  >
+                    {DISK_TIER_OPTIONS.map(opt => (
+                      <MenuItem key={opt} value={opt}>
+                        {opt}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
 
-          <FormControl size="small" fullWidth variant="outlined">
-            <InputLabel id="edit-driver-disk-size-label" shrink>
-              Driver disk size
-            </InputLabel>
-            <Select
-              labelId="edit-driver-disk-size-label"
-              id="edit-driver-disk-size"
-              label="Driver disk size"
-              notched
-              value={draftConfig.driverDiskSize}
-              onChange={e =>
-                handleDriverDiskSizeChange(e.target.value as string)
-              }
-            >
-              {(draftConfig.driverDiskTier === 'SSD (premium)'
-                ? SSD_DISK_SIZES
-                : HDD_DISK_SIZES
-              ).map(size => (
-                <MenuItem key={size} value={size}>
-                  {size}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <div className="executor-driver-disk-col">
+                <FormControl size="small" fullWidth variant="outlined">
+                  <InputLabel id="edit-driver-disk-size-label" shrink>
+                    Driver disk size
+                  </InputLabel>
+                  <Select
+                    labelId="edit-driver-disk-size-label"
+                    id="edit-driver-disk-size"
+                    label="Driver disk size"
+                    notched
+                    value={draftConfig.driverDiskSize}
+                    onChange={e =>
+                      handleDriverDiskSizeChange(e.target.value as string)
+                    }
+                  >
+                    {(draftConfig.driverDiskTier === DISK_TIER_SSD
+                      ? SSD_DISK_SIZES
+                      : HDD_DISK_SIZES
+                    ).map(size => (
+                      <MenuItem key={size} value={size}>
+                        {size}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+            </div>
+          </div>
 
-          <div className="edit-drawer-helper-text">{getDriverHelperText()}</div>
+          <div className="edit-drawer-helper-text">
+            {getDiskHelperText(draftConfig.tier, isDriverAccelerated)}
+          </div>
         </div>
       )}
     </EditDrawer>

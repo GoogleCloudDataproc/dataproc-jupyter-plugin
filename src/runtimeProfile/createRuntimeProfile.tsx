@@ -43,11 +43,11 @@ import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import '../../style/runtimeProfile.css';
 import {
   ExecutorAndDriverEditDrawer,
-  normalizeMachineTypeName,
   RuntimeEnvironmentEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   SelectBucketEditDrawer
 } from './runtimeProfileEditDrawers';
+import { normalizeMachineTypeName } from './runtimeProfileMapper';
 import {
   DATAPROC_TIER_DOC,
   LIGHTNING_ENGINE_DOC,
@@ -79,6 +79,10 @@ import {
   DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
 } from '../utils/const';
 import {
+  DEFAULT_HDD_DISK_SIZE,
+  DEFAULT_SSD_DISK_SIZE,
+  DISK_TIER_HDD,
+  DISK_TIER_SSD,
   ExecutorCategoryType,
   IAutoscalingConfig,
   ICreateRuntimeProfilePayload,
@@ -606,8 +610,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       tier,
       executorType,
       executorMachineType: executorType,
-      lightningEngineEnabled:
-        tier === 'Premium' && Boolean(lightningEngineEnabled)
+      lightningEngineEnabled: Boolean(lightningEngineEnabled)
     }),
     [executorAndDriverConfigState, tier, executorType, lightningEngineEnabled]
   );
@@ -711,9 +714,9 @@ export const CreateRuntimeProfileComponent: React.FC<
       setExecutorType(DEFAULT_ACCELERATED_EXECUTOR_TYPE);
       setExecutorAndDriverConfigState(prev => ({
         ...prev,
-        executorDiskTier: 'SSD (premium)',
-        executorDiskSize: '375 GiB',
-        executorDisk: 'SSD (premium), 375 GiB'
+        executorDiskTier: DISK_TIER_SSD,
+        executorDiskSize: DEFAULT_SSD_DISK_SIZE,
+        executorDisk: `${DISK_TIER_SSD}, ${DEFAULT_SSD_DISK_SIZE}`
       }));
     } else {
       setExecutorType(
@@ -738,12 +741,12 @@ export const CreateRuntimeProfileComponent: React.FC<
       setExecutorAndDriverConfigState(prev => ({
         ...prev,
         tier: 'Standard',
-        executorDiskTier: 'HDD (standard)',
-        executorDiskSize: '200 GiB',
-        executorDisk: 'HDD (standard), 200 GiB',
-        driverDiskTier: 'HDD (standard)',
-        driverDiskSize: '200 GiB',
-        driverDisk: 'HDD (standard), 200 GiB'
+        executorDiskTier: DISK_TIER_HDD,
+        executorDiskSize: DEFAULT_HDD_DISK_SIZE,
+        executorDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`,
+        driverDiskTier: DISK_TIER_HDD,
+        driverDiskSize: DEFAULT_HDD_DISK_SIZE,
+        driverDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`
       }));
     } else {
       setExecutorAndDriverConfigState(prev => ({
@@ -1192,11 +1195,11 @@ export const CreateRuntimeProfileComponent: React.FC<
                       Boolean(match?.acceleratorType);
                     setExecutorAndDriverConfigState(prev => {
                       const nextDiskTier = isAcc
-                        ? 'SSD (premium)'
-                        : prev.executorDiskTier || 'HDD (standard)';
+                        ? DISK_TIER_SSD
+                        : prev.executorDiskTier || DISK_TIER_HDD;
                       const nextDiskSize = isAcc
-                        ? '375 GiB'
-                        : prev.executorDiskSize || '200 GiB';
+                        ? DEFAULT_SSD_DISK_SIZE
+                        : prev.executorDiskSize || DEFAULT_HDD_DISK_SIZE;
                       return {
                         ...prev,
                         executorType: newType,
