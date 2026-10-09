@@ -201,6 +201,16 @@ export const SelectBucketEditDrawer: React.FC<ISelectBucketEditDrawerProps> = ({
   const [isCreatingBucket, setIsCreatingBucket] = useState<boolean>(false);
   const [createBucketError, setCreateBucketError] = useState<string>('');
 
+  const isMountedRef = React.useRef(true);
+  const activeBucketRef = React.useRef<string | null>(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (!open) {
       return;
@@ -245,6 +255,7 @@ export const SelectBucketEditDrawer: React.FC<ISelectBucketEditDrawerProps> = ({
   }, [open, initialBucket, service]);
 
   const handleOpenBucket = async (bucketName: string) => {
+    activeBucketRef.current = bucketName;
     setSelectedBucket(bucketName);
     setCurrentBucket(bucketName);
     setBucketFiles([]);
@@ -254,16 +265,23 @@ export const SelectBucketEditDrawer: React.FC<ISelectBucketEditDrawerProps> = ({
     setIsLoadingFiles(true);
     try {
       const files = await service.getBucketObjects(bucketName);
-      setBucketFiles(files);
+      if (isMountedRef.current && activeBucketRef.current === bucketName) {
+        setBucketFiles(files);
+      }
     } catch (err) {
       console.error(`Failed to load files for bucket ${bucketName}:`, err);
-      setBucketFiles([]);
+      if (isMountedRef.current && activeBucketRef.current === bucketName) {
+        setBucketFiles([]);
+      }
     } finally {
-      setIsLoadingFiles(false);
+      if (isMountedRef.current && activeBucketRef.current === bucketName) {
+        setIsLoadingFiles(false);
+      }
     }
   };
 
   const handleBackToBuckets = () => {
+    activeBucketRef.current = null;
     setCurrentBucket(null);
     setBucketFiles([]);
   };
@@ -472,7 +490,11 @@ export const SelectBucketEditDrawer: React.FC<ISelectBucketEditDrawerProps> = ({
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      setSelectedBucket(bucketName);
+                      if (isSelected) {
+                        handleOpenBucket(bucketName);
+                      } else {
+                        setSelectedBucket(bucketName);
+                      }
                     }
                   }}
                 >
@@ -606,10 +628,6 @@ export const SelectBucketEditDrawer: React.FC<ISelectBucketEditDrawerProps> = ({
                 <span>Labels (optional)</span>
                 <span>{expandBucketLabels ? '▴' : '▾'}</span>
               </div>
-
-              <button type="button" className="create-bucket-continue-btn">
-                Continue
-              </button>
             </div>
           </div>
 
@@ -797,10 +815,14 @@ export const RuntimeEnvironmentEditDrawer: React.FC<
   const isBucketAutoOrEmpty =
     !normalizedStagingBucket ||
     normalizedStagingBucket.toLowerCase() === 'auto';
+  const isBucketRegexValid =
+    isBucketAutoOrEmpty ||
+    VALID_BUCKET_NAME_REGEX.test(normalizedStagingBucket);
   const isBucketValid =
     !isBucketAutoOrEmpty &&
-    VALID_BUCKET_NAME_REGEX.test(normalizedStagingBucket) &&
-    existingBuckets.includes(normalizedStagingBucket);
+    isBucketRegexValid &&
+    (existingBuckets.length === 0 ||
+      existingBuckets.includes(normalizedStagingBucket));
   const stagingBucketError =
     !isBucketAutoOrEmpty && !isBucketValid ? STAGING_BUCKET_ERROR : '';
 

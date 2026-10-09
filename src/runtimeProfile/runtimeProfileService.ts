@@ -276,7 +276,7 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     const { STORAGE } = await gcpServiceUrls;
     const bucketsEndpoint = this.getBucketsEndpoint(STORAGE);
     const response = await loggedFetch(
-      `${bucketsEndpoint}/${encodeURIComponent(bucketName)}/o`,
+      `${bucketsEndpoint}/${encodeURIComponent(bucketName)}/o?delimiter=%2F`,
       {
         method: 'GET',
         headers: {
