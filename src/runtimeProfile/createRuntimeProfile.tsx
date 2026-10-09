@@ -68,7 +68,8 @@ import {
   DATAPROC_STANDARD_MACHINE_TYPES,
   DATAPROC_ACCELERATED_MACHINE_TYPES,
   DEFAULT_GENERAL_EXECUTOR_TYPE,
-  DEFAULT_ACCELERATED_EXECUTOR_TYPE
+  DEFAULT_ACCELERATED_EXECUTOR_TYPE,
+  DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
 } from '../utils/const';
 import {
   ExecutorCategoryType,
@@ -88,6 +89,8 @@ import {
   RuntimeProfileService,
   runtimeProfileService
 } from './runtimeProfileService';
+import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
+import { authApi, IAuthCredentials } from '../utils/utils';
 
 interface IRuntimeProfileFormData {
   displayName: string;
@@ -163,7 +166,7 @@ export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
   driverMachineType: 'Standard-4',
   driverDisk: 'standard persistent disk',
   executorType: 'standard',
-  executorDisk: 'Standard persistent disk (HDD), 100 GB'
+  executorDisk: 'Standard persistent disk (HDD), 200 GB'
 };
 
 export const DEFAULT_AUTOSCALING_CONFIG: IAutoscalingConfig = {
@@ -476,6 +479,8 @@ export const CreateRuntimeProfileComponent: React.FC<
   ICreateRuntimeProfileComponentProps
 > = ({
   app,
+  launcher,
+  themeManager,
   service = runtimeProfileService,
   onBack,
   onSuccess,
@@ -499,9 +504,9 @@ export const CreateRuntimeProfileComponent: React.FC<
     useState<boolean>(true);
 
   // Tier and Lightning Engine state
-  const [tier, setTier] = useState<string>(
-    initialTier || initialExecutorAndDriverConfig?.tier || 'Premium'
-  );
+  const initialTierValue =
+    initialTier || initialExecutorAndDriverConfig?.tier || 'Premium';
+  const [tier, setTier] = useState<string>(initialTierValue);
   const [lightningEngineEnabled, setLightningEngineEnabled] = useState<boolean>(
     initialLightningEngineEnabled !== undefined
       ? initialLightningEngineEnabled
@@ -524,6 +529,8 @@ export const CreateRuntimeProfileComponent: React.FC<
         : undefined) ||
       (resolvedInitialCategory === 'accelerated'
         ? DEFAULT_ACCELERATED_EXECUTOR_TYPE
+        : initialTierValue === 'Standard'
+        ? DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
         : DEFAULT_GENERAL_EXECUTOR_TYPE)
   );
   const machineTypes: IMachineTypeOption[] =
@@ -658,18 +665,29 @@ export const CreateRuntimeProfileComponent: React.FC<
       return;
     }
     setExecutorCategory(category);
-    setExecutorType(
-      category === 'accelerated'
-        ? DEFAULT_ACCELERATED_EXECUTOR_TYPE
-        : DEFAULT_GENERAL_EXECUTOR_TYPE
-    );
+    // Selecting a category resets the machine type to that category's default.
+    // On Standard tier the General default is standard-4, because highmem shapes
+    // exceed the Standard tier per-core memory limit.
+    if (category === 'accelerated') {
+      setExecutorType(DEFAULT_ACCELERATED_EXECUTOR_TYPE);
+    } else {
+      setExecutorType(
+        tier === 'Standard'
+          ? DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
+          : DEFAULT_GENERAL_EXECUTOR_TYPE
+      );
+    }
   };
 
   const handleTierChange = (selectedTier: string) => {
     setTier(selectedTier);
-    if (selectedTier === 'Standard' && executorCategory === 'accelerated') {
+    // Standard tier supports neither accelerated nor highmem executor shapes.
+    if (
+      selectedTier === 'Standard' &&
+      (executorCategory === 'accelerated' || executorType.includes('highmem'))
+    ) {
       setExecutorCategory('general');
-      setExecutorType(DEFAULT_GENERAL_EXECUTOR_TYPE);
+      setExecutorType(DEFAULT_STANDARD_TIER_EXECUTOR_TYPE);
     }
   };
 
@@ -678,18 +696,35 @@ export const CreateRuntimeProfileComponent: React.FC<
     let isMounted = true;
     const loadInitialData = async () => {
       setIsLoadingOptions(true);
+      let credentials: IAuthCredentials | undefined;
       try {
+        credentials = await authApi();
         const loadedRegions = await service.getRegions();
 
         if (isMounted) {
           setRegions(loadedRegions);
 
-          if (loadedRegions.length > 0) {
-            setValue('region', loadedRegions[0].name, { shouldValidate: true });
+          // Pre-select the region saved in Settings, else the first region.
+          const defaultRegion =
+            loadedRegions.find(r => r.name === credentials?.region_id) ??
+            loadedRegions[0];
+          if (defaultRegion) {
+            setValue('region', defaultRegion.name, { shouldValidate: true });
           }
         }
       } catch (error) {
         console.error('Failed to load runtime profile initial data', error);
+        // Same as the Settings region dropdown: skip the popup when there is
+        // already a login/config error.
+        if (
+          isMounted &&
+          !credentials?.login_error &&
+          !credentials?.config_error
+        ) {
+          Notification.emit((error as Error).message, 'error', {
+            autoClose: 5000
+          });
+        }
       } finally {
         if (isMounted) {
           setIsLoadingOptions(false);
@@ -743,6 +778,17 @@ export const CreateRuntimeProfileComponent: React.FC<
         'success',
         { autoClose: 5000 }
       );
+
+      if (app && launcher) {
+        try {
+          await registerSessionKernelsInLauncher(app, launcher, themeManager);
+        } catch (kernelError) {
+          console.error(
+            'Failed to refresh session kernels in launcher',
+            kernelError
+          );
+        }
+      }
 
       if (onSuccess) {
         onSuccess();
@@ -1129,11 +1175,14 @@ export const CreateRuntimeProfileComponent: React.FC<
 
           {/* Action Buttons */}
           <div className="runtime-profile-buttons">
-            {/* TODO - create functionality to be enabled during API integration process */}
             <button
               type="submit"
-              disabled={true}
-              className="runtime-profile-submit-btn submit-button-disable-style"
+              disabled={isSubmitting}
+              className={`runtime-profile-submit-btn ${
+                isSubmitting
+                  ? 'submit-button-disable-style'
+                  : 'submit-button-style'
+              }`}
             >
               {isSubmitting ? (
                 <CircularProgress size={16} color="inherit" />

@@ -30,13 +30,13 @@ import {
   IRuntimeProfileService
 } from './runtimeProfileInterface';
 import { IRuntimeProfileTemplate } from './runtimeProfileListMapper';
+import { mapRuntimeProfileToSessionTemplate } from './runtimeProfileMapper';
 
 /**
- * Flag to enable mock mode for UI development/testing until the skeleton form
- * is fully connected to the Dataproc sessionTemplates API / Jupyter server endpoint.
- * Set to false when connecting to the real Google Cloud Dataproc sessionTemplates endpoint.
+ * Flag to enable mock mode for UI development/testing.
+ * When false, runtime profiles are created via the Dataproc sessionTemplates API.
  */
-export const RUNTIME_PROFILE_USE_MOCK = true;
+export const RUNTIME_PROFILE_USE_MOCK = false;
 
 /**
  * Mock regions with human-readable location descriptions
@@ -154,45 +154,42 @@ export class RuntimeProfileService implements IRuntimeProfileService {
   }
 
   /**
-   * Retrieves available GCP regions with formatted display names
+   * Retrieves available GCP regions for the project.
+   * Mirrors the Settings region dropdown: returns an empty list when there is
+   * no project or access token, and throws on API errors (no mock fallback).
    */
   async getRegions(projectId?: string): Promise<IRegionOption[]> {
     if (this.useMock) {
       return MOCK_REGIONS;
     }
 
-    try {
-      const credentials = await authApi();
-      const { REGION_URL } = await gcpServiceUrls;
-      const targetProject = projectId || credentials?.project_id;
-      if (targetProject && credentials?.access_token) {
-        const response = await loggedFetch(
-          `${REGION_URL}/${targetProject}/regions`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': API_HEADER_CONTENT_TYPE,
-              Authorization: API_HEADER_BEARER + credentials.access_token
-            }
-          }
-        );
-        const result = await response.json();
-        if (result?.items && Array.isArray(result.items)) {
-          return result.items.map((item: { name: string }) => {
-            const match = MOCK_REGIONS.find(r => r.name === item.name);
-            return match ?? { name: item.name, displayName: item.name };
-          });
+    const credentials = await authApi();
+    const targetProject = projectId || credentials?.project_id;
+    if (!targetProject || !credentials?.access_token) {
+      return [];
+    }
+
+    const { REGION_URL } = await gcpServiceUrls;
+    const response = await loggedFetch(
+      `${REGION_URL}/${targetProject}/regions`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': API_HEADER_CONTENT_TYPE,
+          Authorization: API_HEADER_BEARER + credentials.access_token
         }
       }
-      return MOCK_REGIONS;
-    } catch (error) {
-      safeLog(
-        'Failed to fetch regions from API, falling back to default regions list: ' +
-          error,
-        LOG_LEVEL.WARN
+    );
+    const result = await response.json().catch(() => null);
+    if (!response.ok || result?.error) {
+      throw new Error(
+        result?.error?.message ||
+          `Failed to fetch regions: ${response.statusText}`
       );
-      return MOCK_REGIONS;
     }
+
+    const items: { name: string }[] = result?.items ?? [];
+    return items.map(item => ({ name: item.name, displayName: item.name }));
   }
 
   /**
@@ -253,7 +250,24 @@ export class RuntimeProfileService implements IRuntimeProfileService {
       const credentials = await authApi();
       const { DATAPROC } = await gcpServiceUrls;
       const targetProject = projectId || credentials?.project_id;
-      const targetRegion = region || payload.region;
+      const targetRegion = region || payload.region || credentials?.region_id;
+
+      if (!targetProject) {
+        throw new Error(
+          'GCP Project ID is required to create a runtime profile. Please log in or select a project.'
+        );
+      }
+      if (!targetRegion) {
+        throw new Error(
+          'GCP Region is required to create a runtime profile. Please select a valid region.'
+        );
+      }
+
+      const apiPayload = mapRuntimeProfileToSessionTemplate(
+        payload,
+        targetProject,
+        targetRegion
+      );
       const url = `${DATAPROC}/projects/${targetProject}/locations/${targetRegion}/sessionTemplates`;
 
       const response = await loggedFetch(url, {
@@ -262,13 +276,14 @@ export class RuntimeProfileService implements IRuntimeProfileService {
           'Content-Type': API_HEADER_CONTENT_TYPE,
           Authorization: API_HEADER_BEARER + (credentials?.access_token || '')
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(apiPayload)
       });
 
-      const result = await response.json();
-      if (result.error) {
+      const result = await response.json().catch(() => null);
+      if (!response.ok || result?.error) {
         throw new Error(
-          result.error.message || 'Failed to create runtime profile'
+          result?.error?.message ||
+            `Failed to create runtime profile (${response.status}: ${response.statusText})`
         );
       }
       return result as IRuntimeProfile;
