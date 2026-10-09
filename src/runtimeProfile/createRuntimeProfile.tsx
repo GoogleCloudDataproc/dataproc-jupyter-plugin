@@ -42,6 +42,16 @@ import expandMoreIcon from '../../style/icons/expand_more.svg';
 import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import '../../style/runtimeProfile.css';
 import {
+  ExecutorAndDriverEditDrawer,
+  RuntimeEnvironmentEditDrawer,
+  RUNTIME_VERSION_OPTIONS,
+  SelectBucketEditDrawer
+} from './runtimeProfileEditDrawers';
+import {
+  isAcceleratedMachine,
+  normalizeMachineTypeName
+} from './runtimeProfileMapper';
+import {
   DATAPROC_TIER_DOC,
   LIGHTNING_ENGINE_DOC,
   RUNTIME_PROFILE_INTRO_TEXT,
@@ -72,6 +82,10 @@ import {
   DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
 } from '../utils/const';
 import {
+  DEFAULT_HDD_DISK_SIZE,
+  DEFAULT_SSD_DISK_SIZE,
+  DISK_TIER_HDD,
+  DISK_TIER_SSD,
   ExecutorCategoryType,
   IAutoscalingConfig,
   ICreateRuntimeProfilePayload,
@@ -146,7 +160,7 @@ export const generateRandomHex = (): string => {
  */
 export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   runtimeProfileId: '',
-  runtimeVersion: '2.3',
+  runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
   customSparkImage: '',
   stagingBucket: '',
   pythonPackageRepository: ''
@@ -502,6 +516,10 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(true);
+  const [isRuntimeConfigDrawerOpen, setIsRuntimeConfigDrawerOpen] =
+    useState<boolean>(false);
+  const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
+    useState<boolean>(false);
 
   // Tier and Lightning Engine state
   const initialTierValue =
@@ -549,7 +567,6 @@ export const CreateRuntimeProfileComponent: React.FC<
     control,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors, isSubmitting }
   } = useForm<IRuntimeProfileFormData>({
     mode: 'onChange',
@@ -560,33 +577,45 @@ export const CreateRuntimeProfileComponent: React.FC<
     }
   });
 
-  const watchedDisplayName = watch('displayName');
-
   // Configuration values derived from initial props or defaults.
   // TODO: Validation on runtimeProfileId / displayName field will be handled in upcoming PRs.
-  const runtimeEnvironmentConfig = useMemo<IRuntimeEnvironmentConfig>(
+  const [runtimeEnvironmentConfig, setRuntimeEnvironmentConfig] =
+    useState<IRuntimeEnvironmentConfig>(() => {
+      const baseConfig = {
+        ...DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
+        ...initialRuntimeEnvironmentConfig
+      };
+      return {
+        ...baseConfig,
+        runtimeProfileId:
+          baseConfig.runtimeProfileId && baseConfig.runtimeProfileId !== '-'
+            ? baseConfig.runtimeProfileId
+            : defaultRuntimeId
+      };
+    });
+
+  const [executorAndDriverConfigState, setExecutorAndDriverConfigState] =
+    useState<IExecutorAndDriverConfig>(
+      () => initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG
+    );
+
+  const activeRuntimeEnvironmentConfig = useMemo<IRuntimeEnvironmentConfig>(
     () => ({
-      ...DEFAULT_RUNTIME_ENVIRONMENT_CONFIG,
-      ...initialRuntimeEnvironmentConfig,
-      runtimeProfileId: watchedDisplayName?.trim() || defaultRuntimeId,
+      ...runtimeEnvironmentConfig,
       lightningEngineEnabled:
         tier === 'Premium' && Boolean(lightningEngineEnabled)
     }),
-    [
-      initialRuntimeEnvironmentConfig,
-      watchedDisplayName,
-      defaultRuntimeId,
-      tier,
-      lightningEngineEnabled
-    ]
+    [runtimeEnvironmentConfig, tier, lightningEngineEnabled]
   );
   const executorAndDriverConfig = useMemo<IExecutorAndDriverConfig>(
     () => ({
-      ...(initialExecutorAndDriverConfig || DEFAULT_EXECUTOR_AND_DRIVER_CONFIG),
+      ...executorAndDriverConfigState,
       tier,
-      executorType
+      executorType,
+      executorMachineType: executorType,
+      lightningEngineEnabled: Boolean(lightningEngineEnabled)
     }),
-    [initialExecutorAndDriverConfig, tier, executorType]
+    [executorAndDriverConfigState, tier, executorType, lightningEngineEnabled]
   );
   const autoscalingConfig = useMemo<IAutoscalingConfig>(
     () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG,
@@ -617,35 +646,51 @@ export const CreateRuntimeProfileComponent: React.FC<
     () => [
       {
         title: 'Runtime configuration',
-        properties: formatRuntimeEnvironmentProperties(runtimeEnvironmentConfig)
+        properties: formatRuntimeEnvironmentProperties(
+          activeRuntimeEnvironmentConfig
+        ),
+        isEditDisabled: false,
+        onEdit: () => setIsRuntimeConfigDrawerOpen(true)
       },
       {
         title: 'Executor and driver configuration',
-        properties: formatExecutorAndDriverProperties(executorAndDriverConfig)
+        properties: formatExecutorAndDriverProperties(executorAndDriverConfig),
+        isEditDisabled: false,
+        onEdit: () => setIsExecutorDriverDrawerOpen(true)
       },
       {
         title: 'Autoscaling',
-        properties: formatAutoscalingProperties(autoscalingConfig)
+        properties: formatAutoscalingProperties(autoscalingConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Metastore configuration',
-        properties: formatMetastoreProperties(metastoreConfig)
+        properties: formatMetastoreProperties(metastoreConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Network and security',
-        properties: formatNetworkSecurityProperties(networkAndSecurityConfig)
+        properties: formatNetworkSecurityProperties(networkAndSecurityConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Session lifecycle',
-        properties: formatSessionLifecycleProperties(sessionLifecycleConfig)
+        properties: formatSessionLifecycleProperties(sessionLifecycleConfig),
+        isEditDisabled: true,
+        onEdit: undefined
       },
       {
         title: 'Other customizations',
-        properties: formatOtherCustomizationProperties(sparkProperties, labels)
+        properties: formatOtherCustomizationProperties(sparkProperties, labels),
+        isEditDisabled: true,
+        onEdit: undefined
       }
     ],
     [
-      runtimeEnvironmentConfig,
+      activeRuntimeEnvironmentConfig,
       executorAndDriverConfig,
       autoscalingConfig,
       metastoreConfig,
@@ -670,6 +715,12 @@ export const CreateRuntimeProfileComponent: React.FC<
     // exceed the Standard tier per-core memory limit.
     if (category === 'accelerated') {
       setExecutorType(DEFAULT_ACCELERATED_EXECUTOR_TYPE);
+      setExecutorAndDriverConfigState(prev => ({
+        ...prev,
+        executorDiskTier: DISK_TIER_SSD,
+        executorDiskSize: DEFAULT_SSD_DISK_SIZE,
+        executorDisk: `${DISK_TIER_SSD}, ${DEFAULT_SSD_DISK_SIZE}`
+      }));
     } else {
       setExecutorType(
         tier === 'Standard'
@@ -688,6 +739,38 @@ export const CreateRuntimeProfileComponent: React.FC<
     ) {
       setExecutorCategory('general');
       setExecutorType(DEFAULT_STANDARD_TIER_EXECUTOR_TYPE);
+    }
+    if (selectedTier === 'Standard') {
+      setExecutorAndDriverConfigState(prev => {
+        // Standard tier supports neither accelerated nor highmem driver shapes.
+        const driverName = normalizeMachineTypeName(
+          prev.driverMachineType,
+          ALL_MACHINE_TYPES
+        );
+        const isDriverUnsupported =
+          isAcceleratedMachine(driverName, ALL_MACHINE_TYPES) ||
+          driverName.includes('highmem');
+        return {
+          ...prev,
+          ...(isDriverUnsupported && {
+            driverMachineType: getMachineTypeLabel(
+              DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
+            )
+          }),
+          tier: 'Standard',
+          executorDiskTier: DISK_TIER_HDD,
+          executorDiskSize: DEFAULT_HDD_DISK_SIZE,
+          executorDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`,
+          driverDiskTier: DISK_TIER_HDD,
+          driverDiskSize: DEFAULT_HDD_DISK_SIZE,
+          driverDisk: `${DISK_TIER_HDD}, ${DEFAULT_HDD_DISK_SIZE}`
+        };
+      });
+    } else {
+      setExecutorAndDriverConfigState(prev => ({
+        ...prev,
+        tier: 'Premium'
+      }));
     }
   };
 
@@ -761,7 +844,7 @@ export const CreateRuntimeProfileComponent: React.FC<
           executorType: executorCategory,
           machineType: executorType
         },
-        runtimeEnvironmentConfig,
+        runtimeEnvironmentConfig: activeRuntimeEnvironmentConfig,
         executorAndDriverConfig,
         autoscalingConfig,
         metastoreConfig,
@@ -1119,9 +1202,34 @@ export const CreateRuntimeProfileComponent: React.FC<
                   id="runtime-profile-executor-type"
                   value={executorType}
                   label="Executor type"
-                  onChange={(e: SelectChangeEvent) =>
-                    setExecutorType(e.target.value as string)
-                  }
+                  onChange={(e: SelectChangeEvent) => {
+                    const newType = e.target.value as string;
+                    setExecutorType(newType);
+                    const match = ALL_MACHINE_TYPES.find(
+                      m => m.name === newType
+                    );
+                    const isAcc =
+                      match?.category === 'accelerated' ||
+                      Boolean(match?.acceleratorType);
+                    setExecutorAndDriverConfigState(prev => {
+                      const nextDiskTier = isAcc
+                        ? DISK_TIER_SSD
+                        : prev.executorDiskTier || DISK_TIER_HDD;
+                      const nextDiskSize = isAcc
+                        ? DEFAULT_SSD_DISK_SIZE
+                        : prev.executorDiskSize || DEFAULT_HDD_DISK_SIZE;
+                      return {
+                        ...prev,
+                        executorType: newType,
+                        executorMachineType: newType,
+                        ...(isAcc && {
+                          executorDiskTier: nextDiskTier,
+                          executorDiskSize: nextDiskSize,
+                          executorDisk: `${nextDiskTier}, ${nextDiskSize}`
+                        })
+                      };
+                    });
+                  }}
                   notched
                 >
                   {renderGroupedMachineOptions(machineTypes, executorCategory)}
@@ -1166,7 +1274,8 @@ export const CreateRuntimeProfileComponent: React.FC<
                     key={section.title}
                     title={section.title}
                     properties={section.properties}
-                    isEditDisabled={true}
+                    isEditDisabled={section.isEditDisabled}
+                    onEdit={section.onEdit}
                   />
                 ))}
               </div>
@@ -1200,6 +1309,49 @@ export const CreateRuntimeProfileComponent: React.FC<
           </div>
         </form>
       </div>
+
+      <RuntimeEnvironmentEditDrawer
+        open={isRuntimeConfigDrawerOpen}
+        config={activeRuntimeEnvironmentConfig}
+        service={service}
+        onClose={() => setIsRuntimeConfigDrawerOpen(false)}
+        onSave={(updatedConfig: IRuntimeEnvironmentConfig) => {
+          setRuntimeEnvironmentConfig(updatedConfig);
+          setIsRuntimeConfigDrawerOpen(false);
+        }}
+      />
+
+      <ExecutorAndDriverEditDrawer
+        open={isExecutorDriverDrawerOpen}
+        config={executorAndDriverConfig}
+        onClose={() => setIsExecutorDriverDrawerOpen(false)}
+        onSave={(updatedConfig: IExecutorAndDriverConfig) => {
+          setTier(updatedConfig.tier || 'Premium');
+          setLightningEngineEnabled(
+            Boolean(updatedConfig.lightningEngineEnabled)
+          );
+          const execMachineName =
+            updatedConfig.executorMachineType ||
+            normalizeMachineTypeName(
+              updatedConfig.executorType,
+              ALL_MACHINE_TYPES
+            );
+          const execObj = ALL_MACHINE_TYPES.find(
+            m => m.name === execMachineName
+          );
+          const isAcc =
+            execObj?.category === 'accelerated' ||
+            Boolean(execObj?.acceleratorType);
+          setExecutorCategory(isAcc ? 'accelerated' : 'general');
+          setExecutorType(execMachineName);
+          setExecutorAndDriverConfigState({
+            ...updatedConfig,
+            executorType: execMachineName,
+            executorMachineType: execMachineName
+          });
+          setIsExecutorDriverDrawerOpen(false);
+        }}
+      />
     </div>
   );
 };
@@ -1232,3 +1384,11 @@ export class CreateRuntimeProfile extends DataprocWidget {
     );
   }
 }
+
+export {
+  SectionDetail,
+  RuntimeEnvironmentEditDrawer,
+  ExecutorAndDriverEditDrawer,
+  SelectBucketEditDrawer,
+  RUNTIME_VERSION_OPTIONS
+};

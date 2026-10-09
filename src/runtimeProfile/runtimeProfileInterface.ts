@@ -15,6 +15,26 @@
  * limitations under the License.
  */
 
+import {
+  DEFAULT_HDD_DISK_SIZE,
+  DEFAULT_SSD_DISK_SIZE,
+  DISK_TIER_HDD,
+  DISK_TIER_OPTIONS,
+  DISK_TIER_SSD,
+  HDD_DISK_SIZES,
+  SSD_DISK_SIZES
+} from '../utils/const';
+
+export {
+  DEFAULT_HDD_DISK_SIZE,
+  DEFAULT_SSD_DISK_SIZE,
+  DISK_TIER_HDD,
+  DISK_TIER_OPTIONS,
+  DISK_TIER_SSD,
+  HDD_DISK_SIZES,
+  SSD_DISK_SIZES
+};
+
 export interface IRegionOption {
   name: string;
   displayName: string;
@@ -29,6 +49,7 @@ export interface IMachineTypeOption {
   vCPUs: number;
   memory: string;
   category: ExecutorCategoryType;
+  subgroup?: string;
   acceleratorType?: string;
   gpuCount?: number;
 }
@@ -53,6 +74,38 @@ export interface IExecutorAndDriverConfig {
   driverDisk?: string;
   executorType?: ExecutorType;
   executorDisk?: string;
+  useDifferentDriverConfig?: boolean;
+  executorDiskTier?: string;
+  executorDiskSize?: string;
+  driverDiskTier?: string;
+  driverDiskSize?: string;
+  lightningEngineEnabled?: boolean;
+  executorCategory?: ExecutorCategoryType;
+  executorMachineType?: string;
+  /** Legacy compatibility fields */
+  machineType?: string;
+  disk?: string;
+  diskType?: string;
+}
+
+export interface IExecutorAndDriverDraftConfig {
+  tier: string;
+  lightningEngineEnabled: boolean;
+  executorType: string;
+  executorDiskTier: string;
+  executorDiskSize: string;
+  useDifferentDriverConfig: boolean;
+  driverMachineType: string;
+  driverDiskTier: string;
+  driverDiskSize: string;
+}
+
+export interface IExecutorAndDriverEditDrawerProps {
+  open: boolean;
+  config: IExecutorAndDriverConfig;
+  onClose: () => void;
+  onSave: (updatedConfig: IExecutorAndDriverConfig) => void;
+  availableMachineTypes?: IMachineTypeOption[];
 }
 
 export interface IAutoscalingConfig {
@@ -145,6 +198,9 @@ export interface ICreateRuntimeProfilePayload {
 
 export interface IRuntimeProfileService {
   getRegions(projectId?: string): Promise<IRegionOption[]>;
+  getStorageBuckets?(projectId?: string): Promise<string[]>;
+  getBucketObjects?(bucketName: string): Promise<string[]>;
+  createStorageBucket?(bucketName: string, projectId?: string): Promise<string>;
   createRuntimeProfile(
     payload: ICreateRuntimeProfilePayload,
     projectId?: string,

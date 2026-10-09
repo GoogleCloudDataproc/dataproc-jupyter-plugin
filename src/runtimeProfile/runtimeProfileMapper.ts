@@ -20,11 +20,24 @@ import {
   DATAPROC_DEFAULT_ACCELERATOR,
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
   DATAPROC_STANDARD_MACHINE_TYPES,
-  DATAPROC_TIER_PROPERTY
+  DATAPROC_TIER_PROPERTY,
+  DEFAULT_GENERAL_EXECUTOR_TYPE,
+  DEFAULT_STANDARD_TIER_EXECUTOR_TYPE,
+  DISK_HELPER_TEXT_ACCELERATED,
+  DISK_HELPER_TEXT_DEFAULT,
+  DISK_HELPER_TEXT_STANDARD_TIER
 } from '../utils/const';
 import {
+  DEFAULT_HDD_DISK_SIZE,
+  DEFAULT_SSD_DISK_SIZE,
+  DISK_TIER_HDD,
+  DISK_TIER_SSD,
+  HDD_DISK_SIZES,
   ICreateRuntimeProfilePayload,
-  IMachineTypeOption
+  IExecutorAndDriverConfig,
+  IExecutorAndDriverDraftConfig,
+  IMachineTypeOption,
+  SSD_DISK_SIZES
 } from './runtimeProfileInterface';
 
 /**
@@ -101,8 +114,11 @@ export const parseMachineTypeSpec = (
   if (!machineTypeName || machineTypeName.trim() === '') {
     return undefined;
   }
-  const cleanName = machineTypeName.trim().toLowerCase().split(' ')[0];
-  const known = KNOWN_MACHINE_TYPES.find(m => m.name === cleanName);
+  const trimmedLower = machineTypeName.trim().toLowerCase();
+  const cleanName = trimmedLower.split(' ')[0];
+  const known = KNOWN_MACHINE_TYPES.find(
+    m => m.name === cleanName || m.label.toLowerCase() === trimmedLower
+  );
   if (known) {
     return {
       cores: known.vCPUs,
@@ -315,6 +331,7 @@ export function mapRuntimeProfileToSessionTemplate(
   // Executor machine type & accelerator properties
   const executorMachineType =
     payload.executorConfig?.machineType ||
+    executorAndDriverConfig?.executorMachineType ||
     executorAndDriverConfig?.executorType;
 
   const executorMachine = parseMachineTypeSpec(executorMachineType);
@@ -414,3 +431,436 @@ export function mapRuntimeProfileToSessionTemplate(
 
   return templatePayload;
 }
+
+/**
+ * Parses a human-readable disk string (e.g. 'HDD (standard), 200 GiB' or 'SSD 750 GB')
+ * into its UI disk tier and size.
+ */
+export const parseDiskTierAndSize = (
+  diskStr?: string,
+  defaultTier: string = DISK_TIER_HDD
+): { tier: string; size: string } => {
+  if (!diskStr || diskStr.trim() === '') {
+    return {
+      tier: defaultTier,
+      size:
+        defaultTier === DISK_TIER_SSD
+          ? DEFAULT_SSD_DISK_SIZE
+          : DEFAULT_HDD_DISK_SIZE
+    };
+  }
+  const lower = diskStr.toLowerCase();
+  const isSsd = lower.includes('ssd') || lower.includes('premium');
+  const tier = isSsd ? DISK_TIER_SSD : DISK_TIER_HDD;
+  const match = diskStr.match(/(\d+)\s*(?:gib|gb|g)?/i);
+  let size = isSsd ? DEFAULT_SSD_DISK_SIZE : DEFAULT_HDD_DISK_SIZE;
+  if (match) {
+    const rawNum = match[1];
+    const formatted = `${rawNum} GiB`;
+    if (isSsd) {
+      size = SSD_DISK_SIZES.includes(formatted)
+        ? formatted
+        : DEFAULT_SSD_DISK_SIZE;
+    } else {
+      size = HDD_DISK_SIZES.includes(formatted)
+        ? formatted
+        : DEFAULT_HDD_DISK_SIZE;
+    }
+  }
+  return { tier, size };
+};
+
+/**
+ * Normalizes a machine type string or display label (e.g. 'highmem-4 (4 vCPU, 32 GB)' or 'L4 (4 cores)')
+ * to its canonical machine type name (e.g. 'highmem-4' or 'l4-4').
+ */
+export const normalizeMachineTypeName = (
+  raw?: string,
+  allTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): string => {
+  if (!raw || raw.trim() === '') {
+    return DEFAULT_GENERAL_EXECUTOR_TYPE;
+  }
+  const clean = raw.trim().toLowerCase();
+  const byName = allTypes.find(m => m.name.toLowerCase() === clean);
+  if (byName) {
+    return byName.name;
+  }
+  const byLabel = allTypes.find(m => m.label.toLowerCase() === clean);
+  if (byLabel) {
+    return byLabel.name;
+  }
+  const firstWord = clean.split(' ')[0];
+  const byFirstWord = allTypes.find(m => m.name.toLowerCase() === firstWord);
+  if (byFirstWord) {
+    return byFirstWord.name;
+  }
+  return firstWord || raw;
+};
+
+/**
+ * Determines whether a machine type name belongs to the accelerated (GPU) category.
+ */
+export const isAcceleratedMachine = (
+  name: string,
+  allTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): boolean => {
+  const match = allTypes.find(m => m.name === name);
+  if (match) {
+    return match.category === 'accelerated' || Boolean(match.acceleratorType);
+  }
+  const clean = name.toLowerCase();
+  return (
+    clean.startsWith('l4-') ||
+    clean.startsWith('a100-') ||
+    clean.startsWith('h100-') ||
+    clean.startsWith('g2-') ||
+    clean.startsWith('a2-')
+  );
+};
+
+/**
+ * Resolves the appropriate disk size when switching disk tier.
+ */
+export const resolveDiskSizeForTier = (
+  diskTier: string,
+  currentSize: string
+): string => {
+  if (diskTier === DISK_TIER_SSD && !SSD_DISK_SIZES.includes(currentSize)) {
+    return DEFAULT_SSD_DISK_SIZE;
+  }
+  if (diskTier === DISK_TIER_HDD && !HDD_DISK_SIZES.includes(currentSize)) {
+    return DEFAULT_HDD_DISK_SIZE;
+  }
+  return currentSize;
+};
+
+/**
+ * Builds the initial draft state for ExecutorAndDriverEditDrawer from the current config.
+ */
+export const buildInitialExecutorAndDriverDraft = (
+  config: IExecutorAndDriverConfig,
+  allMachineTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): IExecutorAndDriverDraftConfig => {
+  const initialTier = config.tier || 'Premium';
+  const initialExecType = normalizeMachineTypeName(
+    config.executorMachineType ||
+      (typeof config.executorType === 'string'
+        ? config.executorType
+        : undefined),
+    allMachineTypes
+  );
+  const isExecAcc = isAcceleratedMachine(initialExecType, allMachineTypes);
+  const defaultExecDiskTier = isExecAcc ? DISK_TIER_SSD : DISK_TIER_HDD;
+  const parsedExecDisk = parseDiskTierAndSize(
+    config.executorDisk || config.diskType,
+    defaultExecDiskTier
+  );
+  const initialDriverType = normalizeMachineTypeName(
+    config.driverMachineType || config.machineType || initialExecType,
+    allMachineTypes
+  );
+  const isDrvAcc = isAcceleratedMachine(initialDriverType, allMachineTypes);
+  const defaultDrvDiskTier = isDrvAcc ? DISK_TIER_SSD : DISK_TIER_HDD;
+  const parsedDrvDisk = parseDiskTierAndSize(
+    config.driverDisk || config.disk,
+    defaultDrvDiskTier
+  );
+  const diffDriver = Boolean(config.useDifferentDriverConfig);
+
+  const execDiskTier = isExecAcc
+    ? DISK_TIER_SSD
+    : initialTier === 'Standard'
+    ? DISK_TIER_HDD
+    : config.executorDiskTier || parsedExecDisk.tier;
+  const execDiskSize =
+    execDiskTier === DISK_TIER_SSD
+      ? SSD_DISK_SIZES.includes(config.executorDiskSize || parsedExecDisk.size)
+        ? config.executorDiskSize || parsedExecDisk.size
+        : DEFAULT_SSD_DISK_SIZE
+      : config.executorDiskSize || parsedExecDisk.size;
+
+  const drvDiskTier = diffDriver
+    ? isDrvAcc
+      ? DISK_TIER_SSD
+      : initialTier === 'Standard'
+      ? DISK_TIER_HDD
+      : config.driverDiskTier || parsedDrvDisk.tier
+    : execDiskTier;
+
+  const drvDiskSize = diffDriver
+    ? drvDiskTier === DISK_TIER_SSD
+      ? SSD_DISK_SIZES.includes(config.driverDiskSize || parsedDrvDisk.size)
+        ? config.driverDiskSize || parsedDrvDisk.size
+        : DEFAULT_SSD_DISK_SIZE
+      : config.driverDiskSize || parsedDrvDisk.size
+    : execDiskSize;
+
+  return {
+    tier: initialTier,
+    lightningEngineEnabled:
+      config.lightningEngineEnabled !== undefined
+        ? config.lightningEngineEnabled
+        : true,
+    executorType: initialExecType,
+    executorDiskTier: execDiskTier,
+    executorDiskSize: execDiskSize,
+    useDifferentDriverConfig: diffDriver,
+    driverMachineType: diffDriver ? initialDriverType : initialExecType,
+    driverDiskTier: drvDiskTier,
+    driverDiskSize: drvDiskSize
+  };
+};
+
+/**
+ * Updates the draft state when the user toggles between Premium and Standard tier.
+ * Preserves the user's `lightningEngineEnabled` checkbox state across tier toggles.
+ */
+export const applyTierChangeToDraft = (
+  prev: IExecutorAndDriverDraftConfig,
+  selectedTier: string,
+  allMachineTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): IExecutorAndDriverDraftConfig => {
+  if (selectedTier === 'Standard') {
+    const fallbackExec =
+      isAcceleratedMachine(prev.executorType, allMachineTypes) ||
+      prev.executorType.includes('highmem')
+        ? DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
+        : prev.executorType;
+    const fallbackDriver =
+      isAcceleratedMachine(prev.driverMachineType, allMachineTypes) ||
+      prev.driverMachineType.includes('highmem')
+        ? DEFAULT_STANDARD_TIER_EXECUTOR_TYPE
+        : prev.driverMachineType;
+    return {
+      ...prev,
+      tier: 'Standard',
+      executorType: fallbackExec,
+      executorDiskTier: DISK_TIER_HDD,
+      executorDiskSize: SSD_DISK_SIZES.includes(prev.executorDiskSize)
+        ? DEFAULT_HDD_DISK_SIZE
+        : prev.executorDiskSize,
+      driverMachineType: prev.useDifferentDriverConfig
+        ? fallbackDriver
+        : fallbackExec,
+      driverDiskTier: DISK_TIER_HDD,
+      driverDiskSize: SSD_DISK_SIZES.includes(prev.driverDiskSize)
+        ? DEFAULT_HDD_DISK_SIZE
+        : prev.driverDiskSize
+    };
+  }
+  return {
+    ...prev,
+    tier: 'Premium'
+  };
+};
+
+/**
+ * Updates the draft state when the executor machine type changes.
+ */
+export const applyExecutorTypeChangeToDraft = (
+  prev: IExecutorAndDriverDraftConfig,
+  selectedType: string,
+  allMachineTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): IExecutorAndDriverDraftConfig => {
+  const isAcc = isAcceleratedMachine(selectedType, allMachineTypes);
+  const nextDiskTier = isAcc ? DISK_TIER_SSD : prev.executorDiskTier;
+  const nextDiskSize =
+    isAcc && !SSD_DISK_SIZES.includes(prev.executorDiskSize)
+      ? DEFAULT_SSD_DISK_SIZE
+      : prev.executorDiskSize;
+  return {
+    ...prev,
+    executorType: selectedType,
+    executorDiskTier: nextDiskTier,
+    executorDiskSize: nextDiskSize,
+    driverMachineType: prev.useDifferentDriverConfig
+      ? prev.driverMachineType
+      : selectedType,
+    driverDiskTier: prev.useDifferentDriverConfig
+      ? prev.driverDiskTier
+      : nextDiskTier,
+    driverDiskSize: prev.useDifferentDriverConfig
+      ? prev.driverDiskSize
+      : nextDiskSize
+  };
+};
+
+/**
+ * Updates the draft state when the executor disk tier changes.
+ */
+export const applyExecutorDiskTierChangeToDraft = (
+  prev: IExecutorAndDriverDraftConfig,
+  selectedTier: string
+): IExecutorAndDriverDraftConfig => {
+  const nextSize = resolveDiskSizeForTier(selectedTier, prev.executorDiskSize);
+  return {
+    ...prev,
+    executorDiskTier: selectedTier,
+    executorDiskSize: nextSize,
+    driverDiskTier: prev.useDifferentDriverConfig
+      ? prev.driverDiskTier
+      : selectedTier,
+    driverDiskSize: prev.useDifferentDriverConfig
+      ? prev.driverDiskSize
+      : nextSize
+  };
+};
+
+/**
+ * Updates the draft state when the driver machine type changes.
+ */
+export const applyDriverTypeChangeToDraft = (
+  prev: IExecutorAndDriverDraftConfig,
+  selectedType: string,
+  allMachineTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): IExecutorAndDriverDraftConfig => {
+  const isAcc = isAcceleratedMachine(selectedType, allMachineTypes);
+  const nextDiskTier = isAcc ? DISK_TIER_SSD : prev.driverDiskTier;
+  const nextDiskSize =
+    isAcc && !SSD_DISK_SIZES.includes(prev.driverDiskSize)
+      ? DEFAULT_SSD_DISK_SIZE
+      : prev.driverDiskSize;
+  return {
+    ...prev,
+    driverMachineType: selectedType,
+    driverDiskTier: nextDiskTier,
+    driverDiskSize: nextDiskSize
+  };
+};
+
+/**
+ * Updates the draft state when the driver disk tier changes.
+ */
+export const applyDriverDiskTierChangeToDraft = (
+  prev: IExecutorAndDriverDraftConfig,
+  selectedTier: string
+): IExecutorAndDriverDraftConfig => {
+  const nextSize = resolveDiskSizeForTier(selectedTier, prev.driverDiskSize);
+  return {
+    ...prev,
+    driverDiskTier: selectedTier,
+    driverDiskSize: nextSize
+  };
+};
+
+/**
+ * Builds the saved IExecutorAndDriverConfig object from the drawer's draft state.
+ * Preserves the user's `lightningEngineEnabled` checkbox choice across tiers.
+ */
+export const buildSavedExecutorAndDriverConfig = (
+  config: IExecutorAndDriverConfig,
+  draftConfig: IExecutorAndDriverDraftConfig,
+  allMachineTypes: IMachineTypeOption[] = KNOWN_MACHINE_TYPES
+): IExecutorAndDriverConfig => {
+  const execObj = allMachineTypes.find(
+    m => m.name === draftConfig.executorType
+  );
+  const drvObj = allMachineTypes.find(
+    m => m.name === draftConfig.driverMachineType
+  );
+
+  const execLabel = execObj ? execObj.label : draftConfig.executorType;
+  const drvLabel = draftConfig.useDifferentDriverConfig
+    ? drvObj
+      ? drvObj.label
+      : draftConfig.driverMachineType
+    : execLabel;
+
+  const drvDiskTier = draftConfig.useDifferentDriverConfig
+    ? draftConfig.driverDiskTier
+    : draftConfig.executorDiskTier;
+  const drvDiskSize = draftConfig.useDifferentDriverConfig
+    ? draftConfig.driverDiskSize
+    : draftConfig.executorDiskSize;
+
+  return {
+    ...config,
+    tier: draftConfig.tier,
+    lightningEngineEnabled: draftConfig.lightningEngineEnabled,
+    executorCategory: isAcceleratedMachine(
+      draftConfig.executorType,
+      allMachineTypes
+    )
+      ? 'accelerated'
+      : 'general',
+    executorType: execLabel,
+    executorMachineType: draftConfig.executorType,
+    executorDiskTier: draftConfig.executorDiskTier,
+    executorDiskSize: draftConfig.executorDiskSize,
+    executorDisk: `${draftConfig.executorDiskTier}, ${draftConfig.executorDiskSize}`,
+    useDifferentDriverConfig: draftConfig.useDifferentDriverConfig,
+    driverMachineType: drvLabel,
+    driverDiskTier: drvDiskTier,
+    driverDiskSize: drvDiskSize,
+    driverDisk: `${drvDiskTier}, ${drvDiskSize}`,
+    machineType: drvLabel,
+    disk: `${drvDiskTier}, ${drvDiskSize}`,
+    diskType: `${draftConfig.executorDiskTier}, ${draftConfig.executorDiskSize}`
+  };
+};
+
+/**
+ * Filters and groups machine types by subgroup for the Executor/Driver dropdown.
+ */
+export const groupAndFilterMachineTypes = (
+  allMachineTypes: IMachineTypeOption[],
+  activeTier: string,
+  searchQuery: string
+): Record<string, IMachineTypeOption[]> => {
+  const allowed =
+    activeTier === 'Standard'
+      ? allMachineTypes.filter(
+          m =>
+            m.category === 'general' &&
+            !m.name.toLowerCase().includes('highmem')
+        )
+      : allMachineTypes;
+
+  const query = searchQuery.trim().toLowerCase();
+  const filtered = query
+    ? allowed.filter(
+        m =>
+          m.name.toLowerCase().includes(query) ||
+          m.label.toLowerCase().includes(query) ||
+          (m.subgroup && m.subgroup.toLowerCase().includes(query))
+      )
+    : allowed;
+
+  const groups: Record<string, IMachineTypeOption[]> = {};
+  filtered.forEach(m => {
+    const lowerName = m.name.toLowerCase();
+    const groupName =
+      m.subgroup ||
+      (m.category === 'accelerated'
+        ? lowerName.startsWith('a100')
+          ? 'Accelerated (A100)'
+          : lowerName.startsWith('l4')
+          ? 'Accelerated (L4)'
+          : 'Accelerated'
+        : lowerName.startsWith('highmem')
+        ? 'General (High memory)'
+        : 'General (Standard)');
+    if (!groups[groupName]) {
+      groups[groupName] = [];
+    }
+    groups[groupName].push(m);
+  });
+  return groups;
+};
+
+/**
+ * Returns the contextual helper text for Executor or Driver disk configuration.
+ */
+export const getDiskHelperText = (
+  tier: string,
+  isAccelerated: boolean
+): string => {
+  if (tier === 'Standard') {
+    return DISK_HELPER_TEXT_STANDARD_TIER;
+  }
+  if (isAccelerated) {
+    return DISK_HELPER_TEXT_ACCELERATED;
+  }
+  return DISK_HELPER_TEXT_DEFAULT;
+};
