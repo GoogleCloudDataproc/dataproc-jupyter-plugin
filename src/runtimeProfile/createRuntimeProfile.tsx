@@ -533,7 +533,9 @@ export const CreateRuntimeProfileComponent: React.FC<
 }): React.JSX.Element => {
   // Options & Data State
   const [regions, setRegions] = useState<IRegionOption[]>([]);
-  const [projectId, setProjectId] = useState<string | undefined>(undefined);
+  const [projectId, setProjectId] = useState<string | undefined>(
+    initialMetastoreConfig?.projectId
+  );
   const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(true);

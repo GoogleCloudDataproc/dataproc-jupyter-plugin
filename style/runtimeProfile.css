@@ -975,20 +975,27 @@ body[data-jp-theme-light='false']
 }
 
 /* Dark theme: use JupyterLab default theme variables */
-body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-summary-pricing-card {
+body[data-jp-theme-light='false'] .runtime-profile-summary-pricing-card,
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-profile-summary-pricing-card {
   background-color: var(--jp-layout-color0);
   border-color: var(--jp-border-color1);
 }
 
+body[data-jp-theme-light='false'] .runtime-summary-title,
+body[data-jp-theme-light='false'] .runtime-summary-value,
 body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-title,
 body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-value {
   color: var(--jp-ui-font-color0);
 }
 
+body[data-jp-theme-light='false'] .runtime-summary-label,
 body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-label {
   color: var(--jp-ui-font-color2);
 }
 
+body[data-jp-theme-light='false'] .runtime-summary-row,
 body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-row {
   border-bottom-color: var(--jp-border-color2);
 }
+

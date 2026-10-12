@@ -170,7 +170,7 @@ export function getMachineTypeDisplayName(shape?: string | null): string {
   if (normalized && MACHINE_SHAPE_DISPLAY_NAMES[normalized]) {
     return MACHINE_SHAPE_DISPLAY_NAMES[normalized];
   }
-  return shape;
+  return shape.trim();
 }
 
 /**
@@ -204,7 +204,8 @@ export function formatCompactDiskLabel(diskStr?: string): string {
   const lower = diskStr.toLowerCase();
   const diskType =
     lower.includes('ssd') || lower.includes('premium') ? 'SSD' : 'HDD';
-  const sizeMatch = diskStr.match(/(\d+)/);
+  const sizeMatch =
+    diskStr.match(/(\d+)\s*(?:GiB|GB)\b/i) || diskStr.match(/(\d+)/);
   if (!sizeMatch) {
     return diskStr.trim();
   }
@@ -212,17 +213,21 @@ export function formatCompactDiskLabel(diskStr?: string): string {
 }
 
 /**
- * Parses an executor count into a non-negative number with safe fallback.
+ * Parses an executor count into a non-negative integer with safe fallback.
  */
 export function parseExecutorCount(
   value: string | number | null | undefined,
   fallback: number
 ): number {
-  if (value === null || value === undefined || value === '') {
+  if (
+    value === null ||
+    value === undefined ||
+    (typeof value === 'string' && value.trim() === '')
+  ) {
     return fallback;
   }
   const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) {
+  if (!Number.isInteger(parsed) || parsed < 0) {
     return fallback;
   }
   return parsed;

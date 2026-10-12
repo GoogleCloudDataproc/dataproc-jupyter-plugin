@@ -1477,4 +1477,53 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       'data-testid="runtime-profile-summary-section"'
     );
   });
+
+  it('should handle Standard tier, disabled autoscaling, separate driver config, and empty fallbacks in summary', async () => {
+    const customRows = formatRuntimeProfileSummaryProperties({
+      tier: 'Standard',
+      lightningEngineEnabled: false,
+      regionDisplayName: 'us-east1 (South Carolina)',
+      runtimeVersion: '2.3',
+      executorMachineType: 'standard-8',
+      executorDisk: 'Standard persistent disk (HDD), 400 GB',
+      driverMachineType: 'standard-4',
+      driverDisk: 'Standard persistent disk (HDD), 200 GB',
+      separateDriverConfig: true,
+      autoscalingEnabled: false,
+      initialExecutors: 4,
+      metastore: 'None',
+      projectId: 'frontrow-team'
+    });
+
+    expect(customRows.find(r => r.label === 'Profile tier')?.value).toBe(
+      'Standard'
+    );
+    expect(customRows.find(r => r.label === 'Executor node')?.value).toBe(
+      '4 x standard-8 (8 vCPU, 32 GB), 400 GB HDD'
+    );
+    expect(customRows.find(r => r.label === 'Driver node')?.value).toBe(
+      'standard-4 (4 vCPU, 16 GB), 200 GB HDD'
+    );
+    expect(customRows.find(r => r.label === 'Autoscaling')?.value).toBe(
+      'Disabled'
+    );
+    expect(customRows.find(r => r.label === 'Metastore')?.value).toBe('None');
+
+    const emptyRows = formatRuntimeProfileSummaryProperties({
+      tier: 'Premium',
+      lightningEngineEnabled: false,
+      separateDriverConfig: true
+    });
+    expect(emptyRows.find(r => r.label === 'Profile tier')?.value).toBe(
+      'Premium'
+    );
+    expect(emptyRows.find(r => r.label === 'Region')?.value).toBe('—');
+    expect(emptyRows.find(r => r.label === 'Version')?.value).toBe('—');
+    expect(emptyRows.find(r => r.label === 'Executor node')?.value).toBe(
+      'Min: 2, Max: 1000'
+    );
+    expect(emptyRows.find(r => r.label === 'Driver node')?.value).toBe('—');
+    expect(emptyRows.find(r => r.label === 'Metastore')?.value).toBe('—');
+  });
 });
+
