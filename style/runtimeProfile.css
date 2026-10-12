@@ -782,9 +782,9 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
   margin-right: 8px;
 }
 
-.runtime-profile-details-back-btn:hover,
-.runtime-profile-details-copy-btn:hover,
-.runtime-profile-details-subsection-edit-btn:hover {
+.runtime-profile-details-back-btn:hover:not(:disabled),
+.runtime-profile-details-copy-btn:hover:not(:disabled),
+.runtime-profile-details-subsection-edit-btn:hover:not(:disabled) {
   background-color: var(--jp-layout-color2);
 }
 
@@ -802,7 +802,8 @@ body[data-jp-theme-light='false'] .runtime-profile-details-wrapper {
 
 .runtime-profile-details-back-btn svg path,
 .runtime-profile-details-copy-btn svg path,
-.runtime-profile-details-expand-icon svg path {
+.runtime-profile-details-expand-icon svg path,
+.runtime-profile-details-subsection-edit-btn svg path {
   fill: var(--rp-details-text-color);
 }
 

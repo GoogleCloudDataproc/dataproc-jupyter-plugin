@@ -80,7 +80,7 @@ export const formatDiskConfig = (tier?: string, size?: string): string => {
     : '';
   const formattedSize = trimmedSize
     ? trimmedSize.replace(
-        /^(\d+)\s*([gGmMtT])[bB]?$/,
+        /^(\d+)\s*([gGmMtT])(?:[iI]?[bB])?$/,
         (_, num, unit) => `${num}${unit.toUpperCase()}B`
       )
     : '';
@@ -114,6 +114,8 @@ export const formatDurationTtl = (ttl?: string): string => {
   return `${secs} secs`;
 };
 
+const LAKEHOUSE_CATALOG_PREFIX = 'dataproc.lakehouse.catalog.';
+
 const HANDLED_SPARK_PROPERTY_KEYS = new Set<string>([
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
   'spark.dataproc.driver.disk.tier',
@@ -123,7 +125,9 @@ const HANDLED_SPARK_PROPERTY_KEYS = new Set<string>([
   'spark.dynamicAllocation.enabled',
   'spark.dynamicAllocation.initialExecutors',
   'spark.dynamicAllocation.minExecutors',
-  'spark.dynamicAllocation.maxExecutors'
+  'spark.dynamicAllocation.maxExecutors',
+  'dataproc.lakehouse.defaultCatalog',
+  'spark.dataproc.lakehouse.project'
 ]);
 
 export interface IDeleteConfirmationModalProps {
@@ -231,7 +235,7 @@ export default function RuntimeProfileDetails({
     ? 'Customer-managed'
     : 'Google-managed';
   const lightningEngine =
-    getProp(DATAPROC_LIGHTNING_ENGINE_PROPERTY) === 'lightningEngine'
+    getProp(DATAPROC_LIGHTNING_ENGINE_PROPERTY).trim() === 'lightningEngine'
       ? 'Enabled'
       : 'Disabled';
   const driverDisk = formatDiskConfig(
@@ -243,15 +247,22 @@ export default function RuntimeProfileDetails({
     getProp('spark.dataproc.executor.disk.size')
   );
   const autoscalingStatus =
-    getProp('spark.dynamicAllocation.enabled').toLowerCase() === 'false'
+    getProp('spark.dynamicAllocation.enabled').trim().toLowerCase() === 'false'
       ? 'Off'
       : 'On';
 
   const sparkPropertyMap = new Map<string, string>();
-  Object.entries(properties).forEach(([rawKey, value]) => {
+  Object.keys(properties).forEach(rawKey => {
     const normalizedKey = stripPropertyPrefix(rawKey);
-    if (!HANDLED_SPARK_PROPERTY_KEYS.has(normalizedKey)) {
-      sparkPropertyMap.set(normalizedKey, value);
+    if (
+      !HANDLED_SPARK_PROPERTY_KEYS.has(normalizedKey) &&
+      !normalizedKey.startsWith(LAKEHOUSE_CATALOG_PREFIX) &&
+      !sparkPropertyMap.has(normalizedKey)
+    ) {
+      sparkPropertyMap.set(
+        normalizedKey,
+        getPropertyValue(properties, normalizedKey)
+      );
     }
   });
 
@@ -334,25 +345,51 @@ export default function RuntimeProfileDetails({
 
   const runtimeVersion = profile.runtimeConfig?.version || '';
   const configType = profile.jupyterSession ? 'Jupyter' : '';
+  const customSparkImage = profile.runtimeConfig?.containerImage || 'None';
+  const stagingBucket = executionConfig?.stagingBucket || 'Auto';
+  const pythonPackageRepository =
+    profile.runtimeConfig?.repositoryConfig?.pypiRepositoryConfig
+      ?.pypiRepository || 'Google managed PyPI pull-through cache';
   const initialExec = getProp('spark.dynamicAllocation.initialExecutors');
   const minExec = getProp('spark.dynamicAllocation.minExecutors');
   const maxExec = getProp('spark.dynamicAllocation.maxExecutors');
   const metastore =
     profile.environmentConfig?.peripheralsConfig?.metastoreService || 'None';
+  const defaultLakehouseCatalog = getProp('dataproc.lakehouse.defaultCatalog');
+  const hasHiveCatalog = Object.keys(properties).some(rawKey => {
+    const key = stripPropertyPrefix(rawKey);
+    if (!key.startsWith(LAKEHOUSE_CATALOG_PREFIX)) {
+      return false;
+    }
+    const catalogName = key.slice(LAKEHOUSE_CATALOG_PREFIX.length);
+    return Boolean(catalogName) && catalogName !== defaultLakehouseCatalog;
+  });
+  const hiveEndpoint = hasHiveCatalog ? 'Enabled' : 'Disabled';
   const maxIdleTime = formatDurationTtl(executionConfig?.idleTtl);
   const maxSessionTime = formatDurationTtl(executionConfig?.ttl);
+  const sessionLifecycleRows: Array<{ label: string; value: React.ReactNode }> =
+    [
+      ...(maxIdleTime ? [{ label: 'Max idle time', value: maxIdleTime }] : []),
+      ...(maxSessionTime
+        ? [{ label: 'Max session time', value: maxSessionTime }]
+        : [])
+    ];
 
   const configSections: Array<{
     title: string;
-    editable?: boolean;
     rows: Array<{ label: string; value: React.ReactNode }>;
   }> = [
     {
       title: 'Runtime configuration',
-      editable: true,
       rows: [
         { label: 'Spark runtime version', value: runtimeVersion },
-        { label: 'Configuration type', value: configType }
+        { label: 'Configuration type', value: configType },
+        { label: 'Custom Spark image', value: customSparkImage },
+        { label: 'Cloud storage staging bucket', value: stagingBucket },
+        {
+          label: 'Python package repository',
+          value: pythonPackageRepository
+        }
       ]
     },
     {
@@ -365,7 +402,6 @@ export default function RuntimeProfileDetails({
     },
     {
       title: 'Autoscaling',
-      editable: true,
       rows:
         autoscalingStatus === 'Off'
           ? [{ label: 'Autoscaling', value: autoscalingStatus }]
@@ -378,7 +414,10 @@ export default function RuntimeProfileDetails({
     },
     {
       title: 'Metastore configuration',
-      rows: [{ label: 'Metastore', value: metastore }]
+      rows: [
+        { label: 'Metastore', value: metastore },
+        { label: 'Hive endpoint', value: hiveEndpoint }
+      ]
     },
     {
       title: 'Network and security',
@@ -386,11 +425,7 @@ export default function RuntimeProfileDetails({
     },
     {
       title: 'Session lifecycle',
-      editable: true,
-      rows: [
-        { label: 'Max idle time', value: maxIdleTime },
-        { label: 'Max session time', value: maxSessionTime }
-      ]
+      rows: sessionLifecycleRows
     },
     {
       title: 'Other customizations',
@@ -404,7 +439,7 @@ export default function RuntimeProfileDetails({
                     key={key}
                     className="runtime-profile-details-spark-prop-line"
                   >
-                    {`${key}=${value}`}
+                    {`${key}: ${value}`}
                   </div>
                 ))
               : 'None'
@@ -418,7 +453,7 @@ export default function RuntimeProfileDetails({
                     key={key}
                     className="runtime-profile-details-spark-prop-line"
                   >
-                    {`${key}=${value}`}
+                    {`${key}: ${value}`}
                   </div>
                 ))
               : 'None'
@@ -522,17 +557,15 @@ export default function RuntimeProfileDetails({
               <React.Fragment key={section.title}>
                 <div className="runtime-profile-details-subsection-header">
                   <span>{section.title}</span>
-                  {section.editable && (
-                    <button
-                      type="button"
-                      className="runtime-profile-details-subsection-edit-btn"
-                      aria-label={`Edit ${section.title}`}
-                      title={`Edit ${section.title}`}
-                      disabled
-                    >
-                      <iconEdit.react tag="div" aria-hidden="true" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="runtime-profile-details-subsection-edit-btn"
+                    aria-label={`Edit ${section.title}`}
+                    title={`Edit ${section.title}`}
+                    disabled
+                  >
+                    <iconEdit.react tag="div" aria-hidden="true" />
+                  </button>
                 </div>
                 {section.rows.map(row => (
                   <div

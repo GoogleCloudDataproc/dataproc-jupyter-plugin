@@ -89,13 +89,20 @@ export interface IRuntimeProfileTemplate {
   };
   runtimeConfig?: {
     version?: string;
+    containerImage?: string;
     properties?: Record<string, string>;
+    repositoryConfig?: {
+      pypiRepositoryConfig?: {
+        pypiRepository?: string;
+      };
+    };
   };
   environmentConfig?: {
     executionConfig?: {
       networkUri?: string;
       subnetworkUri?: string;
       kmsKey?: string;
+      stagingBucket?: string;
       idleTtl?: string;
       ttl?: string;
       authenticationConfig?: {

@@ -158,6 +158,13 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('2.3');
     expect(container.textContent).toContain('Configuration type');
     expect(container.textContent).toContain('Jupyter');
+    expect(container.textContent).toContain('Custom Spark image');
+    expect(container.textContent).toContain('Cloud storage staging bucket');
+    expect(container.textContent).toContain('Auto');
+    expect(container.textContent).toContain('Python package repository');
+    expect(container.textContent).toContain(
+      'Google managed PyPI pull-through cache'
+    );
 
     // Executor and driver configuration
     expect(container.textContent).toContain(
@@ -175,6 +182,8 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('Minimum executors');
     expect(container.textContent).toContain('Maximum executors');
     expect(container.textContent).toContain('Metastore configuration');
+    expect(container.textContent).toContain('Hive endpoint');
+    expect(container.textContent).toContain('Disabled');
     expect(container.textContent).toContain('Encryption type');
     expect(container.textContent).toContain('Google-managed');
     expect(container.textContent).toContain('Network and security');
@@ -185,6 +194,11 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('3 days');
     expect(container.textContent).toContain('Other customizations');
 
+    const subsectionEditBtns = container.querySelectorAll(
+      'button[aria-label^="Edit "]'
+    );
+    expect(subsectionEditBtns).toHaveLength(7);
+
     // Spark properties & Labels
     expect(container.textContent).toContain('Spark properties');
     expect(container.textContent).toContain('Labels');
@@ -192,11 +206,11 @@ describe('RuntimeProfileDetails Component', () => {
       container.querySelectorAll('.runtime-profile-details-spark-prop-line')
     ).map(el => el.textContent);
     expect(propAndLabelLines).toEqual([
-      'dataproc.tier=premium',
-      'spark.sql.catalog.biglake=org.apache.iceberg.spark.SparkCatalog',
-      'spark.sql.catalog.biglake.type=hadoop',
-      'env=dev',
-      'team=analytics'
+      'dataproc.tier: premium',
+      'spark.sql.catalog.biglake: org.apache.iceberg.spark.SparkCatalog',
+      'spark.sql.catalog.biglake.type: hadoop',
+      'env: dev',
+      'team: analytics'
     ]);
 
     const editBtn = Array.from(
@@ -253,7 +267,8 @@ describe('RuntimeProfileDetails Component', () => {
       jupyterSession: { displayName: 'custom-profile', kernel: 'PYTHON' },
       environmentConfig: {
         executionConfig: {
-          kmsKey: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k'
+          kmsKey: 'projects/p/locations/l/keyRings/kr/cryptoKeys/k',
+          stagingBucket: 'my-staging-bucket'
         },
         peripheralsConfig: {
           metastoreService: 'projects/p/locations/l/services/my-metastore'
@@ -261,25 +276,46 @@ describe('RuntimeProfileDetails Component', () => {
       },
       runtimeConfig: {
         version: '2.2',
-        properties: { 'spark.dynamicAllocation.enabled': 'false' }
+        containerImage: 'us-central1-docker.pkg.dev/my-proj/repo/img:latest',
+        repositoryConfig: {
+          pypiRepositoryConfig: {
+            pypiRepository: 'https://us-central1-python.pkg.dev/my-proj/pypi'
+          }
+        },
+        properties: {
+          'spark.dynamicAllocation.enabled': 'false',
+          'dataproc.lakehouse.defaultCatalog': 'iceberg_cat',
+          'dataproc.lakehouse.catalog.hive_cat':
+            'projects/p/locations/l/catalogs/hive_cat'
+        }
       }
     };
 
     await renderDetails(jest.fn(), undefined, customProfile);
 
+    expect(container.textContent).toContain(
+      'us-central1-docker.pkg.dev/my-proj/repo/img:latest'
+    );
+    expect(container.textContent).toContain('my-staging-bucket');
+    expect(container.textContent).toContain(
+      'https://us-central1-python.pkg.dev/my-proj/pypi'
+    );
     expect(container.textContent).toContain('Customer-managed');
     expect(container.textContent).toContain('Disabled');
+    expect(container.textContent).toContain('Enabled');
     expect(container.textContent).toContain('Off');
     expect(container.textContent).not.toContain('Initial executors');
     expect(container.textContent).not.toContain('Minimum executors');
     expect(container.textContent).not.toContain('Maximum executors');
+    expect(container.textContent).not.toContain('Max idle time');
+    expect(container.textContent).not.toContain('Max session time');
     expect(container.textContent).toContain(
       'projects/p/locations/l/services/my-metastore'
     );
     expect(container.textContent).toContain('None');
 
     const configHeader = container.querySelector(
-      '.runtime-profile-details-section-header.collapsible'
+      '[aria-controls="runtime-profile-config-content"]'
     ) as HTMLElement;
     act(() => {
       configHeader.click();
@@ -399,6 +435,9 @@ describe('RuntimeProfileDetails Component', () => {
     expect(formatDiskConfig('Standard', '200gb')).toBe(
       'Standard persistent disk, 200GB'
     );
+    expect(formatDiskConfig('Standard', '200gib')).toBe(
+      'Standard persistent disk, 200GB'
+    );
     expect(formatDiskConfig('Standard', '')).toBe('Standard persistent disk');
     expect(formatDiskConfig('', '200g')).toBe('200GB');
     expect(formatDiskConfig('', '')).toBe('');
@@ -408,8 +447,9 @@ describe('RuntimeProfileDetails Component', () => {
     expect(formatDurationTtl('1s')).toBe('1 sec');
     expect(formatDurationTtl('45s')).toBe('45 secs');
     expect(formatDurationTtl('60s')).toBe('1 min');
+    expect(formatDurationTtl('90s')).toBe('90 secs');
     expect(formatDurationTtl('1800s')).toBe('30 mins');
-    expect(formatDurationTtl('3600s')).toBe('1 hr');
+    expect(formatDurationTtl(' 3600s ')).toBe('1 hr');
     expect(formatDurationTtl('7200s')).toBe('2 hrs');
     expect(formatDurationTtl('86400s')).toBe('1 day');
     expect(formatDurationTtl('259200s')).toBe('3 days');
