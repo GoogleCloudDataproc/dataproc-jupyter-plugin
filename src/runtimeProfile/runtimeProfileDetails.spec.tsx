@@ -46,12 +46,12 @@ describe('RuntimeProfileDetails Component', () => {
   const originalClipboard = navigator.clipboard;
 
   const mockProfile: IRuntimeProfileTemplate = {
-    name: 'projects/test-project/locations/us-central1/sessionTemplates/aditee-test1234',
+    name: 'projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
     description: 'test123',
-    creator: 'aditeekatti@google.com',
+    creator: 'user@example.com',
     createTime: '2026-09-16T08:02:03Z',
     updateTime: '2026-09-16T08:02:03Z',
-    jupyterSession: { displayName: 'aditee-test1234', kernel: 'PYTHON' }
+    jupyterSession: { displayName: 'sample-profile', kernel: 'PYTHON' }
   };
 
   beforeEach(() => {
@@ -104,12 +104,12 @@ describe('RuntimeProfileDetails Component', () => {
 
     expect(container.textContent).toContain('Resource details');
     expect(container.textContent).toContain('Basic Information');
-    expect(container.textContent).toContain('aditee-test1234');
+    expect(container.textContent).toContain('sample-profile');
     expect(container.textContent).toContain('us-central1');
     expect(container.textContent).toContain(
       'Wed Sep 16 2026 08:02:03 GMT+0000 (Coordinated Universal Time)'
     );
-    expect(container.textContent).toContain('aditeekatti@google.com');
+    expect(container.textContent).toContain('user@example.com');
     expect(container.textContent).toContain('test123');
     expect(container.textContent).toContain('PYTHON');
 
@@ -124,7 +124,7 @@ describe('RuntimeProfileDetails Component', () => {
     await act(async () => {
       copyBtn.click();
     });
-    expect(writeTextMock).toHaveBeenCalledWith('aditee-test1234');
+    expect(writeTextMock).toHaveBeenCalledWith('sample-profile');
     expect(Notification.emit).toHaveBeenCalledWith(
       'Name copied to clipboard',
       'success',
@@ -187,7 +187,7 @@ describe('RuntimeProfileDetails Component', () => {
       getConfirmBtn().click();
     });
     expect(Notification.emit).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to delete aditee-test1234:'),
+      expect.stringContaining('Failed to delete sample-profile:'),
       'error',
       { autoClose: 5000 }
     );
@@ -196,11 +196,11 @@ describe('RuntimeProfileDetails Component', () => {
       getConfirmBtn().click();
     });
     expect(RuntimeProfileService.deleteRuntimeProfile).toHaveBeenCalledWith(
-      'projects/test-project/locations/us-central1/sessionTemplates/aditee-test1234',
-      'aditee-test1234'
+      'projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
+      'sample-profile'
     );
     expect(Notification.emit).toHaveBeenCalledWith(
-      'aditee-test1234 is deleted successfully',
+      'sample-profile is deleted successfully',
       'success',
       { autoClose: 5000 }
     );
