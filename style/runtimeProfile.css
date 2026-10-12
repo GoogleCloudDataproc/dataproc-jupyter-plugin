@@ -1064,3 +1064,40 @@ body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-row {
   border-bottom-color: var(--jp-border-color2);
 }
 
+/* Metastore configuration drawer */
+.metastore-drawer-cards {
+  margin: 8px 0;
+}
+
+.metastore-drawer-row {
+  margin-top: 8px;
+}
+
+.metastore-drawer-subsection {
+  margin-top: 16px;
+}
+
+.metastore-drawer-indented {
+  margin-left: 32px;
+  margin-bottom: 12px;
+}
+
+.metastore-drawer-checkbox-helper {
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+.metastore-drawer-hive-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.metastore-drawer-intro {
+  margin-bottom: 16px;
+}
+
+.metastore-drawer-option-spinner {
+  margin-right: 8px;
+}
