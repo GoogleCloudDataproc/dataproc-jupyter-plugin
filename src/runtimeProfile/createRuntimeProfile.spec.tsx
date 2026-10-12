@@ -1652,6 +1652,67 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(cryptoKeys).toEqual([]);
   });
 
+  it('disables Save in NetworkSecurityEditDrawer when shared network has no available subnetworks', async () => {
+    const sharedVpcSpy = jest
+      .spyOn(mockService, 'getSharedVpcSubnetworks')
+      .mockResolvedValue({ hostProjectId: '', subnetworks: [] });
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Open Network and security edit drawer (index 4)
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[4] as HTMLButtonElement).click();
+    });
+
+    // Should not fetch shared VPC subnetworks when 'project' network source is selected
+    expect(sharedVpcSpy).not.toHaveBeenCalled();
+
+    const getSaveBtn = () =>
+      Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // Switch to 'Networks shared from host project'
+    const sharedRadio = document.body.querySelector(
+      '#edit-network-source-shared'
+    ) as HTMLInputElement;
+    expect(sharedRadio).not.toBeNull();
+    await act(async () => {
+      sharedRadio.click();
+    });
+
+    expect(sharedVpcSpy).toHaveBeenCalledTimes(1);
+    expect(
+      document.body.querySelector('.edit-drawer-info-banner-text')?.textContent
+    ).toBe('No shared subnetworks are available in this region.');
+    expect(
+      document.body.querySelector('#edit-shared-network-tags')
+    ).not.toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Open Shared subnetwork dropdown and verify 'No items to display' is shown
+    const sharedSubnetTrigger = document.body.querySelector(
+      '#edit-shared-subnetwork'
+    ) as HTMLElement;
+    expect(sharedSubnetTrigger).not.toBeNull();
+    await act(async () => {
+      sharedSubnetTrigger.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, button: 0 })
+      );
+    });
+    const emptyOption = document.body.querySelector(
+      'li[role="option"][data-value="__no_items__"]'
+    );
+    expect(emptyOption?.textContent).toBe('No items to display');
+  });
+
   it('should calculate runtime pricing estimate DCU values across machine shapes and autoscaling configurations', () => {
     expect(MACHINE_SHAPE_RESOURCES['highmem-4']).toEqual({
       vcpus: 4,

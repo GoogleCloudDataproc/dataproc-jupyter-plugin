@@ -2237,7 +2237,21 @@ export const NetworkSecurityEditDrawer: React.FC<
     setIsValidManualKey(value === '' || KMS_KEY_REGEX.test(value.trim()));
   };
 
+  const isSaveDisabled =
+    (networkSource === 'project' && hasNoSubnetworks) ||
+    (networkSource === 'shared_from_host' &&
+      (hasNoSharedSubnetworks ||
+        isLoadingSharedSubnetworks ||
+        !sharedSubnetwork.trim())) ||
+    (encryption === 'customer_managed_key' &&
+      kmsKeySelectionMode === 'manual' &&
+      !isValidManualKey);
+
   const handleSave = () => {
+    if (isSaveDisabled) {
+      return;
+    }
+
     const parsedTags = networkTagsText
       .split(',')
       .map(t => t.trim())
@@ -2298,6 +2312,7 @@ export const NetworkSecurityEditDrawer: React.FC<
       title="Network and security"
       onClose={onClose}
       onSave={handleSave}
+      isSaveDisabled={isSaveDisabled}
     >
       {/* Connect your cluster */}
       <div className="edit-drawer-field-group">
@@ -2424,8 +2439,8 @@ export const NetworkSecurityEditDrawer: React.FC<
                       onChange={e => setSubnetwork(e.target.value as string)}
                     >
                       {resolvedSubnetworkOptions.length === 0 ? (
-                        <MenuItem value="" disabled>
-                          No subnetworks available
+                        <MenuItem value="__no_items__" disabled>
+                          No items to display
                         </MenuItem>
                       ) : (
                         resolvedSubnetworkOptions.map(sub => (
@@ -2523,35 +2538,31 @@ export const NetworkSecurityEditDrawer: React.FC<
                   size="small"
                   fullWidth
                   variant="outlined"
-                  error={hasNoSharedSubnetworks}
+                  className="edit-drawer-select-with-help"
                 >
-                  <InputLabel
-                    id="edit-shared-subnetwork-label"
-                    shrink
-                    error={hasNoSharedSubnetworks}
-                  >
-                    Shared subnetwork
+                  <InputLabel id="edit-shared-subnetwork-label">
+                    Shared subnetwork *
                   </InputLabel>
                   <Select
                     labelId="edit-shared-subnetwork-label"
                     id="edit-shared-subnetwork"
-                    label="Shared subnetwork"
-                    notched
-                    error={hasNoSharedSubnetworks}
+                    label="Shared subnetwork *"
                     disabled={isLoadingSharedSubnetworks}
-                    displayEmpty
                     value={
                       resolvedSharedSubnetworkOptions.includes(sharedSubnetwork)
                         ? sharedSubnetwork
                         : ''
                     }
+                    endAdornment={renderFieldHelpIcon(
+                      'The Compute Engine subnetwork with Private Google Access enabled.'
+                    )}
                     onChange={e =>
                       setSharedSubnetwork(e.target.value as string)
                     }
                   >
                     {resolvedSharedSubnetworkOptions.length === 0 ? (
-                      <MenuItem value="" disabled>
-                        No shared subnetworks available
+                      <MenuItem value="__no_items__" disabled>
+                        No items to display
                       </MenuItem>
                     ) : (
                       resolvedSharedSubnetworkOptions.map(sub => (
@@ -2563,10 +2574,28 @@ export const NetworkSecurityEditDrawer: React.FC<
                   </Select>
                 </FormControl>
                 {hasNoSharedSubnetworks && (
-                  <div className="edit-drawer-error-text">
-                    No shared subnetworks are available in this region.
+                  <div className="edit-drawer-info-banner">
+                    <div className="edit-drawer-info-banner-icon" />
+                    <div className="edit-drawer-info-banner-text">
+                      No shared subnetworks are available in this region.
+                    </div>
                   </div>
                 )}
+                <div className="edit-drawer-field-group">
+                  <TextField
+                    id="edit-shared-network-tags"
+                    label="Network tags"
+                    placeholder="Network tags"
+                    value={networkTagsText}
+                    onChange={e => setNetworkTagsText(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                  />
+                  <div className="edit-drawer-helper-text">
+                    {NETWORK_TAG_MESSAGE}
+                  </div>
+                </div>
               </div>
             )}
           </div>
