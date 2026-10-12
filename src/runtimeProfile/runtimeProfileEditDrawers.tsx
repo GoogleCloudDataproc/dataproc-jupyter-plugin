@@ -1772,8 +1772,21 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
     'Maximum executors'
   );
 
+  const initVal = parseInt(initialExecutorsInput.trim(), 10);
+  const minVal = parseInt(minExecutorsInput.trim(), 10);
+  const maxVal = parseInt(maxExecutorsInput.trim(), 10);
+
+  const hasRangeError =
+    !Number.isNaN(initVal) &&
+    !Number.isNaN(minVal) &&
+    !Number.isNaN(maxVal) &&
+    (minVal > maxVal || initVal < minVal || initVal > maxVal);
+
   const isAutoscalingSaveDisabled = Boolean(
-    initialExecutorsError || minExecutorsError || maxExecutorsError
+    initialExecutorsError ||
+      minExecutorsError ||
+      maxExecutorsError ||
+      hasRangeError
   );
 
   const handleSave = () => {
@@ -2160,15 +2173,16 @@ export const OtherCustomizationEditDrawer: React.FC<
   }, [open, sparkProperties, labels]);
 
   const handleEntryChange = (
-    list: IKeyValueEntry[],
     setList: React.Dispatch<React.SetStateAction<IKeyValueEntry[]>>,
     index: number,
     field: 'key' | 'value',
     newVal: string
   ) => {
-    const updated = [...list];
-    updated[index] = { ...updated[index], [field]: newVal };
-    setList(updated);
+    setList(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: newVal };
+      return updated;
+    });
   };
 
   const handleAddEntry = (
@@ -2189,7 +2203,7 @@ export const OtherCustomizationEditDrawer: React.FC<
       return 'Key is required';
     }
     const isDuplicate = sparkEntries.some(
-      (entry, i) => i !== idx && entry.key === keyVal
+      (entry, i) => i !== idx && entry.key.trim() === keyVal.trim()
     );
     if (isDuplicate) {
       return 'The key is already present';
@@ -2205,7 +2219,7 @@ export const OtherCustomizationEditDrawer: React.FC<
       return LABEL_KEY_FORMAT_ERROR;
     }
     const isDuplicate = labelEntries.some(
-      (entry, i) => i !== idx && entry.key === keyVal
+      (entry, i) => i !== idx && entry.key.trim() === keyVal.trim()
     );
     if (isDuplicate) {
       return 'The key is already present';
@@ -2259,7 +2273,6 @@ export const OtherCustomizationEditDrawer: React.FC<
                     value={entry.key}
                     onChange={e =>
                       handleEntryChange(
-                        sparkEntries,
                         setSparkEntries,
                         idx,
                         'key',
@@ -2290,7 +2303,6 @@ export const OtherCustomizationEditDrawer: React.FC<
                     value={entry.value}
                     onChange={e =>
                       handleEntryChange(
-                        sparkEntries,
                         setSparkEntries,
                         idx,
                         'value',
@@ -2344,7 +2356,6 @@ export const OtherCustomizationEditDrawer: React.FC<
                     value={entry.key}
                     onChange={e =>
                       handleEntryChange(
-                        labelEntries,
                         setLabelEntries,
                         idx,
                         'key',
@@ -2375,7 +2386,6 @@ export const OtherCustomizationEditDrawer: React.FC<
                     value={entry.value}
                     onChange={e =>
                       handleEntryChange(
-                        labelEntries,
                         setLabelEntries,
                         idx,
                         'value',
