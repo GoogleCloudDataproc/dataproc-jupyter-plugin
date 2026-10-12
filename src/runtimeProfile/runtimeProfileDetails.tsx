@@ -38,18 +38,22 @@ const iconEdit = makeIcon('edit-icon', EditIcon);
 const iconDelete = makeIcon('delete-icon', DeleteClusterIcon);
 const iconCopy = makeIcon('copy-icon', CloneIcon);
 
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS = 'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec'.split(',');
+
 export const formatCreateTime = (dateString?: string): string => {
-  if (!dateString) {
+  const date = dateString ? new Date(dateString) : null;
+  if (!date || isNaN(date.getTime())) {
     return '';
   }
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) {
-    return '';
-  }
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'medium'
-  }).format(date);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const datePart = `${DAY_NAMES[date.getUTCDay()]} ${
+    MONTHS[date.getUTCMonth()]
+  } ${pad(date.getUTCDate())} ${date.getUTCFullYear()}`;
+  const timePart = `${pad(date.getUTCHours())}:${pad(
+    date.getUTCMinutes()
+  )}:${pad(date.getUTCSeconds())}`;
+  return `${datePart} ${timePart} GMT+0000 (Coordinated Universal Time)`;
 };
 
 export interface IDeleteConfirmationModalProps {
@@ -263,12 +267,7 @@ export default function RuntimeProfileDetails({
 
       <div className="runtime-profile-details-body">
         <div className="runtime-profile-details-title-row">
-          <span className="runtime-profile-details-name">{displayName}</span>
-          {shortName && shortName !== displayName && (
-            <span className="runtime-profile-details-subtitle">
-              ({shortName})
-            </span>
-          )}
+          <span className="runtime-profile-details-name">{shortName}</span>
           <button
             type="button"
             className="runtime-profile-details-copy-btn"

@@ -174,9 +174,7 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         onDeleteSuccess={() => {
           setSelectedProfile(null);
           if (profiles.length === 1 && currentPage > 0) {
-            const prevPage = currentPage - 1;
-            setCurrentPage(prevPage);
-            fetchProfiles(pageTokens[prevPage]);
+            setCurrentPage(currentPage - 1);
           } else {
             fetchProfiles(pageTokens[currentPage]);
           }

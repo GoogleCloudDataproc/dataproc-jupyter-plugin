@@ -107,7 +107,7 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('sample-profile');
     expect(container.textContent).toContain('us-central1');
     expect(container.textContent).toContain(
-      formatCreateTime('2026-09-16T08:02:03Z')
+      'Wed Sep 16 2026 08:02:03 GMT+0000 (Coordinated Universal Time)'
     );
     expect(container.textContent).toContain('user@example.com');
     expect(container.textContent).toContain('test123');
@@ -221,12 +221,8 @@ describe('RuntimeProfileDetails Component', () => {
   it('should format createTime and lastUsed dates deterministically', () => {
     expect(formatCreateTime('')).toBe('');
     expect(formatCreateTime('invalid-date')).toBe('');
-    const validCreateDate = '2026-09-16T08:02:03Z';
-    expect(formatCreateTime(validCreateDate)).toBe(
-      new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'medium'
-      }).format(new Date(validCreateDate))
+    expect(formatCreateTime('2026-09-16T08:02:03Z')).toBe(
+      'Wed Sep 16 2026 08:02:03 GMT+0000 (Coordinated Universal Time)'
     );
 
     jest.useFakeTimers();
