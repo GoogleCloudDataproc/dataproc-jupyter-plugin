@@ -102,6 +102,20 @@ describe('ProjectSelectorModal', () => {
     document.body.querySelector(
       '.project-selector-cancel-btn'
     ) as HTMLButtonElement;
+  const rowId = (row: Element) =>
+    row.querySelector('.project-selector-item-id')?.textContent;
+  const rowIds = () => rows().map(rowId);
+  const checkedRowIds = () =>
+    rows()
+      .filter(row => row.getAttribute('aria-checked') === 'true')
+      .map(rowId);
+  const pressKey = async (element: Element, key: string) => {
+    await act(async () => {
+      element.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true })
+      );
+    });
+  };
 
   const renderModal = async (selectedProjectId = '') => {
     const onSelect = jest.fn();
@@ -189,5 +203,93 @@ describe('ProjectSelectorModal', () => {
     await click(cancelButton());
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it('ignores a project list from an older request', async () => {
+    let resolveFirst: (projects: typeof PROJECTS) => void = () => undefined;
+    mockListProjects
+      .mockReturnValueOnce(
+        new Promise(resolve => {
+          resolveFirst = resolve;
+        })
+      )
+      .mockResolvedValueOnce([PROJECTS[1]]);
+
+    await renderModal('alpha-project');
+    // A new selectedProjectId re-runs the effect, so a second request starts.
+    await renderModal('beta-project');
+    expect(mockListProjects).toHaveBeenCalledTimes(2);
+    expect(rowIds()).toEqual(['beta-project']);
+
+    await act(async () => {
+      resolveFirst(PROJECTS);
+    });
+    expect(rowIds()).toEqual(['beta-project']);
+  });
+
+  it('Enter picks the top match and a second Enter confirms it', async () => {
+    const { onSelect, onClose } = await renderModal();
+
+    await typeInto(searchInput(), 'beta');
+    await pressKey(searchInput(), 'Enter');
+    expect(checkedRowIds()).toEqual(['beta-project']);
+    expect(onSelect).not.toHaveBeenCalled();
+
+    await pressKey(searchInput(), 'Enter');
+    expect(onSelect).toHaveBeenCalledWith('beta-project', PROJECTS[1]);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('Enter on an empty search confirms the current project', async () => {
+    const { onSelect } = await renderModal('beta-project');
+
+    await pressKey(searchInput(), 'Enter');
+    expect(onSelect).toHaveBeenCalledWith('beta-project', PROJECTS[1]);
+  });
+
+  it('Enter prefers an exact project ID, else uses the typed ID', async () => {
+    mockListProjects.mockResolvedValue([
+      { projectId: 'beta-project-dev', name: 'Dev', projectNumber: '333' },
+      PROJECTS[1]
+    ]);
+    const { onSelect } = await renderModal();
+
+    await typeInto(searchInput(), 'beta-project');
+    await pressKey(searchInput(), 'Enter');
+    expect(checkedRowIds()).toEqual(['beta-project']);
+
+    await typeInto(searchInput(), 'my-other-project');
+    await pressKey(searchInput(), 'Enter');
+    await pressKey(searchInput(), 'Enter');
+    expect(onSelect).toHaveBeenCalledWith('my-other-project', undefined);
+  });
+
+  it('uses the rows as radios and hides the inner radio inputs', async () => {
+    await renderModal('alpha-project');
+    // "project" matches both projects and also adds the typed-ID row.
+    await typeInto(searchInput(), 'project');
+
+    expect(rows().map(row => row.getAttribute('aria-checked'))).toEqual([
+      'false',
+      'true',
+      'false'
+    ]);
+    rows().forEach(row => {
+      expect(row.getAttribute('role')).toBe('radio');
+      expect(row.getAttribute('tabindex')).toBe('0');
+      const radioInput = row.querySelector('input[type="radio"]');
+      expect(radioInput?.getAttribute('tabindex')).toBe('-1');
+      expect(radioInput?.getAttribute('aria-hidden')).toBe('true');
+    });
+  });
+
+  it('selects a row with the keyboard or by clicking its radio', async () => {
+    await renderModal();
+
+    await pressKey(rows()[1], ' ');
+    expect(checkedRowIds()).toEqual(['beta-project']);
+
+    await click(rows()[0].querySelector('input[type="radio"]'));
+    expect(checkedRowIds()).toEqual(['alpha-project']);
   });
 });

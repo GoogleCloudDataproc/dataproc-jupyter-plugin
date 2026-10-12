@@ -57,19 +57,28 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
     useState<string>(selectedProjectId);
 
   useEffect(() => {
+    // Ignore the response once the modal closes or a newer request starts.
+    let active = true;
     if (open) {
       setChosenProjectId(selectedProjectId);
       setSearchQuery('');
       setIsLoading(true);
       listProjectsWithDetailsAPI()
         .then(result => {
-          setProjects(result);
-          setIsLoading(false);
+          if (active) {
+            setProjects(result);
+            setIsLoading(false);
+          }
         })
         .catch(() => {
-          setIsLoading(false);
+          if (active) {
+            setIsLoading(false);
+          }
         });
     }
+    return () => {
+      active = false;
+    };
   }, [open, selectedProjectId]);
 
   const filteredProjects = useMemo(() => {
@@ -92,6 +101,40 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
     }
     onClose();
   };
+
+  // Enter picks the exact or first match (or the typed ID) and a second Enter
+  // on the same project confirms it. With an empty search it acts on the
+  // current choice, so a pre-selected project is not replaced by the first one.
+  const handleSearchKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key !== 'Enter') {
+      return;
+    }
+    event.preventDefault();
+    const query = searchQuery.trim();
+    let targetId: string | undefined;
+    if (query) {
+      const match =
+        filteredProjects.find(
+          p => p.projectId.toLowerCase() === query.toLowerCase()
+        ) ?? filteredProjects[0];
+      targetId = match?.projectId ?? query;
+    } else {
+      targetId = chosenProjectId || filteredProjects[0]?.projectId;
+    }
+    if (!targetId) {
+      return;
+    }
+    if (targetId === chosenProjectId) {
+      handleSelect();
+    } else {
+      setChosenProjectId(targetId);
+    }
+  };
+
+  const isCustomSelected =
+    chosenProjectId.toLowerCase() === searchQuery.trim().toLowerCase();
 
   return (
     <Dialog
@@ -124,16 +167,7 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
             placeholder="Search projects by name or ID"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                if (filteredProjects.length > 0) {
-                  setChosenProjectId(filteredProjects[0].projectId);
-                } else if (searchQuery.trim()) {
-                  setChosenProjectId(searchQuery.trim());
-                }
-              }
-            }}
+            onKeyDown={handleSearchKeyDown}
             autoFocus
           />
         </div>
@@ -155,13 +189,11 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
               ) && (
                 <div
                   className={`project-selector-item ${
-                    chosenProjectId.toLowerCase() ===
-                    searchQuery.trim().toLowerCase()
-                      ? 'selected'
-                      : ''
+                    isCustomSelected ? 'selected' : ''
                   }`}
                   onClick={() => setChosenProjectId(searchQuery.trim())}
-                  role="button"
+                  role="radio"
+                  aria-checked={isCustomSelected}
                   tabIndex={0}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -170,16 +202,14 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
                     }
                   }}
                 >
+                  {/* Visual only: the row is the focusable radio. */}
                   <Radio
-                    checked={
-                      chosenProjectId.toLowerCase() ===
-                      searchQuery.trim().toLowerCase()
-                    }
-                    onChange={() => setChosenProjectId(searchQuery.trim())}
+                    checked={isCustomSelected}
                     value={searchQuery.trim()}
                     name="project-radio-selection"
                     size="small"
                     className="project-selector-radio"
+                    inputProps={{ tabIndex: -1, 'aria-hidden': true }}
                   />
                   <div className="project-selector-item-info">
                     <div className="project-selector-item-name">
@@ -201,7 +231,8 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
                     isSelected ? 'selected' : ''
                   }`}
                   onClick={() => setChosenProjectId(project.projectId)}
-                  role="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   tabIndex={0}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -210,13 +241,14 @@ export const ProjectSelectorModal: React.FC<IProjectSelectorModalProps> = ({
                     }
                   }}
                 >
+                  {/* Visual only: the row is the focusable radio. */}
                   <Radio
                     checked={isSelected}
-                    onChange={() => setChosenProjectId(project.projectId)}
                     value={project.projectId}
                     name="project-radio-selection"
                     size="small"
                     className="project-selector-radio"
+                    inputProps={{ tabIndex: -1, 'aria-hidden': true }}
                   />
                   <div className="project-selector-item-info">
                     <div className="project-selector-item-name">
