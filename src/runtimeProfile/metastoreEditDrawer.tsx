@@ -289,6 +289,36 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
   const update = (changes: Partial<IMetastoreDrawerState>) =>
     setState(prev => ({ ...prev, ...changes }));
 
+  // Another project has other catalogs and services, so drop what was picked
+  // for the previous one; the list effects below pick again for the new one.
+  const changeProjectId = (projectId: string) =>
+    setState(prev =>
+      prev.projectId === projectId
+        ? prev
+        : {
+            ...prev,
+            projectId,
+            catalogId: '',
+            dataprocMetastoreService: METASTORE_NONE
+          }
+    );
+
+  const changeHiveProjectId = (hiveProjectId: string) =>
+    setState(prev =>
+      prev.hiveProjectId === hiveProjectId
+        ? prev
+        : {
+            ...prev,
+            hiveProjectId,
+            hiveCatalogId: '',
+            // A name that only mirrored the old catalog ID follows the new one.
+            hiveCatalogName:
+              prev.hiveCatalogName === prev.hiveCatalogId
+                ? ''
+                : prev.hiveCatalogName
+          }
+    );
+
   // Reset the fields from the saved config each time the drawer opens, and
   // default empty project fields to the signed-in project.
   useEffect(() => {
@@ -437,8 +467,13 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     if (!state.icebergRestEndpointEnabled && !state.hiveEndpointEnabled) {
       return true;
     }
+    // Both endpoints wait while their catalogs load, so a quick Save after a
+    // project change can't go out before that project's catalog is picked.
     if (state.icebergRestEndpointEnabled) {
-      if (state.catalogSelectionMode === 'existing' && !state.catalogId) {
+      if (
+        state.catalogSelectionMode === 'existing' &&
+        (isLoadingCatalogs || !state.catalogId)
+      ) {
         return true;
       }
       // An empty new catalog name means the region's default name.
@@ -448,7 +483,8 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
     }
     if (
       state.hiveEndpointEnabled &&
-      (!state.hiveProjectId.trim() ||
+      (isLoadingHiveCatalogs ||
+        !state.hiveProjectId.trim() ||
         !state.hiveCatalogName.trim() ||
         hiveCatalogNameError)
     ) {
@@ -573,7 +609,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
                     className="metastore-drawer-row"
                     label="Project ID"
                     value={state.projectId}
-                    onChange={projectId => update({ projectId })}
+                    onChange={changeProjectId}
                     onBrowse={() => setProjectModalTarget('project')}
                   />
 
@@ -678,7 +714,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
                     id="hive-project-id"
                     label="Project ID *"
                     value={state.hiveProjectId}
-                    onChange={hiveProjectId => update({ hiveProjectId })}
+                    onChange={changeHiveProjectId}
                     onBrowse={() => setProjectModalTarget('hive')}
                   />
 
@@ -745,7 +781,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
                 id="dpms-project-id"
                 label="Selected project"
                 value={state.projectId}
-                onChange={projectId => update({ projectId })}
+                onChange={changeProjectId}
                 onBrowse={() => setProjectModalTarget('project')}
               />
             </div>
@@ -781,11 +817,9 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
         }
         onClose={() => setProjectModalTarget(null)}
         onSelect={selectedId =>
-          update(
-            projectModalTarget === 'hive'
-              ? { hiveProjectId: selectedId }
-              : { projectId: selectedId }
-          )
+          projectModalTarget === 'hive'
+            ? changeHiveProjectId(selectedId)
+            : changeProjectId(selectedId)
         }
       />
     </>

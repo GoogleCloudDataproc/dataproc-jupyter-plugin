@@ -53,6 +53,15 @@ jest.mock('../utils/metastoreService', () => ({
     ])
 }));
 
+jest.mock('../utils/projectService', () => ({
+  ...jest.requireActual('../utils/projectService'),
+  listProjectsWithDetailsAPI: jest
+    .fn()
+    .mockResolvedValue([
+      { projectId: 'picked-project', name: 'Picked', projectNumber: '999' }
+    ])
+}));
+
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import {
@@ -203,6 +212,13 @@ describe('MetastoreEditDrawer interactions', () => {
         `li[role="option"][data-value="${value}"]`
       ) as HTMLElement
     );
+  };
+
+  // A real click on Save moves focus off the field first, so it blurs.
+  const blur = async (element: HTMLElement) => {
+    await act(async () => {
+      element.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    });
   };
 
   const renderDrawer = async () => {
@@ -359,6 +375,120 @@ describe('MetastoreEditDrawer interactions', () => {
     expect(listBigLakeCatalogsAPI).toHaveBeenCalledWith(
       'other-project',
       'us-central1'
+    );
+  });
+
+  it('saves a typed project right away and drops the old project service', async () => {
+    const onSave = await renderDrawer();
+    await click(cards()[1]);
+    await wait();
+    await chooseOption('dpms-service-select', DPMS_SERVICE);
+
+    await typeInto(input('dpms-project-id'), 'other-project');
+    // Clicking Save moves focus off the field first, which commits the value.
+    await blur(input('dpms-project-id'));
+    await click(saveButton());
+
+    expect(onSave.mock.calls[0][0]).toStrictEqual({
+      metastore: 'Dataproc Metastore',
+      metastoreType: 'dataproc',
+      projectId: 'other-project',
+      dataprocMetastoreService: undefined
+    });
+  });
+
+  it('clears the catalog picked for the previous project', async () => {
+    const onSave = await renderDrawer();
+    await click(radio('existing'));
+    await wait();
+    await chooseOption('existing-catalog-select', 'catalog-b');
+    expect(saveButton().disabled).toBe(false);
+
+    let resolveCatalogs: (catalogs: string[]) => void = () => undefined;
+    (listBigLakeCatalogsAPI as jest.Mock).mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveCatalogs = resolve;
+      })
+    );
+    await typeInto(input('metastore-project-id'), 'other-project');
+    await blur(input('metastore-project-id'));
+    // catalog-b belongs to the old project; Save waits for the new list.
+    expect(saveButton().disabled).toBe(true);
+
+    await act(async () => {
+      resolveCatalogs(['other-catalog']);
+    });
+    expect(saveButton().disabled).toBe(false);
+    await click(saveButton());
+    expect(onSave.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        projectId: 'other-project',
+        catalogSelectionMode: 'existing',
+        catalogId: 'other-catalog'
+      })
+    );
+  });
+
+  it('keeps a typed Hive catalog name when the Hive project changes', async () => {
+    const onSave = await renderDrawer();
+    await click(checkbox('Hive Endpoint'));
+    await wait();
+    await typeInto(input('hive-catalog-name'), 'my_hive');
+
+    let resolveCatalogs: (catalogs: string[]) => void = () => undefined;
+    (listBigLakeCatalogsAPI as jest.Mock).mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveCatalogs = resolve;
+      })
+    );
+    await typeInto(input('hive-project-id'), 'other-project');
+    await blur(input('hive-project-id'));
+    // The typed name alone must not save before the new catalog is picked.
+    expect(saveButton().disabled).toBe(true);
+
+    await act(async () => {
+      resolveCatalogs(['hive-catalog']);
+    });
+    await click(saveButton());
+    expect(onSave.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        hiveProjectId: 'other-project',
+        hiveCatalogId: 'hive-catalog',
+        hiveCatalogName: 'my_hive'
+      })
+    );
+  });
+
+  it('clears the Hive catalog when a project is picked with Browse', async () => {
+    const onSave = await renderDrawer();
+    await click(checkbox('Hive Endpoint'));
+    await wait();
+
+    (listBigLakeCatalogsAPI as jest.Mock).mockResolvedValueOnce([
+      'picked-catalog'
+    ]);
+    await click(
+      document.querySelector(
+        '.metastore-drawer-hive-fields .edit-drawer-browse-btn'
+      ) as HTMLElement
+    );
+    await wait();
+    await click(
+      document.querySelector('.project-selector-item') as HTMLElement
+    );
+    await click(
+      document.querySelector('.project-selector-submit-btn') as HTMLElement
+    );
+    await wait();
+    await click(saveButton());
+
+    // The name only mirrored the old catalog ID, so it follows the new one.
+    expect(onSave.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        hiveProjectId: 'picked-project',
+        hiveCatalogId: 'picked-catalog',
+        hiveCatalogName: 'picked-catalog'
+      })
     );
   });
 });
