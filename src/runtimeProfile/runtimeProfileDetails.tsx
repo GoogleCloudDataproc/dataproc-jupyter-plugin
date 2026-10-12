@@ -38,23 +38,96 @@ const iconEdit = makeIcon('edit-icon', EditIcon);
 const iconDelete = makeIcon('delete-icon', DeleteClusterIcon);
 const iconCopy = makeIcon('copy-icon', CloneIcon);
 
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = 'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec'.split(',');
-
 export const formatCreateTime = (dateString?: string): string => {
-  const date = dateString ? new Date(dateString) : null;
-  if (!date || isNaN(date.getTime())) {
+  if (!dateString) {
     return '';
   }
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const datePart = `${DAY_NAMES[date.getUTCDay()]} ${
-    MONTHS[date.getUTCMonth()]
-  } ${pad(date.getUTCDate())} ${date.getUTCFullYear()}`;
-  const timePart = `${pad(date.getUTCHours())}:${pad(
-    date.getUTCMinutes()
-  )}:${pad(date.getUTCSeconds())}`;
-  return `${datePart} ${timePart} GMT+0000 (Coordinated Universal Time)`;
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return '';
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'medium'
+  }).format(date);
 };
+
+export interface IDeleteConfirmationModalProps {
+  profileName: string;
+  isDeleting: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+export function DeleteConfirmationModal({
+  profileName,
+  isDeleting,
+  onCancel,
+  onConfirm
+}: IDeleteConfirmationModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isDeleting) {
+        onCancel();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDeleting, onCancel]);
+
+  return createPortal(
+    <div
+      className="delete-profile-modal-backdrop"
+      onClick={() => !isDeleting && onCancel()}
+    >
+      <div
+        className="delete-profile-modal"
+        role="dialog"
+        aria-modal="true"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="delete-profile-modal-title">Delete Runtime Profile</div>
+        <div className="delete-profile-modal-banner">
+          <svg
+            className="delete-profile-modal-info-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+          </svg>
+          <span>This operation cannot be undone.</span>
+        </div>
+        <div className="delete-profile-modal-body">
+          Do you want to delete runtime profile {profileName}?
+        </div>
+        <div className="delete-profile-modal-actions">
+          <button
+            type="button"
+            className="delete-profile-modal-btn"
+            onClick={onCancel}
+            disabled={isDeleting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="delete-profile-modal-btn"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 export interface IRuntimeProfileDetailsProps {
   profile: IRuntimeProfileTemplate;
@@ -71,36 +144,38 @@ export default function RuntimeProfileDetails({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (!showDeleteModal) {
-      return;
-    }
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !isDeleting) {
-        setShowDeleteModal(false);
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [showDeleteModal, isDeleting]);
-
   const { region, profileId: shortName } = parseRuntimeProfileResourceName(
     profile.name
   );
   const displayName = profile.jupyterSession?.displayName || shortName;
 
   const handleCopyName = async () => {
+    if (!shortName) {
+      Notification.emit('No profile name to copy', 'warning', {
+        autoClose: 3000
+      });
+      return;
+    }
+
     try {
-      if (shortName && navigator.clipboard?.writeText) {
+      if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shortName);
-        Notification.emit('Name copied to clipboard', 'success', {
-          autoClose: 2000
-        });
       } else {
-        throw new Error('Clipboard API not available');
+        const textarea = document.createElement('textarea');
+        textarea.value = shortName;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        if (!copied) {
+          throw new Error('execCommand copy failed');
+        }
       }
+      Notification.emit('Name copied to clipboard', 'success', {
+        autoClose: 2000
+      });
     } catch (error) {
       safeLog(`Failed to copy runtime profile name: ${error}`, LOG_LEVEL.WARN);
       Notification.emit('Failed to copy name to clipboard', 'error', {
@@ -149,59 +224,14 @@ export default function RuntimeProfileDetails({
 
   return (
     <div className="runtime-profile-details-wrapper">
-      {showDeleteModal &&
-        createPortal(
-          <div
-            className="delete-profile-modal-backdrop"
-            onClick={() => !isDeleting && setShowDeleteModal(false)}
-          >
-            <div
-              className="delete-profile-modal"
-              role="dialog"
-              aria-modal="true"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="delete-profile-modal-title">
-                Delete Runtime Profile
-              </div>
-              <div className="delete-profile-modal-banner">
-                <svg
-                  className="delete-profile-modal-info-icon"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-                </svg>
-                <span>This operation cannot be undone.</span>
-              </div>
-              <div className="delete-profile-modal-body">
-                Do you want to delete runtime profile {displayName}?
-              </div>
-              <div className="delete-profile-modal-actions">
-                <button
-                  type="button"
-                  className="delete-profile-modal-btn"
-                  onClick={() => setShowDeleteModal(false)}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="delete-profile-modal-btn"
-                  onClick={() => void confirmDelete()}
-                  disabled={isDeleting}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+      {showDeleteModal && (
+        <DeleteConfirmationModal
+          profileName={displayName}
+          isDeleting={isDeleting}
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={() => void confirmDelete()}
+        />
+      )}
 
       <div className="runtime-profile-details-header">
         <button
@@ -233,7 +263,12 @@ export default function RuntimeProfileDetails({
 
       <div className="runtime-profile-details-body">
         <div className="runtime-profile-details-title-row">
-          <span className="runtime-profile-details-name">{shortName}</span>
+          <span className="runtime-profile-details-name">{displayName}</span>
+          {shortName && shortName !== displayName && (
+            <span className="runtime-profile-details-subtitle">
+              ({shortName})
+            </span>
+          )}
           <button
             type="button"
             className="runtime-profile-details-copy-btn"

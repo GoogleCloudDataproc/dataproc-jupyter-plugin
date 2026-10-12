@@ -100,15 +100,12 @@ describe('RuntimeProfileList Component', () => {
     container.remove();
   });
 
-
   it('should fetch and display runtime profiles in table with pagination footer', async () => {
     await act(async () => {
       root.render(<RuntimeProfileList />);
     });
 
-    expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledWith(
-      ''
-    );
+    expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledWith('');
     expect(container.textContent).toContain('profile-1');
     expect(container.textContent).toContain('us-central1');
     expect(container.textContent).toContain('profile-2');
@@ -159,7 +156,9 @@ describe('RuntimeProfileList Component', () => {
     });
 
     expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledTimes(2);
-    expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenLastCalledWith('');
+    expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenLastCalledWith(
+      ''
+    );
   });
 
   it('should ignore stale out-of-order fetch response when Refresh triggers a newer request', async () => {
@@ -235,9 +234,7 @@ describe('RuntimeProfileList Component', () => {
     const modalBanner = document.body.querySelector(
       '.delete-profile-modal-banner'
     );
-    const modalBody = document.body.querySelector(
-      '.delete-profile-modal-body'
-    );
+    const modalBody = document.body.querySelector('.delete-profile-modal-body');
 
     expect(modalTitle?.textContent).toBe('Delete Runtime Profile');
     expect(modalBanner?.textContent).toContain(
@@ -260,9 +257,7 @@ describe('RuntimeProfileList Component', () => {
       confirmDeleteBtn.click();
     });
 
-    expect(
-      RuntimeProfileService.deleteRuntimeProfile
-    ).toHaveBeenCalledWith(
+    expect(RuntimeProfileService.deleteRuntimeProfile).toHaveBeenCalledWith(
       'projects/test-project/locations/us-central1/sessionTemplates/profile-1',
       'profile-1'
     );
@@ -290,9 +285,7 @@ describe('RuntimeProfileList Component', () => {
       deleteOption.click();
     });
 
-    expect(
-      document.body.querySelector('.delete-profile-modal')
-    ).not.toBeNull();
+    expect(document.body.querySelector('.delete-profile-modal')).not.toBeNull();
 
     const backdrop = document.body.querySelector(
       '.delete-profile-modal-backdrop'
@@ -302,9 +295,7 @@ describe('RuntimeProfileList Component', () => {
     });
 
     expect(document.body.querySelector('.delete-profile-modal')).toBeNull();
-    expect(
-      RuntimeProfileService.deleteRuntimeProfile
-    ).not.toHaveBeenCalled();
+    expect(RuntimeProfileService.deleteRuntimeProfile).not.toHaveBeenCalled();
   });
 
   it('should fall back to previous page when deleting the last remaining profile on page > 0', async () => {
@@ -327,12 +318,16 @@ describe('RuntimeProfileList Component', () => {
       root.render(<RuntimeProfileList />);
     });
 
-    const nextBtn = container.querySelectorAll('.pagination-btn')[1] as HTMLElement;
+    const nextBtn = container.querySelectorAll(
+      '.pagination-btn'
+    )[1] as HTMLElement;
     await act(async () => {
       nextBtn.click();
     });
 
-    expect(container.querySelector('.table-footer')?.textContent).toContain('Showing 3 – 3 profiles');
+    expect(container.querySelector('.table-footer')?.textContent).toContain(
+      'Showing 3 – 3 profiles'
+    );
 
     const actionTriggers = container.querySelectorAll('.actions-cell span');
     act(() => {
@@ -354,7 +349,9 @@ describe('RuntimeProfileList Component', () => {
       confirmDeleteBtn.click();
     });
 
-    expect(container.querySelector('.table-footer')?.textContent).toContain('Showing 1 – 2 profiles');
+    expect(container.querySelector('.table-footer')?.textContent).toContain(
+      'Showing 1 – 2 profiles'
+    );
   });
 
   it('should update pagination range accurately when navigating next and previous pages', async () => {
@@ -390,7 +387,9 @@ describe('RuntimeProfileList Component', () => {
     const footerPage2 = container.querySelector('.table-footer');
     expect(footerPage2?.textContent).toContain('Showing 3 – 4 profiles');
 
-    const prevBtn = container.querySelectorAll('.pagination-btn')[0] as HTMLElement;
+    const prevBtn = container.querySelectorAll(
+      '.pagination-btn'
+    )[0] as HTMLElement;
     await act(async () => {
       prevBtn.click();
     });
@@ -400,9 +399,9 @@ describe('RuntimeProfileList Component', () => {
   });
 
   it('should display empty state and emit error notification when fetchRuntimeProfiles fails', async () => {
-    (RuntimeProfileService.fetchRuntimeProfiles as jest.Mock).mockRejectedValueOnce(
-      new Error('API unavailable')
-    );
+    (
+      RuntimeProfileService.fetchRuntimeProfiles as jest.Mock
+    ).mockRejectedValueOnce(new Error('API unavailable'));
 
     await act(async () => {
       root.render(<RuntimeProfileList />);
@@ -419,9 +418,9 @@ describe('RuntimeProfileList Component', () => {
   });
 
   it('should emit error notification when deleteRuntimeProfile fails', async () => {
-    (RuntimeProfileService.deleteRuntimeProfile as jest.Mock).mockRejectedValueOnce(
-      new Error('Delete denied')
-    );
+    (
+      RuntimeProfileService.deleteRuntimeProfile as jest.Mock
+    ).mockRejectedValueOnce(new Error('Delete denied'));
 
     await act(async () => {
       root.render(<RuntimeProfileList />);
@@ -473,13 +472,15 @@ describe('RuntimeProfileList Component', () => {
     expect(container.querySelector('.dropdown-content.show')).toBeNull();
   });
 
-  it('should open RuntimeProfileDetails on profile click and return on Back click', async () => {
+  it('should open RuntimeProfileDetails on profile click or keyboard Enter/Space and return on Back click', async () => {
     await act(async () => {
       root.render(<RuntimeProfileList />);
     });
 
     act(() => {
-      (container.querySelector('.profile-name-cell') as HTMLElement).click();
+      (
+        container.querySelector('.profile-name-button-link') as HTMLElement
+      ).click();
     });
 
     expect(RuntimeProfileService.fetchRuntimeProfiles).toHaveBeenCalledTimes(1);
@@ -487,14 +488,27 @@ describe('RuntimeProfileList Component', () => {
     expect(container.textContent).toContain('Basic Information');
     expect(container.textContent).toContain('alice@example.com');
 
-    act(() => {
-      (
-        container.querySelector(
-          '.runtime-profile-details-back-btn'
-        ) as HTMLButtonElement
-      ).click();
-    });
+    const clickBack = () =>
+      act(() => {
+        (
+          container.querySelector(
+            '.runtime-profile-details-back-btn'
+          ) as HTMLButtonElement
+        ).click();
+      });
 
+    clickBack();
     expect(container.querySelector('.runtime-profile-table')).not.toBeNull();
+
+    for (const key of ['Enter', ' ']) {
+      act(() => {
+        container
+          .querySelector('.profile-name-button-link')
+          ?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+      });
+      expect(container.textContent).toContain('Resource details');
+      clickBack();
+      expect(container.querySelector('.runtime-profile-table')).not.toBeNull();
+    }
   });
 });

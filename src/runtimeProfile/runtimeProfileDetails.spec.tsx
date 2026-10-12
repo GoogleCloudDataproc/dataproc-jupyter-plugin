@@ -107,7 +107,7 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('sample-profile');
     expect(container.textContent).toContain('us-central1');
     expect(container.textContent).toContain(
-      'Wed Sep 16 2026 08:02:03 GMT+0000 (Coordinated Universal Time)'
+      formatCreateTime('2026-09-16T08:02:03Z')
     );
     expect(container.textContent).toContain('user@example.com');
     expect(container.textContent).toContain('test123');
@@ -140,6 +140,17 @@ describe('RuntimeProfileDetails Component', () => {
       'error',
       { autoClose: 3000 }
     );
+
+    Object.defineProperty(navigator, 'clipboard', {
+      value: undefined,
+      configurable: true,
+      writable: true
+    });
+    document.execCommand = jest.fn().mockReturnValue(true);
+    await act(async () => {
+      copyBtn.click();
+    });
+    expect(document.execCommand).toHaveBeenCalledWith('copy');
 
     const backBtn = container.querySelector(
       '.runtime-profile-details-back-btn'
@@ -210,6 +221,13 @@ describe('RuntimeProfileDetails Component', () => {
   it('should format createTime and lastUsed dates deterministically', () => {
     expect(formatCreateTime('')).toBe('');
     expect(formatCreateTime('invalid-date')).toBe('');
+    const validCreateDate = '2026-09-16T08:02:03Z';
+    expect(formatCreateTime(validCreateDate)).toBe(
+      new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'medium'
+      }).format(new Date(validCreateDate))
+    );
 
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-09-29T15:37:20Z'));

@@ -74,7 +74,9 @@ export const formatLastUsed = (
       'Nov',
       'Dec'
     ];
-    return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    return `${
+      monthNames[date.getMonth()]
+    } ${date.getDate()}, ${date.getFullYear()}`;
   }
 };
 
@@ -119,10 +121,10 @@ export const runtimeProfileListMapper = (
   templates: IRuntimeProfileTemplate[]
 ): IRuntimeProfileRow[] => {
   return templates.map((t: IRuntimeProfileTemplate) => {
-    const { region } = parseRuntimeProfileResourceName(t.name);
+    const { region, profileId } = parseRuntimeProfileResourceName(t.name);
 
     return {
-      name: t.jupyterSession?.displayName || t.name,
+      name: t.jupyterSession?.displayName || profileId || t.name,
       region: region,
       description: t.description || '',
       runtimeVersion: t.runtimeConfig?.version || '',
