@@ -49,6 +49,9 @@ import {
   CreateRuntimeProfileComponent,
   ExecutorAndDriverEditDrawer,
   RuntimeEnvironmentEditDrawer,
+  MetastoreEditDrawer,
+  DEFAULT_METASTORE_CONFIG,
+  formatMetastoreProperties,
   AutoscalingEditDrawer,
   SessionLifecycleEditDrawer,
   OtherCustomizationEditDrawer,
@@ -191,6 +194,20 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(editButtons[4].getAttribute('aria-disabled')).toBe('true');
     expect(editButtons[5].getAttribute('aria-disabled')).toBe('false');
     expect(editButtons[6].getAttribute('aria-disabled')).toBe('false');
+    // Runtime configuration (0), Executor and driver configuration (1), and
+    // Metastore configuration (3) are editable; the remaining sections are still read-only.
+    const expectedDisabled = [
+      'false',
+      'false',
+      'true',
+      'false',
+      'true',
+      'true',
+      'true'
+    ];
+    Array.from(editButtons).forEach((btn, idx) => {
+      expect(btn.getAttribute('aria-disabled')).toBe(expectedDisabled[idx]);
+    });
 
     const displayNameInput = container.querySelector(
       '#runtime-profile-display-name'
