@@ -45,6 +45,8 @@ import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import {
   CreateRuntimeProfileComponent,
+  RuntimeEnvironmentEditDrawer,
+  generateRandomHex,
   renderGroupedMachineOptions
 } from './createRuntimeProfile';
 import { RuntimeProfileService } from './runtimeProfileService';
@@ -141,9 +143,12 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       '.section-detail-edit-button'
     );
     expect(editButtons).toHaveLength(7);
-    editButtons.forEach(btn => {
-      expect(btn.getAttribute('aria-disabled')).toBe('true');
-    });
+    expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
+    Array.from(editButtons)
+      .slice(1)
+      .forEach(btn => {
+        expect(btn.getAttribute('aria-disabled')).toBe('true');
+      });
 
     const displayNameInput = container.querySelector(
       '#runtime-profile-display-name'
@@ -971,5 +976,247 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       .querySelectorAll('.node-config-card');
     expect(executorCards[1].classList.contains('selected')).toBe(true);
     expect(getFieldValue('Executor type')).toBe('L4 (8 cores)');
+  });
+
+  it('opens RuntimeEnvironmentEditDrawer and updates runtime configuration on save', async () => {
+    expect(RuntimeEnvironmentEditDrawer).toBeDefined();
+    const randomId = generateRandomHex();
+    expect(randomId).toMatch(/^runtime-[0-9a-f]{12}$/);
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[0] as HTMLButtonElement).click();
+    });
+
+    const profileIdInput = document.body.querySelector(
+      '#edit-runtime-profile-id'
+    ) as HTMLInputElement;
+    expect(profileIdInput).not.toBeNull();
+
+    const saveBtn = document.body.querySelector(
+      '.edit-drawer-footer .submit-button-style'
+    ) as HTMLButtonElement;
+    expect(saveBtn).not.toBeNull();
+
+    await act(async () => {
+      saveBtn.click();
+    });
+  });
+
+  it('supports browsing buckets, viewing bucket files, searching buckets, and opening create bucket placeholder drawer', async () => {
+    jest
+      .spyOn(mockService, 'getStorageBuckets')
+      .mockResolvedValue(['bucket-alpha', 'bucket-beta']);
+    jest
+      .spyOn(mockService, 'getBucketObjects')
+      .mockResolvedValue(['sample_notebook.ipynb', 'job.py']);
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    // Open Runtime configuration edit drawer
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[0] as HTMLButtonElement).click();
+    });
+
+    // Click Browse button next to staging bucket
+    const browseBtn = document.body.querySelector(
+      '.edit-drawer-browse-btn'
+    ) as HTMLButtonElement;
+    expect(browseBtn).not.toBeNull();
+    await act(async () => {
+      browseBtn.click();
+    });
+
+    // Verify Select bucket drawer is open and Select button is initially disabled
+    const drawerTitles = Array.from(
+      document.body.querySelectorAll('.edit-drawer-title')
+    ).map(el => el.textContent);
+    expect(drawerTitles).toContain('Select bucket');
+
+    const bucketItems = document.body.querySelectorAll('.bucket-browser-item');
+    expect(bucketItems).toHaveLength(2);
+
+    // Resource hierarchy dropdown is disabled when on Buckets root view
+    const initialHierarchyTrigger = document.body.querySelector(
+      '#bucket-resource-hierarchy'
+    );
+    expect(initialHierarchyTrigger?.getAttribute('aria-disabled')).toBe('true');
+
+    // 1. Click a bucket to select it -> Select button becomes enabled
+    await act(async () => {
+      (bucketItems[0] as HTMLElement).click();
+    });
+    const footerButtons = Array.from(
+      document.body.querySelectorAll('.edit-drawer-footer button')
+    ) as HTMLButtonElement[];
+    const selectBtn = footerButtons.find(
+      b => b.textContent?.trim() === 'Select'
+    );
+    expect(selectBtn?.disabled).toBe(false);
+
+    // 2. Click open arrow (or selected bucket) to view files inside -> Resource hierarchy shows bucket name and Select is disabled
+    const openBucketBtn = bucketItems[0].querySelector(
+      '.bucket-browser-open-btn'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      openBucketBtn.click();
+    });
+
+    expect(mockService.getBucketObjects).toHaveBeenCalledWith('bucket-alpha');
+    expect(selectBtn?.disabled).toBe(true);
+    const hierarchyTrigger = document.body.querySelector(
+      '#bucket-resource-hierarchy'
+    );
+    expect(hierarchyTrigger?.textContent).toContain('bucket-alpha');
+    expect(hierarchyTrigger?.getAttribute('aria-disabled')).not.toBe('true');
+
+    const fileNames = Array.from(
+      document.body.querySelectorAll('.bucket-browser-item-name')
+    ).map(el => el.textContent);
+    expect(fileNames).toEqual(['sample_notebook.ipynb', 'job.py']);
+
+    // Navigate back to Buckets using the back button
+    const backBtn = document.body.querySelector(
+      '#bucket-browser-back-btn'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      backBtn.click();
+    });
+    expect(selectBtn?.disabled).toBe(false);
+
+    // 3. Click search icon -> replaces Resource hierarchy with search input and filters buckets
+    const searchBtn = document.body.querySelector(
+      '#bucket-browser-search-btn'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      searchBtn.click();
+    });
+    expect(
+      document.body.querySelector('#bucket-resource-hierarchy')
+    ).toBeNull();
+    const searchInput = document.body.querySelector(
+      '#bucket-search-input'
+    ) as HTMLInputElement;
+    expect(searchInput).not.toBeNull();
+
+    // 4. Click create bucket icon -> opens Create a bucket drawer
+    const createBucketBtn = document.body.querySelector(
+      '#bucket-browser-create-btn'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      createBucketBtn.click();
+    });
+    const updatedTitles = Array.from(
+      document.body.querySelectorAll('.edit-drawer-title')
+    ).map(el => el.textContent);
+    expect(updatedTitles).toContain('Create a bucket');
+    expect(document.body.querySelector('.create-bucket-steps')).not.toBeNull();
+    expect(
+      document.body.querySelector('#create-bucket-name-input')
+    ).not.toBeNull();
+  });
+
+  it('validates Runtime Profile ID and Cloud Storage Staging bucket in RuntimeEnvironmentEditDrawer', async () => {
+    jest
+      .spyOn(mockService, 'getStorageBuckets')
+      .mockResolvedValue(['test_bucket']);
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    await act(async () => {
+      (editButtons[0] as HTMLButtonElement).click();
+    });
+
+    const profileIdInput = document.body.querySelector(
+      '#edit-runtime-profile-id'
+    ) as HTMLInputElement;
+    const stagingBucketInput = document.body.querySelector(
+      '#edit-cloud-storage-staging-bucket'
+    ) as HTMLInputElement;
+    const getSaveBtn = () =>
+      Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(b => b.textContent?.trim() === 'Save') as HTMLButtonElement;
+
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+
+    // 1. Empty Runtime Profile ID -> required error & Save disabled
+    await act(async () => {
+      nativeInputValueSetter?.call(profileIdInput, '');
+      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#runtime-profile-id-error-text')?.textContent
+    ).toBe('Runtime profile name is required.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // 2. Invalid format Runtime Profile ID -> format error & Save disabled
+    await act(async () => {
+      nativeInputValueSetter?.call(profileIdInput, 'ytywteywqe***');
+      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#runtime-profile-id-error-text')?.textContent
+    ).toBe(
+      'A runtime profile name must start and end in a letter or a number, be between 4 and 63 characters long, and contain only lowercase letters, numbers, and hyphens.'
+    );
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // 3. Valid Runtime Profile ID -> clears error & Save enabled
+    await act(async () => {
+      nativeInputValueSetter?.call(profileIdInput, 'runtime-4d92');
+      profileIdInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#runtime-profile-id-error-text')
+    ).toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // 4. Invalid / non-existing Staging bucket -> error message, red invalid bucket icon, Save disabled
+    await act(async () => {
+      nativeInputValueSetter?.call(stagingBucketInput, 'test123****');
+      stagingBucketInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#staging-bucket-error-text')?.textContent
+    ).toBe(
+      'Enter the name of an existing bucket. Try browsing for the bucket instead.'
+    );
+    expect(
+      document.body.querySelector('.bucket-input-adornment-icon.invalid')
+    ).not.toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // 5. Valid existing Staging bucket -> green valid bucket icon, helper text restored, Save enabled
+    await act(async () => {
+      nativeInputValueSetter?.call(stagingBucketInput, 'test_bucket');
+      stagingBucketInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#staging-bucket-error-text')
+    ).toBeNull();
+    expect(
+      document.body.querySelector('.bucket-input-adornment-icon.valid')
+    ).not.toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(false);
   });
 });
