@@ -75,3 +75,22 @@ export class DataprocLoggingService {
     return (resp as any)['status'];
   }
 }
+
+export const safeLog = (
+  message: string,
+  level: LOG_LEVEL = LOG_LEVEL.INFO
+): void => {
+  try {
+    if (
+      typeof process !== 'undefined' &&
+      (process.env?.NODE_ENV === 'test' || Boolean(process.env?.JEST_WORKER_ID))
+    ) {
+      return;
+    }
+    DataprocLoggingService.log(message, level).catch(() => {
+      // Ignore background logging transport errors
+    });
+  } catch {
+    // Ignore synchronous logging errors
+  }
+};
