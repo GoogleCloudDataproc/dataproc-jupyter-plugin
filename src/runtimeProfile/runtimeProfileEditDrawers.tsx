@@ -1896,9 +1896,14 @@ export const NetworkSecurityEditDrawer: React.FC<
     config.networkInThisProject
   ]);
 
-  // Load Shared VPC subnetworks when drawer opens or when 'shared_from_host' is selected
+  // Load Shared VPC subnetworks when drawer opens and 'shared_from_host' is selected
   useEffect(() => {
-    if (!open || sharedSubnetworkOptions || !service?.getSharedVpcSubnetworks) {
+    if (
+      !open ||
+      networkSource !== 'shared_from_host' ||
+      sharedSubnetworkOptions ||
+      !service?.getSharedVpcSubnetworks
+    ) {
       return;
     }
     let isMounted = true;
