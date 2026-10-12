@@ -145,9 +145,14 @@ export interface ICreateRuntimeProfilePayload {
 
 export interface IRuntimeProfileService {
   getRegions(projectId?: string): Promise<IRegionOption[]>;
+  getStorageBuckets?(projectId?: string): Promise<string[]>;
+  getBucketObjects?(bucketName: string): Promise<string[]>;
+  createStorageBucket?(bucketName: string, projectId?: string): Promise<string>;
   createRuntimeProfile(
     payload: ICreateRuntimeProfilePayload,
     projectId?: string,
     region?: string
   ): Promise<IRuntimeProfile>;
 }
+
+
