@@ -166,11 +166,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(editButtons).toHaveLength(7);
     expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
     expect(editButtons[1].getAttribute('aria-disabled')).toBe('false');
-    Array.from(editButtons)
-      .slice(2)
-      .forEach(btn => {
-        expect(btn.getAttribute('aria-disabled')).toBe('true');
-      });
+    expect(editButtons[2].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[3].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[4].getAttribute('aria-disabled')).toBe('false');
+    expect(editButtons[5].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[6].getAttribute('aria-disabled')).toBe('true');
 
     const displayNameInput = container.querySelector(
       '#runtime-profile-display-name'
@@ -1633,6 +1633,23 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getProfileTierSummaryValue()).toBe(
       'Premium (Lightning Engine enabled)'
     );
+  });
+
+  it('should provide network, subnetwork, shared VPC, keyRing, and cryptoKey methods on RuntimeProfileService', async () => {
+    const networks = await mockService.getNetworks();
+    expect(networks).toEqual(['default']);
+
+    const subnetworks = await mockService.getSubnetworks('default');
+    expect(subnetworks).toEqual(['default']);
+
+    const sharedVpc = await mockService.getSharedVpcSubnetworks();
+    expect(sharedVpc).toEqual({ hostProjectId: '', subnetworks: [] });
+
+    const keyRings = await mockService.getKeyRings();
+    expect(keyRings).toEqual([]);
+
+    const cryptoKeys = await mockService.getCryptoKeys('test-ring');
+    expect(cryptoKeys).toEqual([]);
   });
 
   it('should calculate runtime pricing estimate DCU values across machine shapes and autoscaling configurations', () => {

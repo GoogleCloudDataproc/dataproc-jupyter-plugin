@@ -76,8 +76,23 @@ export interface ISessionTemplateApiPayload {
     };
   };
   environmentConfig?: {
+    executionConfig?: {
+      serviceAccount?: string;
+      networkTags?: string[];
+      kmsKey?: string;
+      subnetworkUri?: string;
+      idleTtl?: string;
+      ttl?: string;
+      authentication_config?: {
+        user_workload_authentication_type: string;
+      };
+      stagingBucket?: string;
+    };
     peripheralsConfig?: {
       metastoreService?: string;
+      sparkHistoryServerConfig?: {
+        dataprocCluster?: string;
+      };
     };
   };
 }
@@ -516,6 +531,64 @@ export function mapRuntimeProfileToSessionTemplate(
       ? metastoreConfig.dataprocMetastoreService
       : undefined;
 
+  // Execution Config (Network & Security)
+  let subnetworkUri: string | undefined;
+  if (payload.networkAndSecurityConfig?.networkSource === 'shared_from_host') {
+    const sharedSub = payload.networkAndSecurityConfig?.sharedSubnetwork;
+    const hostProject = payload.networkAndSecurityConfig?.hostProjectId;
+    if (sharedSub) {
+      subnetworkUri =
+        sharedSub.startsWith('projects/') || !hostProject
+          ? sharedSub
+          : `projects/${hostProject}/regions/${targetRegion}/subnetworks/${sharedSub}`;
+    }
+  } else {
+    subnetworkUri = payload.networkAndSecurityConfig?.subnetwork || undefined;
+  }
+
+  const networkTags =
+    payload.networkAndSecurityConfig?.networkTags &&
+    payload.networkAndSecurityConfig.networkTags.length > 0
+      ? payload.networkAndSecurityConfig.networkTags
+      : undefined;
+
+  let kmsKey: string | undefined;
+  if (payload.networkAndSecurityConfig?.encryption === 'customer_managed_key') {
+    if (
+      payload.networkAndSecurityConfig.kmsKeySelectionMode !== 'manual' &&
+      payload.networkAndSecurityConfig.keyRing &&
+      payload.networkAndSecurityConfig.cryptoKey
+    ) {
+      kmsKey = `projects/${projectId}/locations/${targetRegion}/keyRings/${payload.networkAndSecurityConfig.keyRing}/cryptoKeys/${payload.networkAndSecurityConfig.cryptoKey}`;
+    } else if (payload.networkAndSecurityConfig.kmsKeyName) {
+      kmsKey = payload.networkAndSecurityConfig.kmsKeyName;
+    }
+  }
+
+  const serviceAccount =
+    payload.networkAndSecurityConfig?.serviceAccount?.trim() || undefined;
+
+  const isUserAccount =
+    payload.networkAndSecurityConfig?.executionIdentity === 'user_account';
+
+  const executionConfig: NonNullable<
+    NonNullable<
+      ISessionTemplateApiPayload['environmentConfig']
+    >['executionConfig']
+  > = {
+    ...(subnetworkUri && { subnetworkUri }),
+    ...(networkTags && { networkTags }),
+    ...(kmsKey && { kmsKey }),
+    ...(serviceAccount && { serviceAccount }),
+    ...(isUserAccount && {
+      authentication_config: {
+        user_workload_authentication_type: 'END_USER_CREDENTIALS'
+      }
+    })
+  };
+
+  const hasExecutionConfig = Object.keys(executionConfig).length > 0;
+
   const templatePayload: ISessionTemplateApiPayload = {
     name: `projects/${projectId}/locations/${targetRegion}/sessionTemplates/${templateId}`,
     description: payload.description,
@@ -525,9 +598,12 @@ export function mapRuntimeProfileToSessionTemplate(
     },
     labels: payload.labels || {},
     runtimeConfig,
-    ...(metastoreService && {
+    ...((hasExecutionConfig || metastoreService) && {
       environmentConfig: {
-        peripheralsConfig: { metastoreService }
+        ...(hasExecutionConfig && { executionConfig }),
+        ...(metastoreService && {
+          peripheralsConfig: { metastoreService }
+        })
       }
     })
   };
