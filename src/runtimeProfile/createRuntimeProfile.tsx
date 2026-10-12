@@ -42,10 +42,13 @@ import expandMoreIcon from '../../style/icons/expand_more.svg';
 import { SectionDetail, ISectionProperty } from '../controls/SectionDetail';
 import '../../style/runtimeProfile.css';
 import {
+  AutoscalingEditDrawer,
   ExecutorAndDriverEditDrawer,
+  OtherCustomizationEditDrawer,
   RuntimeEnvironmentEditDrawer,
   RUNTIME_VERSION_OPTIONS,
-  SelectBucketEditDrawer
+  SelectBucketEditDrawer,
+  SessionLifecycleEditDrawer
 } from './runtimeProfileEditDrawers';
 import {
   isAcceleratedMachine,
@@ -546,6 +549,12 @@ export const CreateRuntimeProfileComponent: React.FC<
   const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
     useState<boolean>(false);
   const formScrollContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const [isAutoscalingDrawerOpen, setIsAutoscalingDrawerOpen] =
+    useState<boolean>(false);
+  const [isSessionLifecycleDrawerOpen, setIsSessionLifecycleDrawerOpen] =
+    useState<boolean>(false);
+  const [isOtherCustomizationDrawerOpen, setIsOtherCustomizationDrawerOpen] =
+    useState<boolean>(false);
 
   // Tier and Lightning Engine state
   const initialTierValue =
@@ -644,10 +653,10 @@ export const CreateRuntimeProfileComponent: React.FC<
     }),
     [executorAndDriverConfigState, tier, executorType, lightningEngineEnabled]
   );
-  const autoscalingConfig = useMemo<IAutoscalingConfig>(
-    () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG,
-    [initialAutoscalingConfig]
-  );
+  const [autoscalingConfig, setAutoscalingConfig] =
+    useState<IAutoscalingConfig>(
+      () => initialAutoscalingConfig || DEFAULT_AUTOSCALING_CONFIG
+    );
   const metastoreConfig = useMemo<IMetastoreConfig>(
     () => initialMetastoreConfig || DEFAULT_METASTORE_CONFIG,
     [initialMetastoreConfig]
@@ -656,17 +665,15 @@ export const CreateRuntimeProfileComponent: React.FC<
     () => initialNetworkAndSecurityConfig || DEFAULT_NETWORK_SECURITY_CONFIG,
     [initialNetworkAndSecurityConfig]
   );
-  const sessionLifecycleConfig = useMemo<ISessionLifecycleConfig>(
-    () => initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG,
-    [initialSessionLifecycleConfig]
+  const [sessionLifecycleConfig, setSessionLifecycleConfig] =
+    useState<ISessionLifecycleConfig>(
+      () => initialSessionLifecycleConfig || DEFAULT_SESSION_LIFECYCLE_CONFIG
+    );
+  const [sparkProperties, setSparkProperties] = useState<SparkProperties>(
+    () => initialSparkProperties || DEFAULT_SPARK_PROPERTIES
   );
-  const sparkProperties = useMemo<SparkProperties>(
-    () => initialSparkProperties || DEFAULT_SPARK_PROPERTIES,
-    [initialSparkProperties]
-  );
-  const labels = useMemo<ProfileLabels>(
-    () => initialLabels || DEFAULT_PROFILE_LABELS,
-    [initialLabels]
+  const [labels, setLabels] = useState<ProfileLabels>(
+    () => initialLabels || DEFAULT_PROFILE_LABELS
   );
 
   const additionalConfigSections = useMemo(
@@ -688,8 +695,8 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Autoscaling',
         properties: formatAutoscalingProperties(autoscalingConfig),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsAutoscalingDrawerOpen(true)
       },
       {
         title: 'Metastore configuration',
@@ -706,14 +713,14 @@ export const CreateRuntimeProfileComponent: React.FC<
       {
         title: 'Session lifecycle',
         properties: formatSessionLifecycleProperties(sessionLifecycleConfig),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsSessionLifecycleDrawerOpen(true)
       },
       {
         title: 'Other customizations',
         properties: formatOtherCustomizationProperties(sparkProperties, labels),
-        isEditDisabled: true,
-        onEdit: undefined
+        isEditDisabled: false,
+        onEdit: () => setIsOtherCustomizationDrawerOpen(true)
       }
     ],
     [
@@ -1490,6 +1497,38 @@ export const CreateRuntimeProfileComponent: React.FC<
           setIsExecutorDriverDrawerOpen(false);
         }}
       />
+
+      <AutoscalingEditDrawer
+        open={isAutoscalingDrawerOpen}
+        config={autoscalingConfig}
+        onClose={() => setIsAutoscalingDrawerOpen(false)}
+        onSave={updatedConfig => {
+          setAutoscalingConfig(updatedConfig);
+          setIsAutoscalingDrawerOpen(false);
+        }}
+      />
+
+      <SessionLifecycleEditDrawer
+        open={isSessionLifecycleDrawerOpen}
+        config={sessionLifecycleConfig}
+        onClose={() => setIsSessionLifecycleDrawerOpen(false)}
+        onSave={updatedConfig => {
+          setSessionLifecycleConfig(updatedConfig);
+          setIsSessionLifecycleDrawerOpen(false);
+        }}
+      />
+
+      <OtherCustomizationEditDrawer
+        open={isOtherCustomizationDrawerOpen}
+        sparkProperties={sparkProperties}
+        labels={labels}
+        onClose={() => setIsOtherCustomizationDrawerOpen(false)}
+        onSave={(updatedSparkProperties, updatedLabels) => {
+          setSparkProperties(updatedSparkProperties);
+          setLabels(updatedLabels);
+          setIsOtherCustomizationDrawerOpen(false);
+        }}
+      />
     </div>
   );
 };
@@ -1526,6 +1565,9 @@ export {
   SectionDetail,
   RuntimeEnvironmentEditDrawer,
   ExecutorAndDriverEditDrawer,
+  AutoscalingEditDrawer,
+  SessionLifecycleEditDrawer,
+  OtherCustomizationEditDrawer,
   SelectBucketEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   RuntimeProfileSummary,

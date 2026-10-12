@@ -49,6 +49,9 @@ import {
   CreateRuntimeProfileComponent,
   ExecutorAndDriverEditDrawer,
   RuntimeEnvironmentEditDrawer,
+  AutoscalingEditDrawer,
+  SessionLifecycleEditDrawer,
+  OtherCustomizationEditDrawer,
   generateRandomHex,
   RuntimeProfileSummary,
   formatRuntimeProfileSummaryProperties,
@@ -166,11 +169,11 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(editButtons).toHaveLength(7);
     expect(editButtons[0].getAttribute('aria-disabled')).toBe('false');
     expect(editButtons[1].getAttribute('aria-disabled')).toBe('false');
-    Array.from(editButtons)
-      .slice(2)
-      .forEach(btn => {
-        expect(btn.getAttribute('aria-disabled')).toBe('true');
-      });
+    expect(editButtons[2].getAttribute('aria-disabled')).toBe('false');
+    expect(editButtons[3].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[4].getAttribute('aria-disabled')).toBe('true');
+    expect(editButtons[5].getAttribute('aria-disabled')).toBe('false');
+    expect(editButtons[6].getAttribute('aria-disabled')).toBe('false');
 
     const displayNameInput = container.querySelector(
       '#runtime-profile-display-name'
@@ -1633,6 +1636,109 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(getProfileTierSummaryValue()).toBe(
       'Premium (Lightning Engine enabled)'
     );
+  });
+
+  it('validates Autoscaling, SessionLifecycle, and OtherCustomization edit drawers', async () => {
+    expect(AutoscalingEditDrawer).toBeDefined();
+    expect(SessionLifecycleEditDrawer).toBeDefined();
+    expect(OtherCustomizationEditDrawer).toBeDefined();
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const editButtons = container.querySelectorAll(
+      '.section-detail-edit-button'
+    );
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+    const getSaveBtn = () =>
+      Array.from(document.body.querySelectorAll('.edit-drawer-footer button'))
+        .filter(b => b.textContent?.trim() === 'Save')
+        .pop() as HTMLButtonElement;
+
+    // 1. Autoscaling drawer validation
+    await act(async () => {
+      (editButtons[2] as HTMLButtonElement).click();
+    });
+    const initExecInput = document.body.querySelector(
+      '#edit-initial-executors'
+    ) as HTMLInputElement;
+    await act(async () => {
+      nativeInputValueSetter?.call(initExecInput, '****');
+      initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#initial-executors-error-text')?.textContent
+    ).toBe('Initial executors must be an integer.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    await act(async () => {
+      nativeInputValueSetter?.call(initExecInput, '-2');
+      initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#initial-executors-error-text')?.textContent
+    ).toBe('Initial executors must be greater than or equal to 2.');
+
+    await act(async () => {
+      nativeInputValueSetter?.call(initExecInput, '4');
+      initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#initial-executors-error-text')
+    ).toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(false);
+    await act(async () => {
+      getSaveBtn().click();
+    });
+
+    // 2. Session lifecycle drawer validation
+    await act(async () => {
+      (editButtons[5] as HTMLButtonElement).click();
+    });
+    const idleQtyInput = document.body.querySelector(
+      '#edit-max-idle-time-quantity'
+    ) as HTMLInputElement;
+    await act(async () => {
+      nativeInputValueSetter?.call(idleQtyInput, '-1');
+      idleQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#max-idle-time-quantity-error-text')
+        ?.textContent
+    ).toBe('Max idle time quantity must be greater than or equal to 0.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    await act(async () => {
+      nativeInputValueSetter?.call(idleQtyInput, '30');
+      idleQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(getSaveBtn()?.disabled).toBe(false);
+    await act(async () => {
+      getSaveBtn().click();
+    });
+
+    // 3. Other customizations drawer validation
+    await act(async () => {
+      (editButtons[6] as HTMLButtonElement).click();
+    });
+    const addBtns = Array.from(
+      document.body.querySelectorAll('.edit-drawer-add-btn')
+    ) as HTMLButtonElement[];
+    await act(async () => {
+      addBtns[0].click();
+      addBtns[1].click();
+    });
+    expect(document.body.querySelector('#spark-key-error-0')?.textContent).toBe(
+      'Key is required'
+    );
+    expect(document.body.querySelector('#label-key-error-0')?.textContent).toBe(
+      'Key is required'
+    );
+    expect(getSaveBtn()?.disabled).toBe(true);
   });
 
   it('should calculate runtime pricing estimate DCU values across machine shapes and autoscaling configurations', () => {
