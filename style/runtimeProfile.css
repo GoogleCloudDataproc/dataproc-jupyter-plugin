@@ -16,9 +16,11 @@
  */
 
 .runtime-profile-main-wrapper {
+  width: 100%;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  box-sizing: border-box;
   background-color: var(--jp-layout-color1, #ffffff);
   font-family: var(
     --jp-ui-font-family,
@@ -30,8 +32,12 @@
 }
 
 .runtime-profile-container {
-  padding: 20px 24px 32px 20px;
-  max-width: 720px;
+  padding: 24px 16px 40px 32px;
+  max-width: 668px;
+  flex: 0 1 668px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .runtime-profile-intro-text {
@@ -889,4 +895,100 @@ body[data-jp-theme-light='false']
   svg
   path {
   fill: var(--jp-brand-color1, #8ab4f8);
+}
+
+.runtime-profile-content-layout {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 48px;
+}
+
+.runtime-profile-right-panel {
+  flex: 0 1 400px;
+  width: 400px;
+  min-width: 320px;
+  max-width: 100%;
+  padding: 24px 24px 40px 0;
+  box-sizing: border-box;
+}
+
+.runtime-profile-summary-pricing-card {
+  border: 1px solid #d8e2ef;
+  border-radius: 12px;
+  padding: 24px 22px;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.runtime-summary-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: #1f3057;
+  margin-bottom: 14px;
+}
+
+.runtime-summary-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.runtime-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eef2f6;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.runtime-summary-row:first-child {
+  padding-top: 4px;
+}
+
+.runtime-summary-row:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.runtime-summary-label {
+  color: #475467;
+  font-weight: 400;
+  flex: 0 0 100px;
+}
+
+.runtime-summary-value {
+  color: #1f3057;
+  font-weight: 600;
+  text-align: right;
+  flex: 1;
+  max-width: 235px;
+  margin-left: auto;
+  word-break: break-word;
+}
+
+/* Dark theme: use JupyterLab default theme variables */
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-profile-summary-pricing-card {
+  background-color: var(--jp-layout-color0);
+  border-color: var(--jp-border-color1);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-title,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-value {
+  color: var(--jp-ui-font-color0);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-label {
+  color: var(--jp-ui-font-color2);
+}
+
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-row {
+  border-bottom-color: var(--jp-border-color2);
 }

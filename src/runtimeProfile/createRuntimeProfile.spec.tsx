@@ -43,11 +43,15 @@ jest.mock('../utils/utils', () => ({
 
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
+import ReactDOMServer from 'react-dom/server';
+import { ISectionProperty } from '../controls/SectionDetail';
 import {
   CreateRuntimeProfileComponent,
   ExecutorAndDriverEditDrawer,
   RuntimeEnvironmentEditDrawer,
   generateRandomHex,
+  RuntimeProfileSummary,
+  formatRuntimeProfileSummaryProperties,
   renderGroupedMachineOptions
 } from './createRuntimeProfile';
 import {
@@ -1394,5 +1398,83 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     });
     // Unchecked state must be preserved
     expect(getDrawerCheckbox()?.checked).toBe(false);
+  });
+
+  it('should format runtime profile summary rows matching the screenshot', () => {
+    const rows: ISectionProperty[] = formatRuntimeProfileSummaryProperties({
+      tier: 'Premium',
+      lightningEngineEnabled: true,
+      regionDisplayName: 'us-central1 (Iowa)',
+      runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
+      executorMachineType: 'highmem-4',
+      executorDisk: 'SSD (premium), 375 GiB',
+      separateDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 2,
+      maxExecutors: 300,
+      metastore: 'Lakehouse runtime catalog',
+      projectId: 'frontrow-team'
+    });
+
+    expect(rows).toHaveLength(7);
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Profile tier')?.value
+    ).toBe('Premium (Lightning Engine enabled)');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Region')?.value
+    ).toBe('us-central1 (Iowa)');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Version')?.value
+    ).toBe('2.3 LTS (Spark 3.5.1, Python 3.12)');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Executor node')?.value
+    ).toBe('Min: 2, Max: 300 x highmem-4 (4 vCPU, 32 GB), 375 GB SSD');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Driver node')?.value
+    ).toBe('Same as executor');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Autoscaling')?.value
+    ).toBe('Enabled (Min: 2, Max: 300)');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Metastore')?.value
+    ).toBe('Lakehouse runtime catalog (frontrow-team)');
+  });
+
+  it('should render standalone RuntimeProfileSummary component with edit-drawer styling and inject it into CreateRuntimeProfileComponent by default when EditDrawer is closed', () => {
+    expect(RuntimeProfileSummary).toBeDefined();
+
+    const summaryMarkup = ReactDOMServer.renderToStaticMarkup(
+      <RuntimeProfileSummary
+        summaryInput={{
+          tier: 'Premium',
+          lightningEngineEnabled: true,
+          regionDisplayName: 'us-central1 (Iowa)',
+          runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
+          executorMachineType: 'highmem-4',
+          executorDisk: 'SSD (premium), 375 GiB',
+          separateDriverConfig: false,
+          autoscalingEnabled: true,
+          initialExecutors: 5,
+          minExecutors: 2,
+          maxExecutors: 300,
+          metastore: 'Lakehouse runtime catalog',
+          projectId: 'frontrow-team'
+        }}
+      />
+    );
+    expect(summaryMarkup).toContain('runtime-summary-section');
+    expect(summaryMarkup).toContain('Summary');
+    expect(summaryMarkup).toContain('Premium (Lightning Engine enabled)');
+    expect(summaryMarkup).toContain('Same as executor');
+
+    const injectedCreateMarkup = ReactDOMServer.renderToStaticMarkup(
+      <CreateRuntimeProfileComponent
+        SummaryComponent={RuntimeProfileSummary}
+      />
+    );
+    expect(injectedCreateMarkup).toContain(
+      'data-testid="runtime-profile-summary-section"'
+    );
   });
 });

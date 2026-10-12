@@ -72,6 +72,7 @@ export interface IExecutorAndDriverConfig {
   tier?: string;
   driverMachineType?: string;
   driverDisk?: string;
+  separateDriverConfig?: boolean;
   executorType?: ExecutorType;
   executorDisk?: string;
   useDifferentDriverConfig?: boolean;
@@ -106,6 +107,29 @@ export interface IExecutorAndDriverEditDrawerProps {
   onClose: () => void;
   onSave: (updatedConfig: IExecutorAndDriverConfig) => void;
   availableMachineTypes?: IMachineTypeOption[];
+}
+
+/** Backward-compatibility aliases */
+export type IDriverAndExecutorConfiguration = IExecutorAndDriverConfig;
+export type IDriverConfig = IExecutorAndDriverConfig;
+export type IExecutorDiskConfig = IExecutorAndDriverConfig;
+
+export interface IRuntimeProfileSummaryInput {
+  tier?: string;
+  lightningEngineEnabled?: boolean;
+  regionDisplayName?: string;
+  runtimeVersion?: string;
+  executorMachineType?: string;
+  executorDisk?: string;
+  driverMachineType?: string;
+  driverDisk?: string;
+  separateDriverConfig?: boolean;
+  autoscalingEnabled?: boolean;
+  initialExecutors?: number;
+  minExecutors?: number;
+  maxExecutors?: number;
+  metastore?: string;
+  projectId?: string;
 }
 
 export interface IAutoscalingConfig {
