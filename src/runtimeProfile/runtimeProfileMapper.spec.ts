@@ -32,9 +32,18 @@ import {
   sanitizeSessionTemplateId,
   parseMachineTypeSpec,
   parseDiskSpec,
-  mapRuntimeProfileToSessionTemplate
+  mapRuntimeProfileToSessionTemplate,
+  getDefaultLakehouseCatalogName,
+  ISessionTemplateApiPayload,
+  LAKEHOUSE_CATALOG_PROPERTY_PREFIX,
+  LAKEHOUSE_DEFAULT_CATALOG_PROPERTY,
+  LAKEHOUSE_PROJECT_PROPERTY,
+  LAKEHOUSE_RUNTIME_CATALOG
 } from './runtimeProfileMapper';
-import { ICreateRuntimeProfilePayload } from './runtimeProfileInterface';
+import {
+  ICreateRuntimeProfilePayload,
+  IMetastoreConfig
+} from './runtimeProfileInterface';
 import {
   DATAPROC_LIGHTNING_ENGINE_PROPERTY,
   DATAPROC_TIER_PROPERTY
@@ -342,6 +351,194 @@ describe('runtimeProfileMapper', () => {
       expect(props?.['spark.dynamicAllocation.enabled']).toBe('true');
       // Tier is an explicit UI control and intentionally overrides sparkProperties
       expect(props?.[DATAPROC_TIER_PROPERTY]).toBe('premium');
+    });
+
+    describe('metastore configuration', () => {
+      const mapMetastore = (
+        metastoreConfig: IMetastoreConfig,
+        extra: Partial<ICreateRuntimeProfilePayload> = {}
+      ): ISessionTemplateApiPayload =>
+        mapRuntimeProfileToSessionTemplate(
+          {
+            displayName: 'Metastore Profile',
+            region: 'us-central1',
+            metastoreConfig,
+            ...extra
+          },
+          'test-project',
+          'us-central1'
+        );
+
+      // Metastore-related runtime properties of a mapped payload.
+      const metastoreProps = (result: ISessionTemplateApiPayload) =>
+        Object.fromEntries(
+          Object.entries(result.runtimeConfig?.properties ?? {}).filter(
+            ([key]) =>
+              key.includes('lakehouse') || key.startsWith('spark.sql.catalog')
+          )
+        );
+
+      it('sends no metastore settings for the untouched default config', () => {
+        const result = mapMetastore({
+          metastore: '',
+          hiveEndpointEnabled: false
+        });
+
+        expect(metastoreProps(result)).toEqual({});
+        expect(result.environmentConfig).toBeUndefined();
+      });
+
+      it('maps a new default catalog with a custom name', () => {
+        const result = mapMetastore({
+          metastore: LAKEHOUSE_RUNTIME_CATALOG,
+          metastoreType: 'lakehouse',
+          icebergRestEndpointEnabled: true,
+          catalogSelectionMode: 'new',
+          catalogName: 'sales_catalog'
+        });
+
+        // No spark.sql.catalog.* properties: the service sets up the catalog.
+        expect(metastoreProps(result)).toEqual({
+          [LAKEHOUSE_PROJECT_PROPERTY]: 'test-project',
+          [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}sales_catalog`]:
+            'projects/test-project/catalogs/sales_catalog',
+          [LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]: 'sales_catalog'
+        });
+      });
+
+      it("names the new default catalog after the profile's region when no name is saved", () => {
+        const result = mapMetastore(
+          {
+            metastoreType: 'lakehouse',
+            icebergRestEndpointEnabled: true,
+            catalogSelectionMode: 'new'
+          },
+          { region: 'europe-west1' }
+        );
+
+        expect(getDefaultLakehouseCatalogName('europe-west1')).toBe(
+          'standard-lh-catalog-europe-west1'
+        );
+        expect(
+          result.runtimeConfig?.properties?.[LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]
+        ).toBe('standard-lh-catalog-europe-west1');
+      });
+
+      it('maps an existing catalog in another project as the default catalog', () => {
+        const result = mapMetastore({
+          metastoreType: 'lakehouse',
+          icebergRestEndpointEnabled: true,
+          catalogSelectionMode: 'existing',
+          catalogId: 'my_catalog',
+          projectId: 'custom-project'
+        });
+
+        expect(metastoreProps(result)).toEqual({
+          [LAKEHOUSE_PROJECT_PROPERTY]: 'custom-project',
+          [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}my_catalog`]:
+            'projects/custom-project/catalogs/my_catalog',
+          [LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]:
+            'projects/custom-project/catalogs/my_catalog'
+        });
+      });
+
+      it('uses only the Hive fields when only the Hive endpoint is enabled', () => {
+        // Hidden Iceberg values must not leak into a Hive-only payload.
+        const result = mapMetastore({
+          metastoreType: 'lakehouse',
+          icebergRestEndpointEnabled: false,
+          projectId: 'hidden-iceberg-project',
+          catalogSelectionMode: 'existing',
+          catalogId: 'hidden_catalog',
+          hiveEndpointEnabled: true,
+          hiveProjectId: 'analytics-prod',
+          hiveCatalogId: 'shared-hive-catalog',
+          hiveCatalogName: 'shared_hive'
+        });
+
+        expect(metastoreProps(result)).toEqual({
+          [LAKEHOUSE_PROJECT_PROPERTY]: 'analytics-prod',
+          [`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}shared_hive`]:
+            'projects/analytics-prod/catalogs/shared-hive-catalog'
+        });
+      });
+
+      it('registers the Hive catalog without changing the Iceberg default catalog', () => {
+        const result = mapMetastore({
+          metastoreType: 'lakehouse',
+          icebergRestEndpointEnabled: true,
+          catalogSelectionMode: 'new',
+          catalogName: 'default_catalog',
+          hiveEndpointEnabled: true,
+          hiveProjectId: 'hive-project',
+          hiveCatalogName: 'hive_alias'
+        });
+        const props = result.runtimeConfig?.properties;
+
+        expect(props?.[LAKEHOUSE_PROJECT_PROPERTY]).toBe('test-project');
+        expect(props?.[LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]).toBe(
+          'default_catalog'
+        );
+        // Without a Hive catalog ID, the name is used as the ID.
+        expect(props?.[`${LAKEHOUSE_CATALOG_PROPERTY_PREFIX}hive_alias`]).toBe(
+          'projects/hive-project/catalogs/hive_alias'
+        );
+      });
+
+      it("keeps the user's own Spark properties", () => {
+        const result = mapMetastore(
+          {
+            metastoreType: 'lakehouse',
+            icebergRestEndpointEnabled: true,
+            catalogSelectionMode: 'new',
+            catalogName: 'sales_catalog'
+          },
+          {
+            sparkProperties: {
+              [LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]: 'user_catalog'
+            }
+          }
+        );
+
+        expect(
+          result.runtimeConfig?.properties?.[LAKEHOUSE_DEFAULT_CATALOG_PROPERTY]
+        ).toBe('user_catalog');
+      });
+
+      it('maps a Dataproc Metastore service to peripheralsConfig', () => {
+        const service =
+          'projects/test-project/locations/us-central1/services/my-dpms';
+        const result = mapMetastore({
+          metastoreType: 'dataproc',
+          dataprocMetastoreService: service
+        });
+
+        expect(
+          result.environmentConfig?.peripheralsConfig?.metastoreService
+        ).toBe(service);
+      });
+
+      it('ignores Lakehouse values and sends no service for Dataproc Metastore with None', () => {
+        const result = mapMetastore({
+          metastoreType: 'dataproc',
+          icebergRestEndpointEnabled: true,
+          hiveEndpointEnabled: true,
+          hiveCatalogName: 'leftover'
+        });
+
+        expect(metastoreProps(result)).toEqual({});
+        expect(result.environmentConfig).toBeUndefined();
+      });
+
+      it('does not send a Dataproc Metastore service for the Lakehouse runtime catalog', () => {
+        const result = mapMetastore({
+          metastoreType: 'lakehouse',
+          dataprocMetastoreService:
+            'projects/test-project/locations/us-central1/services/leftover'
+        });
+
+        expect(result.environmentConfig).toBeUndefined();
+      });
     });
   });
 });

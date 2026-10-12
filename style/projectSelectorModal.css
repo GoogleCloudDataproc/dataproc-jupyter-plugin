@@ -1,0 +1,225 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.project-selector-dialog-paper {
+  border-radius: 8px !important;
+  width: 580px !important;
+  max-width: 90vw !important;
+  font-family: Roboto,
+    var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, sans-serif) !important;
+  background-color: var(--jp-layout-color1, #ffffff) !important;
+  color: var(--jp-ui-font-color0, #202124) !important;
+}
+
+.project-selector-dialog-header {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 16px 24px !important;
+  border-bottom: 1px solid var(--jp-border-color2, #e0e0e0);
+}
+
+.project-selector-title-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--jp-ui-font-color0, #202124);
+}
+
+.project-selector-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--jp-ui-font-color2, #5f6368);
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.project-selector-close-btn:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+  color: var(--jp-ui-font-color0, #202124);
+}
+
+.project-selector-dialog-content {
+  padding: 16px 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 440px !important;
+}
+
+.project-selector-search-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--jp-border-color1, #dadce0);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  background-color: var(--jp-layout-color0, #ffffff);
+}
+
+.project-selector-search-box:focus-within {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 1px #1a73e8;
+}
+
+.project-selector-search-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  opacity: 0.65;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-selector-search-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.project-selector-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 13px;
+  color: var(--jp-ui-font-color0, #202124);
+  font-family: inherit;
+}
+
+.project-selector-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 0;
+  font-size: 13px;
+  color: var(--jp-ui-font-color2, #5f6368);
+}
+
+.project-selector-empty {
+  text-align: center;
+  padding: 36px 0;
+  font-size: 13px;
+  color: var(--jp-ui-font-color2, #5f6368);
+}
+
+.project-selector-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 280px;
+}
+
+.project-selector-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.12s ease-in-out;
+}
+
+.project-selector-item:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+}
+
+.project-selector-item.selected {
+  background-color: rgba(26, 115, 232, 0.08);
+}
+
+.project-selector-radio {
+  padding: 4px !important;
+}
+
+.project-selector-item-info {
+  flex: 1;
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-selector-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--jp-ui-font-color0, #202124);
+}
+
+.project-selector-item-id {
+  font-size: 12px;
+  font-family: Roboto Mono, monospace;
+  color: var(--jp-ui-font-color2, #5f6368);
+  margin-top: 1px;
+}
+
+.project-selector-item-number {
+  font-size: 12px;
+  color: var(--jp-ui-font-color2, #5f6368);
+  margin-left: 12px;
+  white-space: nowrap;
+}
+
+.project-selector-dialog-actions {
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--jp-border-color2, #e0e0e0);
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px;
+}
+
+.project-selector-cancel-btn {
+  height: 36px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid var(--jp-border-color1, #dadce0);
+  border-radius: 4px;
+  color: var(--jp-ui-font-color0, #3c4043);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.project-selector-cancel-btn:hover {
+  background-color: var(--jp-layout-color2, #f1f3f4);
+}
+
+.project-selector-submit-btn {
+  height: 36px;
+  padding: 0 20px;
+  background-color: #1a73e8;
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.project-selector-submit-btn:hover:not(:disabled) {
+  background-color: #1557b0;
+}
+
+.project-selector-submit-btn:disabled {
+  background-color: rgba(60, 64, 67, 0.12);
+  color: rgba(60, 64, 67, 0.38);
+  cursor: not-allowed;
+}
