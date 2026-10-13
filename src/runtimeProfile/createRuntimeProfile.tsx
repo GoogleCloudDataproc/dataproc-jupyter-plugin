@@ -106,13 +106,12 @@ import {
 import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
 import { authApi, IAuthCredentials } from '../utils/utils';
 import {
+  ALL_MACHINE_TYPES,
   DEFAULT_INITIAL_EXECUTORS,
   DEFAULT_MAX_EXECUTORS,
   DEFAULT_MIN_EXECUTORS,
   formatCompactDiskLabel,
-  formatDiskSummary,
-  getMachineTypeDisplayName,
-  MACHINE_SHAPE_DISPLAY_NAMES,
+  getMachineTypeLabel,
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,
@@ -183,15 +182,6 @@ export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   stagingBucket: '',
   pythonPackageRepository: ''
 };
-
-const ALL_MACHINE_TYPES: IMachineTypeOption[] = [
-  ...DATAPROC_STANDARD_MACHINE_TYPES,
-  ...DATAPROC_ACCELERATED_MACHINE_TYPES
-];
-
-// Display-only: maps a machine id (e.g. 'highmem-4') to its label; falls back to the raw value.
-const getMachineTypeLabel = (machineName?: string): string | undefined =>
-  ALL_MACHINE_TYPES.find(m => m.name === machineName)?.label ?? machineName;
 
 export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
   tier: 'Standard',
@@ -814,16 +804,14 @@ export const CreateRuntimeProfileComponent: React.FC<
       regionDisplayName: selectedRegionDisplayName,
       runtimeVersion:
         RUNTIME_VERSION_DISPLAY_MAP[
-          runtimeEnvironmentConfig.runtimeVersion || ''
-        ] || runtimeEnvironmentConfig.runtimeVersion,
+          activeRuntimeEnvironmentConfig.runtimeVersion || ''
+        ] || activeRuntimeEnvironmentConfig.runtimeVersion,
       executorMachineType: executorType,
       executorDisk: executorAndDriverConfig.executorDisk,
       driverMachineType: executorAndDriverConfig.driverMachineType,
       driverDisk: executorAndDriverConfig.driverDisk,
-      separateDriverConfig: Boolean(
-        executorAndDriverConfig.separateDriverConfig ??
-          executorAndDriverConfig.useDifferentDriverConfig
-      ),
+      useDifferentDriverConfig:
+        executorAndDriverConfig.useDifferentDriverConfig,
       autoscalingEnabled: autoscalingConfig.autoscalingEnabled,
       initialExecutors: autoscalingConfig.initialExecutors,
       minExecutors: autoscalingConfig.minExecutors,
@@ -835,12 +823,11 @@ export const CreateRuntimeProfileComponent: React.FC<
       tier,
       lightningEngineEnabled,
       selectedRegionDisplayName,
-      runtimeEnvironmentConfig.runtimeVersion,
+      activeRuntimeEnvironmentConfig.runtimeVersion,
       executorType,
       executorAndDriverConfig.executorDisk,
       executorAndDriverConfig.driverMachineType,
       executorAndDriverConfig.driverDisk,
-      executorAndDriverConfig.separateDriverConfig,
       executorAndDriverConfig.useDifferentDriverConfig,
       autoscalingConfig.autoscalingEnabled,
       autoscalingConfig.initialExecutors,
@@ -1484,11 +1471,10 @@ export {
   RUNTIME_VERSION_OPTIONS,
   RuntimeProfileSummary,
   formatRuntimeProfileSummaryProperties,
-  getMachineTypeDisplayName,
-  formatDiskSummary,
+  ALL_MACHINE_TYPES,
+  getMachineTypeLabel,
   formatCompactDiskLabel,
   parseExecutorCount,
-  MACHINE_SHAPE_DISPLAY_NAMES,
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,

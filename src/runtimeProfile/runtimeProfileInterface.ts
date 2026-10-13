@@ -72,7 +72,6 @@ export interface IExecutorAndDriverConfig {
   tier?: string;
   driverMachineType?: string;
   driverDisk?: string;
-  separateDriverConfig?: boolean;
   executorType?: ExecutorType;
   executorDisk?: string;
   useDifferentDriverConfig?: boolean;
@@ -123,7 +122,7 @@ export interface IRuntimeProfileSummaryInput {
   executorDisk?: string;
   driverMachineType?: string;
   driverDisk?: string;
-  separateDriverConfig?: boolean;
+  useDifferentDriverConfig?: boolean;
   autoscalingEnabled?: boolean;
   initialExecutors?: number;
   minExecutors?: number;

@@ -18,17 +18,18 @@
 import React from 'react';
 import { ISectionProperty } from '../controls/SectionDetail';
 import { IRuntimeProfileSummaryInput } from './runtimeProfileInterface';
+import { normalizeMachineTypeName } from './runtimeProfileMapper';
 import {
+  ALL_MACHINE_TYPES,
   DEFAULT_EMPTY_DISPLAY_VALUE,
   DEFAULT_INITIAL_EXECUTORS,
   DEFAULT_MAX_EXECUTORS,
   DEFAULT_MIN_EXECUTORS,
   formatCompactDiskLabel,
-  getMachineTypeDisplayName,
+  getMachineTypeLabel,
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,
-  normalizeMachineShapeKey,
   parseExecutorCount,
   TIER_PREMIUM
 } from './runtimeProfileConstants';
@@ -73,9 +74,12 @@ export function formatRuntimeProfileSummaryProperties(
     DEFAULT_INITIAL_EXECUTORS
   );
 
-  const executorDisplayName = getMachineTypeDisplayName(
-    input.executorMachineType || ''
-  );
+  const normalizedExecutorShape = input.executorMachineType?.trim()
+    ? normalizeMachineTypeName(input.executorMachineType, ALL_MACHINE_TYPES)
+    : undefined;
+  const executorDisplayName = normalizedExecutorShape
+    ? getMachineTypeLabel(normalizedExecutorShape) || ''
+    : '';
   const compactDisk = formatCompactDiskLabel(input.executorDisk);
   const executorTarget = [executorDisplayName, compactDisk]
     .filter(Boolean)
@@ -89,19 +93,18 @@ export function formatRuntimeProfileSummaryProperties(
     : executorPrefix;
 
   // 5. Driver node
-  const normalizedDriverShape = normalizeMachineShapeKey(
-    input.driverMachineType
-  );
-  const normalizedExecutorShape = normalizeMachineShapeKey(
-    input.executorMachineType
-  );
+  const normalizedDriverShape = input.driverMachineType?.trim()
+    ? normalizeMachineTypeName(input.driverMachineType, ALL_MACHINE_TYPES)
+    : undefined;
   const isSameDriver =
-    input.separateDriverConfig === false ||
-    (!input.separateDriverConfig &&
-      (!input.driverMachineType ||
+    input.useDifferentDriverConfig === false ||
+    (!input.useDifferentDriverConfig &&
+      (!normalizedDriverShape ||
         normalizedDriverShape === normalizedExecutorShape));
 
-  const driverDisplayName = getMachineTypeDisplayName(input.driverMachineType);
+  const driverDisplayName = normalizedDriverShape
+    ? getMachineTypeLabel(normalizedDriverShape) || ''
+    : '';
   const driverDiskLabel = formatCompactDiskLabel(
     input.driverDisk || input.executorDisk
   );
