@@ -32,13 +32,22 @@ import {
   DEFAULT_SSD_DISK_SIZE,
   DISK_TIER_HDD,
   DISK_TIER_SSD,
+  ExecutorCategoryType,
   HDD_DISK_SIZES,
+  IAutoscalingConfig,
   ICreateRuntimeProfilePayload,
   IExecutorAndDriverConfig,
   IExecutorAndDriverDraftConfig,
   IMachineTypeOption,
-  SSD_DISK_SIZES
+  IRuntimeProfileFormInitialValues,
+  SSD_DISK_SIZES,
+  SparkProperties,
+  TimeUnit
 } from './runtimeProfileInterface';
+import {
+  IRuntimeProfileTemplate,
+  parseRuntimeProfileResourceName
+} from './runtimeProfileListMapper';
 
 // Lakehouse runtime catalog properties. Like DATAPROC_TIER_PROPERTY, the keys
 // without the `spark.` prefix are read by the Dataproc service, not by Spark.
@@ -967,3 +976,371 @@ export const getDiskHelperText = (
   }
   return DISK_HELPER_TEXT_DEFAULT;
 };
+
+/** Property key without the `spark:` / `dataproc:` prefix the API may return. */
+const normalizePropertyKey = (key: string): string =>
+  key.replace(/^(?:spark|dataproc):/, '');
+
+/** Spark properties that mapRuntimeProfileToSessionTemplate derives from form controls. */
+const FORM_DERIVED_PROPERTY_KEYS = new Set<string>([
+  DATAPROC_TIER_PROPERTY,
+  DATAPROC_LIGHTNING_ENGINE_PROPERTY,
+  'spark.dynamicAllocation.enabled',
+  'spark.dynamicAllocation.initialExecutors',
+  'spark.dynamicAllocation.minExecutors',
+  'spark.dynamicAllocation.maxExecutors',
+  'spark.driver.cores',
+  'spark.driver.memory',
+  'spark.dataproc.driver.compute.tier',
+  'spark.dataproc.driver.disk.tier',
+  'spark.dataproc.driver.disk.size',
+  'spark.executor.cores',
+  'spark.executor.memory',
+  'spark.dataproc.executor.compute.tier',
+  'spark.dataproc.executor.resource.accelerator.type',
+  'spark.dataproc.executor.disk.tier',
+  'spark.dataproc.executor.disk.size'
+]);
+
+const LAKEHOUSE_CATALOG_PREFIX = 'dataproc.lakehouse.catalog.';
+
+/** Known machine type with the given Spark cores and memory, e.g. 4 and '32g' -> highmem-4. */
+const findMachineType = (
+  cores: string | undefined,
+  memory: string | undefined,
+  category: ExecutorCategoryType
+): IMachineTypeOption | undefined => {
+  const memoryMb = memory ? memoryToMb(memory) : 0;
+  if (!cores || !memoryMb) {
+    return undefined;
+  }
+  return KNOWN_MACHINE_TYPES.find(
+    machine =>
+      machine.category === category &&
+      String(machine.vCPUs) === cores &&
+      memoryToMb(machine.memory) === memoryMb
+  );
+};
+
+/**
+ * Disk label that parseDiskSpec reads back to the same tier and size, e.g.
+ * 'standard' + '400g' -> 'Standard persistent disk, 400 GB'. Undefined when the
+ * values can't be represented that way.
+ */
+const formatDiskSpec = (tier?: string, size?: string): string | undefined => {
+  const normalizedTier = tier?.toLowerCase();
+  const sizeMatch = size?.match(/^(\d+)\s*g(?:i?b)?$/i);
+  if (
+    (normalizedTier !== 'standard' && normalizedTier !== 'premium') ||
+    !sizeMatch
+  ) {
+    return undefined;
+  }
+  const tierLabel = normalizedTier === 'premium' ? 'Premium' : 'Standard';
+  return `${tierLabel} persistent disk, ${sizeMatch[1]} GB`;
+};
+
+const DURATION_UNITS: Array<[number, TimeUnit]> = [
+  [86400, 'days'],
+  [3600, 'hours'],
+  [60, 'minutes'],
+  [1, 'seconds']
+];
+
+/** Splits a duration such as '3600s' into its largest whole unit (1 hour). */
+const parseDuration = (
+  duration?: string
+): { quantity: number; unit: TimeUnit; label: string } | undefined => {
+  const match = duration?.trim().match(/^(\d+)(?:\.\d+)?s$/);
+  if (!match) {
+    return undefined;
+  }
+  const seconds = Number(match[1]);
+  const [divisor, unit] =
+    DURATION_UNITS.find(([unitSeconds]) => seconds % unitSeconds === 0) ??
+    DURATION_UNITS[DURATION_UNITS.length - 1];
+  const quantity = seconds / divisor;
+  const unitLabel = quantity === 1 ? unit.slice(0, -1) : unit;
+  return { quantity, unit, label: `${quantity} ${unitLabel}` };
+};
+
+/**
+ * Maps an existing session template to the runtime profile form's initial
+ * values (the reverse of mapRuntimeProfileToSessionTemplate), so the form can
+ * open in edit mode pre-filled with the profile's settings.
+ *
+ * Spark properties that a form control owns (tier, Lightning Engine, executor
+ * and driver shape, disks, autoscaling) are mapped into that control's config.
+ * All other properties stay in initialSparkProperties under their original
+ * keys. A derived property that its control can't represent also stays there,
+ * so it is saved unchanged.
+ */
+export function mapSessionTemplateToFormValues(
+  template: IRuntimeProfileTemplate
+): IRuntimeProfileFormInitialValues {
+  const { region, profileId } = parseRuntimeProfileResourceName(template.name);
+  const rawProperties = template.runtimeConfig?.properties ?? {};
+
+  // Lookup by unprefixed key; an unprefixed key wins over its prefixed variants.
+  const properties: Record<string, string> = {};
+  Object.entries(rawProperties).forEach(([key, value]) => {
+    const normalizedKey = normalizePropertyKey(key);
+    if (key === normalizedKey || properties[normalizedKey] === undefined) {
+      properties[normalizedKey] = value;
+    }
+  });
+  const getProperty = (key: string): string | undefined =>
+    properties[key]?.trim() || undefined;
+  const mappedKeys = new Set<string>();
+  const markMapped = (...keys: string[]) =>
+    keys.forEach(key => mappedKeys.add(key));
+
+  // Dataproc defaults to the standard tier; Lightning Engine needs premium.
+  const lightningEngineEnabled =
+    getProperty(DATAPROC_LIGHTNING_ENGINE_PROPERTY) === 'lightningEngine';
+  const tierValue = getProperty(DATAPROC_TIER_PROPERTY)?.toLowerCase();
+  const tier =
+    tierValue === 'premium' || (!tierValue && lightningEngineEnabled)
+      ? 'Premium'
+      : 'Standard';
+  markMapped(DATAPROC_TIER_PROPERTY, DATAPROC_LIGHTNING_ENGINE_PROPERTY);
+
+  const executorCategory: ExecutorCategoryType = getProperty(
+    'spark.dataproc.executor.resource.accelerator.type'
+  )
+    ? 'accelerated'
+    : 'general';
+  const executorMachine = findMachineType(
+    getProperty('spark.executor.cores'),
+    getProperty('spark.executor.memory'),
+    executorCategory
+  );
+  if (executorMachine) {
+    markMapped(
+      'spark.executor.cores',
+      'spark.executor.memory',
+      'spark.dataproc.executor.compute.tier',
+      'spark.dataproc.executor.resource.accelerator.type'
+    );
+  }
+
+  const driverMachine = findMachineType(
+    getProperty('spark.driver.cores'),
+    getProperty('spark.driver.memory'),
+    'general'
+  );
+  if (driverMachine) {
+    markMapped('spark.driver.cores', 'spark.driver.memory');
+  }
+
+  const driverDisk = formatDiskSpec(
+    getProperty('spark.dataproc.driver.disk.tier'),
+    getProperty('spark.dataproc.driver.disk.size')
+  );
+  if (driverDisk) {
+    markMapped(
+      'spark.dataproc.driver.disk.tier',
+      'spark.dataproc.driver.disk.size'
+    );
+  }
+  const executorDisk = formatDiskSpec(
+    getProperty('spark.dataproc.executor.disk.tier'),
+    getProperty('spark.dataproc.executor.disk.size')
+  );
+  if (executorDisk) {
+    markMapped(
+      'spark.dataproc.executor.disk.tier',
+      'spark.dataproc.executor.disk.size'
+    );
+  }
+
+  const autoscalingConfig: IAutoscalingConfig = {};
+  const dynamicAllocation = getProperty(
+    'spark.dynamicAllocation.enabled'
+  )?.toLowerCase();
+  if (dynamicAllocation === 'true' || dynamicAllocation === 'false') {
+    autoscalingConfig.autoscalingEnabled = dynamicAllocation === 'true';
+    markMapped('spark.dynamicAllocation.enabled');
+  }
+  const executorCountKeys: Array<
+    ['initialExecutors' | 'minExecutors' | 'maxExecutors', string]
+  > = [
+    ['initialExecutors', 'spark.dynamicAllocation.initialExecutors'],
+    ['minExecutors', 'spark.dynamicAllocation.minExecutors'],
+    ['maxExecutors', 'spark.dynamicAllocation.maxExecutors']
+  ];
+  executorCountKeys.forEach(([field, key]) => {
+    const value = getProperty(key);
+    if (value && /^\d+$/.test(value)) {
+      autoscalingConfig[field] = Number(value);
+      markMapped(key);
+    }
+  });
+
+  // Derived keys that weren't mapped keep their unprefixed name, so the create
+  // mapping finds them and doesn't add a second, conflicting value.
+  const sparkProperties: SparkProperties = {};
+  Object.entries(rawProperties).forEach(([key, value]) => {
+    const normalizedKey = normalizePropertyKey(key);
+    if (mappedKeys.has(normalizedKey)) {
+      return;
+    }
+    if (FORM_DERIVED_PROPERTY_KEYS.has(normalizedKey)) {
+      sparkProperties[normalizedKey] = properties[normalizedKey];
+    } else {
+      sparkProperties[key] = value;
+    }
+  });
+
+  const executionConfig = template.environmentConfig?.executionConfig;
+  const authenticationType =
+    executionConfig?.authenticationConfig?.userWorkloadAuthenticationType;
+  const idleTtl = parseDuration(executionConfig?.idleTtl);
+  const sessionTtl = parseDuration(executionConfig?.ttl);
+  const defaultCatalog = getProperty('dataproc.lakehouse.defaultCatalog');
+  const hiveEndpointEnabled = Object.keys(properties).some(key => {
+    const catalog = key.startsWith(LAKEHOUSE_CATALOG_PREFIX)
+      ? key.slice(LAKEHOUSE_CATALOG_PREFIX.length)
+      : '';
+    return Boolean(catalog) && catalog !== defaultCatalog;
+  });
+
+  return {
+    initialDisplayName: template.jupyterSession?.displayName || profileId,
+    initialRegion: region,
+    initialDescription: template.description ?? '',
+    initialTier: tier,
+    initialLightningEngineEnabled: lightningEngineEnabled,
+    initialExecutorCategory: executorCategory,
+    initialExecutorType: executorMachine?.name,
+    initialRuntimeEnvironmentConfig: {
+      runtimeProfileId: profileId,
+      // Left undefined when unset, so saving doesn't pin a version.
+      runtimeVersion: template.runtimeConfig?.version,
+      customSparkImage: template.runtimeConfig?.containerImage ?? '',
+      stagingBucket: executionConfig?.stagingBucket ?? '',
+      pythonPackageRepository:
+        template.runtimeConfig?.repositoryConfig?.pypiRepositoryConfig
+          ?.pypiRepository ?? ''
+    },
+    initialExecutorAndDriverConfig: {
+      tier,
+      driverMachineType: driverMachine?.name,
+      driverDisk,
+      executorType: executorMachine?.name,
+      executorDisk
+    },
+    initialAutoscalingConfig: autoscalingConfig,
+    initialMetastoreConfig: {
+      metastore:
+        template.environmentConfig?.peripheralsConfig?.metastoreService,
+      hiveEndpointEnabled,
+      projectId: getProperty('spark.dataproc.lakehouse.project')
+    },
+    initialNetworkAndSecurityConfig: {
+      executionIdentity:
+        authenticationType === 'END_USER_CREDENTIALS'
+          ? 'user_account'
+          : authenticationType === 'SERVICE_ACCOUNT'
+          ? 'service_account'
+          : undefined,
+      networkInThisProject:
+        executionConfig?.subnetworkUri || executionConfig?.networkUri,
+      primaryNetwork: executionConfig?.networkUri,
+      subnetwork: executionConfig?.subnetworkUri,
+      networkTags: executionConfig?.networkTags,
+      encryption: executionConfig?.kmsKey
+        ? 'customer_managed_key'
+        : 'google_managed',
+      kmsKeyName: executionConfig?.kmsKey
+    },
+    initialSessionLifecycleConfig: {
+      maxIdleTime: idleTtl?.label,
+      maxIdleTimeQuantity: idleTtl?.quantity,
+      maxIdleTimeUnit: idleTtl?.unit,
+      maxSessionTime: sessionTtl?.label,
+      maxSessionTimeQuantity: sessionTtl?.quantity,
+      maxSessionTimeUnit: sessionTtl?.unit
+    },
+    initialSparkProperties: sparkProperties,
+    initialLabels: { ...template.labels }
+  };
+}
+
+/** Body of a sessionTemplates.patch request built by mapRuntimeProfileToSessionTemplateUpdate. */
+export interface ISessionTemplateUpdatePayload
+  extends ISessionTemplateApiPayload {
+  environmentConfig?: IRuntimeProfileTemplate['environmentConfig'];
+}
+
+/** Bucket name for executionConfig.stagingBucket; empty or 'Auto' means unset. */
+const normalizeStagingBucket = (bucket?: string): string | undefined => {
+  const name = bucket
+    ?.trim()
+    .replace(/^gs:\/\//, '')
+    .replace(/\/+$/, '');
+  return name && name.toLowerCase() !== 'auto' ? name : undefined;
+};
+
+/**
+ * Maps the edited form payload to the body of a sessionTemplates.patch request
+ * for `existingTemplate`, using the same mapping as create.
+ *
+ * PATCH replaces the whole template, so the body also keeps the profile's
+ * resource name (its ID and region can't change), its Jupyter kernel, and the
+ * settings this mapping doesn't produce yet: the environment config (network,
+ * KMS key, TTLs, metastore service) and any other runtime config fields. The
+ * staging bucket is taken from the form.
+ */
+export function mapRuntimeProfileToSessionTemplateUpdate(
+  payload: ICreateRuntimeProfilePayload,
+  existingTemplate: IRuntimeProfileTemplate
+): ISessionTemplateUpdatePayload {
+  const { region } = parseRuntimeProfileResourceName(existingTemplate.name);
+  const projectId = existingTemplate.name.split('/')[1] ?? '';
+  const mapped = mapRuntimeProfileToSessionTemplate(payload, projectId, region);
+
+  // Runtime config fields the mapping doesn't manage, e.g. autotuningConfig.
+  const otherRuntimeConfig: Record<string, unknown> = {
+    ...existingTemplate.runtimeConfig
+  };
+  ['version', 'containerImage', 'properties', 'repositoryConfig'].forEach(
+    field => delete otherRuntimeConfig[field]
+  );
+
+  const stagingBucket = normalizeStagingBucket(
+    payload.runtimeEnvironmentConfig?.stagingBucket
+  );
+  const executionConfig = {
+    ...existingTemplate.environmentConfig?.executionConfig
+  };
+  if (stagingBucket) {
+    executionConfig.stagingBucket = stagingBucket;
+  } else {
+    delete executionConfig.stagingBucket;
+  }
+  const hasEnvironmentConfig =
+    Boolean(existingTemplate.environmentConfig) || Boolean(stagingBucket);
+
+  return {
+    ...mapped,
+    name: existingTemplate.name,
+    jupyterSession: {
+      ...mapped.jupyterSession,
+      kernel:
+        existingTemplate.jupyterSession?.kernel || mapped.jupyterSession.kernel
+    },
+    runtimeConfig: {
+      ...otherRuntimeConfig,
+      ...mapped.runtimeConfig
+    } as ISessionTemplateApiPayload['runtimeConfig'],
+    ...(hasEnvironmentConfig
+      ? {
+          environmentConfig: {
+            ...existingTemplate.environmentConfig,
+            executionConfig
+          }
+        }
+      : {})
+  };
+}

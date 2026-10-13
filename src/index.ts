@@ -48,6 +48,7 @@ import {
 } from './utils/const';
 import { RuntimeTemplate } from './runtime/runtimeTemplate';
 import { CreateRuntimeProfile } from './runtimeProfile/createRuntimeProfile';
+import { IRuntimeProfileTemplate } from './runtimeProfile/runtimeProfileListMapper';
 import {
   IFileBrowserFactory,
   IDefaultFileBrowser
@@ -417,7 +418,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     app.docRegistry.addWidgetExtension(
       'Notebook',
-        new NotebookButtonExtension(
+      new NotebookButtonExtension(
         app as JupyterLab,
         launcher,
         themeManager
@@ -589,16 +590,14 @@ const extension: JupyterFrontEndPlugin<void> = {
       // Define the path to the 'bigQueryNotebookDownload' folder within the local application directory
 
       const urlParts = notebookUrl.split('/');
-      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${
-        urlParts[urlParts.length - 1]
-      }`;
+      const filePath = `${bigQueryNotebookDownloadFolderPath}${path.sep}${urlParts[urlParts.length - 1]
+        }`;
 
       const credentials = await authApi();
       if (credentials) {
         notebookContent.cells[2].source[1] = `PROJECT_ID = '${credentials.project_id}' \n`;
-        notebookContent.cells[2].source[2] = `REGION = '${
-          settings.get('bqRegion')['composite']
-        }'\n`;
+        notebookContent.cells[2].source[2] = `REGION = '${settings.get('bqRegion')['composite']
+          }'\n`;
       }
 
       // Save the file to the workspace
@@ -666,15 +665,24 @@ const extension: JupyterFrontEndPlugin<void> = {
         label: 'Create Runtime Profile',
         // @ts-ignore jupyter lab icon command issue
         icon: args => (args['isPalette'] ? null : iconAddRuntime),
-        execute: () => {
+        execute: args => {
+          // Opened with { mode: 'edit', profile } from the runtime profile
+          // details page to edit that profile in the same form.
+          const profileToEdit =
+            args?.['mode'] === 'edit'
+              ? (args['profile'] as IRuntimeProfileTemplate | undefined)
+              : undefined;
           const content = new CreateRuntimeProfile(
             app as JupyterLab,
             launcher as ILauncher,
             themeManager,
-            settingRegistry
+            settingRegistry,
+            profileToEdit
           );
           const widget = new MainAreaWidget<CreateRuntimeProfile>({ content });
-          widget.title.label = 'Create Runtime Profile';
+          widget.title.label = profileToEdit
+            ? 'Edit Runtime Profile'
+            : 'Create Runtime Profile';
           widget.title.icon = iconServerless;
           app.shell.add(widget, 'main');
         }

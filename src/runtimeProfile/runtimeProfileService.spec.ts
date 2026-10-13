@@ -28,7 +28,10 @@ jest.mock('../handler/handler', () => ({
 }));
 
 import { RuntimeProfileService } from './runtimeProfileService';
-import { mapRuntimeProfileToSessionTemplate } from './runtimeProfileMapper';
+import {
+  mapRuntimeProfileToSessionTemplate,
+  mapRuntimeProfileToSessionTemplateUpdate
+} from './runtimeProfileMapper';
 import { authenticatedFetch, loggedFetch, authApi } from '../utils/utils';
 import { HTTP_METHOD } from '../utils/const';
 
@@ -433,6 +436,103 @@ describe('RuntimeProfileService', () => {
         })
       ).rejects.toThrow('GCP Project ID is required');
       expect(loggedFetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateRuntimeProfile', () => {
+    const existingProfile = {
+      name: 'projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
+      description: 'old description',
+      jupyterSession: { displayName: 'sample-profile', kernel: 'PYTHON' },
+      environmentConfig: { executionConfig: { idleTtl: '3600s' } }
+    };
+    const payload = {
+      displayName: 'Renamed profile',
+      region: 'us-central1',
+      description: 'new description',
+      tier: 'Premium',
+      runtimeEnvironmentConfig: { runtimeProfileId: 'sample-profile' }
+    };
+
+    it('sends a PATCH for the profile resource name with the update mapping in live mode', async () => {
+      const service = new RuntimeProfileService(false);
+      const savedProfile = { ...existingProfile, description: 'saved' };
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(savedProfile)
+      });
+
+      const result = await service.updateRuntimeProfile(
+        existingProfile,
+        payload
+      );
+
+      expect(loggedFetch).toHaveBeenCalledWith(
+        'https://dataproc.googleapis.com/v1/projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer live-token'
+          }),
+          body: JSON.stringify(
+            mapRuntimeProfileToSessionTemplateUpdate(payload, existingProfile)
+          )
+        })
+      );
+      expect(result).toEqual(savedProfile);
+    });
+
+    it('throws the API error message when the live update fails', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+        json: jest
+          .fn()
+          .mockResolvedValue({ error: { message: 'Permission denied' } })
+      });
+
+      await expect(
+        service.updateRuntimeProfile(existingProfile, payload)
+      ).rejects.toThrow('Permission denied');
+    });
+
+    it('throws a readable error when the live update response is not JSON', async () => {
+      const service = new RuntimeProfileService(false);
+      (authApi as jest.Mock).mockResolvedValue({ access_token: 'live-token' });
+      (loggedFetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+        json: jest
+          .fn()
+          .mockRejectedValue(new SyntaxError("Unexpected token '<'"))
+      });
+
+      await expect(
+        service.updateRuntimeProfile(existingProfile, payload)
+      ).rejects.toThrow('Failed to update runtime profile (502: Bad Gateway)');
+    });
+
+    it('returns the merged profile without calling the API in mock mode', async () => {
+      const service = new RuntimeProfileService(true);
+
+      const result = await service.updateRuntimeProfile(
+        existingProfile,
+        payload
+      );
+
+      expect(loggedFetch).not.toHaveBeenCalled();
+      expect(result.name).toBe(existingProfile.name);
+      expect(result.description).toBe('new description');
+      expect(result.jupyterSession?.displayName).toBe('Renamed profile');
+      expect(result.environmentConfig).toEqual(
+        existingProfile.environmentConfig
+      );
+      expect(result.updateTime).toBeDefined();
     });
   });
 });

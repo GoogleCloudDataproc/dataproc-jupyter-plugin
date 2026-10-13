@@ -101,6 +101,7 @@ export interface IRuntimeProfileTemplate {
     executionConfig?: {
       networkUri?: string;
       subnetworkUri?: string;
+      networkTags?: string[];
       kmsKey?: string;
       stagingBucket?: string;
       idleTtl?: string;
