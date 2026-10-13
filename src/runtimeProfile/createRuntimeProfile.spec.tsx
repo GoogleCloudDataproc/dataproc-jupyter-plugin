@@ -43,11 +43,15 @@ jest.mock('../utils/utils', () => ({
 
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
+import ReactDOMServer from 'react-dom/server';
+import { ISectionProperty } from '../controls/SectionDetail';
 import {
   CreateRuntimeProfileComponent,
   ExecutorAndDriverEditDrawer,
   RuntimeEnvironmentEditDrawer,
   generateRandomHex,
+  RuntimeProfileSummary,
+  formatRuntimeProfileSummaryProperties,
   renderGroupedMachineOptions
 } from './createRuntimeProfile';
 import {
@@ -1395,4 +1399,232 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     // Unchecked state must be preserved
     expect(getDrawerCheckbox()?.checked).toBe(false);
   });
+
+  it('should format runtime profile summary rows matching the screenshot', () => {
+    const rows: ISectionProperty[] = formatRuntimeProfileSummaryProperties({
+      tier: 'Premium',
+      lightningEngineEnabled: true,
+      regionDisplayName: 'us-central1 (Iowa)',
+      runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
+      executorMachineType: 'highmem-4',
+      executorDisk: 'SSD (premium), 375 GiB',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 2,
+      maxExecutors: 300,
+      metastore: 'Lakehouse runtime catalog',
+      projectId: 'frontrow-team'
+    });
+
+    expect(rows).toHaveLength(7);
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Profile tier')?.value
+    ).toBe('Premium (Lightning Engine enabled)');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Region')?.value
+    ).toBe('us-central1 (Iowa)');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Version')?.value
+    ).toBe('2.3 LTS (Spark 3.5.1, Python 3.12)');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Executor node')?.value
+    ).toBe('Min: 2, Max: 300 x highmem-4 (4 vCPU, 32 GB), 375 GB SSD');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Driver node')?.value
+    ).toBe('Same as executor');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Autoscaling')?.value
+    ).toBe('Enabled (Min: 2, Max: 300)');
+    expect(
+      rows.find((r: ISectionProperty) => r.label === 'Metastore')?.value
+    ).toBe('Lakehouse runtime catalog (frontrow-team)');
+  });
+
+  it('should render standalone RuntimeProfileSummary component with edit-drawer styling and inject it into CreateRuntimeProfileComponent by default when EditDrawer is closed', () => {
+    expect(RuntimeProfileSummary).toBeDefined();
+
+    const summaryMarkup = ReactDOMServer.renderToStaticMarkup(
+      <RuntimeProfileSummary
+        summaryInput={{
+          tier: 'Premium',
+          lightningEngineEnabled: true,
+          regionDisplayName: 'us-central1 (Iowa)',
+          runtimeVersion: '2.3 LTS (Spark 3.5.1, Python 3.12)',
+          executorMachineType: 'highmem-4',
+          executorDisk: 'SSD (premium), 375 GiB',
+          useDifferentDriverConfig: false,
+          autoscalingEnabled: true,
+          initialExecutors: 5,
+          minExecutors: 2,
+          maxExecutors: 300,
+          metastore: 'Lakehouse runtime catalog',
+          projectId: 'frontrow-team'
+        }}
+      />
+    );
+    expect(summaryMarkup).toContain('runtime-summary-section');
+    expect(summaryMarkup).toContain('Summary');
+    expect(summaryMarkup).toContain('Premium (Lightning Engine enabled)');
+    expect(summaryMarkup).toContain('Same as executor');
+
+    const injectedCreateMarkup = ReactDOMServer.renderToStaticMarkup(
+      <CreateRuntimeProfileComponent
+        SummaryComponent={RuntimeProfileSummary}
+      />
+    );
+    expect(injectedCreateMarkup).toContain(
+      'data-testid="runtime-profile-summary-section"'
+    );
+  });
+
+  it('should handle Standard tier, disabled autoscaling, separate driver config, and empty fallbacks in summary', async () => {
+    const customRows = formatRuntimeProfileSummaryProperties({
+      tier: 'Standard',
+      lightningEngineEnabled: false,
+      regionDisplayName: 'us-east1 (South Carolina)',
+      runtimeVersion: '2.3',
+      executorMachineType: 'standard-8',
+      executorDisk: 'Standard persistent disk (HDD), 400 GB',
+      driverMachineType: 'standard-4',
+      driverDisk: 'Standard persistent disk (HDD), 200 GB',
+      useDifferentDriverConfig: true,
+      autoscalingEnabled: false,
+      initialExecutors: 4,
+      metastore: 'None',
+      projectId: 'frontrow-team'
+    });
+
+    expect(customRows.find(r => r.label === 'Profile tier')?.value).toBe(
+      'Standard'
+    );
+    expect(customRows.find(r => r.label === 'Executor node')?.value).toBe(
+      '4 x standard-8 (8 vCPU, 32 GB), 400 GB HDD'
+    );
+    expect(customRows.find(r => r.label === 'Driver node')?.value).toBe(
+      'standard-4 (4 vCPU, 16 GB), 200 GB HDD'
+    );
+    expect(customRows.find(r => r.label === 'Autoscaling')?.value).toBe(
+      'Disabled'
+    );
+    expect(customRows.find(r => r.label === 'Metastore')?.value).toBe('None');
+
+    const acceleratedRows = formatRuntimeProfileSummaryProperties({
+      tier: 'Premium',
+      lightningEngineEnabled: true,
+      executorMachineType: 'l4-4',
+      executorDisk: 'SSD (premium), 375 GiB',
+      useDifferentDriverConfig: false
+    });
+    expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
+      'Min: 2, Max: 1000 x L4 (4 cores), 375 GB SSD'
+    );
+
+    const emptyRows = formatRuntimeProfileSummaryProperties({
+      tier: 'Premium',
+      lightningEngineEnabled: false,
+      useDifferentDriverConfig: true
+    });
+    expect(emptyRows.find(r => r.label === 'Profile tier')?.value).toBe(
+      'Premium'
+    );
+    expect(emptyRows.find(r => r.label === 'Region')?.value).toBe('—');
+    expect(emptyRows.find(r => r.label === 'Version')?.value).toBe('—');
+    expect(emptyRows.find(r => r.label === 'Executor node')?.value).toBe(
+      'Min: 2, Max: 1000'
+    );
+    expect(emptyRows.find(r => r.label === 'Driver node')?.value).toBe('—');
+    expect(emptyRows.find(r => r.label === 'Metastore')?.value).toBe('—');
+  });
+
+  it('should display separate driver configuration in Summary when driver differs from executor in CreateRuntimeProfileComponent', async () => {
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          initialExecutorType="highmem-4"
+          initialExecutorAndDriverConfig={{
+            tier: 'Premium',
+            executorType: 'highmem-4',
+            executorDisk: 'HDD (standard), 200 GiB',
+            useDifferentDriverConfig: true,
+            driverMachineType: 'standard-8',
+            driverDisk: 'HDD (standard), 400 GiB'
+          }}
+        />
+      );
+    });
+
+    const getSummaryRowValue = (label: string): string | undefined => {
+      const rows = Array.from(
+        container.querySelectorAll(
+          '[data-testid="runtime-profile-summary-section"] .runtime-summary-row'
+        )
+      );
+      const matched = rows.find(
+        row =>
+          row.querySelector('.runtime-summary-label')?.textContent?.trim() ===
+          label
+      );
+      return matched
+        ?.querySelector('.runtime-summary-value')
+        ?.textContent?.trim();
+    };
+
+    expect(getSummaryRowValue('Executor node')).toBe(
+      'Min: 2, Max: 10 x highmem-4 (4 vCPU, 32 GB), 200 GB HDD'
+    );
+    expect(getSummaryRowValue('Driver node')).toBe(
+      'standard-8 (8 vCPU, 32 GB), 400 GB HDD'
+    );
+  });
+
+  it('should update Summary Profile tier row when toggling Lightning Engine checkbox on the form', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const getProfileTierSummaryValue = (): string | undefined => {
+      const rows = Array.from(
+        container.querySelectorAll(
+          '[data-testid="runtime-profile-summary-section"] .runtime-summary-row'
+        )
+      );
+      const matched = rows.find(
+        row =>
+          row.querySelector('.runtime-summary-label')?.textContent?.trim() ===
+          'Profile tier'
+      );
+      return matched
+        ?.querySelector('.runtime-summary-value')
+        ?.textContent?.trim();
+    };
+
+    expect(getProfileTierSummaryValue()).toBe(
+      'Premium (Lightning Engine enabled)'
+    );
+
+    const lightningCheckbox = container.querySelector(
+      '.runtime-profile-checkbox-section input[type="checkbox"]'
+    ) as HTMLInputElement;
+    expect(lightningCheckbox).not.toBeNull();
+    expect(lightningCheckbox.checked).toBe(true);
+
+    // Uncheck Lightning Engine
+    await act(async () => {
+      lightningCheckbox.click();
+    });
+    expect(lightningCheckbox.checked).toBe(false);
+    expect(getProfileTierSummaryValue()).toBe('Premium');
+
+    // Re-check Lightning Engine
+    await act(async () => {
+      lightningCheckbox.click();
+    });
+    expect(lightningCheckbox.checked).toBe(true);
+    expect(getProfileTierSummaryValue()).toBe(
+      'Premium (Lightning Engine enabled)'
+    );
+  });
 });
+

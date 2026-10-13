@@ -105,6 +105,23 @@ import {
 } from './runtimeProfileService';
 import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
 import { authApi, IAuthCredentials } from '../utils/utils';
+import {
+  ALL_MACHINE_TYPES,
+  DEFAULT_INITIAL_EXECUTORS,
+  DEFAULT_MAX_EXECUTORS,
+  DEFAULT_MIN_EXECUTORS,
+  formatCompactDiskLabel,
+  getMachineTypeLabel,
+  MSG_EXECUTOR_TIER_PREMIUM,
+  MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
+  MSG_EXECUTOR_TIER_STANDARD,
+  parseExecutorCount
+} from './runtimeProfileConstants';
+import {
+  formatRuntimeProfileSummaryProperties,
+  IRuntimeProfileSummaryProps,
+  RuntimeProfileSummary
+} from './runtimeProfileSummary';
 
 interface IRuntimeProfileFormData {
   displayName: string;
@@ -165,15 +182,6 @@ export const DEFAULT_RUNTIME_ENVIRONMENT_CONFIG: IRuntimeEnvironmentConfig = {
   stagingBucket: '',
   pythonPackageRepository: ''
 };
-
-const ALL_MACHINE_TYPES: IMachineTypeOption[] = [
-  ...DATAPROC_STANDARD_MACHINE_TYPES,
-  ...DATAPROC_ACCELERATED_MACHINE_TYPES
-];
-
-// Display-only: maps a machine id (e.g. 'highmem-4') to its label; falls back to the raw value.
-const getMachineTypeLabel = (machineName?: string): string | undefined =>
-  ALL_MACHINE_TYPES.find(m => m.name === machineName)?.label ?? machineName;
 
 export const DEFAULT_EXECUTOR_AND_DRIVER_CONFIG: IExecutorAndDriverConfig = {
   tier: 'Standard',
@@ -422,6 +430,7 @@ export interface ICreateRuntimeProfileComponentProps {
   initialSessionLifecycleConfig?: ISessionLifecycleConfig;
   initialSparkProperties?: SparkProperties;
   initialLabels?: ProfileLabels;
+  SummaryComponent?: React.ComponentType<IRuntimeProfileSummaryProps>;
 }
 
 const MACHINE_TYPE_GROUPS: Record<
@@ -509,10 +518,14 @@ export const CreateRuntimeProfileComponent: React.FC<
   initialNetworkAndSecurityConfig,
   initialSessionLifecycleConfig,
   initialSparkProperties,
-  initialLabels
+  initialLabels,
+  SummaryComponent = RuntimeProfileSummary
 }): React.JSX.Element => {
   // Options & Data State
   const [regions, setRegions] = useState<IRegionOption[]>([]);
+  const [projectId, setProjectId] = useState<string | undefined>(
+    initialMetastoreConfig?.projectId
+  );
   const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
   const [expandAdditionalConfig, setExpandAdditionalConfig] =
     useState<boolean>(true);
@@ -567,6 +580,7 @@ export const CreateRuntimeProfileComponent: React.FC<
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting }
   } = useForm<IRuntimeProfileFormData>({
     mode: 'onChange',
@@ -774,6 +788,56 @@ export const CreateRuntimeProfileComponent: React.FC<
     }
   };
 
+  const selectedRegionValue = watch('region');
+  const selectedRegionDisplayName = React.useMemo(() => {
+    if (!selectedRegionValue) {
+      return '';
+    }
+    const matched = regions.find(r => r.name === selectedRegionValue);
+    return matched ? matched.displayName : selectedRegionValue;
+  }, [regions, selectedRegionValue]);
+
+  const summaryInput = React.useMemo(
+    () => ({
+      tier,
+      lightningEngineEnabled,
+      regionDisplayName: selectedRegionDisplayName,
+      runtimeVersion:
+        RUNTIME_VERSION_DISPLAY_MAP[
+          activeRuntimeEnvironmentConfig.runtimeVersion || ''
+        ] || activeRuntimeEnvironmentConfig.runtimeVersion,
+      executorMachineType: executorType,
+      executorDisk: executorAndDriverConfig.executorDisk,
+      driverMachineType: executorAndDriverConfig.driverMachineType,
+      driverDisk: executorAndDriverConfig.driverDisk,
+      useDifferentDriverConfig:
+        executorAndDriverConfig.useDifferentDriverConfig,
+      autoscalingEnabled: autoscalingConfig.autoscalingEnabled,
+      initialExecutors: autoscalingConfig.initialExecutors,
+      minExecutors: autoscalingConfig.minExecutors,
+      maxExecutors: autoscalingConfig.maxExecutors,
+      metastore: metastoreConfig.metastore || 'Lakehouse runtime catalog',
+      projectId: metastoreConfig.projectId || projectId
+    }),
+    [
+      tier,
+      lightningEngineEnabled,
+      selectedRegionDisplayName,
+      activeRuntimeEnvironmentConfig.runtimeVersion,
+      executorType,
+      executorAndDriverConfig.executorDisk,
+      executorAndDriverConfig.driverMachineType,
+      executorAndDriverConfig.driverDisk,
+      executorAndDriverConfig.useDifferentDriverConfig,
+      autoscalingConfig.autoscalingEnabled,
+      autoscalingConfig.initialExecutors,
+      autoscalingConfig.minExecutors,
+      autoscalingConfig.maxExecutors,
+      metastoreConfig.metastore,
+      metastoreConfig.projectId,
+      projectId
+    ]
+  );
   // Load Regions from service
   useEffect(() => {
     let isMounted = true;
@@ -785,6 +849,9 @@ export const CreateRuntimeProfileComponent: React.FC<
         const loadedRegions = await service.getRegions();
 
         if (isMounted) {
+          if (credentials?.project_id) {
+            setProjectId(prev => prev || credentials?.project_id);
+          }
           setRegions(loadedRegions);
 
           // Pre-select the region saved in Settings, else the first region.
@@ -913,10 +980,11 @@ export const CreateRuntimeProfileComponent: React.FC<
         <div className="cluster-details-title">Create a runtime profile</div>
       </div>
 
-      <div className="runtime-profile-container">
-        <div className="runtime-profile-intro-text">
-          {RUNTIME_PROFILE_INTRO_TEXT}
-        </div>
+      <div className="runtime-profile-content-layout">
+        <div className="runtime-profile-container">
+          <div className="runtime-profile-intro-text">
+            {RUNTIME_PROFILE_INTRO_TEXT}
+          </div>
 
         <form
           className="runtime-profile-form"
@@ -1307,7 +1375,18 @@ export const CreateRuntimeProfileComponent: React.FC<
               Cancel
             </button>
           </div>
-        </form>
+          </form>
+        </div>
+
+        {/* Right Side Panel: Display Summary by default */}
+        <div className="runtime-profile-right-panel">
+          <div
+            className="runtime-profile-summary-pricing-card"
+            data-testid="runtime-profile-summary-pricing-card"
+          >
+            <SummaryComponent summaryInput={summaryInput} />
+          </div>
+        </div>
       </div>
 
       <RuntimeEnvironmentEditDrawer
@@ -1384,11 +1463,22 @@ export class CreateRuntimeProfile extends DataprocWidget {
     );
   }
 }
-
 export {
   SectionDetail,
   RuntimeEnvironmentEditDrawer,
   ExecutorAndDriverEditDrawer,
   SelectBucketEditDrawer,
-  RUNTIME_VERSION_OPTIONS
+  RUNTIME_VERSION_OPTIONS,
+  RuntimeProfileSummary,
+  formatRuntimeProfileSummaryProperties,
+  ALL_MACHINE_TYPES,
+  getMachineTypeLabel,
+  formatCompactDiskLabel,
+  parseExecutorCount,
+  MSG_EXECUTOR_TIER_PREMIUM,
+  MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
+  MSG_EXECUTOR_TIER_STANDARD,
+  DEFAULT_INITIAL_EXECUTORS,
+  DEFAULT_MIN_EXECUTORS,
+  DEFAULT_MAX_EXECUTORS
 };

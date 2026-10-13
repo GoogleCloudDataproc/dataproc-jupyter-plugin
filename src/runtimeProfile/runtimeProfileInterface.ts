@@ -108,6 +108,29 @@ export interface IExecutorAndDriverEditDrawerProps {
   availableMachineTypes?: IMachineTypeOption[];
 }
 
+/** Backward-compatibility aliases */
+export type IDriverAndExecutorConfiguration = IExecutorAndDriverConfig;
+export type IDriverConfig = IExecutorAndDriverConfig;
+export type IExecutorDiskConfig = IExecutorAndDriverConfig;
+
+export interface IRuntimeProfileSummaryInput {
+  tier?: string;
+  lightningEngineEnabled?: boolean;
+  regionDisplayName?: string;
+  runtimeVersion?: string;
+  executorMachineType?: string;
+  executorDisk?: string;
+  driverMachineType?: string;
+  driverDisk?: string;
+  useDifferentDriverConfig?: boolean;
+  autoscalingEnabled?: boolean;
+  initialExecutors?: number;
+  minExecutors?: number;
+  maxExecutors?: number;
+  metastore?: string;
+  projectId?: string;
+}
+
 export interface IAutoscalingConfig {
   autoscalingEnabled?: boolean;
   initialExecutors?: number;
