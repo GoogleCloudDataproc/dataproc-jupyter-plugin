@@ -69,6 +69,8 @@ import { Notification } from '@jupyterlab/apputils';
 import { BigQueryService } from './bigQuery/bigQueryService';
 import { setupNotificationSystem } from './notifications';
 
+// TEMP COMMENT - trigger again
+
 const iconDpms = new LabIcon({
   name: 'launcher:dpms-icon',
   svgstr: dpmsIcon
