@@ -109,7 +109,7 @@ const ProjectIdField: React.FC<IProjectIdFieldProps> = ({
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
-  // Pick up values set outside the input (signed-in project, Browse).
+  // Pick up values set outside the input (signed-in project).
   useEffect(() => {
     setDraft(value);
   }, [value]);
