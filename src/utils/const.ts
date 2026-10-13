@@ -318,7 +318,6 @@ export const DEFAULT_STANDARD_TIER_EXECUTOR_TYPE = 'standard-4';
 
 /**
  * Predefined Dataproc Serverless Standard (CPU only) machine types
- * Ref: One-Pager: Executor Configuration & Sizing Option Mapping
  */
 export const DATAPROC_STANDARD_MACHINE_TYPES = [
   {
@@ -497,3 +496,59 @@ export const EXECUTOR_SHAPES_SUBHEADING =
   'Shapes for common workloads, optimized for cost and flexibility';
 export const EXECUTOR_ACCELERATED_SHAPES_SUBHEADING =
   'Shapes with GPUs attached, for training and inference workloads';
+
+/**
+ * Executor and driver edit drawer disk & UI constants
+ */
+export const DISK_TIER_HDD = 'HDD (standard)';
+export const DISK_TIER_SSD = 'SSD (premium)';
+export const DISK_TIER_OPTIONS: string[] = [DISK_TIER_HDD, DISK_TIER_SSD];
+
+export const DEFAULT_HDD_DISK_SIZE = '200 GiB';
+export const DEFAULT_SSD_DISK_SIZE = '375 GiB';
+
+export const HDD_DISK_SIZES: string[] = [
+  '200 GiB',
+  '300 GiB',
+  '400 GiB',
+  '500 GiB',
+  '600 GiB',
+  '700 GiB',
+  '800 GiB',
+  '900 GiB',
+  '1000 GiB',
+  '1100 GiB',
+  '1200 GiB',
+  '1300 GiB',
+  '1400 GiB',
+  '1500 GiB'
+];
+
+export const SSD_DISK_SIZES: string[] = [
+  '375 GiB',
+  '750 GiB',
+  '1500 GiB',
+  '3000 GiB',
+  '6000 GiB',
+  '9000 GiB'
+];
+
+export const EXECUTOR_DRIVER_DRAWER_TITLE = 'Executor and driver configuration';
+export const EXECUTOR_DRIVER_DRAWER_SUBTITLE =
+  'Customize compute tier, driver, and executor configuration for your workloads.';
+export const EXECUTOR_ONLY_SUBTITLE = 'Executors run your tasks.';
+export const EXECUTOR_SHARED_SUBTITLE =
+  'The driver and executors will share the same machine type and disk configuration.';
+export const DIFFERENT_DRIVER_CHECKBOX_LABEL =
+  'Use different configuration for driver';
+export const DIFFERENT_DRIVER_CHECKBOX_DESC =
+  'Driver will match executor settings unless checked.';
+export const DRIVER_CONFIG_SECTION_TITLE = 'Driver configuration';
+export const DRIVER_CONFIG_SECTION_SUBTITLE =
+  'The driver coordinates your executors and manages metadata.';
+export const DISK_HELPER_TEXT_STANDARD_TIER =
+  'HDD (standard) is used for batch workloads on standard tier.';
+export const DISK_HELPER_TEXT_ACCELERATED =
+  'SSD (premium) is used for accelerated machine types.';
+export const DISK_HELPER_TEXT_DEFAULT =
+  'HDD (standard) suits most workloads. SSD (premium) costs more and pays off on shuffle-heavy or spill-heavy jobs.';
