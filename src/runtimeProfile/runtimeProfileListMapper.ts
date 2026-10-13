@@ -89,10 +89,34 @@ export interface IRuntimeProfileTemplate {
   };
   runtimeConfig?: {
     version?: string;
+    containerImage?: string;
+    properties?: Record<string, string>;
+    repositoryConfig?: {
+      pypiRepositoryConfig?: {
+        pypiRepository?: string;
+      };
+    };
+  };
+  environmentConfig?: {
+    executionConfig?: {
+      networkUri?: string;
+      subnetworkUri?: string;
+      kmsKey?: string;
+      stagingBucket?: string;
+      idleTtl?: string;
+      ttl?: string;
+      authenticationConfig?: {
+        userWorkloadAuthenticationType?: string;
+      };
+    };
+    peripheralsConfig?: {
+      metastoreService?: string;
+    };
   };
   creator?: string;
   createTime?: string;
   updateTime?: string;
+  labels?: Record<string, string>;
 }
 
 const SESSION_TEMPLATE_RESOURCE_PATTERN =
