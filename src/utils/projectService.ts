@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import { Notification } from '@jupyterlab/apputils';
 import {
   API_HEADER_BEARER,
   API_HEADER_CONTENT_TYPE,
@@ -22,9 +23,10 @@ import {
 } from '../utils/const';
 import { authApi, loggedFetch } from '../utils/utils';
 
-interface IProject {
+export interface IProjectInfo {
   projectId: string;
   name: string;
+  projectNumber?: string;
 }
 
 export const projectListAPI = async (prefix: string): Promise<string[]> => {
@@ -46,7 +48,47 @@ export const projectListAPI = async (prefix: string): Promise<string[]> => {
     }
   });
   const { projects } = (await resp.json()) as {
-    projects: IProject[] | undefined;
+    projects: IProjectInfo[] | undefined;
   };
   return (projects ?? []).map(project => project.projectId);
+};
+
+export const listProjectsWithDetailsAPI = async (
+  prefix: string = ''
+): Promise<IProjectInfo[]> => {
+  try {
+    const credentials = await authApi();
+    const { CLOUD_RESOURCE_MANAGER } = await gcpServiceUrls;
+    if (!credentials) {
+      return [];
+    }
+    const requestUrl = new URL(CLOUD_RESOURCE_MANAGER);
+    if (prefix.length > 0) {
+      requestUrl.searchParams.append('filter', `name:${prefix}*`);
+    }
+    requestUrl.searchParams.append('pageSize', '200');
+    const resp = await loggedFetch(requestUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token
+      }
+    });
+
+    const data = await resp.json();
+    if (!resp.ok || data?.error) {
+      const errorMsg =
+        data?.error?.message ||
+        `Failed to list projects (${resp.status}: ${resp.statusText})`;
+      Notification.emit(errorMsg, 'error', { autoClose: 5000 });
+      return [];
+    }
+
+    return (data?.projects ?? []) as IProjectInfo[];
+  } catch (error) {
+    Notification.emit(`Error listing projects: ${error}`, 'error', {
+      autoClose: 5000
+    });
+    return [];
+  }
 };

@@ -40,6 +40,19 @@ import {
   SSD_DISK_SIZES
 } from './runtimeProfileInterface';
 
+// Lakehouse runtime catalog properties. Like DATAPROC_TIER_PROPERTY, the keys
+// without the `spark.` prefix are read by the Dataproc service, not by Spark.
+export const LAKEHOUSE_PROJECT_PROPERTY = 'spark.dataproc.lakehouse.project';
+export const LAKEHOUSE_DEFAULT_CATALOG_PROPERTY =
+  'dataproc.lakehouse.defaultCatalog';
+export const LAKEHOUSE_CATALOG_PROPERTY_PREFIX = 'dataproc.lakehouse.catalog.';
+// The default catalog the service creates is named after the region.
+const LAKEHOUSE_DEFAULT_CATALOG_NAME_PREFIX = 'standard-lh-catalog-';
+
+// Metastore values used in IMetastoreConfig.
+export const LAKEHOUSE_RUNTIME_CATALOG = 'Lakehouse runtime catalog';
+export const METASTORE_NONE = 'None';
+
 /**
  * Interface representing the exact Google Cloud Dataproc SessionTemplate API payload schema.
  * Endpoint: POST https://dataproc.googleapis.com/v1/projects/{project}/locations/{location}/sessionTemplates
@@ -60,6 +73,11 @@ export interface ISessionTemplateApiPayload {
       pypiRepositoryConfig?: {
         pypiRepository?: string;
       };
+    };
+  };
+  environmentConfig?: {
+    peripheralsConfig?: {
+      metastoreService?: string;
     };
   };
 }
@@ -232,6 +250,21 @@ export const sanitizeSessionTemplateId = (
 };
 
 /**
+ * Name of the default Lakehouse catalog the service creates in a region,
+ * e.g. 'standard-lh-catalog-us-central1'. Empty when the region is unknown.
+ */
+export const getDefaultLakehouseCatalogName = (region?: string): string =>
+  region ? `${LAKEHOUSE_DEFAULT_CATALOG_NAME_PREFIX}${region}` : '';
+
+/**
+ * Resource name of a Lakehouse catalog, e.g. 'projects/p/catalogs/c'.
+ */
+export const getLakehouseCatalogResource = (
+  project: string,
+  catalogId: string
+): string => `projects/${project}/catalogs/${catalogId}`;
+
+/**
  * Maps ICreateRuntimeProfilePayload to Dataproc SessionTemplate API payload schema
  */
 export function mapRuntimeProfileToSessionTemplate(
@@ -388,6 +421,63 @@ export function mapRuntimeProfileToSessionTemplate(
     properties['spark.dataproc.executor.disk.size'] = executorDisk.size;
   }
 
+  // Lakehouse runtime catalog. The untouched default config sends nothing, so
+  // the service uses the Lakehouse runtime catalog in the profile's project.
+  // Derived values never override the user's sparkProperties.
+  const metastoreConfig = payload.metastoreConfig;
+  if (metastoreConfig?.metastoreType === 'lakehouse') {
+    const isIcebergEnabled = metastoreConfig.icebergRestEndpointEnabled ?? true;
+    const isHiveEnabled = Boolean(metastoreConfig.hiveEndpointEnabled);
+    const hiveProject = metastoreConfig.hiveProjectId || projectId;
+
+    if (isIcebergEnabled) {
+      const icebergProject = metastoreConfig.projectId || projectId;
+      setIfAbsent(LAKEHOUSE_PROJECT_PROPERTY, icebergProject);
+
+      if (metastoreConfig.catalogSelectionMode === 'existing') {
+        // An existing catalog becomes the default catalog.
+        if (metastoreConfig.catalogId) {
+          const catalogResource = getLakehouseCatalogResource(
+            icebergProject,
+            metastoreConfig.catalogId
+          );
+          setIfAbsent(
+            LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.catalogId,
+            catalogResource
+          );
+          setIfAbsent(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogResource);
+        }
+      } else {
+        // New default catalog, created by the service in the project above.
+        const catalogName =
+          metastoreConfig.catalogName ||
+          getDefaultLakehouseCatalogName(targetRegion);
+        if (catalogName) {
+          setIfAbsent(
+            LAKEHOUSE_CATALOG_PROPERTY_PREFIX + catalogName,
+            getLakehouseCatalogResource(icebergProject, catalogName)
+          );
+          setIfAbsent(LAKEHOUSE_DEFAULT_CATALOG_PROPERTY, catalogName);
+        }
+      }
+    } else if (isHiveEnabled) {
+      // Hive only: the Lakehouse project is the Hive endpoint's project.
+      setIfAbsent(LAKEHOUSE_PROJECT_PROPERTY, hiveProject);
+    }
+
+    // The Hive endpoint registers its catalog but never sets the default
+    // catalog, which belongs to the Iceberg REST endpoint.
+    if (isHiveEnabled && metastoreConfig.hiveCatalogName) {
+      setIfAbsent(
+        LAKEHOUSE_CATALOG_PROPERTY_PREFIX + metastoreConfig.hiveCatalogName,
+        getLakehouseCatalogResource(
+          hiveProject,
+          metastoreConfig.hiveCatalogId || metastoreConfig.hiveCatalogName
+        )
+      );
+    }
+  }
+
   // Runtime Config
   const runtimeVersion = extractRuntimeVersion(
     payload.runtimeEnvironmentConfig?.runtimeVersion
@@ -418,6 +508,14 @@ export function mapRuntimeProfileToSessionTemplate(
     })
   };
 
+  // Dataproc Metastore service
+  const metastoreService =
+    metastoreConfig?.metastoreType === 'dataproc' &&
+    metastoreConfig.dataprocMetastoreService &&
+    metastoreConfig.dataprocMetastoreService !== METASTORE_NONE
+      ? metastoreConfig.dataprocMetastoreService
+      : undefined;
+
   const templatePayload: ISessionTemplateApiPayload = {
     name: `projects/${projectId}/locations/${targetRegion}/sessionTemplates/${templateId}`,
     description: payload.description,
@@ -426,7 +524,12 @@ export function mapRuntimeProfileToSessionTemplate(
       displayName: payload.displayName
     },
     labels: payload.labels || {},
-    runtimeConfig
+    runtimeConfig,
+    ...(metastoreService && {
+      environmentConfig: {
+        peripheralsConfig: { metastoreService }
+      }
+    })
   };
 
   return templatePayload;
