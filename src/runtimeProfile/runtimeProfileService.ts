@@ -161,6 +161,43 @@ export class RuntimeProfileService implements IRuntimeProfileService {
     }
   }
 
+  static async updateRuntimeProfile(
+    id: string,
+    payload: IRuntimeProfileTemplate,
+    displayName: string = id
+  ): Promise<IRuntimeProfileTemplate> {
+    const credentials = await authApi();
+    const { DATAPROC } = await gcpServiceUrls;
+    if (!credentials) {
+      throw new Error('Authentication failed');
+    }
+    const response = await loggedFetch(`${DATAPROC}/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': API_HEADER_CONTENT_TYPE,
+        Authorization: API_HEADER_BEARER + credentials.access_token
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json().catch((err: unknown) => {
+      safeLog(
+        `Response body for PATCH ${displayName} is not JSON: ${err}`,
+        LOG_LEVEL.WARN
+      );
+      return null;
+    });
+
+    if (!response.ok || data?.error) {
+      throw new Error(
+        data?.error?.message ||
+          `Failed to update runtime profile ${displayName}`
+      );
+    }
+
+    return data?.name ? (data as IRuntimeProfileTemplate) : payload;
+  }
+
   constructor(useMock: boolean = RUNTIME_PROFILE_USE_MOCK) {
     this.useMock = useMock;
   }

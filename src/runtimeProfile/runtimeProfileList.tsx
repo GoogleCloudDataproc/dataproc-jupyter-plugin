@@ -171,6 +171,16 @@ export default function RuntimeProfileList({ app }: { app?: JupyterLab }) {
         key={selectedProfile.name}
         profile={selectedProfile}
         onBack={() => setSelectedProfile(null)}
+        onUpdateSuccess={updatedTemplate => {
+          setSelectedProfile(prev =>
+            prev?.name === updatedTemplate.name ? updatedTemplate : prev
+          );
+          const nextTemplates = rawTemplates.map(t =>
+            t.name === updatedTemplate.name ? updatedTemplate : t
+          );
+          setRawTemplates(nextTemplates);
+          setProfiles(runtimeProfileListMapper(nextTemplates));
+        }}
         onDeleteSuccess={() => {
           setSelectedProfile(null);
           if (profiles.length === 1 && currentPage > 0) {

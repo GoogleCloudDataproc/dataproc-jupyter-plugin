@@ -26,6 +26,10 @@ jest.mock('../handler/handler', () => ({
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import RuntimeProfileDetails, {
+  applyExecutorAndDriverUpdateToTemplate,
+  applyRuntimeEnvironmentUpdateToTemplate,
+  buildExecutorAndDriverConfigFromTemplate,
+  buildRuntimeEnvironmentConfigFromTemplate,
   formatCreateTime,
   formatDiskConfig,
   formatDurationTtl,
@@ -47,6 +51,7 @@ describe('RuntimeProfileDetails Component', () => {
   let container: HTMLDivElement;
   let root: Root;
   const originalClipboard = navigator.clipboard;
+  const originalExecCommand = document.execCommand;
 
   const mockProfile: IRuntimeProfileTemplate = {
     name: 'projects/test-project/locations/us-central1/sessionTemplates/sample-profile',
@@ -97,6 +102,9 @@ describe('RuntimeProfileDetails Component', () => {
     jest
       .spyOn(RuntimeProfileService, 'deleteRuntimeProfile')
       .mockResolvedValue(undefined);
+    jest
+      .spyOn(RuntimeProfileService, 'updateRuntimeProfile')
+      .mockImplementation(async (_id, payload) => payload);
   });
 
   afterEach(() => {
@@ -106,6 +114,7 @@ describe('RuntimeProfileDetails Component', () => {
       configurable: true,
       writable: true
     });
+    document.execCommand = originalExecCommand;
     act(() => {
       root.unmount();
     });
@@ -115,7 +124,8 @@ describe('RuntimeProfileDetails Component', () => {
   const renderDetails = (
     onBack = jest.fn(),
     onDeleteSuccess?: () => void,
-    profile: IRuntimeProfileTemplate = mockProfile
+    profile: IRuntimeProfileTemplate = mockProfile,
+    onUpdateSuccess?: (updated: IRuntimeProfileTemplate) => void
   ) =>
     act(async () => {
       root.render(
@@ -123,6 +133,7 @@ describe('RuntimeProfileDetails Component', () => {
           profile={profile}
           onBack={onBack}
           onDeleteSuccess={onDeleteSuccess}
+          onUpdateSuccess={onUpdateSuccess}
         />
       );
     });
@@ -194,10 +205,13 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).toContain('3 days');
     expect(container.textContent).toContain('Other customizations');
 
-    const subsectionEditBtns = container.querySelectorAll(
-      'button[aria-label^="Edit "]'
-    );
+    const subsectionEditBtns = Array.from(
+      container.querySelectorAll('button[aria-label^="Edit "]')
+    ) as HTMLButtonElement[];
     expect(subsectionEditBtns).toHaveLength(7);
+    expect(subsectionEditBtns[0].disabled).toBe(false);
+    expect(subsectionEditBtns[1].disabled).toBe(false);
+    expect(subsectionEditBtns.slice(2).every(btn => btn.disabled)).toBe(true);
 
     // Spark properties & Labels
     expect(container.textContent).toContain('Spark properties');
@@ -337,6 +351,77 @@ describe('RuntimeProfileDetails Component', () => {
     expect(container.textContent).not.toContain('Runtime configuration');
   });
 
+  it('should open RuntimeEnvironmentEditDrawer and ExecutorAndDriverEditDrawer, call updateRuntimeProfile on Save, and notify user', async () => {
+    const onUpdateSuccessMock = jest.fn();
+    await renderDetails(jest.fn(), undefined, mockProfile, onUpdateSuccessMock);
+
+    // 1. Open Runtime configuration drawer
+    const editRuntimeBtn = container.querySelector(
+      'button[aria-label="Edit Runtime configuration"]'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      editRuntimeBtn.click();
+    });
+
+    const profileIdInput = document.body.querySelector(
+      '#edit-runtime-profile-id'
+    ) as HTMLInputElement;
+    expect(profileIdInput).not.toBeNull();
+    expect(profileIdInput.value).toBe('sample-profile');
+    expect(profileIdInput.disabled).toBe(true);
+
+    // Click Save in Runtime configuration drawer
+    const getDrawerSaveBtn = () =>
+      Array.from(
+        document.body.querySelectorAll('.edit-drawer-footer button')
+      ).find(btn => btn.textContent === 'Save') as HTMLButtonElement;
+
+    await act(async () => {
+      getDrawerSaveBtn().click();
+    });
+
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledWith(
+      mockProfile.name,
+      expect.objectContaining({
+        name: mockProfile.name,
+        runtimeConfig: expect.objectContaining({ version: '2.3' })
+      }),
+      'sample-profile'
+    );
+    expect(onUpdateSuccessMock).toHaveBeenCalledTimes(1);
+    expect(Notification.emit).toHaveBeenCalledWith(
+      'Runtime Profile sample-profile successfully updated',
+      'success',
+      { autoClose: 5000 }
+    );
+
+    // 2. Open Executor and driver configuration drawer and test error + success
+    const editExecDriverBtn = container.querySelector(
+      'button[aria-label="Edit Executor and driver configuration"]'
+    ) as HTMLButtonElement;
+    await act(async () => {
+      editExecDriverBtn.click();
+    });
+
+    (
+      RuntimeProfileService.updateRuntimeProfile as jest.Mock
+    ).mockRejectedValueOnce(new Error('Quota exceeded'));
+    await act(async () => {
+      getDrawerSaveBtn().click();
+    });
+    expect(Notification.emit).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to update sample-profile:'),
+      'error',
+      { autoClose: 5000 }
+    );
+
+    await act(async () => {
+      getDrawerSaveBtn().click();
+    });
+    expect(RuntimeProfileService.updateRuntimeProfile).toHaveBeenCalledTimes(3);
+    expect(onUpdateSuccessMock).toHaveBeenCalledTimes(2);
+  });
+
   it('should open delete modal, handle Escape/Cancel, and delete or notify on error', async () => {
     const onDeleteSuccessMock = jest.fn();
     await renderDetails(jest.fn(), onDeleteSuccessMock);
@@ -394,7 +479,7 @@ describe('RuntimeProfileDetails Component', () => {
     expect(onDeleteSuccessMock).toHaveBeenCalledTimes(1);
   });
 
-  it('should format createTime, lastUsed, diskConfig, durationTtl, and stripPropertyPrefix deterministically', () => {
+  it('should format createTime, lastUsed, diskConfig, durationTtl, stripPropertyPrefix, and map drawer configs deterministically', () => {
     expect(formatCreateTime('')).toBe('');
     expect(formatCreateTime('invalid-date')).toBe('');
     expect(formatCreateTime('2026-09-16T08:02:03Z')).toBe(
@@ -462,5 +547,81 @@ describe('RuntimeProfileDetails Component', () => {
     expect(stripPropertyPrefix('spark.executor.cores')).toBe(
       'spark.executor.cores'
     );
+
+    // Drawer config builders and updaters
+    const envCfg = buildRuntimeEnvironmentConfigFromTemplate(
+      mockProfile,
+      'sample-profile'
+    );
+    expect(envCfg.runtimeProfileId).toBe('sample-profile');
+    expect(envCfg.runtimeVersion).toBe('2.3');
+    expect(envCfg.lightningEngineEnabled).toBe(true);
+
+    const updatedEnvTemplate = applyRuntimeEnvironmentUpdateToTemplate(
+      mockProfile,
+      {
+        runtimeProfileId: 'sample-profile',
+        runtimeVersion: '2.2 LTS (Spark 3.5, Java 17, Scala 2.13)',
+        customSparkImage: 'gcr.io/proj/img:v1',
+        stagingBucket: 'gs://custom-bucket',
+        pythonPackageRepository: 'https://pypi.example.com/simple'
+      }
+    );
+    expect(updatedEnvTemplate.runtimeConfig?.version).toBe('2.2');
+    expect(updatedEnvTemplate.runtimeConfig?.containerImage).toBe(
+      'gcr.io/proj/img:v1'
+    );
+    expect(
+      updatedEnvTemplate.environmentConfig?.executionConfig?.stagingBucket
+    ).toBe('custom-bucket');
+    expect(
+      updatedEnvTemplate.runtimeConfig?.repositoryConfig?.pypiRepositoryConfig
+        ?.pypiRepository
+    ).toBe('https://pypi.example.com/simple');
+
+    const clearedEnvTemplate = applyRuntimeEnvironmentUpdateToTemplate(
+      updatedEnvTemplate,
+      {
+        runtimeProfileId: 'sample-profile',
+        runtimeVersion: '',
+        customSparkImage: 'None',
+        stagingBucket: 'Auto',
+        pythonPackageRepository: 'Google Managed PyPI pull through cache'
+      }
+    );
+    expect(clearedEnvTemplate.runtimeConfig?.version).toBeUndefined();
+    expect(clearedEnvTemplate.runtimeConfig?.containerImage).toBeUndefined();
+    expect(clearedEnvTemplate.runtimeConfig?.repositoryConfig).toBeUndefined();
+    expect(
+      clearedEnvTemplate.environmentConfig?.executionConfig?.stagingBucket
+    ).toBeUndefined();
+
+    const execDrvCfg = buildExecutorAndDriverConfigFromTemplate(mockProfile);
+    expect(execDrvCfg.tier).toBe('Premium');
+    expect(execDrvCfg.lightningEngineEnabled).toBe(true);
+    expect(execDrvCfg.useDifferentDriverConfig).toBe(true);
+
+    const updatedExecDrvTemplate = applyExecutorAndDriverUpdateToTemplate(
+      mockProfile,
+      {
+        tier: 'Premium',
+        lightningEngineEnabled: false,
+        executorType: 'l4-4',
+        executorMachineType: 'l4-4',
+        executorDisk: 'SSD (premium), 375 GiB',
+        driverMachineType: 'standard-4',
+        driverDisk: 'SSD (premium), 375 GiB'
+      }
+    );
+    const updatedProps =
+      updatedExecDrvTemplate.runtimeConfig?.properties || {};
+    expect(updatedProps['dataproc.tier']).toBe('premium');
+    expect(updatedProps['spark.dataproc.engine']).toBeUndefined();
+    expect(updatedProps['spark.executor.cores']).toBe('4');
+    expect(updatedProps['spark.dataproc.executor.resource.accelerator.type']).toBe(
+      'l4'
+    );
+    expect(updatedProps['spark.dataproc.driver.compute.tier']).toBe('premium');
   });
 });
+
