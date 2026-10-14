@@ -162,7 +162,7 @@ interface IAsyncOptionsSelectProps {
   loadingText: string;
   emptyText: string;
   onChange: (value: string) => void;
-  /** Options listed before the fetched ones, e.g. "None". */
+  /** Options listed before the fetched ones */
   fixedOptions?: string[];
 }
 
