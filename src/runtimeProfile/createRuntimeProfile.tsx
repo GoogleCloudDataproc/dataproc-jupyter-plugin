@@ -1500,6 +1500,7 @@ export {
   RuntimeEnvironmentEditDrawer,
   ExecutorAndDriverEditDrawer,
   SelectBucketEditDrawer,
+  MetastoreEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   RuntimeProfileSummary,
   formatRuntimeProfileSummaryProperties,
