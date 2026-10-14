@@ -107,11 +107,16 @@ import { registerSessionKernelsInLauncher } from './sessionKernelLauncher';
 import { authApi, IAuthCredentials } from '../utils/utils';
 import {
   ALL_MACHINE_TYPES,
+  calculateDcu,
   DEFAULT_INITIAL_EXECUTORS,
   DEFAULT_MAX_EXECUTORS,
   DEFAULT_MIN_EXECUTORS,
   formatCompactDiskLabel,
+  formatDcuNumber,
   getMachineTypeLabel,
+  getShapeDcu,
+  MACHINE_SHAPE_DCU,
+  MACHINE_SHAPE_RESOURCES,
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,
@@ -122,6 +127,11 @@ import {
   IRuntimeProfileSummaryProps,
   RuntimeProfileSummary
 } from './runtimeProfileSummary';
+import {
+  calculateRuntimePricingEstimate,
+  IRuntimePricingEstimateProps,
+  RuntimePricingEstimate
+} from './runtimePricingEstimate';
 
 interface IRuntimeProfileFormData {
   displayName: string;
@@ -431,6 +441,7 @@ export interface ICreateRuntimeProfileComponentProps {
   initialSparkProperties?: SparkProperties;
   initialLabels?: ProfileLabels;
   SummaryComponent?: React.ComponentType<IRuntimeProfileSummaryProps>;
+  PricingComponent?: React.ComponentType<IRuntimePricingEstimateProps>;
 }
 
 const MACHINE_TYPE_GROUPS: Record<
@@ -519,7 +530,8 @@ export const CreateRuntimeProfileComponent: React.FC<
   initialSessionLifecycleConfig,
   initialSparkProperties,
   initialLabels,
-  SummaryComponent = RuntimeProfileSummary
+  SummaryComponent = RuntimeProfileSummary,
+  PricingComponent = RuntimePricingEstimate
 }): React.JSX.Element => {
   // Options & Data State
   const [regions, setRegions] = useState<IRegionOption[]>([]);
@@ -533,6 +545,7 @@ export const CreateRuntimeProfileComponent: React.FC<
     useState<boolean>(false);
   const [isExecutorDriverDrawerOpen, setIsExecutorDriverDrawerOpen] =
     useState<boolean>(false);
+  const formScrollContainerRef = React.useRef<HTMLDivElement | null>(null);
 
   // Tier and Lightning Engine state
   const initialTierValue =
@@ -838,6 +851,28 @@ export const CreateRuntimeProfileComponent: React.FC<
       projectId
     ]
   );
+
+  const pricingInput = React.useMemo(
+    () => ({
+      executorMachineType: executorType,
+      driverMachineType: executorAndDriverConfig.driverMachineType,
+      useDifferentDriverConfig:
+        executorAndDriverConfig.useDifferentDriverConfig,
+      autoscalingEnabled: autoscalingConfig.autoscalingEnabled,
+      initialExecutors: autoscalingConfig.initialExecutors,
+      minExecutors: autoscalingConfig.minExecutors,
+      maxExecutors: autoscalingConfig.maxExecutors
+    }),
+    [
+      executorType,
+      executorAndDriverConfig.driverMachineType,
+      executorAndDriverConfig.useDifferentDriverConfig,
+      autoscalingConfig.autoscalingEnabled,
+      autoscalingConfig.initialExecutors,
+      autoscalingConfig.minExecutors,
+      autoscalingConfig.maxExecutors
+    ]
+  );
   // Load Regions from service
   useEffect(() => {
     let isMounted = true;
@@ -956,8 +991,30 @@ export const CreateRuntimeProfileComponent: React.FC<
     ? iconExpandLess.react
     : iconExpandMore.react;
 
+  const handleMainWrapperWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (!target || !formScrollContainerRef.current) {
+      return;
+    }
+    // When scrolling over the Summary and Pricing Estimate card, let the right panel scroll itself
+    if (
+      target.closest('[data-testid="runtime-profile-summary-pricing-card"]')
+    ) {
+      return;
+    }
+    // When scrolling directly inside the form container, let native scrolling handle it
+    if (formScrollContainerRef.current.contains(target)) {
+      return;
+    }
+    // Otherwise (scrolling anywhere outside Summary & Pricing Estimate), scroll the create form container
+    formScrollContainerRef.current.scrollTop += event.deltaY;
+  };
+
   return (
-    <div className="runtime-profile-main-wrapper">
+    <div
+      className="runtime-profile-main-wrapper"
+      onWheel={handleMainWrapperWheel}
+    >
       <div className="cluster-details-header">
         <div
           className="back-arrow-icon"
@@ -981,7 +1038,7 @@ export const CreateRuntimeProfileComponent: React.FC<
       </div>
 
       <div className="runtime-profile-content-layout">
-        <div className="runtime-profile-container">
+        <div ref={formScrollContainerRef} className="runtime-profile-container">
           <div className="runtime-profile-intro-text">
             {RUNTIME_PROFILE_INTRO_TEXT}
           </div>
@@ -1378,13 +1435,15 @@ export const CreateRuntimeProfileComponent: React.FC<
           </form>
         </div>
 
-        {/* Right Side Panel: Display Summary by default */}
+        {/* Right Side Panel: Display Summary and Pricing Estimate by default */}
         <div className="runtime-profile-right-panel">
           <div
             className="runtime-profile-summary-pricing-card"
             data-testid="runtime-profile-summary-pricing-card"
           >
             <SummaryComponent summaryInput={summaryInput} />
+            <div className="runtime-summary-pricing-section-divider" />
+            <PricingComponent pricingInput={pricingInput} />
           </div>
         </div>
       </div>
@@ -1470,11 +1529,18 @@ export {
   SelectBucketEditDrawer,
   RUNTIME_VERSION_OPTIONS,
   RuntimeProfileSummary,
+  RuntimePricingEstimate,
   formatRuntimeProfileSummaryProperties,
+  calculateRuntimePricingEstimate,
   ALL_MACHINE_TYPES,
+  calculateDcu,
   getMachineTypeLabel,
+  getShapeDcu,
+  formatDcuNumber,
   formatCompactDiskLabel,
   parseExecutorCount,
+  MACHINE_SHAPE_DCU,
+  MACHINE_SHAPE_RESOURCES,
   MSG_EXECUTOR_TIER_PREMIUM,
   MSG_EXECUTOR_TIER_PREMIUM_LIGHTNING,
   MSG_EXECUTOR_TIER_STANDARD,

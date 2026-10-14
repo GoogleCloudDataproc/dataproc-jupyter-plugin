@@ -16,10 +16,11 @@
  */
 
 .runtime-profile-main-wrapper {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   box-sizing: border-box;
   background-color: var(--jp-layout-color1, #ffffff);
   font-family: var(
@@ -36,8 +37,23 @@
   max-width: 668px;
   flex: 0 1 668px;
   width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none !important;
+  scrollbar-color: transparent transparent !important;
+  -ms-overflow-style: none !important;
   min-width: 0;
   box-sizing: border-box;
+}
+
+.runtime-profile-container::-webkit-scrollbar,
+.runtime-profile-container::-webkit-scrollbar-track,
+.runtime-profile-container::-webkit-scrollbar-thumb {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
 }
 
 .runtime-profile-intro-text {
@@ -966,36 +982,54 @@ body[data-jp-theme-light='false']
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: flex-start;
   width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
   box-sizing: border-box;
   gap: 48px;
 }
 
 .runtime-profile-right-panel {
-  flex: 0 1 400px;
-  width: 400px;
-  min-width: 320px;
+  flex: 0 1 420px;
+  width: 420px;
+  min-width: 280px;
   max-width: 100%;
+  height: 100%;
   padding: 24px 24px 40px 0;
   box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none !important;
+  scrollbar-color: transparent transparent !important;
+  -ms-overflow-style: none !important;
+}
+
+.runtime-profile-right-panel::-webkit-scrollbar,
+.runtime-profile-right-panel::-webkit-scrollbar-track,
+.runtime-profile-right-panel::-webkit-scrollbar-thumb {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
 }
 
 .runtime-profile-summary-pricing-card {
-  border: 1px solid #d8e2ef;
-  border-radius: 12px;
-  padding: 24px 22px;
-  background-color: #ffffff;
+  border: none;
+  padding: 4px 0;
+  background-color: transparent;
   box-sizing: border-box;
 }
 
 .runtime-summary-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 400;
   line-height: 24px;
   color: #1f3057;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .runtime-summary-list {
@@ -1005,62 +1039,178 @@ body[data-jp-theme-light='false']
 
 .runtime-summary-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid #eef2f6;
+  padding: 6px 0;
+  border-bottom: 1px solid #d8e2ef;
   font-size: 12px;
   line-height: 18px;
 }
 
-.runtime-summary-row:first-child {
-  padding-top: 4px;
-}
-
-.runtime-summary-row:last-child {
-  border-bottom: none;
-  padding-bottom: 4px;
-}
-
 .runtime-summary-label {
-  color: #475467;
-  font-weight: 400;
-  flex: 0 0 100px;
+  color: #1f3057;
+  font-weight: 600;
+  flex: 0 0 115px;
+  text-align: left;
 }
 
 .runtime-summary-value {
   color: #1f3057;
-  font-weight: 600;
-  text-align: right;
+  font-weight: 400;
+  text-align: left;
   flex: 1;
-  max-width: 235px;
-  margin-left: auto;
   word-break: break-word;
 }
 
-/* Dark theme: use JupyterLab default theme variables */
+.runtime-summary-pricing-section-divider {
+  height: 0;
+  background-color: transparent;
+  margin: 14px 0;
+}
+
+.runtime-pricing-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.runtime-pricing-subtitle {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #1f3057;
+  margin-bottom: 4px;
+}
+
+.runtime-pricing-hero {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+  color: #1f3057;
+  margin-bottom: 8px;
+}
+
+.runtime-pricing-caption {
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #3c4f76;
+  margin-bottom: 14px;
+}
+
+.runtime-pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.runtime-pricing-table thead tr {
+  background-color: #e8eaed;
+  border-bottom: 1px solid #b8c4d4;
+}
+
+.runtime-pricing-th-item,
+.runtime-pricing-th-dcu {
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #3c4f76;
+}
+
+.runtime-pricing-th-item {
+  text-align: left;
+}
+
+.runtime-pricing-th-dcu {
+  text-align: right;
+}
+
+.runtime-pricing-td-item,
+.runtime-pricing-td-dcu {
+  padding: 8px 0;
+  border-bottom: 1px solid #d8e2ef;
+  color: #1f3057;
+  vertical-align: top;
+}
+
+.runtime-pricing-td-item {
+  text-align: left;
+  font-weight: 600;
+}
+
+.runtime-pricing-td-dcu {
+  text-align: right;
+  font-weight: 400;
+}
+
+.runtime-pricing-total-row .runtime-pricing-td-item,
+.runtime-pricing-total-row .runtime-pricing-td-dcu {
+  font-weight: 600;
+  color: #1f3057;
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+/* Dark theme: use JupyterLab default theme variables while preserving Pantheon bold/normal hierarchy */
 body[data-jp-theme-light='false'] .runtime-profile-summary-pricing-card,
 body[data-jp-theme-name='JupyterLab Dark']
   .runtime-profile-summary-pricing-card {
-  background-color: var(--jp-layout-color0);
-  border-color: var(--jp-border-color1);
+  background-color: transparent;
 }
 
 body[data-jp-theme-light='false'] .runtime-summary-title,
-body[data-jp-theme-light='false'] .runtime-summary-value,
+body[data-jp-theme-light='false'] .runtime-summary-label,
+body[data-jp-theme-light='false'] .runtime-pricing-subtitle,
+body[data-jp-theme-light='false'] .runtime-pricing-hero,
+body[data-jp-theme-light='false'] .runtime-pricing-td-item,
+body[data-jp-theme-light='false']
+  .runtime-pricing-total-row
+  .runtime-pricing-td-item,
+body[data-jp-theme-light='false']
+  .runtime-pricing-total-row
+  .runtime-pricing-td-dcu,
 body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-title,
-body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-value {
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-label,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-subtitle,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-hero,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-td-item,
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-pricing-total-row
+  .runtime-pricing-td-item,
+body[data-jp-theme-name='JupyterLab Dark']
+  .runtime-pricing-total-row
+  .runtime-pricing-td-dcu {
   color: var(--jp-ui-font-color0);
 }
 
-body[data-jp-theme-light='false'] .runtime-summary-label,
-body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-label {
+body[data-jp-theme-light='false'] .runtime-summary-value,
+body[data-jp-theme-light='false'] .runtime-pricing-td-dcu,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-value,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-td-dcu {
+  color: var(--jp-ui-font-color1);
+}
+
+body[data-jp-theme-light='false'] .runtime-pricing-caption,
+body[data-jp-theme-light='false'] .runtime-pricing-th-item,
+body[data-jp-theme-light='false'] .runtime-pricing-th-dcu,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-caption,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-th-item,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-th-dcu {
   color: var(--jp-ui-font-color2);
 }
 
 body[data-jp-theme-light='false'] .runtime-summary-row,
-body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-row {
+body[data-jp-theme-light='false'] .runtime-pricing-td-item,
+body[data-jp-theme-light='false'] .runtime-pricing-td-dcu,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-summary-row,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-td-item,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-td-dcu {
   border-bottom-color: var(--jp-border-color2);
 }
 
+body[data-jp-theme-light='false'] .runtime-pricing-table thead tr,
+body[data-jp-theme-name='JupyterLab Dark'] .runtime-pricing-table thead tr {
+  background-color: var(--jp-layout-color2);
+  border-bottom-color: var(--jp-border-color1);
+}
