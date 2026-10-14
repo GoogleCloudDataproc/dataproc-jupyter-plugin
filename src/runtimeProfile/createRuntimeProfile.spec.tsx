@@ -52,6 +52,12 @@ import {
   generateRandomHex,
   RuntimeProfileSummary,
   formatRuntimeProfileSummaryProperties,
+  RuntimePricingEstimate,
+  calculateRuntimePricingEstimate,
+  calculateDcu,
+  getShapeDcu,
+  MACHINE_SHAPE_DCU,
+  MACHINE_SHAPE_RESOURCES,
   renderGroupedMachineOptions
 } from './createRuntimeProfile';
 import {
@@ -1429,7 +1435,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     ).toBe('2.3 LTS (Spark 3.5.1, Python 3.12)');
     expect(
       rows.find((r: ISectionProperty) => r.label === 'Executor node')?.value
-    ).toBe('Min: 2, Max: 300 x highmem-4 (4 vCPU, 32 GB), 375 GB SSD');
+    ).toBe('highmem-4 (4 vCPU, 32 GB), 375 GB SSD');
     expect(
       rows.find((r: ISectionProperty) => r.label === 'Driver node')?.value
     ).toBe('Same as executor');
@@ -1469,13 +1475,12 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     expect(summaryMarkup).toContain('Same as executor');
 
     const injectedCreateMarkup = ReactDOMServer.renderToStaticMarkup(
-      <CreateRuntimeProfileComponent
-        SummaryComponent={RuntimeProfileSummary}
-      />
+      <CreateRuntimeProfileComponent SummaryComponent={RuntimeProfileSummary} />
     );
     expect(injectedCreateMarkup).toContain(
       'data-testid="runtime-profile-summary-section"'
     );
+    expect(injectedCreateMarkup).toContain('Same as executor');
   });
 
   it('should handle Standard tier, disabled autoscaling, separate driver config, and empty fallbacks in summary', async () => {
@@ -1517,7 +1522,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       useDifferentDriverConfig: false
     });
     expect(acceleratedRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'Min: 2, Max: 1000 x L4 (4 cores), 375 GB SSD'
+      'L4 (4 cores), 375 GB SSD'
     );
 
     const emptyRows = formatRuntimeProfileSummaryProperties({
@@ -1530,9 +1535,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     );
     expect(emptyRows.find(r => r.label === 'Region')?.value).toBe('—');
     expect(emptyRows.find(r => r.label === 'Version')?.value).toBe('—');
-    expect(emptyRows.find(r => r.label === 'Executor node')?.value).toBe(
-      'Min: 2, Max: 1000'
-    );
+    expect(emptyRows.find(r => r.label === 'Executor node')?.value).toBe('—');
     expect(emptyRows.find(r => r.label === 'Driver node')?.value).toBe('—');
     expect(emptyRows.find(r => r.label === 'Metastore')?.value).toBe('—');
   });
@@ -1572,7 +1575,7 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     };
 
     expect(getSummaryRowValue('Executor node')).toBe(
-      'Min: 2, Max: 10 x highmem-4 (4 vCPU, 32 GB), 200 GB HDD'
+      'highmem-4 (4 vCPU, 32 GB), 200 GB HDD'
     );
     expect(getSummaryRowValue('Driver node')).toBe(
       'standard-8 (8 vCPU, 32 GB), 400 GB HDD'
@@ -1626,5 +1629,251 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       'Premium (Lightning Engine enabled)'
     );
   });
-});
 
+  it('should calculate runtime pricing estimate DCU values matching the Pantheon specification across all 6 test cases', () => {
+    expect(MACHINE_SHAPE_RESOURCES['highmem-4']).toEqual({
+      vcpus: 4,
+      memoryGib: 32
+    });
+    expect(calculateDcu(4, 32)).toBe(5.6);
+    expect(calculateDcu(12, 170)).toBe(31.6);
+    expect(MACHINE_SHAPE_DCU['highmem-4']).toBe(5.6);
+    expect(MACHINE_SHAPE_DCU['standard-4']).toBe(4);
+    expect(MACHINE_SHAPE_DCU['l4-4']).toBe(4);
+    expect(MACHINE_SHAPE_DCU['a100-40']).toBe(15.7);
+    expect(MACHINE_SHAPE_DCU['a100-80']).toBe(31.6);
+    expect(getShapeDcu('highmem-4 (4 vCPU, 32 GB)')).toBe(5.6);
+    expect(getShapeDcu('L4 (4 cores)')).toBe(4);
+    expect(getShapeDcu('A100 (80 GB)')).toBe(31.6);
+    expect(getShapeDcu('unknown-shape')).toBe(0);
+    expect(getShapeDcu('')).toBe(0);
+
+    // 1. Default values matching screenshot (highmem-4 = 5.6 DCU, initialExecutors: 5, minExecutors: 2, maxExecutors: 1000)
+    const defaultEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 2,
+      maxExecutors: 1000
+    });
+    expect(defaultEstimate.hero).toBe('33.6 DCU hours / hour of usage');
+    expect(defaultEstimate.baselineCaption).toBe(
+      'Baseline for 1 driver and 5 initial executors'
+    );
+    expect(defaultEstimate.subjectToAutoscaling).toBe(true);
+    expect(defaultEstimate.executorRowLabel).toBe('Executor nodes (initial 5)');
+    expect(defaultEstimate.executorRowValue).toBe(
+      '28 DCU hours / hour of usage'
+    );
+    expect(defaultEstimate.driverRowLabel).toBe('Driver node');
+    expect(defaultEstimate.driverRowValue).toBe(
+      '5.6 DCU hours / hour of usage'
+    );
+    expect(defaultEstimate.autoscalingRowLabel).toBe(
+      'Autoscaling range (2–1,000 executors)'
+    );
+    expect(defaultEstimate.autoscalingRowValue).toBe(
+      '16.8 – 5,605.6 DCU hours / hour of usage'
+    );
+    expect(defaultEstimate.totalRowLabel).toBe('Total (baseline)');
+    expect(defaultEstimate.totalRowValue).toBe(
+      '33.6 DCU hours / hour of usage'
+    );
+
+    // 2. Executor shape changed to standard-4 (4 DCU) -> 5 * 4 + 4 = 24
+    const standard4Estimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'standard-4',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 2,
+      maxExecutors: 300
+    });
+    expect(standard4Estimate.hero).toBe('24 DCU hours / hour of usage');
+    expect(standard4Estimate.executorRowLabel).toBe(
+      'Executor nodes (initial 5)'
+    );
+    expect(standard4Estimate.executorRowValue).toBe(
+      '20 DCU hours / hour of usage'
+    );
+    expect(standard4Estimate.driverRowValue).toBe(
+      '4 DCU hours / hour of usage'
+    );
+    expect(standard4Estimate.totalRowValue).toBe(
+      '24 DCU hours / hour of usage'
+    );
+
+    // 3. Initial executors changed to 10 (with highmem-4 -> 10 * 5.6 + 5.6 = 61.6)
+    const tenExecutorsEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: true,
+      initialExecutors: 10,
+      minExecutors: 2,
+      maxExecutors: 300
+    });
+    expect(tenExecutorsEstimate.hero).toBe('61.6 DCU hours / hour of usage');
+    expect(tenExecutorsEstimate.baselineCaption).toBe(
+      'Baseline for 1 driver and 10 initial executors'
+    );
+    expect(tenExecutorsEstimate.executorRowLabel).toBe(
+      'Executor nodes (initial 10)'
+    );
+    expect(tenExecutorsEstimate.executorRowValue).toBe(
+      '56 DCU hours / hour of usage'
+    );
+    expect(tenExecutorsEstimate.totalRowValue).toBe(
+      '61.6 DCU hours / hour of usage'
+    );
+
+    // 4. Separate driver enabled with standard-4 (5 * 5.6 + 4 = 32)
+    const separateDriverEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      driverMachineType: 'standard-4',
+      useDifferentDriverConfig: true,
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 2,
+      maxExecutors: 300
+    });
+    expect(separateDriverEstimate.hero).toBe('32 DCU hours / hour of usage');
+    expect(separateDriverEstimate.driverRowLabel).toBe('Driver node');
+    expect(separateDriverEstimate.driverRowValue).toBe(
+      '4 DCU hours / hour of usage'
+    );
+    expect(separateDriverEstimate.autoscalingRowValue).toBe(
+      '15.2 – 1,684 DCU hours / hour of usage'
+    );
+    expect(separateDriverEstimate.totalRowValue).toBe(
+      '32 DCU hours / hour of usage'
+    );
+
+    // 5. Autoscaling disabled -> hides Subject to autoscaling and autoscaling range row
+    const noAutoscalingEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      useDifferentDriverConfig: false,
+      autoscalingEnabled: false,
+      initialExecutors: 5
+    });
+    expect(noAutoscalingEstimate.subjectToAutoscaling).toBe(false);
+    expect(noAutoscalingEstimate.autoscalingRowLabel).toBeNull();
+    expect(noAutoscalingEstimate.autoscalingRowValue).toBeNull();
+
+    // 6. Null / empty input, driverShape fallback, prototype keys, & min >= max single-value autoscaling fallback
+    expect(getShapeDcu('toString')).toBe(0);
+    expect(getShapeDcu('valueOf')).toBe(0);
+
+    const nullEstimate = calculateRuntimePricingEstimate(null);
+    expect(nullEstimate.hero).toBe('0 DCU hours / hour of usage');
+    expect(nullEstimate.totalRowValue).toBe('0 DCU hours / hour of usage');
+
+    const driverShapeFallbackEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      driverMachineType: '   ',
+      driverShape: 'standard-4',
+      useDifferentDriverConfig: true,
+      initialExecutors: 5
+    });
+    expect(driverShapeFallbackEstimate.driverDcu).toBe(4);
+    expect(driverShapeFallbackEstimate.hero).toBe(
+      '32 DCU hours / hour of usage'
+    );
+
+    const equalBoundsEstimate = calculateRuntimePricingEstimate({
+      executorMachineType: 'highmem-4',
+      autoscalingEnabled: true,
+      initialExecutors: 5,
+      minExecutors: 10,
+      maxExecutors: 10
+    });
+    expect(equalBoundsEstimate.autoscalingRowLabel).toBe(
+      'Autoscaling range (10 executors)'
+    );
+    expect(equalBoundsEstimate.autoscalingRowValue).toBe(
+      '61.6 DCU hours / hour of usage'
+    );
+  });
+
+  it('should render RuntimePricingEstimate and update dynamically in CreateRuntimeProfileComponent when executor shape changes', async () => {
+    expect(RuntimePricingEstimate).toBeDefined();
+
+    const staticMarkup = ReactDOMServer.renderToStaticMarkup(
+      <RuntimePricingEstimate
+        pricingInput={{
+          executorMachineType: 'highmem-4',
+          useDifferentDriverConfig: false,
+          autoscalingEnabled: true,
+          initialExecutors: 5,
+          minExecutors: 2,
+          maxExecutors: 1000
+        }}
+      />
+    );
+    expect(staticMarkup).toContain('Pricing estimate');
+    expect(staticMarkup).toContain('33.6 DCU hours / hour of usage');
+    expect(staticMarkup).toContain(
+      'Baseline for 1 driver and 5 initial executors'
+    );
+    expect(staticMarkup).toContain('Subject to autoscaling');
+    expect(staticMarkup).toContain('16.8 – 5,605.6 DCU hours / hour of usage');
+    expect(staticMarkup).toContain('Total (baseline)');
+
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    const pricingSection = container.querySelector(
+      '[data-testid="runtime-pricing-estimate-section"]'
+    );
+    expect(pricingSection).not.toBeNull();
+    // 2 initial executors * 5.6 DCU + 5.6 DCU driver = 16.8 DCU hours
+    expect(
+      pricingSection?.querySelector('.runtime-pricing-hero')?.textContent
+    ).toBe('16.8 DCU hours / hour of usage');
+
+    // Change executor machine shape to standard-4 (2 initial executors * 4 DCU + 4 DCU driver = 12 DCU hours)
+    await selectExecutorType('standard-4');
+    expect(
+      pricingSection?.querySelector('.runtime-pricing-hero')?.textContent
+    ).toBe('12 DCU hours / hour of usage');
+
+    // Render a fresh instance with separate driver config and disabled autoscaling
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          key="custom-driver-no-autoscaling"
+          service={mockService}
+          initialExecutorType="highmem-4"
+          initialExecutorAndDriverConfig={{
+            tier: 'Premium',
+            executorType: 'highmem-4',
+            useDifferentDriverConfig: true,
+            driverMachineType: 'standard-4'
+          }}
+          initialAutoscalingConfig={{
+            autoscalingEnabled: false,
+            initialExecutors: 5
+          }}
+        />
+      );
+    });
+
+    const updatedPricingSection = container.querySelector(
+      '[data-testid="runtime-pricing-estimate-section"]'
+    );
+    expect(
+      updatedPricingSection?.querySelector('.runtime-pricing-hero')?.textContent
+    ).toBe('32 DCU hours / hour of usage');
+    expect(
+      updatedPricingSection?.querySelector(
+        '[data-testid="pricing-autoscaling-caption"]'
+      )
+    ).toBeNull();
+    expect(
+      updatedPricingSection?.querySelector(
+        '[data-testid="pricing-autoscaling-row"]'
+      )
+    ).toBeNull();
+  });
+});
