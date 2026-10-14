@@ -1152,7 +1152,7 @@ body[data-jp-theme-light='false']
   padding-bottom: 2px;
 }
 
-/* Dark theme: use JupyterLab default theme variables while preserving Pantheon bold/normal hierarchy */
+/* Dark theme: use JupyterLab default theme variables while preserving bold/normal hierarchy */
 body[data-jp-theme-light='false'] .runtime-profile-summary-pricing-card,
 body[data-jp-theme-name='JupyterLab Dark']
   .runtime-profile-summary-pricing-card {
