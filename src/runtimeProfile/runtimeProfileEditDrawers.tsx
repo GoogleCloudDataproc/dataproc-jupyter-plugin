@@ -1709,8 +1709,23 @@ const validateAutoscalingField = (
   return '';
 };
 
+const UNIT_TO_SECONDS: Record<TimeUnit, number> = {
+  seconds: 1,
+  s: 1,
+  minutes: 60,
+  m: 60,
+  hours: 3600,
+  h: 3600,
+  days: 86400,
+  d: 86400
+};
+const MIN_LIFECYCLE_SECONDS = 10 * 60; // 10 minutes
+const MAX_IDLE_TIME_SECONDS = 330 * 3600; // 330 hours
+const MAX_SESSION_TIME_SECONDS = 14 * 86400; // 14 days
+
 const validateLifecycleQuantity = (
   rawVal: string,
+  unit: TimeUnit,
   fieldLabel: 'Max idle time quantity' | 'Max session time quantity'
 ): string => {
   const trimmed = rawVal.trim();
@@ -1718,8 +1733,21 @@ const validateLifecycleQuantity = (
     return `${fieldLabel} must be an integer.`;
   }
   const parsed = parseInt(trimmed, 10);
-  if (parsed < 0) {
-    return `${fieldLabel} must be greater than or equal to 0.`;
+  const totalSeconds = parsed * UNIT_TO_SECONDS[unit];
+  if (fieldLabel === 'Max idle time quantity') {
+    if (
+      totalSeconds < MIN_LIFECYCLE_SECONDS ||
+      totalSeconds > MAX_IDLE_TIME_SECONDS
+    ) {
+      return 'Max idle time must be between 10 minutes and 330 hours.';
+    }
+  } else {
+    if (
+      totalSeconds < MIN_LIFECYCLE_SECONDS ||
+      totalSeconds > MAX_SESSION_TIME_SECONDS
+    ) {
+      return 'Max session time must be between 10 minutes and 14 days.';
+    }
   }
   return '';
 };
@@ -1759,15 +1787,15 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
 
   const isAutoscalingEnabled = draftConfig.autoscalingEnabled ?? true;
 
-  const initialExecutorsError = validateAutoscalingField(
+  const baseInitialError = validateAutoscalingField(
     initialExecutorsInput,
     'Initial executors'
   );
-  const minExecutorsError = validateAutoscalingField(
+  const baseMinError = validateAutoscalingField(
     minExecutorsInput,
     'Minimum executors'
   );
-  const maxExecutorsError = validateAutoscalingField(
+  const baseMaxError = validateAutoscalingField(
     maxExecutorsInput,
     'Maximum executors'
   );
@@ -1776,18 +1804,34 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
   const minVal = parseInt(minExecutorsInput.trim(), 10);
   const maxVal = parseInt(maxExecutorsInput.trim(), 10);
 
-  const hasRangeError =
+  const initialRangeError =
+    !baseInitialError &&
     !Number.isNaN(initVal) &&
+    ((!baseMinError && !Number.isNaN(minVal) && initVal < minVal) ||
+      (!baseMaxError && !Number.isNaN(maxVal) && initVal > maxVal))
+      ? 'Initial executors must be between minimum and maximum executors.'
+      : '';
+
+  const minRangeError =
+    !baseMinError &&
+    !baseMaxError &&
     !Number.isNaN(minVal) &&
     !Number.isNaN(maxVal) &&
-    (minVal > maxVal || initVal < minVal || initVal > maxVal);
+    minVal > maxVal
+      ? 'Minimum executors must not exceed maximum executors.'
+      : '';
 
-  const isAutoscalingSaveDisabled = Boolean(
-    initialExecutorsError ||
-      minExecutorsError ||
-      maxExecutorsError ||
-      hasRangeError
-  );
+  const initialExecutorsError = isAutoscalingEnabled
+    ? baseInitialError || initialRangeError
+    : '';
+  const minExecutorsError = isAutoscalingEnabled
+    ? baseMinError || minRangeError
+    : '';
+  const maxExecutorsError = isAutoscalingEnabled ? baseMaxError : '';
+
+  const isAutoscalingSaveDisabled =
+    isAutoscalingEnabled &&
+    Boolean(initialExecutorsError || minExecutorsError || maxExecutorsError);
 
   const handleSave = () => {
     if (isAutoscalingSaveDisabled) {
@@ -1795,9 +1839,18 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
     }
     onSave({
       ...draftConfig,
-      initialExecutors: parseInt(initialExecutorsInput.trim(), 10),
-      minExecutors: parseInt(minExecutorsInput.trim(), 10),
-      maxExecutors: parseInt(maxExecutorsInput.trim(), 10)
+      initialExecutors:
+        isAutoscalingEnabled || !Number.isNaN(initVal)
+          ? initVal
+          : config.initialExecutors ?? 2,
+      minExecutors:
+        isAutoscalingEnabled || !Number.isNaN(minVal)
+          ? minVal
+          : config.minExecutors ?? 2,
+      maxExecutors:
+        isAutoscalingEnabled || !Number.isNaN(maxVal)
+          ? maxVal
+          : config.maxExecutors ?? 1000
     });
   };
 
@@ -1840,6 +1893,7 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
           variant="outlined"
           size="small"
           fullWidth
+          disabled={!isAutoscalingEnabled}
           error={Boolean(initialExecutorsError)}
           InputLabelProps={{ shrink: true }}
         />
@@ -1865,6 +1919,7 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
           variant="outlined"
           size="small"
           fullWidth
+          disabled={!isAutoscalingEnabled}
           error={Boolean(minExecutorsError)}
           InputLabelProps={{ shrink: true }}
         />
@@ -1890,6 +1945,7 @@ export const AutoscalingEditDrawer: React.FC<IAutoscalingEditDrawerProps> = ({
           variant="outlined"
           size="small"
           fullWidth
+          disabled={!isAutoscalingEnabled}
           error={Boolean(maxExecutorsError)}
           InputLabelProps={{ shrink: true }}
         />
@@ -1976,10 +2032,12 @@ export const SessionLifecycleEditDrawer: React.FC<
 
   const idleQuantityError = validateLifecycleQuantity(
     idleQuantityInput,
+    idleUnit,
     'Max idle time quantity'
   );
   const sessionQuantityError = validateLifecycleQuantity(
     sessionQuantityInput,
+    sessionUnit,
     'Max session time quantity'
   );
   const isLifecycleSaveDisabled = Boolean(

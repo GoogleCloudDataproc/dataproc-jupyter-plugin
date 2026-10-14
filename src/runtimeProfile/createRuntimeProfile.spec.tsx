@@ -1666,6 +1666,16 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     const initExecInput = document.body.querySelector(
       '#edit-initial-executors'
     ) as HTMLInputElement;
+    const minExecInput = document.body.querySelector(
+      '#edit-minimum-executors'
+    ) as HTMLInputElement;
+    const maxExecInput = document.body.querySelector(
+      '#edit-maximum-executors'
+    ) as HTMLInputElement;
+    const enabledCheckbox = document.body.querySelector(
+      '#edit-autoscaling-enabled'
+    ) as HTMLInputElement;
+
     await act(async () => {
       nativeInputValueSetter?.call(initExecInput, '****');
       initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1683,12 +1693,64 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       document.body.querySelector('#initial-executors-error-text')?.textContent
     ).toBe('Initial executors must be greater than or equal to 2.');
 
+    // Cross-field range validation: Initial < Minimum
     await act(async () => {
+      nativeInputValueSetter?.call(initExecInput, '2');
+      initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(minExecInput, '4');
+      minExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#initial-executors-error-text')?.textContent
+    ).toBe('Initial executors must be between minimum and maximum executors.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Cross-field range validation: Minimum > Maximum
+    await act(async () => {
+      nativeInputValueSetter?.call(minExecInput, '10');
+      minExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(maxExecInput, '5');
+      maxExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#minimum-executors-error-text')?.textContent
+    ).toBe('Minimum executors must not exceed maximum executors.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    // Unchecking Enabled disables fields and bypasses validation
+    await act(async () => {
+      enabledCheckbox.click();
+    });
+    expect(initExecInput.disabled).toBe(true);
+    expect(minExecInput.disabled).toBe(true);
+    expect(maxExecInput.disabled).toBe(true);
+    expect(
+      document.body.querySelector('#initial-executors-error-text')
+    ).toBeNull();
+    expect(
+      document.body.querySelector('#minimum-executors-error-text')
+    ).toBeNull();
+    expect(getSaveBtn()?.disabled).toBe(false);
+
+    // Re-checking Enabled restores validation until valid range is entered
+    await act(async () => {
+      enabledCheckbox.click();
+    });
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    await act(async () => {
+      nativeInputValueSetter?.call(minExecInput, '2');
+      minExecInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(maxExecInput, '1000');
+      maxExecInput.dispatchEvent(new Event('input', { bubbles: true }));
       nativeInputValueSetter?.call(initExecInput, '4');
       initExecInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
       document.body.querySelector('#initial-executors-error-text')
+    ).toBeNull();
+    expect(
+      document.body.querySelector('#minimum-executors-error-text')
     ).toBeNull();
     expect(getSaveBtn()?.disabled).toBe(false);
     await act(async () => {
@@ -1702,19 +1764,35 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
     const idleQtyInput = document.body.querySelector(
       '#edit-max-idle-time-quantity'
     ) as HTMLInputElement;
+    const sessionQtyInput = document.body.querySelector(
+      '#edit-max-session-time-quantity'
+    ) as HTMLInputElement;
+
     await act(async () => {
-      nativeInputValueSetter?.call(idleQtyInput, '-1');
+      nativeInputValueSetter?.call(idleQtyInput, '0');
       idleQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
       document.body.querySelector('#max-idle-time-quantity-error-text')
         ?.textContent
-    ).toBe('Max idle time quantity must be greater than or equal to 0.');
+    ).toBe('Max idle time must be between 10 minutes and 330 hours.');
     expect(getSaveBtn()?.disabled).toBe(true);
 
     await act(async () => {
       nativeInputValueSetter?.call(idleQtyInput, '30');
       idleQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+      nativeInputValueSetter?.call(sessionQtyInput, '15');
+      sessionQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      document.body.querySelector('#max-session-time-quantity-error-text')
+        ?.textContent
+    ).toBe('Max session time must be between 10 minutes and 14 days.');
+    expect(getSaveBtn()?.disabled).toBe(true);
+
+    await act(async () => {
+      nativeInputValueSetter?.call(sessionQtyInput, '3');
+      sessionQtyInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(getSaveBtn()?.disabled).toBe(false);
     await act(async () => {
@@ -1739,6 +1817,41 @@ describe('CreateRuntimeProfileComponent UI & Service', () => {
       'Key is required'
     );
     expect(getSaveBtn()?.disabled).toBe(true);
+  });
+
+  it('syncs autoscaling, session lifecycle, spark properties, and labels when initial* props update', async () => {
+    await act(async () => {
+      root.render(<CreateRuntimeProfileComponent service={mockService} />);
+    });
+
+    await act(async () => {
+      root.render(
+        <CreateRuntimeProfileComponent
+          service={mockService}
+          initialAutoscalingConfig={{
+            autoscalingEnabled: false,
+            initialExecutors: 6,
+            minExecutors: 3,
+            maxExecutors: 50
+          }}
+          initialSessionLifecycleConfig={{
+            maxIdleTime: '45 minutes',
+            maxSessionTime: '5 days'
+          }}
+          initialSparkProperties={{ 'spark.sql.shuffle.partitions': '200' }}
+          initialLabels={{ env: 'staging' }}
+        />
+      );
+    });
+
+    expect(getFieldValue('Autoscaling')).toBe('Disabled');
+    expect(getFieldValue('Initial executors')).toBe('6');
+    expect(getFieldValue('Maximum idle time')).toBe('45 minutes');
+    expect(getFieldValue('Maximum session time')).toBe('5 days');
+    expect(getFieldValue('Spark properties')).toBe(
+      'spark.sql.shuffle.partitions: 200'
+    );
+    expect(getFieldValue('Labels')).toBe('env: staging');
   });
 
   it('should calculate runtime pricing estimate DCU values across machine shapes and autoscaling configurations', () => {
