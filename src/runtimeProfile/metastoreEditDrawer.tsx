@@ -476,7 +476,7 @@ export const MetastoreEditDrawer: React.FC<IMetastoreEditDrawerProps> = ({
       ) {
         return true;
       }
-      // An empty new catalog name means the region's default name.
+      // An empty new catalog name meaning is the region's default name.
       if (state.catalogSelectionMode === 'new' && catalogNameError) {
         return true;
       }
