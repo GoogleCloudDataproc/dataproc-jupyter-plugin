@@ -276,7 +276,7 @@ const resolveMachineTypeFromProperties = (
   if (acceleratorType) {
     const matchedAcc = DATAPROC_ACCELERATED_MACHINE_TYPES.find(
       m =>
-        m.acceleratorType.toLowerCase() === acceleratorType &&
+        m.acceleratorType?.toLowerCase() === acceleratorType &&
         (!cores || String(m.vCPUs) === cores)
     );
     return matchedAcc?.name || DEFAULT_ACCELERATED_EXECUTOR_TYPE;
