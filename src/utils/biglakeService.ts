@@ -19,17 +19,17 @@ import { Notification } from '@jupyterlab/apputils';
 import { API_HEADER_BEARER, API_HEADER_CONTENT_TYPE } from './const';
 import { authApi, loggedFetch } from './utils';
 
-export interface IBigLakeCatalog {
+const BIGLAKE_API_URL = 'https://biglake.googleapis.com';
+
+/**
+ * A Lakehouse runtime catalog. Catalogs are project-scoped, so the name looks
+ * like 'projects/my-project/catalogs/my_catalog'.
+ */
+export interface ILakehouseCatalog {
   name: string;
-  createTime?: string;
-  updateTime?: string;
-  deleteTime?: string;
-  expireTime?: string;
 }
 
-export interface IBigLakeCatalogsResponse {
-  catalogs?: IBigLakeCatalog[];
-  nextPageToken?: string;
+export interface ILakehouseErrorResponse {
   error?: {
     code: number;
     message: string;
@@ -37,9 +37,19 @@ export interface IBigLakeCatalogsResponse {
   };
 }
 
+/** Iceberg REST catalogs list response. The array key is kebab-case. */
+export interface IIcebergCatalogsResponse extends ILakehouseErrorResponse {
+  'iceberg-catalogs'?: ILakehouseCatalog[];
+}
+
+/** Hive catalogs list response. */
+export interface IHiveCatalogsResponse extends ILakehouseErrorResponse {
+  catalogs?: ILakehouseCatalog[];
+}
+
 /**
  * Extracts short catalog ID from full resource name
- * e.g., 'projects/test-proj/locations/us-central1/catalogs/iceberg_catalog_01' -> 'iceberg_catalog_01'
+ * e.g., 'projects/test-proj/catalogs/iceberg_catalog_01' -> 'iceberg_catalog_01'
  */
 export const extractCatalogId = (catalogResourceName: string): string => {
   if (!catalogResourceName) {
@@ -50,12 +60,15 @@ export const extractCatalogId = (catalogResourceName: string): string => {
 };
 
 /**
- * Fetches BigLake / Iceberg catalogs from the BigLake REST API.
+ * Lists the catalog IDs of a project from a Lakehouse runtime catalog
+ * endpoint, defaulting to the signed-in project.
  * Emits error notification if API is not enabled or request fails (no fallback).
  */
-export const listBigLakeCatalogsAPI = async (
+const listLakehouseCatalogIds = async <T extends ILakehouseErrorResponse>(
   projectId: string,
-  region: string
+  label: string,
+  buildPath: (encodedProjectId: string) => string,
+  readCatalogs: (data: T) => ILakehouseCatalog[] | undefined
 ): Promise<string[]> => {
   try {
     const credentials = await authApi();
@@ -64,13 +77,12 @@ export const listBigLakeCatalogsAPI = async (
     }
 
     const targetProject = projectId || credentials.project_id;
-    const targetRegion = region || credentials.region_id;
-
-    if (!targetProject || !targetRegion) {
+    if (!targetProject) {
       return [];
     }
 
-    const url = `https://biglake.googleapis.com/v1/projects/${targetProject}/locations/${targetRegion}/catalogs`;
+    // The project ID can be typed by the user, so encode it for the path.
+    const url = BIGLAKE_API_URL + buildPath(encodeURIComponent(targetProject));
 
     const resp = await loggedFetch(url, {
       method: 'GET',
@@ -80,22 +92,44 @@ export const listBigLakeCatalogsAPI = async (
       }
     });
 
-    const data = (await resp.json()) as IBigLakeCatalogsResponse;
+    const data = (await resp.json()) as T;
 
     if (!resp.ok || data?.error) {
       const errorMsg =
         data?.error?.message ||
-        `Failed to fetch BigLake catalogs (${resp.status}: ${resp.statusText})`;
+        `Failed to fetch ${label} catalogs (${resp.status}: ${resp.statusText})`;
       Notification.emit(errorMsg, 'error', { autoClose: 5000 });
       return [];
     }
 
-    const catalogs = data.catalogs || [];
-    return catalogs.map(c => extractCatalogId(c.name));
+    return (readCatalogs(data) ?? [])
+      .map(catalog => extractCatalogId(catalog.name))
+      .filter(catalogId => catalogId !== '');
   } catch (error) {
-    Notification.emit(`Error fetching BigLake catalogs: ${error}`, 'error', {
+    Notification.emit(`Error fetching ${label} catalogs: ${error}`, 'error', {
       autoClose: 5000
     });
     return [];
   }
 };
+
+/**
+ * Lists the Iceberg REST catalogs of a project, for the Iceberg REST endpoint.
+ */
+export const listIcebergCatalogsAPI = (projectId: string): Promise<string[]> =>
+  listLakehouseCatalogIds<IIcebergCatalogsResponse>(
+    projectId,
+    'Iceberg REST',
+    project =>
+      `/iceberg/v1/restcatalog/extensions/projects/${project}/catalogs`,
+    data => data['iceberg-catalogs']
+  );
+
+/** Lists the Hive catalogs of a project, for the Hive endpoint. */
+export const listHiveCatalogsAPI = (projectId: string): Promise<string[]> =>
+  listLakehouseCatalogIds<IHiveCatalogsResponse>(
+    projectId,
+    'Hive',
+    project => `/hive/v1/projects/${project}/catalogs`,
+    data => data.catalogs
+  );
