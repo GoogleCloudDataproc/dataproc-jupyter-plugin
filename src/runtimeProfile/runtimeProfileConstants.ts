@@ -111,10 +111,7 @@ export function calculateDcu(vcpus: number, memoryGib: number): number {
     memoryGib,
     vcpus * MAX_REGULAR_MEMORY_GIB_PER_VCPU
   );
-  const extendedMemoryGib = Math.max(
-    0,
-    Math.trunc(memoryGib - regularMemoryGib)
-  );
+  const extendedMemoryGib = Math.max(0, memoryGib - regularMemoryGib);
   const milliDcu =
     vcpus * MILLI_DCU_PER_VCPU +
     regularMemoryGib * MILLI_DCU_PER_REGULAR_MEMORY_GIB +
@@ -258,7 +255,7 @@ export function parseExecutorCount(
     return fallback;
   }
   const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) {
+  if (!Number.isInteger(parsed) || parsed < 0) {
     return fallback;
   }
   return parsed;
